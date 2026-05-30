@@ -10,7 +10,15 @@
     
     {% load static %}
     <link rel="icon" type="image/x-icon" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}?v={{ CP_VERSION }}">
-    
+
+    <!-- Speed up third-party asset fetches (DNS + TLS handshake up front) -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://code.jquery.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://code.jquery.com">
+
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.min.css' %}?v={{ CP_VERSION }}">
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/bootstrap-toggle.min.css' %}?v={{ CP_VERSION }}">
@@ -20,1645 +28,56 @@
         {{ cosmetic.MainDashboardCSS | safe }}
     </style>
     
-    <!-- Mobile Responsive CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/mobile-responsive.css' %}?v={{ CP_VERSION }}">
-    
-    <!-- Readability Fixes CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/readability-fixes.css' %}?v={{ CP_VERSION }}">
-    
-    <!-- Core Scripts: Angular + system-status FIRST so dashboard works even when CDN/Tracking Prevention blocks jQuery/Bootstrap -->
+    <!-- Core Scripts -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}&dashboard=10" data-cfasync="false"></script>
-    <script src="https://code.jquery.com/jquery-2.2.4.min.js" data-cfasync="false"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <!-- QRious is only used by 2FA QR codes; load it without blocking parse -->
+    <script defer src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}&dashboard=10" data-cfasync="false"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PNotify (data-cfasync=false ensures it loads before controllers that use it) -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
-    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <!-- Chart.js — only used by post-load controllers; defer so it never blocks paint -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
-    <!-- Select2 (required by FTP create account; local copy avoids CDN Tracking Prevention blocking) -->
+    <!-- PNotify -->
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
+    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}"></script>
+
+    <!-- Select2 (FTP forms; local copy avoids CDN / tracking prevention blocking) -->
     <link rel="stylesheet" href="{% static 'baseTemplate/vendor/select2/select2.min.css' %}?v={{ CP_VERSION }}">
     <script src="{% static 'baseTemplate/vendor/select2/select2.full.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
-    <style>
-        /* CSS Variables for Theme */
-        :root {
-            /* Light Theme Colors */
-            --bg-primary: #f0f0ff;
-            --bg-secondary: white;
-            --bg-sidebar: #f3f1ff;
-            --bg-sidebar-item: white;
-            --bg-hover: #e8e6ff;
-            --text-primary: #2f3640;
-            --text-secondary: #2f3640; /* Changed from grey to dark for better readability */
-            --text-heading: #1e293b;
-            --border-color: #e8e9ff;
-            --shadow-color: rgba(0,0,0,0.05);
-            --accent-color: #5856d6;
-            --accent-hover: #4644c0;
-            --danger-color: #ef4444;
-            --success-color: #10b981;
-            --warning-bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            --ai-banner-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-        }
-        
-        /* Dark Theme Colors */
-        [data-theme="dark"] {
-            --bg-primary: #0f0f23;
-            --bg-secondary: #1a1a3e;
-            --bg-sidebar: #16162e;
-            --bg-sidebar-item: #1e1e42;
-            --bg-hover: #252550;
-            --text-primary: #e4e4e7;
-            --text-secondary: #e4e4e7; /* Changed from grey to light for better readability */
-            --text-heading: #f3f4f6;
-            --border-color: #2a2a5e;
-            --shadow-color: rgba(0,0,0,0.3);
-            --accent-color: #7c7ff3;
-            --accent-hover: #6b6ee8;
-            --danger-color: #f87171;
-            --success-color: #34d399;
-            --warning-bg: linear-gradient(135deg, #78350f 0%, #92400e 100%);
-            --ai-banner-bg: linear-gradient(135deg, #4c1d95 0%, #5b21b6 50%, #6d28d9 100%);
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        /* Header */
-        #header {
-            background: var(--bg-secondary);
-            height: 80px;
-            display: flex;
-            align-items: center;
-            padding: 0 30px;
-            box-shadow: 0 2px 12px var(--shadow-color);
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            z-index: 1000;
-            transition: background-color 0.3s ease;
-        }
-        
-        #header .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        #header .logo-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(88,86,214,0.3);
-        }
-        
-        #header .logo-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        #header .logo-text {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        #header .logo-text .brand {
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--text-heading);
-        }
-        
-        #header .logo-text .tagline {
-            font-size: 14px;
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-top: -2px;
-        }
-        
-        #header-right {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-        
-        #header-right .info-text {
-            color: var(--text-secondary);
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-        }
-        
-        #header-right .social-links {
-            display: flex;
-            gap: 15px;
-        }
-        
-        #header-right .social-links a {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 20px;
-        }
-        
-        #header-right .social-links a:hover {
-            background: var(--accent-color);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
-        }
-        
-        #header-right .logout-btn {
-            background: transparent;
-            color: var(--accent-color);
-            border: none;
-            padding: 10px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 15px;
-            text-decoration: none;
-        }
-        
-        #header-right .logout-btn:hover {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
-        }
-        
-        /* Theme Toggle Button */
-        .theme-toggle {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 18px;
-        }
-        
-        .theme-toggle:hover {
-            background: var(--accent-color);
-            color: white;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
-        }
-        
-        [data-theme="dark"] .theme-toggle {
-            color: #fbbf24;
-        }
-        
-        /* Notification Center Button */
-        .notification-center-btn {
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 18px;
-        }
-        .notification-center-btn:hover {
-            background: var(--accent-color);
-            color: white;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
-        }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc2626;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 0.15rem 0.4rem;
-            border-radius: 10px;
-            min-width: 1.2rem;
-            text-align: center;
-            line-height: 1.2;
-            border: 2px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Notification dropdown: always light panel with dark text so readable in both light and dark mode */
-        .notification-center-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            width: 520px;
-            max-width: calc(100vw - 40px);
-            max-height: 600px;
-            display: none;
-            flex-direction: column;
-            z-index: 10000;
-            overflow: hidden;
-            min-height: 0;
-        }
-        .notification-center-dropdown.show { display: flex; }
-        .notification-center-dropdown .notification-center-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .notification-center-dropdown .notification-center-header h3 { margin: 0; font-size: 1.25rem; font-weight: 700; color: #111827; }
-        .notification-center-list {
-            padding: 1rem;
-            flex: 1 1 0;
-            min-height: 0;
-            max-height: 480px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-        }
-        #notification-center-dropdown .notification-center-empty { color: #4b5563; padding: 1rem; }
-        .notification-center-item {
-            padding: 1.5rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            background: #ffffff;
-            overflow: visible;
-        }
-        .notification-center-item.dismissed { opacity: 0.7; background: #f9fafb; }
-        .notification-center-item-title {
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #111827;
-        }
-        .notification-center-item-title .dismissed-badge {
-            font-size: 0.75rem;
-            color: #374151;
-            margin-left: auto;
-            padding: 0.25rem 0.5rem;
-            background: #e5e7eb;
-            border-radius: 6px;
-        }
-        #notification-center-dropdown .notification-center-item-text { color: #4b5563; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; }
-        #notification-center-dropdown .notification-center-item-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            align-items: flex-start;
-            margin-top: 0.75rem;
-            width: 100%;
-        }
-        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 600;
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
-            white-space: nowrap;
-            flex-shrink: 0;
-            min-width: 160px;
-            width: auto;
-            min-height: 2.25rem;
-            line-height: 1.3;
-            box-sizing: border-box;
-        }
-        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link:hover {
-            filter: brightness(1.1);
-            color: #ffffff !important;
-        }
-        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: #4338ca !important;
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            padding: 0.4rem 0.75rem;
-            white-space: nowrap;
-            flex-shrink: 0;
-            min-width: 120px;
-            width: auto;
-            min-height: 1.75rem;
-            line-height: 1.3;
-            box-sizing: border-box;
-        }
-        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link-secondary:hover {
-            text-decoration: underline;
-            color: #3730a3 !important;
-        }
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}">
 
-        /* Ephemeral notifications (e.g. Docker update progress) */
-        .notification-center-item-ephemeral {
-            border-color: #c7d2fe;
-            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-        }
-        .notification-center-progress-track {
-            height: 8px;
-            border-radius: 999px;
-            background: #e5e7eb;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-        .notification-center-progress-bar {
-            height: 100%;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #4f46e5, #6366f1);
-            transition: width 0.35s ease;
-        }
-        .notification-center-progress-bar.indeterminate {
-            width: 35% !important;
-            animation: cp-nc-progress-indet 1.2s ease-in-out infinite;
-        }
-        .notification-center-progress-bar.success {
-            width: 100% !important;
-            background: linear-gradient(90deg, #16a34a, #22c55e);
-            animation: none;
-        }
-        .notification-center-progress-bar.error {
-            width: 100% !important;
-            background: linear-gradient(90deg, #dc2626, #ef4444);
-            animation: none;
-        }
-        @keyframes cp-nc-progress-indet {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(280%); }
-        }
-        .notification-center-ephemeral-dismiss {
-            margin-top: 0.75rem;
-            font-size: 0.8rem;
-            color: #6b7280;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            text-decoration: underline;
-        }
-        .notification-center-ephemeral-dismiss:hover { color: #111827; }
-        .notification-center-btn.has-active-operation {
-            animation: cp-nc-bell-pulse 1.5s ease-in-out infinite;
-            border-color: #6366f1;
-            color: #4f46e5;
-        }
-        @keyframes cp-nc-bell-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35); }
-            50% { box-shadow: 0 0 0 6px rgba(79, 70, 229, 0); }
-        }
-        
-        /* Sidebar */
-        #sidebar {
-            width: 260px;
-            background: var(--bg-sidebar);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            overflow-y: auto;
-            z-index: 1001;
-            transition: background-color 0.3s ease;
-        }
-        
-        .sidebar-logo {
-            padding: 20px;
-            background: var(--bg-secondary);
-            margin: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px var(--shadow-color);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .sidebar-logo .logo-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        
-        .sidebar-logo .logo-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .sidebar-logo .logo-text {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-        
-        .sidebar-logo .logo-text .brand {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-heading);
-        }
-        
-        .sidebar-logo .logo-text .tagline {
-            font-size: 11px;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-        
-        
-        #sidebar .server-info {
-            padding: 15px;
-            background: var(--bg-secondary);
-            margin: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px var(--shadow-color);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: background-color 0.3s ease;
-        }
-        
-        #sidebar .server-info .server-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--bg-hover);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-color);
-            font-size: 18px;
-            flex-shrink: 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        #sidebar .server-info .server-details {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        
-        #sidebar .server-info .info-line {
-            font-size: 12px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        
-        /* Fix green text issue - ensure uptime uses normal text color */
-        #sidebar .server-info .info-line span,
-        #sidebar .server-info .info-line .ng-binding {
-            color: var(--text-secondary) !important;
-        }
-        
-        #sidebar .server-info .info-line strong {
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-right: 4px;
-            flex-shrink: 0;
-        }
-        
-        #sidebar .server-info .ip-value {
-            color: var(--accent-color);
-            font-weight: 600;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease;
-        }
-        
-        #sidebar .server-info .ip-value:hover {
-            color: var(--accent-hover);
-        }
-        
-        #sidebar .server-info .ip-value::after {
-            content: '\f0c5';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            margin-left: 5px;
-            font-size: 11px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-        
-        #sidebar .server-info .ip-value:hover::after {
-            opacity: 0.7;
-        }
-        
-        .copy-tooltip {
-            position: absolute;
-            background: var(--text-primary);
-            color: var(--bg-secondary);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-            white-space: nowrap;
-            z-index: 1000;
-        }
-        
-        .copy-tooltip.show {
-            opacity: 1;
-        }
-        
-        #sidebar .section-header {
-            background: var(--accent-color);
-            color: white;
-            padding: 8px 15px;
-            margin: 15px;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 700;
-            border-radius: 8px;
-            text-align: center;
-            transition: background-color 0.3s ease;
-        }
-        
-        #sidebar .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
-            gap: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 8px;
-            margin: 2px 15px;
-            background: var(--bg-secondary);
-            box-shadow: 0 1px 3px var(--shadow-color);
-        }
-        
-        #sidebar .menu-item:hover {
-            background: var(--bg-hover);
-            color: var(--accent-color);
-            box-shadow: 0 2px 8px var(--shadow-color);
-        }
-        
-        #sidebar .menu-item.active {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 3px 10px rgba(88,86,214,0.3);
-        }
-        
-        #sidebar .menu-item.active i {
-            color: white;
-        }
-        
-        #sidebar .menu-item .icon-wrapper {
-            width: 32px;
-            height: 32px;
-            background: var(--bg-hover);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: background-color 0.3s ease;
-        }
-        
-        #sidebar .menu-item:hover .icon-wrapper {
-            background: var(--bg-hover);
-        }
-        
-        #sidebar .menu-item.active .icon-wrapper {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        #sidebar .menu-item i {
-            font-size: 18px;
-            color: var(--accent-color);
-            transition: color 0.3s ease;
-        }
-        
-        #sidebar .menu-item.active i {
-            color: white;
-        }
-        
-        #sidebar .menu-item span {
-            flex: 1;
-        }
-        
-        #sidebar .menu-item .badge {
-            background: #ff9500;
-            color: white;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        #sidebar .menu-item .chevron {
-            margin-left: auto;
-            font-size: 12px;
-            transition: transform 0.3s ease, color 0.3s ease;
-            color: var(--text-secondary);
-        }
-        
-        #sidebar .menu-item.expanded .chevron {
-            transform: rotate(90deg);
-        }
-        
-        #sidebar .submenu {
-            display: none;
-            padding: 10px 15px 10px 15px;
-        }
-        
-        #sidebar .submenu.show {
-            display: block;
-        }
-        
-        #sidebar .submenu .menu-item {
-            padding: 12px 16px;
-            font-size: 14px;
-            gap: 8px;
-            margin-bottom: 8px;
-            background: var(--bg-sidebar-item);
-            margin-right: 0;
-            margin-left: 0;
-        }
-        
-        #sidebar .submenu .menu-item:hover {
-            box-shadow: 0 2px 6px var(--shadow-color);
-        }
-        
-        #sidebar .submenu .menu-item.delete {
-            background: #ef4444;
-            color: white;
-        }
-        
-        #sidebar .submenu .menu-item.delete:hover {
-            background: #dc2626;
-        }
-        
-        #sidebar .submenu .menu-item .icon-wrapper {
-            display: none;
-        }
-        
-        #sidebar .submenu .menu-item i {
-            font-size: 6px;
-            width: auto;
-            margin-right: 10px;
-            color: white;
-        }
-        
-        /* Active submenu item */
-        #sidebar .submenu .menu-item.active {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 2px 8px rgba(88,86,214,0.2);
-        }
-        
-        #sidebar .submenu .menu-item.active:hover {
-            background: var(--accent-hover);
-        }
-        
-        /* Parent menu item with active child */
-        #sidebar .menu-item.has-active-child {
-            color: var(--accent-color);
-            font-weight: 600;
-        }
-        
-        #sidebar .menu-item.has-active-child .icon-wrapper {
-            background: var(--bg-hover);
-        }
-        
-        #sidebar .menu-item.has-active-child i {
-            color: var(--accent-color);
-        }
-        
-        /* Main Content */
-        #main-content {
-            margin-left: 260px;
-            padding: 110px 30px 30px;
-            min-height: 100vh;
-            background: var(--bg-primary);
-            transition: background-color 0.3s ease;
-        }
-        
-        /* Notification Banner */
-        .notification-banner {
-            position: fixed;
-            top: 80px;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-bottom: 1px solid #f59e0b;
-            padding: 12px 30px;
-            z-index: 999;
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
-            animation: slideDown 0.3s ease-out;
-            display: none; /* Hidden by default */
-        }
-        
-        .notification-banner.show {
-            display: block;
-        }
-        
-        .notification-content {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .notification-icon {
-            color: #d97706;
-            font-size: 1.25rem;
-            flex-shrink: 0;
-        }
-        
-        .notification-text {
-            flex: 1;
-            color: #92400e;
-            font-size: 1.125rem;
-            font-weight: 500;
-        }
-        
-        .configure-link {
-            color: #d97706;
-            font-weight: 600;
-            text-decoration: underline;
-            margin-left: 0.5rem;
-            transition: color 0.2s ease;
-            font-size: 1.125rem;
-        }
-        
-        .configure-link:hover {
-            color: #b45309;
-        }
-        
-        .notification-close {
-            background: transparent;
-            border: none;
-            color: #92400e;
-            font-size: 1.125rem;
-            cursor: pointer;
-            padding: 0.25rem;
-            transition: all 0.2s ease;
-            border-radius: 4px;
-        }
-        
-        .notification-close:hover {
-            background: rgba(217, 119, 6, 0.1);
-            color: #b45309;
-        }
-        
-        /* Adjust main content padding when notification is shown */
-        .notification-shown #main-content {
-            padding-top: 160px;
-        }
-        
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        /* AI Scanner Security Banner */
-        .ai-scanner-banner {
-            position: fixed;
-            top: 80px;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-            border-bottom: 2px solid #4f46e5;
-            padding: 16px 30px;
-            z-index: 998;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
-            animation: slideDown 0.4s ease-out;
-            display: none;
-        }
-        
-        .ai-scanner-banner.show {
-            display: block;
-        }
-        
-        .ai-scanner-content {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .ai-scanner-icon {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 12px;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .ai-scanner-icon i {
-            color: white;
-            font-size: 1.5rem;
-            display: block;
-        }
-        
-        .ai-scanner-text {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .ai-scanner-main-text {
-            color: white;
-            font-size: 1.25rem;
-            font-weight: 600;
-            line-height: 1.4;
-        }
-        
-        .ai-scanner-sub-text {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
-            font-weight: 400;
-        }
-        
-        .ai-scanner-actions {
-            display: flex;
-            gap: 12px;
-        }
-        
-        .ai-scanner-btn {
-            background: white;
-            color: #4f46e5;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .ai-scanner-btn:hover {
-            background: #f8fafc;
-            color: #4338ca;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            text-decoration: none;
-        }
-        
-        .ai-scanner-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3), rgba(255,255,255,0.1));
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-            border-radius: 8px;
-        }
-        
-        .ai-scanner-btn:hover::before {
-            transform: translateX(100%);
-        }
-        
-        .ai-scanner-btn i {
-            font-size: 0.875rem;
-        }
-        
-        .ai-scanner-close {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-        }
-        
-        .ai-scanner-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-        
-        /* Adjust main content when AI scanner banner is shown */
-        .ai-scanner-shown #main-content {
-            padding-top: 180px;
-        }
-        
-        /* Both banners shown */
-        .notification-shown.ai-scanner-shown #main-content {
-            padding-top: 220px;
-        }
-
-        .notification-shown .ai-scanner-banner {
-            top: 130px;
-        }
-
-        /* .htaccess Feature Banner */
-        .htaccess-feature-banner {
-            position: fixed;
-            top: 80px;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-            border-bottom: 2px solid #065f46;
-            padding: 18px 30px;
-            z-index: 997;
-            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.3);
-            animation: slideDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            display: none;
-        }
-
-        .htaccess-feature-banner.show {
-            display: block;
-        }
-
-        .htaccess-content {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .htaccess-icon {
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 14px;
-            padding: 14px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .htaccess-icon i {
-            color: white;
-            font-size: 1.75rem;
-            display: block;
-        }
-
-        .htaccess-text {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .htaccess-main-text {
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 700;
-            line-height: 1.4;
-            letter-spacing: 0.3px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .htaccess-sub-text {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .htaccess-sub-text span {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .htaccess-sub-text i {
-            font-size: 0.75rem;
-        }
-
-        .htaccess-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .htaccess-btn {
-            background: white;
-            color: #047857;
-            padding: 14px 28px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            position: relative;
-            overflow: hidden;
-            border: 2px solid transparent;
-        }
-
-        .htaccess-btn:hover {
-            background: #f0fdf4;
-            color: #065f46;
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            text-decoration: none;
-            border-color: white;
-        }
-
-        .htaccess-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.1);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-        }
-
-        .htaccess-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .htaccess-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .htaccess-btn i {
-            font-size: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .htaccess-close {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(12px);
-        }
-
-        .htaccess-close:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.1) rotate(90deg);
-        }
-
-        /* Adjust main content when .htaccess banner is shown */
-        .htaccess-shown #main-content {
-            padding-top: 190px;
-        }
-
-        /* Multiple banners adjustments */
-        .notification-shown.htaccess-shown #main-content {
-            padding-top: 240px;
-        }
-
-        .ai-scanner-shown.htaccess-shown #main-content {
-            padding-top: 270px;
-        }
-
-        .notification-shown.ai-scanner-shown.htaccess-shown #main-content {
-            padding-top: 320px;
-        }
-
-        .notification-shown .htaccess-feature-banner {
-            top: 130px;
-        }
-
-        .ai-scanner-shown .htaccess-feature-banner {
-            top: 160px;
-        }
-
-        .notification-shown.ai-scanner-shown .htaccess-feature-banner {
-            top: 210px;
-        }
-        
-        /* .htaccess Feature Banner */
-        .htaccess-feature-banner {
-            position: fixed;
-            top: 80px;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-            border-bottom: 2px solid #065f46;
-            padding: 18px 30px;
-            z-index: 997;
-            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.3);
-            animation: slideDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            display: none;
-        }
-
-        .htaccess-feature-banner.show {
-            display: block;
-        }
-
-        .htaccess-content {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .htaccess-icon {
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 14px;
-            padding: 14px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .htaccess-icon i {
-            color: white;
-            font-size: 1.75rem;
-            display: block;
-        }
-
-        .htaccess-text {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .htaccess-main-text {
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 700;
-            line-height: 1.4;
-            letter-spacing: 0.3px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .htaccess-sub-text {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .htaccess-sub-text span {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .htaccess-sub-text i {
-            font-size: 0.75rem;
-        }
-
-        .htaccess-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .htaccess-btn {
-            background: white;
-            color: #047857;
-            padding: 14px 28px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            position: relative;
-            overflow: hidden;
-            border: 2px solid transparent;
-        }
-
-        .htaccess-btn:hover {
-            background: #f0fdf4;
-            color: #065f46;
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            text-decoration: none;
-            border-color: white;
-        }
-
-        .htaccess-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.1);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-        }
-
-        .htaccess-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .htaccess-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .htaccess-btn i {
-            font-size: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .htaccess-close {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(12px);
-        }
-
-        .htaccess-close:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.1) rotate(90deg);
-        }
-
-        /* Adjust main content when .htaccess banner is shown */
-        .htaccess-shown #main-content {
-            padding-top: 190px;
-        }
-
-        /* Multiple banners adjustments */
-        .notification-shown.htaccess-shown #main-content {
-            padding-top: 240px;
-        }
-
-        .ai-scanner-shown.htaccess-shown #main-content {
-            padding-top: 270px;
-        }
-
-        .notification-shown.ai-scanner-shown.htaccess-shown #main-content {
-            padding-top: 320px;
-        }
-
-        .notification-shown .htaccess-feature-banner {
-            top: 130px;
-        }
-
-        .ai-scanner-shown .htaccess-feature-banner {
-            top: 160px;
-        }
-
-        .notification-shown.ai-scanner-shown .htaccess-feature-banner {
-            top: 210px;
-        }
-        
-        /* Mobile responsive styles for AI Scanner banner */
-        @media (max-width: 768px) {
-            .ai-scanner-banner {
-                left: 0;
-                padding: 12px 20px;
-            }
-
-            .ai-scanner-content {
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-
-            .ai-scanner-text {
-                min-width: 200px;
-            }
-
-            .ai-scanner-main-text {
-                font-size: 1.1rem;
-            }
-
-            .ai-scanner-sub-text {
-                font-size: 0.95rem;
-            }
-
-            .ai-scanner-btn {
-                padding: 10px 20px;
-                font-size: 0.8rem;
-            }
-
-            .ai-scanner-icon {
-                padding: 10px;
-            }
-
-            .ai-scanner-icon i {
-                font-size: 1.25rem;
-            }
-
-            /* .htaccess banner mobile styles */
-            .htaccess-feature-banner {
-                left: 0;
-                padding: 14px 20px;
-            }
-
-            .htaccess-content {
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-
-            .htaccess-text {
-                min-width: 200px;
-            }
-
-            .htaccess-main-text {
-                font-size: 0.95rem;
-            }
-
-            .htaccess-sub-text {
-                font-size: 0.8rem;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-
-            .htaccess-btn {
-                padding: 12px 22px;
-                font-size: 0.85rem;
-            }
-
-            .htaccess-icon {
-                padding: 12px;
-            }
-
-            .htaccess-icon i {
-                font-size: 1.4rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .ai-scanner-content {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .ai-scanner-actions {
-                justify-content: center;
-            }
-
-            .ai-scanner-close {
-                position: absolute;
-                top: 8px;
-                right: 8px;
-            }
-
-            /* .htaccess banner small mobile styles */
-            .htaccess-content {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .htaccess-actions {
-                justify-content: center;
-            }
-
-            .htaccess-close {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-            }
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent-color);
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-hover);
-        }
-        
-        /* Enhanced Text Readability Fixes */
-        /* Ensure all text elements use proper contrast colors */
-        .menu-item span,
-        .menu-item i,
-        .info-line,
-        .info-line span,
-        .info-line strong,
-        .server-details,
-        .server-details *,
-        .tagline,
-        .brand {
-            color: inherit !important;
-        }
-        
-        /* Override any Angular binding colors that might be green */
-        .ng-binding {
-            color: var(--text-secondary) !important;
-        }
-        
-        /* Ensure menu items have proper text color */
-        #sidebar .menu-item {
-            color: var(--text-secondary) !important;
-        }
-        
-        #sidebar .menu-item:hover {
-            color: var(--accent-color) !important;
-        }
-        
-        #sidebar .menu-item.active {
-            color: white !important;
-        }
-        
-        /* Fix any remaining grey text issues */
-        .text-muted,
-        .text-secondary,
-        .text-light,
-        small,
-        .small {
-            color: var(--text-secondary) !important;
-        }
-        
-        /* Mobile Menu Toggle */
-        #mobile-menu-toggle {
-            display: none;
-            background: var(--bg-hover);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-right: 15px;
-            color: var(--accent-color);
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-        
-        #mobile-menu-toggle:hover {
-            background: var(--accent-color);
-            color: white;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            #mobile-menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            #sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            
-            #sidebar.show {
-                transform: translateX(0);
-            }
-            
-            #header {
-                left: 0;
-                padding: 0 15px;
-            }
-            
-            #main-content {
-                margin-left: 0;
-                padding: 100px 15px 30px;
-            }
-            
-            #header .info-text {
-                display: none;
-            }
-            
-            .notification-banner {
-                left: 0;
-                padding: 12px 15px;
-            }
-            
-            .notification-shown #main-content {
-                padding-top: 140px;
-            }
-            
-            .notification-text {
-                font-size: 1rem;
-            }
-        }
-    </style>
-    
     {% block header_scripts %}{% endblock %}
+
+    <!-- Theme harmonizer: re-skins legacy per-page styles to the design tokens.
+         Loads AFTER page styles so it calms every internal page consistently. -->
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-harmonize.css' %}?v={{ CP_VERSION }}">
+
+    <!-- Apply saved theme before first paint (avoids light/dark flash) -->
+    <script>
+    (function(){try{var t=localStorage.getItem('cyberPanelTheme');t=(t==='dark')?'dark':'light';var h=document.documentElement;h.setAttribute('data-theme',t);h.classList.toggle('cp-theme-dark',t==='dark');h.classList.toggle('cp-theme-light',t==='light');h.style.colorScheme=t;}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.classList.add('cp-theme-light');}})();
+    </script>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">{% trans "Skip to main content" %}</a>
     <!-- Header -->
-    <div id="header">
-        <button id="mobile-menu-toggle" class="mobile-menu-toggle" onclick="toggleSidebar()" style="display: none;">
-            <i class="fas fa-bars"></i>
+    <header id="header">
+        <button id="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="{% trans 'Toggle navigation menu' %}" aria-expanded="false" aria-controls="sidebar">
+            <i class="fas fa-bars" aria-hidden="true"></i>
         </button>
         <div class="logo">
             <div class="logo-icon">
-                <img src="https://cyberpanel.net/wp-content/uploads/2025/04/cyberpanel-logo-icon_only.png" alt="CyberPanel Logo">
+                <img src="{% static 'baseTemplate/cyber-panel-logo.svg' %}?v={{ CP_VERSION }}" alt="CyberPanel Logo">
             </div>
             <div class="logo-text">
                 <div class="brand">CyberPanel</div>
@@ -1667,21 +86,7 @@
         </div>
         
         <div id="header-right">
-            <div class="info-text">Connect with us — Watch tutorials, <a href="https://community.cyberpanel.net/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">Join discussions</a>, and <a href="https://platform.cyberpersons.com/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">get support</a>.</div>
-            <div class="social-links" style="position: relative;">
-                <button id="notification-center-btn" class="notification-center-btn" title="Notifications" onclick="toggleNotificationCenter()">
-                    <i class="fas fa-bell"></i>
-                    <span id="notification-badge" class="notification-badge">0</span>
-                </button>
-                <div id="notification-center-dropdown" class="notification-center-dropdown">
-                    <div class="notification-center-header">
-                        <h3>Notifications</h3>
-                        <button onclick="toggleNotificationCenter()" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #6b7280;">&times;</button>
-                    </div>
-                    <div id="notification-center-list" class="notification-center-list">
-                        <div class="notification-center-empty">Loading notifications...</div>
-                    </div>
-                </div>
+            <div class="social-links">
                 <a href="https://web.facebook.com/groups/cyberpanel" target="_blank" rel="noopener" title="Facebook">
                     <i class="fab fa-facebook-f"></i>
                 </a>
@@ -1692,925 +97,436 @@
                     <i class="fab fa-twitter"></i>
                 </a>
             </div>
-            <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Mode">
-                <i class="fas fa-moon" id="theme-icon"></i>
+            <button id="cp-cmdk-trigger" class="theme-toggle" type="button" title="{% trans 'Search (Ctrl/Cmd-K)' %}" aria-label="{% trans 'Open command palette' %}">
+                <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+            <div class="cp-notif" id="cp-notif">
+                <button id="cp-notif-btn" class="cp-notif-btn" type="button" title="{% trans 'Notifications' %}" aria-label="{% trans 'Notifications' %}" aria-haspopup="true" aria-expanded="false" aria-controls="cp-notif-panel">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <span class="cp-notif-badge" id="cp-notif-badge" hidden>0</span>
+                </button>
+                <div class="cp-notif-panel" id="cp-notif-panel" role="region" aria-label="{% trans 'Notifications' %}" hidden>
+                    <div class="cp-notif-head">
+                        <span>{% trans "Notifications" %}</span>
+                        <button type="button" class="cp-notif-clear" id="cp-notif-clear">{% trans "Dismiss all" %}</button>
+                    </div>
+                    <div class="cp-notif-list" id="cp-notif-list">
+                        <div class="cp-notif-item" data-key="emaildelivery" data-storekey="emailDeliveryNotificationDismissed" data-store="local">
+                            <div class="cp-notif-ic ic-accent"><i class="fas fa-paper-plane" aria-hidden="true"></i></div>
+                            <div class="cp-notif-body">
+                                <div class="cp-notif-title">{% trans "Reliable email delivery" %}</div>
+                                <div class="cp-notif-desc">{% trans "Land in the inbox, not spam — with CyberPanel's managed Email Delivery service." %}</div>
+                                <a class="cp-notif-action" href="https://cyberpanel.net/email-delivery-service?utm_source=cyberpanel&utm_medium=panel&utm_campaign=email_delivery" target="_blank" rel="noopener">{% trans "Learn more" %}</a>
+                            </div>
+                            <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="cp-notif-item" data-key="backup" data-storekey="backupNotificationDismissed" data-store="session">
+                            <div class="cp-notif-ic ic-warn"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
+                            <div class="cp-notif-body">
+                                <div class="cp-notif-title">{% trans "Automatic backups not configured" %}</div>
+                                <div class="cp-notif-desc">{% trans "Your websites are not secured with automatic backups." %}</div>
+                                <a class="cp-notif-action" href="{% url 'OneClickBackups' %}">{% trans "Configure now" %}</a>
+                            </div>
+                            <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="cp-notif-item" data-key="ai" data-storekey="aiScannerNotificationDismissed" data-store="session">
+                            <div class="cp-notif-ic ic-accent"><i class="fas fa-brain" aria-hidden="true"></i></div>
+                            <div class="cp-notif-body">
+                                <div class="cp-notif-title">{% trans "AI-powered malware detection" %}</div>
+                                <div class="cp-notif-desc">{% trans "Advanced threat detection, real-time scanning, zero false positives." %}</div>
+                                <a class="cp-notif-action" href="/aiscanner/">{% trans "Start AI Security Scan" %}</a>
+                            </div>
+                            <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="cp-notif-item" data-key="htaccess" data-storekey="htaccessNotificationDismissed" data-store="local">
+                            <div class="cp-notif-ic ic-ok"><i class="fas fa-magic" aria-hidden="true"></i></div>
+                            <div class="cp-notif-body">
+                                <div class="cp-notif-title">{% trans ".htaccess support is now live" %}</div>
+                                <div class="cp-notif-desc">{% trans "Full .htaccess support, PHP configuration works, zero rule rewrites needed." %}</div>
+                                <a class="cp-notif-action" href="https://cyberpanel.net/cyberpanel-htaccess-module" target="_blank" rel="noopener">{% trans "Learn more" %}</a>
+                            </div>
+                            <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                    <div class="cp-notif-empty" id="cp-notif-empty" hidden>{% trans "You're all caught up." %}</div>
+                </div>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" title="{% trans 'Toggle dark mode' %}" aria-label="{% trans 'Toggle dark mode' %}" aria-pressed="false">
+                <i class="fas fa-moon" id="theme-icon" aria-hidden="true"></i>
             </button>
             <a href="{% url 'logout' %}" class="logout-btn">
-                <i class="fas fa-arrow-right-from-bracket"></i>
-                Logout
+                <i class="fas fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                {% trans "Logout" %}
             </a>
         </div>
-    </div>
-    
+    </header>
+
     <!-- Sidebar -->
-    <div id="sidebar">
+    <nav id="sidebar" aria-label="{% trans 'Main navigation' %}">
         <div class="sidebar-logo">
             <div class="logo-icon">
-                <img src="https://cyberpanel.net/wp-content/uploads/2025/04/cyberpanel-logo-icon_only.png" alt="CyberPanel Logo">
+                <img src="{% static 'baseTemplate/cyber-panel-logo.svg' %}?v={{ CP_VERSION }}" alt="CyberPanel Logo">
             </div>
             <div class="logo-text">
                 <div class="brand">CyberPanel</div>
                 <div class="tagline">Web Hosting Panel</div>
             </div>
         </div>
-        
-        <div class="section-header">OVERVIEW</div>
-        
+
+        <div class="sidebar-search">
+            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="text" id="sidebar-search-input" autocomplete="off"
+                   placeholder="{% trans 'Search menu…' %}" aria-label="{% trans 'Search navigation menu' %}">
+            <button type="button" id="sidebar-search-clear" aria-label="{% trans 'Clear search' %}" hidden>
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="sidebar-search-empty" id="sidebar-search-empty" hidden>{% trans "No matching menu items" %}</div>
+
         <div class="server-info" ng-controller="systemStatusInfo" ng-init="getSystemStatus()">
             <div class="server-icon">
                 <i class="fas fa-desktop"></i>
             </div>
             <div class="server-details">
                 <div class="info-line">
-                    <strong>IP:</strong> 
-                    <span class="ip-value" onclick="copyIP(this, '{{ ipAddress }}')" title="Click to copy">
+                    <strong>IP:</strong>
+                    <span class="ip-value" onclick="copyIP(this, '{{ ipAddress }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyIP(this, '{{ ipAddress }}');}" role="button" tabindex="0" title="{% trans 'Click to copy' %}" aria-label="{% trans 'Copy server IP address' %} {{ ipAddress }}">
                         {{ ipAddress }}
-                        <span class="copy-tooltip">Copied!</span>
+                        <span class="copy-tooltip" aria-hidden="true">{% trans "Copied!" %}</span>
                     </span>
                 </div>
                 <div class="info-line">
-                    <strong>Uptime:</strong> 
-                    <span ng-show="!uptimeLoaded">Loading...</span>
-                    <span ng-show="uptimeLoaded">{$ uptime $}</span>
+                    <strong>Uptime:</strong>
+                    <span aria-live="polite">
+                        <span ng-show="!uptimeLoaded">{% trans "Loading..." %}</span>
+                        <span ng-show="uptimeLoaded">{$ uptime $}</span>
+                    </span>
                 </div>
             </div>
         </div>
-        
+
+        <!-- ============================ HOSTING ============================ -->
+        <div class="section-header">{% trans "HOSTING" %}</div>
+
         <a href="{% url 'index' %}" class="menu-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-            <div class="icon-wrapper">
-                <i class="fas fa-th-large"></i>
-            </div>
-            <span>Dashboard</span>
+            <div class="icon-wrapper"><i class="fas fa-gauge-high"></i></div>
+            <span>{% trans "Dashboard" %}</span>
         </a>
+        <a href="{% url 'listWebsites' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-globe"></i></div>
+            <span>{% trans "Websites" %}</span>
+        </a>
+        <a href="{% url 'ListWPSites' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fab fa-wordpress"></i></div>
+            <span>{% trans "WordPress" %}</span>
+        </a>
+        <a href="{% url 'cpHub' 'email' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-envelope"></i></div>
+            <span>{% trans "Email" %}</span>
+        </a>
+        <a href="{% url 'cpHub' 'data' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-database"></i></div>
+            <span>{% trans "Databases & FTP" %}</span>
+        </a>
+        <a href="{% url 'cpHub' 'backups' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-shield-halved"></i></div>
+            <span>{% trans "Backups" %}</span>
+        </a>
+
+        <!-- Build Services: prominent, available to everyone -->
+        <a href="{% url 'buildServices' %}" class="menu-item menu-item-promo">
+            <div class="icon-wrapper"><i class="fas fa-rocket"></i></div>
+            <span>{% trans "Build Services" %}</span>
+            <span class="badge badge-promo">{% trans "HIRE US" %}</span>
+        </a>
+
+        <!-- ============================ ACCOUNT ============================ -->
+        <div class="section-header">{% trans "ACCOUNT" %}</div>
+
+        <a href="{% url 'cpHub' 'access' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-users"></i></div>
+            <span>{% trans "Users & Plans" %}</span>
+        </a>
+
         {% if admin %}
-        <a href="{% url 'versionManagment' %}" class="menu-item">
-            <div class="icon-wrapper">
-                <i class="fas fa-code-branch"></i>
-            </div>
-            <span>Version Management</span>
+        <!-- ========================= ADMINISTRATION ========================= -->
+        <div class="section-header">{% trans "ADMINISTRATION" %}</div>
+
+        <a href="{% url 'cpHub' 'server' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-server"></i></div>
+            <span>{% trans "Server" %}</span>
         </a>
-        <a href="{% url 'design' %}" class="menu-item">
-            <div class="icon-wrapper">
-                <i class="fas fa-palette"></i>
-            </div>
-            <span>Design</span>
+        <a href="{% url 'cpHub' 'security' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-shield"></i></div>
+            <span>{% trans "Security" %}</span>
+        </a>
+        <a href="{% url 'cpHub' 'settings' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-sliders"></i></div>
+            <span>{% trans "Settings" %}</span>
         </a>
         {% endif %}
+
+        <!-- ============================ HELP ============================ -->
+        <div class="section-header">{% trans "HELP" %}</div>
+
         <a href="https://platform.cyberpersons.com/" class="menu-item" target="_blank" rel="noopener">
-            <div class="icon-wrapper">
-                <i class="fas fa-link"></i>
-            </div>
-            <span>Connect</span>
+            <div class="icon-wrapper"><i class="fas fa-link"></i></div>
+            <span>{% trans "Connect" %}</span>
         </a>
         <a href="https://cyberpanel.net/KnowledgeBase/" class="menu-item" target="_blank" rel="noopener">
-            <div class="icon-wrapper">
-                <i class="fas fa-comments"></i>
-            </div>
-            <span>Community</span>
+            <div class="icon-wrapper"><i class="fas fa-comments"></i></div>
+            <span>{% trans "Community" %}</span>
         </a>
-        
-        <div class="section-header">MAIN</div>
-            
-        <a href="#" class="menu-item" onclick="toggleSubmenu('users-submenu', this); return false;">
-            <div class="icon-wrapper">
-                <i class="fas fa-users"></i>
-            </div>
-            <span>Users</span>
-            <i class="fas fa-chevron-right chevron"></i>
-        </a>
-        <div id="users-submenu" class="submenu">
-                <a href="{% url 'viewProfile' %}" class="menu-item">
-                    <span>View Profile</span>
-                </a>
-                {% if admin or createNewUser %}
-                <a href="{% url 'createUser' %}" class="menu-item">
-                    <span>Create New User</span>
-                </a>
-                {% endif %}
-                {% if admin or listUsers %}
-                <a href="{% url 'listUsers' %}" class="menu-item">
-                    <span>List Users</span>
-                </a>
-                {% endif %}
-                <a href="{% url 'modifyUsers' %}" class="menu-item">
-                    <span>Modify User</span>
-                </a>
-                {% if admin or resellerCenter %}
-                <a href="{% url 'resellerCenter' %}" class="menu-item">
-                    <span>Reseller Center</span>
-                </a>
-                {% endif %}
-                {% if admin %}
-                <a href="{% url 'createNewACL' %}" class="menu-item">
-                    <span>Create New ACL</span>
-                </a>
-                <a href="{% url 'deleteACL' %}" class="menu-item">
-                    <span>Delete ACL</span>
-                </a>
-                <a href="{% url 'modifyACL' %}" class="menu-item">
-                    <span>Modify ACL</span>
-                </a>
-                <a href="{% url 'apiAccess' %}" class="menu-item">
-                    <span>API Access</span>
-                </a>
-                {% endif %}
-        </div>
-            
-        <a href="#" class="menu-item" onclick="toggleSubmenu('wordpress-submenu', this); return false;">
-            <div class="icon-wrapper">
-                <i class="fab fa-wordpress"></i>
-            </div>
-            <span>WordPress</span>
-            <i class="fas fa-chevron-right chevron"></i>
-        </a>
-        <div id="wordpress-submenu" class="submenu">
-                <a href="{% url 'createWordpress' %}" class="menu-item">
-                    <span>Deploy WordPress</span>
-                </a>
-                <a href="{% url 'ListWPSites' %}" class="menu-item">
-                    <span>List WordPress</span>
-                </a>
-                <a href="{% url 'ConfigurePlugins' %}" class="menu-item">
-                    <span>Configure Plugins</span>
-                </a>
-                <a href="{% url 'RestoreBackups' %}" class="menu-item">
-                    <span>Restore Backups</span>
-                </a>
-                <a href="{% url 'RemoteBackupConfig' %}" class="menu-item">
-                    <span>Remote Backup</span>
-                </a>
-            </div>
-            
-            {% if admin %}
-            <a href="#" class="menu-item" onclick="toggleSubmenu('docker-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-ship"></i>
-                </div>
-                <span>Docker Apps</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="docker-submenu" class="submenu">
-                <a href="{% url 'CreateDockersite' %}" class="menu-item">
-                    <span>Create Docker Apps</span>
-                </a>
-                <a href="{% url 'ListDockerSites' %}" class="menu-item">
-                    <span>List Docker Apps</span>
-                </a>
-                <a href="{% url 'CreateDockerPackage' %}" class="menu-item">
-                    <span>Docker Packages</span>
-                </a>
-                <a href="{% url 'AssignPackage' %}" class="menu-item">
-                    <span>Assign Package</span>
-                </a>
-            </div>
-            {% endif %}
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('websites-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-globe"></i>
-                </div>
-                <span>Websites</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="websites-submenu" class="submenu">
-                {% if admin or createWebsite %}
-                <a href="{% url 'createWebsite' %}" class="menu-item">
-                    <span>Create Website</span>
-                </a>
-                {% endif %}
-                <a href="{% url 'listWebsites' %}" class="menu-item">
-                    <span>List Websites</span>
-                </a>
-                <a href="{% url 'CreateNewDomain' %}" class="menu-item">
-                    <span>Create Sub/Addon Domain</span>
-                </a>
-                <a href="{% url 'listChildDomains' %}" class="menu-item">
-                    <span>List Sub/Addon Domains</span>
-                </a>
-                {% if admin or modifyWebsite %}
-                <a href="{% url 'modifyWebsite' %}" class="menu-item">
-                    <span>Modify Website</span>
-                </a>
-                {% endif %}
-                {% if admin or suspendWebsite %}
-                <a href="{% url 'siteState' %}" class="menu-item">
-                    <span>Suspend/Unsuspend</span>
-                </a>
-                {% endif %}
-                {% if admin or deleteWebsite %}
-                <a href="{% url 'deleteWebsite' %}" class="menu-item">
-                    <span>Delete Website</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('packages-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-cube"></i>
-                </div>
-                <span>Packages</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="packages-submenu" class="submenu">
-                {% if admin or createPackage %}
-                <a href="{% url 'createPackage' %}" class="menu-item">
-                    <span>Create Package</span>
-                </a>
-                {% endif %}
-                {% if admin or listPackages %}
-                <a href="{% url 'listPackages' %}" class="menu-item">
-                    <span>List Packages</span>
-                </a>
-                {% endif %}
-                {% if admin or deletePackage %}
-                <a href="{% url 'deletePackage' %}" class="menu-item">
-                    <span>Delete Package</span>
-                </a>
-                {% endif %}
-                {% if admin or modifyPackage %}
-                <a href="{% url 'modifyPackage' %}" class="menu-item">
-                    <span>Modify Package</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('databases-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-database"></i>
-                </div>
-                <span>Databases</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="databases-submenu" class="submenu">
-                {% if admin or createDatabase %}
-                <a href="{% url 'createDatabase' %}" class="menu-item">
-                    <span>Create Database</span>
-                </a>
-                {% endif %}
-                {% if admin or deleteDatabase %}
-                <a href="{% url 'deleteDatabase' %}" class="menu-item">
-                    <span>Delete Database</span>
-                </a>
-                {% endif %}
-                {% if admin or listDatabases %}
-                <a href="{% url 'listDBs' %}" class="menu-item">
-                    <span>List Databases</span>
-                </a>
-                {% endif %}
-                {% if admin or createDatabase %}
-                <a href="{% url 'phpMyAdmin' %}" class="menu-item" target="_blank" rel="noopener">
-                    <span>PHPMYAdmin</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('dns-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-sitemap"></i>
-                </div>
-                <span>DNS</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="dns-submenu" class="submenu">
-                {% if admin or createNameServer %}
-                <a href="{% url 'createNameserver' %}" class="menu-item">
-                    <span>Create Nameserver</span>
-                </a>
-                {% endif %}
-                {% if admin %}
-                <a href="{% url 'configureDefaultNameServers' %}" class="menu-item">
-                    <span>Config Default Nameservers</span>
-                </a>
-                {% endif %}
-                {% if admin or createDNSZone %}
-                <a href="{% url 'createDNSZone' %}" class="menu-item">
-                    <span>Create DNS Zone</span>
-                </a>
-                {% endif %}
-                {% if admin or deleteZone %}
-                <a href="{% url 'deleteDNSZone' %}" class="menu-item deleteZone">
-                    <span>Delete Zone</span>
-                </a>
-                {% endif %}
-                {% if admin or addDeleteRecords %}
-                <a href="{% url 'addDeleteDNSRecords' %}" class="menu-item addDeleteRecords">
-                    <span>Add/Delete Records</span>
-                </a>
-                {% endif %}
-                {% if admin or addDeleteRecords %}
-                <a href="{% url 'addDeleteDNSRecordsCloudFlare' %}" class="menu-item addDeleteRecords">
-                    <span>CloudFlare</span>
-                </a>
-                {% endif %}
-                {% if admin or addDeleteRecords %}
-                <a href="{% url 'ResetDNSConfigurations' %}" class="menu-item addDeleteRecords">
-                    <span>Reset DNS Configurations</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('email-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-envelope"></i>
-                </div>
-                <span>Email</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="email-submenu" class="submenu">
-                {% if admin or createEmail %}
-                <a href="{% url 'createEmailAccount' %}" class="menu-item">
-                    <span>Create Email</span>
-                </a>
-                {% endif %}
-                {% if admin or listEmails %}
-                <a href="{% url 'listEmails' %}" class="menu-item">
-                    <span>List Emails</span>
-                </a>
-                {% endif %}
-                {% if admin or deleteEmail %}
-                <a href="{% url 'deleteEmailAccount' %}" class="menu-item">
-                    <span>Delete Email</span>
-                </a>
-                {% endif %}
-                {% if admin or emailForwarding %}
-                <a href="{% url 'EmailLimits' %}" class="menu-item">
-                    <span>Email Limits</span>
-                </a>
-                {% endif %}
-                {% if admin or emailForwarding %}
-                <a href="{% url 'emailForwarding' %}" class="menu-item">
-                    <span>Email Forwarding</span>
-                </a>
-                {% endif %}
-                {% if admin or emailForwarding %}
-                <a href="{% url 'catchAllEmail' %}" class="menu-item">
-                    <span>Catch-All Email</span>
-                </a>
-                {% endif %}
-                {% if admin or emailForwarding %}
-                <a href="{% url 'patternForwarding' %}" class="menu-item">
-                    <span>Pattern Forwarding</span>
-                </a>
-                {% endif %}
-                {% if admin %}
-                <a href="{% url 'plusAddressingSettings' %}" class="menu-item">
-                    <span>Plus-Addressing</span>
-                </a>
-                {% endif %}
-                {% if admin or changeEmailPassword %}
-                <a href="{% url 'changeEmailAccountPassword' %}" class="menu-item">
-                    <span>Change Password</span>
-                </a>
-                {% endif %}
-                {% if admin or dkimManager %}
-                <a href="{% url 'dkimManager' %}" class="menu-item">
-                    <span>DKIM Manager</span>
-                </a>
-                {% endif %}
-                {% if admin or createEmail %}
-                <a href="/webmail/" class="menu-item">
-                    <span>Access Webmail</span>
-                </a>
-                {% endif %}
-                {% if admin %}
-                <a href="/snappymail/" class="menu-item" target="_blank" rel="noopener noreferrer">
-                    <span>SnappyMail</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('ftp-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-folder"></i>
-                </div>
-                <span>FTP</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="ftp-submenu" class="submenu">
-                {% if admin or createFTPAccount %}
-                <a href="{% url 'createFTPAccount' %}" class="menu-item">
-                    <span>Create FTP Account</span>
-                </a>
-                {% endif %}
-                {% if admin or deleteFTPAccount %}
-                <a href="{% url 'deleteFTPAccount' %}" class="menu-item delete">
-                    <span>Delete FTP Account</span>
-                </a>
-                {% endif %}
-                {% if admin or listFTPAccounts %}
-                <a href="{% url 'listFTPAccounts' %}" class="menu-item">
-                    <span>List FTP Accounts</span>
-                </a>
-                {% endif %}
-                {% if admin or listFTPAccounts %}
-                <a href="{% url 'ResetFTPConfigurations' %}" class="menu-item">
-                    <span>Reset FTP Configurations</span>
-                </a>
-                {% endif %}
-                {% if admin %}
-                <a href="{% url 'ftpQuotaManagementPage' %}" class="menu-item" target="_blank">
-                    <span>FTP Quota Management</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('backup-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-save"></i>
-                </div>
-                <span>Backup</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="backup-submenu" class="submenu">
-                {% if admin or createBackup %}
-                <a href="{% url 'OneClickBackups' %}" class="menu-item">
-                    <span>One-Click Backups</span>
-                </a>
-                {% endif %}
-                {% if admin or createBackup %}
-                <a href="{% url 'backupSite' %}" class="menu-item">
-                    <span>Create Backup</span>
-                </a>
-                {% endif %}
-                {% if admin or restoreBackup %}
-                <a href="{% url 'restoreSite' %}" class="menu-item">
-                    <span>Restore Backup</span>
-                </a>
-                {% endif %}
-                {% if admin or addDeleteDestinations %}
-                <a href="{% url 'backupDestinations' %}" class="menu-item">
-                    <span>Add/Delete Destination</span>
-                </a>
-                {% endif %}
-                {% if admin or scheduleBackups %}
-                <a href="{% url 'scheduleBackup' %}" class="menu-item">
-                    <span>Schedule Backup</span>
-                </a>
-                {% endif %}
-                {% if admin or googleDriveBackups %}
-                <a href="{% url 'gDrive' %}" class="menu-item">
-                    <span>Setup Google Drive</span>
-                </a>
-                {% endif %}
-                {% if admin or remoteBackups %}
-                <a href="{% url 'remoteBackups' %}" class="menu-item">
-                    <span>Remote Backups</span>
-                </a>
-                {% endif %}
-        </div>
-            
-        <a href="#" class="menu-item" onclick="toggleSubmenu('incremental-backup-submenu', this); return false;">
-            <div class="icon-wrapper">
-                <i class="fas fa-save"></i>
-            </div>
-            <span>Incremental Backup</span>
-            <i class="fas fa-chevron-right chevron"></i>
-        </a>
-        <div id="incremental-backup-submenu" class="submenu">
-            {% if admin or createBackup %}
-            <a href="{% url 'backupDestinationsInc' %}" class="menu-item">
-                <span>Backups v2</span>
-            </a>
-            <a href="{% url 'createBackupInc' %}" class="menu-item">
-                <span>v1 (Deprecated)</span>
-            </a>
-            {% endif %}
-        </div>
-            
-        <a href="#" class="menu-item" onclick="toggleSubmenu('ssl-submenu', this); return false;">
-            <div class="icon-wrapper">
-                <i class="fas fa-lock"></i>
-            </div>
-            <span>SSL</span>
-            <i class="fas fa-chevron-right chevron"></i>
-        </a>
-        <div id="ssl-submenu" class="submenu">
-            {% if admin or manageSSL %}
-            <a href="{% url 'v2ManageSSL' %}" class="menu-item">
-                <span>Manage SSL v2</span>
-            </a>
-            <a href="{% url 'manageSSL' %}" class="menu-item">
-                <span>Manage SSL</span>
-            </a>
-            {% comment %}SSL Reconciliation - hidden; URL /manageSSL/sslReconcile still works if needed{% endcomment %}
-            {% endif %}
-            {% if admin or hostnameSSL %}
-            <a href="{% url 'sslForHostName' %}" class="menu-item">
-                <span>Hostname SSL</span>
-            </a>
-            {% endif %}
-            {% if admin or mailServerSSL %}
-            <a href="{% url 'sslForMailServer' %}" class="menu-item">
-                <span>MailServer SSL</span>
-            </a>
-            {% endif %}
-        </div>
-        
-        {% if admin %}
-        <div class="section-header">SERVER</div>
-            
-        <a href="{% url 'MysqlManager' %}" class="menu-item">
-            <div class="icon-wrapper">
-                <i class="fas fa-database"></i>
-            </div>
-            <span>MySQL Manager</span>
-        </a>
-            
-        <a href="{% url 'Filemanager' %}" class="menu-item">
-            <div class="icon-wrapper">
-                <i class="fas fa-folder-open"></i>
-            </div>
-            <span>Root File Manager</span>
-        </a>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('cloudlinux-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-fire"></i>
-                </div>
-                <span>CloudLinux</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="cloudlinux-submenu" class="submenu">
-                <a href="{% url 'CreatePackageCL' %}" class="menu-item">
-                    <span>Create Package</span>
-                </a>
-                <a href="{% url 'listPackagesCL' %}" class="menu-item">
-                    <span>List Packages</span>
-                </a>
-                <a href="{% url 'monitorUsage' %}" class="menu-item">
-                    <span>Monitor Usage</span>
-                </a>
-                <a href="{% url 'CageFS' %}" class="menu-item">
-                    <span>CageFS</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('docker-manager-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-cogs"></i>
-                </div>
-                <span>Docker Manager</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="docker-manager-submenu" class="submenu">
-                <a href="{% url 'manageImages' %}" class="menu-item">
-                    <span>Manage Images</span>
-                </a>
-                <a href="{% url 'listContainers' %}" class="menu-item">
-                    <span>Manage Containers</span>
-                </a>
-                <a href="{% url 'containerImage' %}" class="menu-item">
-                    <span>Create New Container</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('tuning-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-adjust"></i>
-                </div>
-                <span>Tuning</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="tuning-submenu" class="submenu">
-                <a href="{% url 'liteSpeedTuning' %}" class="menu-item">
-                    <span>LiteSpeed Tuning</span>
-                </a>
-                {% if serverCheck == 1 %}
-                <a href="{% url 'litespeed_ent_conf' %}" class="menu-item">
-                    <span>LiteSpeed Ent Global Conf</span>
-                </a>
-                {% endif %}
-                <a href="{% url 'phpTuning' %}" class="menu-item">
-                    <span>PHP Tuning</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('server-status-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <span>Server Status</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="server-status-submenu" class="submenu">
-                <a href="{% url 'topProcesses' %}" class="menu-item">
-                    <span>Top Processes</span>
-                </a>
-                <a href="{% url 'litespeedStatus' %}" class="menu-item">
-                    <span>LiteSpeed Status</span>
-                </a>
-                <a href="{% url 'CyberPanelPort' %}" class="menu-item">
-                    <span>Change Port</span>
-                </a>
-                <a href="{% url 'packageManager' %}" class="menu-item">
-                    <span>Package Manager</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('php-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-code"></i>
-                </div>
-                <span>PHP</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="php-submenu" class="submenu">
-                <a href="{% url 'installExtensions' %}" class="menu-item">
-                    <span>Install Extensions</span>
-                </a>
-                <a href="{% url 'editPHPConfigs' %}" class="menu-item">
-                    <span>Edit PHP Configs</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('logs-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-file"></i>
-                </div>
-                <span>Logs</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="logs-submenu" class="submenu">
-                <a href="{% url 'serverMail' %}" class="menu-item">
-                    <span>Server Mail</span>
-                </a>
-                <a href="{% url 'cyberCPMainLogFile' %}" class="menu-item">
-                    <span>CyberPanel Main Log File</span>
-                </a>
-                <a href="{% url 'accessLogs' %}" class="menu-item">
-                    <span>Access Log</span>
-                </a>
-                <a href="{% url 'errorLogs' %}" class="menu-item">
-                    <span>Error Logs</span>
-                </a>
-                <a href="{% url 'emaillogs' %}" class="menu-item">
-                    <span>Email Log</span>
-                </a>
-                <a href="{% url 'ftplogs' %}" class="menu-item">
-                    <span>FTP Logs</span>
-                </a>
-                <a href="{% url 'modSecAuditLogs' %}" class="menu-item">
-                    <span>ModSec Audit Logs</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('security-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-shield"></i>
-                </div>
-                <span>Security</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="security-submenu" class="submenu">
-                <a href="{% url 'firewallHome' %}" class="menu-item">
-                    <span>Firewall</span>
-                </a>
-                <a href="{% url 'secureSSH' %}" class="menu-item">
-                    <span>Secure SSH</span>
-                </a>
-                <a href="{% url 'modSecurity' %}" class="menu-item">
-                    <span>ModSecurity Conf</span>
-                </a>
-                <a href="{% url 'modSecRules' %}" class="menu-item">
-                    <span>ModSecurity Rules</span>
-                </a>
-                <a href="{% url 'modSecRulesPacks' %}" class="menu-item">
-                    <span>ModSecurity Rules Packs</span>
-                </a>
-                <a href="{% url 'imunify' %}" class="menu-item">
-                    <span>Imunify 360</span>
-                </a>
-                <a href="{% url 'imunifyAV' %}" class="menu-item">
-                    <span>ImunifyAV</span>
-                </a>
-                <a href="{% url 'aiScannerHome' %}" class="menu-item">
-                    <span>AI Scanner</span>
-                </a>
-            </div>
-            
-            <a href="#" class="menu-item" onclick="toggleSubmenu('mail-settings-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-envelope"></i>
-                </div>
-                <span>Mail Settings</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="mail-settings-submenu" class="submenu">
-                <a href="{% url 'EmailDebugger' %}" class="menu-item">
-                    <span>Email Debugger</span>
-                </a>
-                <a href="{% url 'mailQueue' %}" class="menu-item">
-                    <span>Mail Queue</span>
-                </a>
-                <a href="{% url 'SpamAssassin' %}" class="menu-item">
-                    <span>SpamAssassin</span>
-                </a>
-                <a href="{% url 'emailMarketing' %}" class="menu-item">
-                    <span>Email Marketing</span>
-                </a>
-                <a href="{% url 'MailScanner' %}" class="menu-item">
-                    <span>MailScanner</span>
-                </a>
-                <a href="{% url 'Rspamd' %}" class="menu-item">
-                    <span>RSPAMD</span>
-                </a>
-                <a href="{% url 'emailDeliveryHome' %}" class="menu-item">
-                    <span>Email Delivery</span>
-                    <span class="badge">NEW</span>
-                </a>
-            </div>
+    </nav>
 
-            <a href="#" class="menu-item" onclick="toggleSubmenu('manage-services-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-folder-open"></i>
-                </div>
-                <span>Manage Services</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="manage-services-submenu" class="submenu">
-                <a href="{% url 'manageApplications' %}" class="menu-item">
-                    <span>Applications</span>
-                </a>
-                <a href="{% url 'services' %}" class="menu-item">
-                    <span>Services Status</span>
-                </a>
-                <a href="{% url 'managePowerDNS' %}" class="menu-item">
-                    <span>Manage PowerDNS</span>
-                </a>
-                <a href="{% url 'managePostfix' %}" class="menu-item">
-                    <span>Manage Postfix</span>
-                </a>
-                <a href="{% url 'managePureFtpd' %}" class="menu-item">
-                    <span>Manage FTP</span>
-                </a>
-                {% if admin %}
-                <a href="#" class="menu-item" onclick="loadBandwidthManagement(); return false;">
-                    <span>Bandwidth Management</span>
-                </a>
-                {% endif %}
-            </div>
-        {% endif %}
-        {% if show_plugins_menu %}
-            {% if grant_only_lpma_sidebar or managePlugins and not admin %}
-            <div class="section-header">{% trans "PLUGINS" %}</div>
-            {% endif %}
-            <a href="#" class="menu-item" onclick="toggleSubmenu('plugins-submenu', this); return false;">
-                <div class="icon-wrapper">
-                    <i class="fas fa-plug"></i>
-                </div>
-                <span>Plugins</span>
-                <i class="fas fa-chevron-right chevron"></i>
-            </a>
-            <div id="plugins-submenu" class="submenu">
-                {% if show_plugin_management_links %}
-                <a href="{% url 'installed' %}" class="menu-item">
-                    <span>Installed</span>
-                </a>
-                <a href="{% url 'installed' %}?view=store" class="menu-item">
-                    <span>{% trans "Plugin Store" %}</span>
-                </a>
-                {% endif %}
-                {% if show_lpma_sidebar_link %}
-                <a href="{{ lpma_sidebar_url }}" class="menu-item">
-                    <span>{% trans "Limited phpMyAdmin" %}</span>
-                </a>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-    
-    <!-- Backup Notification Banner -->
-    <div id="backup-notification" class="notification-banner">
-        <div class="notification-content">
-            <div class="notification-icon">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <div class="notification-text">
-                <span>{% trans "Looks like your websites are not secured with automatic backups." %}</span>
-                <a href="{% url 'OneClickBackups' %}" class="configure-link">{% trans "Configure now" %}</a>
-            </div>
-            <button class="notification-close" onclick="dismissBackupNotification()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
-    
-    <!-- AI Scanner Security Notice -->
-    <div id="ai-scanner-notification" class="ai-scanner-banner">
-        <div class="ai-scanner-content">
-            <div class="ai-scanner-icon">
-                <i class="fas fa-brain"></i>
-            </div>
-            <div class="ai-scanner-text">
-                <span class="ai-scanner-main-text">🛡️ Secure your websites with AI-powered malware detection</span>
-                <span class="ai-scanner-sub-text">Advanced threat detection • Real-time scanning • Zero false positives</span>
-            </div>
-            <div class="ai-scanner-actions">
-                <a href="/aiscanner/" class="ai-scanner-btn">
-                    <i class="fas fa-rocket"></i>
-                    Start AI Security Scan
-                </a>
-            </div>
-            <button class="ai-scanner-close" onclick="dismissAIScannerNotification()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
-    <!-- .htaccess Feature Announcement -->
-    <div id="htaccess-notification" class="htaccess-feature-banner">
-        <div class="htaccess-content">
-            <div class="htaccess-icon">
-                <i class="fas fa-magic"></i>
-            </div>
-            <div class="htaccess-text">
-                <span class="htaccess-main-text">✨ Revolutionary .htaccess Support Now Live!</span>
-                <span class="htaccess-sub-text">
-                    <span><i class="fas fa-check-circle"></i> Full .htaccess support</span>
-                    <span><i class="fas fa-check-circle"></i> PHP configuration now works</span>
-                    <span><i class="fas fa-check-circle"></i> Zero rule rewrites needed</span>
-                </span>
-            </div>
-            <div class="htaccess-actions">
-                <a href="https://cyberpanel.net/cyberpanel-htaccess-module" target="_blank" rel="noopener" class="htaccess-btn">
-                    <i class="fas fa-book-open"></i>
-                    <span>Learn More</span>
-                </a>
-            </div>
-            <button class="htaccess-close" onclick="dismissHtaccessNotification()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
     <!-- Main Content -->
-    <div id="main-content">
+    <main id="main-content" role="main" tabindex="-1">
+        <nav id="cp-breadcrumb" class="cp-breadcrumb" aria-label="{% trans 'Breadcrumb' %}" hidden>
+            <a href="{% url 'index' %}"><i class="fas fa-house" aria-hidden="true"></i> {% trans "Dashboard" %}</a>
+            <span class="cp-bc-sep" id="cp-bc-group-wrap" hidden><span class="cp-bc-chevron" aria-hidden="true">/</span><span id="cp-bc-group" class="cp-bc-group"></span></span>
+            <span class="cp-bc-chevron" aria-hidden="true">/</span>
+            <span id="cp-bc-page" class="cp-bc-page" aria-current="page"></span>
+        </nav>
         {% block content %}{% endblock %}
-    </div>
+    </main>
     
-    <!-- Additional Scripts (data-cfasync=false ensures controllers load before Angular compiles) -->
-    <script src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'loginSystem/webauthn.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}&dns={{ DNS_STATIC_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION|default:CP_VERSION }}&cb=11" data-cfasync="false"></script>
-    <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}&msModal=20260402d" data-cfasync="false"></script>
-    <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <!-- Command Palette (Ctrl/Cmd-K) -->
+    <div class="cp-cmdk-overlay" id="cp-cmdk-overlay" hidden role="dialog" aria-modal="true" aria-label="{% trans 'Command palette' %}">
+        <div class="cp-cmdk" role="document">
+            <div class="cp-cmdk-search">
+                <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="text" id="cp-cmdk-input" autocomplete="off" spellcheck="false"
+                       placeholder="{% trans 'Search pages and actions…' %}" aria-label="{% trans 'Search pages and actions' %}">
+                <span class="cp-cmdk-hint">ESC</span>
+            </div>
+            <div class="cp-cmdk-results" id="cp-cmdk-results"></div>
+            <div class="cp-cmdk-empty" id="cp-cmdk-empty" hidden>{% trans "No results" %}</div>
+        </div>
+    </div>
+
+    <script>
+    /* -------- Command palette: searches nav pages + quick actions -------- */
+    (function () {
+        var overlay, input, results, emptyEl, items = [], filtered = [], activeIdx = 0;
+
+        // Comprehensive page index — the palette is the universal fast path now
+        // that the sidebar is intentionally shallow. ACL-gated server-side.
+        var CP_PAGES = [
+            // Quick actions
+            {% if admin or createWebsite %}{l:'{% trans "Create Website" %}', h:'{% url "createWebsite" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},{% endif %}
+            {l:'{% trans "Deploy WordPress" %}', h:'{% url "createWordpress" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},
+            {% if admin or createEmail %}{l:'{% trans "Create Email Account" %}', h:'{% url "createEmailAccount" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},{% endif %}
+            {% if admin or createDatabase %}{l:'{% trans "Create Database" %}', h:'{% url "createDatabase" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},{% endif %}
+            {l:'{% trans "Build Services" %}', h:'{% url "buildServices" %}', i:'fa-rocket', g:'{% trans "Quick actions" %}'},
+            // Build services (open the marketing pages on cyberpanel.net)
+            {l:'{% trans "Website Development" %}', h:'https://cyberpanel.net/custom-development/web?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-globe', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "WordPress & eCommerce" %}', h:'https://cyberpanel.net/custom-development/wordpress?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fab fa-wordpress', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "Website Speed Optimization" %}', h:'https://cyberpanel.net/custom-development/speed-optimization?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-gauge-high', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "Android App Development" %}', h:'https://cyberpanel.net/custom-development/android?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fab fa-android', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "iOS App Development" %}', h:'https://cyberpanel.net/custom-development/ios?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fab fa-apple', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "Custom Software & APIs" %}', h:'https://cyberpanel.net/custom-development/custom-software?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-code', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "UI / UX Design" %}', h:'https://cyberpanel.net/custom-development/design?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-pen-ruler', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "DevOps & Server Management" %}', h:'https://cyberpanel.net/custom-development/devops?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-server', g:'{% trans "Build services" %}', t:'_blank'},
+            {l:'{% trans "Maintenance & Support" %}', h:'https://cyberpanel.net/custom-development/support?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-life-ring', g:'{% trans "Build services" %}', t:'_blank'},
+            // Sites
+            {l:'{% trans "Dashboard" %}', h:'{% url "index" %}', i:'fa-gauge-high', g:'{% trans "Sites" %}'},
+            {l:'{% trans "Websites" %}', h:'{% url "listWebsites" %}', i:'fa-globe', g:'{% trans "Sites" %}'},
+            {l:'{% trans "WordPress Sites" %}', h:'{% url "ListWPSites" %}', i:'fab fa-wordpress', g:'{% trans "Sites" %}'},
+            {l:'{% trans "Sub / Addon Domains" %}', h:'{% url "listChildDomains" %}', i:'fa-diagram-project', g:'{% trans "Sites" %}'},
+            {l:'{% trans "Create Sub / Addon Domain" %}', h:'{% url "CreateNewDomain" %}', i:'fa-circle-plus', g:'{% trans "Sites" %}'},
+            // Email
+            {% if admin or listEmails %}{l:'{% trans "Email Accounts" %}', h:'{% url "listEmails" %}', i:'fa-inbox', g:'{% trans "Email" %}'},{% endif %}
+            {% if admin or emailForwarding %}{l:'{% trans "Email Forwarding" %}', h:'{% url "emailForwarding" %}', i:'fa-share', g:'{% trans "Email" %}'},
+            {l:'{% trans "Catch-All Email" %}', h:'{% url "catchAllEmail" %}', i:'fa-filter', g:'{% trans "Email" %}'},
+            {l:'{% trans "Email Limits" %}', h:'{% url "EmailLimits" %}', i:'fa-gauge', g:'{% trans "Email" %}'},{% endif %}
+            {% if admin or dkimManager %}{l:'{% trans "DKIM Manager" %}', h:'{% url "dkimManager" %}', i:'fa-signature', g:'{% trans "Email" %}'},{% endif %}
+            {l:'{% trans "Webmail" %}', h:'/webmail/', i:'fa-envelope-open-text', g:'{% trans "Email" %}'},
+            {% if admin %}{l:'{% trans "Email Delivery" %}', h:'{% url "emailDeliveryHome" %}', i:'fa-paper-plane', g:'{% trans "Email" %}'},
+            {l:'{% trans "Email Debugger" %}', h:'{% url "EmailDebugger" %}', i:'fa-stethoscope', g:'{% trans "Email" %}'},
+            {l:'{% trans "Mail Queue" %}', h:'{% url "mailQueue" %}', i:'fa-list-check', g:'{% trans "Email" %}'},
+            {l:'{% trans "Email Marketing" %}', h:'{% url "emailMarketing" %}', i:'fa-bullhorn', g:'{% trans "Email" %}'},{% endif %}
+            // Data
+            {% if admin or listDatabases %}{l:'{% trans "Databases" %}', h:'{% url "listDBs" %}', i:'fa-database', g:'{% trans "Data" %}'},{% endif %}
+            {% if admin or createDatabase %}{l:'{% trans "phpMyAdmin" %}', h:'{% url "phpMyAdmin" %}', i:'fa-table', g:'{% trans "Data" %}', t:'_blank'},{% endif %}
+            {% if admin %}{l:'{% trans "MySQL Manager" %}', h:'{% url "MysqlManager" %}', i:'fa-sliders', g:'{% trans "Data" %}'},{% endif %}
+            {% if admin or listFTPAccounts %}{l:'{% trans "FTP Accounts" %}', h:'{% url "listFTPAccounts" %}', i:'fa-folder', g:'{% trans "Data" %}'},{% endif %}
+            // Backups
+            {% if admin or createBackup %}{l:'{% trans "One-Click Backups" %}', h:'{% url "OneClickBackups" %}', i:'fa-bolt', g:'{% trans "Backups" %}'},
+            {l:'{% trans "Incremental Backups" %}', h:'{% url "backupDestinationsInc" %}', i:'fa-layer-group', g:'{% trans "Backups" %}'},
+            {l:'{% trans "Create Backup" %}', h:'{% url "backupSite" %}', i:'fa-box-archive', g:'{% trans "Backups" %}'},{% endif %}
+            {% if admin or restoreBackup %}{l:'{% trans "Restore Backup" %}', h:'{% url "restoreSite" %}', i:'fa-rotate-left', g:'{% trans "Backups" %}'},{% endif %}
+            {% if admin or scheduleBackups %}{l:'{% trans "Schedule Backup" %}', h:'{% url "scheduleBackup" %}', i:'fa-clock', g:'{% trans "Backups" %}'},{% endif %}
+            // Account
+            {l:'{% trans "View Profile" %}', h:'{% url "viewProfile" %}', i:'fa-id-card', g:'{% trans "Account" %}'},
+            {% if admin or listUsers %}{l:'{% trans "List Users" %}', h:'{% url "listUsers" %}', i:'fa-users', g:'{% trans "Account" %}'},{% endif %}
+            {% if admin or createNewUser %}{l:'{% trans "Create User" %}', h:'{% url "createUser" %}', i:'fa-user-plus', g:'{% trans "Account" %}'},{% endif %}
+            {% if admin or listPackages %}{l:'{% trans "Packages" %}', h:'{% url "listPackages" %}', i:'fa-box', g:'{% trans "Account" %}'},{% endif %}
+            {% if admin or resellerCenter %}{l:'{% trans "Reseller Center" %}', h:'{% url "resellerCenter" %}', i:'fa-handshake', g:'{% trans "Account" %}'},{% endif %}
+            {% if admin %}
+            // Server (admin)
+            {l:'{% trans "Services Status" %}', h:'{% url "services" %}', i:'fa-server', g:'{% trans "Server" %}'},
+            {l:'{% trans "Applications" %}', h:'{% url "manageApplications" %}', i:'fa-cubes', g:'{% trans "Server" %}'},
+            {l:'{% trans "PHP Extensions" %}', h:'{% url "installExtensions" %}', i:'fa-puzzle-piece', g:'{% trans "Server" %}'},
+            {l:'{% trans "PHP Configs" %}', h:'{% url "editPHPConfigs" %}', i:'fa-code', g:'{% trans "Server" %}'},
+            {l:'{% trans "LiteSpeed Tuning" %}', h:'{% url "liteSpeedTuning" %}', i:'fa-gauge-high', g:'{% trans "Server" %}'},
+            {l:'{% trans "Top Processes" %}', h:'{% url "topProcesses" %}', i:'fa-microchip', g:'{% trans "Server" %}'},
+            {l:'{% trans "Package Manager" %}', h:'{% url "packageManager" %}', i:'fa-box-open', g:'{% trans "Server" %}'},
+            {l:'{% trans "Change Port" %}', h:'{% url "CyberPanelPort" %}', i:'fa-plug', g:'{% trans "Server" %}'},
+            {l:'{% trans "Docker Apps" %}', h:'{% url "ListDockerSites" %}', i:'fa-ship', g:'{% trans "Server" %}'},
+            {l:'{% trans "Containers" %}', h:'{% url "listContainers" %}', i:'fa-cubes', g:'{% trans "Server" %}'},
+            {l:'{% trans "Root File Manager" %}', h:'{% url "Filemanager" %}', i:'fa-folder-open', g:'{% trans "Server" %}'},
+            {l:'{% trans "DNS Zones" %}', h:'{% url "createDNSZone" %}', i:'fa-sitemap', g:'{% trans "Server" %}'},
+            {l:'{% trans "Nameservers" %}', h:'{% url "createNameserver" %}', i:'fa-server', g:'{% trans "Server" %}'},
+            {l:'{% trans "Main Log" %}', h:'{% url "cyberCPMainLogFile" %}', i:'fa-file-lines', g:'{% trans "Server" %}'},
+            {l:'{% trans "Access Logs" %}', h:'{% url "accessLogs" %}', i:'fa-file-lines', g:'{% trans "Server" %}'},
+            {l:'{% trans "Error Logs" %}', h:'{% url "errorLogs" %}', i:'fa-triangle-exclamation', g:'{% trans "Server" %}'},
+            // Security (admin)
+            {l:'{% trans "AI Scanner" %}', h:'{% url "aiScannerHome" %}', i:'fa-brain', g:'{% trans "Security" %}'},
+            {l:'{% trans "Firewall" %}', h:'{% url "firewallHome" %}', i:'fa-fire-flame-curved', g:'{% trans "Security" %}'},
+            {l:'{% trans "Secure SSH" %}', h:'{% url "secureSSH" %}', i:'fa-terminal', g:'{% trans "Security" %}'},
+            {l:'{% trans "ModSecurity" %}', h:'{% url "modSecurity" %}', i:'fa-shield-halved', g:'{% trans "Security" %}'},
+            {l:'{% trans "ModSecurity Rules" %}', h:'{% url "modSecRules" %}', i:'fa-list', g:'{% trans "Security" %}'},
+            {l:'{% trans "Imunify 360" %}', h:'{% url "imunify" %}', i:'fa-shield-virus', g:'{% trans "Security" %}'},
+            {l:'{% trans "Manage SSL" %}', h:'{% url "v2ManageSSL" %}', i:'fa-lock', g:'{% trans "Security" %}'},
+            {l:'{% trans "Hostname SSL" %}', h:'{% url "sslForHostName" %}', i:'fa-server', g:'{% trans "Security" %}'},
+            // Settings (admin)
+            {l:'{% trans "Version Management" %}', h:'{% url "versionManagment" %}', i:'fa-code-branch', g:'{% trans "Settings" %}'},
+            {l:'{% trans "Design" %}', h:'{% url "design" %}', i:'fa-palette', g:'{% trans "Settings" %}'},
+            {l:'{% trans "Setup Wizard" %}', h:'{% url "onboarding" %}', i:'fa-wand-magic-sparkles', g:'{% trans "Settings" %}'},
+            {% endif %}
+        ];
+
+        function buildIndex() {
+            items = CP_PAGES.map(function (p) {
+                return {label: p.l, href: p.h, icon: (p.i.indexOf('fa-') === 0 ? 'fas ' + p.i : p.i), group: p.g, target: p.t || ''};
+            });
+            // Normalize icon prefix (CP_PAGES uses bare fa-* or full "fab fa-*")
+            // Supplement with any sidebar links not already indexed (e.g. plugin items)
+            var sidebar = document.getElementById('sidebar');
+            if (!sidebar) { return; }
+            var seen = {};
+            items.forEach(function (it) { seen[it.href] = 1; });
+            sidebar.querySelectorAll('a.menu-item[href]').forEach(function (a) {
+                var href = a.getAttribute('href');
+                if (!href || href === '#' || seen[href]) { return; }
+                seen[href] = 1;
+                var lbl = a.querySelector('span');
+                var label = (lbl ? lbl.textContent : a.textContent).trim();
+                if (!label) { return; }
+                items.push({label: label, href: href, icon: 'fas fa-arrow-right', group: '{% trans "Pages" %}', target: a.getAttribute('target') || ''});
+            });
+        }
+
+        function render() {
+            results.innerHTML = '';
+            if (!filtered.length) { emptyEl.hidden = false; return; }
+            emptyEl.hidden = true;
+            var lastGroup = null;
+            filtered.forEach(function (it, i) {
+                if (it.group !== lastGroup) {
+                    var gl = document.createElement('div');
+                    gl.className = 'cp-cmdk-group-label';
+                    gl.textContent = it.group;
+                    results.appendChild(gl);
+                    lastGroup = it.group;
+                }
+                var row = document.createElement('a');
+                row.className = 'cp-cmdk-item' + (i === activeIdx ? ' active' : '');
+                row.href = it.href;
+                if (it.target) { row.target = it.target; }
+                row.innerHTML = '<span class="cp-cmdk-ic"><i class="' + it.icon + '"></i></span>' +
+                                '<span><div>' + it.label + '</div>' +
+                                (it.group ? '<div class="cp-cmdk-sub">' + it.group + '</div>' : '') + '</span>';
+                row.addEventListener('mouseenter', function () { activeIdx = i; paintActive(); });
+                results.appendChild(row);
+            });
+        }
+        function paintActive() {
+            var rows = results.querySelectorAll('.cp-cmdk-item');
+            rows.forEach(function (r, i) { r.classList.toggle('active', i === activeIdx); });
+        }
+        function search(term) {
+            term = term.trim().toLowerCase();
+            if (!term) { filtered = items.slice(0, 8); }
+            else { filtered = items.filter(function (it) { return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1; }); }
+            activeIdx = 0; render();
+        }
+        function open() {
+            if (!items.length) { buildIndex(); }
+            overlay.hidden = false;
+            input.value = ''; search('');
+            setTimeout(function () { input.focus(); }, 10);
+            document.addEventListener('keydown', onKey, true);
+        }
+        function close() {
+            overlay.hidden = true;
+            document.removeEventListener('keydown', onKey, true);
+        }
+        function go() {
+            var it = filtered[activeIdx];
+            if (!it) { return; }
+            if (it.target === '_blank') { window.open(it.href, '_blank'); close(); }
+            else { window.location.href = it.href; }
+        }
+        function onKey(e) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, filtered.length - 1); paintActive(); scrollActive(); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); paintActive(); scrollActive(); }
+            else if (e.key === 'Enter') { e.preventDefault(); go(); }
+            else if (e.key === 'Escape') { e.preventDefault(); close(); }
+        }
+        function scrollActive() {
+            var row = results.querySelectorAll('.cp-cmdk-item')[activeIdx];
+            if (row && row.scrollIntoView) { row.scrollIntoView({block: 'nearest'}); }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            overlay = document.getElementById('cp-cmdk-overlay');
+            input = document.getElementById('cp-cmdk-input');
+            results = document.getElementById('cp-cmdk-results');
+            emptyEl = document.getElementById('cp-cmdk-empty');
+            if (!overlay) { return; }
+            input.addEventListener('input', function () { search(input.value); });
+            overlay.addEventListener('click', function (e) { if (e.target === overlay) { close(); } });
+            var trigger = document.getElementById('cp-cmdk-trigger');
+            if (trigger) { trigger.addEventListener('click', open); }
+            document.addEventListener('keydown', function (e) {
+                if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    if (overlay.hidden) { open(); } else { close(); }
+                }
+            });
+        });
+    })();
+    </script>
+
+    <!-- Per-module controllers. Lightweight shell pages (dashboard, hubs,
+         build services, site workspace) override this block to skip ~1.1MB. -->
+    {% block module_scripts %}
+    <script defer src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>
+    {% endblock %}
     
     <!-- Scripts -->
     <script>
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            const mobileToggle = document.getElementById('mobile-menu-toggle');
-            
-            sidebar.classList.toggle('show');
-            
-            // Add/remove sidebar-open class to main content for mobile
-            if (window.innerWidth <= 768) {
-                if (mainContent) {
-                    mainContent.classList.toggle('sidebar-open');
-                }
-            }
+            var sb = document.getElementById('sidebar');
+            var isOpen = sb.classList.toggle('show');
+            var mt = document.getElementById('mobile-menu-toggle');
+            if (mt) { mt.setAttribute('aria-expanded', isOpen ? 'true' : 'false'); }
         }
-        
-        // Show/hide mobile menu toggle based on screen size
-        function handleResize() {
-            const mobileToggle = document.getElementById('mobile-menu-toggle');
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            
-            if (window.innerWidth <= 768) {
-                mobileToggle.style.display = 'block';
-                // Close sidebar by default on mobile
-                sidebar.classList.remove('show');
-                if (mainContent) {
-                    mainContent.classList.remove('sidebar-open');
-                }
-            } else {
-                mobileToggle.style.display = 'none';
-                // Show sidebar on desktop
-                sidebar.classList.remove('show');
-                if (mainContent) {
-                    mainContent.classList.remove('sidebar-open');
-                }
-            }
-        }
-        
-        // Add event listener for window resize
-        window.addEventListener('resize', handleResize);
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            handleResize();
-        });
         
         function toggleSubmenu(id, element) {
             const submenu = document.getElementById(id);
@@ -2659,341 +575,163 @@
                 !toggle.contains(e.target) && 
                 sidebar.classList.contains('show')) {
                 sidebar.classList.remove('show');
+                if (toggle) { toggle.setAttribute('aria-expanded', 'false'); }
             }
         });
-        
-        // Backup notification banner logic
-        function checkBackupStatus() {
-            // Check if user has dismissed the notification permanently (from server-side context)
-            {% if backup_notification_dismissed %}
-                return; // Notification already dismissed permanently
-            {% endif %}
-            
-            // Check if user has backup configured (you'll need to implement this API)
-            // For now, we'll show it by default unless they have a backup plan
-            // Session check omitted - has_backup_configured may be absent in some views
-            
-            // For demonstration, let's show it if URL doesn't contain 'OneClickBackups'
-            if (!window.location.href.includes('OneClickBackups')) {
-                showBackupNotification();
+
+        // Notification center (replaces the old stacked promo banners)
+        function initNotifCenter() {
+            var wrap  = document.getElementById('cp-notif');
+            if (!wrap) { return; }
+            var btn   = document.getElementById('cp-notif-btn');
+            var panel = document.getElementById('cp-notif-panel');
+            var badge = document.getElementById('cp-notif-badge');
+            var empty = document.getElementById('cp-notif-empty');
+            var clear = document.getElementById('cp-notif-clear');
+            var items = Array.prototype.slice.call(wrap.querySelectorAll('.cp-notif-item'));
+
+            function storeFor(el) {
+                return el.getAttribute('data-store') === 'local' ? localStorage : sessionStorage;
             }
-        }
-        
-        function showBackupNotification() {
-            const banner = document.getElementById('backup-notification');
-            const body = document.body;
-            banner.classList.add('show');
-            body.classList.add('notification-shown');
-        }
-        
-        function dismissBackupNotification() {
-            const banner = document.getElementById('backup-notification');
-            const body = document.body;
-            banner.classList.remove('show');
-            body.classList.remove('notification-shown');
-            
-            // Dismiss permanently via API
-            fetch('/base/dismiss_backup_notification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 1) {
-                    console.log('Backup notification dismissed permanently');
+            function isDismissed(el) {
+                try { return storeFor(el).getItem(el.getAttribute('data-storekey')) === 'true'; }
+                catch (e) { return false; }
+            }
+            function dismiss(el) {
+                try { storeFor(el).setItem(el.getAttribute('data-storekey'), 'true'); } catch (e) {}
+                el.hidden = true;
+                refresh();
+            }
+            function refresh() {
+                var visible = items.filter(function (el) { return !el.hidden; }).length;
+                if (visible > 0) {
+                    badge.textContent = visible;
+                    badge.hidden = false;
+                    empty.hidden = true;
                 } else {
-                    console.error('Failed to dismiss backup notification:', data.error);
+                    badge.hidden = true;
+                    empty.hidden = false;
                 }
-            })
-            .catch(error => {
-                console.error('Error dismissing backup notification:', error);
+            }
+            function openPanel() {
+                panel.hidden = false;
+                btn.setAttribute('aria-expanded', 'true');
+                document.addEventListener('click', onOutside, true);
+                document.addEventListener('keydown', onEsc);
+            }
+            function closePanel() {
+                panel.hidden = true;
+                btn.setAttribute('aria-expanded', 'false');
+                document.removeEventListener('click', onOutside, true);
+                document.removeEventListener('keydown', onEsc);
+            }
+            function onOutside(e) { if (!wrap.contains(e.target)) { closePanel(); } }
+            function onEsc(e) { if (e.key === 'Escape') { closePanel(); btn.focus(); } }
+
+            items.forEach(function (el) {
+                if (isDismissed(el)) { el.hidden = true; }
+                var x = el.querySelector('.cp-notif-x');
+                if (x) { x.addEventListener('click', function () { dismiss(el); }); }
             });
-        }
-        
-        // AI Scanner Notification Functions
-        function checkAIScannerStatus() {
-            {% if ai_scanner_notification_dismissed %}
-                return;
-            {% endif %}
-            if (sessionStorage.getItem('aiScannerNotificationDismissed') === 'true') {
-                return;
-            }
-            // Check if we're not already on the AI Scanner page
-            if (!window.location.href.includes('aiscanner')) {
-                showAIScannerNotification();
-            }
-        }
 
-        function showAIScannerNotification() {
-            const banner = document.getElementById('ai-scanner-notification');
-            const body = document.body;
-            banner.classList.add('show');
-            body.classList.add('ai-scanner-shown');
-        }
-
-        function dismissAIScannerNotification() {
-            const banner = document.getElementById('ai-scanner-notification');
-            const body = document.body;
-            banner.classList.remove('show');
-            body.classList.remove('ai-scanner-shown');
-            
-            // Dismiss permanently via API
-            fetch('/base/dismiss_ai_scanner_notification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 1) {
-                    console.log('AI scanner notification dismissed permanently');
-                } else {
-                    console.error('Failed to dismiss AI scanner notification:', data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error dismissing AI scanner notification:', error);
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (panel.hidden) { openPanel(); } else { closePanel(); }
             });
-        }
-
-        // .htaccess Feature Notification Functions
-        function checkHtaccessStatus() {
-            try {
-                if (localStorage.getItem('htaccessNotificationDismissed') === 'true') return;
-            } catch (e) { return; }
-
-            let lastShown;
-            try { lastShown = localStorage.getItem('htaccessNotificationLastShown'); } catch (e) { return; }
-            const today = new Date().toDateString();
-
-            if (lastShown === today) {
-                return;
-            }
-
-            // Show the notification
-            showHtaccessNotification();
-            try { localStorage.setItem('htaccessNotificationLastShown', today); } catch (e) {}
-        }
-
-        function showHtaccessNotification() {
-            const banner = document.getElementById('htaccess-notification');
-            const body = document.body;
-            banner.classList.add('show');
-            body.classList.add('htaccess-shown');
-        }
-
-        function dismissHtaccessNotification() {
-            const banner = document.getElementById('htaccess-notification');
-            const body = document.body;
-            banner.classList.remove('show');
-            body.classList.remove('htaccess-shown');
-            try { localStorage.setItem('htaccessNotificationDismissed', 'true'); } catch (e) {}
-        }
-        
-        function isNotificationDismissed(notificationKey) {
-            if (notificationKey === 'backup-notification') {
-                return {% if backup_notification_dismissed %}true{% else %}false{% endif %};
-            }
-            if (notificationKey === 'ai-scanner-notification') {
-                return {% if ai_scanner_notification_dismissed %}true{% else %}false{% endif %};
-            }
-            if (notificationKey === 'htaccess-notification') {
-                try { return localStorage.getItem('htaccessNotificationDismissed') === 'true'; } catch (e) { return false; }
-            }
-            return false;
-        }
-
-        window.__cpEphemeralNotifications = window.__cpEphemeralNotifications || [];
-
-        function cpEscapeHtmlNC(str) {
-            if (str == null || str === '') return '';
-            var div = document.createElement('div');
-            div.textContent = String(str);
-            return div.innerHTML;
-        }
-
-        function cpEscapeAttrNC(s) {
-            return String(s || '')
-                .replace(/&/g, '&amp;')
-                .replace(/"/g, '&quot;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-        }
-
-        function renderEphemeralNotificationsHTML() {
-            var items = window.__cpEphemeralNotifications || [];
-            return items.map(function(notif) {
-                var nameEsc = cpEscapeHtmlNC(notif.containerName);
-                var imgEsc = cpEscapeHtmlNC(notif.imageRef);
-                var idAttr = cpEscapeAttrNC(notif.id);
-                var textHtml = '';
-                var barHtml = '';
-                if (notif.state === 'running') {
-                    textHtml = '<p style="margin:0 0 0.5rem 0">Updating <strong>' + nameEsc + '</strong> to <code style="font-size:0.9em">' + imgEsc + '</code>. Pulling image and recreating the container — you can leave this tab open.</p>';
-                    barHtml = '<div class="notification-center-progress-track"><div class="notification-center-progress-bar indeterminate"></div></div>';
-                } else if (notif.state === 'done_ok') {
-                    textHtml = '<p style="margin:0 0 0.5rem 0"><strong>' + nameEsc + '</strong> updated successfully.</p><p style="margin:0;color:#15803d;font-size:0.9em">' + cpEscapeHtmlNC(notif.resultMessage) + '</p>';
-                    barHtml = '<div class="notification-center-progress-track"><div class="notification-center-progress-bar success"></div></div>';
-                } else {
-                    textHtml = '<p style="margin:0 0 0.5rem 0">Update failed for <strong>' + nameEsc + '</strong>.</p><p style="margin:0;color:#b91c1c;font-size:0.9em">' + cpEscapeHtmlNC(notif.resultMessage) + '</p>';
-                    barHtml = '<div class="notification-center-progress-track"><div class="notification-center-progress-bar error"></div></div>';
-                }
-                return '<div class="notification-center-item notification-center-item-ephemeral" data-ephemeral-id="' + idAttr + '">' +
-                    '<div class="notification-center-item-title"><i class="fab fa-docker"></i><span>Docker update</span></div>' +
-                    '<div class="notification-center-item-text" style="margin-bottom:0">' + textHtml + '</div>' +
-                    barHtml +
-                    '<button type="button" class="notification-center-ephemeral-dismiss" data-cp-ephemeral-dismiss="' + idAttr + '">Dismiss</button>' +
-                    '</div>';
-            }).join('');
-        }
-
-        window.cpDismissEphemeralNotification = function(id) {
-            window.__cpEphemeralNotifications = (window.__cpEphemeralNotifications || []).filter(function(n) { return n.id !== id; });
-            var stillRunning = (window.__cpEphemeralNotifications || []).some(function(n) { return n.state === 'running'; });
-            var btn = document.getElementById('notification-center-btn');
-            if (btn && !stillRunning) btn.classList.remove('has-active-operation');
-            loadNotificationCenter();
-        };
-
-        window.cpDockerUpdateNotifyStart = function(containerName, imageRef) {
-            window.__cpEphemeralNotifications = window.__cpEphemeralNotifications || [];
-            var id = 'docker-update-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
-            window.__cpEphemeralNotifications.unshift({
-                id: id,
-                kind: 'docker-update',
-                containerName: String(containerName || ''),
-                imageRef: String(imageRef || ''),
-                state: 'running',
-                resultMessage: ''
-            });
-            var dd = document.getElementById('notification-center-dropdown');
-            if (dd) dd.classList.add('show');
-            var bell = document.getElementById('notification-center-btn');
-            if (bell) bell.classList.add('has-active-operation');
-            loadNotificationCenter();
-            return id;
-        };
-
-        window.cpDockerUpdateNotifyEnd = function(nid, ok, message) {
-            window.__cpEphemeralNotifications = window.__cpEphemeralNotifications || [];
-            var n = null;
-            for (var i = 0; i < window.__cpEphemeralNotifications.length; i++) {
-                if (window.__cpEphemeralNotifications[i].id === nid) { n = window.__cpEphemeralNotifications[i]; break; }
-            }
-            if (!n) return;
-            n.state = ok ? 'done_ok' : 'done_err';
-            n.resultMessage = message ? String(message) : (ok ? 'Done.' : 'Unknown error.');
-            var stillRunning = window.__cpEphemeralNotifications.some(function(x) { return x.state === 'running'; });
-            var btn = document.getElementById('notification-center-btn');
-            if (btn && !stillRunning) btn.classList.remove('has-active-operation');
-            loadNotificationCenter();
-        };
-
-        function toggleNotificationCenter() {
-            const dropdown = document.getElementById('notification-center-dropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-                if (dropdown.classList.contains('show')) {
-                    loadNotificationCenter();
-                }
-            }
-        }
-        function loadNotificationCenter() {
-            const list = document.getElementById('notification-center-list');
-            if (!list) return;
-            const notifications = [
-                { id: 'backup', title: 'Backup Security', icon: 'fas fa-shield-alt',
-                  text: 'Looks like your websites are not secured with automatic backups.',
-                  link: '/backup/OneClickBackups', linkText: 'Configure now',
-                  learnMoreLink: 'https://cyberpanel.net/docs/backup',
-                  dismissed: isNotificationDismissed('backup-notification') },
-                { id: 'ai-scanner', title: 'AI Security Scanner', icon: 'fas fa-brain',
-                  text: 'Secure your websites with AI-powered malware detection. Advanced threat detection • Real-time scanning • Zero false positives',
-                  link: '/aiscanner/', linkText: 'Start AI Security Scan',
-                  learnMoreLink: 'https://cyberpanel.net/docs/ai-scanner',
-                  dismissed: isNotificationDismissed('ai-scanner-notification') },
-                { id: 'htaccess', title: '.htaccess Support', icon: 'fas fa-magic',
-                  text: 'Revolutionary .htaccess Support Now Live! Full .htaccess support • PHP configuration now works • Zero rule rewrites needed',
-                  link: 'https://cyberpanel.net/cyberpanel-htaccess-module', linkText: 'View Details',
-                  learnMoreLink: 'https://cyberpanel.net/cyberpanel-htaccess-module',
-                  dismissed: isNotificationDismissed('htaccess-notification') }
-            ];
-            const ephemeralHtml = renderEphemeralNotificationsHTML();
-            let staticHtml = '';
-            if (notifications.length > 0) {
-                staticHtml = notifications.map(notif => {
-                    let linkIcon = notif.linkText.includes('Configure') ? '<i class="fas fa-cog"></i>' :
-                        notif.linkText.includes('Start') ? '<i class="fas fa-rocket"></i>' :
-                        (notif.linkText.includes('View') || notif.linkText.includes('Details')) ? '<i class="fas fa-external-link-alt"></i>' : '<i class="fas fa-arrow-right"></i>';
-                    const isExternal = notif.link.startsWith('http');
-                    const learnExternal = notif.learnMoreLink && notif.learnMoreLink.startsWith('http');
-                    return `<div class="notification-center-item ${notif.dismissed ? 'dismissed' : ''}">
-                        <div class="notification-center-item-title">
-                            <i class="${notif.icon}"></i>
-                            <span>${notif.title}</span>
-                            ${notif.dismissed ? '<span class="dismissed-badge">Dismissed</span>' : ''}
-                        </div>
-                        <div class="notification-center-item-text">${notif.text}</div>
-                        <div class="notification-center-item-actions">
-                            <a href="${notif.link}" class="notification-center-item-link" ${isExternal ? 'target="_blank" rel="noopener"' : ''}>${linkIcon} <span>${notif.linkText}</span></a>
-                            ${notif.learnMoreLink ? `<a href="${notif.learnMoreLink}" class="notification-center-item-link-secondary" ${learnExternal ? 'target="_blank" rel="noopener"' : ''}><i class="fas fa-info-circle"></i> <span>Learn More</span> <i class="fas fa-arrow-right"></i></a>` : ''}
-                        </div>
-                    </div>`;
-                }).join('');
-            }
-            if (!ephemeralHtml && !staticHtml) {
-                list.innerHTML = '<div class="notification-center-empty">No notifications available</div>';
-            } else {
-                list.innerHTML = ephemeralHtml + staticHtml;
-            }
-            const staticActive = notifications.filter(n => !n.dismissed).length;
-            const runningEphem = (window.__cpEphemeralNotifications || []).filter(function(n) { return n.state === 'running'; }).length;
-            const activeCount = staticActive + runningEphem;
-            const badge = document.getElementById('notification-badge');
-            if (badge) {
-                badge.textContent = activeCount;
-                badge.style.display = 'flex';
-            }
-        }
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('notification-center-dropdown');
-            const button = document.getElementById('notification-center-btn');
-            if (dropdown && button && !dropdown.contains(event.target) && !button.contains(event.target)) {
-                dropdown.classList.remove('show');
-            }
-        });
-        
-        // Check all notification statuses when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            var ncList = document.getElementById('notification-center-list');
-            if (ncList) {
-                ncList.addEventListener('click', function(ev) {
-                    var dismissBtn = ev.target.closest('[data-cp-ephemeral-dismiss]');
-                    if (dismissBtn && window.cpDismissEphemeralNotification) {
-                        var eid = dismissBtn.getAttribute('data-cp-ephemeral-dismiss');
-                        if (eid) window.cpDismissEphemeralNotification(eid);
-                    }
+            if (clear) {
+                clear.addEventListener('click', function () {
+                    items.forEach(function (el) { if (!el.hidden) { dismiss(el); } });
                 });
             }
-            loadNotificationCenter();
-            checkBackupStatus();
-            // Optional: open notification dropdown for testing (e.g. ?showNotifications=1)
-            if (window.location.search.indexOf('showNotifications=1') !== -1) {
-                setTimeout(function() { document.getElementById('notification-center-dropdown').classList.add('show'); }, 400);
-            }
-            // Show AI Scanner notification with a slight delay for better UX
-            setTimeout(checkAIScannerStatus, 1000);
-            // Show .htaccess notification with additional delay for staggered effect
-            setTimeout(checkHtaccessStatus, 1500);
-            // Set active menu state based on current URL
+            refresh();
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function () {
             setActiveMenuState();
+            initNotifCenter();
+            initSidebarSearch();
         });
-        
+
+        // Sidebar quick-filter / jump-to
+        function initSidebarSearch() {
+            var input = document.getElementById('sidebar-search-input');
+            if (!input) { return; }
+            var clearBtn = document.getElementById('sidebar-search-clear');
+            var emptyMsg = document.getElementById('sidebar-search-empty');
+            var sidebar  = document.getElementById('sidebar');
+            var sectionHeaders = Array.prototype.slice.call(sidebar.querySelectorAll('.section-header'));
+            var serverInfo = sidebar.querySelector('.server-info');
+
+            function inSubmenu(el) {
+                var p = el.parentElement;
+                while (p && p !== sidebar) {
+                    if (p.classList && p.classList.contains('submenu')) { return true; }
+                    p = p.parentElement;
+                }
+                return false;
+            }
+            function topItems() {
+                return Array.prototype.slice.call(sidebar.querySelectorAll('.menu-item')).filter(function (el) {
+                    return !inSubmenu(el);
+                });
+            }
+            function reset() {
+                sidebar.querySelectorAll('.menu-item').forEach(function (el) { el.style.display = ''; el.classList.remove('expanded'); });
+                sidebar.querySelectorAll('.submenu').forEach(function (s) { s.style.display = ''; s.classList.remove('show'); });
+                sectionHeaders.forEach(function (h) { h.style.display = ''; });
+                if (serverInfo) { serverInfo.style.display = ''; }
+                emptyMsg.hidden = true;
+                clearBtn.hidden = true;
+                if (typeof setActiveMenuState === 'function') { setActiveMenuState(); }
+            }
+            function filter(term) {
+                clearBtn.hidden = false;
+                sectionHeaders.forEach(function (h) { h.style.display = 'none'; });
+                if (serverInfo) { serverInfo.style.display = 'none'; }
+                var anyVisible = false;
+                topItems().forEach(function (item) {
+                    var sib = item.nextElementSibling;
+                    var submenu = (sib && sib.classList && sib.classList.contains('submenu')) ? sib : null;
+                    var label = (item.textContent || '').toLowerCase();
+                    if (submenu) {
+                        var groupMatch = label.indexOf(term) !== -1;
+                        var childVisible = false;
+                        Array.prototype.slice.call(submenu.querySelectorAll('.menu-item')).forEach(function (c) {
+                            var m = groupMatch || (c.textContent || '').toLowerCase().indexOf(term) !== -1;
+                            c.style.display = m ? '' : 'none';
+                            if (m) { childVisible = true; }
+                        });
+                        if (groupMatch || childVisible) {
+                            item.style.display = '';
+                            submenu.style.display = '';
+                            submenu.classList.add('show');
+                            item.classList.add('expanded');
+                            anyVisible = true;
+                        } else {
+                            item.style.display = 'none';
+                            submenu.style.display = 'none';
+                            submenu.classList.remove('show');
+                            item.classList.remove('expanded');
+                        }
+                    } else {
+                        var match = label.indexOf(term) !== -1;
+                        item.style.display = match ? '' : 'none';
+                        if (match) { anyVisible = true; }
+                    }
+                });
+                emptyMsg.hidden = anyVisible;
+            }
+            input.addEventListener('input', function () {
+                var t = input.value.trim().toLowerCase();
+                if (!t) { reset(); } else { filter(t); }
+            });
+            clearBtn.addEventListener('click', function () { input.value = ''; reset(); input.focus(); });
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { input.value = ''; reset(); }
+            });
+        }
+
         // Function to set active menu state
         function setActiveMenuState() {
             const currentPath = window.location.pathname;
@@ -3005,114 +743,114 @@
             });
             
             // Find and activate the matching menu item
+            let activeLabel = '';
+            let activeGroup = '';
             allMenuItems.forEach(item => {
                 const href = item.getAttribute('href');
                 if (href && href !== '#' && currentPath === href) {
                     item.classList.add('active');
-                    
+                    const lbl = item.querySelector('span');
+                    activeLabel = (lbl ? lbl.textContent : item.textContent).trim();
+
                     // If this item is in a submenu, expand the parent
                     const parentSubmenu = item.closest('.submenu');
                     if (parentSubmenu) {
                         parentSubmenu.classList.add('show');
-                        
+
                         // Find the parent menu item (the one with the chevron)
                         const parentMenuItem = parentSubmenu.previousElementSibling;
                         if (parentMenuItem && parentMenuItem.classList.contains('menu-item')) {
                             parentMenuItem.classList.add('expanded', 'has-active-child');
+                            const plbl = parentMenuItem.querySelector('span');
+                            if (plbl) { activeGroup = plbl.textContent.trim(); }
                         }
                     }
                 }
             });
+            updateBreadcrumb(activeLabel, activeGroup);
         }
-    </script>
-    
-    
-    <!-- Dark Mode Toggle Script -->
-    <script>
-        // Theme switching functionality (wrapped in try-catch for Tracking Prevention / private browsing)
-        (function() {
-            var savedTheme = 'light';
-            try {
-                savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
-            } catch (e) { /* Tracking Prevention or storage disabled */ }
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            
-            // Update icon based on current theme
-            const updateThemeIcon = (theme) => {
-                const icon = document.getElementById('theme-icon');
-                if (icon) {
-                    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                }
-            };
-            
-            // Initialize icon
-            updateThemeIcon(savedTheme);
-            
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    const currentTheme = document.documentElement.getAttribute('data-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    
-                    // Update theme
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                    try { localStorage.setItem('cyberPanelTheme', newTheme); } catch (e) { /* Tracking Prevention */ }
-                    
-                    // Update icon
-                    updateThemeIcon(newTheme);
-                    
-                    // Dispatch custom event for any components that need to react to theme change
-                    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
-                });
+
+        function updateBreadcrumb(label, group) {
+            const bc = document.getElementById('cp-breadcrumb');
+            if (!bc) { return; }
+            const pageEl = document.getElementById('cp-bc-page');
+            const groupWrap = document.getElementById('cp-bc-group-wrap');
+            const groupEl = document.getElementById('cp-bc-group');
+            // On the dashboard itself there is no deeper context — keep it hidden.
+            if (!label || label.toLowerCase() === 'dashboard') {
+                bc.hidden = true;
+                return;
             }
-        })();
-    </script>
-    
-    <!-- FTP Quota and Bandwidth Management Functions -->
-    <script>
-        function loadFTPQuotaManagement() {
-            $.ajax({
-                url: '{% url "getFTPQuotas" %}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.status === 1) {
-                        window.open('{% url "ftpQuotaManagementPage" %}', '_blank');
-                    } else {
-                        var msg = (data && (data.error_message || data.message || data.errorMessage)) || 'Unknown error';
-                        alert('Error loading FTP quota management: ' + msg);
-                    }
-                },
-                error: function(xhr) {
-                    var msg = (xhr.responseJSON && (xhr.responseJSON.error_message || xhr.responseJSON.message)) || (xhr.statusText || 'Request failed');
-                    alert('Error loading FTP quota management: ' + msg);
-                }
-            });
+            pageEl.textContent = label;
+            if (group && group.toLowerCase() !== label.toLowerCase()) {
+                groupEl.textContent = group;
+                groupWrap.hidden = false;
+            } else {
+                groupWrap.hidden = true;
+            }
+            bc.hidden = false;
+            const base = document.title && document.title.indexOf('CyberPanel') !== -1 ? '' : ' - CyberPanel';
+            document.title = label + (group ? ' · ' + group : '') + base;
         }
-        
-        function loadBandwidthManagement() {
-            $.ajax({
-                url: '{% url "getBandwidthResetLogs" %}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.status === 1) {
-                        window.open('{% url "bandwidthManagementPage" %}', '_blank');
-                    } else {
-                        var msg = (data && (data.error_message || data.message || data.errorMessage)) || 'Unknown error';
-                        alert('Error loading bandwidth management: ' + msg);
-                    }
-                },
-                error: function(xhr) {
-                    var msg = (xhr.responseJSON && (xhr.responseJSON.error_message || xhr.responseJSON.message)) || (xhr.statusText || 'Request failed');
-                    alert('Error loading bandwidth management: ' + msg);
+
+        /* -----------------------------------------------------------------
+           Standardized UI feedback helpers (use these instead of alert()).
+             cpToast(message, type, title)   type: success|error|info|notice
+             cpBusy(buttonEl, true|false)    toggles a spinner + disabled state
+           ----------------------------------------------------------------- */
+        window.cpToast = function (message, type, title) {
+            type = type || 'info';
+            try {
+                if (typeof PNotify === 'function') {
+                    return new PNotify({
+                        title: title || '',
+                        text: message,
+                        type: type === 'error' ? 'error' : (type === 'success' ? 'success' : (type === 'notice' ? 'notice' : 'info')),
+                        delay: type === 'error' ? 6000 : 3500,
+                        buttons: { closer: true, sticker: false }
+                    });
                 }
-            });
-        }
-        
+            } catch (e) { /* fall through to lightweight toast */ }
+
+            var host = document.getElementById('cp-toast-host');
+            if (!host) {
+                host = document.createElement('div');
+                host.id = 'cp-toast-host';
+                host.className = 'cp-toast-host';
+                document.body.appendChild(host);
+            }
+            var t = document.createElement('div');
+            t.className = 'cp-toast cp-toast-' + type;
+            t.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            t.innerHTML = (title ? '<strong>' + title + '</strong> ' : '') + '';
+            t.appendChild(document.createTextNode(message));
+            host.appendChild(t);
+            setTimeout(function () { t.classList.add('cp-toast-hide'); }, type === 'error' ? 6000 : 3500);
+            setTimeout(function () { if (t.parentNode) { t.parentNode.removeChild(t); } }, (type === 'error' ? 6000 : 3500) + 400);
+            return t;
+        };
+
+        window.cpBusy = function (btn, on) {
+            if (!btn) { return; }
+            if (on) {
+                if (btn.dataset.cpBusy === '1') { return; }
+                btn.dataset.cpBusy = '1';
+                btn.dataset.cpLabel = btn.innerHTML;
+                btn.disabled = true;
+                btn.setAttribute('aria-busy', 'true');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> ' + (btn.dataset.cpBusyText || 'Working…');
+            } else {
+                if (btn.dataset.cpBusy !== '1') { return; }
+                btn.disabled = false;
+                btn.removeAttribute('aria-busy');
+                btn.innerHTML = btn.dataset.cpLabel || btn.innerHTML;
+                delete btn.dataset.cpBusy;
+                delete btn.dataset.cpLabel;
+            }
+        };
     </script>
-    
+<script src="{% static 'baseTemplate/custom-js/cyberpanel-theme.js' %}?v={{ CP_VERSION }}"></script>
+
     {% block footer_scripts %}{% endblock %}
 </body>
 </html>

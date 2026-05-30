@@ -1,0 +1,823 @@
+    /* Prevent Angular flicker on page load */
+    [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+        display: none !important;
+    }
+    
+    /* Dashboard Specific Styles */
+    .dashboard-wrapper {
+        background: transparent;
+        padding: 20px;
+    }
+    
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Overview Section */
+    .overview-section {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+    }
+    
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .section-title::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: var(--accent-color, #5b5fcf);
+        border-radius: 2px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .stat-card {
+        background: var(--bg-secondary, white);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .stat-card-title {
+        font-size: 13px;
+        color: var(--text-secondary, #8893a7);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-card-value {
+        font-size: 13px;
+        color: var(--text-secondary, #8893a7);
+    }
+    
+    .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background: var(--border-color, #e8e9ff);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        background: var(--accent-color, #5b5fcf);
+    }
+    
+    .stat-card-info {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--text-secondary, #8893a7);
+    }
+    
+    /* Insights Section */
+    .insights-section {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+    }
+    
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+    }
+    
+    .insight-card {
+        background: var(--bg-hover, #f8f9ff);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 10px;
+        padding: 20px 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .insight-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px var(--shadow-color);
+        border-color: var(--accent-color, #5b5fcf);
+    }
+    
+    .insight-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--accent-color, #5b5fcf);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: white;
+        font-size: 20px;
+    }
+    
+    .insight-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 5px;
+    }
+    
+    .insight-label {
+        font-size: 13px;
+        color: var(--text-secondary, #8893a7);
+        font-weight: 500;
+    }
+    
+    /* Activity Board */
+    .activity-section {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+    }
+    
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .activity-tabs {
+        display: flex;
+        gap: 3px;
+        background: var(--bg-primary, #f0f0ff);
+        padding: 3px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e8e9ff);
+    }
+    
+    .activity-tab {
+        background: transparent;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    
+    .activity-tab:hover {
+        color: var(--accent-color, #5b5fcf);
+        background: rgba(91,95,207,0.1);
+    }
+    
+    .activity-tab.active {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+        box-shadow: 0 2px 4px rgba(91,95,207,0.3);
+    }
+    
+    .activity-tab i {
+        font-size: 14px;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .activity-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        display: table;
+    }
+    
+    .activity-table thead {
+        display: table-header-group;
+    }
+    
+    .activity-table tbody {
+        display: table-row-group;
+    }
+    
+    .activity-table tr {
+        display: table-row;
+    }
+    
+    .activity-table th,
+    .activity-table td {
+        display: table-cell !important;
+    }
+    
+    .activity-table tr {
+        display: table-row !important;
+    }
+    
+    .activity-table thead {
+        display: table-header-group !important;
+    }
+    
+    .activity-table tbody {
+        display: table-row-group !important;
+    }
+    
+    .activity-table th {
+        text-align: left;
+        padding: 14px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        border-bottom: 2px solid rgba(91, 95, 207, 0.3);
+        background: linear-gradient(135deg, #5b5fcf 0%, #4a4fc7 100%);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    
+    .activity-table thead {
+        background: linear-gradient(135deg, #5b5fcf 0%, #4a4fc7 100%);
+    }
+    
+    .activity-table tbody tr {
+        border-bottom: 1px solid var(--border-color, #f0f0ff);
+    }
+    
+    .activity-table tbody tr:hover {
+        background: var(--bg-hover, #f8f9ff);
+    }
+    
+    .activity-table td {
+        padding: 12px 12px;
+        font-size: 13px;
+        color: var(--text-primary, #2f3640);
+        border-bottom: 1px solid var(--border-color, #f0f0ff);
+        vertical-align: middle;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .activity-table td:nth-child(1) { 
+        min-width: 80px;
+        max-width: 120px;
+    }
+    
+    .activity-table td:nth-child(2) { 
+        min-width: 120px;
+        max-width: 180px;
+        font-family: monospace;
+        font-size: 12px;
+    }
+    
+    .activity-table td:nth-child(3) { 
+        min-width: 80px;
+        max-width: 120px;
+    }
+    
+    .activity-table td:nth-child(4) { 
+        min-width: 140px;
+        max-width: 200px;
+        white-space: nowrap;
+    }
+    
+    .activity-table td:nth-child(5) { 
+        min-width: 150px;
+        max-width: 300px;
+    }
+    
+    .activity-table td:nth-child(6) { 
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    /* SSH Logs table specific column widths */
+    .ssh-logs-table th:nth-child(1),
+    .ssh-logs-table td:nth-child(1) {
+        min-width: 180px;
+        max-width: 220px;
+        white-space: nowrap;
+    }
+    
+    .ssh-logs-table th:nth-child(2),
+    .ssh-logs-table td:nth-child(2) {
+        min-width: 300px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Process table specific column widths (for modal only) */
+    .process-table thead th:nth-child(1),
+    .process-table tbody td:nth-child(1) { 
+        min-width: 70px;
+        max-width: 90px;
+    }
+    
+    .process-table thead th:nth-child(2),
+    .process-table tbody td:nth-child(2) { 
+        min-width: 80px;
+        max-width: 100px;
+    }
+    
+    .process-table thead th:nth-child(3),
+    .process-table tbody td:nth-child(3) { 
+        min-width: 90px;
+        max-width: 120px;
+    }
+    
+    .process-table thead th:nth-child(4),
+    .process-table tbody td:nth-child(4) { 
+        min-width: 200px;
+    }
+    
+    .process-table thead th:nth-child(5),
+    .process-table tbody td:nth-child(5) { 
+        min-width: 150px;
+        max-width: 250px;
+    }
+    
+    .process-table thead th:nth-child(6),
+    .process-table tbody td:nth-child(6) { 
+        min-width: 100px;
+        max-width: 120px;
+        text-align: center;
+    }
+    
+    .activity-table tr:hover {
+        background: var(--bg-hover, #f8f9ff);
+    }
+    
+    .view-activity-btn {
+        background: var(--bg-hover, #f8f9ff);
+        border: 1px solid var(--border-color, #e8e9ff);
+        color: var(--accent-color, #5b5fcf);
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .view-activity-btn:hover {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+        border-color: var(--accent-color, #5b5fcf);
+        box-shadow: 0 2px 4px rgba(91,95,207,0.3);
+    }
+    
+    /* Pagination Styles */
+    .pagination-container {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: #ffffff;
+        border: 1px solid #e8e9ff;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .pagination-info {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .pagination-btn {
+        background: #f8f9ff;
+        border: 1px solid #e8e9ff;
+        color: #5b5fcf;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .pagination-btn:hover:not(:disabled) {
+        background: #5b5fcf;
+        color: #ffffff;
+        border-color: #5b5fcf;
+    }
+    
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .pagination-page-info {
+        color: #2f3640;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 8px;
+    }
+    
+    .pagination-goto {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .pagination-goto input {
+        width: 80px;
+        padding: 6px 8px;
+        border: 1px solid #e8e9ff;
+        border-radius: 6px;
+        font-size: 12px;
+        margin-right: 6px;
+    }
+    
+    .pagination-goto input:focus {
+        outline: none;
+        border-color: #5b5fcf;
+        box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.1);
+    }
+    
+    .chart-container {
+        height: 280px;
+        position: relative;
+        padding: 15px;
+        background: var(--bg-hover, #fafbff);
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e8e9ff);
+        margin-top: 10px;
+    }
+    
+    /* Modal Styles */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        backdrop-filter: blur(2px);
+        overflow-y: auto;
+    }
+    
+    .modal-backdrop.show {
+        display: flex !important;
+    }
+    
+    /* Ensure modal is hidden when ng-show is false */
+    .modal-backdrop.ng-hide {
+        display: none !important;
+    }
+    
+    .modal-content {
+        max-width: 90vw;
+        max-height: 90vh;
+        width: 600px;
+        background: var(--bg-secondary, #fff);
+        border-radius: 16px;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+        padding: 32px 28px 24px;
+        position: relative;
+        overflow-y: auto;
+        animation: modalFadeIn 0.3s ease-out;
+        margin: auto;
+        align-self: center;
+    }
+    
+    /* Ensure tables inside modal render correctly */
+    .modal-content table {
+        display: table !important;
+        width: 100% !important;
+    }
+    
+    .modal-content table thead {
+        display: table-header-group !important;
+    }
+    
+    .modal-content table tbody {
+        display: table-row-group !important;
+    }
+    
+    .modal-content table tr {
+        display: table-row !important;
+    }
+    
+    .modal-content table th,
+    .modal-content table td {
+        display: table-cell !important;
+    }
+    
+    @keyframes modalFadeIn {
+        from { 
+            opacity: 0; 
+            transform: scale(0.9) translateY(-20px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: scale(1) translateY(0); 
+        }
+    }
+    
+    /* Brand Bird Badge */
+    .brand-badge {
+        background: var(--text-primary, #2f3640);
+        color: var(--bg-secondary, white);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .brand-badge img {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .activity-tabs {
+            flex-wrap: wrap;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid,
+        .insights-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .activity-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .activity-table {
+            font-size: 12px;
+        }
+        
+        .activity-table th,
+        .activity-table td {
+            padding: 8px;
+        }
+        
+        .view-activity-btn {
+            font-size: 12px;
+            padding: 4px 12px;
+        }
+        
+        .activity-tabs {
+            width: 100%;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+    }
+
+/* ============================================================
+   Dark-theme completion + states (appended)
+   Re-points hardcoded literals to theme tokens. Appended last
+   so these win over the extracted rules at equal specificity.
+   ============================================================ */
+
+.pagination-container {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+.pagination-info        { color: var(--text-secondary); }
+.pagination-page-info   { color: var(--text-primary); }
+.pagination-btn {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+    color: var(--accent-color);
+}
+.pagination-btn:hover:not(:disabled) {
+    background: var(--accent-color);
+    color: var(--text-on-accent);
+    border-color: var(--accent-color);
+}
+.pagination-goto input {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+.pagination-goto input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.18);
+}
+
+.activity-table th,
+.activity-table thead {
+    background: var(--table-head-bg);
+    color: var(--table-head-text);
+}
+
+/* Code / monospace chips inside activity area (inline-styled in markup) */
+.activity-table code,
+.activity-section code {
+    background: var(--bg-code) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Empty / loading inline text blocks use a muted literal in markup */
+[ng-if*="length === 0"],
+[ng-if*="loading"] { color: var(--text-secondary); }
+
+/* Activity tab bar */
+.activity-tabs { background: var(--bg-primary); border-color: var(--border-color); }
+.activity-tab  { color: var(--text-secondary); }
+
+/* Chart panels adapt to theme */
+.chart-container {
+    background: var(--bg-muted);
+    border-color: var(--border-color);
+}
+
+/* Modal shell + inner muted panels */
+.modal-content { background: var(--bg-secondary); color: var(--text-primary); }
+
+/* Stat card threshold value emphasis already in cyberpanel-ui.css */
+
+/* Stat-card skeleton placeholder layout */
+.stat-card .cp-skeleton-line { margin-bottom: 10px; }
+.stat-card .cp-skeleton-bar  { margin: 6px 0; }
+
+/* Dashboard error/retry block spacing */
+.dashboard-container .cp-error-state { margin: 10px 0 4px; }
+
+/* Insight value skeleton sizing */
+.insight-value .cp-skeleton-line { height: 26px; width: 60px; margin: 0 auto; }
+
+/* Insight cards are now real links (was a misleading non-clickable div) */
+a.insight-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+a.insight-card:hover { text-decoration: none; }
+a.insight-card:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+.insight-value { min-height: 28px; }
+
+/* ============================================================
+   Responsive dashboard tables
+   Wrap wide activity tables in a horizontal scroll area instead
+   of letting them overflow / break the card layout on mobile.
+   ============================================================ */
+.tab-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.tab-content > .activity-table {
+    min-width: 640px;
+}
+.ssh-logs-table { min-width: 520px; }
+
+/* Subtle edge fade hint that content scrolls horizontally */
+@media (max-width: 768px) {
+    .activity-section { position: relative; }
+    .tab-content::-webkit-scrollbar { height: 6px; }
+    .tab-content::-webkit-scrollbar-thumb {
+        background: var(--accent-color);
+        border-radius: 3px;
+    }
+    .activity-table th,
+    .activity-table td { white-space: nowrap; }
+    /* Modal grids collapse to single column on small screens */
+    .modal-content [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+    .modal-content { width: 95vw; padding: 20px 16px; }
+}
+
+/* Charts keep a sane height on small screens */
+@media (max-width: 600px) {
+    .chart-container { height: 220px; }
+}
+
+/* ============================================================
+   Design refinement pass (dashboard content)
+   ============================================================ */
+.dashboard-container { max-width: 1320px; }
+
+.overview-section,
+.insights-section,
+.activity-section {
+    border-radius: 16px;
+    border-color: var(--border-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+/* Section titles as quiet eyebrow labels with a small marker */
+.section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    color: var(--text-secondary);
+    gap: 9px;
+}
+.section-title::before {
+    width: 3px;
+    height: 13px;
+    border-radius: 3px;
+    background: var(--accent-color);
+}
+
+/* Cards: consistent radius + subtle interactive lift */
+.stat-card,
+.insight-card {
+    border-radius: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.stat-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 6px 18px var(--shadow-color);
+}
+a.insight-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px var(--shadow-color);
+}
+
+.stat-card-title { letter-spacing: 0.6px; }
+.stat-card-value { font-weight: 700; }
+
+.progress-bar-container { height: 7px; border-radius: 6px; }
+.progress-bar { border-radius: 6px; }
+
+/* Insight cards: smaller, cleaner hierarchy */
+.insight-card { padding: 18px 12px; }
+.insight-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    font-size: 17px;
+    margin-bottom: 12px;
+}
+.insight-value { font-size: 24px; }
+.insight-label { font-size: 12px; }
+
+/* Flatten the table header gradient to a clean solid */
+.activity-table th,
+.activity-table thead {
+    background: var(--accent-color);
+}
+.activity-tab.active { box-shadow: none; }
