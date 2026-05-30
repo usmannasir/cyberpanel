@@ -14,6 +14,13 @@ For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
 
+
+### Fixed: dark theme UI regression (31/05/2026)
+
+- Restored external design system CSS (`cyberpanel-ui.css`, `dashboard.css`, `cyberpanel-harmonize.css`) that were missing from the repo; `index.html` again loads tokens from CSS instead of 3000+ lines of stale inline styles.
+- Replaced bloated `index.html` / `homePage.html` with the v2.4.8 shell (flat HOSTING/ACCOUNT nav, command palette, theme toggle).
+- Dark mode: sidebar, main canvas, and dashboard cards now share the same `--bg-*` tokens; harmonizer patch improves dashboard section title contrast.
+
 ### Fixed: SSH login banner (30/05/2026)
 
 - Fresh installs and upgrades again deploy `/etc/profile.d/cyberpanel.sh` from `https://cyberpanel.sh/?banner`.

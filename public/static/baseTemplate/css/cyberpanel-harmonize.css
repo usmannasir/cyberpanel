@@ -1,0 +1,168 @@
+/* =====================================================================
+   CyberPanel Theme Harmonizer  (v2.4.8)
+   ---------------------------------------------------------------------
+   Internal pages (dns, ftp, email, server, databases, firewall…) each ship
+   their own embedded <style> with hardcoded colors copied from the OLD
+   palette (#5b5fcf, #e8e9ff, #2f3640, #f8f9ff…). That makes them look busy
+   and breaks dark mode. This single sheet re-skins the SHARED class
+   vocabulary to the design tokens so every page is calm + theme-correct.
+
+   Notes:
+   - Visual only (color / background / border / box-shadow). No layout.
+   - Selectors are scoped under #main-content so they reliably beat the
+     pages' own per-class (even !important) declarations, while loading in
+     <head> (no flash). Modals can be re-parented to <body>, so modal rules
+     are also provided unscoped.
+   ===================================================================== */
+
+/* ---- Card / box surfaces: token bg, hairline border, whisper shadow ---- */
+#main-content .content-card,
+#main-content .content-box-wrapper,
+#main-content .info-box,
+#main-content .card,
+#main-content .cyber-card,
+#main-content .example-box-wrapper,
+#main-content .panel.panel-body {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 1px 2px var(--shadow-color) !important;
+}
+
+/* ---- Page wrappers: text color only (sit on the page background) ---- */
+#main-content .modern-container,
+#main-content .page-container { color: var(--text-primary) !important; }
+
+/* ---- Headings & secondary text (also fixes dark-mode legibility) ---- */
+#main-content .page-title,
+#main-content .card-title,
+#main-content .section-title,
+#main-content .card-header,
+#main-content .content-box-header,
+#main-content .cyber-section-title { color: var(--text-heading) !important; }
+#main-content .page-subtitle,
+#main-content .form-label,
+#main-content .text-muted,
+#main-content .help-block { color: var(--text-secondary) !important; }
+
+/* ---- Page header: quiet, no heavy card look ---- */
+#main-content .page-header {
+    background: transparent !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+/* ---- Form fields ---- */
+#main-content .form-control,
+#main-content select.form-control,
+#main-content textarea.form-control {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: none !important;
+}
+#main-content .form-control:focus {
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px var(--accent-soft-bg) !important;
+}
+#main-content .form-control::placeholder { color: var(--text-secondary) !important; opacity: .7; }
+
+/* ---- Buttons: one calm system, semantic colors preserved ---- */
+#main-content .btn { box-shadow: none !important; }
+#main-content .btn-primary {
+    background: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    color: #fff !important;
+}
+#main-content .btn-primary:hover,
+#main-content .btn-primary:focus { background: var(--accent-hover) !important; border-color: var(--accent-hover) !important; color: #fff !important; }
+#main-content .btn-secondary,
+#main-content .btn-default {
+    background: var(--bg-hover) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+#main-content .btn-secondary:hover,
+#main-content .btn-default:hover { background: var(--bg-muted) !important; color: var(--accent-color) !important; }
+#main-content .btn-danger {
+    background: var(--danger-color) !important;
+    border-color: var(--danger-color) !important;
+    color: #fff !important;
+}
+#main-content .btn-outline,
+#main-content .btn-outline-primary {
+    background: transparent !important;
+    border-color: var(--border-color) !important;
+    color: var(--accent-color) !important;
+}
+
+/* ---- Alerts: soft, theme-aware ---- */
+#main-content .alert { border-color: var(--border-color) !important; box-shadow: none !important; }
+#main-content .alert-success { background: var(--success-soft-bg) !important; color: var(--success-soft-text) !important; border-color: transparent !important; }
+#main-content .alert-danger,
+#main-content .alert-error  { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text) !important; border-color: transparent !important; }
+#main-content .alert-warning { background: var(--warn-soft-bg) !important; color: var(--warn-soft-text) !important; border-color: transparent !important; }
+#main-content .alert-info    { background: var(--info-soft-bg) !important; color: var(--info-soft-text) !important; border-color: transparent !important; }
+
+/* ---- Tables ---- */
+#main-content .table { color: var(--text-primary) !important; }
+#main-content .table > thead > tr > th,
+#main-content .table th {
+    background: var(--bg-muted) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+#main-content .table > tbody > tr > td,
+#main-content .table td { border-color: var(--border-color) !important; }
+#main-content .table-striped > tbody > tr:nth-of-type(odd) { background: var(--bg-muted) !important; }
+#main-content .table-hover > tbody > tr:hover,
+#main-content .table tr:hover { background: var(--bg-hover) !important; }
+
+/* ---- Misc shared bits ---- */
+#main-content .empty-state { background: var(--bg-muted) !important; border-color: var(--border-color) !important; color: var(--text-secondary) !important; }
+#main-content .docs-link { color: var(--accent-color) !important; }
+#main-content .badge { box-shadow: none !important; }
+
+/* ---- Modals (also unscoped: Bootstrap may move them to <body>) ---- */
+.modal-content { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
+.modal-header,
+.modal-footer { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
+
+/* =====================================================================
+   Site management page (website.html) bespoke components — centralized
+   here so there is a single source of truth for the calm look.
+   ===================================================================== */
+#main-content .cyberpanel-website-page { color: var(--text-primary) !important; }
+#main-content .cyberpanel-website-page .domain-hero {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.25) !important;
+}
+#main-content .cyberpanel-website-page .resource-card,
+#main-content .cyberpanel-website-page .app-installer-section {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 1px 2px var(--shadow-color) !important;
+}
+#main-content .cyberpanel-website-page .resource-value { color: var(--text-heading) !important; }
+#main-content .cyberpanel-website-page .resource-title,
+#main-content .cyberpanel-website-page .resource-limit { color: var(--text-secondary) !important; }
+#main-content .cyberpanel-website-page .cyber-table { color: var(--text-primary) !important; }
+#main-content .cyberpanel-website-page .cyber-table th { background: var(--bg-muted) !important; color: var(--text-secondary) !important; border-color: var(--border-color) !important; }
+#main-content .cyberpanel-website-page .cyber-table td { border-color: var(--border-color) !important; }
+#main-content .cyberpanel-website-page .action-btn,
+#main-content .cyberpanel-website-page .action-btn.terminal,
+#main-content .cyberpanel-website-page .action-btn.git,
+#main-content .cyberpanel-website-page .action-btn.staging,
+#main-content .cyberpanel-website-page .action-btn.ssh,
+#main-content .cyberpanel-website-page .action-btn.stress {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+}
+#main-content .cyberpanel-website-page .action-btn:hover { border-color: var(--accent-color) !important; color: var(--accent-color) !important; }
+#main-content .cyberpanel-website-page .action-btn i { color: var(--accent-color) !important; }
+#main-content .cyberpanel-website-page .quick-actions { background: var(--bg-secondary) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 1px 2px var(--shadow-color) !important; }
+#main-content .cyberpanel-website-page .resource-progress { background: var(--bg-hover) !important; }
+#main-content .cyberpanel-website-page .resource-progress-bar { background: var(--accent-color) !important; }
