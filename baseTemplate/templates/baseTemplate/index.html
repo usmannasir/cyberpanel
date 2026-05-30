@@ -62,6 +62,11 @@
     <!-- Theme harmonizer: re-skins legacy per-page styles to the design tokens.
          Loads AFTER page styles so it calms every internal page consistently. -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-harmonize.css' %}?v={{ CP_VERSION }}">
+
+    <!-- Apply saved theme before first paint (avoids light/dark flash) -->
+    <script>
+    (function(){try{var t=localStorage.getItem('cyberPanelTheme');t=(t==='dark')?'dark':'light';var h=document.documentElement;h.setAttribute('data-theme',t);h.classList.toggle('cp-theme-dark',t==='dark');h.classList.toggle('cp-theme-light',t==='light');h.style.colorScheme=t;}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.classList.add('cp-theme-light');}})();
+    </script>
 </head>
 <body>
     <a href="#main-content" class="skip-link">{% trans "Skip to main content" %}</a>
@@ -844,53 +849,8 @@
             }
         };
     </script>
-    
-    
-    <!-- Dark Mode Toggle Script -->
-    <script>
-        // Theme switching functionality
-        (function() {
-            // Get saved theme from localStorage or default to light
-            var savedTheme = 'light';
-            try {
-                savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
-            } catch (e) { /* storage blocked */ }
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            
-            // Update icon based on current theme
-            const updateThemeIcon = (theme) => {
-                const icon = document.getElementById('theme-icon');
-                if (icon) {
-                    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                }
-                const tt = document.getElementById('theme-toggle');
-                if (tt) { tt.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false'); }
-            };
-            
-            // Initialize icon
-            updateThemeIcon(savedTheme);
-            
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    const currentTheme = document.documentElement.getAttribute('data-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    
-                    // Update theme
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                    try { localStorage.setItem('cyberPanelTheme', newTheme); } catch (e) { /* storage blocked */ }
-                    
-                    // Update icon
-                    updateThemeIcon(newTheme);
-                    
-                    // Dispatch custom event for any components that need to react to theme change
-                    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
-                });
-            }
-        })();
-    </script>
-    
+<script src="{% static 'baseTemplate/custom-js/cyberpanel-theme.js' %}?v={{ CP_VERSION }}"></script>
+
     {% block footer_scripts %}{% endblock %}
 </body>
 </html>

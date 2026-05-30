@@ -2291,3 +2291,83 @@ html[data-theme="dark"] #sidebar .menu-item.active {
     background: var(--accent-soft-bg);
     color: var(--accent-color);
 }
+
+/* ============================================================
+   Light theme shell guard (must follow dark guard)
+   Ensures sidebar/header repaint when leaving dark mode without refresh.
+   ============================================================ */
+html[data-theme="light"],
+html.cp-theme-light {
+    --bg-primary: #f4f5fa;
+    --bg-secondary: #ffffff;
+    --bg-sidebar: #f6f7fc;
+    --bg-sidebar-item: transparent;
+    --bg-hover: #eceefb;
+    --bg-muted: #f6f7f9;
+    --bg-code: #f3f4f6;
+    --text-primary: #2f3640;
+    --text-secondary: #6b7280;
+    --text-heading: #1e293b;
+    --border-color: #e9ebf4;
+    --border-soft: #edeef2;
+    --shadow-color: rgba(17, 24, 39, 0.06);
+    --accent-color: #5856d6;
+    --accent-hover: #4644c0;
+    --accent-soft-bg: rgba(88, 86, 214, 0.10);
+    --table-head-bg: linear-gradient(135deg, #5b5fcf 0%, #4a4fc7 100%);
+    --table-head-text: #ffffff;
+    --text-on-accent: #ffffff;
+    --focus-ring: #5856d6;
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] #main-content,
+html.cp-theme-light body,
+html.cp-theme-light #main-content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] #sidebar,
+html.cp-theme-light #sidebar {
+    background-color: var(--bg-sidebar);
+    border-right-color: var(--border-color);
+}
+
+html[data-theme="light"] #header,
+html.cp-theme-light #header {
+    background-color: var(--bg-secondary);
+    border-bottom-color: var(--border-color);
+}
+
+html[data-theme="light"] .sidebar-logo,
+html[data-theme="light"] #sidebar .server-info,
+html.cp-theme-light .sidebar-logo,
+html.cp-theme-light #sidebar .server-info {
+    background-color: var(--bg-muted);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] #sidebar .section-header,
+html.cp-theme-light #sidebar .section-header {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+html[data-theme="light"] #sidebar .menu-item,
+html.cp-theme-light #sidebar .menu-item {
+    color: var(--text-secondary);
+}
+
+html[data-theme="light"] #sidebar .menu-item:hover,
+html.cp-theme-light #sidebar .menu-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] #sidebar .menu-item.active,
+html.cp-theme-light #sidebar .menu-item.active {
+    background-color: var(--accent-soft-bg);
+    color: var(--accent-color);
+}

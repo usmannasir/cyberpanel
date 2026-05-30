@@ -21,6 +21,11 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 - Replaced bloated `index.html` / `homePage.html` with the v2.4.8 shell (flat HOSTING/ACCOUNT nav, command palette, theme toggle).
 - Dark mode: sidebar, main canvas, and dashboard cards now share the same `--bg-*` tokens; harmonizer patch improves dashboard section title contrast.
 
+
+### Fixed: dark mode sidebar stayed light (31/05/2026)
+
+- `cyberpanel-ui.css` had a light-only `:root` refinement block after `[data-theme="dark"]`, which reset `--bg-sidebar` and `--bg-primary` to light colors even when dark mode was on. Scoped refinement to `:root:not([data-theme="dark"])` and added a dark token guard at end of the file.
+
 ### Fixed: SSH login banner (30/05/2026)
 
 - Fresh installs and upgrades again deploy `/etc/profile.d/cyberpanel.sh` from `https://cyberpanel.sh/?banner`.
