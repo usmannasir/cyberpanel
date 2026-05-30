@@ -19,7 +19,7 @@ import socket
 
 
 class CustomACME:
-    def __init__(self, domain, admin_email, staging=False, provider='letsencrypt'):
+    def __init__(self, domain, admin_email, staging=False, provider='letsencrypt', challenge_path=None):
         """Initialize CustomACME"""
         logging.CyberCPLogFileWriter.writeToFile(
             f'Initializing CustomACME for domain: {domain}, email: {admin_email}, staging: {staging}, provider: {provider}')
@@ -55,7 +55,8 @@ class CustomACME:
 
         # Initialize paths
         self.cert_path = f'/etc/letsencrypt/live/{domain}'
-        self.challenge_path = '/usr/local/lsws/Example/html/.well-known/acme-challenge'
+        default_challenge_path = '/usr/local/lsws/Example/html/.well-known/acme-challenge'
+        self.challenge_path = challenge_path or default_challenge_path
         self.account_key_path = f'/etc/letsencrypt/accounts/{domain}.key'
         logging.CyberCPLogFileWriter.writeToFile(
             f'Certificate path: {self.cert_path}, Challenge path: {self.challenge_path}')
@@ -296,25 +297,21 @@ class CustomACME:
             logging.CyberCPLogFileWriter.writeToFile(f'Account creation response status: {response.status_code}')
             logging.CyberCPLogFileWriter.writeToFile(f'Account creation response: {response.text}')
 
-            if response.status_code == 201:
-                self.account_url = response.headers['Location']
+            if response.status_code in (200, 201):
+                self.account_url = response.headers.get('Location')
+                if not self.account_url:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'ACME account response did not include Location header')
+                    return False
                 logging.CyberCPLogFileWriter.writeToFile(
-                    f'Successfully created account. Account URL: {self.account_url}')
+                    f'Successfully loaded ACME account. Account URL: {self.account_url}')
                 # Save the account key for future use
                 self._save_account_key()
                 return True
             elif response.status_code == 429:
                 logging.CyberCPLogFileWriter.writeToFile(
-                    'Rate limit hit for account creation. Using staging environment...')
-                self.staging = True
-                self.acme_directory = "https://acme-staging-v02.api.letsencrypt.org/directory"
-                # Get new directory and nonce for staging
-                if not self._get_directory():
-                    return False
-                if not self._get_nonce():
-                    return False
-                # Try one more time with staging
-                return self._create_account()
+                    'Rate limit hit for ACME account creation. Not switching production issuance to staging.')
+                return False
             elif response.status_code == 400 and "badNonce" in response.text:
                 logging.CyberCPLogFileWriter.writeToFile('Bad nonce, getting new nonce and retrying...')
                 if not self._get_nonce():
@@ -965,7 +962,8 @@ class CustomACME:
                 f'Starting certificate issuance for domains: {domains}, use_dns: {use_dns}')
 
             # Try to load existing account key first
-            if self._load_account_key():
+            account_key_loaded = self._load_account_key()
+            if account_key_loaded:
                 logging.CyberCPLogFileWriter.writeToFile('Using existing account key')
             else:
                 logging.CyberCPLogFileWriter.writeToFile('No existing account key found, will create new one')
@@ -983,10 +981,13 @@ class CustomACME:
                 return False
 
             # Initialize ACME
-            logging.CyberCPLogFileWriter.writeToFile('Step 1: Generating account key')
-            if not self._generate_account_key():
-                logging.CyberCPLogFileWriter.writeToFile('Failed to generate account key')
-                return False
+            if account_key_loaded:
+                logging.CyberCPLogFileWriter.writeToFile('Step 1: Using existing account key')
+            else:
+                logging.CyberCPLogFileWriter.writeToFile('Step 1: Generating account key')
+                if not self._generate_account_key():
+                    logging.CyberCPLogFileWriter.writeToFile('Failed to generate account key')
+                    return False
 
             logging.CyberCPLogFileWriter.writeToFile('Step 2: Getting ACME directory')
             if not self._get_directory():
@@ -1001,19 +1002,7 @@ class CustomACME:
             logging.CyberCPLogFileWriter.writeToFile('Step 4: Creating account')
             if not self._create_account():
                 logging.CyberCPLogFileWriter.writeToFile('Failed to create account')
-                # If we failed to create account and we're not in staging, try staging
-                if not self.staging:
-                    logging.CyberCPLogFileWriter.writeToFile('Switching to staging environment...')
-                    self.staging = True
-                    self.acme_directory = "https://acme-staging-v02.api.letsencrypt.org/directory"
-                    if not self._get_directory():
-                        return False
-                    if not self._get_nonce():
-                        return False
-                    if not self._create_account():
-                        return False
-                else:
-                    return False
+                return False
 
             # Create order with only valid domains
             logging.CyberCPLogFileWriter.writeToFile('Step 5: Creating order')
@@ -1150,4 +1139,4 @@ class CustomACME:
             return True
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f'Error issuing certificate: {str(e)}')
-            return False 
+            return False

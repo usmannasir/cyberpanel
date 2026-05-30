@@ -14,6 +14,43 @@ except:
 from plogical.acl import ACLManager
 
 
+STAGING_LE_ISSUER = "(STAGING) Let's Encrypt"
+
+
+def _ssl_get_certificate_issuer(cert_path):
+    try:
+        import OpenSSL
+        with open(cert_path, 'r') as cert_file:
+            cert_data = cert_file.read()
+        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+        components = cert.get_issuer().get_components()
+
+        for key, value in components:
+            if key == b'O':
+                return value.decode('utf-8')
+        for key, value in components:
+            if key == b'CN':
+                return value.decode('utf-8')
+        if len(components) > 1:
+            return components[1][1].decode('utf-8')
+    except BaseException as exc:
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(
+                f'Failed to read SSL issuer from {cert_path}: {str(exc)}')
+        except BaseException:
+            pass
+    return None
+
+
+def _ssl_is_staging_provider(provider):
+    return provider == STAGING_LE_ISSUER
+
+
+def _ssl_live_cert_is_staging(domain):
+    cert_path = '/etc/letsencrypt/live/%s/fullchain.pem' % (domain)
+    return _ssl_is_staging_provider(_ssl_get_certificate_issuer(cert_path))
+
+
 class sslUtilities:
     Server_root = "/usr/local/lsws"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
@@ -173,14 +210,14 @@ class sslUtilities:
         if os.path.exists(filePath):
             import OpenSSL
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            SSLProvider = _ssl_get_certificate_issuer(filePath)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'SSL provider for {virtualHostName} is {SSLProvider}.')
 
             #### totally seprate check to see if both non-www and www are covered
 
-            if SSLProvider == "(STAGING) Let's Encrypt":
+            if _ssl_is_staging_provider(SSLProvider):
                 return sslUtilities.ISSUE_SSL
 
             if SSLProvider == "Let's Encrypt":
@@ -518,22 +555,37 @@ context /.well-known/acme-challenge {
                 else:
 
                     if sslUtilities.checkIfSSLMap(virtualHostName) == 0:
+                        from plogical import installUtilities
 
-                        data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-                        writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-                        sslCheck = 0
+                        def modify_config(lines):
+                            """Add SSL map entry to existing SSL listener"""
+                            modified = []
+                            sslCheck = 0
 
-                        for items in data:
-                            if items.find("listener") > -1 and items.find("SSL") > -1:
-                                sslCheck = 1
+                            for line in lines:
+                                if line.find("listener") > -1 and line.find("SSL") > -1:
+                                    sslCheck = 1
 
-                            if (sslCheck == 1):
-                                writeDataToFile.writelines(items)
-                                writeDataToFile.writelines(map)
-                                sslCheck = 0
-                            else:
-                                writeDataToFile.writelines(items)
-                        writeDataToFile.close()
+                                if (sslCheck == 1):
+                                    modified.append(line)
+                                    modified.append(map)
+                                    sslCheck = 0
+                                else:
+                                    modified.append(line)
+
+                            return modified
+
+                        # Use safe modification with backup and validation
+                        success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                            modify_config,
+                            f"Add SSL map entry for {virtualHostName}"
+                        )
+
+                        if not success:
+                            error_msg = error if error else "Unknown error"
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                f"[sslUtilities] Failed to add SSL map entry: {error_msg}")
+                            raise BaseException(f"Failed to add SSL map entry: {error_msg}")
 
                     ###################### Write per host Configs for SSL ###################
 
@@ -697,11 +749,30 @@ context /.well-known/acme-challenge {
 
         sslUtilities.PatchVhostConf(virtualHostName)
 
-        if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
-            command = f'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
+        default_webroot = '/usr/local/lsws/Example/html'
+        # Child domains: use their docroot so HTTP-01 challenge is served from the correct vhost
+        if sslpath and str(sslpath).strip():
+            webroot = str(sslpath).strip().rstrip('/')
+            if webroot != default_webroot and os.path.isdir(webroot):
+                challenge_path = webroot + '/.well-known/acme-challenge'
+                if not os.path.exists(challenge_path):
+                    os.makedirs(challenge_path, exist_ok=True)
+                    command = f'chmod -R 755 {webroot}/.well-known'
+                    ProcessUtilities.executioner(command)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f"Using domain webroot for ACME challenge: {webroot}")
+            else:
+                webroot = default_webroot
+                challenge_path = None
+        else:
+            webroot = default_webroot
+            challenge_path = None
+
+        if not os.path.exists(default_webroot + '/.well-known/acme-challenge'):
+            command = f'mkdir -p {default_webroot}/.well-known/acme-challenge'
             ProcessUtilities.normalExecutioner(command)
 
-        command = f'chmod -R 755 /usr/local/lsws/Example/html'
+        command = f'chmod -R 755 {default_webroot}'
         ProcessUtilities.executioner(command)
 
         # Try Let's Encrypt first
@@ -738,8 +809,12 @@ context /.well-known/acme-challenge {
             except:
                 pass
 
-            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='letsencrypt')
+            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='letsencrypt', challenge_path=challenge_path)
             if acme.issue_certificate(domains, use_dns=use_dns):
+                if _ssl_live_cert_is_staging(virtualHostName):
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f"Refusing to accept staging Let's Encrypt SSL for: {virtualHostName}")
+                    return 0
                 logging.CyberCPLogFileWriter.writeToFile(
                     f"Successfully obtained SSL using Let's Encrypt for: {virtualHostName}")
                 return 1
@@ -783,8 +858,12 @@ context /.well-known/acme-challenge {
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"www.{aliasDomain} has no DNS records, excluding from SSL request")
 
-            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='zerossl')
+            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='zerossl', challenge_path=challenge_path)
             if acme.issue_certificate(domains, use_dns=use_dns):
+                if _ssl_live_cert_is_staging(virtualHostName):
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f"Refusing to accept staging Let's Encrypt SSL for: {virtualHostName}")
+                    return 0
                 logging.CyberCPLogFileWriter.writeToFile(
                     f"Successfully obtained SSL using ZeroSSL for: {virtualHostName}")
                 return 1
@@ -820,9 +899,11 @@ context /.well-known/acme-challenge {
                         logging.CyberCPLogFileWriter.writeToFile(
                             f"www.{virtualHostName} has no DNS records, excluding from acme.sh SSL request")
 
-                    # Step 1: Issue the certificate (staging) - this stores config in /root/.acme.sh/
+                    # Issue the production certificate directly. Staging certificates must never be
+                    # written to /etc/letsencrypt/live.
                     command = acmePath + " --issue" + domain_list \
-                              + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging'
+                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + shlex.quote(webroot) + ' -k ec-256 --force --server letsencrypt'
 
                     try:
                         result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
@@ -832,37 +913,33 @@ context /.well-known/acme-challenge {
                                                 universal_newlines=True, shell=True)
 
                     if result.returncode == 0:
-                        # Step 2: Issue the certificate (production) - this stores config in /root/.acme.sh/
-                        command = acmePath + " --issue" + domain_list \
-                                  + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+                        install_command = acmePath + " --install-cert -d " + virtualHostName \
+                                        + ' --ecc' \
+                                        + ' --cert-file ' + existingCertPath + '/cert.pem' \
+                                        + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
 
                         try:
-                            result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                            install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
                         except TypeError:
                             # Fallback for Python < 3.7
-                            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                    universal_newlines=True, shell=True)
+                            install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                            universal_newlines=True, shell=True)
 
-                        if result.returncode == 0:
-                            # Step 3: Install the certificate to the desired location
-                            install_command = acmePath + " --install-cert -d " + virtualHostName \
-                                            + ' --cert-file ' + existingCertPath + '/cert.pem' \
-                                            + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
-
-                            try:
-                                install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
-                            except TypeError:
-                                # Fallback for Python < 3.7
-                                install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                                universal_newlines=True, shell=True)
-
-                            if install_result.returncode == 0:
+                        if install_result.returncode == 0:
+                            if _ssl_live_cert_is_staging(virtualHostName):
                                 logging.CyberCPLogFileWriter.writeToFile(
-                                    "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
-                                logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, result.stdout,
-                                                                       'SSL Notification for %s.' % (virtualHostName))
-                                return 1
+                                    f"Refusing to install staging Let's Encrypt SSL for: {virtualHostName}")
+                                return 0
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                            logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, result.stdout,
+                                                                   'SSL Notification for %s.' % (virtualHostName))
+                            return 1
+                    else:
+                        error_output = result.stderr if hasattr(result, 'stderr') and result.stderr else result.stdout
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f"Production acme.sh issue failed for {virtualHostName}: {error_output}")
                     return 0
                 except Exception as e:
                     logging.CyberCPLogFileWriter.writeToFile(str(e))
@@ -890,7 +967,8 @@ context /.well-known/acme-challenge {
 
                     # Step 1: Issue the certificate - this stores config in /root/.acme.sh/
                     command = acmePath + " --issue" + domain_list \
-                              + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + shlex.quote(webroot) + ' -k ec-256 --force --server letsencrypt'
 
                     try:
                         result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
@@ -902,6 +980,7 @@ context /.well-known/acme-challenge {
                     if result.returncode == 0:
                         # Step 2: Install the certificate to the desired location
                         install_command = acmePath + " --install-cert -d " + virtualHostName \
+                                        + ' --ecc' \
                                         + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                         + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                         + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
@@ -914,6 +993,10 @@ context /.well-known/acme-challenge {
                                                             universal_newlines=True, shell=True)
 
                         if install_result.returncode == 0:
+                            if _ssl_live_cert_is_staging(virtualHostName):
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    f"Refusing to install staging Let's Encrypt SSL for: {virtualHostName}")
+                                return 0
                             return 1
                     return 0
                 except Exception as e:
@@ -924,6 +1007,77 @@ context /.well-known/acme-challenge {
             return 0
 
 
+def _ssl_resolve_acme_webroot(sslpath):
+    """Match obtainSSLForADomain webroot selection for HTTP-01 (child domains / custom docroot)."""
+    default_webroot = '/usr/local/lsws/Example/html'
+    if sslpath and str(sslpath).strip():
+        webroot = str(sslpath).strip().rstrip('/')
+        if webroot != default_webroot and os.path.isdir(webroot):
+            return webroot
+    return default_webroot
+
+
+def _ssl_privkey_is_ecdsa(privkey_path):
+    """True if privkey is ECDSA (CyberPanel acme.sh -k ec-256); False for legacy RSA."""
+    if not os.path.exists(privkey_path):
+        return True
+    try:
+        try:
+            proc = subprocess.run(
+                ['openssl', 'ec', '-in', privkey_path, '-noout'],
+                capture_output=True, text=True, timeout=15,
+            )
+        except TypeError:
+            proc = subprocess.run(
+                ['openssl', 'ec', '-in', privkey_path, '-noout'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True, timeout=15,
+            )
+        return proc.returncode == 0
+    except BaseException as exc:
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(
+                '_ssl_privkey_is_ecdsa: %s, assuming ECDSA' % (str(exc),))
+        except BaseException:
+            pass
+        return True
+
+
+def _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
+    """Run acme.sh --install-cert so renewed certs are copied to /etc/letsencrypt/live/."""
+    live_dir = '/etc/letsencrypt/live/' + domain
+    if not os.path.exists(live_dir):
+        subprocess.call(shlex.split('mkdir -p ' + live_dir))
+    install_command = acmePath + ' --install-cert -d ' + shlex.quote(domain)
+    if use_ecc:
+        install_command += ' --ecc'
+    install_command += (
+        ' --cert-file ' + live_dir + '/cert.pem'
+        ' --key-file ' + live_dir + '/privkey.pem'
+        ' --fullchain-file ' + live_dir + '/fullchain.pem'
+    )
+    try:
+        install_result = subprocess.run(
+            install_command, capture_output=True, text=True, shell=True)
+    except TypeError:
+        install_result = subprocess.run(
+            install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, shell=True)
+    if install_result.returncode != 0:
+        err = ''
+        try:
+            err = (install_result.stderr or install_result.stdout or '').strip()
+        except BaseException:
+            err = ''
+        logging.CyberCPLogFileWriter.writeToFile(
+            'acme.sh install-cert failed for %s (exit %s): %s' % (
+                domain, install_result.returncode, err[:2000]))
+        return False
+    logging.CyberCPLogFileWriter.writeToFile(
+        'Deployed renewed certificate to %s via acme.sh install-cert' % (live_dir,), 0)
+    return True
+
+
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False):
     try:
         # Check if certificate already exists and try to renew it first
@@ -931,6 +1085,8 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
         if os.path.exists(existingCertPath):
             # Check if certificate is expired
             is_expired = False
+            ssl_provider = None
+            is_staging_cert = False
             try:
                 import OpenSSL
                 from datetime import datetime
@@ -941,7 +1097,10 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 now = datetime.now()
                 diff = final_date - now
                 is_expired = diff.days < 0
-                logging.CyberCPLogFileWriter.writeToFile(f"Certificate for {domain} expires in {diff.days} days")
+                ssl_provider = _ssl_get_certificate_issuer(existingCertPath)
+                is_staging_cert = _ssl_is_staging_provider(ssl_provider)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f"Certificate for {domain} expires in {diff.days} days. Provider: {ssl_provider}")
             except Exception as e:
                 logging.CyberCPLogFileWriter.writeToFile(f"Could not check certificate expiry: {str(e)}")
 
@@ -949,10 +1108,22 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
             # Try to renew using acme.sh
             acmePath = '/root/.acme.sh/acme.sh'
-            if os.path.exists(acmePath):
+            if is_staging_cert:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f"Existing certificate for {domain} is Let's Encrypt staging; skipping acme.sh renew and forcing production issue.")
+            elif os.path.exists(acmePath):
                 # First set the webroot path for the domain
                 command = f'{acmePath} --update-account --accountemail {adminEmail}'
                 subprocess.call(command, shell=True)
+                command = f'{acmePath} --set-default-ca --server letsencrypt'
+                subprocess.call(command, shell=True)
+
+                webroot = _ssl_resolve_acme_webroot(sslpath)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'ACME renew webroot for {domain}: {webroot}', 0)
+
+                privkey_path = '/etc/letsencrypt/live/' + domain + '/privkey.pem'
+                use_ecc = _ssl_privkey_is_ecdsa(privkey_path)
 
                 # Build domain list for renewal
                 renewal_domains = f'-d {domain}'
@@ -963,10 +1134,17 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 if is_expired:
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"Certificate is expired, using --issue --force for {domain}")
-                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    key_opt = ' -k ec-256' if use_ecc else ''
+                    command = (
+                        f'{acmePath} --issue {renewal_domains} -w {shlex.quote(webroot)}'
+                        f'{key_opt} --force --server letsencrypt'
+                    )
                 else:
-                    # Try to renew with explicit webroot
-                    command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    ecc_opt = ' --ecc' if use_ecc else ''
+                    command = (
+                        f'{acmePath} --renew {renewal_domains} -w {shlex.quote(webroot)}'
+                        f'{ecc_opt} --force --server letsencrypt'
+                    )
 
                 try:
                     result = subprocess.run(command, capture_output=True, text=True, shell=True)
@@ -977,7 +1155,13 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
-                    if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
+                    if not _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'install-cert after renew failed for {domain}; will try full obtain path', 1)
+                    elif _ssl_live_cert_is_staging(domain):
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f"Renewed certificate for {domain} is staging; will try full production obtain path", 1)
+                    elif sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                         return [1, "SSL successfully renewed"]
                 else:
                     # Parse ACME error details
@@ -1000,17 +1184,17 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             ### if so, dont issue self-signed ssl, as it may override some existing ssl
 
             if os.path.exists(pathToStoreSSLFullChain):
-                import OpenSSL
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(pathToStoreSSLFullChain, 'r').read())
-                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                SSLProvider = _ssl_get_certificate_issuer(pathToStoreSSLFullChain)
 
-                if SSLProvider != 'Denial':
+                if SSLProvider != 'Denial' and not _ssl_is_staging_provider(SSLProvider):
                     if sslUtilities.installSSLForDomain(domain) == 1:
                         logging.CyberCPLogFileWriter.writeToFile(
                             "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www).")
                         return [1,
                                 "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www)." + " [issueSSLForDomain]"]
+                elif _ssl_is_staging_provider(SSLProvider):
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Existing SSL for " + domain + " is Let's Encrypt staging; not installing it as a valid certificate.")
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)
@@ -1024,3 +1208,59 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
     except BaseException as msg:
         return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
+
+def reconcile_ssl_all():
+    """Reconcile SSL configuration for all domains using the reconciliation module."""
+    try:
+        from plogical.sslReconcile import SSLReconcile
+        return SSLReconcile.reconcile_all()
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile(f"Error in reconcile_ssl_all: {str(e)}")
+        return False
+
+
+def reconcile_ssl_domain(domain):
+    """Reconcile SSL configuration for a specific domain using the reconciliation module."""
+    try:
+        from plogical.sslReconcile import SSLReconcile
+        return SSLReconcile.reconcile_domain(domain)
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile(f"Error in reconcile_ssl_domain for {domain}: {str(e)}")
+        return False
+
+
+def fix_acme_challenge_context(virtualHostName):
+    """Fix ACME challenge context for a specific domain."""
+    try:
+        from plogical.sslReconcile import SSLReconcile
+
+        vconf_path = f"{sslUtilities.Server_root}/conf/vhosts/{virtualHostName}/vhost.conf"
+
+        if not os.path.exists(vconf_path):
+            logging.CyberCPLogFileWriter.writeToFile(f"VHost configuration not found: {vconf_path}")
+            return False
+
+        docroot = ""
+        with open(vconf_path, 'r') as f:
+            for line in f:
+                if line.strip().startswith('docRoot'):
+                    docroot = line.split()[1]
+                    break
+
+        if not docroot:
+            logging.CyberCPLogFileWriter.writeToFile(f"No docRoot found for {virtualHostName}")
+            return False
+
+        if docroot.startswith('$VH_ROOT/'):
+            docroot = docroot.replace('$VH_ROOT', f"/home/{virtualHostName}")
+
+        return SSLReconcile.fix_context_location(vconf_path, docroot)
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile(
+            f"Error fixing ACME challenge context for {virtualHostName}: {str(e)}")
+        return False
+
+
+sslUtilities.reconcile_ssl_all = staticmethod(reconcile_ssl_all)
+sslUtilities.reconcile_ssl_domain = staticmethod(reconcile_ssl_domain)
+sslUtilities.fix_acme_challenge_context = staticmethod(fix_acme_challenge_context)
