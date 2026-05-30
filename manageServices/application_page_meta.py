@@ -64,10 +64,12 @@ def _cold_fetch_version_inventory(major, rmq, support):
     return inv
 
 
-def _resolve_version_inventory(cache_key, major, rmq, support):
+def _resolve_version_inventory(cache_key, major, rmq, support, allow_cold_fetch=True):
     cached = _versions_inventory_cache_get(cache_key)
     if cached is not None:
         return cached
+    if not allow_cold_fetch:
+        return {app_name: [] for app_name in ('Elasticsearch', 'Redis', 'RabbitMQ')}
     inv = _cold_fetch_version_inventory(major, rmq, support)
     _versions_inventory_cache_put(cache_key, inv)
     return inv
@@ -154,13 +156,16 @@ def _assemble_manage_applications_payload(major, rmq, support, version_inv):
     return services, meta_json
 
 
-def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
+def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4', allow_cold_fetch=True):
     """
     Build `services` for card HTML and a JSON-serializable bootstrap matching
     /manageservices/applicationMeta shape (default ES major 8, RMQ stream 4).
 
     Version lists are cached for _VERSIONS_INVENTORY_TTL_SECONDS to avoid repeated
     DNF/repoquery on every page view; install status is always detected live.
+    When allow_cold_fetch is False (Manage Applications HTML), uncached version
+    lists stay empty so the page returns immediately; the UI loads versions via
+    POST /manageservices/applicationMeta when the user opens install/upgrade.
     """
     support = managed_apps_os_support()
     major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
@@ -169,7 +174,9 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
         major, rmq, 1 if support.get('supported') else 0
     )
 
-    version_inv = _resolve_version_inventory(cache_key, major, rmq, support)
+    version_inv = _resolve_version_inventory(
+        cache_key, major, rmq, support, allow_cold_fetch=allow_cold_fetch
+    )
     return _assemble_manage_applications_payload(major, rmq, support, version_inv)
 
 
@@ -182,7 +189,7 @@ def get_application_meta_response_dict(es_major='8', rabbitmq_stream='4'):
     major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
     rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '4'
 
-    _, meta_json = build_manage_applications_page_data(major, rmq)
+    _, meta_json = build_manage_applications_page_data(major, rmq, allow_cold_fetch=True)
     payload = json.loads(meta_json)
     return {
         'status': 1,

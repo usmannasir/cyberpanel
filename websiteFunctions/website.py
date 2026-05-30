@@ -20,6 +20,7 @@ from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, 
     RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites, \
     FTPQuota, BandwidthResetLog
 from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.formatUnits import format_size_from_mb
 import subprocess
 import shlex
 from plogical.installUtilities import installUtilities
@@ -2705,7 +2706,7 @@ Require valid-user
 
             # Calculate disk usage
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
-            diskUsed = "%sMB" % str(DiskUsage)
+            diskUsed = format_size_from_mb(DiskUsage)
 
             # Convert numeric state to text
             state = "Active" if website.state == 1 else "Suspended"
@@ -3821,6 +3822,49 @@ context /cyberpanel_suspension_page.html {
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+
+    def loadSiteWorkspace(self, request=None, userID=None):
+        """Lightweight single-site hub (tiles). Avoids loadDomainHome heavy work."""
+        import os
+        from plogical.httpProc import httpProc
+
+        if not Websites.objects.filter(domain=self.domain).exists():
+            proc = httpProc(
+                request,
+                'baseTemplate/siteWorkspace.html',
+                {'error': 1, 'domain': self.domain, 'siteState': 0, 'phpSelection': '', 'sslState': 0, 'packageName': ''},
+            )
+            return proc.render()
+
+        currentACL = ACLManager.loadedACL(userID)
+        website = Websites.objects.get(domain=self.domain)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) != 1:
+            return ACLManager.loadError()
+
+        ssl_state = int(website.ssl or 0)
+        cert_path = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
+        if os.path.isfile(cert_path):
+            ssl_state = 1
+
+        package_name = ''
+        try:
+            if website.package_id:
+                package_name = website.package.packageName
+        except BaseException:
+            package_name = ''
+
+        data = {
+            'domain': self.domain,
+            'siteState': int(website.state if website.state is not None else 1),
+            'phpSelection': website.phpSelection or '',
+            'sslState': ssl_state,
+            'packageName': package_name,
+        }
+        proc = httpProc(request, 'baseTemplate/siteWorkspace.html', data)
+        return proc.render()
+
     def loadDomainHome(self, request=None, userID=None, data=None):
 
         if Websites.objects.filter(domain=self.domain).exists():
@@ -4014,7 +4058,7 @@ context /cyberpanel_suspension_page.html {
                 lscgctl_path = '/usr/local/lsws/lsns/bin/lscgctl'
                 if os.path.exists(lscgctl_path):
                     # Get the website username
-                    username = website.exsysUser
+                    username = website.externalApp
 
                     # Run lscgctl list-user command
                     result = subprocess.run(
@@ -5780,7 +5824,7 @@ StrictHostKeyChecking no
             except:
                 PHPVersionActual = 'PHP 8.1'
 
-            diskUsed = "%sMB" % str(DiskUsage)
+            diskUsed = format_size_from_mb(DiskUsage)
 
             # Get WordPress sites for this website
             wp_sites = []
@@ -5835,7 +5879,7 @@ StrictHostKeyChecking no
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
 
-            diskUsed = "%sMB" % str(DiskUsage)
+            diskUsed = format_size_from_mb(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,

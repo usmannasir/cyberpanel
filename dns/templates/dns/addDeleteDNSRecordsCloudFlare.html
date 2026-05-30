@@ -1266,9 +1266,14 @@
                                         {% trans "Cannot add record. Error message:" %} {$ errorMessage $}
                                     </div>
 
-                                    <div ng-hide="recordsFetched" class="alert alert-success">
+                                    <div ng-hide="recordsFetched" class="alert alert-success" ng-if="records.length > 0">
                                         <i class="fas fa-check-circle"></i>
                                         {% trans "Records successfully fetched for" %} <strong>{$ domainFeteched $}</strong>
+                                        ({$ filteredRecords.length $} {% trans "shown" %})
+                                    </div>
+                                    <div ng-hide="recordsFetched" class="alert alert-info" ng-if="records.length === 0 && domainFeteched">
+                                        <i class="fas fa-info-circle"></i>
+                                        {% trans "Fetch succeeded but no records of this type. Try another tab (CNAME, MX, TXT, etc.)." %}
                                     </div>
 
                                     <div ng-hide="recordDeleted" class="alert alert-success">

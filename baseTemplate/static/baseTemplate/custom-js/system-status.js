@@ -493,7 +493,7 @@ app.controller('loadAvg', function ($scope, $http, $timeout) {
             console.log("Can't get load average data");
         }
 
-        //$timeout(getStuff, 2000);
+        //$timeout(getStuff, 60000); // was 2s; reduced panel load
 
     }
 });
@@ -603,7 +603,7 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
             console.log("not good");
         }
 
-        $timeout(getStuff, 2000);
+        $timeout(getStuff, 60000); // was 2s; reduced panel load
 
     }
 
@@ -833,7 +833,7 @@ app.controller('designtheme', function ($scope, $http, $timeout) {
             console.log(response);
         }
 
-        //$timeout(getStuff, 2000);
+        //$timeout(getStuff, 60000); // was 2s; reduced panel load
 
     };
 });

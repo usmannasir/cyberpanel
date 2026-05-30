@@ -747,7 +747,7 @@ class DNSManager:
 
             self.loadCFKeys()
 
-            params = {'name': zoneDomain, 'per_page':50}
+            params = {'name': zoneDomain, 'per_page': 50}
             cf = get_cloudflare_client(self.email, self.key)
 
             try:
@@ -790,7 +790,7 @@ class DNSManager:
                     fetchType = 'CAA'
 
                 try:
-                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page':50, 'type':fetchType})
+                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page': 500, 'type': fetchType})
                 except BaseException as e:
                     final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
                     return HttpResponse(final_json)

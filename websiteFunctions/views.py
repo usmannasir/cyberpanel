@@ -1103,7 +1103,7 @@ def siteWorkspace(request, domain):
     try:
         userID = request.session['userID']
         wm = WebsiteManager(domain)
-        return wm.loadDomainHome(request, userID)
+        return wm.loadSiteWorkspace(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

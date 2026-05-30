@@ -165,11 +165,27 @@ def getSystemStatus(request):
         
         # Admin users get full system information
         if currentACL.get('admin', 0):
+            from django.core.cache import cache
+            cache_key = 'cp_admin_sysstatus'
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return HttpResponse(json.dumps(cached))
             HTTPData = SystemInformation.getSystemInformation()
+            try:
+                cache.set(cache_key, HTTPData, 45)
+            except Exception:
+                pass
             json_data = json.dumps(HTTPData)
             return HttpResponse(json_data)
         else:
-            # Non-admin users get user-specific resource information
+            # Non-admin users get user-specific resource information.
+            # Cache briefly: per-site du is slow on every poll.
+            from django.core.cache import cache
+            cache_key = 'cp_user_sysstatus_%s' % val
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return HttpResponse(json.dumps(cached))
+
             import subprocess
             import os
             
@@ -239,6 +255,11 @@ def getSystemStatus(request):
                 'uptime': 'User Account Active'
             }
             
+            try:
+                cache.set(cache_key, user_data, 300)
+            except Exception:
+                pass
+
             json_data = json.dumps(user_data)
             return HttpResponse(json_data)
             

@@ -853,7 +853,35 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     $scope.couldNotAddRecord = true;
     $scope.recordValueDefault = false;
     $scope.records = [];
+    $scope.filteredRecords = [];
+    $scope.dnsSearch = { filter: '' };
     $scope.cfDeletedBackup = {};
+
+    function applyDnsRecordFilter() {
+        var q = ($scope.dnsSearch.filter || '').toLowerCase().trim();
+        var list = $scope.records || [];
+        if (!q) {
+            $scope.filteredRecords = list;
+            return;
+        }
+        $scope.filteredRecords = list.filter(function (r) {
+            var hay = [
+                r.name || '',
+                r.type || '',
+                r.content || '',
+                String(r.ttl || ''),
+                String(r.priority || '')
+            ].join(' ').toLowerCase();
+            return hay.indexOf(q) !== -1;
+        });
+    }
+
+    $scope.$watch('dnsSearch.filter', function () {
+        applyDnsRecordFilter();
+    });
+    $scope.$watch('records', function () {
+        applyDnsRecordFilter();
+    }, true);
     $scope.exportLoading = false;
     $scope.clearAllLoading = false;
     $scope.restoreLoading = false;
@@ -1056,6 +1084,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
             if (response.data.fetchStatus === 1) {
 
                 $scope.records = JSON.parse(response.data.data);
+                applyDnsRecordFilter();
 
                 $scope.currentRecords = false;
                 $scope.canNotFetchRecords = true;
@@ -1080,6 +1109,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
                 $scope.recordsLoading = true;
                 $scope.couldNotAddRecord = true;
                 $scope.records = [];
+                $scope.filteredRecords = [];
 
                 $scope.errorMessage = response.data.error_message;
             }

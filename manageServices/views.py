@@ -277,7 +277,7 @@ def saveStatus(request):
 
 def manageApplications(request):
     services, application_meta_bootstrap_json = build_manage_applications_page_data(
-        '8', '4'
+        '8', '4', allow_cold_fetch=False
     )
 
     proc = httpProc(
