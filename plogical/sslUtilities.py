@@ -1129,16 +1129,31 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
             if os.path.exists(pathToStoreSSLFullChain):
                 import OpenSSL
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(pathToStoreSSLFullChain, 'r').read())
+                from datetime import datetime
+                with open(pathToStoreSSLFullChain, 'r') as _cf:
+                    _pem = _cf.read()
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, _pem)
                 SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
                 if SSLProvider != 'Denial':
+                    expireData = x509.get_notAfter().decode('ascii')
+                    finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+                    if (finalDate - datetime.now()).days < 0:
+                        msg = (
+                            "Renewal failed and the certificate on the server is expired. "
+                            "HTTP validation often fails when the domain is behind Cloudflare proxy "
+                            "(orange cloud): use DNS-only mode temporarily, or issue SSL via DNS challenge. "
+                            "Check /home/cyberpanel/error-logs.txt for ACME details. [issueSSLForDomain]"
+                        )
+                        logging.CyberCPLogFileWriter.writeToFile(msg)
+                        return [0, msg]
                     if sslUtilities.installSSLForDomain(domain) == 1:
                         logging.CyberCPLogFileWriter.writeToFile(
                             "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www).")
-                        return [1,
-                                "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www)." + " [issueSSLForDomain]"]
+                        return [0,
+                                "Could not renew SSL. An older certificate is still installed. "
+                                "If you use Cloudflare, turn off proxy (grey cloud) for the site during issuance, "
+                                "or use DNS validation. See error logs. [issueSSLForDomain]"]
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)

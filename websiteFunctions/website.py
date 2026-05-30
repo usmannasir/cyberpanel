@@ -2728,6 +2728,26 @@ Require valid-user
             })
         return json.dumps(json_data)
 
+
+    @staticmethod
+    def _load_pem_certificate(filePath):
+        """Read PEM cert; fall back to openssl when panel user cannot read the file."""
+        import shlex
+        try:
+            with open(filePath, 'r') as cert_file:
+                return cert_file.read()
+        except (IOError, OSError, PermissionError):
+            pass
+        try:
+            from plogical.processUtilities import ProcessUtilities
+            cmd = 'openssl x509 -in %s -outform PEM 2>/dev/null' % shlex.quote(filePath)
+            out = ProcessUtilities.outputExecutioner(cmd)
+            if out and 'BEGIN CERTIFICATE' in out:
+                return out
+        except BaseException:
+            pass
+        return None
+
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
         try:
@@ -2748,7 +2768,7 @@ Require valid-user
                         try:
                             x509 = OpenSSL.crypto.load_certificate(
                                 OpenSSL.crypto.FILETYPE_PEM,
-                                open(wildcard_path, 'r').read()
+                                WebsiteManager._load_pem_certificate(wildcard_path) or ''
                             )
                             cn = None
                             for component in x509.get_subject().get_components():
@@ -2773,7 +2793,7 @@ Require valid-user
             # Load and analyze certificate
             x509 = OpenSSL.crypto.load_certificate(
                 OpenSSL.crypto.FILETYPE_PEM,
-                open(filePath, 'r').read()
+                WebsiteManager._load_pem_certificate(filePath) or ''
             )
             
             # Get expiration date
@@ -3925,7 +3945,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(filePath, 'r').read())
+                                                       WebsiteManager._load_pem_certificate(filePath) or '')
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
