@@ -3,14 +3,29 @@ import bcrypt
 import hashlib
 
 def hash_password(password):
-    # uuid is used to generate a random number
-    salt = uuid.uuid4().hex
-    return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return '$bcrypt$' + hashed.decode('utf-8')
 
 
 def check_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
+    if not hashed_password:
+        return False
+    if str(hashed_password).startswith('$bcrypt$'):
+        stored = str(hashed_password)[8:].encode('utf-8')
+        try:
+            return bcrypt.checkpw(user_password.encode('utf-8'), stored)
+        except ValueError:
+            return False
+    try:
+        password, salt = hashed_password.split(':', 1)
+    except ValueError:
+        return False
     return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
+
+
+def needs_password_rehash(hashed_password):
+    return not str(hashed_password or '').startswith('$bcrypt$')
 
 # def generateToken(serverUserName, serverPassword):
 #     credentials = '{0}:{1}'.format(serverUserName, serverPassword).encode()

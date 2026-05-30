@@ -19,7 +19,10 @@ def router(request):
 
         serverUserName = data['serverUserName']
 
-        admin = Administrator.objects.get(userName=serverUserName)
+        from plogical.usernameUtils import resolve_administrator_by_login_name, GENERIC_AUTH_FAIL
+        admin, exact_match = resolve_administrator_by_login_name(serverUserName)
+        if not admin or not exact_match:
+            return HttpResponse(json.dumps({'status': 0, 'error_message': GENERIC_AUTH_FAIL}), content_type='application/json')
 
         cm = CloudManager(data, admin)
 

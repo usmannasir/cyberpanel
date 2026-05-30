@@ -31,7 +31,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
+# Loaded from /etc/cyberpanel/django_secret or CYBERPANEL_DJANGO_SECRET_KEY (see plogical/djangoSecrets.py)
+from plogical.djangoSecrets import get_django_secret_key
+_SECRET_FALLBACK = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
+SECRET_KEY = get_django_secret_key(fallback=_SECRET_FALLBACK, create_if_missing=True)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False

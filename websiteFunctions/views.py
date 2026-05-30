@@ -1098,6 +1098,16 @@ def domain(request, domain):
         return redirect(loadLoginPage)
 
 
+def siteWorkspace(request, domain):
+    """Single-site workspace hub (linked from list websites)."""
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.loadDomainHome(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def launchChild(request, domain, childDomain):
     try:
         userID = request.session['userID']
@@ -1453,6 +1463,15 @@ def setupGitRepo(request):
 @csrf_exempt
 def gitNotify(request, domain):
     try:
+        from plogical.webhookSecurity import verify_git_webhook_for_domain
+        payload = {}
+        try:
+            payload = json.loads(request.body) if request.body else {}
+        except Exception:
+            payload = {}
+        folder = '/home/%s/public_html' % (domain)
+        if not verify_git_webhook_for_domain(request, domain, folder, payload):
+            return HttpResponse(json.dumps({'status': 0, 'error_message': 'Unauthorized'}), status=401, content_type='application/json')
         wm = WebsiteManager(domain)
         return wm.gitNotify()
     except KeyError:
@@ -1838,7 +1857,7 @@ def addSSHKey(request):
 def webhook(request, domain):
     try:
         wm = WebsiteManager()
-        return wm.webhook(domain, json.loads(request.body))
+        return wm.webhook(domain, json.loads(request.body), request)
     except KeyError:
         return redirect(loadLoginPage)
 

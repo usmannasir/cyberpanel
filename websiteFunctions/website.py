@@ -6504,6 +6504,11 @@ StrictHostKeyChecking no
                             except:
                                 self.webhookCommandCurrent = "False"
 
+                            try:
+                                self.webhookSecret = gitConf.get('webhookSecret', '')
+                            except:
+                                self.webhookSecret = ''
+
                             self.confCheck = 0
                             break
 
@@ -6512,6 +6517,7 @@ StrictHostKeyChecking no
                 self.autoPushCurrent = 'Never'
                 self.emailLogsCurrent = 'False'
                 self.webhookCommandCurrent = 'False'
+                self.webhookSecret = ''
                 self.commands = "Add Commands to run after every commit, separate commands using comma."
 
             ##
@@ -6649,7 +6655,10 @@ StrictHostKeyChecking no
 
                 port = ProcessUtilities.fetchCurrentPort()
 
+                from plogical.webhookSecurity import append_token_to_webhook_url
                 webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
+                if getattr(self, 'webhookSecret', ''):
+                    webHookURL = append_token_to_webhook_url(webHookURL, self.webhookSecret)
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits,
@@ -7599,6 +7608,16 @@ StrictHostKeyChecking no
 
             dic['folder'] = self.folder
 
+            from plogical.webhookSecurity import generate_webhook_secret
+            if getattr(self, 'confCheck', 1) == 0 and getattr(self, 'finalFile', None) and os.path.exists(self.finalFile):
+                try:
+                    existing = json.loads(open(self.finalFile, 'r').read())
+                    dic['webhookSecret'] = existing.get('webhookSecret') or generate_webhook_secret()
+                except Exception:
+                    dic['webhookSecret'] = generate_webhook_secret()
+            else:
+                dic['webhookSecret'] = generate_webhook_secret()
+
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -7694,7 +7713,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def webhook(self, domain, data=None):
+    def webhook(self, domain, data=None, request=None):
         try:
 
             self.domain = domain
@@ -7715,6 +7734,11 @@ StrictHostKeyChecking no
             ## Check if remote exists
 
             self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
+            from plogical.webhookSecurity import verify_git_webhook_for_domain
+            if not verify_git_webhook_for_domain(request, self.masterDomain, self.folder, data):
+                data_ret = {'status': 0, 'error_message': 'Unauthorized'}
+                return HttpResponse(json.dumps(data_ret), status=401)
 
             command = 'git -C %s pull' % (self.folder)
             commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
