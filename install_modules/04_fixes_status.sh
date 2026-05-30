@@ -351,6 +351,11 @@ EOF
         Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt" || true
     fi
 
+    echo "  • Installing SSH login banner (/etc/profile.d/cyberpanel.sh)..."
+    if declare -F Install_Cyberpanel_Ssh_Login_Banner >/dev/null 2>&1; then
+        Install_Cyberpanel_Ssh_Login_Banner && echo "  ✓ SSH login banner installed" || echo "  ⚠ SSH login banner install skipped (download failed)"
+    fi
+
     echo "  ✓ Post-installation configurations completed"
 }
 

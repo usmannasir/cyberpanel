@@ -27,6 +27,13 @@ require_root() {
     exit 1
 }
 
+# SSH login banner helper (install/cyberpanel_ssh_login_banner.sh)
+_CYBERPANEL_INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "${_CYBERPANEL_INSTALL_ROOT}/install/cyberpanel_ssh_login_banner.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_CYBERPANEL_INSTALL_ROOT}/install/cyberpanel_ssh_login_banner.sh"
+fi
+
 # Global variables
 CYBERPANEL_LOG_DIR="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
 SERVER_OS=""
