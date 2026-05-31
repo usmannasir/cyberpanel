@@ -79,15 +79,20 @@ class SystemInformation:
             import psutil
             
             # Get usage percentages
-            ram_percent = int(math.floor(psutil.virtual_memory()[2]))
-            cpu_percent = int(math.floor(psutil.cpu_percent()))
-            disk_percent = int(math.floor(psutil.disk_usage('/')[3]))
-            
+            vm = psutil.virtual_memory()
+            ram_percent = int(math.floor(vm.percent))
+            if not getattr(SystemInformation, '_cpu_percent_ready', False):
+                psutil.cpu_percent(interval=None)
+                SystemInformation._cpu_percent_ready = True
+            cpu_percent = int(math.floor(psutil.cpu_percent(interval=None)))
+            disk = psutil.disk_usage('/')
+            disk_percent = int(math.floor(disk.percent))
+
             # Get total system information
-            cpu_cores = psutil.cpu_count()
-            ram_total_mb = int(psutil.virtual_memory().total / (1024 * 1024))
-            disk_total_gb = int(psutil.disk_usage('/').total / (1024 * 1024 * 1024))
-            disk_free_gb = int(psutil.disk_usage('/').free / (1024 * 1024 * 1024))
+            cpu_cores = psutil.cpu_count() or 1
+            ram_total_mb = int(vm.total / (1024 * 1024))
+            disk_total_gb = int(disk.total / (1024 * 1024 * 1024))
+            disk_free_gb = int(disk.free / (1024 * 1024 * 1024))
             
             # Get uptime
             uptime_seconds = int(psutil.boot_time())
@@ -129,9 +134,14 @@ class SystemInformation:
     def cpuRamDisk():
         try:
             import psutil
-            SystemInfo = {'ramUsage': int(math.floor(psutil.virtual_memory()[2])),
-                          'cpuUsage': int(math.floor(psutil.cpu_percent())),
-                          'diskUsage': int(math.floor(psutil.disk_usage('/')[3]))}
+            vm = psutil.virtual_memory()
+            if not getattr(SystemInformation, '_cpu_percent_ready', False):
+                psutil.cpu_percent(interval=None)
+                SystemInformation._cpu_percent_ready = True
+            cpu_u = int(math.floor(psutil.cpu_percent(interval=None)))
+            SystemInfo = {'ramUsage': int(math.floor(vm.percent)),
+                          'cpuUsage': cpu_u,
+                          'diskUsage': int(math.floor(psutil.disk_usage('/').percent))}
         except:
             SystemInfo = {'ramUsage': 0,
                           'cpuUsage': 0,

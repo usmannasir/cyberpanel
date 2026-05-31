@@ -15,6 +15,41 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 
 
+
+### Security: remediation SEC-01 through SEC-14 (30/05/2026)
+
+- **SEC-02:** Git `/websites/<domain>/webhook` and `/gitNotify` require `webhookSecret` (query `token`, header `X-CyberPanel-Webhook-Token`, or JSON). Secrets are stored in `/home/cyberpanel/git/` JSON and shown in the panel webhook URL after save. Run `plogical/migrate_git_webhook_secrets.py` on upgraded hosts, then re-copy webhook URLs from Git settings.
+- **SEC-01:** Django `SECRET_KEY` loads from `/etc/cyberpanel/django_secret` or `CYBERPANEL_DJANGO_SECRET_KEY`; first boot seeds the legacy key into the file without rotating sessions.
+- **SEC-04:** New passwords use bcrypt (`$bcrypt$` prefix); legacy SHA256 hashes still verify and rehash on successful login.
+- **SEC-13:** Case-exact panel login and cloud API username; migration `0002_username_case_sensitive` sets `userName` to `utf8mb4_bin`.
+- **SEC-14:** Modify Users supports optional username rename with ACL (admin, owner, or self).
+- **SEC-06:** Installer `-p d|r|PASSWORD` and `CYBERPANEL_ADMIN_PASSWORD` for first admin account (default, random, or custom).
+- **SEC-09 / SEC-03:** Ops scripts `scripts/security/enable-fail2ban-cyberpanel.sh` and `restrict-panel-port-2087.sh` (run manually on the server).
+
+
+
+
+### Fixed: SOA serial not updated on DNS record edit or delete (31/05/2026)
+
+- Fixes [#1785](https://github.com/usmannasir/cyberpanel/issues/1785): SOA serial now increments on update and delete, not only on add.
+- Added `DNS.bumpSOASerial()` in `plogical/dnsUtilities.py`; `updateRecord` and `deleteDNSRecord` call it for MASTER zones (skips direct SOA record edits).
+
+### Security: force logout after self username rename (31/05/2026)
+
+- Renaming a user clears all Django sessions for that account (`plogical/session_utils.py`).
+- Renaming your own username returns `forceLogout` and redirects to `/logout` so you must sign in with the new login name.
+
+### Fixed: Internal Error 500 on /base/ (31/05/2026)
+
+- `websiteFunctions.urls` referenced `views.siteWorkspace` but the view was missing, so Django could not load URLconf and the panel returned 500 on all routes.
+- Added `siteWorkspace()` to delegate to `WebsiteManager.loadDomainHome()` (same hub as the site home page).
+
+### Fixed: Permission denied on /etc/cyberpanel/machineIP (31/05/2026)
+
+- `/etc/cyberpanel` is now `750` with group `cyberpanel` so the panel user can read non-secret files like `machineIP`.
+- `plogical/machine_ip.py` centralizes IP reads with fallbacks; `httpProc` no longer crashes Modify Users and other pages when the file is unreadable.
+- `djangoSecrets` creates `/etc/cyberpanel` with mode `750` instead of `700`.
+
 ### Fixed: dark theme UI regression (31/05/2026)
 
 - Restored external design system CSS (`cyberpanel-ui.css`, `dashboard.css`, `cyberpanel-harmonize.css`) that were missing from the repo; `index.html` again loads tokens from CSS instead of 3000+ lines of stale inline styles.

@@ -751,22 +751,39 @@ class DNS:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
 
     @staticmethod
+    def bumpSOASerial(zone):
+        """Increment SOA serial for a MASTER zone (PowerDNS zone transfer signaling)."""
+        try:
+            if zone is None or getattr(zone, 'type', None) != 'MASTER':
+                return False
+            updated = False
+            for getSOA in Records.objects.filter(domainOwner=zone, type='SOA'):
+                parts = (getSOA.content or '').split()
+                if len(parts) < 3:
+                    continue
+                try:
+                    parts[2] = str(int(parts[2]) + 1)
+                except (TypeError, ValueError):
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'SOA serial bump skipped: invalid serial in record id %s' % (getSOA.id,)
+                    )
+                    continue
+                getSOA.content = ' '.join(parts)
+                getSOA.save()
+                updated = True
+            return updated
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [bumpSOASerial]')
+            return False
+
+    @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
 
             if Records.objects.filter(name=name, type=type, content=value).count() > 0:
                 return
 
-            if zone.type == 'MASTER':
-                try:
-                    for getSOA in Records.objects.filter(domainOwner=zone, type='SOA'):
-                    #getSOA = Records.objects.get(domainOwner=zone, type='SOA')
-                        soaContent = getSOA.content.split(' ')
-                        soaContent[2] = str(int(soaContent[2]) + 1)
-                        getSOA.content = " ".join(soaContent)
-                        getSOA.save()
-                except:
-                    pass
+            DNS.bumpSOASerial(zone)
 
 
             if type == 'NS':

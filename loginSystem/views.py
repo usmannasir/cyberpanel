@@ -94,7 +94,12 @@ def verifyLogin(request):
                     response = HttpResponse()
                     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
 
-            admin = Administrator.objects.get(userName=username)
+            from plogical.usernameUtils import resolve_administrator_by_login_name, GENERIC_AUTH_FAIL
+            admin, exact_match = resolve_administrator_by_login_name(username)
+            if not admin or not exact_match:
+                data = {'userID': 0, 'loginStatus': 0, 'error_message': GENERIC_AUTH_FAIL}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
 
             if admin.state == 'SUSPENDED':
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Account currently suspended.'}
@@ -114,6 +119,13 @@ def verifyLogin(request):
             password_check_result = hashPassword.check_password(admin.password, password)
 
             if password_check_result:
+                try:
+                    from plogical import hashPassword as hp
+                    if hp.needs_password_rehash(admin.password):
+                        admin.password = hp.hash_password(password)
+                        admin.save(update_fields=['password'])
+                except Exception:
+                    pass
                 if admin.twoFA:
                     if request.session.get('twofa', 1) == 0:
                         import pyotp

@@ -54,6 +54,26 @@ parse_arguments() {
                     exit 1
                 fi
                 ;;
+            -p|--admin-password)
+                if [ -n "$2" ]; then
+                    case "$2" in
+                        d|default)
+                            CYBERPANEL_ADMIN_PASSWORD_MODE=default
+                            ;;
+                        r|random)
+                            CYBERPANEL_ADMIN_PASSWORD_MODE=random
+                            ;;
+                        *)
+                            CYBERPANEL_ADMIN_PASSWORD_MODE=custom
+                            CYBERPANEL_ADMIN_PASSWORD_CUSTOM="$2"
+                            ;;
+                    esac
+                    shift 2
+                else
+                    echo "ERROR: -p/--admin-password requires d (default), r (random), or a custom password"
+                    exit 1
+                fi
+                ;;
             --debug)
                 DEBUG_MODE=true
                 set -x
@@ -109,6 +129,7 @@ parse_arguments() {
                 echo "  --auto                Auto mode: OpenLiteSpeed + MariaDB 11.8 unless --mariadb-version set"
                 echo "  --powerdns ON|OFF     Install PowerDNS (default ON)"
                 echo "  --postfix ON|OFF      Install Postfix/Dovecot email (default ON)"
+                echo "  -p, --admin-password  Admin password: d (default 1234567), r (random), or custom value"
                 echo "  --ftp ON|OFF          Install Pure-FTPd (default ON)"
                 echo "  -h, --help            Show this help message"
                 echo ""

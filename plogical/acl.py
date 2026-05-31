@@ -120,13 +120,8 @@ class ACLManager:
 
     @staticmethod
     def fetchIP():
-        try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            return ipData.split('\n', 1)[0]
-        except BaseException:
-            return "192.168.100.1"
+        from plogical.machine_ip import read_machine_ip
+        return read_machine_ip("192.168.100.1")
 
     @staticmethod
     def validateInput(value, regex = None):
@@ -1092,10 +1087,8 @@ class ACLManager:
 
     @staticmethod
     def GetServerIP():
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        return ipData.split('\n', 1)[0]
+        from plogical.machine_ip import read_machine_ip
+        return read_machine_ip()
 
     @staticmethod
     def GetServerIPv6():

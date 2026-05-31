@@ -711,6 +711,17 @@ context /.well-known/acme-challenge {
 
         sslUtilities.PatchVhostConf(virtualHostName)
 
+        try:
+            from plogical.ssl_cloudflare_dns import find_domain_in_cloudflare, issue_le_via_cloudflare_dns
+            cf_ok, _cf_msg = find_domain_in_cloudflare(virtualHostName)
+            if cf_ok and issue_le_via_cloudflare_dns(virtualHostName, adminEmail, isHostname):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'obtainSSLForADomain: issued via Cloudflare DNS for %s' % virtualHostName, 0)
+                return 1
+        except BaseException as cf_exc:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Cloudflare DNS SSL path skipped for %s: %s' % (virtualHostName, str(cf_exc)))
+
         default_webroot = '/usr/local/lsws/Example/html'
         # Child domains: use their docroot so HTTP-01 challenge is served from the correct vhost
         if sslpath and str(sslpath).strip():
@@ -762,14 +773,19 @@ context /.well-known/acme-challenge {
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"www.{aliasDomain} has no DNS records, excluding from SSL request")
 
-            # Check if Cloudflare is used
+            # DNS-01 when zone is in Cloudflare (not only externalApp flag)
             use_dns = False
             try:
-                website = Websites.objects.get(domain=virtualHostName)
-                if website.externalApp == 'cloudflare':
-                    use_dns = True
-            except:
-                pass
+                from plogical.ssl_cloudflare_dns import find_domain_in_cloudflare
+                cf_ok, _ = find_domain_in_cloudflare(virtualHostName)
+                use_dns = bool(cf_ok)
+            except BaseException:
+                try:
+                    website = Websites.objects.get(domain=virtualHostName)
+                    if website.externalApp == 'cloudflare':
+                        use_dns = True
+                except BaseException:
+                    pass
 
             acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='letsencrypt', challenge_path=challenge_path)
             if acme.issue_certificate(domains, use_dns=use_dns):
@@ -1058,6 +1074,16 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
             logging.CyberCPLogFileWriter.writeToFile(f"Certificate exists for {domain}, attempting renewal...")
 
+            if is_expired:
+                try:
+                    from plogical.ssl_cloudflare_dns import issue_le_via_cloudflare_dns
+                    if issue_le_via_cloudflare_dns(domain, adminEmail, isHostname):
+                        if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
+                            return [1, "SSL successfully renewed via Cloudflare DNS"]
+                except BaseException as cf_renew_exc:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Cloudflare DNS renewal attempt failed for %s: %s' % (domain, str(cf_renew_exc)))
+
             # Try to renew using acme.sh
             acmePath = '/root/.acme.sh/acme.sh'
             if os.path.exists(acmePath):
@@ -1129,16 +1155,31 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
             if os.path.exists(pathToStoreSSLFullChain):
                 import OpenSSL
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(pathToStoreSSLFullChain, 'r').read())
+                from datetime import datetime
+                with open(pathToStoreSSLFullChain, 'r') as _cf:
+                    _pem = _cf.read()
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, _pem)
                 SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
                 if SSLProvider != 'Denial':
+                    expireData = x509.get_notAfter().decode('ascii')
+                    finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+                    if (finalDate - datetime.now()).days < 0:
+                        msg = (
+                            "Renewal failed and the certificate on the server is expired. "
+                            "HTTP validation often fails when the domain is behind Cloudflare proxy "
+                            "(orange cloud): use DNS-only mode temporarily, or issue SSL via DNS challenge. "
+                            "Check /home/cyberpanel/error-logs.txt for ACME details. [issueSSLForDomain]"
+                        )
+                        logging.CyberCPLogFileWriter.writeToFile(msg)
+                        return [0, msg]
                     if sslUtilities.installSSLForDomain(domain) == 1:
                         logging.CyberCPLogFileWriter.writeToFile(
                             "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www).")
-                        return [1,
-                                "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www)." + " [issueSSLForDomain]"]
+                        return [0,
+                                "Could not renew SSL. An older certificate is still installed. "
+                                "If you use Cloudflare, turn off proxy (grey cloud) for the site during issuance, "
+                                "or use DNS validation. See error logs. [issueSSLForDomain]"]
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)

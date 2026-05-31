@@ -6396,7 +6396,8 @@ milter_default_action = accept
     @staticmethod
     def setUpFirstAccount():
         try:
-            command = 'python /usr/local/CyberCP/plogical/adminPass.py --password 1234567'
+            admin_pass = os.environ.get('CYBERPANEL_ADMIN_PASSWORD', '1234567')
+            command = 'python /usr/local/CyberCP/plogical/adminPass.py --password %s' % (admin_pass,)
             subprocess.call(shlex.split(command))
         except:
             pass

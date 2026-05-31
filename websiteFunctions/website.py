@@ -20,6 +20,7 @@ from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, 
     RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites, \
     FTPQuota, BandwidthResetLog
 from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.formatUnits import format_size_from_mb
 import subprocess
 import shlex
 from plogical.installUtilities import installUtilities
@@ -2705,7 +2706,7 @@ Require valid-user
 
             # Calculate disk usage
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
-            diskUsed = "%sMB" % str(DiskUsage)
+            diskUsed = format_size_from_mb(DiskUsage)
 
             # Convert numeric state to text
             state = "Active" if website.state == 1 else "Suspended"
@@ -2727,6 +2728,54 @@ Require valid-user
             })
         return json.dumps(json_data)
 
+
+    @staticmethod
+    def _load_pem_certificate(filePath):
+        """Read PEM cert; fall back to openssl when panel user cannot read the file."""
+        import shlex
+        try:
+            with open(filePath, 'r') as cert_file:
+                return cert_file.read()
+        except (IOError, OSError, PermissionError):
+            pass
+        try:
+            from plogical.processUtilities import ProcessUtilities
+            cmd = 'openssl x509 -in %s -outform PEM 2>/dev/null' % shlex.quote(filePath)
+            out = ProcessUtilities.outputExecutioner(cmd)
+            if out and 'BEGIN CERTIFICATE' in out:
+                return out
+        except BaseException:
+            pass
+        return None
+
+    @staticmethod
+    def _live_tls_certificate_info(domain):
+        """Days until expiry and issuer from the certificate served on port 443."""
+        import ssl
+        import socket
+        from datetime import datetime
+        try:
+            ctx = ssl.create_default_context()
+            with socket.create_connection((domain, 443), timeout=8) as raw:
+                with ctx.wrap_socket(raw, server_hostname=domain) as sock:
+                    cert = sock.getpeercert()
+            if not cert:
+                return None
+            not_after = cert.get('notAfter')
+            if not not_after:
+                return None
+            final_date = datetime.strptime(not_after, '%b %d %H:%M:%S %Y %Z')
+            days = (final_date - datetime.now()).days
+            issuer_org = 'Unknown'
+            for item in cert.get('issuer') or ():
+                for key, value in item:
+                    if key == 'organizationName':
+                        issuer_org = value
+                        break
+            return {'days': days, 'issuer': issuer_org}
+        except BaseException:
+            return None
+
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
         try:
@@ -2747,7 +2796,7 @@ Require valid-user
                         try:
                             x509 = OpenSSL.crypto.load_certificate(
                                 OpenSSL.crypto.FILETYPE_PEM,
-                                open(wildcard_path, 'r').read()
+                                WebsiteManager._load_pem_certificate(wildcard_path) or ''
                             )
                             cn = None
                             for component in x509.get_subject().get_components():
@@ -2772,7 +2821,7 @@ Require valid-user
             # Load and analyze certificate
             x509 = OpenSSL.crypto.load_certificate(
                 OpenSSL.crypto.FILETYPE_PEM,
-                open(filePath, 'r').read()
+                WebsiteManager._load_pem_certificate(filePath) or ''
             )
             
             # Get expiration date
@@ -2825,7 +2874,7 @@ Require valid-user
             if x509.get_issuer() == x509.get_subject():
                 is_self_signed = True
             
-            # Determine status
+            # Determine status (origin PEM on disk)
             if is_self_signed:
                 status = 'self-signed'
             elif days < 0:
@@ -2836,12 +2885,28 @@ Require valid-user
                 status = 'warning'
             else:
                 status = 'valid'
-            
+
+            ssl_source = 'origin'
+            if status == 'expired':
+                live = WebsiteManager._live_tls_certificate_info(domain)
+                if live and live.get('days', -1) >= 0:
+                    days = live['days']
+                    if live.get('issuer'):
+                        issuer_org = live['issuer']
+                    if days > 30:
+                        status = 'valid'
+                    elif days > 7:
+                        status = 'warning'
+                    else:
+                        status = 'expiring'
+                    ssl_source = 'edge'
+
             return {
                 'status': status,
                 'days': days,
                 'issuer': issuer_org,
-                'is_wildcard': is_wildcard
+                'is_wildcard': is_wildcard,
+                'ssl_source': ssl_source
             }
             
         except Exception as e:
@@ -3821,6 +3886,49 @@ context /cyberpanel_suspension_page.html {
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+
+    def loadSiteWorkspace(self, request=None, userID=None):
+        """Lightweight single-site hub (tiles). Avoids loadDomainHome heavy work."""
+        import os
+        from plogical.httpProc import httpProc
+
+        if not Websites.objects.filter(domain=self.domain).exists():
+            proc = httpProc(
+                request,
+                'baseTemplate/siteWorkspace.html',
+                {'error': 1, 'domain': self.domain, 'siteState': 0, 'phpSelection': '', 'sslState': 0, 'packageName': ''},
+            )
+            return proc.render()
+
+        currentACL = ACLManager.loadedACL(userID)
+        website = Websites.objects.get(domain=self.domain)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) != 1:
+            return ACLManager.loadError()
+
+        ssl_state = int(website.ssl or 0)
+        cert_path = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
+        if os.path.isfile(cert_path):
+            ssl_state = 1
+
+        package_name = ''
+        try:
+            if website.package_id:
+                package_name = website.package.packageName
+        except BaseException:
+            package_name = ''
+
+        data = {
+            'domain': self.domain,
+            'siteState': int(website.state if website.state is not None else 1),
+            'phpSelection': website.phpSelection or '',
+            'sslState': ssl_state,
+            'packageName': package_name,
+        }
+        proc = httpProc(request, 'baseTemplate/siteWorkspace.html', data)
+        return proc.render()
+
     def loadDomainHome(self, request=None, userID=None, data=None):
 
         if Websites.objects.filter(domain=self.domain).exists():
@@ -3881,7 +3989,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(filePath, 'r').read())
+                                                       WebsiteManager._load_pem_certificate(filePath) or '')
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
@@ -4014,7 +4122,7 @@ context /cyberpanel_suspension_page.html {
                 lscgctl_path = '/usr/local/lsws/lsns/bin/lscgctl'
                 if os.path.exists(lscgctl_path):
                     # Get the website username
-                    username = website.exsysUser
+                    username = website.externalApp
 
                     # Run lscgctl list-user command
                     result = subprocess.run(
@@ -5780,7 +5888,7 @@ StrictHostKeyChecking no
             except:
                 PHPVersionActual = 'PHP 8.1'
 
-            diskUsed = "%sMB" % str(DiskUsage)
+            diskUsed = format_size_from_mb(DiskUsage)
 
             # Get WordPress sites for this website
             wp_sites = []
@@ -5835,7 +5943,7 @@ StrictHostKeyChecking no
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
 
-            diskUsed = "%sMB" % str(DiskUsage)
+            diskUsed = format_size_from_mb(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
@@ -6504,6 +6612,11 @@ StrictHostKeyChecking no
                             except:
                                 self.webhookCommandCurrent = "False"
 
+                            try:
+                                self.webhookSecret = gitConf.get('webhookSecret', '')
+                            except:
+                                self.webhookSecret = ''
+
                             self.confCheck = 0
                             break
 
@@ -6512,6 +6625,7 @@ StrictHostKeyChecking no
                 self.autoPushCurrent = 'Never'
                 self.emailLogsCurrent = 'False'
                 self.webhookCommandCurrent = 'False'
+                self.webhookSecret = ''
                 self.commands = "Add Commands to run after every commit, separate commands using comma."
 
             ##
@@ -6649,7 +6763,10 @@ StrictHostKeyChecking no
 
                 port = ProcessUtilities.fetchCurrentPort()
 
+                from plogical.webhookSecurity import append_token_to_webhook_url
                 webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
+                if getattr(self, 'webhookSecret', ''):
+                    webHookURL = append_token_to_webhook_url(webHookURL, self.webhookSecret)
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits,
@@ -7599,6 +7716,16 @@ StrictHostKeyChecking no
 
             dic['folder'] = self.folder
 
+            from plogical.webhookSecurity import generate_webhook_secret
+            if getattr(self, 'confCheck', 1) == 0 and getattr(self, 'finalFile', None) and os.path.exists(self.finalFile):
+                try:
+                    existing = json.loads(open(self.finalFile, 'r').read())
+                    dic['webhookSecret'] = existing.get('webhookSecret') or generate_webhook_secret()
+                except Exception:
+                    dic['webhookSecret'] = generate_webhook_secret()
+            else:
+                dic['webhookSecret'] = generate_webhook_secret()
+
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -7694,7 +7821,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def webhook(self, domain, data=None):
+    def webhook(self, domain, data=None, request=None):
         try:
 
             self.domain = domain
@@ -7715,6 +7842,11 @@ StrictHostKeyChecking no
             ## Check if remote exists
 
             self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
+            from plogical.webhookSecurity import verify_git_webhook_for_domain
+            if not verify_git_webhook_for_domain(request, self.masterDomain, self.folder, data):
+                data_ret = {'status': 0, 'error_message': 'Unauthorized'}
+                return HttpResponse(json.dumps(data_ret), status=401)
 
             command = 'git -C %s pull' % (self.folder)
             commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)

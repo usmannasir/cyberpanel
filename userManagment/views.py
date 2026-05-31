@@ -544,6 +544,24 @@ def saveModifications(request):
             currentACL = ACLManager.loadedACL(val)
             loggedUser = Administrator.objects.get(pk=val)
 
+            from plogical.usernameUtils import normalize_username
+            user_renamed = 0
+            renamed_self = 0
+            force_logout = 0
+            new_user_name = ''
+            if isinstance(data, dict) and 'newUserName' in data:
+                new_user_name = normalize_username(data.get('newUserName', ''))
+            if new_user_name and normalize_username(user.userName) != new_user_name:
+                from userManagment.rename_user import rename_administrator
+                rename_result = rename_administrator(loggedUser, user.pk, new_user_name)
+                if rename_result.get('status') != 1:
+                    data_ret = {'fetchStatus': 0, 'saveStatus': 0, 'error_message': rename_result.get('error_message', 'Rename failed.')}
+                    return HttpResponse(json.dumps(data_ret))
+                user_renamed = 1
+                accountUsername = rename_result.get('userName', new_user_name)
+                user = Administrator.objects.get(pk=user.pk)
+                renamed_self = (loggedUser.pk == user.pk)
+
             if currentACL['admin'] == 1:
                 pass
             elif user.owner == loggedUser.pk:
@@ -592,12 +610,23 @@ def saveModifications(request):
 
             adminEmailPath = '/home/cyberpanel/adminEmail'
 
-            if accountUsername == 'admin':
+            if user.pk == 1:
                 writeToFile = open(adminEmailPath, 'w')
                 writeToFile.write(email)
                 writeToFile.close()
 
-            data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
+            if user_renamed and renamed_self:
+                from plogical.session_utils import flush_request_session
+                flush_request_session(request)
+                force_logout = 1
+            data_ret = {
+                'status': 1,
+                'saveStatus': 1,
+                'error_message': 'None',
+                'userName': user.userName,
+                'userRenamed': user_renamed,
+                'forceLogout': force_logout,
+            }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

@@ -27,6 +27,11 @@ require_root() {
     exit 1
 }
 
+# Admin password resolver (install_modules/cyberpanel_admin_password.sh)
+_SCRIPT_DIR_CP="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# shellcheck source=install_modules/cyberpanel_admin_password.sh
+source "${_SCRIPT_DIR_CP}/cyberpanel_admin_password.sh" 2>/dev/null || true
+
 # SSH login banner helper (install/cyberpanel_ssh_login_banner.sh)
 _CYBERPANEL_INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ -f "${_CYBERPANEL_INSTALL_ROOT}/install/cyberpanel_ssh_login_banner.sh" ]]; then

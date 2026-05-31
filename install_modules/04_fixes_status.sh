@@ -85,6 +85,11 @@ Install_CyberCP_Runtime_Python_Requirements() {
     fi
 }
 
+# Apply install-time password mode before reading stored files
+if type resolve_cyberpanel_admin_password >/dev/null 2>&1 && [ -n "${CYBERPANEL_ADMIN_PASSWORD_MODE:-}" ]; then
+    resolve_cyberpanel_admin_password
+fi
+
 _get_cyberpanel_admin_password() {
     local password=""
 

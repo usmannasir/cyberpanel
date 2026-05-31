@@ -12,6 +12,9 @@ from .models import Administrator
 from .webauthn_backend import WebAuthnBackend
 from .webauthn_models import WebAuthnSettings, WebAuthnCredential
 from plogical.acl import ACLManager
+from django.http import JsonResponse
+from plogical.usernameUtils import resolve_administrator_by_login_name, GENERIC_AUTH_FAIL
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -54,7 +57,9 @@ class WebAuthnRegistrationStart(WebAuthnAPIView):
                 return self.error_response('Username is required')
             
             try:
-                user = Administrator.objects.get(userName=username)
+                user, exact = resolve_administrator_by_login_name(username)
+                if not user or not exact:
+                    return self.error_response(GENERIC_AUTH_FAIL, 403)
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             
@@ -125,7 +130,9 @@ class WebAuthnAuthenticationStart(WebAuthnAPIView):
                 return self.error_response('Username is required')
             
             try:
-                user = Administrator.objects.get(userName=username)
+                user, exact = resolve_administrator_by_login_name(username)
+                if not user or not exact:
+                    return self.error_response(GENERIC_AUTH_FAIL, 403)
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             
@@ -209,7 +216,9 @@ class WebAuthnCredentialsList(WebAuthnAPIView):
                 return self.error_response('Username is required')
             
             try:
-                user = Administrator.objects.get(userName=username)
+                user, exact = resolve_administrator_by_login_name(username)
+                if not user or not exact:
+                    return self.error_response(GENERIC_AUTH_FAIL, 403)
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             
@@ -224,8 +233,21 @@ class WebAuthnCredentialsList(WebAuthnAPIView):
                        user.owner == current_user.pk):
                     return self.error_response('Unauthorized access', 403)
             
-            credentials = self.webauthn.get_user_credentials(user)
-            settings = WebAuthnSettings.get_or_create_settings(user)
+            from django.db.utils import OperationalError, ProgrammingError
+            try:
+                credentials = self.webauthn.get_user_credentials(user)
+                settings = WebAuthnSettings.get_or_create_settings(user)
+            except (OperationalError, ProgrammingError) as db_err:
+                if 'webauthn' not in str(db_err).lower():
+                    raise
+                credentials = []
+                settings = WebAuthnSettings(
+                    user=user,
+                    enabled=False,
+                    require_passkey=False,
+                    allow_multiple_credentials=True,
+                    max_credentials=10,
+                )
             
             return self.json_response({
                 'success': True,
@@ -258,7 +280,9 @@ class WebAuthnCredentialDelete(WebAuthnAPIView):
                 return self.error_response('Username and credential ID are required')
             
             try:
-                user = Administrator.objects.get(userName=username)
+                user, exact = resolve_administrator_by_login_name(username)
+                if not user or not exact:
+                    return self.error_response(GENERIC_AUTH_FAIL, 403)
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             
@@ -298,7 +322,9 @@ class WebAuthnCredentialUpdate(WebAuthnAPIView):
                 return self.error_response('Username, credential ID, and new name are required')
             
             try:
-                user = Administrator.objects.get(userName=username)
+                user, exact = resolve_administrator_by_login_name(username)
+                if not user or not exact:
+                    return self.error_response(GENERIC_AUTH_FAIL, 403)
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             
@@ -341,7 +367,9 @@ class WebAuthnSettingsUpdate(WebAuthnAPIView):
                 return self.error_response('Username is required')
             
             try:
-                user = Administrator.objects.get(userName=username)
+                user, exact = resolve_administrator_by_login_name(username)
+                if not user or not exact:
+                    return self.error_response(GENERIC_AUTH_FAIL, 403)
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             

@@ -476,6 +476,9 @@ class DNSManager:
 
             record.save()
 
+            if record.type != 'SOA':
+                DNS.bumpSOASerial(record.domainOwner)
+
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -503,8 +506,12 @@ class DNSManager:
             else:
                 return ACLManager.loadError()
 
-
+            zone = delRecord.domainOwner
+            record_type = delRecord.type
             delRecord.delete()
+
+            if record_type != 'SOA':
+                DNS.bumpSOASerial(zone)
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -740,7 +747,7 @@ class DNSManager:
 
             self.loadCFKeys()
 
-            params = {'name': zoneDomain, 'per_page':50}
+            params = {'name': zoneDomain, 'per_page': 50}
             cf = get_cloudflare_client(self.email, self.key)
 
             try:
@@ -783,7 +790,7 @@ class DNSManager:
                     fetchType = 'CAA'
 
                 try:
-                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page':50, 'type':fetchType})
+                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page': 500, 'type': fetchType})
                 except BaseException as e:
                     final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
                     return HttpResponse(final_json)

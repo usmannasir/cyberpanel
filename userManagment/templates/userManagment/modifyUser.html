@@ -244,6 +244,13 @@
                     </select>
                     <p class="help-text">{% trans "Select the user account you want to modify" %}</p>
                 </div>
+                <div ng-hide="acctDetailsFetched">
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Username (login name)" %}</label>
+                        <input name="newUserName" type="text" class="form-control" ng-model="newUserName" autocomplete="off" minlength="3" maxlength="50" required>
+                        <p class="help-text">{% trans "Case-sensitive. Change this to rename the account (for example admin to Admin). You must sign in with the new name after saving." %}</p>
+                    </div>
+                </div>
                 <script>
                 (function() {
                     var searchEl = document.getElementById('modifyUserSearchInput');
