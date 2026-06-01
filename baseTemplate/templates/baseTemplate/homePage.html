@@ -435,6 +435,25 @@
                                     <strong style="font-size: 12px; color: #1e293b;">Recommendation:</strong>
                                     <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569; white-space: pre-line;">{$ alert.recommendation $}</p>
                                 </div>
+                                <div ng-if="alert.details && (alert.details['IP Address'] || alert.details['Top IP'])" style="margin-top: 12px;">
+                                    <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation()"
+                                            ng-disabled="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"
+                                            style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
+                                            onmouseover="this.style.background='#b91c1c'"
+                                            onmouseout="this.style.background='#dc2626'">
+                                        <i class="fas fa-ban" ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])"></i>
+                                        <i class="fas fa-spinner fa-spin" ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"></i>
+                                        <span ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])">{% trans "Ban IP Permanently" %}</span>
+                                        <span ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])">{% trans "Banning..." %}</span>
+                                    </button>
+                                    <a href="/firewall/" target="_blank" rel="noopener" style="margin-left: 10px; color: #5b5fcf; font-size: 12px; text-decoration: none;">
+                                        <i class="fas fa-external-link-alt"></i> {% trans "Manage in Firewall" %}
+                                    </a>
+                                    <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address'] || alert.details['Top IP']]"
+                                          style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-check-circle"></i> {% trans "Blocked" %}
+                                    </span>
+                                </div>
                             </div>
                             <span style="background: {$ alert.severity === 'high' ? '#fee2e2' : (alert.severity === 'medium' ? '#fef3c7' : (alert.severity === 'low' ? '#dbeafe' : '#d1fae5')) $}; 
                                        color: {$ alert.severity === 'high' ? '#dc2626' : (alert.severity === 'medium' ? '#f59e0b' : (alert.severity === 'low' ? '#3b82f6' : '#10b981')) $}; 
@@ -458,15 +477,65 @@
                     <tr>
                         <th>{% trans "TIMESTAMP" %}</th>
                         <th>{% trans "MESSAGE" %}</th>
+                        <th>{% trans "IP ADDRESS" %}</th>
+                        <th>{% trans "ACTIONS" %}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="log in sshLogs">
+                    <tr ng-repeat="log in sshLogsPaginated">
                         <td><strong>{$ log.timestamp $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; word-break: break-word; overflow-wrap: break-word;">{$ log.message $}</code></td>
+                        <td>
+                            <span ng-if="log.ip_address" style="font-family: monospace; color: #5b5fcf; font-weight: 600;">{$ log.ip_address $}</span>
+                            <span ng-if="!log.ip_address" style="color: #8893a7;">-</span>
+                        </td>
+                        <td>
+                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address]"
+                                    ng-click="banIPFromSSHLog(log.ip_address)"
+                                    style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                                    onmouseover="this.style.background='#b91c1c'"
+                                    onmouseout="this.style.background='#dc2626'"
+                                    title="{% trans 'Ban this IP address permanently' %}">
+                                <i class="fas fa-ban"></i>
+                                {% trans "Ban IP" %}
+                            </button>
+                            <button ng-if="log.ip_address && blockingIP === log.ip_address"
+                                    disabled
+                                    style="background: #9ca3af; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                {% trans "Banning..." %}
+                            </button>
+                            <span ng-if="log.ip_address && blockedIPs[log.ip_address]"
+                                  style="color: #10b981; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-circle"></i>
+                                {% trans "Banned" %}
+                            </span>
+                            <span ng-if="!log.ip_address" style="color: #8893a7; font-size: 11px;">-</span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
+            <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #64748b; font-size: 13px;">{% trans "Show" %}</span>
+                    <select ng-model="sshLogsPerPage" ng-change="sshLogsCurrentPage = 1; updateSSHLogsPaginated();" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">{% trans "per page" %}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLogsStart() $}-{$ getSSHLogsEnd() $} {% trans "of" %} {$ sshLogs.length $}</span>
+                    <button ng-click="sshLogsPrevPage()" ng-disabled="sshLogsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLogsNextPage()" ng-disabled="sshLogsCurrentPage >= getSSHLogsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Top Process Tab -->
