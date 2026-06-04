@@ -19,6 +19,7 @@ from django.shortcuts import HttpResponse, render, redirect
 from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
+from plogical.sshKeyUtilities import parse_authorized_key
 from firewall.models import FirewallRules
 from plogical.modSec import modSec
 from plogical.csf import CSF
@@ -403,30 +404,29 @@ class FirewallManager:
                 checker = 0
 
                 for items in data:
-                    if items.find("ssh-rsa") > -1:
-                        keydata = items.split(" ")
+                    parsedKey = parse_authorized_key(items)
+                    if parsedKey is None:
+                        continue
 
+                    key = parsedKey['keyType'] + " " + parsedKey['keyData'][:50]
+                    if parsedKey['comment']:
+                        key = key + "  ..  " + parsedKey['comment']
                         try:
-                            key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
-                            try:
-                                userName = keydata[2][:keydata[2].index("@")]
-                            except:
-                                userName = keydata[2]
-                        except:
-                            key = "ssh-rsa " + keydata[1][:50]
-                            userName = ''
+                            userName = parsedKey['comment'][:parsedKey['comment'].index("@")]
+                        except ValueError:
+                            userName = parsedKey['comment']
+                    else:
+                        userName = ''
 
+                    dic = {'userName': userName,
+                           'key': key,
+                           }
 
-
-                        dic = {'userName': userName,
-                               'key': key,
-                               }
-
-                        if checker == 0:
-                            json_data = json_data + json.dumps(dic)
-                            checker = 1
-                        else:
-                            json_data = json_data + ',' + json.dumps(dic)
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
                 json_data = json_data + ']'
 

@@ -14,6 +14,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
 from plogical.acl import ACLManager
+from plogical.sshKeyUtilities import parse_authorized_key
 import plogical.CyberCPLogFileWriter as logging
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup, \
@@ -7368,28 +7369,29 @@ StrictHostKeyChecking no
             checker = 0
 
             for items in data:
-                if items.find("ssh-rsa") > -1:
-                    keydata = items.split(" ")
+                parsedKey = parse_authorized_key(items)
+                if parsedKey is None:
+                    continue
 
+                key = parsedKey['keyType'] + " " + parsedKey['keyData'][:50]
+                if parsedKey['comment']:
+                    key = key + "  ..  " + parsedKey['comment']
                     try:
-                        key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
-                        try:
-                            userName = keydata[2][:keydata[2].index("@")]
-                        except:
-                            userName = keydata[2]
-                    except:
-                        key = "ssh-rsa " + keydata[1][:50]
-                        userName = ''
+                        userName = parsedKey['comment'][:parsedKey['comment'].index("@")]
+                    except ValueError:
+                        userName = parsedKey['comment']
+                else:
+                    userName = ''
 
-                    dic = {'userName': userName,
-                           'key': key,
-                           }
+                dic = {'userName': userName,
+                       'key': key,
+                       }
 
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
 

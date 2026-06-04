@@ -209,7 +209,7 @@ class FirewallUtilities:
             writeToFile = open(pathToSSH, "w")
 
             for items in data:
-                if items.find("ssh-rsa") > -1 and items.find(keyPart) > -1:
+                if keyPart and items.find(keyPart) > -1:
                     continue
                 else:
                     writeToFile.writelines(items)
