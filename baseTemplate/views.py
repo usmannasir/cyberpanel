@@ -1727,6 +1727,12 @@ def getTopProcesses(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        from django.core.cache import cache
+        cache_key = 'cp_top_processes'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return HttpResponse(json.dumps(cached), content_type='application/json')
         
         import subprocess
         import tempfile
@@ -1767,10 +1773,15 @@ def getTopProcesses(request):
                     }
                     processes.append(process)
             
-            return HttpResponse(json.dumps({
+            payload = {
                 'status': 1,
                 'processes': processes
-            }), content_type='application/json')
+            }
+            try:
+                cache.set(cache_key, payload, 8)
+            except Exception:
+                pass
+            return HttpResponse(json.dumps(payload), content_type='application/json')
             
         finally:
             # Clean up temporary file
