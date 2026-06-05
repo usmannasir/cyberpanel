@@ -9,6 +9,7 @@ from django.views.decorators.http import require_http_methods
 from websiteFunctions.models import Websites
 from loginSystem.models import Administrator
 from .models import AIScannerSettings, FileAccessToken, ScanHistory
+from .auth_helpers import scan_allows_api_key_file_write
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 
@@ -118,12 +119,17 @@ def validate_access_token(token, scan_id):
 
             logging.writeToFile(f'[API] Found API key for admin: {scanner_settings.admin.userName}')
 
-            # Get the scan - don't require it to belong to the same admin
-            # (platform may be using any valid CyberPanel API key for file operations)
+            # Get the scan - must belong to the API key owner
             try:
                 scan = ScanHistory.objects.get(
                     scan_id=scan_id
                 )
+
+                if scan.admin_id != scanner_settings.admin_id:
+                    logging.writeToFile(
+                        f'[API] API key owner mismatch for scan {scan_id}'
+                    )
+                    return None, 'API key does not match scan owner'
 
                 # Get wp_path from WPSites (WordPress installations)
                 try:
@@ -176,66 +182,7 @@ def validate_access_token(token, scan_id):
 
         except Exception as e:
             logging.writeToFile(f'[API] API key validation error: {str(e)}')
-            pass  # Fall through to OPTION 3
-
-        # OPTION 3: Simple validation for platform callbacks
-        # If we have a valid CyberPanel API key and a valid scan, allow access
-        # This handles cases where the platform is using the API key to fix files
-        try:
-            from .models import AIScannerSettings, ScanHistory
-
-            # Check if ANY admin has this API key (less restrictive for platform callbacks)
-            has_valid_key = AIScannerSettings.objects.filter(api_key=token).exists()
-
-            if has_valid_key:
-                # Check if the scan exists (any admin's scan)
-                try:
-                    scan = ScanHistory.objects.get(scan_id=scan_id)
-
-                    # Get WordPress site info
-                    from websiteFunctions.models import WPSites, Websites
-                    wp_site = WPSites.objects.filter(
-                        FinalURL__icontains=scan.domain
-                    ).first()
-
-                    if wp_site:
-                        # Get the external app (user) for this website
-                        external_app = wp_site.owner.externalApp
-
-                        # If no external app, try to get it from the website directly
-                        if not external_app:
-                            try:
-                                website = Websites.objects.get(domain=scan.domain)
-                                external_app = website.externalApp
-                            except Websites.DoesNotExist:
-                                pass
-
-                        # If still no external app, use the admin username as fallback
-                        if not external_app:
-                            external_app = wp_site.owner.admin.userName
-                            logging.writeToFile(f'[API] Warning: No externalApp for {scan.domain}, using admin username: {external_app}')
-
-                        logging.writeToFile(f'[API] Platform callback validated: API key exists, scan {scan_id} found, user {external_app}')
-                        return AuthWrapper(
-                            domain=scan.domain,
-                            wp_path=wp_site.path,
-                            auth_type='api_key',
-                            external_app=external_app,
-                            source_obj=None
-                        ), None
-                    else:
-                        logging.writeToFile(f'[API] WordPress site not found for scan {scan_id}')
-                        return None, "WordPress site not found"
-
-                except ScanHistory.DoesNotExist:
-                    logging.writeToFile(f'[API] Scan {scan_id} not found in OPTION 3')
-                    return None, "Scan not found"
-            else:
-                logging.writeToFile(f'[API] No valid API key found matching: {token[:20]}...')
-
-        except Exception as e:
-            logging.writeToFile(f'[API] OPTION 3 validation error: {str(e)}')
-            pass  # Fall through to final error
+            return None, "Invalid token"
 
     except Exception as e:
         logging.writeToFile(f'[API] Token validation error: {str(e)}')
@@ -1083,7 +1030,10 @@ def scanner_backup_file(request):
         logging.writeToFile(f'[API] Backup file error: {str(e)}')
         log_file_operation(scan_id if 'scan_id' in locals() else 'unknown', 'backup',
                           file_path if 'file_path' in locals() else 'unknown', False, str(e), request=request)
-        return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)@csrf_exempt
+        return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)
+
+
+@csrf_exempt
 @require_http_methods(['GET'])
 def scanner_get_file(request):
     """
@@ -1131,6 +1081,16 @@ def scanner_get_file(request):
         if error:
             log_file_operation(scan_id, 'read', file_path, False, error, request=request)
             return JsonResponse({'success': False, 'error': error}, status=401)
+
+        try:
+            scan_record = ScanHistory.objects.get(scan_id=scan_id)
+        except ScanHistory.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Scan not found'}, status=404)
+
+        allowed, write_error = scan_allows_api_key_file_write(scan_record, file_token.auth_type)
+        if not allowed:
+            log_file_operation(scan_id, 'read', file_path, False, write_error, request=request)
+            return JsonResponse({'success': False, 'error': write_error}, status=403)
 
         # Rate limiting - higher limits for API key authenticated requests (platform operations)
         max_reads = 5000 if file_token.auth_type == 'api_key' else 500
@@ -1307,8 +1267,18 @@ def scanner_replace_file(request):
             log_file_operation(scan_id, 'replace', file_path, False, error, request=request)
             return JsonResponse({'success': False, 'error': error}, status=401)
 
-        # Rate limiting - higher limits for API key authenticated requests (platform operations)
-        max_replacements = 1000 if file_token.auth_type == 'api_key' else 100
+        try:
+            scan_record = ScanHistory.objects.get(scan_id=scan_id)
+        except ScanHistory.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Scan not found'}, status=404)
+
+        allowed, write_error = scan_allows_api_key_file_write(scan_record, file_token.auth_type)
+        if not allowed:
+            log_file_operation(scan_id, 'replace', file_path, False, write_error, request=request)
+            return JsonResponse({'success': False, 'error': write_error}, status=403)
+
+        # Rate limiting - capped at 100 replacements per scan
+        max_replacements = 100
         is_allowed, count = check_rate_limit(scan_id, 'replace-file', max_replacements)
         if not is_allowed:
             return JsonResponse({'success': False, 'error': f'Rate limit exceeded (max {max_replacements} replacements per scan)'}, status=429)

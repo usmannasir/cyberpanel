@@ -41,10 +41,11 @@ class secMiddleware:
         # Public one-time phpMyAdmin launch links (limitedPhpmyAdmin plugin); must work when admin is logged out.
         _lpma_public_launch = pathActual.startswith('/plugins/limitedPhpmyAdmin/launch/')
         _lpma_pma_signon = pathActual == '/phpmyadmin/phpmyadminsignin.php'
+        _ai_scanner_callback = pathActual in ('/aiscanner/callback/', '/aiscanner/callback')
 
         if pathActual == "/backup/localInitiate" or pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
                 or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI') or pathActual.startswith('/static/')\
-                or _lpma_public_launch or _lpma_pma_signon:
+                or _lpma_public_launch or _lpma_pma_signon or _ai_scanner_callback:
             pass
         else:
             # Session check logging removed
@@ -201,6 +202,7 @@ class secMiddleware:
                                    pathActual.find('docker') > -1 or pathActual.find('cloudAPI') > -1 or 
                                    pathActual.find('verifyLogin') > -1 or pathActual.find('submitUserCreation') > -1 or 
                                    pathActual.find('/api/') > -1 or pathActual.find('aiscanner/scheduled-scans') > -1 or
+                                   pathActual.find('aiscanner/callback') > -1 or
                                    pathActual.find('plugins/discordWebhooks/webhook/') > -1)
                     
                     if isAPIEndpoint:
