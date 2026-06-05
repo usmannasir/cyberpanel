@@ -362,7 +362,16 @@
             font-weight: 600;
             cursor: pointer;
             position: relative;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease, filter 0.2s ease;
+            filter: blur(5px);
+            user-select: none;
+        }
+
+        #sidebar .server-info .ip-value:hover,
+        #sidebar .server-info .ip-value:focus-visible,
+        #sidebar .server-info .ip-value.ip-revealed {
+            filter: none;
+            user-select: text;
         }
         
         #sidebar .server-info .ip-value:hover {
@@ -2257,7 +2266,7 @@ html[data-theme="dark"] #main-content {
 }
 
 html[data-theme="dark"] #sidebar {
-    background: var(--bg-sidebar);
+    background-color: var(--bg-sidebar);
     border-right-color: var(--border-color);
 }
 

@@ -190,7 +190,7 @@
             <div class="server-details">
                 <div class="info-line">
                     <strong>IP:</strong>
-                    <span class="ip-value" onclick="copyIP(this, '{{ ipAddress }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyIP(this, '{{ ipAddress }}');}" role="button" tabindex="0" title="{% trans 'Click to copy' %}" aria-label="{% trans 'Copy server IP address' %} {{ ipAddress }}">
+                    <span class="ip-value" onclick="copyIP(this, '{{ ipAddress }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyIP(this, '{{ ipAddress }}');}" role="button" tabindex="0" title="{% trans 'Hover or click to reveal; click to copy' %}" aria-label="{% trans 'Copy server IP address' %} {{ ipAddress }}">
                         {{ ipAddress }}
                         <span class="copy-tooltip" aria-hidden="true">{% trans "Copied!" %}</span>
                     </span>
@@ -553,8 +553,9 @@
             element.classList.toggle('expanded');
         }
         
-        // Copy IP function
+        // Copy IP function (reveals blurred IP on click, then copies)
         function copyIP(element, ip) {
+            element.classList.add('ip-revealed');
             navigator.clipboard.writeText(ip).then(function() {
                 const tooltip = element.querySelector('.copy-tooltip');
                 tooltip.classList.add('show');
