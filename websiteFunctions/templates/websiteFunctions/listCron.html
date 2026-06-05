@@ -78,13 +78,16 @@
     }
     
     /* Container Styling */
-    .container {
-        max-width: 1200px;
+    .cron-management-page.container {
+        max-width: 100%;
+        width: 100%;
         margin: 0 auto;
         padding: 20px;
-        min-height: 100vh;
+        min-height: auto;
         background: transparent;
         transition: var(--transition-base);
+        min-width: 0;
+        overflow: visible;
     }
     
     /* Page Title Section */
@@ -138,14 +141,16 @@
     }
     
     /* Main Panel */
-    .panel {
+    .cron-management-page .panel {
         background: var(--bg-card);
         border-radius: var(--radius-xl);
         box-shadow: var(--shadow-lg);
         border: 1px solid var(--border-color);
-        overflow: hidden;
+        overflow: visible;
         position: relative;
         transition: var(--transition-base);
+        max-width: 100%;
+        min-width: 0;
     }
     
     .panel-body {
@@ -169,8 +174,127 @@
     }
     
     /* Example Box Wrapper */
-    .example-box-wrapper {
+    .cron-management-page .example-box-wrapper {
         padding: 30px;
+        max-width: 100%;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    /* Scrollable table region (desktop + narrow viewports) */
+    .cron-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        margin-bottom: 30px;
+        background: var(--bg-card);
+        scrollbar-gutter: stable both-edges;
+    }
+
+    .cron-table-wrap:focus-visible {
+        outline: 3px solid var(--focus-ring, #6366f1);
+        outline-offset: 2px;
+    }
+
+    .cron-table-wrap::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .cron-table-wrap::-webkit-scrollbar-track {
+        background: var(--bg-light, #f1f5f9);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .cron-table-wrap::-webkit-scrollbar-thumb {
+        background: var(--primary-color, #6366f1);
+        border-radius: 999px;
+    }
+
+    .cron-table-scroll-hint {
+        display: none;
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin: 0 0 10px;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Mobile card list (replaces wide table on small screens) */
+    .cron-cards {
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .cron-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .cron-card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 16px;
+        margin-bottom: 12px;
+    }
+
+    .cron-card-field {
+        min-width: 0;
+    }
+
+    .cron-card-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+    }
+
+    .cron-card-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        word-break: break-word;
+    }
+
+    .cron-card-command {
+        margin-bottom: 12px;
+    }
+
+    .cron-card-command code {
+        display: block;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        background: var(--bg-light);
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--text-primary);
+    }
+
+    .cron-card-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .cron-card-actions .btn {
+        flex: 1 1 120px;
+        width: auto;
+        margin-bottom: 0;
     }
     
     /* Enhanced Buttons */
@@ -282,14 +406,32 @@
     }
     
     /* Enhanced Table */
-    #cronTable {
+    .cron-management-page #cronTable {
         background: var(--bg-card);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        margin-bottom: 30px;
+        border-radius: 0;
+        overflow: visible;
+        box-shadow: none;
+        margin-bottom: 0;
         width: 100%;
+        min-width: 860px;
+        table-layout: fixed;
+        border-collapse: collapse;
     }
+
+    .cron-management-page #cronTable thead th:nth-child(1),
+    .cron-management-page #cronTable tbody td:nth-child(1) { width: 72px; }
+    .cron-management-page #cronTable thead th:nth-child(2),
+    .cron-management-page #cronTable tbody td:nth-child(2) { width: 72px; }
+    .cron-management-page #cronTable thead th:nth-child(3),
+    .cron-management-page #cronTable tbody td:nth-child(3) { width: 96px; }
+    .cron-management-page #cronTable thead th:nth-child(4),
+    .cron-management-page #cronTable tbody td:nth-child(4) { width: 72px; }
+    .cron-management-page #cronTable thead th:nth-child(5),
+    .cron-management-page #cronTable tbody td:nth-child(5) { width: 96px; }
+    .cron-management-page #cronTable thead th:nth-child(6),
+    .cron-management-page #cronTable tbody td:nth-child(6) { width: auto; min-width: 280px; }
+    .cron-management-page #cronTable thead th:nth-child(7),
+    .cron-management-page #cronTable tbody td:nth-child(7) { width: 120px; }
     
     #cronTable thead {
         background: var(--bg-gradient);
@@ -319,11 +461,27 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
     
-    #cronTable tbody td {
+    .cron-management-page #cronTable tbody td {
         padding: 18px;
         border: none;
-        vertical-align: middle;
+        vertical-align: top;
         color: var(--text-primary);
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .cron-management-page #cronTable tbody td.cron-command-cell code {
+        display: block;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        max-width: 100%;
+        line-height: 1.45;
+    }
+
+    .cron-management-page #cronTable tbody td.cron-action-cell {
+        vertical-align: middle;
+        white-space: nowrap;
     }
     
     /* Cron Form */
@@ -463,15 +621,7 @@
     
     /* Mobile Responsive Styles */
     @media (max-width: 768px) {
-        .page-wrapper {
-            padding: 10px;
-        }
-        
-        .page-container {
-            max-width: 100%;
-        }
-        
-        .container {
+        .cron-management-page.container {
             padding: 10px;
         }
         
@@ -480,148 +630,87 @@
             margin-bottom: 20px;
         }
         
-        #page-title h1 {
-            font-size: 1.5rem !important;
+        #page-title h2 {
+            font-size: 1.35rem !important;
+            flex-direction: column;
+            align-items: flex-start;
         }
         
         #page-title p {
             font-size: 14px !important;
         }
-        
-        /* Table improvements for mobile */
-        .table-responsive {
-            border: none;
-            margin-bottom: 20px;
+
+        .cron-management-page .example-box-wrapper {
+            padding: 16px;
         }
-        
-        .table {
-            font-size: 14px !important;
-            min-width: 600px;
-        }
-        
-        .table th, .table td {
-            padding: 8px 6px !important;
-            font-size: 13px !important;
-            white-space: nowrap;
-        }
-        
-        /* Hide less important columns on mobile */
-        .table .d-none-mobile {
-            display: none !important;
-        }
-        
-        /* Button improvements for mobile */
-        .btn {
-            font-size: 16px !important;
-            padding: 12px 20px !important;
-            margin-bottom: 10px;
-            width: 100%;
-        }
-        
-        .btn-group {
+
+        .cron-table-scroll-hint {
             display: flex;
+        }
+
+        .cron-table-wrap {
+            display: none;
+        }
+
+        .cron-cards {
+            display: flex;
+        }
+        
+        .cron-management-page .action-buttons {
             flex-direction: column;
             width: 100%;
         }
         
-        .btn-group .btn {
-            margin-bottom: 10px;
+        .cron-management-page .action-buttons .btn {
             width: 100%;
+            margin-bottom: 0;
         }
         
-        /* Form improvements for mobile */
-        .form-horizontal .form-group {
+        .cron-management-page .form-horizontal .form-group {
             margin-bottom: 15px;
         }
         
-        .form-horizontal .control-label {
+        .cron-management-page .form-horizontal .control-label {
             text-align: left !important;
             margin-bottom: 5px;
             font-size: 16px !important;
         }
         
-        .form-horizontal .col-sm-3,
-        .form-horizontal .col-sm-6,
-        .form-horizontal .col-sm-9 {
+        .cron-management-page .form-horizontal .col-sm-3,
+        .cron-management-page .form-horizontal .col-sm-6,
+        .cron-management-page .form-horizontal .col-sm-9 {
             width: 100% !important;
             float: none !important;
         }
         
-        .form-control, input, textarea, select {
+        .cron-management-page .form-control,
+        .cron-management-page input,
+        .cron-management-page textarea,
+        .cron-management-page select {
             font-size: 16px !important;
             padding: 12px 16px !important;
             width: 100%;
         }
-        
-        /* Modal improvements for mobile */
-        .modal-dialog {
-            margin: 10px;
-            width: calc(100% - 20px);
-            max-width: none;
-        }
-        
-        .modal-content {
-            padding: 20px 15px;
-        }
-        
-        .modal-title {
-            font-size: 1.25rem !important;
-        }
-        
-        /* Card improvements for mobile */
-        .card {
-            margin-bottom: 15px;
-        }
-        
-        .card-body {
-            padding: 15px;
-        }
-        
-        .card-title {
-            font-size: 1.125rem !important;
-        }
-        
-        .card-text {
-            font-size: 14px !important;
-        }
     }
     
     @media (max-width: 576px) {
-        /* Extra small devices */
-        .page-wrapper {
-            padding: 5px;
-        }
-        
-        .container {
-            padding: 5px;
+        .cron-management-page.container {
+            padding: 8px;
         }
         
         #page-title {
             padding: 15px;
         }
-        
-        #page-title h1 {
-            font-size: 1.25rem !important;
+
+        .cron-card-grid {
+            grid-template-columns: 1fr;
         }
-        
-        .table th, .table td {
-            padding: 6px 4px !important;
-            font-size: 12px !important;
-        }
-        
-        /* Hide even more columns on very small screens */
-        .table .d-none-mobile-sm {
-            display: none !important;
-        }
-        
-        .btn {
-            font-size: 14px !important;
-            padding: 10px 15px !important;
-        }
-        
-        .form-control, input, textarea, select {
-            font-size: 16px !important;
-            padding: 10px 14px !important;
+    }
+
+    /* Tablet / narrow desktop: keep table with horizontal scroll */
+    @media (min-width: 769px) and (max-width: 1200px) {
+        .cron-table-scroll-hint {
+            display: flex;
         }
     }
     
@@ -663,49 +752,17 @@
     
     /* Responsive */
     @media (max-width: 768px) {
-        .container {
-            padding: 15px;
-        }
-        
         #page-title {
             padding: 25px;
         }
         
-        #page-title h2 {
-            font-size: 24px;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .example-box-wrapper {
-            padding: 20px;
-        }
-        
-        .control-label {
+        .cron-management-page .control-label {
             margin-bottom: 10px;
         }
         
-        .btn-lg {
+        .cron-management-page .btn-lg {
             padding: 12px 28px;
             font-size: 14px;
-        }
-        
-        .action-buttons {
-            flex-direction: column;
-            width: 100%;
-        }
-        
-        .action-buttons .btn {
-            width: 100%;
-        }
-        
-        #cronTable {
-            font-size: 12px;
-        }
-        
-        #cronTable th,
-        #cronTable td {
-            padding: 12px 8px;
         }
     }
 </style>
@@ -746,6 +803,54 @@
                 </div>
                 
                 <!-- Cron Jobs Table -->
+                <div id="cronListPanel" style="display:none;">
+                <p class="cron-table-scroll-hint" id="cronTableScrollHint">
+                    <i class="fas fa-arrows-left-right" aria-hidden="true"></i>
+                    {% trans "Swipe or scroll sideways to see all columns and full commands." %}
+                </p>
+
+                <div class="cron-cards" id="cronCards">
+                    <article class="cron-card" ng-repeat="cron in cronList track by $index">
+                        <div class="cron-card-grid">
+                            <div class="cron-card-field">
+                                <span class="cron-card-label">{% trans "Minute" %}</span>
+                                <span class="cron-card-value" ng-bind="cron.minute"></span>
+                            </div>
+                            <div class="cron-card-field">
+                                <span class="cron-card-label">{% trans "Hour" %}</span>
+                                <span class="cron-card-value" ng-bind="cron.hour"></span>
+                            </div>
+                            <div class="cron-card-field">
+                                <span class="cron-card-label">{% trans "Day of Month" %}</span>
+                                <span class="cron-card-value" ng-bind="cron.monthday"></span>
+                            </div>
+                            <div class="cron-card-field">
+                                <span class="cron-card-label">{% trans "Month" %}</span>
+                                <span class="cron-card-value" ng-bind="cron.month"></span>
+                            </div>
+                            <div class="cron-card-field">
+                                <span class="cron-card-label">{% trans "Day of Week" %}</span>
+                                <span class="cron-card-value" ng-bind="cron.weekday"></span>
+                            </div>
+                        </div>
+                        <div class="cron-card-command">
+                            <span class="cron-card-label">{% trans "Command" %}</span>
+                            <code ng-bind="cron.command"></code>
+                        </div>
+                        <div class="cron-card-actions">
+                            <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href="#" title="{% trans 'Edit' %}">
+                                <i class="fas fa-edit"></i>
+                                {% trans "Edit" %}
+                            </a>
+                            <a class="btn btn-warning" ng-click="removeCron(cron.line)" href="#" title="{% trans 'Delete' %}">
+                                <i class="fas fa-trash"></i>
+                                {% trans "Delete" %}
+                            </a>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="cron-table-wrap" id="cronTableWrap" tabindex="0" aria-describedby="cronTableScrollHint">
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="cronTable">
                     <thead>
                         <tr>
@@ -755,7 +860,7 @@
                             <th>{% trans "Month" %}</th>
                             <th>{% trans "Day of Week" %}</th>
                             <th>{% trans "Command" %}</th>
-                            <th style="width: 120px;">{% trans "Action" %}</th>
+                            <th>{% trans "Action" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -765,12 +870,12 @@
                             <td ng-bind="cron.monthday"></td>
                             <td ng-bind="cron.month"></td>
                             <td ng-bind="cron.weekday"></td>
-                            <td>
-                                <code style="background: var(--bg-light); padding: 4px 8px; border-radius: 4px; font-size: 12px; color: var(--text-primary);" ng-bind="cron.command">
+                            <td class="cron-command-cell">
+                                <code style="background: var(--bg-light); padding: 8px 10px; border-radius: 4px; font-size: 12px; color: var(--text-primary);" ng-bind="cron.command">
                                 </code>
                             </td>
-                            <td>
-                                <div style="display: flex; gap: 8px; justify-content: center;">
+                            <td class="cron-action-cell">
+                                <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                                     <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href="#" title="{% trans 'Edit' %}">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -782,7 +887,9 @@
                         </tr>
                     </tbody>
                 </table>
-                
+                </div>
+                </div>
+
                 <!-- Cron Form -->
                 <div id="modifyCronForm">
                     <form action="/" class="form-horizontal">

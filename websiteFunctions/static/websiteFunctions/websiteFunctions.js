@@ -13104,7 +13104,7 @@ app.controller('suspendWebsiteControl', function ($scope, $http) {
 app.controller('manageCronController', function ($scope, $http) {
     $("#manageCronLoading").hide();
     $("#modifyCronForm").hide();
-    $("#cronTable").hide();
+    $("#cronListPanel").hide();
     $("#saveCronButton").hide();
     $("#addCronButton").hide();
 
@@ -13139,7 +13139,7 @@ app.controller('manageCronController', function ($scope, $http) {
             if (response.data.getWebsiteCron === 0) {
                 console.log(response.data);
                 $scope.errorMessage = response.data.error_message;
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13148,7 +13148,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 console.log(response.data);
                 var finalData = response.data.crons;
                 $scope.cronList = finalData;
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13158,7 +13158,7 @@ app.controller('manageCronController', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $("#manageCronLoading").hide();
-            $("#cronTable").hide();
+            $("#cronListPanel").hide();
             $("#fetchCronFailure").show();
             $("#addCronFailure").hide();
             $("#cronEditSuccess").hide();
@@ -13168,7 +13168,7 @@ app.controller('manageCronController', function ($scope, $http) {
 
     $scope.fetchCron = function (cronLine) {
 
-        $("#cronTable").show();
+        $("#cronListPanel").show();
         $("#manageCronLoading").show();
         $("#modifyCronForm").show();
         $("#saveCronButton").show();
@@ -13202,7 +13202,7 @@ app.controller('manageCronController', function ($scope, $http) {
             if (response.data.getWebsiteCron === 0) {
                 console.log(response.data);
                 $scope.errorMessage = response.data.error_message;
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13218,7 +13218,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $scope.command = response.data.cron.command
                 $scope.line = response.data.line
 
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").fadeIn();
                 $("#addCronButton").hide();
@@ -13255,7 +13255,7 @@ app.controller('manageCronController', function ($scope, $http) {
         } else {
             $scope.minute = $scope.hour = $scope.monthday = $scope.month = $scope.weekday = $scope.command = $scope.line = "";
 
-            $("#cronTable").hide();
+            $("#cronListPanel").hide();
             $("#manageCronLoading").hide();
             $("#modifyCronForm").show();
             $("#saveCronButton").hide()
@@ -13301,7 +13301,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#fetchCronFailure").hide();
                 $("#addCronFailure").show();
             } else {
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13350,7 +13350,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#fetchCronFailure").hide();
                 $("#addCronFailure").show();
             } else {
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13407,7 +13407,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#addCronFailure").show();
             } else {
                 console.log(response.data);
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
