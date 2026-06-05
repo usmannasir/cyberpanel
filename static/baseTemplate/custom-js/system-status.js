@@ -1074,94 +1074,105 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.sshLogs = [];
     $scope.sshLogsPaginated = [];
     $scope.sshLogsCurrentPage = 1;
-    $scope.sshLogsPerPage = 10;
-    $scope.sshLogsGoToPage = 1;
+    $scope.sshLogsPerPage = 5;
+    $scope.sshLogsGoToPageInput = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
     
     $scope.getSSHLogsTotalPages = function() {
-        return Math.ceil($scope.sshLogs.length / $scope.sshLogsPerPage);
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogs || []).length / perPage);
     };
     
     $scope.getSSHLogsStart = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             return 0;
         }
-        return ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage + 1;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return ($scope.sshLogsCurrentPage - 1) * perPage + 1;
     };
     
     $scope.getSSHLogsEnd = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             return 0;
         }
-        var end = $scope.sshLogsCurrentPage * $scope.sshLogsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var end = $scope.sshLogsCurrentPage * perPage;
         return Math.min(end, $scope.sshLogs.length);
     };
     
     $scope.updateSSHLogsPaginated = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             $scope.sshLogsPaginated = [];
-            console.log('updateSSHLogsPaginated: No data, cleared paginated array');
             return;
         }
-        var start = ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage;
-        var end = start + $scope.sshLogsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if ($scope.sshLogsCurrentPage > totalPages) {
+            $scope.sshLogsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLogsCurrentPage < 1) {
+            $scope.sshLogsCurrentPage = 1;
+        }
+        $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
+        var start = ($scope.sshLogsCurrentPage - 1) * perPage;
+        var end = start + perPage;
         $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
-        console.log('updateSSHLogsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogs.length, 'paginated=', $scope.sshLogsPaginated.length);
     };
     
     $scope.sshLogsPrevPage = function() {
-        if ($scope.sshLogsCurrentPage > 1) {
-            $scope.sshLogsCurrentPage--;
-            $scope.updateSSHLogsPaginated();
-        }
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage - 1);
     };
     
     $scope.sshLogsNextPage = function() {
-        if ($scope.sshLogsCurrentPage < $scope.getSSHLogsTotalPages()) {
-            $scope.sshLogsCurrentPage++;
-            $scope.updateSSHLogsPaginated();
-        }
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage + 1);
     };
-    
-    $scope.sshLogsGoToPageNumber = function() {
-        var page = parseInt($scope.sshLogsGoToPage);
+
+    $scope.sshLogsChangePerPage = function() {
+        $scope.sshLogsPerPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        $scope.sshLogsCurrentPage = 1;
+        $scope.sshLogsGoToPageInput = 1;
+        $scope.updateSSHLogsPaginated();
+    };
+
+    $scope.sshLogsGoToPage = function(page) {
+        page = parseInt(page, 10);
         var totalPages = $scope.getSSHLogsTotalPages();
         if (page >= 1 && page <= totalPages) {
             $scope.sshLogsCurrentPage = page;
             $scope.updateSSHLogsPaginated();
         } else {
-            $scope.sshLogsGoToPage = $scope.sshLogsCurrentPage;
+            $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
         }
+    };
+    
+    $scope.sshLogsGoToPageNumber = function() {
+        $scope.sshLogsGoToPage($scope.sshLogsGoToPageInput);
     };
     
     $scope.refreshSSHLogs = function() {
         $scope.loadingSSHLogs = true;
         $http.get('/base/getRecentSSHLogs').then(function (response) {
             $scope.loadingSSHLogs = false;
-            console.log('SSH Logs response:', response.data);
             if (response.data && response.data.logs && Array.isArray(response.data.logs)) {
                 $scope.sshLogs = response.data.logs;
                 $scope.sshLogsCurrentPage = 1;
-                $scope.sshLogsGoToPage = 1;
-                console.log('SSH Logs loaded:', $scope.sshLogs.length, 'items');
+                $scope.sshLogsGoToPageInput = 1;
                 $scope.updateSSHLogsPaginated();
-                console.log('SSH Logs paginated:', $scope.sshLogsPaginated.length, 'items');
-                // Analyze logs for security issues
                 $scope.analyzeSSHSecurity();
             } else {
-                console.warn('SSH Logs: No data or invalid format', response.data);
                 $scope.sshLogs = [];
                 $scope.sshLogsPaginated = [];
+                $scope.sshLogsGoToPageInput = 1;
             }
-        }, function (err) {
+        }, function () {
             $scope.loadingSSHLogs = false;
-            console.error('SSH Logs error:', err);
             $scope.errorSSHLogs = 'Failed to load SSH logs.';
             $scope.sshLogs = [];
             $scope.sshLogsPaginated = [];
+            $scope.sshLogsGoToPageInput = 1;
         });
     };
     

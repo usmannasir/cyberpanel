@@ -516,24 +516,28 @@
                 </tbody>
             </table>
             <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <span style="color: #64748b; font-size: 13px;">{% trans "Show" %}</span>
-                    <select ng-model="sshLogsPerPage" ng-change="sshLogsCurrentPage = 1; updateSSHLogsPaginated();" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
+                    <select ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white; min-width: 64px;">
+                        <option ng-value="5">5</option>
+                        <option ng-value="10">10</option>
+                        <option ng-value="25">25</option>
+                        <option ng-value="50">50</option>
+                        <option ng-value="100">100</option>
                     </select>
                     <span style="color: #64748b; font-size: 13px;">{% trans "per page" %}</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     <span style="color: #64748b; font-size: 13px;">{$ getSSHLogsStart() $}-{$ getSSHLogsEnd() $} {% trans "of" %} {$ sshLogs.length $}</span>
-                    <button ng-click="sshLogsPrevPage()" ng-disabled="sshLogsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Previous' %}">
+                    <button type="button" ng-click="sshLogsPrevPage()" ng-disabled="sshLogsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Previous' %}">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <button ng-click="sshLogsNextPage()" ng-disabled="sshLogsCurrentPage >= getSSHLogsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Next' %}">
+                    <button type="button" ng-click="sshLogsNextPage()" ng-disabled="sshLogsCurrentPage >= getSSHLogsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Next' %}">
                         <i class="fas fa-chevron-right"></i>
                     </button>
+                    <label style="color: #64748b; font-size: 13px; margin: 0;">{% trans "Go to page" %}</label>
+                    <input type="number" min="1" ng-attr-max="{$ getSSHLogsTotalPages() $}" ng-model="sshLogsGoToPageInput" ng-keypress="$event.keyCode === 13 && sshLogsGoToPageNumber(); $event.preventDefault()" style="width: 56px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" aria-label="{% trans 'Go to page' %}">
+                    <button type="button" ng-click="sshLogsGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">{% trans "Go" %}</button>
                 </div>
             </div>
         </div>
