@@ -5194,17 +5194,24 @@ class Migration(migrations.Migration):
                         if result.find('22.04') > -1 or result.find('24.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
 
-                command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
-                Upgrade.executioner(command, command, 0)
+                from plogical import lscpd_integrity
+                if not lscpd_integrity.verify_bundled_binary(lscpdSelection):
+                    Upgrade.stdOut(
+                        'ERROR: lscpd binary failed integrity check; aborting install of %s'
+                        % lscpdSelection
+                    )
+                else:
+                    command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
+                    Upgrade.executioner(command, command, 0)
 
-                command = 'rm -f /usr/local/lscp/bin/lscpd'
-                Upgrade.executioner(command, command, 0)
+                    command = 'rm -f /usr/local/lscp/bin/lscpd'
+                    Upgrade.executioner(command, command, 0)
 
-                command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
-                Upgrade.executioner(command, command, 0)
+                    command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
+                    Upgrade.executioner(command, command, 0)
 
-                command = f'chmod 755 {lscpdPath}'
-                Upgrade.executioner(command, 'LSCPD Download.', 0)
+                    command = f'chmod 755 {lscpdPath}'
+                    Upgrade.executioner(command, 'LSCPD Download.', 0)
 
                 command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
                 Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)

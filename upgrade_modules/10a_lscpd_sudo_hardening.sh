@@ -10,6 +10,7 @@ Post_Upgrade_LSCPD_Sudo_Hardening() {
   local git_user="${Git_User:-master3395}"
   local branch="${Branch_Name:-stable}"
   local base="${Git_Content_URL:-https://raw.githubusercontent.com/${git_user}/cyberpanel}"
+  local had_error=0
 
   mkdir -p "$dst_dir"
   mkdir -p "$src_dir"
@@ -51,11 +52,16 @@ Post_Upgrade_LSCPD_Sudo_Hardening() {
       cp -f "$src_dir/$name" "$dst_dir/$name"
       chown root:root "$dst_dir/$name"
       chmod 755 "$dst_dir/$name"
+      chmod 755 "$src_dir/$name" 2>/dev/null || true
     else
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Missing wrapper $src_dir/$name" | tee -a /var/log/cyberpanel_upgrade_debug.log
-      return 1
+      had_error=1
     fi
   done
+
+  if [[ "$had_error" -ne 0 ]]; then
+    return 1
+  fi
 
   cat > /etc/sudoers.d/pm2-logs <<'EOF'
 Defaults:lscpd !requiretty

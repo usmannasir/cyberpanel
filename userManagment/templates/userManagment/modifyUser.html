@@ -232,7 +232,7 @@
                 {% trans "Modify User" %}
                 <img class="loading-icon" ng-hide="userModificationLoading" src="{% static 'images/loading.gif' %}">
             </h3>
-            <form name="modifyUserForm" action="/">
+            <form name="modifyUserForm" action="/" novalidate>
                 <div class="form-group">
                     <label class="form-label">{% trans "Select User Account" %}</label>
                     <input type="text" id="modifyUserSearchInput" class="form-control" placeholder="{% trans 'Search users...' %}" style="margin-bottom: 8px;" autocomplete="off">

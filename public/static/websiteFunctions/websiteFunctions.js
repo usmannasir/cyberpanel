@@ -1438,6 +1438,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
+        $('#databaseLoading').show();
+        $('#databaseInfoTable').hide();
+        $('#databaseError').hide().text('');
+
         var url = "/websites/fetchDatabase";
 
         var data = {
@@ -1457,21 +1461,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
             $('#wordpresshomeloading').hide();
+            $('#databaseLoading').hide();
 
             if (response.data.status === 1) {
                 $('#DB_Name').html(response.data.DataBaseName);
                 $('#DB_User').html(response.data.DataBaseUser);
                 $('#tableprefix').html(response.data.tableprefix);
+                $('#databaseInfoTable').show();
             } else {
-                alert("Error data.error_message:" + response.data.error_message)
-
+                $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
-            alert("Error" + response)
-
+            $('#databaseLoading').hide();
+            var status = (response && response.status) ? response.status : 'network';
+            $('#databaseError').text('Unable to load database information (request failed, status: ' + status + ').').show();
         }
 
     };
@@ -4817,6 +4823,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
+        $('#databaseLoading').show();
+        $('#databaseInfoTable').hide();
+        $('#databaseError').hide().text('');
+
         var url = "/websites/fetchDatabase";
 
         var data = {
@@ -4836,21 +4846,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
             $('#wordpresshomeloading').hide();
+            $('#databaseLoading').hide();
 
             if (response.data.status === 1) {
                 $('#DB_Name').html(response.data.DataBaseName);
                 $('#DB_User').html(response.data.DataBaseUser);
                 $('#tableprefix').html(response.data.tableprefix);
+                $('#databaseInfoTable').show();
             } else {
-                alert("Error data.error_message:" + response.data.error_message)
-
+                $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
-            alert("Error" + response)
-
+            $('#databaseLoading').hide();
+            var status = (response && response.status) ? response.status : 'network';
+            $('#databaseError').text('Unable to load database information (request failed, status: ' + status + ').').show();
         }
 
     };
@@ -8616,6 +8628,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
+        $('#databaseLoading').show();
+        $('#databaseInfoTable').hide();
+        $('#databaseError').hide().text('');
+
         var url = "/websites/fetchDatabase";
 
         var data = {
@@ -8635,21 +8651,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
             $('#wordpresshomeloading').hide();
+            $('#databaseLoading').hide();
 
             if (response.data.status === 1) {
                 $('#DB_Name').html(response.data.DataBaseName);
                 $('#DB_User').html(response.data.DataBaseUser);
                 $('#tableprefix').html(response.data.tableprefix);
+                $('#databaseInfoTable').show();
             } else {
-                alert("Error data.error_message:" + response.data.error_message)
-
+                $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
-            alert("Error" + response)
-
+            $('#databaseLoading').hide();
+            var status = (response && response.status) ? response.status : 'network';
+            $('#databaseError').text('Unable to load database information (request failed, status: ' + status + ').').show();
         }
 
     };
@@ -10831,39 +10849,6 @@ app.filter('filesize', [function () {
 }]);
 
 app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope, $http) {
-    
-    // Initialize home directory variables
-    $scope.homeDirectories = [];
-    $scope.selectedHomeDirectory = '';
-    $scope.selectedHomeDirectoryInfo = null;
-    $scope.currentHomeDirectory = '';
-
-    // Load home directories on page load
-    $scope.loadHomeDirectories = function() {
-        $http.post('/users/getUserHomeDirectories', {})
-            .then(function(response) {
-                if (response.data.status === 1) {
-                    $scope.homeDirectories = response.data.directories;
-                }
-            })
-            .catch(function(error) {
-                console.error('Error loading home directories:', error);
-            });
-    };
-    
-    // Update home directory info when selection changes
-    $scope.updateHomeDirectoryInfo = function() {
-        if ($scope.selectedHomeDirectory) {
-            $scope.selectedHomeDirectoryInfo = $scope.homeDirectories.find(function(dir) {
-                return dir.id == $scope.selectedHomeDirectory;
-            });
-        } else {
-            $scope.selectedHomeDirectoryInfo = null;
-        }
-    };
-    
-    // Initialize home directories
-    $scope.loadHomeDirectories();
 
     $scope.fetchWebsites = function () {
 
@@ -10908,7 +10893,6 @@ app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope,
                 $scope.webpacks = JSON.parse(response.data.packages);
                 $scope.adminNames = JSON.parse(response.data.adminNames);
                 $scope.currentAdmin = response.data.currentAdmin;
-                $scope.currentHomeDirectory = response.data.currentHomeDirectory || 'Default';
 
                 $("#webSiteDetailsToBeModified").fadeIn();
                 $("#websiteModifySuccess").fadeIn();
@@ -10936,7 +10920,6 @@ app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope,
         var email = $scope.adminEmail;
         var phpVersion = $scope.phpSelection;
         var admin = $scope.selectedAdmin;
-        var homeDirectory = $scope.selectedHomeDirectory;
 
 
         $("#websiteModifyFailure").hide();
@@ -10953,8 +10936,7 @@ app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope,
             packForWeb: packForWeb,
             email: email,
             phpVersion: phpVersion,
-            admin: admin,
-            homeDirectory: homeDirectory
+            admin: admin
         };
 
         var config = {
@@ -13083,7 +13065,7 @@ app.controller('suspendWebsiteControl', function ($scope, $http) {
 app.controller('manageCronController', function ($scope, $http) {
     $("#manageCronLoading").hide();
     $("#modifyCronForm").hide();
-    $("#cronTable").hide();
+    $("#cronListPanel").hide();
     $("#saveCronButton").hide();
     $("#addCronButton").hide();
 
@@ -13092,6 +13074,44 @@ app.controller('manageCronController', function ($scope, $http) {
     $("#fetchCronFailure").hide();
 
     $scope.websiteToBeModified = $("#domain").text();
+
+    function scrollCronFormIntoView() {
+        var formEl = document.getElementById('modifyCronForm');
+        if (formEl && formEl.scrollIntoView) {
+            formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function setCronFormMode(mode) {
+        if (mode === 'edit') {
+            $("#cronFormTitleAdd").hide();
+            $("#cronFormTitleEdit").show();
+        } else {
+            $("#cronFormTitleAdd").show();
+            $("#cronFormTitleEdit").hide();
+        }
+    }
+
+    $scope.cancelCronForm = function () {
+        $("#modifyCronForm").hide();
+        $("#saveCronButton").hide();
+        $("#addCronButton").hide();
+        $("#manageCronLoading").hide();
+        $("#addCronFailure").hide();
+        $("#fetchCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#cronListPanel").show();
+    };
+
+    $scope.openCronForm = function (mode) {
+        setCronFormMode(mode);
+        $("#cronListPanel").hide();
+        $("#modifyCronForm").show();
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        scrollCronFormIntoView();
+    };
 
     $scope.fetchWebsites = function () {
 
@@ -13118,7 +13138,7 @@ app.controller('manageCronController', function ($scope, $http) {
             if (response.data.getWebsiteCron === 0) {
                 console.log(response.data);
                 $scope.errorMessage = response.data.error_message;
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13127,7 +13147,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 console.log(response.data);
                 var finalData = response.data.crons;
                 $scope.cronList = finalData;
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13137,7 +13157,7 @@ app.controller('manageCronController', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $("#manageCronLoading").hide();
-            $("#cronTable").hide();
+            $("#cronListPanel").hide();
             $("#fetchCronFailure").show();
             $("#addCronFailure").hide();
             $("#cronEditSuccess").hide();
@@ -13147,9 +13167,8 @@ app.controller('manageCronController', function ($scope, $http) {
 
     $scope.fetchCron = function (cronLine) {
 
-        $("#cronTable").show();
+        $scope.openCronForm('edit');
         $("#manageCronLoading").show();
-        $("#modifyCronForm").show();
         $("#saveCronButton").show();
         $("#addCronButton").hide();
 
@@ -13181,11 +13200,12 @@ app.controller('manageCronController', function ($scope, $http) {
             if (response.data.getWebsiteCron === 0) {
                 console.log(response.data);
                 $scope.errorMessage = response.data.error_message;
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
                 $("#addCronButton").hide();
+                $("#fetchCronFailure").show();
             } else {
                 console.log(response.data);
 
@@ -13197,11 +13217,13 @@ app.controller('manageCronController', function ($scope, $http) {
                 $scope.command = response.data.cron.command
                 $scope.line = response.data.line
 
-                $("#cronTable").show();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
-                $("#modifyCronForm").fadeIn();
+                $("#modifyCronForm").show();
                 $("#addCronButton").hide();
                 $("#saveCronButton").show();
+                setCronFormMode('edit');
+                scrollCronFormIntoView();
 
             }
         }
@@ -13234,9 +13256,8 @@ app.controller('manageCronController', function ($scope, $http) {
         } else {
             $scope.minute = $scope.hour = $scope.monthday = $scope.month = $scope.weekday = $scope.command = $scope.line = "";
 
-            $("#cronTable").hide();
+            $scope.openCronForm('add');
             $("#manageCronLoading").hide();
-            $("#modifyCronForm").show();
             $("#saveCronButton").hide()
             $("#addCronButton").show();
         }
@@ -13280,7 +13301,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#fetchCronFailure").hide();
                 $("#addCronFailure").show();
             } else {
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13329,7 +13350,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#fetchCronFailure").hide();
                 $("#addCronFailure").show();
             } else {
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13386,7 +13407,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#addCronFailure").show();
             } else {
                 console.log(response.data);
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13425,16 +13446,6 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.aliasCreated = true;
     $scope.manageAliasLoading = true;
     $scope.operationSuccess = true;
-
-    // Initialize the page to show aliases list
-    $scope.showAliasesList = function() {
-        $scope.aliasTable = true;
-        $scope.addAliasButton = true;
-        $scope.domainAliasForm = false;
-    };
-
-    // Auto-show aliases list on page load
-    $scope.showAliasesList();
 
     $scope.createAliasEnter = function ($event) {
         var keyCode = $event.which || $event.keyCode;
@@ -13681,64 +13692,6 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         }
 
 
-    };
-
-    $scope.issueAliasSSL = function (masterDomain, aliasDomain) {
-        $scope.manageAliasLoading = false;
-
-        url = "/websites/issueAliasSSL";
-
-        var data = {
-            masterDomain: masterDomain,
-            aliasDomain: aliasDomain
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-        function ListInitialDatas(response) {
-            if (response.data.issueAliasSSL === 1) {
-                $scope.aliasTable = false;
-                $scope.addAliasButton = true;
-                $scope.domainAliasForm = true;
-                $scope.aliasError = true;
-                $scope.couldNotConnect = true;
-                $scope.aliasCreated = true;
-                $scope.manageAliasLoading = true;
-                $scope.operationSuccess = false;
-
-                $timeout(function () {
-                    $window.location.reload();
-                }, 3000);
-            } else {
-                $scope.aliasTable = false;
-                $scope.addAliasButton = true;
-                $scope.domainAliasForm = true;
-                $scope.aliasError = false;
-                $scope.couldNotConnect = true;
-                $scope.aliasCreated = true;
-                $scope.manageAliasLoading = true;
-                $scope.operationSuccess = true;
-
-                $scope.errorMessage = response.data.error_message;
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.aliasTable = false;
-            $scope.addAliasButton = true;
-            $scope.domainAliasForm = true;
-            $scope.aliasError = true;
-            $scope.couldNotConnect = false;
-            $scope.aliasCreated = true;
-            $scope.manageAliasLoading = true;
-            $scope.operationSuccess = true;
-        }
     };
 
 

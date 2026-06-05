@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.contrib import messages
 from loginSystem.models import Administrator
 from .models import AIScannerSettings, ScanHistory, FileAccessToken
+from .auth_helpers import validate_scan_callback_credentials
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -637,16 +638,12 @@ class AIScannerManager:
             data = json.loads(request.body)
             scan_id = data.get('scan_id')
             status = data.get('status')
-            
-            if not scan_id:
-                return JsonResponse({'success': False, 'error': 'Scan ID required'})
-            
-            # Find scan history record
-            try:
-                scan_history = ScanHistory.objects.get(scan_id=scan_id)
-            except ScanHistory.DoesNotExist:
-                self.logger.writeToFile(f'[AIScannerManager.scanCallback] Scan not found: {scan_id}')
-                return JsonResponse({'success': False, 'error': 'Scan not found'})
+
+            scan_history, scanner_settings, error_response = validate_scan_callback_credentials(
+                request, scan_id
+            )
+            if error_response is not None:
+                return error_response
             
             # Update scan status and results
             scan_history.status = status

@@ -190,7 +190,7 @@
             <div class="server-details">
                 <div class="info-line">
                     <strong>IP:</strong>
-                    <span class="ip-value" onclick="copyIP(this, '{{ ipAddress }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyIP(this, '{{ ipAddress }}');}" role="button" tabindex="0" title="{% trans 'Click to copy' %}" aria-label="{% trans 'Copy server IP address' %} {{ ipAddress }}">
+                    <span class="ip-value" onclick="copyIP(this, '{{ ipAddress }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyIP(this, '{{ ipAddress }}');}" role="button" tabindex="0" title="{% trans 'Hover to peek; click to reveal and copy; click again to hide' %}" aria-label="{% trans 'Copy server IP address' %} {{ ipAddress }}">
                         {{ ipAddress }}
                         <span class="copy-tooltip" aria-hidden="true">{% trans "Copied!" %}</span>
                     </span>
@@ -341,6 +341,7 @@
             {l:'{% trans "Email Limits" %}', h:'{% url "EmailLimits" %}', i:'fa-gauge', g:'{% trans "Email" %}'},{% endif %}
             {% if admin or dkimManager %}{l:'{% trans "DKIM Manager" %}', h:'{% url "dkimManager" %}', i:'fa-signature', g:'{% trans "Email" %}'},{% endif %}
             {l:'{% trans "Webmail" %}', h:'/webmail/', i:'fa-envelope-open-text', g:'{% trans "Email" %}'},
+            {% if admin %}{l:'{% trans "SnappyMail" %}', h:'/snappymail/', i:'fa-envelope', g:'{% trans "Email" %}', t:'_blank'},{% endif %}
             {% if admin %}{l:'{% trans "Email Delivery" %}', h:'{% url "emailDeliveryHome" %}', i:'fa-paper-plane', g:'{% trans "Email" %}'},
             {l:'{% trans "Email Debugger" %}', h:'{% url "EmailDebugger" %}', i:'fa-stethoscope', g:'{% trans "Email" %}'},
             {l:'{% trans "Mail Queue" %}', h:'{% url "mailQueue" %}', i:'fa-list-check', g:'{% trans "Email" %}'},
@@ -552,8 +553,13 @@
             element.classList.toggle('expanded');
         }
         
-        // Copy IP function
+        // Copy IP function (toggle blur: click to reveal+copy, click again to re-blur)
         function copyIP(element, ip) {
+            if (element.classList.contains('ip-revealed')) {
+                element.classList.remove('ip-revealed');
+                return;
+            }
+            element.classList.add('ip-revealed');
             navigator.clipboard.writeText(ip).then(function() {
                 const tooltip = element.querySelector('.copy-tooltip');
                 tooltip.classList.add('show');

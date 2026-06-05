@@ -39,6 +39,31 @@ function randomPassword(length) {
 window.app = angular.module('CyberCP', []);
 var app = window.app; // Local reference for this file
 
+/* Dashboard API helpers: avoid worker exhaustion from poll storms */
+var DASH_HTTP_TIMEOUT = 25000;
+var dashPollInFlight = {};
+
+function dashGet($http, url, extraConfig) {
+    var cfg = extraConfig || {};
+    cfg.timeout = DASH_HTTP_TIMEOUT;
+    return $http.get(url, cfg);
+}
+
+function dashPollOnce($http, key, url, onSuccess) {
+    if (dashPollInFlight[key]) {
+        return;
+    }
+    dashPollInFlight[key] = true;
+    dashGet($http, url).then(function (response) {
+        dashPollInFlight[key] = false;
+        if (typeof onSuccess === 'function') {
+            onSuccess(response);
+        }
+    }, function () {
+        dashPollInFlight[key] = false;
+    });
+}
+
 // MUST be first: register dashboard controller before any other setup (avoids ctrlreg when CDN/Tracking Prevention blocks scripts)
 app.controller('dashboardStatsController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
     $scope.cpuUsage = 0; $scope.ramUsage = 0; $scope.diskUsage = 0; $scope.cpuCores = 0;
@@ -48,66 +73,76 @@ app.controller('dashboardStatsController', ['$scope', '$http', '$timeout', funct
     $scope.topProcesses = []; $scope.sshLogins = []; $scope.sshLogs = [];
     $scope.loadingTopProcesses = true; $scope.loadingSSHLogins = true; $scope.loadingSSHLogs = true;
     $scope.blockedIPs = {}; $scope.blockingIP = null; $scope.securityAlerts = [];
-    var opts = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
-    try {
-        $http.get('/base/getSystemStatus', opts).then(function (r) {
-            if (r && r.data && r.data.status === 1) {
-                $scope.cpuUsage = r.data.cpuUsage || 0; $scope.ramUsage = r.data.ramUsage || 0;
-                $scope.diskUsage = r.data.diskUsage || 0; $scope.cpuCores = r.data.cpuCores || 0;
-                $scope.ramTotalMB = r.data.ramTotalMB || 0; $scope.diskTotalGB = r.data.diskTotalGB || 0;
-                $scope.diskFreeGB = r.data.diskFreeGB || 0;
-            }
-        });
-        $http.get('/base/getDashboardStats', opts).then(function (r) {
-            if (r && r.data && r.data.status === 1) {
-                $scope.totalUsers = r.data.total_users || 0; $scope.totalSites = r.data.total_sites || 0;
-                $scope.totalWPSites = r.data.total_wp_sites || 0; $scope.totalDBs = r.data.total_dbs || 0;
-                $scope.totalEmails = r.data.total_emails || 0; $scope.totalFTPUsers = r.data.total_ftp_users || 0;
-            }
-        });
-        $http.get('/base/getRecentSSHLogins', opts).then(function (r) {
-            $scope.loadingSSHLogins = false;
-            $scope.sshLogins = (r && r.data && r.data.logins) ? r.data.logins : [];
-        }, function () { $scope.loadingSSHLogins = false; $scope.sshLogins = []; });
-        $http.get('/base/getRecentSSHLogs', opts).then(function (r) {
-            $scope.loadingSSHLogs = false;
-            $scope.sshLogs = (r && r.data && r.data.logs) ? r.data.logs : [];
-        }, function () { $scope.loadingSSHLogs = false; $scope.sshLogs = []; });
-        $http.get('/base/getTopProcesses', opts).then(function (r) {
-            $scope.loadingTopProcesses = false;
-            $scope.topProcesses = (r && r.data && r.data.status === 1 && r.data.processes) ? r.data.processes : [];
-        }, function () { $scope.loadingTopProcesses = false; $scope.topProcesses = []; });
-        if (typeof $timeout === 'function') { $timeout(function() { /* refresh */ }, 10000); }
-    } catch (e) { /* ignore */ }
+    // Full dashboardStatsController (below) handles API polling; avoid duplicate requests here.
 }]);
 
 // Overview CPU/RAM/Disk cards use systemStatusInfo – register early so data loads even if later script fails
 app.controller('systemStatusInfo', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
-    $scope.cpuUsage = 0; $scope.ramUsage = 0; $scope.diskUsage = 0;
-    $scope.cpuCores = 0; $scope.ramTotalMB = 0; $scope.diskTotalGB = 0; $scope.diskFreeGB = 0;
-    $scope.getSystemStatus = function() { fetchStatus(); };
-    function fetchStatus() {
-        try {
-            var csrf = (typeof getCookie === 'function') ? getCookie('csrftoken') : '';
-            $http.get('/base/getSystemStatus', { headers: { 'X-CSRFToken': csrf } }).then(function (r) {
-                if (r && r.data && r.data.status === 1) {
-                    $scope.cpuUsage = r.data.cpuUsage != null ? r.data.cpuUsage : 0;
-                    $scope.ramUsage = r.data.ramUsage != null ? r.data.ramUsage : 0;
-                    $scope.diskUsage = r.data.diskUsage != null ? r.data.diskUsage : 0;
-                    $scope.cpuCores = r.data.cpuCores != null ? r.data.cpuCores : 0;
-                    $scope.ramTotalMB = r.data.ramTotalMB != null ? r.data.ramTotalMB : 0;
-                    $scope.diskTotalGB = r.data.diskTotalGB != null ? r.data.diskTotalGB : 0;
-                    $scope.diskFreeGB = r.data.diskFreeGB != null ? r.data.diskFreeGB : 0;
-                    $scope.uptime = r.data.uptime || 'N/A';
-                }
-                $scope.uptimeLoaded = true;
-            }, function() { $scope.uptime = 'Unavailable'; $scope.uptimeLoaded = true; });
-            if (typeof $timeout === 'function') { $timeout(fetchStatus, 60000); }
-        } catch (e) { $scope.uptimeLoaded = true; }
+    $scope.statusError = false;
+    var statusPollTimer = null;
+    var statusReqPending = false;
+    var STATUS_REFRESH_MS = 60000;
+
+    function scheduleStatusRefresh() {
+        if (statusPollTimer) {
+            $timeout.cancel(statusPollTimer);
+        }
+        statusPollTimer = $timeout(getStuff, STATUS_REFRESH_MS);
     }
-    fetchStatus();
+
+    getStuff();
+
+    $scope.getSystemStatus = function() {
+        getStuff(true);
+    };
+
+    $scope.retryStatus = function() {
+        $scope.statusError = false;
+        $scope.cpuUsage = undefined;
+        $scope.ramUsage = undefined;
+        $scope.diskUsage = undefined;
+        $scope.cpuCores = undefined;
+        $scope.ramTotalMB = undefined;
+        $scope.diskTotalGB = undefined;
+        $scope.diskFreeGB = undefined;
+        getStuff(true);
+    };
+
+    function getStuff(force) {
+        if (statusReqPending && !force) {
+            return;
+        }
+        statusReqPending = true;
+
+        dashGet($http, '/base/getSystemStatus').then(function (response) {
+            statusReqPending = false;
+            if (response && response.data) {
+                $scope.statusError = false;
+                $scope.cpuUsage = response.data.cpuUsage;
+                $scope.ramUsage = response.data.ramUsage;
+                $scope.diskUsage = response.data.diskUsage;
+                $scope.cpuCores = response.data.cpuCores;
+                $scope.ramTotalMB = response.data.ramTotalMB;
+                $scope.diskTotalGB = response.data.diskTotalGB;
+                $scope.diskFreeGB = response.data.diskFreeGB;
+                $scope.uptime = response.data.uptime || 'N/A';
+                $scope.uptimeLoaded = true;
+            } else {
+                $scope.uptime = 'Unavailable';
+                $scope.uptimeLoaded = true;
+                $scope.statusError = true;
+            }
+            scheduleStatusRefresh();
+        }, function () {
+            statusReqPending = false;
+            $scope.uptime = 'Unavailable';
+            $scope.uptimeLoaded = true;
+            $scope.statusError = true;
+            scheduleStatusRefresh();
+        });
+    }
 }]);
 
 var globalScope;
@@ -189,65 +224,7 @@ function getWebsiteName(domain) {
     }
 }
 
-app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
-
-    $scope.uptimeLoaded = false;
-    $scope.uptime = 'Loading...';
-    // Defaults so template never shows undefined (avoids raw {$ cpuUsage $} when API is slow or fails)
-    $scope.cpuUsage = 0;
-    $scope.ramUsage = 0;
-    $scope.diskUsage = 0;
-    $scope.cpuCores = 0;
-    $scope.ramTotalMB = 0;
-    $scope.diskTotalGB = 0;
-    $scope.diskFreeGB = 0;
-
-    getStuff();
-
-    $scope.getSystemStatus = function() {
-        getStuff();
-    };
-
-    function getStuff() {
-
-        url = "/base/getSystemStatus";
-
-        $http.get(url).then(ListInitialData, cantLoadInitialData);
-
-
-        function ListInitialData(response) {
-
-            $scope.cpuUsage = response.data.cpuUsage != null ? response.data.cpuUsage : 0;
-            $scope.ramUsage = response.data.ramUsage != null ? response.data.ramUsage : 0;
-            $scope.diskUsage = response.data.diskUsage != null ? response.data.diskUsage : 0;
-
-            $scope.cpuCores = response.data.cpuCores != null ? response.data.cpuCores : 0;
-            $scope.ramTotalMB = response.data.ramTotalMB != null ? response.data.ramTotalMB : 0;
-            $scope.diskTotalGB = response.data.diskTotalGB != null ? response.data.diskTotalGB : 0;
-            $scope.diskFreeGB = response.data.diskFreeGB != null ? response.data.diskFreeGB : 0;
-
-            if (response.data.uptime) {
-                $scope.uptime = response.data.uptime;
-                $scope.uptimeLoaded = true;
-            } else {
-                $scope.uptime = 'N/A';
-                $scope.uptimeLoaded = true;
-            }
-
-        }
-
-        function cantLoadInitialData(response) {
-            $scope.uptime = 'Unavailable';
-            $scope.uptimeLoaded = true;
-            $scope.cpuUsage = 0;
-            $scope.ramUsage = 0;
-            $scope.diskUsage = 0;
-        }
-
-        $timeout(getStuff, 60000); // Update every minute
-
-    }
-});
+/* systemStatusInfo registered at top of file for early load */
 
 /*  Admin status */
 
@@ -1020,16 +997,21 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
     $scope.refreshTopProcesses = function() {
+        if (dashPollInFlight.topProcesses) {
+            return;
+        }
+        dashPollInFlight.topProcesses = true;
         $scope.loadingTopProcesses = true;
-        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
-        $http.get('/base/getTopProcesses', h).then(function (response) {
+        dashGet($http, '/base/getTopProcesses').then(function (response) {
+            dashPollInFlight.topProcesses = false;
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
             } else {
                 $scope.topProcesses = [];
             }
-        }, function (err) {
+        }, function () {
+            dashPollInFlight.topProcesses = false;
             $scope.loadingTopProcesses = false;
             $scope.errorTopProcesses = 'Failed to load top processes.';
         });
@@ -1700,8 +1682,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         });
     };
 
-    // Initial fetch
-    $scope.refreshTopProcesses();
+    // Initial fetch (top processes polled on slower interval below)
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
 
@@ -1714,7 +1695,8 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
-    var pollInterval = 2000; // ms
+    var pollInterval = 5000; // ms (was 2000; slower poll reduces lscpd worker exhaustion)
+    var topProcessPollInterval = 30000;
     var maxPoints = 30;
 
     // Expose so switchTab can create charts on first tab click if they weren't created at load
@@ -1724,20 +1706,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     };
 
     function pollDashboardStats() {
-        console.log('[dashboardStatsController] pollDashboardStats() called');
-        console.log('[dashboardStatsController] Fetching dashboard stats from /base/getDashboardStats');
-        $http({
-            method: 'GET',
-            url: '/base/getDashboardStats',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        }).then(function(response) {
-            console.log('[dashboardStatsController] pollDashboardStats SUCCESS callback called');
-            console.log('[dashboardStatsController] Dashboard stats response received:', response);
-            console.log('[dashboardStatsController] Response status:', response.status);
-            console.log('[dashboardStatsController] Response data:', response.data);
+        dashPollOnce($http, 'dashboardStats', '/base/getDashboardStats', function(response) {
             if (response.data && response.data.status === 1) {
                 $scope.totalUsers = response.data.total_users || 0;
                 $scope.totalSites = response.data.total_sites || 0;
@@ -1745,43 +1714,12 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 $scope.totalDBs = response.data.total_dbs || 0;
                 $scope.totalEmails = response.data.total_emails || 0;
                 $scope.totalFTPUsers = response.data.total_ftp_users || 0;
-                console.log('[dashboardStatsController] Dashboard stats updated:', {
-                    users: $scope.totalUsers,
-                    sites: $scope.totalSites,
-                    wp: $scope.totalWPSites,
-                    dbs: $scope.totalDBs,
-                    emails: $scope.totalEmails,
-                    ftp: $scope.totalFTPUsers
-                });
-                // No $apply needed - $http already triggers digest cycle
-            } else {
-                // Set default values if request fails
-                console.error('[dashboardStatsController] Failed to load dashboard stats - invalid response:', response.data);
-                $scope.$apply(function() {
-                    $scope.totalUsers = 0;
-                    $scope.totalSites = 0;
-                    $scope.totalWPSites = 0;
-                    $scope.totalDBs = 0;
-                    $scope.totalEmails = 0;
-                    $scope.totalFTPUsers = 0;
-                });
             }
-        }, function(error) {
-            console.error('[dashboardStatsController] Error loading dashboard stats:', error);
-            console.error('[dashboardStatsController] Error status:', error.status);
-            console.error('[dashboardStatsController] Error data:', error.data);
-            // Set default values on error (no $apply needed - error callback also triggers digest)
-            $scope.totalUsers = 0;
-            $scope.totalSites = 0;
-            $scope.totalWPSites = 0;
-            $scope.totalDBs = 0;
-            $scope.totalEmails = 0;
-            $scope.totalFTPUsers = 0;
         });
     }
 
     function pollTraffic() {
-        $http.get('/base/getTrafficStats').then(function(response) {
+        dashPollOnce($http, 'trafficStats', '/base/getTrafficStats', function(response) {
             if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
@@ -1829,16 +1767,12 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     }
                 }
                 lastRx = rx; lastTx = tx;
-            } else {
-                console.warn('pollTraffic: no data or status', response.data);
             }
-        }).catch(function(err) {
-            console.warn('pollTraffic failed:', err);
         });
     }
 
     function pollDiskIO() {
-        $http.get('/base/getDiskIOStats').then(function(response) {
+        dashPollOnce($http, 'diskIOStats', '/base/getDiskIOStats', function(response) {
             if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
@@ -1878,13 +1812,11 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 }
                 lastDiskRead = read; lastDiskWrite = write;
             }
-        }).catch(function(err) {
-            console.warn('pollDiskIO failed:', err);
         });
     }
 
     function pollCPU() {
-        $http.get('/base/getCPULoadGraph').then(function(response) {
+        dashPollOnce($http, 'cpuLoadGraph', '/base/getCPULoadGraph', function(response) {
             if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
@@ -1924,8 +1856,6 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 }
                 lastCPUTimes = cpuTimes;
             }
-        }).catch(function(err) {
-            console.warn('pollCPU failed:', err);
         });
     }
 
@@ -2235,36 +2165,37 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         });
     }
 
-    // Initial setup - fetch stats immediately
-    pollDashboardStats();
-    $scope.refreshTopProcesses();
+    // Initial setup - SSH lists once; chart polls staggered to avoid worker stampede
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
 
     $timeout(function() {
-        // Always create charts so Traffic/Disk IO/CPU tabs have something to show; admin check only affects hideSystemCharts
         setupCharts();
-        $http.get('/base/getAdminStatus').then(function(response) {
+        dashGet($http, '/base/getAdminStatus').then(function(response) {
             if (response.data && (response.data.admin === 1 || response.data.admin === true)) {
                 $scope.hideSystemCharts = false;
             } else {
                 $scope.hideSystemCharts = true;
             }
-        }).catch(function(err) {
-            console.warn('getAdminStatus failed:', err);
+        }).catch(function() {
             $scope.hideSystemCharts = true;
         });
 
-        // Start polling for all stats (data feeds charts)
-        function pollAll() {
+        function pollCharts() {
             pollDashboardStats();
             pollTraffic();
             pollDiskIO();
             pollCPU();
-            $scope.refreshTopProcesses();
-            $timeout(pollAll, pollInterval);
+            $timeout(pollCharts, pollInterval);
         }
-        pollAll();
+
+        function pollTopProcessesSlow() {
+            $scope.refreshTopProcesses();
+            $timeout(pollTopProcessesSlow, topProcessPollInterval);
+        }
+
+        pollCharts();
+        $timeout(pollTopProcessesSlow, 1500);
     }, 800);
 
     // SSH User Activity Modal

@@ -644,6 +644,28 @@ def onboarding(request):
     return proc.render()
 
 
+@ensure_csrf_cookie
+def cpHub(request, section):
+    # Category landing pages ("hubs") that replace the old deep sidebar
+    # accordions with a scannable grid of labelled tiles.
+    section = (section or '').lower()
+    adminOnly = {'server', 'security', 'settings'}
+    func = 'admin' if section in adminOnly else None
+    template = 'baseTemplate/hub.html'
+    proc = httpProc(request, template, {'section': section}, func)
+    return proc.render()
+
+
+@ensure_csrf_cookie
+def buildServices(request):
+    # In-panel landing for CyberPanel development services (Android, iOS,
+    # web and custom software). The full marketing page lives on
+    # cyberpanel.net; this page introduces the offering and deep-links out.
+    template = 'baseTemplate/buildServices.html'
+    proc = httpProc(request, template, {})
+    return proc.render()
+
+
 def runonboarding(request):
     try:
         userID = request.session['userID']
@@ -1705,6 +1727,12 @@ def getTopProcesses(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        from django.core.cache import cache
+        cache_key = 'cp_top_processes'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return HttpResponse(json.dumps(cached), content_type='application/json')
         
         import subprocess
         import tempfile
@@ -1745,10 +1773,15 @@ def getTopProcesses(request):
                     }
                     processes.append(process)
             
-            return HttpResponse(json.dumps({
+            payload = {
                 'status': 1,
                 'processes': processes
-            }), content_type='application/json')
+            }
+            try:
+                cache.set(cache_key, payload, 8)
+            except Exception:
+                pass
+            return HttpResponse(json.dumps(payload), content_type='application/json')
             
         finally:
             # Clean up temporary file

@@ -4791,6 +4791,37 @@ context /cyberpanel_suspension_page.html {
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+    @staticmethod
+    def _parse_crontab_entries(raw):
+        entries = []
+        for idx, line in enumerate(raw.split("\n")):
+            if not line.strip():
+                continue
+            parts = line.split(" ", 5)
+            if len(parts) != 6:
+                continue
+            entries.append({
+                'file_index': idx,
+                'minute': parts[0],
+                'hour': parts[1],
+                'monthday': parts[2],
+                'month': parts[3],
+                'weekday': parts[4],
+                'command': parts[5],
+            })
+        return entries
+
+    @staticmethod
+    def _get_crontab_entry_by_ui_line(raw, ui_line):
+        try:
+            ui_line = int(ui_line)
+        except (TypeError, ValueError):
+            return None
+        entries = WebsiteManager._parse_crontab_entries(raw)
+        if ui_line < 1 or ui_line > len(entries):
+            return None
+        return entries[ui_line - 1]
+
     def getWebsiteCron(self, userID=None, data=None):
         try:
 
@@ -4843,18 +4874,17 @@ context /cyberpanel_suspension_page.html {
                 return HttpResponse(final_json)
 
             counter = 0
-            for line in f.split("\n"):
-                if line:
-                    split = line.split(" ", 5)
-                    if len(split) == 6:
-                        counter += 1
-                        crons.append({"line": counter,
-                                      "minute": split[0],
-                                      "hour": split[1],
-                                      "monthday": split[2],
-                                      "month": split[3],
-                                      "weekday": split[4],
-                                      "command": split[5]})
+            for entry in self._parse_crontab_entries(f):
+                counter += 1
+                crons.append({
+                    "line": counter,
+                    "minute": entry['minute'],
+                    "hour": entry['hour'],
+                    "monthday": entry['monthday'],
+                    "month": entry['month'],
+                    "weekday": entry['weekday'],
+                    "command": entry['command'],
+                })
 
             data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons": crons}
             final_json = json.dumps(data_ret)
@@ -4886,7 +4916,6 @@ context /cyberpanel_suspension_page.html {
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-            line -= 1
             website = Websites.objects.get(domain=self.domain)
 
             try:
@@ -4901,11 +4930,8 @@ context /cyberpanel_suspension_page.html {
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-            f = f.split("\n")
-            cron = f[line]
-
-            cron = cron.split(" ", 5)
-            if len(cron) != 6:
+            entry = self._get_crontab_entry_by_ui_line(f, line)
+            if entry is None:
                 dic = {'getWebsiteCron': 0, 'error_message': 'Cron line incorrect'}
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
@@ -4913,14 +4939,14 @@ context /cyberpanel_suspension_page.html {
             data_ret = {"getWebsiteCron": 1,
                         "user": website.externalApp,
                         "cron": {
-                            "minute": cron[0],
-                            "hour": cron[1],
-                            "monthday": cron[2],
-                            "month": cron[3],
-                            "weekday": cron[4],
-                            "command": cron[5],
+                            "minute": entry['minute'],
+                            "hour": entry['hour'],
+                            "monthday": entry['monthday'],
+                            "month": entry['month'],
+                            "weekday": entry['weekday'],
+                            "command": entry['command'],
                         },
-                        "line": line}
+                        "line": int(line)}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
         except BaseException as msg:
@@ -4957,8 +4983,18 @@ context /cyberpanel_suspension_page.html {
             CronUtil.CronPrem(1)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
+            raw_cron = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+            entry = self._get_crontab_entry_by_ui_line(raw_cron, line)
+            if entry is None:
+                CronUtil.CronPrem(0)
+                dic = {'getWebsiteCron': 0, 'error_message': 'Cron line incorrect'}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " saveCronChanges --externalApp " + website.externalApp + " --line " + str(
-                line) + " --finalCron '" + finalCron + "'"
+                entry['file_index']) + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
             CronUtil.CronPrem(0)
 
@@ -5006,8 +5042,18 @@ context /cyberpanel_suspension_page.html {
             CronUtil.CronPrem(1)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
+            raw_cron = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+            entry = self._get_crontab_entry_by_ui_line(raw_cron, line)
+            if entry is None:
+                CronUtil.CronPrem(0)
+                dic = {'remCronbyLine': 0, 'error_message': 'Cron line incorrect'}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " remCronbyLine --externalApp " + website.externalApp + " --line " + str(
-                line)
+                entry['file_index'])
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
             CronUtil.CronPrem(0)
