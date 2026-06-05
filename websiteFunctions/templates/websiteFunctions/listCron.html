@@ -494,6 +494,27 @@
         display: none;
         transition: var(--transition-base);
     }
+
+    .cron-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    .cron-form-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
     
     .form-horizontal {
         margin-bottom: 0;
@@ -792,7 +813,7 @@
             <div class="example-box-wrapper">
                 
                 <div class="action-buttons">
-                    <a ng-click="addCronForm()" class="btn btn-primary" href="#">
+                    <a ng-click="addCronForm(); $event.preventDefault();" class="btn btn-primary" href="#">
                         <i class="fas fa-plus"></i>
                         {% trans "Add Cron" %}
                     </a>
@@ -838,7 +859,7 @@
                             <code ng-bind="cron.command"></code>
                         </div>
                         <div class="cron-card-actions">
-                            <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href="#" title="{% trans 'Edit' %}">
+                            <a class="btn btn-primary" ng-click="fetchCron(cron.line); $event.preventDefault();" href="#" title="{% trans 'Edit' %}">
                                 <i class="fas fa-edit"></i>
                                 {% trans "Edit" %}
                             </a>
@@ -876,7 +897,7 @@
                             </td>
                             <td class="cron-action-cell">
                                 <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                                    <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href="#" title="{% trans 'Edit' %}">
+                                    <a class="btn btn-primary" ng-click="fetchCron(cron.line); $event.preventDefault();" href="#" title="{% trans 'Edit' %}">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a class="btn btn-warning" ng-click="removeCron(cron.line)" href="#" title="{% trans 'Delete' %}">
@@ -892,6 +913,20 @@
 
                 <!-- Cron Form -->
                 <div id="modifyCronForm">
+                    <div class="cron-form-header">
+                        <h3 id="cronFormTitleAdd">
+                            <i class="fas fa-plus" style="color: var(--accent-color, #5b5fcf);"></i>
+                            {% trans "Add Cron Job" %}
+                        </h3>
+                        <h3 id="cronFormTitleEdit" style="display:none;">
+                            <i class="fas fa-edit" style="color: var(--accent-color, #5b5fcf);"></i>
+                            {% trans "Edit Cron Job" %}
+                        </h3>
+                        <button type="button" class="btn btn-border" ng-click="cancelCronForm()">
+                            <i class="fas fa-times"></i>
+                            {% trans "Cancel" %}
+                        </button>
+                    </div>
                     <form action="/" class="form-horizontal">
                         <input type="hidden" ng-value="line" required="">
                         

@@ -56,7 +56,7 @@ class CronUtil:
     @staticmethod
     def remCronbyLine(externalApp, line):
         try:
-            line -= 1
+            file_index = int(line)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + externalApp
@@ -65,23 +65,16 @@ class CronUtil:
 
             data = open(cronPath, 'r').readlines()
 
-            counter = 0
+            if file_index < 0 or file_index >= len(data):
+                print("0,Invalid cron line")
+                return
 
-            writeToFile = open(cronPath, 'w')
+            removedLine = data.pop(file_index)
 
-            for items in data:
-                if counter == line:
-                    removedLine = items
-                    counter = counter + 1
-                    continue
-                else:
-                    writeToFile.writelines(items)
+            with open(cronPath, 'w') as file:
+                file.writelines(data)
 
-                counter = counter + 1
-
-            writeToFile.close()
-
-            print("1," + removedLine)
+            print("1," + removedLine.strip())
         except BaseException as msg:
             print("0," + str(msg))
 

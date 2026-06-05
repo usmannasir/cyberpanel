@@ -13114,6 +13114,44 @@ app.controller('manageCronController', function ($scope, $http) {
 
     $scope.websiteToBeModified = $("#domain").text();
 
+    function scrollCronFormIntoView() {
+        var formEl = document.getElementById('modifyCronForm');
+        if (formEl && formEl.scrollIntoView) {
+            formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function setCronFormMode(mode) {
+        if (mode === 'edit') {
+            $("#cronFormTitleAdd").hide();
+            $("#cronFormTitleEdit").show();
+        } else {
+            $("#cronFormTitleAdd").show();
+            $("#cronFormTitleEdit").hide();
+        }
+    }
+
+    $scope.cancelCronForm = function () {
+        $("#modifyCronForm").hide();
+        $("#saveCronButton").hide();
+        $("#addCronButton").hide();
+        $("#manageCronLoading").hide();
+        $("#addCronFailure").hide();
+        $("#fetchCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#cronListPanel").show();
+    };
+
+    $scope.openCronForm = function (mode) {
+        setCronFormMode(mode);
+        $("#cronListPanel").hide();
+        $("#modifyCronForm").show();
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        scrollCronFormIntoView();
+    };
+
     $scope.fetchWebsites = function () {
 
         $("#manageCronLoading").show();
@@ -13168,9 +13206,8 @@ app.controller('manageCronController', function ($scope, $http) {
 
     $scope.fetchCron = function (cronLine) {
 
-        $("#cronListPanel").show();
+        $scope.openCronForm('edit');
         $("#manageCronLoading").show();
-        $("#modifyCronForm").show();
         $("#saveCronButton").show();
         $("#addCronButton").hide();
 
@@ -13207,6 +13244,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
                 $("#addCronButton").hide();
+                $("#fetchCronFailure").show();
             } else {
                 console.log(response.data);
 
@@ -13218,11 +13256,13 @@ app.controller('manageCronController', function ($scope, $http) {
                 $scope.command = response.data.cron.command
                 $scope.line = response.data.line
 
-                $("#cronListPanel").show();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
-                $("#modifyCronForm").fadeIn();
+                $("#modifyCronForm").show();
                 $("#addCronButton").hide();
                 $("#saveCronButton").show();
+                setCronFormMode('edit');
+                scrollCronFormIntoView();
 
             }
         }
@@ -13255,9 +13295,8 @@ app.controller('manageCronController', function ($scope, $http) {
         } else {
             $scope.minute = $scope.hour = $scope.monthday = $scope.month = $scope.weekday = $scope.command = $scope.line = "";
 
-            $("#cronListPanel").hide();
+            $scope.openCronForm('add');
             $("#manageCronLoading").hide();
-            $("#modifyCronForm").show();
             $("#saveCronButton").hide()
             $("#addCronButton").show();
         }
