@@ -713,6 +713,54 @@ app.controller('listFTPAccounts', function ($scope, $http) {
         }
     };
 
+    $scope.setFtpAccountStatus = function (record, enabled) {
+        $scope.ftpLoading = true;
+        var url = "/ftp/setFTPAccountStatus";
+        var data = {
+            ftpUserName: record.user,
+            selectedDomain: $scope.selectedDomain,
+            enabled: !!enabled
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(function (response) {
+            $scope.ftpLoading = false;
+            if (response.data.setFTPStatusResult === 1) {
+                record.acct_enabled = !!enabled;
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Success!',
+                        text: enabled ? 'FTP account enabled.' : 'FTP account disabled.',
+                        type: 'success'
+                    });
+                }
+                populateCurrentRecords();
+            } else {
+                $scope.errorMessage = response.data.error_message;
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+        }, function () {
+            $scope.ftpLoading = false;
+            $scope.couldNotConnect = false;
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error!',
+                    text: 'Could not connect to server.',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
 });
 
 

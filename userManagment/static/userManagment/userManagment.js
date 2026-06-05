@@ -436,6 +436,18 @@ app.controller('modifyUser', function ($scope, $http, $timeout) {
 
 
         var accountUsername = $scope.accountUsername;
+        if ($scope.newUserName && $scope.newUserName.trim()) {
+            var proposedName = $scope.newUserName.trim();
+            var originalName = ($scope.originalUserName || accountUsername || '').trim();
+            if (proposedName !== originalName) {
+                var usernameErr = $scope.validateUsernameFormat(proposedName);
+                if (usernameErr) {
+                    alert(usernameErr);
+                    return;
+                }
+            }
+        }
+
 
 
         var url = "/users/fetchUserDetails";
@@ -462,6 +474,9 @@ app.controller('modifyUser', function ($scope, $http, $timeout) {
 
                 var userDetails = response.data.userDetails;
 
+
+                $scope.originalUserName = accountUsername;
+                $scope.newUserName = accountUsername;
                 $scope.firstName = userDetails.firstName;
                 $scope.lastName = userDetails.lastName;
                 $scope.email = userDetails.email;
@@ -535,6 +550,21 @@ app.controller('modifyUser', function ($scope, $http, $timeout) {
 
     };
 
+
+    $scope.validateUsernameFormat = function (name) {
+        if (!name || !String(name).trim()) {
+            return 'Username is required.';
+        }
+        name = String(name).trim();
+        if (name.length < 3 || name.length > 50) {
+            return 'Username must be 3 to 50 characters.';
+        }
+        if (!/^[A-Za-z0-9_-]+$/.test(name)) {
+            return 'Username may only contain letters, numbers, underscore, and hyphen.';
+        }
+        return '';
+    };
+
     $scope.modifyUser = function () {
 
 
@@ -568,6 +598,9 @@ app.controller('modifyUser', function ($scope, $http, $timeout) {
             securityLevel: $scope.securityLevel,
             twofa: $scope.twofa
         };
+        if ($scope.newUserName && String($scope.newUserName).trim()) {
+            data.newUserName = String($scope.newUserName).trim();
+        }
 
         // Only include password if it's provided and not empty
         if (password && password.trim()) {
@@ -605,8 +638,21 @@ app.controller('modifyUser', function ($scope, $http, $timeout) {
                 $scope.accountTypeView = true;
                 $scope.websitesLimit = true;
 
+                if (response.data.userName) {
+                    $scope.accountUsername = response.data.userName;
+                    $scope.originalUserName = response.data.userName;
+                    $scope.newUserName = response.data.userName;
+                }
+                if (response.data.userRenamed == 1) {
+                    if (response.data.forceLogout == 1) {
+                        alert('Username updated to ' + response.data.userName + '. You will be logged out now; sign in with the new username.');
+                        window.location.href = '/logout';
+                        return;
+                    }
+                    alert('Username updated. User must sign in as: ' + response.data.userName);
+                }
 
-                $scope.userName = accountUsername;
+                $scope.userName = response.data.userName || accountUsername;
 
 
             } else {
@@ -773,7 +819,6 @@ app.controller('createACLCTRL', function ($scope, $http) {
     //
 
     $scope.versionManagement = false;
-    $scope.managePlugins = false;
 
     // User Management
 
@@ -848,25 +893,13 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
         var url = "/users/createACLFunc";
 
-        var aclNameTrimmed = ($scope.aclName !== undefined && $scope.aclName !== null) ? String($scope.aclName).trim() : '';
-        if (!aclNameTrimmed) {
-            $scope.aclLoading = true;
-            safePNotify({
-                title: 'Error!',
-                text: 'Please enter a name for this ACL.',
-                type: 'error'
-            });
-            return;
-        }
-
         var data = {
 
-            aclName: aclNameTrimmed,
+            aclName: $scope.aclName,
             makeAdmin: $scope.makeAdmin,
 
             //
             versionManagement: $scope.versionManagement,
-            managePlugins: $scope.managePlugins,
 
             // User Management
 
@@ -954,10 +987,10 @@ app.controller('createACLCTRL', function ($scope, $http) {
                     type: 'success'
                 });
             } else {
-                var errText = (response.data && (response.data.errorMessage || response.data.error_message)) ? (response.data.errorMessage || response.data.error_message) : 'Unknown error';
+
                 safePNotify({
                     title: 'Error!',
-                    text: errText,
+                    text: response.data.errorMessage,
                     type: 'error'
                 });
 
@@ -990,7 +1023,6 @@ app.controller('createACLCTRL', function ($scope, $http) {
             //
 
             $scope.versionManagement = true;
-            $scope.managePlugins = true;
 
             // User Management
 
@@ -1062,7 +1094,6 @@ app.controller('createACLCTRL', function ($scope, $http) {
             //
 
             $scope.versionManagement = false;
-            $scope.managePlugins = false;
 
             // User Management
 
@@ -1247,7 +1278,6 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
                 //
 
                 $scope.versionManagement = Boolean(response.data.versionManagement);
-                $scope.managePlugins = Boolean(response.data.managePlugins);
 
                 // User Management
 
@@ -1349,7 +1379,6 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             adminStatus: $scope.makeAdmin,
             //
             versionManagement: $scope.versionManagement,
-            managePlugins: $scope.managePlugins,
 
             // User Management
 
@@ -1473,7 +1502,6 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             //
 
             $scope.versionManagement = true;
-            $scope.managePlugins = true;
 
             // User Management
 
@@ -1545,7 +1573,6 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             //
 
             $scope.versionManagement = false;
-            $scope.managePlugins = false;
 
             // User Management
 
