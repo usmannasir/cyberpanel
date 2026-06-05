@@ -644,6 +644,28 @@ def onboarding(request):
     return proc.render()
 
 
+@ensure_csrf_cookie
+def cpHub(request, section):
+    # Category landing pages ("hubs") that replace the old deep sidebar
+    # accordions with a scannable grid of labelled tiles.
+    section = (section or '').lower()
+    adminOnly = {'server', 'security', 'settings'}
+    func = 'admin' if section in adminOnly else None
+    template = 'baseTemplate/hub.html'
+    proc = httpProc(request, template, {'section': section}, func)
+    return proc.render()
+
+
+@ensure_csrf_cookie
+def buildServices(request):
+    # In-panel landing for CyberPanel development services (Android, iOS,
+    # web and custom software). The full marketing page lives on
+    # cyberpanel.net; this page introduces the offering and deep-links out.
+    template = 'baseTemplate/buildServices.html'
+    proc = httpProc(request, template, {})
+    return proc.render()
+
+
 def runonboarding(request):
     try:
         userID = request.session['userID']

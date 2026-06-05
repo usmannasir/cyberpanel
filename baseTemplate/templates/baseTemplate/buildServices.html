@@ -1,0 +1,129 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Build Services - CyberPanel" %}{% endblock %}
+
+{# Static marketing page — no per-module JS needed #}
+{% block module_scripts %}{% endblock %}
+
+{% block content %}
+{% with BS_BASE="https://cyberpanel.net/custom-development" UTM="?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services" %}
+<div class="dashboard-wrapper">
+    <div class="dashboard-container">
+
+        <!-- Hero -->
+        <div class="cp-bs-hero">
+            <h1>{% trans "Need it built? Our team builds it for you." %}</h1>
+            <p>{% trans "Beyond hosting, CyberPanel offers full development services — websites, web apps, Android & iOS apps, and custom software. Tell us what you need and our engineers deliver it, fully managed and deployed on your CyberPanel server." %}</p>
+            <a class="cp-build-btn" href="{{ BS_BASE }}{{ UTM }}" target="_blank" rel="noopener">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i> {% trans "Request a free quote" %}
+            </a>
+        </div>
+
+        <!-- Service categories -->
+        <h2 class="section-title">{% trans "WHAT WE BUILD" %}</h2>
+        <div class="cp-bs-grid">
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fas fa-globe"></i></div>
+                <h3>{% trans "Website Development" %}</h3>
+                <p>{% trans "Marketing sites, landing pages, and business websites — fast, responsive, SEO-ready, and deployed straight onto your server." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/web{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fab fa-wordpress"></i></div>
+                <h3>{% trans "WordPress & eCommerce" %}</h3>
+                <p>{% trans "Custom WordPress themes, plugins, WooCommerce stores and migrations — built to perform on LiteSpeed." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/wordpress{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fas fa-gauge-high"></i></div>
+                <h3>{% trans "Website Speed Optimization" %}</h3>
+                <p>{% trans "Make your site load faster — caching, LiteSpeed tuning, image and database optimization, and Core Web Vitals fixes." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/speed-optimization{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fab fa-android"></i></div>
+                <h3>{% trans "Android App Development" %}</h3>
+                <p>{% trans "Native and cross-platform Android apps with secure backends hosted on your CyberPanel infrastructure." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/android{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fab fa-apple"></i></div>
+                <h3>{% trans "iOS App Development" %}</h3>
+                <p>{% trans "iPhone and iPad apps from design to App Store release, integrated with APIs running on your server." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/ios{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fas fa-code"></i></div>
+                <h3>{% trans "Custom Software & APIs" %}</h3>
+                <p>{% trans "Bespoke web applications, SaaS platforms, REST APIs and automation — built in the stack of your choice." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/custom-software{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fas fa-pen-ruler"></i></div>
+                <h3>{% trans "UI / UX Design" %}</h3>
+                <p>{% trans "Product design, branding and design systems that make your website or app a pleasure to use." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/design{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fas fa-server"></i></div>
+                <h3>{% trans "DevOps & Server Management" %}</h3>
+                <p>{% trans "Migrations, performance tuning, hardening and fully-managed maintenance of your CyberPanel servers." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/devops{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="cp-bs-svc">
+                <div class="cp-bs-ic"><i class="fas fa-life-ring"></i></div>
+                <h3>{% trans "Maintenance & Support" %}</h3>
+                <p>{% trans "Ongoing updates, security monitoring and on-call support so your sites and apps keep running smoothly." %}</p>
+                <a class="cp-bs-link" href="{{ BS_BASE }}/support{{ UTM }}" target="_blank" rel="noopener">{% trans "Learn more" %} <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="cp-bs-steps">
+            <h2>{% trans "How it works" %}</h2>
+            <div class="cp-bs-steps-grid">
+                <div class="cp-bs-step">
+                    <div class="cp-ob-num">1</div>
+                    <h4>{% trans "Tell us your idea" %}</h4>
+                    <p>{% trans "Share your requirements and goals — no commitment." %}</p>
+                </div>
+                <div class="cp-bs-step">
+                    <div class="cp-ob-num">2</div>
+                    <h4>{% trans "Get a quote & plan" %}</h4>
+                    <p>{% trans "We scope the work and send a fixed quote and timeline." %}</p>
+                </div>
+                <div class="cp-bs-step">
+                    <div class="cp-ob-num">3</div>
+                    <h4>{% trans "We build it" %}</h4>
+                    <p>{% trans "Our team designs, develops and tests your product." %}</p>
+                </div>
+                <div class="cp-bs-step">
+                    <div class="cp-ob-num">4</div>
+                    <h4>{% trans "Deploy & support" %}</h4>
+                    <p>{% trans "We ship it to your server and keep it running." %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cp-bs-cta">
+            <h2>{% trans "Have a project in mind?" %}</h2>
+            <p>{% trans "Get a free, no-obligation consultation with the CyberPanel development team." %}</p>
+            <a class="cp-build-btn" href="{{ BS_BASE }}{{ UTM }}" target="_blank" rel="noopener">
+                <i class="fas fa-comments" aria-hidden="true"></i> {% trans "Start your project" %}
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endwith %}
+{% endblock %}
