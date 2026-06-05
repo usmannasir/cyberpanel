@@ -341,6 +341,7 @@
             {l:'{% trans "Email Limits" %}', h:'{% url "EmailLimits" %}', i:'fa-gauge', g:'{% trans "Email" %}'},{% endif %}
             {% if admin or dkimManager %}{l:'{% trans "DKIM Manager" %}', h:'{% url "dkimManager" %}', i:'fa-signature', g:'{% trans "Email" %}'},{% endif %}
             {l:'{% trans "Webmail" %}', h:'/webmail/', i:'fa-envelope-open-text', g:'{% trans "Email" %}'},
+            {% if admin %}{l:'{% trans "SnappyMail" %}', h:'/snappymail/', i:'fa-envelope', g:'{% trans "Email" %}', t:'_blank'},{% endif %}
             {% if admin %}{l:'{% trans "Email Delivery" %}', h:'{% url "emailDeliveryHome" %}', i:'fa-paper-plane', g:'{% trans "Email" %}'},
             {l:'{% trans "Email Debugger" %}', h:'{% url "EmailDebugger" %}', i:'fa-stethoscope', g:'{% trans "Email" %}'},
             {l:'{% trans "Mail Queue" %}', h:'{% url "mailQueue" %}', i:'fa-list-check', g:'{% trans "Email" %}'},
