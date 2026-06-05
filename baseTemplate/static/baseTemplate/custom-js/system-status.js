@@ -994,8 +994,84 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
 
     // Top Processes
     $scope.topProcesses = [];
+    $scope.topProcessesPaginated = [];
+    $scope.topProcessesCurrentPage = 1;
+    $scope.topProcessesPerPage = 5;
+    $scope.topProcessesGoToPageInput = 1;
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
+
+    $scope.getTopProcessesTotalPages = function() {
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.topProcesses || []).length / perPage);
+    };
+
+    $scope.getTopProcessesStart = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return ($scope.topProcessesCurrentPage - 1) * perPage + 1;
+    };
+
+    $scope.getTopProcessesEnd = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var end = $scope.topProcessesCurrentPage * perPage;
+        return Math.min(end, $scope.topProcesses.length);
+    };
+
+    $scope.updateTopProcessesPaginated = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            $scope.topProcessesPaginated = [];
+            return;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if ($scope.topProcessesCurrentPage > totalPages) {
+            $scope.topProcessesCurrentPage = totalPages || 1;
+        }
+        if ($scope.topProcessesCurrentPage < 1) {
+            $scope.topProcessesCurrentPage = 1;
+        }
+        $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        var start = ($scope.topProcessesCurrentPage - 1) * perPage;
+        var end = start + perPage;
+        $scope.topProcessesPaginated = $scope.topProcesses.slice(start, end);
+    };
+
+    $scope.topProcessesPrevPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage - 1);
+    };
+
+    $scope.topProcessesNextPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage + 1);
+    };
+
+    $scope.topProcessesChangePerPage = function() {
+        $scope.topProcessesPerPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        $scope.topProcessesCurrentPage = 1;
+        $scope.topProcessesGoToPageInput = 1;
+        $scope.updateTopProcessesPaginated();
+    };
+
+    $scope.topProcessesGoToPage = function(page) {
+        page = parseInt(page, 10);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.topProcessesCurrentPage = page;
+            $scope.updateTopProcessesPaginated();
+        } else {
+            $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        }
+    };
+
+    $scope.topProcessesGoToPageNumber = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesGoToPageInput);
+    };
+
     $scope.refreshTopProcesses = function() {
         if (dashPollInFlight.topProcesses) {
             return;
@@ -1007,13 +1083,21 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
+                $scope.topProcessesCurrentPage = 1;
+                $scope.topProcessesGoToPageInput = 1;
+                $scope.updateTopProcessesPaginated();
             } else {
                 $scope.topProcesses = [];
+                $scope.topProcessesPaginated = [];
+                $scope.topProcessesGoToPageInput = 1;
             }
         }, function () {
             dashPollInFlight.topProcesses = false;
             $scope.loadingTopProcesses = false;
             $scope.errorTopProcesses = 'Failed to load top processes.';
+            $scope.topProcesses = [];
+            $scope.topProcessesPaginated = [];
+            $scope.topProcessesGoToPageInput = 1;
         });
     };
 

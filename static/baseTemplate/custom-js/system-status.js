@@ -956,8 +956,84 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     // Top Processes
     $scope.topProcesses = [];
+    $scope.topProcessesPaginated = [];
+    $scope.topProcessesCurrentPage = 1;
+    $scope.topProcessesPerPage = 5;
+    $scope.topProcessesGoToPageInput = 1;
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
+
+    $scope.getTopProcessesTotalPages = function() {
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.topProcesses || []).length / perPage);
+    };
+
+    $scope.getTopProcessesStart = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return ($scope.topProcessesCurrentPage - 1) * perPage + 1;
+    };
+
+    $scope.getTopProcessesEnd = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var end = $scope.topProcessesCurrentPage * perPage;
+        return Math.min(end, $scope.topProcesses.length);
+    };
+
+    $scope.updateTopProcessesPaginated = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            $scope.topProcessesPaginated = [];
+            return;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if ($scope.topProcessesCurrentPage > totalPages) {
+            $scope.topProcessesCurrentPage = totalPages || 1;
+        }
+        if ($scope.topProcessesCurrentPage < 1) {
+            $scope.topProcessesCurrentPage = 1;
+        }
+        $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        var start = ($scope.topProcessesCurrentPage - 1) * perPage;
+        var end = start + perPage;
+        $scope.topProcessesPaginated = $scope.topProcesses.slice(start, end);
+    };
+
+    $scope.topProcessesPrevPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage - 1);
+    };
+
+    $scope.topProcessesNextPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage + 1);
+    };
+
+    $scope.topProcessesChangePerPage = function() {
+        $scope.topProcessesPerPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        $scope.topProcessesCurrentPage = 1;
+        $scope.topProcessesGoToPageInput = 1;
+        $scope.updateTopProcessesPaginated();
+    };
+
+    $scope.topProcessesGoToPage = function(page) {
+        page = parseInt(page, 10);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.topProcessesCurrentPage = page;
+            $scope.updateTopProcessesPaginated();
+        } else {
+            $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        }
+    };
+
+    $scope.topProcessesGoToPageNumber = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesGoToPageInput);
+    };
+
     $scope.refreshTopProcesses = function() {
         if (dashPollInFlight.topProcesses) {
             return;
@@ -969,13 +1045,21 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
+                $scope.topProcessesCurrentPage = 1;
+                $scope.topProcessesGoToPageInput = 1;
+                $scope.updateTopProcessesPaginated();
             } else {
                 $scope.topProcesses = [];
+                $scope.topProcessesPaginated = [];
+                $scope.topProcessesGoToPageInput = 1;
             }
         }, function () {
             dashPollInFlight.topProcesses = false;
             $scope.loadingTopProcesses = false;
             $scope.errorTopProcesses = 'Failed to load top processes.';
+            $scope.topProcesses = [];
+            $scope.topProcessesPaginated = [];
+            $scope.topProcessesGoToPageInput = 1;
         });
     };
 
@@ -983,90 +1067,102 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.sshLogins = [];
     $scope.sshLoginsPaginated = [];
     $scope.sshLoginsCurrentPage = 1;
-    $scope.sshLoginsPerPage = 10;
-    $scope.sshLoginsGoToPage = 1;
+    $scope.sshLoginsPerPage = 5;
+    $scope.sshLoginsGoToPageInput = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
     
     $scope.getSSHLoginsTotalPages = function() {
-        return Math.ceil($scope.sshLogins.length / $scope.sshLoginsPerPage);
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogins || []).length / perPage);
     };
     
     $scope.getSSHLoginsStart = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             return 0;
         }
-        return ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage + 1;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return ($scope.sshLoginsCurrentPage - 1) * perPage + 1;
     };
     
     $scope.getSSHLoginsEnd = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             return 0;
         }
-        var end = $scope.sshLoginsCurrentPage * $scope.sshLoginsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var end = $scope.sshLoginsCurrentPage * perPage;
         return Math.min(end, $scope.sshLogins.length);
     };
     
     $scope.updateSSHLoginsPaginated = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             $scope.sshLoginsPaginated = [];
-            console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
             return;
         }
-        var start = ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage;
-        var end = start + $scope.sshLoginsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if ($scope.sshLoginsCurrentPage > totalPages) {
+            $scope.sshLoginsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLoginsCurrentPage < 1) {
+            $scope.sshLoginsCurrentPage = 1;
+        }
+        $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
+        var start = ($scope.sshLoginsCurrentPage - 1) * perPage;
+        var end = start + perPage;
         $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
-        console.log('updateSSHLoginsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogins.length, 'paginated=', $scope.sshLoginsPaginated.length);
     };
     
     $scope.sshLoginsPrevPage = function() {
-        if ($scope.sshLoginsCurrentPage > 1) {
-            $scope.sshLoginsCurrentPage--;
-            $scope.updateSSHLoginsPaginated();
-        }
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage - 1);
     };
     
     $scope.sshLoginsNextPage = function() {
-        if ($scope.sshLoginsCurrentPage < $scope.getSSHLoginsTotalPages()) {
-            $scope.sshLoginsCurrentPage++;
-            $scope.updateSSHLoginsPaginated();
-        }
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage + 1);
     };
-    
-    $scope.sshLoginsGoToPageNumber = function() {
-        var page = parseInt($scope.sshLoginsGoToPage);
+
+    $scope.sshLoginsChangePerPage = function() {
+        $scope.sshLoginsPerPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        $scope.sshLoginsCurrentPage = 1;
+        $scope.sshLoginsGoToPageInput = 1;
+        $scope.updateSSHLoginsPaginated();
+    };
+
+    $scope.sshLoginsGoToPage = function(page) {
+        page = parseInt(page, 10);
         var totalPages = $scope.getSSHLoginsTotalPages();
         if (page >= 1 && page <= totalPages) {
             $scope.sshLoginsCurrentPage = page;
             $scope.updateSSHLoginsPaginated();
         } else {
-            $scope.sshLoginsGoToPage = $scope.sshLoginsCurrentPage;
+            $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
         }
+    };
+    
+    $scope.sshLoginsGoToPageNumber = function() {
+        $scope.sshLoginsGoToPage($scope.sshLoginsGoToPageInput);
     };
     
     $scope.refreshSSHLogins = function() {
         $scope.loadingSSHLogins = true;
         $http.get('/base/getRecentSSHLogins').then(function (response) {
             $scope.loadingSSHLogins = false;
-            console.log('SSH Logins response:', response.data);
             if (response.data && response.data.logins && Array.isArray(response.data.logins)) {
                 $scope.sshLogins = response.data.logins;
                 $scope.sshLoginsCurrentPage = 1;
-                $scope.sshLoginsGoToPage = 1;
-                console.log('SSH Logins loaded:', $scope.sshLogins.length, 'items');
+                $scope.sshLoginsGoToPageInput = 1;
                 $scope.updateSSHLoginsPaginated();
-                console.log('SSH Logins paginated:', $scope.sshLoginsPaginated.length, 'items');
             } else {
-                console.warn('SSH Logins: No data or invalid format', response.data);
                 $scope.sshLogins = [];
                 $scope.sshLoginsPaginated = [];
+                $scope.sshLoginsGoToPageInput = 1;
             }
-        }, function (err) {
+        }, function () {
             $scope.loadingSSHLogins = false;
-            console.error('SSH Logins error:', err);
             $scope.errorSSHLogins = 'Failed to load SSH logins.';
             $scope.sshLogins = [];
             $scope.sshLoginsPaginated = [];
+            $scope.sshLoginsGoToPageInput = 1;
         });
     };
 

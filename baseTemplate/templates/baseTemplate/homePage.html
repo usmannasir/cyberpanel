@@ -315,7 +315,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="login in sshLogins">
+                    <tr ng-repeat="login in sshLoginsPaginated">
                         <td><strong>{$ login.user $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">{$ login.ip $}</code></td>
                         <td>
@@ -330,6 +330,32 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{% trans "Show" %}</span>
+                    <select ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white; min-width: 64px;">
+                        <option ng-value="5">5</option>
+                        <option ng-value="10">10</option>
+                        <option ng-value="25">25</option>
+                        <option ng-value="50">50</option>
+                        <option ng-value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">{% trans "per page" %}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLoginsStart() $}-{$ getSSHLoginsEnd() $} {% trans "of" %} {$ sshLogins.length $}</span>
+                    <button type="button" ng-click="sshLoginsPrevPage()" ng-disabled="sshLoginsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button type="button" ng-click="sshLoginsNextPage()" ng-disabled="sshLoginsCurrentPage >= getSSHLoginsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <label style="color: #64748b; font-size: 13px; margin: 0;">{% trans "Go to page" %}</label>
+                    <input type="number" min="1" ng-attr-max="{$ getSSHLoginsTotalPages() $}" ng-model="sshLoginsGoToPageInput" ng-keypress="$event.keyCode === 13 && sshLoginsGoToPageNumber(); $event.preventDefault()" style="width: 56px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" aria-label="{% trans 'Go to page' %}">
+                    <button type="button" ng-click="sshLoginsGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">{% trans "Go" %}</button>
+                </div>
+            </div>
             
             <!-- Loading skeleton (no fake data) -->
             <table class="activity-table" ng-if="loadingSSHLogins" aria-hidden="true">
@@ -564,7 +590,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="process in topProcesses">
+                    <tr ng-repeat="process in topProcessesPaginated">
                         <td>{$ process.pid $}</td>
                         <td>{$ process.user $}</td>
                         <td>{$ process.cpu $}%</td>
@@ -573,6 +599,32 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div ng-if="!loadingTopProcesses && !errorTopProcesses && topProcesses.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{% trans "Show" %}</span>
+                    <select ng-model="topProcessesPerPage" ng-change="topProcessesChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white; min-width: 64px;">
+                        <option ng-value="5">5</option>
+                        <option ng-value="10">10</option>
+                        <option ng-value="25">25</option>
+                        <option ng-value="50">50</option>
+                        <option ng-value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">{% trans "per page" %}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getTopProcessesStart() $}-{$ getTopProcessesEnd() $} {% trans "of" %} {$ topProcesses.length $}</span>
+                    <button type="button" ng-click="topProcessesPrevPage()" ng-disabled="topProcessesCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button type="button" ng-click="topProcessesNextPage()" ng-disabled="topProcessesCurrentPage >= getTopProcessesTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <label style="color: #64748b; font-size: 13px; margin: 0;">{% trans "Go to page" %}</label>
+                    <input type="number" min="1" ng-attr-max="{$ getTopProcessesTotalPages() $}" ng-model="topProcessesGoToPageInput" ng-keypress="$event.keyCode === 13 && topProcessesGoToPageNumber(); $event.preventDefault()" style="width: 56px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" aria-label="{% trans 'Go to page' %}">
+                    <button type="button" ng-click="topProcessesGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">{% trans "Go" %}</button>
+                </div>
+            </div>
         </div>
         
         <!-- Traffic Tab -->
