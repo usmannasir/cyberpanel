@@ -2481,14 +2481,19 @@ Require valid-user
             except:
                 apacheBackend = "0"
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            try:
+                openBasedir = int(data.get('openBasedir', 1))
+            except (TypeError, ValueError):
+                openBasedir = 0
 
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                        " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
+                       + " --openBasedir " + str(openBasedir) + ' --path ' + path + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
-            create_result = subprocess.run(execPath, shell=True, capture_output=True, text=True, timeout=1800)
+            cli_output = ProcessUtilities.outputExecutioner(execPath, None, True)
+
             st = ''
             try:
                 if os.path.isfile(tempStatusPath):
@@ -2496,14 +2501,15 @@ Require valid-user
                         st = sf.read().strip()
             except BaseException:
                 st = ''
-            out = (create_result.stdout or '').strip()
+
+            out = (cli_output or '').strip()
             last_line = out.split('\n')[-1] if out else ''
             cli_ok = last_line.startswith('1,')
             cli_fail = last_line.startswith('0,')
             status_ok = ('Domain successfully created.' in st and '[200]' in st)
             status_fail = ('[404]' in st)
 
-            if create_result.returncode == 0 and (cli_ok or status_ok) and not status_fail:
+            if (cli_ok or status_ok) and not status_fail:
                 data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
                             'tempStatusPath': tempStatusPath}
             else:
@@ -2512,8 +2518,8 @@ Require valid-user
                     err_msg = last_line.split(',', 1)[1].strip() or err_msg
                 elif st:
                     err_msg = st.replace('. [404]', '').strip() or err_msg
-                elif create_result.stderr and create_result.stderr.strip():
-                    err_msg = create_result.stderr.strip()[:500]
+                elif out:
+                    err_msg = out.strip()[:500]
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': err_msg[:2000],
                             'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)

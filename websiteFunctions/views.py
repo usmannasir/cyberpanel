@@ -900,7 +900,13 @@ def submitDomainCreation(request):
             return result
 
         wm = WebsiteManager()
-        coreResult = wm.submitDomainCreation(userID, json.loads(request.body))
+        try:
+            payload = json.loads(request.body.decode('utf-8') if isinstance(request.body, bytes) else request.body)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': 'Invalid request payload.'}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+
+        coreResult = wm.submitDomainCreation(userID, payload)
 
         result = pluginManager.postDomainCreation(request, coreResult)
         if result != 200:
@@ -909,6 +915,11 @@ def submitDomainCreation(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+    except BaseException as msg:
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
+        CyberCPLogFileWriter.writeToFile(str(msg) + ' [submitDomainCreation]')
+        data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)[:2000]}
+        return HttpResponse(json.dumps(data_ret), content_type='application/json')
 
 
 def fetchDomains(request):

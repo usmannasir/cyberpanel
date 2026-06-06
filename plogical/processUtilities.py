@@ -289,8 +289,13 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
             
             if ProcessUtilities.token == "unset":
-                ProcessUtilities.token = os.environ.get('TOKEN')
-                del os.environ['TOKEN']
+                token_val = os.environ.get('TOKEN')
+                if token_val:
+                    ProcessUtilities.token = token_val
+                    del os.environ['TOKEN']
+                else:
+                    ProcessUtilities.token = ""
+                    logging.writeToFile('TOKEN not set in environment; privileged command may fail [sendCommand]')
 
             if user == None:
                 if command.find('export') > -1:

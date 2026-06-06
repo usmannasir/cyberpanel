@@ -5,6 +5,8 @@ import shutil
 import pexpect
 import os
 import shlex
+import getpass
+import glob
 from plogical.processUtilities import ProcessUtilities
 from datetime import datetime
 
@@ -221,6 +223,87 @@ class installUtilities:
         return 1
 
     @staticmethod
+    def _readProtectedConfigLines(config_file):
+        if getpass.getuser() == 'root' and os.path.isfile(config_file):
+            with open(config_file, 'r') as f:
+                return f.readlines()
+        content = ProcessUtilities.outputExecutioner('cat %s' % shlex.quote(config_file))
+        if content is None or content == '':
+            return []
+        if content.endswith('\n'):
+            return content.splitlines(True)
+        return content.splitlines(True) if '\n' in content else [content + '\n']
+
+    @staticmethod
+    def _writeProtectedConfigLines(config_file, lines):
+        if getpass.getuser() == 'root':
+            with open(config_file, 'w') as f:
+                f.writelines(lines)
+            return True, None
+        tmp_path = '/home/cyberpanel/.cp_cfg_%s_%s.tmp' % (
+            os.getpid(), datetime.now().strftime('%H%M%S%f'))
+        try:
+            with open(tmp_path, 'w') as f:
+                f.writelines(lines)
+            cmd = 'cp %s %s' % (shlex.quote(tmp_path), shlex.quote(config_file))
+            if ProcessUtilities.executioner(cmd, None, True) == 1:
+                return True, None
+            return False, 'Failed to write config via privileged copy'
+        finally:
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+    @staticmethod
+    def _copyProtectedFile(src, dst):
+        if getpass.getuser() == 'root':
+            shutil.copy2(src, dst)
+            return True, None
+        cmd = 'cp %s %s' % (shlex.quote(src), shlex.quote(dst))
+        if ProcessUtilities.executioner(cmd, None, True) == 1:
+            return True, None
+        return False, 'Failed to copy %s to %s' % (src, dst)
+
+    @staticmethod
+    def repairInvalidPhpHandlersInVhosts():
+        try:
+            from managePHP.phpManager import PHPManager
+            versions = PHPManager.findPHPVersions()
+            if not versions:
+                return
+            fallback_label = versions[-2] if len(versions) >= 2 else versions[-1]
+            fallback_php = PHPManager.getPHPString(fallback_label)
+            fallback_path = '/usr/local/lsws/lsphp%s/bin/lsphp' % fallback_php
+            if not os.path.exists(fallback_path):
+                return
+            for vh_file in glob.glob('/usr/local/lsws/conf/vhosts/*/vhost.conf'):
+                lines = installUtilities._readProtectedConfigLines(vh_file)
+                if not lines:
+                    continue
+                changed = False
+                new_lines = []
+                for line in lines:
+                    stripped = line.strip()
+                    if stripped.startswith('path') and '/lsphp' in stripped and stripped.endswith('/bin/lsphp'):
+                        parts = stripped.split()
+                        php_path = parts[-1] if parts else ''
+                        if php_path and not os.path.exists(php_path):
+                            new_lines.append('  path                    %s\n' % fallback_path)
+                            changed = True
+                            CyberCPLogFileWriter.writeToFile(
+                                '[repairInvalidPhpHandlers] %s: %s -> %s' % (vh_file, php_path, fallback_path))
+                            continue
+                    new_lines.append(line)
+                if changed:
+                    ok, err = installUtilities._writeProtectedConfigLines(vh_file, new_lines)
+                    if not ok:
+                        CyberCPLogFileWriter.writeToFile(
+                            '[repairInvalidPhpHandlers] Failed to update %s: %s' % (vh_file, err))
+        except BaseException as msg:
+            CyberCPLogFileWriter.writeToFile('[repairInvalidPhpHandlers] %s' % str(msg))
+
+    @staticmethod
     def safeModifyHttpdConfig(config_modifier, description="config modification", skip_validation=False):
         """
         Safely modify httpd_config.conf with backup, validation, and rollback on failure.
@@ -256,7 +339,9 @@ class installUtilities:
         try:
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             backup_file = f"{config_file}.backup-{timestamp}"
-            shutil.copy2(config_file, backup_file)
+            ok, copy_err = installUtilities._copyProtectedFile(config_file, backup_file)
+            if not ok:
+                raise OSError(copy_err)
             CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Created backup: {backup_file} for {description}")
         except Exception as e:
             error_msg = f"Failed to create backup: {str(e)}"
@@ -265,8 +350,9 @@ class installUtilities:
         
         # Read current config
         try:
-            with open(config_file, 'r') as f:
-                original_content = f.readlines()
+            original_content = installUtilities._readProtectedConfigLines(config_file)
+            if not original_content:
+                raise OSError('Config file is empty or unreadable')
         except Exception as e:
             error_msg = f"Failed to read config file: {str(e)}"
             CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
@@ -286,14 +372,15 @@ class installUtilities:
         
         # Write modified config
         try:
-            with open(config_file, 'w') as f:
-                f.writelines(modified_content)
+            ok, write_err = installUtilities._writeProtectedConfigLines(config_file, modified_content)
+            if not ok:
+                raise OSError(write_err)
         except Exception as e:
             error_msg = f"Failed to write modified config: {str(e)}"
             CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
             # Restore backup
             try:
-                shutil.copy2(backup_file, config_file)
+                installUtilities._copyProtectedFile(backup_file, config_file)
                 CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to write failure")
             except:
                 pass
@@ -309,15 +396,20 @@ class installUtilities:
                 if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                     openlitespeed_bin = '/usr/local/lsws/bin/openlitespeed'
                     if os.path.exists(openlitespeed_bin):
-                        validate_cmd = [openlitespeed_bin, '-t']
-                        result = subprocess.run(validate_cmd, capture_output=True, text=True, timeout=30)
+                        installUtilities.repairInvalidPhpHandlersInVhosts()
+                        if getpass.getuser() == 'root':
+                            validate_cmd = [openlitespeed_bin, '-t']
+                            result = subprocess.run(validate_cmd, capture_output=True, text=True, timeout=30)
+                            error_output = result.stderr or result.stdout or ''
+                        else:
+                            validate_cmd = '%s -t 2>&1' % shlex.quote(openlitespeed_bin)
+                            error_output = ProcessUtilities.outputExecutioner(validate_cmd, None, True) or ''
+                            result = type('Result', (), {'returncode': 1 if '[ERROR]' in error_output.upper() else 0})()
                         
                         # Check for actual errors (not just warnings)
                         # openlitespeed -t returns 0 on success, non-zero on errors
                         # But it may also return non-zero for warnings, so check for actual [ERROR] lines
                         if result.returncode != 0:
-                            # Check if there are actual ERROR log lines (not just WARN or the word "error" in text)
-                            error_output = result.stderr or result.stdout or ''
                             # Look for lines that start with [ERROR] or contain [ERROR] (actual error log entries)
                             error_lines = [line for line in error_output.split('\n') if '[ERROR]' in line.upper()]
                             if error_lines:
@@ -326,7 +418,7 @@ class installUtilities:
                                 CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
                                 # Restore backup
                                 try:
-                                    shutil.copy2(backup_file, config_file)
+                                    installUtilities._copyProtectedFile(backup_file, config_file)
                                     CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation failure")
                                 except Exception as restore_error:
                                     CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] CRITICAL: Failed to restore backup: {str(restore_error)}")
@@ -345,7 +437,7 @@ class installUtilities:
                 CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
                 # Restore backup
                 try:
-                    shutil.copy2(backup_file, config_file)
+                    installUtilities._copyProtectedFile(backup_file, config_file)
                     CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation error")
                 except:
                     pass
