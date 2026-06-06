@@ -1605,8 +1605,8 @@ $cfg['Servers'][$i]['port'] = '3306';
             Upgrade.executioner_silent(command, 'chown phpMyAdmin tmp')
 
             try:
-                from plogical.phpmyadmin_utils import ensure_phpmyadmin_signin_bridge
-                ensure_phpmyadmin_signin_bridge()
+                from plogical.phpmyadmin_utils import ensure_phpmyadmin_sso
+                ensure_phpmyadmin_sso()
             except Exception:
                 pass
 

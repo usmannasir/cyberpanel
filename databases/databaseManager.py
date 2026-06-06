@@ -33,8 +33,8 @@ class DatabaseManager:
 
     def phpMyAdmin(self, request = None, userID = None):
         try:
-            from plogical.phpmyadmin_utils import ensure_phpmyadmin_signin_bridge
-            ensure_phpmyadmin_signin_bridge()
+            from plogical.phpmyadmin_utils import ensure_phpmyadmin_sso
+            ensure_phpmyadmin_sso()
         except BaseException:
             pass
         template = 'databases/phpMyAdmin.html'
