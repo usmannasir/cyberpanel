@@ -4,6 +4,76 @@ import datetime
 import math
 import argparse
 
+_METRICS_EMA_CACHE_KEY = 'cp_metrics_ema'
+_METRICS_EMA_CACHE_TTL = 3600
+
+
+def _clamp_step(prev_val, new_val, max_step):
+    if prev_val is None:
+        return new_val
+    delta = new_val - prev_val
+    if delta > max_step:
+        return prev_val + max_step
+    if delta < -max_step:
+        return prev_val - max_step
+    return new_val
+
+
+def _smooth_metric(raw_val, prev_val, alpha, max_step):
+    if prev_val is None:
+        smoothed = raw_val
+    else:
+        smoothed = (alpha * raw_val) + ((1.0 - alpha) * prev_val)
+    smoothed = _clamp_step(prev_val, smoothed, max_step)
+    return max(0.0, min(100.0, smoothed))
+
+
+def _sample_cpu_percent(psutil_mod, samples=3, interval=0.2):
+    readings = []
+    for _ in range(samples):
+        readings.append(psutil_mod.cpu_percent(interval=interval))
+    return sum(readings) / float(len(readings))
+
+
+def _load_metrics_ema():
+    try:
+        from django.core.cache import cache
+        return cache.get(_METRICS_EMA_CACHE_KEY) or {}
+    except Exception:
+        return {}
+
+
+def _save_metrics_ema(ema_state):
+    try:
+        from django.core.cache import cache
+        cache.set(_METRICS_EMA_CACHE_KEY, ema_state, _METRICS_EMA_CACHE_TTL)
+    except Exception:
+        pass
+
+
+def _smooth_usage_metrics(cpu_raw, ram_raw, disk_raw):
+    ema_state = _load_metrics_ema()
+    prev_cpu = ema_state.get('cpu')
+    prev_ram = ema_state.get('ram')
+    prev_disk = ema_state.get('disk')
+
+    cpu_smoothed = _smooth_metric(cpu_raw, prev_cpu, alpha=0.35, max_step=15.0)
+    ram_smoothed = _smooth_metric(ram_raw, prev_ram, alpha=0.5, max_step=8.0)
+    disk_smoothed = _smooth_metric(disk_raw, prev_disk, alpha=0.5, max_step=8.0)
+
+    _save_metrics_ema({
+        'cpu': cpu_smoothed,
+        'ram': ram_smoothed,
+        'disk': disk_smoothed,
+    })
+
+    return (
+        int(math.floor(cpu_smoothed)),
+        int(math.floor(ram_smoothed)),
+        int(math.floor(disk_smoothed)),
+    )
+
+
 class SystemInformation:
     now = datetime.datetime.now()
     olsReport = ""
@@ -78,15 +148,15 @@ class SystemInformation:
         try:
             import psutil
             
-            # Get usage percentages
+            # Get usage percentages (multi-sample CPU + EMA to avoid burst spikes)
             vm = psutil.virtual_memory()
-            ram_percent = int(math.floor(vm.percent))
-            if not getattr(SystemInformation, '_cpu_percent_ready', False):
-                psutil.cpu_percent(interval=None)
-                SystemInformation._cpu_percent_ready = True
-            cpu_percent = int(math.floor(psutil.cpu_percent(interval=None)))
+            ram_raw = float(vm.percent)
+            cpu_raw = _sample_cpu_percent(psutil)
             disk = psutil.disk_usage('/')
-            disk_percent = int(math.floor(disk.percent))
+            disk_raw = float(disk.percent)
+            cpu_percent, ram_percent, disk_percent = _smooth_usage_metrics(
+                cpu_raw, ram_raw, disk_raw
+            )
 
             # Get total system information
             cpu_cores = psutil.cpu_count() or 1
@@ -135,13 +205,13 @@ class SystemInformation:
         try:
             import psutil
             vm = psutil.virtual_memory()
-            if not getattr(SystemInformation, '_cpu_percent_ready', False):
-                psutil.cpu_percent(interval=None)
-                SystemInformation._cpu_percent_ready = True
-            cpu_u = int(math.floor(psutil.cpu_percent(interval=None)))
-            SystemInfo = {'ramUsage': int(math.floor(vm.percent)),
+            ram_raw = float(vm.percent)
+            cpu_raw = _sample_cpu_percent(psutil)
+            disk_raw = float(psutil.disk_usage('/').percent)
+            cpu_u, ram_u, disk_u = _smooth_usage_metrics(cpu_raw, ram_raw, disk_raw)
+            SystemInfo = {'ramUsage': ram_u,
                           'cpuUsage': cpu_u,
-                          'diskUsage': int(math.floor(psutil.disk_usage('/').percent))}
+                          'diskUsage': disk_u}
         except:
             SystemInfo = {'ramUsage': 0,
                           'cpuUsage': 0,
