@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 # CyberPanel upgrade – common helpers (logging, check return, retry, branch check).
-
-# SSH login banner helper
-_CYBERPANEL_UPGRADE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [[ -f "${_CYBERPANEL_UPGRADE_ROOT}/install/cyberpanel_ssh_login_banner.sh" ]]; then
-  # shellcheck source=/dev/null
-  source "${_CYBERPANEL_UPGRADE_ROOT}/install/cyberpanel_ssh_login_banner.sh"
-fi
 # Sourced by cyberpanel_upgrade.sh. Do not run standalone.
 
 Debug_Log() {
@@ -102,6 +95,64 @@ EOF
     openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout $key_path -out $cert_path
   fi
   rm -f /usr/local/CyberCP/cert_conf
+}
+
+# Git safe.directory: upgrade runs as root while /usr/local/CyberCP may be owned by lscpd/cyberpanel.
+CyberCP_Ensure_Git_Safe_Directory() {
+  local repo="${1:-/usr/local/CyberCP}"
+  if [[ -d "$repo/.git" ]]; then
+    git config --global --add safe.directory "$repo" 2>/dev/null || true
+  fi
+}
+
+# Resolve the Python linked to lswsgi (ldd libpythonX.Y). Falls back to CyberCP venv bootstrap Python.
+CYBERCP_LSWGI_PYTHON=""
+CyberCP_Detect_Lswsgi_Python() {
+  CYBERCP_LSWGI_PYTHON=""
+  local lswsgi_bin="/usr/local/CyberCP/bin/lswsgi"
+  local ver py_bin
+
+  if [[ -x "$lswsgi_bin" ]]; then
+    ver=$(ldd "$lswsgi_bin" 2>/dev/null | sed -n 's/.*libpython\([0-9]\+\)\.\([0-9]\+\).*/\1.\2/p' | head -1)
+    if [[ -n "$ver" ]]; then
+      for py_bin in "/usr/bin/python${ver}" "/usr/local/bin/python${ver}"; do
+        if [[ -x "$py_bin" ]]; then
+          CYBERCP_LSWGI_PYTHON="$py_bin"
+          return 0
+        fi
+      done
+    fi
+  fi
+
+  CyberCP_Upgrade_Select_VenvBootstrapPython
+  if [[ -n "${CYBERCP_UPGRADE_VENV_PY:-}" && -x "$CYBERCP_UPGRADE_VENV_PY" ]]; then
+    CYBERCP_LSWGI_PYTHON="$CYBERCP_UPGRADE_VENV_PY"
+    return 0
+  fi
+
+  for py_bin in /usr/bin/python3.11 /usr/bin/python3.10 /usr/bin/python3.9 /usr/bin/python3; do
+    if [[ -x "$py_bin" ]]; then
+      CYBERCP_LSWGI_PYTHON="$py_bin"
+      return 0
+    fi
+  done
+}
+
+# lscpd reads /usr/local/lscp/conf/pythonenv.conf for lswsgi (PYTHONHOME=/usr).
+CyberCP_Write_Lscp_Pythonenv_Conf() {
+  local py_cmd site_py maj min
+  mkdir -p /usr/local/lscp/conf
+  CyberCP_Detect_Lswsgi_Python
+  py_cmd="${CYBERCP_LSWGI_PYTHON:-/usr/bin/python3.11}"
+  [[ -x "$py_cmd" ]] || py_cmd="/usr/bin/python3.11"
+  maj=$("$py_cmd" -c 'import sys; print(sys.version_info[0])' 2>/dev/null || echo 3)
+  min=$("$py_cmd" -c 'import sys; print(sys.version_info[1])' 2>/dev/null || echo 11)
+  site_py="/usr/local/lib/python${maj}.${min}/site-packages"
+  cat > /usr/local/lscp/conf/pythonenv.conf <<EOF
+PYTHONHOME=/usr
+PYTHONPATH=${site_py}:/usr/local/CyberCP
+EOF
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Wrote pythonenv.conf for lswsgi Python ${maj}.${min} (${py_cmd})" | tee -a /var/log/cyberpanel_upgrade_debug.log
 }
 
 # Prefer Python 3.11+ for temporary /usr/local/CyberPanel venv and CyberCP venv (shared with 08_main_upgrade.sh).
@@ -204,6 +255,14 @@ CyberPanel_Final_Upgrade_Verification() {
   else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: /usr/local/CyberCP/bin/python missing" | tee -a /var/log/cyberpanel_upgrade_debug.log
     errors=$((errors + 1))
+  fi
+
+  if declare -F CyberCP_Detect_Lswsgi_Python >/dev/null 2>&1; then
+    CyberCP_Detect_Lswsgi_Python
+    if [[ -n "${CYBERCP_LSWGI_PYTHON:-}" ]]; then
+      env PYTHONHOME=/usr PYTHONPATH= "$CYBERCP_LSWGI_PYTHON" -c 'import django, MySQLdb' 2>/dev/null \
+        || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: lswsgi runtime Python ($CYBERCP_LSWGI_PYTHON) cannot import django/MySQLdb under PYTHONHOME=/usr" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }
+    fi
   fi
 
   if [[ $errors -eq 0 ]]; then

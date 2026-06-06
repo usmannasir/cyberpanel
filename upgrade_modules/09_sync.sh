@@ -14,6 +14,12 @@ Sync_CyberCP_To_Latest() {
 
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Syncing /usr/local/CyberCP to latest commit for branch: $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
+  if declare -F CyberCP_Ensure_Git_Safe_Directory >/dev/null 2>&1; then
+    CyberCP_Ensure_Git_Safe_Directory /usr/local/CyberCP
+  else
+    git config --global --add safe.directory /usr/local/CyberCP 2>/dev/null || true
+  fi
+
   if [[ -f /usr/local/CyberCP/CyberCP/settings.py ]]; then
     cp /usr/local/CyberCP/CyberCP/settings.py /tmp/cyberpanel_settings_backup.py
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Backed up settings.py for restore after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log

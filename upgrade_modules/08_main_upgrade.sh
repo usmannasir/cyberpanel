@@ -19,9 +19,15 @@ Install_CyberCP_Runtime_Python_Requirements() {
   _rt_log() { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] $*" | tee -a "$log"; }
 
   local py_cmd=""
-  for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3; do
-    [[ -x "$p" ]] && py_cmd="$p" && break
-  done
+  if declare -F CyberCP_Detect_Lswsgi_Python >/dev/null 2>&1; then
+    CyberCP_Detect_Lswsgi_Python
+    py_cmd="${CYBERCP_LSWGI_PYTHON:-}"
+  fi
+  if [[ -z "$py_cmd" ]]; then
+    for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3; do
+      [[ -x "$p" ]] && py_cmd="$p" && break
+    done
+  fi
   if [[ -z "$py_cmd" ]] && command -v python3 >/dev/null 2>&1; then
     py_cmd="$(command -v python3)"
   elif [[ -z "$py_cmd" && -x /usr/bin/python3 ]]; then
@@ -101,10 +107,10 @@ Install_CyberCP_Runtime_Python_Requirements() {
     return 0
   fi
 
-  if env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django, docker" 2>/dev/null; then
-    _rt_log "Runtime pip: verify OK (django, docker) with PYTHONHOME=/usr."
+  if env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django, MySQLdb, docker" 2>/dev/null; then
+    _rt_log "Runtime pip: verify OK (django, MySQLdb, docker) with PYTHONHOME=/usr."
   else
-    _rt_log "Runtime pip: WARNING: django/docker not importable under PYTHONHOME=/usr with $py_cmd."
+    _rt_log "Runtime pip: WARNING: django/MySQLdb/docker not importable under PYTHONHOME=/usr with $py_cmd."
   fi
   if ! env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import CloudFlare" 2>/dev/null; then
     _rt_log "Runtime pip: WARNING: CloudFlare SDK not importable (expect cloudflare 2.x / import CloudFlare)."
@@ -439,8 +445,12 @@ tar xf wsgi-lsapi-2.1.tgz
 cd wsgi-lsapi-2.1 || exit
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring WSGI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-PYTHON_CFG="${CP_PYTHON:-/usr/bin/python3}"
+CyberCP_Upgrade_Select_VenvBootstrapPython
+PYTHON_CFG="${CYBERCP_UPGRADE_VENV_PY:-/usr/bin/python3.11}"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="/usr/bin/python3.11"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="${CP_PYTHON:-/usr/bin/python3}"
 [[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="/usr/bin/python3"
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WSGI configure Python: $PYTHON_CFG" | tee -a /var/log/cyberpanel_upgrade_debug.log
 "$PYTHON_CFG" ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
@@ -469,13 +479,30 @@ rm -f /usr/local/CyberCP/bin/lswsgi
 cp lswsgi /usr/local/CyberCP/bin/
 chmod +x /usr/local/CyberCP/bin/lswsgi
 
+if declare -F Install_CyberCP_Runtime_Python_Requirements >/dev/null 2>&1; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-syncing runtime pip to lswsgi-linked Python after WSGI build..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Install_CyberCP_Runtime_Python_Requirements "/usr/local/requirments.txt" || true
+fi
+if declare -F CyberCP_Write_Lscp_Pythonenv_Conf >/dev/null 2>&1; then
+  CyberCP_Write_Lscp_Pythonenv_Conf
+fi
+
 # Return to original directory
 cd "$UPGRADE_CWD" || cd /root
 
 # Final verification
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running final verification..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 if /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null && [[ -f /usr/local/CyberCP/bin/lswsgi ]]; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] All components successfully installed!" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if declare -F CyberCP_Detect_Lswsgi_Python >/dev/null 2>&1; then
+    CyberCP_Detect_Lswsgi_Python
+    if [[ -n "${CYBERCP_LSWGI_PYTHON:-}" ]] && env PYTHONHOME=/usr PYTHONPATH= "$CYBERCP_LSWGI_PYTHON" -c "import django, MySQLdb" 2>/dev/null; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] All components successfully installed!" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lswsgi runtime Python cannot import django/MySQLdb (check pythonenv.conf and runtime pip)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] All components successfully installed!" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
 else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Some components may be missing, check logs" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
