@@ -3097,14 +3097,13 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (
-                str(DeleteDocRoot))
-            deleteStatus, deleteOutput = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
-            if deleteStatus == 0:
+            ProcessUtilities.ensureCommandToken()
+            delete_status, delete_output = virtualHostUtilities.deleteDomain(
+                websiteName, DeleteDocRoot)
+            if delete_status == 0:
                 errorMessage = "Not able to remove virtual host configuration."
-                if isinstance(deleteOutput, str) and deleteOutput.strip() != "":
-                    errorMessage = deleteOutput.strip().splitlines()[-1]
+                if isinstance(delete_output, str) and delete_output.strip() != "":
+                    errorMessage = delete_output.strip()
                 data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': errorMessage}
                 return HttpResponse(json.dumps(data_ret))
 

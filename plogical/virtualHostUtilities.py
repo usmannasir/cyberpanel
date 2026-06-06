@@ -688,14 +688,6 @@ local_name %s {
 
                 ####### Limitations Check End
 
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
-
-                ##### Zone creation
-
-                DNS.dnsTemplate(virtualHostName, admin)
-
-                ## Zone creation
-
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
 
                 if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
@@ -706,6 +698,16 @@ local_name %s {
                 if vhost.checkIfAliasExists(virtualHostName) == 1:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                     return 0, "This domain exists as Alias."
+
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
+
+                ##### Zone creation
+
+                DNS.dnsTemplate(virtualHostName, admin)
+
+                ## Zone creation
+
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
 
             postfixPath = '/home/cyberpanel/postfix'
 
@@ -1432,11 +1434,12 @@ local_name %s {
         try:
 
             admin = Administrator.objects.get(userName=owner)
-            DNS.dnsTemplate(aliasDomain, admin)
 
             if vhost.checkIfAliasExists(aliasDomain) == 1:
                 print("0, This domain already exists as vHost or Alias.")
                 return
+
+            DNS.dnsTemplate(aliasDomain, admin)
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -1563,6 +1566,16 @@ local_name %s {
                 installUtilities.installUtilities.reStartLiteSpeed()
 
                 delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+                adminUserName = None
+                try:
+                    adminUserName = delAlias.master.admin.userName
+                except:
+                    pass
+                try:
+                    DNS.cleanupHostDNSRecords(aliasDomain, adminUserName)
+                except Exception as cfError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
                 delAlias.delete()
 
                 print("1,None")
@@ -1587,6 +1600,16 @@ local_name %s {
                 installUtilities.installUtilities.reStartLiteSpeed()
 
                 alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+                adminUserName = None
+                try:
+                    adminUserName = alias.master.admin.userName
+                except:
+                    pass
+                try:
+                    DNS.cleanupHostDNSRecords(aliasDomain, adminUserName)
+                except Exception as cfError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
                 alias.delete()
 
                 print("1,None")
@@ -1754,8 +1777,6 @@ local_name %s {
             master = Websites.objects.get(domain=masterDomain)
 
             if LimitsCheck:
-                DNS.dnsTemplate(virtualHostName, admin)
-
                 if Websites.objects.filter(domain=virtualHostName).count() > 0:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'This Domain already exists as a website. [404]')
@@ -1807,6 +1828,8 @@ local_name %s {
                 if vhost.checkIfAliasExists(virtualHostName) == 1:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                     #return 0, "This domain exists as Alias."
+
+                DNS.dnsTemplate(virtualHostName, admin)
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
@@ -1910,6 +1933,11 @@ local_name %s {
                     ChildDomains.objects.filter(domain=virtualHostName).delete()
             except BaseException:
                 pass
+            try:
+                DNS.cleanupHostDNSRecords(virtualHostName, owner)
+            except Exception as cf_cleanup_error:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'CloudFlare DNS rollback failed for %s: %s' % (virtualHostName, str(cf_cleanup_error)))
             if ACLManager.FindIfChild() == 0:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
                 vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
@@ -1922,29 +1950,26 @@ local_name %s {
     @staticmethod
     def deleteDomain(virtualHostName, DeleteDocRoot=0):
         try:
-
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
+            doc_root = delWebsite.path
 
-            # Get admin user name before deletion for CloudFlare cleanup
             adminUserName = None
             try:
                 adminUserName = delWebsite.master.admin.userName
             except:
                 pass
 
-            # Delete CloudFlare DNS records for this domain
             try:
-                from plogical.dnsUtilities import DNS
-                DNS.deleteCloudFlareDNSRecords(virtualHostName, adminUserName)
+                DNS.cleanupHostDNSRecords(virtualHostName, adminUserName)
             except Exception as cfError:
-                # Log error but don't fail domain deletion if CloudFlare deletion fails
                 logging.CyberCPLogFileWriter.writeToFile(
-                    f'CloudFlare DNS deletion failed for {virtualHostName}: {str(cfError)}')
+                    'CloudFlare DNS deletion failed for %s: %s' % (virtualHostName, str(cfError)))
+
+            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
 
             if DeleteDocRoot:
-                command = 'rm -rf %s' % (delWebsite.path)
+                command = 'rm -rf %s' % (doc_root)
                 ProcessUtilities.executioner(command)
 
             delWebsite.delete()

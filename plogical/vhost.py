@@ -438,9 +438,9 @@ class vhost:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
                     vhost.deleteCoreConf(items.domain, numberOfSites)
 
-                    # Delete CloudFlare DNS records for child domain
+                    # Delete CloudFlare and local DNS records for child domain
                     try:
-                        DNS.deleteCloudFlareDNSRecords(items.domain, adminUserName)
+                        DNS.cleanupHostDNSRecords(items.domain, adminUserName)
                     except Exception as cfError:
                         # Log error but don't fail deletion if CloudFlare deletion fails
                         logging.CyberCPLogFileWriter.writeToFile(
@@ -490,9 +490,9 @@ class vhost:
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                    # Delete CloudFlare DNS records for main domain before deletion
+                    # Delete CloudFlare and local DNS records for main domain before deletion
                     try:
-                        DNS.deleteCloudFlareDNSRecords(virtualHostName, adminUserName)
+                        DNS.cleanupHostDNSRecords(virtualHostName, adminUserName)
                     except Exception as cfError:
                         # Log error but don't fail deletion if CloudFlare deletion fails
                         logging.CyberCPLogFileWriter.writeToFile(
