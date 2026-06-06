@@ -347,6 +347,10 @@ row, and the alias SSL button keeps working after the next
   unaffected. Forward filter rules added in the webmail UI now reach
   Dovecot. (Upstream PR #1777, still open.)
 
+### Fixed: Overview dashboard Angular bootstrap after JS syntax error (06/06/2026)
+
+- Removed a corrupted duplicate tail in `system-status.js` that broke JavaScript parsing, prevented Angular from loading, and left raw `{$ ... $}` placeholders on the Overview cards.
+
 ### Improved: smoother Overview CPU/Memory/Disk meters (06/06/2026)
 
 - Dashboard Overview metrics use multi-sample CPU reads, EMA smoothing, and capped step size so brief spikes no longer flash 100%.
