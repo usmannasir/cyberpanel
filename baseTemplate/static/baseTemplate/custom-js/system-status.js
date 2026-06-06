@@ -162,23 +162,18 @@ var cpMetricAnimator = {
         }
     },
 
-    normalizeMetric: function (value) {
-        var n = Number(value);
-        return isNaN(n) ? 0 : Math.max(0, Math.min(100, n));
-    },
-
     setTargets: function (cpu, ram, disk) {
-        this.targets.cpu = this.normalizeMetric(cpu);
-        this.targets.ram = this.normalizeMetric(ram);
-        this.targets.disk = this.normalizeMetric(disk);
+        this.targets.cpu = cpu;
+        this.targets.ram = ram;
+        this.targets.disk = disk;
         if (this.display.cpu === null) {
-            this.display.cpu = this.targets.cpu;
+            this.display.cpu = cpu;
         }
         if (this.display.ram === null) {
-            this.display.ram = this.targets.ram;
+            this.display.ram = ram;
         }
         if (this.display.disk === null) {
-            this.display.disk = this.targets.disk;
+            this.display.disk = disk;
         }
     },
 
@@ -223,9 +218,9 @@ var cpMetricAnimator = {
             });
         } else {
             self.animFrameId = null;
-            $scope.displayCpuUsage = self.targets.cpu;
-            $scope.displayRamUsage = self.targets.ram;
-            $scope.displayDiskUsage = self.targets.disk;
+            $scope.displayCpuUsage = Math.round(self.targets.cpu || 0);
+            $scope.displayRamUsage = Math.round(self.targets.ram || 0);
+            $scope.displayDiskUsage = Math.round(self.targets.disk || 0);
             self.display.cpu = self.targets.cpu;
             self.display.ram = self.targets.ram;
             self.display.disk = self.targets.disk;

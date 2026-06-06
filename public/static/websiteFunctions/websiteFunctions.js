@@ -2754,6 +2754,45 @@ $("#listFail").hide();
 
 
 app.controller('listWebsites', function ($scope, $http, $window) {
+
+    function formatDiskLabel(val) {
+        if (val === null || val === undefined || val === '') {
+            return '0 MB';
+        }
+        var s = String(val).trim();
+        if (/^\d+(\.\d+)?\s*(B|KB|MB|GB|TB)$/i.test(s)) {
+            return s.replace(/(\d)([A-Za-z])/g, '$1 $2');
+        }
+        var m = s.match(/^(\d+(?:\.\d+)?)\s*MB$/i);
+        if (!m) {
+            return s;
+        }
+        var mb = parseFloat(m[1]);
+        if (!isFinite(mb) || mb < 0) {
+            return '0 MB';
+        }
+        var bytes = mb * 1024 * 1024;
+        if (bytes >= 1024 * 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + ' TB';
+        }
+        if (bytes >= 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+        if (bytes >= 1024 * 1024) {
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+        if (bytes >= 1024) {
+            return (bytes / 1024).toFixed(1) + ' KB';
+        }
+        return Math.round(bytes) + ' B';
+    }
+
+    function normalizeWebsiteRow(web) {
+        if (web && web.diskUsed) {
+            web.diskUsed = formatDiskLabel(web.diskUsed);
+        }
+        return web;
+    }
     $scope.web = {};
     $scope.WebSitesList = [];
     $scope.loading = true; // Add loading state
@@ -2837,7 +2876,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         $http.post(dataurl, data, config).then(function(response) {
             if (response.data.listWebSiteStatus === 1) {
-                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.WebSitesList = JSON.parse(response.data.data).map(normalizeWebsiteRow);
                 $scope.pagination = response.data.pagination;
                 $("#listFail").hide();
                 // Expand the first site by default

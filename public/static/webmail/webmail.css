@@ -1,0 +1,1237 @@
+/* CyberPanel Webmail Styles */
+
+.webmail-container {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: -20px -15px;
+}
+
+/* Account Switcher */
+.wm-account-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.wm-account-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.wm-account-current i {
+    color: var(--accent-color);
+}
+
+.wm-account-select {
+    padding: 4px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.wm-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.wm-account-switch {
+    position: relative;
+}
+
+.wm-account-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wm-account-picker-trigger:hover {
+    border-color: var(--accent-color);
+    background: var(--bg-secondary);
+}
+
+.wm-account-picker-chevron {
+    font-size: 11px;
+    opacity: 0.65;
+    transition: transform 0.2s ease;
+}
+
+.wm-account-picker-chevron.is-open {
+    transform: rotate(180deg);
+}
+
+.wm-account-picker-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: min(360px, 92vw);
+    max-width: 420px;
+    max-height: min(340px, 70vh);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    z-index: 200;
+    overflow: hidden;
+}
+
+.wm-account-search-input {
+    margin: 10px 10px 6px;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.wm-account-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 260px;
+}
+
+.wm-account-picker-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    word-break: break-all;
+    line-height: 1.35;
+    border-left: 3px solid transparent;
+}
+
+.wm-account-picker-item:hover {
+    background: var(--bg-secondary);
+}
+
+.wm-account-picker-item.is-active {
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--accent-color);
+    font-weight: 600;
+}
+
+.wm-account-picker-empty {
+    padding: 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.wm-compose-account-filter {
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.wm-compose-account-select {
+    margin-top: 0;
+}
+
+/* Main Layout */
+.wm-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar (width overridden via ng-style when sidebarResizeEnabled) */
+.wm-sidebar {
+    width: 220px;
+    min-width: 220px;
+    max-width: 100%;
+    background: var(--bg-secondary);
+    border-right: none;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 12px 0;
+    flex-shrink: 0;
+}
+
+.wm-sidebar-resizer {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    border-right: 1px solid var(--border-color);
+    align-self: stretch;
+    margin: 0 -3px 0 -3px;
+    padding: 0;
+    z-index: 5;
+    touch-action: none;
+    transition: background 0.15s ease;
+}
+
+.wm-sidebar-resizer:hover,
+.wm-sidebar-resizer:focus {
+    background: rgba(108, 92, 231, 0.18);
+    outline: none;
+}
+
+/* Drag handle between message list and reader (same interaction as folder panel resizer) */
+.wm-list-detail-resizer {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    border-right: 1px solid var(--border-color);
+    align-self: stretch;
+    margin: 0 -3px 0 -3px;
+    padding: 0;
+    z-index: 5;
+    touch-action: none;
+    transition: background 0.15s ease;
+}
+
+.wm-list-detail-resizer:hover,
+.wm-list-detail-resizer:focus {
+    background: rgba(108, 92, 231, 0.18);
+    outline: none;
+}
+
+body.wm-resizing-sidebar,
+body.wm-resizing-message-list {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+body.wm-resizing-sidebar *,
+body.wm-resizing-message-list * {
+    cursor: col-resize !important;
+}
+
+.wm-compose-btn {
+    margin: 0 12px 12px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    background: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    transition: all 0.2s;
+}
+
+.wm-compose-btn:hover {
+    background: var(--accent-hover, #5A4BD1) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(108,92,231,0.3);
+}
+
+.wm-folder-list {
+    flex: 1;
+}
+
+.wm-folder-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px 8px 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    transition: all 0.15s;
+    gap: 6px;
+}
+
+.wm-folder-chevron {
+    flex-shrink: 0;
+    width: 22px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.wm-folder-chevron:hover {
+    color: var(--accent-color);
+    background: var(--bg-primary);
+}
+
+.wm-folder-chevron-spacer {
+    width: 22px;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.wm-folder-item:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.wm-folder-item.active {
+    background: var(--bg-primary);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.wm-folder-item.dragging {
+    opacity: 0.6;
+    background: rgba(108,92,231,0.08);
+    color: var(--text-primary);
+    cursor: move;
+}
+
+.wm-folder-item.drag-over {
+    outline: 2px dashed var(--accent-color);
+    outline-offset: -2px;
+}
+
+.wm-folder-item i {
+    width: 18px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.wm-folder-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wm-badge {
+    background: var(--accent-color);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+.wm-folder-delete-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.85;
+    z-index: 2;
+}
+
+.wm-folder-item:hover .wm-folder-delete-btn {
+    opacity: 1;
+}
+
+.wm-folder-delete-btn:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.12);
+}
+
+.wm-sidebar-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 16px;
+}
+
+.wm-sidebar-nav {
+    padding: 0 4px;
+}
+
+.wm-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    gap: 10px;
+    transition: all 0.15s;
+}
+
+.wm-nav-link:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.wm-nav-link.active {
+    background: var(--bg-primary);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.wm-nav-link i {
+    width: 18px;
+    text-align: center;
+}
+
+button.wm-nav-link.wm-nav-btn {
+    font-family: inherit;
+    width: 100%;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+button.wm-nav-link.wm-nav-btn:hover,
+button.wm-nav-link.wm-nav-btn:focus {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* New-folder modal */
+.wm-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1040;
+}
+
+.wm-modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    min-width: 320px;
+    max-width: 96vw;
+    padding: 20px 22px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.wm-modal h4 {
+    margin: 0 0 10px;
+    font-size: 17px;
+    color: var(--text-primary);
+}
+
+.wm-modal-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+    line-height: 1.45;
+}
+
+.wm-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.wm-modal-emphasis {
+    color: var(--text-primary);
+    font-size: 15px;
+    word-break: break-word;
+}
+
+.wm-modal-warning {
+    color: #b45309;
+}
+
+.wm-modal-confirm-delete .btn-danger {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.wm-modal-confirm-delete .btn-danger:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: #fff;
+}
+
+.wm-field-hint {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    line-height: 1.35;
+}
+
+/* Message List Column */
+.wm-message-list {
+    width: 380px;
+    min-width: 320px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+}
+
+.wm-search-bar {
+    display: flex;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.wm-search-scope {
+    flex: 0 0 auto;
+    min-width: 7.5rem;
+    max-width: 10.5rem;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.wm-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.wm-search-input:focus {
+    border-color: var(--accent-color);
+}
+
+.wm-search-btn {
+    padding: 8px 12px;
+    border: none;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.wm-search-btn:hover {
+    background: var(--accent-hover, #5A4BD1);
+}
+
+/* Bulk Actions */
+.wm-bulk-actions {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 4px;
+    background: var(--bg-secondary);
+    flex-wrap: wrap;
+}
+
+.wm-action-btn {
+    padding: 4px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all 0.15s;
+}
+
+.wm-action-btn:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.wm-action-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.wm-page-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: auto;
+    padding: 0 4px;
+}
+
+.wm-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+}
+
+.wm-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+.wm-move-dropdown select {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Message Rows */
+.wm-messages {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.wm-msg-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: grab;
+    gap: 8px;
+    transition: background 0.1s;
+    font-size: 13px;
+}
+
+.wm-msg-row:active {
+    cursor: grabbing;
+}
+
+.wm-msg-row .wm-checkbox-label,
+.wm-msg-row .wm-star-btn {
+    cursor: pointer;
+}
+
+.wm-msg-row:hover {
+    background: var(--bg-primary);
+}
+
+.wm-msg-row.unread {
+    font-weight: 600;
+}
+
+.wm-msg-row.unread .wm-msg-subject {
+    color: var(--text-primary);
+}
+
+.wm-msg-row.selected {
+    background: rgba(108, 92, 231, 0.06);
+}
+
+.wm-star-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 13px;
+}
+
+.wm-starred {
+    color: #F39C12;
+}
+
+.wm-unstarred {
+    color: var(--border-color);
+}
+
+.wm-msg-from {
+    width: 120px;
+    min-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
+
+.wm-msg-subject {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
+
+.wm-msg-folder-pill {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: rgba(108, 92, 231, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+}
+
+.wm-msg-date {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 50px;
+    text-align: right;
+}
+
+.wm-empty, .wm-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    gap: 12px;
+}
+
+.wm-empty i {
+    font-size: 48px;
+    opacity: 0.3;
+}
+
+/* Detail Pane */
+.wm-detail-pane {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    padding: 0;
+}
+
+.wm-empty-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    opacity: 0.4;
+    gap: 16px;
+}
+
+/* Read View */
+.wm-read-view {
+    padding: 0;
+}
+
+.wm-read-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.wm-read-toolbar .btn {
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+}
+
+.wm-read-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wm-read-subject {
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-read-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.wm-read-meta strong {
+    color: var(--text-primary);
+}
+
+.wm-attachments {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wm-attachment a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--accent-color);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.wm-attachment a:hover {
+    background: var(--border-color);
+}
+
+.wm-att-size {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.wm-read-body {
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.wm-read-body img {
+    max-width: 100%;
+    height: auto;
+}
+
+.wm-read-body blockquote {
+    border-left: 3px solid var(--border-color);
+    margin: 8px 0;
+    padding: 4px 12px;
+    color: var(--text-secondary);
+}
+
+.wm-read-body pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: var(--bg-primary);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+/* Compose View */
+.wm-compose-view {
+    padding: 20px;
+}
+
+.wm-compose-header h3 {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-compose-form .wm-field {
+    margin-bottom: 12px;
+}
+
+.wm-compose-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.wm-compose-form .form-control {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 14px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.wm-compose-form .form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+}
+
+.wm-toggle-link {
+    font-size: 12px;
+    color: var(--accent-color);
+    cursor: pointer;
+}
+
+.wm-editor-toolbar {
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+}
+
+.wm-editor-toolbar button {
+    padding: 6px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.wm-editor-toolbar button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.wm-editor {
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 8px 8px;
+    background: white;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.wm-editor:focus {
+    border-color: var(--accent-color);
+}
+
+.wm-compose-attachments {
+    margin-top: 12px;
+}
+
+.wm-compose-attachments input[type="file"] {
+    display: none;
+}
+
+.wm-attach-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--bg-primary);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.wm-attach-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.wm-file-list {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.wm-file-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+.wm-file-tag i {
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.wm-file-tag i:hover {
+    color: #E74C3C;
+}
+
+.wm-compose-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.wm-compose-actions .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 14px;
+}
+
+/* Contacts View */
+.wm-contacts-view, .wm-rules-view, .wm-settings-view {
+    padding: 20px;
+}
+
+.wm-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.wm-section-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-contacts-search {
+    margin-bottom: 16px;
+}
+
+.wm-contacts-search .form-control {
+    border-radius: 8px;
+    background: var(--bg-primary);
+}
+
+.wm-contact-list, .wm-rule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wm-contact-item, .wm-rule-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+
+.wm-contact-item:hover, .wm-rule-item:hover {
+    background: var(--border-color);
+}
+
+.wm-contact-info, .wm-rule-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.wm-contact-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.wm-contact-email {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.wm-contact-actions, .wm-rule-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.wm-rule-desc {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Forms */
+.wm-contact-form, .wm-rule-form, .wm-settings-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+}
+
+.wm-contact-form h4, .wm-rule-form h4 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-field {
+    margin-bottom: 12px;
+}
+
+.wm-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.wm-field .form-control {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 14px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.wm-field .form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+    outline: none;
+}
+
+.wm-field-row {
+    display: flex;
+    gap: 12px;
+}
+
+.wm-field-row .wm-field {
+    flex: 1;
+}
+
+.wm-form-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.wm-form-actions .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+}
+
+/* Autocomplete Dropdown */
+.wm-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.wm-autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.wm-autocomplete-item:hover {
+    background: var(--bg-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .wm-sidebar {
+        width: 180px;
+        min-width: 180px;
+    }
+    .wm-message-list {
+        width: 300px;
+        min-width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .wm-layout {
+        flex-direction: column;
+    }
+    .wm-sidebar-resizer,
+    .wm-list-detail-resizer {
+        display: none !important;
+    }
+    .wm-sidebar {
+        width: 100%;
+        min-width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 8px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .wm-folder-list {
+        display: flex;
+        gap: 4px;
+    }
+    .wm-folder-item {
+        white-space: nowrap;
+        padding: 6px 12px;
+        border-radius: 8px;
+    }
+    .wm-sidebar-divider, .wm-sidebar-nav {
+        display: none;
+    }
+    .wm-compose-btn {
+        margin: 0 4px 0 0;
+        padding: 6px 14px;
+        white-space: nowrap;
+    }
+    .wm-message-list {
+        width: 100%;
+        min-width: 100%;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .wm-detail-pane {
+        min-height: 50vh;
+    }
+    .wm-field-row {
+        flex-direction: column;
+    }
+}

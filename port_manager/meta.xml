@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cyberpanelPluginConfig>
+    <name>CyberPanel Port Manager</name>
+    <type>Utility</type>
+    <description>Local and public port discovery with process, Docker, and firewall control.</description>
+    <version>1.0.0</version>
+    <author>master3395</author>
+    <url>/plugins/port_manager/</url>
+    <settings_url>/plugins/port_manager/</settings_url>
+    <paid>false</paid>
+</cyberpanelPluginConfig>

@@ -2157,12 +2157,4 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             alert(errorMsg);
         });
     };
-});s === 403) {
-                errorMsg += 'Access denied.';
-            } else {
-                errorMsg += 'Please try again.';
-            }
-            alert(errorMsg);
-        });
-    };
 });

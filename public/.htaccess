@@ -1,0 +1,6 @@
+
+# Redirect old RainLoop URL to SnappyMail (2.5.5 upgrade)
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^rainloop/?(.*)$ /snappymail/$1 [R=301,L]
+</IfModule>

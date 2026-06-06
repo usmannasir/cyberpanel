@@ -141,11 +141,111 @@ function getWebsiteName(domain) {
     }
 }
 
+/* Smooth Overview metric display (CPU/RAM/Disk cards) */
+var cpMetricAnimator = {
+    lerpFactor: 0.12,
+    snapThreshold: 0.5,
+    animFrameId: null,
+    targets: { cpu: null, ram: null, disk: null },
+    display: { cpu: null, ram: null, disk: null },
+
+    reset: function () {
+        this.cancel();
+        this.targets = { cpu: null, ram: null, disk: null };
+        this.display = { cpu: null, ram: null, disk: null };
+    },
+
+    cancel: function () {
+        if (this.animFrameId !== null) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+    },
+
+    setTargets: function (cpu, ram, disk) {
+        this.targets.cpu = cpu;
+        this.targets.ram = ram;
+        this.targets.disk = disk;
+        if (this.display.cpu === null) {
+            this.display.cpu = cpu;
+        }
+        if (this.display.ram === null) {
+            this.display.ram = ram;
+        }
+        if (this.display.disk === null) {
+            this.display.disk = disk;
+        }
+    },
+
+    stepToward: function (current, target) {
+        if (target === null || target === undefined) {
+            return current;
+        }
+        if (current === null || current === undefined) {
+            return target;
+        }
+        var diff = target - current;
+        if (Math.abs(diff) <= this.snapThreshold) {
+            return target;
+        }
+        return current + (diff * this.lerpFactor);
+    },
+
+  tick: function ($scope) {
+        var self = this;
+        var keys = ['cpu', 'ram', 'disk'];
+        var done = true;
+
+        keys.forEach(function (key) {
+            var target = self.targets[key];
+            if (target === null || target === undefined || isNaN(target)) {
+                target = 0;
+            }
+            var next = self.stepToward(self.display[key], target);
+            if (Math.abs(target - next) > self.snapThreshold) {
+                done = false;
+            }
+            self.display[key] = next;
+        });
+
+        $scope.displayCpuUsage = Math.round(self.display.cpu || 0);
+        $scope.displayRamUsage = Math.round(self.display.ram || 0);
+        $scope.displayDiskUsage = Math.round(self.display.disk || 0);
+
+        if (!done) {
+            self.animFrameId = requestAnimationFrame(function () {
+                self.tick($scope);
+            });
+        } else {
+            self.animFrameId = null;
+            $scope.displayCpuUsage = Math.round(self.targets.cpu || 0);
+            $scope.displayRamUsage = Math.round(self.targets.ram || 0);
+            $scope.displayDiskUsage = Math.round(self.targets.disk || 0);
+            self.display.cpu = self.targets.cpu;
+            self.display.ram = self.targets.ram;
+            self.display.disk = self.targets.disk;
+        }
+
+        if (!$scope.$$phase) {
+            $scope.$apply();
+        }
+    },
+
+    animateTo: function ($scope, cpu, ram, disk) {
+        this.cancel();
+        this.setTargets(cpu, ram, disk);
+        this.tick($scope);
+    }
+};
+
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
     $scope.statusError = false;
+    $scope.displayCpuUsage = undefined;
+    $scope.displayRamUsage = undefined;
+    $scope.displayDiskUsage = undefined;
     var statusPollTimer = null;
     var statusReqPending = false;
     var STATUS_REFRESH_MS = 60000;
@@ -157,6 +257,13 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
         statusPollTimer = $timeout(getStuff, STATUS_REFRESH_MS);
     }
 
+    function resetDisplayMetrics() {
+        cpMetricAnimator.reset();
+        $scope.displayCpuUsage = undefined;
+        $scope.displayRamUsage = undefined;
+        $scope.displayDiskUsage = undefined;
+    }
+
     getStuff();
 
     $scope.getSystemStatus = function() {
@@ -165,15 +272,20 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.retryStatus = function() {
         $scope.statusError = false;
-        $scope.cpuUsage = undefined;
-        $scope.ramUsage = undefined;
-        $scope.diskUsage = undefined;
+        resetDisplayMetrics();
         $scope.cpuCores = undefined;
         $scope.ramTotalMB = undefined;
         $scope.diskTotalGB = undefined;
         $scope.diskFreeGB = undefined;
         getStuff(true);
     };
+
+    $scope.$on('$destroy', function () {
+        cpMetricAnimator.cancel();
+        if (statusPollTimer) {
+            $timeout.cancel(statusPollTimer);
+        }
+    });
 
     function getStuff(force) {
         if (statusReqPending && !force) {
@@ -185,9 +297,12 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
             statusReqPending = false;
             if (response && response.data) {
                 $scope.statusError = false;
-                $scope.cpuUsage = response.data.cpuUsage;
-                $scope.ramUsage = response.data.ramUsage;
-                $scope.diskUsage = response.data.diskUsage;
+                cpMetricAnimator.animateTo(
+                    $scope,
+                    response.data.cpuUsage,
+                    response.data.ramUsage,
+                    response.data.diskUsage
+                );
                 $scope.cpuCores = response.data.cpuCores;
                 $scope.ramTotalMB = response.data.ramTotalMB;
                 $scope.diskTotalGB = response.data.diskTotalGB;

@@ -166,3 +166,12 @@
 #main-content .cyberpanel-website-page .quick-actions { background: var(--bg-secondary) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 1px 2px var(--shadow-color) !important; }
 #main-content .cyberpanel-website-page .resource-progress { background: var(--bg-hover) !important; }
 #main-content .cyberpanel-website-page .resource-progress-bar { background: var(--accent-color) !important; }
+
+/* Dashboard eyebrow labels: ensure contrast in dark mode (regression fix) */
+[data-theme="dark"] #main-content .section-title,
+[data-theme="dark"] #main-content .dashboard-greeting h2 {
+    color: var(--text-secondary) !important;
+}
+[data-theme="dark"] #main-content .dashboard-greeting p {
+    color: var(--text-secondary) !important;
+}

@@ -1,0 +1,62 @@
+{
+    "name": "phpmyadmin/motranslator",
+    "description": "Translation API for PHP using Gettext MO files",
+    "license": "GPL-2.0-or-later",
+    "keywords": ["gettext", "mo", "translator", "i18n"],
+    "homepage": "https://github.com/phpmyadmin/motranslator",
+    "authors": [
+        {
+            "name": "The phpMyAdmin Team",
+            "email": "developers@phpmyadmin.net",
+            "homepage": "https://www.phpmyadmin.net/team/"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/phpmyadmin/motranslator/issues",
+        "source": "https://github.com/phpmyadmin/motranslator"
+    },
+    "scripts": {
+        "phpcbf": "@php phpcbf",
+        "phpcs": "@php phpcs",
+        "phpstan": "@php phpstan",
+        "phpunit": "@php phpunit",
+        "test": [
+            "@phpcs",
+            "@phpstan",
+            "@phpunit"
+        ]
+    },
+    "require": {
+        "php": "^7.2 || ^8.0",
+        "symfony/expression-language": "^5.0 || ^6.0 || ^7.0"
+    },
+    "require-dev": {
+        "phpmyadmin/coding-standard": "^3.0.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^1.12",
+        "phpstan/phpstan-deprecation-rules": "^1.2",
+        "phpstan/phpstan-phpunit": "^1.4",
+        "phpstan/phpstan-strict-rules": "^1.6",
+        "phpunit/phpunit": "^8.5 || ^9.6 || ^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpMyAdmin\\MoTranslator\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpMyAdmin\\MoTranslator\\Tests\\": "tests"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "suggest": {
+        "ext-apcu": "Needed for ACPu-backed translation cache"
+    }
+}
