@@ -1005,33 +1005,50 @@ class vhost:
     ## Child Domain Functions
 
     @staticmethod
+    def ensureDefaultIndexFile(path, virtualHostUser):
+        """Place CyberPanel default index.html in a site path if missing."""
+        try:
+            index_dst = path.rstrip('/') + '/index.html'
+            if os.path.exists(index_dst):
+                return True
+
+            index_src = '/usr/local/CyberCP/index.html'
+            if not os.path.exists(index_src):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Default index template missing: %s [ensureDefaultIndexFile]' % (index_src))
+                return False
+
+            cmd = 'cp %s %s && chown %s:%s %s && chmod 644 %s' % (
+                shlex.quote(index_src),
+                shlex.quote(index_dst),
+                shlex.quote(virtualHostUser),
+                shlex.quote(virtualHostUser),
+                shlex.quote(index_dst),
+                shlex.quote(index_dst),
+            )
+            if ProcessUtilities.executioner(cmd, None, True) == 1:
+                return os.path.exists(index_dst)
+
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Failed to create default index.html in %s [ensureDefaultIndexFile]' % (path))
+            return False
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ensureDefaultIndexFile]')
+            return False
+
+    @staticmethod
     def finalizeDomainCreation(virtualHostUser, path):
         try:
 
             ACLManager.CreateSecureDir()
 
-            RanddomFileName = str(randint(1000, 9999))
-
-            FullPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RanddomFileName)
-
-            FNULL = open(os.devnull, 'w')
-
-            #shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
-
-            shutil.copy("/usr/local/CyberCP/index.html", FullPath)
-
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + FullPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = 'sudo -u %s cp %s %s/index.html' % (virtualHostUser, FullPath, path)
-            ProcessUtilities.normalExecutioner(command)
-
-            os.remove(FullPath)
+            if not vhost.ensureDefaultIndexFile(path, virtualHostUser):
+                raise OSError('Could not create default index.html in %s' % (path))
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
             cmd = shlex.split(command)
+            FNULL = open(os.devnull, 'w')
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException as msg:
@@ -1062,6 +1079,18 @@ class vhost:
 
             command = "chmod 750 %s" % shlex.quote(path)
             ProcessUtilities.executioner(command, None, True)
+
+            logs_dir = '/home/%s/logs' % masterDomain
+            command = 'mkdir -p %s && chown %s:%s %s && chmod 750 %s' % (
+                shlex.quote(logs_dir),
+                shlex.quote(virtualHostUser),
+                shlex.quote(groupName),
+                shlex.quote(logs_dir),
+                shlex.quote(logs_dir),
+            )
+            ProcessUtilities.executioner(command, None, True)
+
+            vhost.ensureDefaultIndexFile(path, virtualHostUser)
 
             # Create .well-known/acme-challenge so LiteSpeed config validation does not fail (path must exist)
             acme_path = path.rstrip('/') + '/.well-known/acme-challenge'
