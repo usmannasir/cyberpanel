@@ -13,6 +13,7 @@
         redisplay: function(id) {
             // Repopulate HTML select box from cache
             const box = document.getElementById(id);
+            const scroll_value_from_top = box.scrollTop;
             box.innerHTML = '';
             for (const node of SelectBox.cache[id]) {
                 if (node.displayed) {
@@ -22,6 +23,7 @@
                     box.appendChild(new_option);
                 }
             }
+            box.scrollTop = scroll_value_from_top;
         },
         filter: function(id, text) {
             // Redisplay the HTML select box, displaying only the choices containing ALL
@@ -31,13 +33,17 @@
                 node.displayed = 1;
                 const node_text = node.text.toLowerCase();
                 for (const token of tokens) {
-                    if (node_text.indexOf(token) === -1) {
+                    if (!node_text.includes(token)) {
                         node.displayed = 0;
                         break; // Once the first token isn't found we're done
                     }
                 }
             }
             SelectBox.redisplay(id);
+        },
+        get_hidden_node_count(id) {
+            const cache = SelectBox.cache[id] || [];
+            return cache.filter(node => node.displayed === 0).length;
         },
         delete_from_cache: function(id, value) {
             let delete_index = null;

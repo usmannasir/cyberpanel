@@ -1,9 +1,7 @@
 <!doctype html>
-<html lang="en">
 
 <title>CodeMirror: COBOL mode</title>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel=stylesheet href="../../doc/docs.css">
 
 <link rel="stylesheet" href="../../lib/codemirror.css">
@@ -57,7 +55,7 @@
 <article>
 <h2>COBOL mode</h2>
 
-    <p> Select Theme <select onchange="selectTheme()" id="selectTheme" title="Select theme" aria-label="Select theme">
+    <p> Select Theme <select onchange="selectTheme()" id="selectTheme">
         <option>default</option>
         <option>ambiance</option>
         <option>blackboard</option>
@@ -77,7 +75,7 @@
         <option>vibrant-ink</option>
         <option>xq-dark</option>
         <option>xq-light</option>
-    </select>    Select Font Size <select onchange="selectFontsize()" id="selectFontSize" title="Select font size" aria-label="Select font size">
+    </select>    Select Font Size <select onchange="selectFontsize()" id="selectFontSize">
           <option value="13px">13px</option>
           <option value="14px">14px</option>
           <option value="16px">16px</option>
@@ -96,8 +94,7 @@
 <label for="id_tabToIndentSpace">Insert Spaces on Tab</label>
 <input type="checkbox" id="id_tabToIndentSpace" onchange="tabToIndentSpace()">
 </p>
-<label for="code">COBOL code editor</label>
-<textarea id="code" name="code" placeholder="Enter COBOL code here" title="COBOL code editor">
+<textarea id="code" name="code">
 ---------1---------2---------3---------4---------5---------6---------7---------8
 12345678911234567892123456789312345678941234567895123456789612345678971234567898
 000010 IDENTIFICATION DIVISION.                                        MODTGHERE

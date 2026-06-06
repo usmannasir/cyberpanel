@@ -1,0 +1,111 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n static %}
+{% block title %}Port Manager{% endblock %}
+{% block content %}
+<style>
+.pm-wrap,.pm-wrap h3,.pm-wrap h4,.pm-wrap p,.pm-wrap label,.pm-wrap li{color:#1a1a2e!important}
+.pm-wrap .panel-body{background:#fff!important;color:#1a1a2e!important}
+.pm-wrap .form-control{background:#fff!important;color:#1a1a2e!important;border:1px solid #c5c5d0!important}
+.pm-wrap pre{background:#f4f4f8!important;color:#1a1a2e!important;border:1px solid #c5c5d0;padding:12px;border-radius:4px}
+#pm-ports-table tbody tr,#pm-ports-table tbody tr:nth-child(odd),#pm-ports-table tbody tr:nth-child(even){background:#fff!important;color:#1a1a2e!important}
+#pm-ports-table tbody tr td{color:#1a1a2e!important;border-top:1px solid #e2e8f0!important}
+#pm-ports-table tbody tr:hover{background:#edf2ff!important;color:#1a1a2e!important}
+#pm-ports-table thead th{background:#2d3748!important;color:#fff!important}
+.pm-collapse{margin-top:18px;border:1px solid #c5c5d0;border-radius:6px;background:#fff;overflow:hidden}
+.pm-collapse-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#f4f4f8;border:0;cursor:pointer;text-align:left;color:#1a1a2e!important;font-size:16px;font-weight:600}
+.pm-collapse-toggle:hover{background:#edf2ff}
+.pm-collapse-icon{display:inline-block;transition:transform .2s ease;font-size:12px;color:#4a5568}
+.pm-collapse.is-open .pm-collapse-icon{transform:rotate(90deg)}
+.pm-collapse-body{display:none;padding:0 16px 16px;border-top:1px solid #e2e8f0}
+.pm-collapse.is-open .pm-collapse-body{display:block}
+.pm-collapse-meta{font-size:13px;font-weight:400;color:#4a5568!important}
+.pm-collapse-links{font-size:13px;margin:0 0 10px}
+.pm-collapse-links a{color:#2563eb!important}
+#pm-docker{max-height:320px;overflow:auto;margin:0}
+</style>
+<div class="pm-wrap container-fluid">
+  <div class="row"><div class="col-lg-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3>CyberPanel Port Manager</h3>
+        <p class="text-muted">Panel port: {{ panel_port }}</p>
+      </div>
+      <div class="panel-body">
+        <input id="pm-search" class="form-control" placeholder="Search port, process, bind..." style="max-width:320px;margin-bottom:12px;">
+        <div class="table-responsive">
+          <table class="table" id="pm-ports-table">
+            <thead><tr><th>Port</th><th>Proto</th><th>Bind</th><th>Type</th><th>Process</th><th>User</th><th>Path</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="pm-collapse" id="pm-docker-collapse">
+          <button type="button" class="pm-collapse-toggle" id="pm-docker-toggle" aria-expanded="false" aria-controls="pm-docker-body">
+            <span>Docker <span class="pm-collapse-meta" id="pm-docker-summary"></span></span>
+            <span class="pm-collapse-icon">&#9654;</span>
+          </button>
+          <div class="pm-collapse-body" id="pm-docker-body">
+            <p class="pm-collapse-links"><a href="?stopped=0">Running only</a> | <a href="?stopped=1">Include stopped</a></p>
+            <pre id="pm-docker"></pre>
+          </div>
+        </div>
+
+        <div class="pm-collapse is-open" id="pm-keys-collapse" style="margin-top:12px;">
+          <button type="button" class="pm-collapse-toggle" id="pm-keys-toggle" aria-expanded="true" aria-controls="pm-keys-body">
+            <span>API keys</span><span class="pm-collapse-icon">&#9654;</span>
+          </button>
+          <div class="pm-collapse-body" id="pm-keys-body">
+            <form method="post" action="api/keys/create" id="pm-key-form">
+              {% csrf_token %}
+              <select name="scope" class="form-control" style="max-width:200px;display:inline-block;">
+                <option value="read">read</option><option value="mutate">mutate</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Generate key</button>
+            </form>
+            <ul>{% for k in api_keys %}<li>{{ k.label }} — {{ k.scope }} (id {{ k.id }})</li>{% empty %}<li>No keys yet</li>{% endfor %}</ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+<script>
+(function(){
+  var ports={{ ports_json|safe }}, docker={{ docker_json|safe }}, tbody=document.querySelector('#pm-ports-table tbody');
+  function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+  function setupCollapse(rootId,toggleId,startOpen){
+    var root=document.getElementById(rootId), toggle=document.getElementById(toggleId);
+    if(!root||!toggle)return;
+    if(startOpen)root.classList.add('is-open');
+    toggle.setAttribute('aria-expanded',startOpen?'true':'false');
+    toggle.addEventListener('click',function(){
+      var open=root.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded',open?'true':'false');
+    });
+  }
+  function render(filter){
+    tbody.innerHTML=''; filter=(filter||'').toLowerCase();
+    ports.forEach(function(r){
+      var p=r.process||{}, blob=[r.port,r.proto,r.bind,r.bind_type,p.name,p.cmdline].join(' ').toLowerCase();
+      if(filter&&blob.indexOf(filter)===-1)return;
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+esc(r.port)+'</td><td>'+esc(r.proto)+'</td><td>'+esc(r.bind)+'</td><td>'+esc(r.bind_type)+'</td><td>'+esc(p.name||'')+(p.pid?' ('+esc(p.pid)+')':'')+'</td><td>'+esc(p.user||'')+'</td><td>'+esc(p.exe||'')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  render('');
+  document.getElementById('pm-search').addEventListener('input',function(e){render(e.target.value);});
+  var running=0; docker.forEach(function(c){if(c.running)running++;});
+  document.getElementById('pm-docker-summary').textContent='('+docker.length+' container'+(docker.length===1?'':'s')+', '+running+' running)';
+  document.getElementById('pm-docker').textContent=JSON.stringify(docker,null,2);
+  setupCollapse('pm-docker-collapse','pm-docker-toggle',false);
+  setupCollapse('pm-keys-collapse','pm-keys-toggle',true);
+  document.getElementById('pm-key-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    fetch('api/keys/create',{method:'POST',body:new FormData(this),credentials:'same-origin'})
+      .then(function(r){return r.json();})
+      .then(function(j){alert(j.message+'\n\n'+(j.key||j.error));location.reload();});
+  });
+})();
+</script>
+{% endblock %}

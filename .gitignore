@@ -118,6 +118,8 @@ dmypy.json
 /etc/cyberpanel/
 cyberpanel_password.txt
 mysql_password.txt
+public/phpmyadmin/config.inc.php
+data/
 
 # Development test files
 test.php
