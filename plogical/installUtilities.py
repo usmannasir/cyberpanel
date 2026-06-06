@@ -304,6 +304,63 @@ class installUtilities:
             CyberCPLogFileWriter.writeToFile('[repairInvalidPhpHandlers] %s' % str(msg))
 
     @staticmethod
+    def repairInvalidSslCertPathsInVhosts():
+        """Ensure vhssl cert paths exist, or remove broken vhssl blocks before OLS -t."""
+        try:
+            from plogical.sslUtilities import sslUtilities
+
+            for vh_file in glob.glob('/usr/local/lsws/conf/vhosts/*/vhost.conf'):
+                lines = installUtilities._readProtectedConfigLines(vh_file)
+                if not lines:
+                    continue
+
+                cert_paths = []
+                for line in lines:
+                    stripped = line.strip()
+                    if stripped.startswith('certFile') or stripped.startswith('keyFile'):
+                        parts = stripped.split()
+                        if len(parts) >= 2:
+                            cert_paths.append(parts[-1])
+
+                if not cert_paths:
+                    continue
+
+                missing = [p for p in cert_paths if p and not os.path.exists(p)]
+                if not missing:
+                    continue
+
+                domain = vh_file.split('/vhosts/')[1].split('/')[0]
+                if sslUtilities._ssl_issue_self_signed(domain):
+                    CyberCPLogFileWriter.writeToFile(
+                        '[repairInvalidSslCertPaths] Issued self-signed SSL for %s' % (domain))
+                    continue
+
+                new_lines = []
+                in_vhssl = False
+                brace_depth = 0
+                for line in lines:
+                    if not in_vhssl and line.strip().startswith('vhssl'):
+                        in_vhssl = True
+                        brace_depth = line.count('{') - line.count('}')
+                        continue
+                    if in_vhssl:
+                        brace_depth += line.count('{') - line.count('}')
+                        if brace_depth <= 0:
+                            in_vhssl = False
+                        continue
+                    new_lines.append(line)
+
+                ok, err = installUtilities._writeProtectedConfigLines(vh_file, new_lines)
+                if ok:
+                    CyberCPLogFileWriter.writeToFile(
+                        '[repairInvalidSslCertPaths] Removed broken vhssl block from %s' % (vh_file))
+                else:
+                    CyberCPLogFileWriter.writeToFile(
+                        '[repairInvalidSslCertPaths] Failed to update %s: %s' % (vh_file, err))
+        except BaseException as msg:
+            CyberCPLogFileWriter.writeToFile('[repairInvalidSslCertPaths] %s' % str(msg))
+
+    @staticmethod
     def appendProtectedHttpdConfigBlock(conf_block, description, config_file='/usr/local/lsws/conf/httpd_config.conf'):
         block = conf_block if conf_block.endswith('\n') else conf_block + '\n'
         try:
@@ -422,6 +479,7 @@ class installUtilities:
                     openlitespeed_bin = '/usr/local/lsws/bin/openlitespeed'
                     if os.path.exists(openlitespeed_bin):
                         installUtilities.repairInvalidPhpHandlersInVhosts()
+                        installUtilities.repairInvalidSslCertPathsInVhosts()
                         if getpass.getuser() == 'root':
                             validate_cmd = [openlitespeed_bin, '-t']
                             result = subprocess.run(validate_cmd, capture_output=True, text=True, timeout=30)

@@ -19,6 +19,61 @@ class sslUtilities:
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
     @staticmethod
+    def _ssl_live_cert_paths(domain):
+        live_dir = '/etc/letsencrypt/live/' + domain
+        return live_dir + '/privkey.pem', live_dir + '/fullchain.pem'
+
+    @staticmethod
+    def _ssl_cert_files_exist(domain):
+        priv_path, full_path = sslUtilities._ssl_live_cert_paths(domain)
+        return os.path.exists(full_path) and os.path.exists(priv_path)
+
+    @staticmethod
+    def _ssl_issue_self_signed(domain):
+        """Create self-signed cert under /etc/letsencrypt/live/ via privileged executioner."""
+        priv_path, full_path = sslUtilities._ssl_live_cert_paths(domain)
+        if os.path.exists(full_path) and os.path.exists(priv_path):
+            return True
+
+        live_dir = os.path.dirname(full_path)
+        ProcessUtilities.ensureCommandToken()
+        mkdir_cmd = 'mkdir -p %s && chmod 755 %s' % (shlex.quote(live_dir), shlex.quote(live_dir))
+        if ProcessUtilities.executioner(mkdir_cmd, None, True) != 1:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Failed to create live cert directory for %s' % (domain))
+            return False
+
+        subj = '/C=US/ST=Denial/L=Springfield/O=Dis/CN=%s' % domain
+        openssl_cmd = (
+            'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 '
+            '-subj %s -keyout %s -out %s && chmod 600 %s && chmod 644 %s'
+        ) % (
+            shlex.quote(subj),
+            shlex.quote(priv_path),
+            shlex.quote(full_path),
+            shlex.quote(priv_path),
+            shlex.quote(full_path),
+        )
+        if ProcessUtilities.executioner(openssl_cmd, None, True) != 1:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Failed to issue self-signed SSL for %s via openssl' % (domain))
+            return False
+
+        if os.path.exists(full_path) and os.path.exists(priv_path):
+            return True
+
+        verify_cmd = 'test -f %s && test -f %s && echo ok' % (
+            shlex.quote(full_path), shlex.quote(priv_path))
+        out = (ProcessUtilities.outputExecutioner(verify_cmd, None, True) or '').strip()
+        return out == 'ok'
+
+    @staticmethod
+    def _ssl_ensure_cert_files_for_vhost(virtualHostName):
+        if sslUtilities._ssl_cert_files_exist(virtualHostName):
+            return True
+        return sslUtilities._ssl_issue_self_signed(virtualHostName)
+
+    @staticmethod
     def parseACMEError(error_output):
         """Parse ACME error output to extract meaningful error messages"""
         if not error_output:
@@ -434,6 +489,13 @@ context /.well-known/acme-challenge {
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s [installSSLForDomain:72]' % (str(msg)))
 
+        if not sslUtilities._ssl_ensure_cert_files_for_vhost(virtualHostName):
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Cannot install SSL for %s: certificate files are missing' % (virtualHostName))
+            return 0
+
+        priv_path, full_path = sslUtilities._ssl_live_cert_paths(virtualHostName)
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             completePathToConfigFile = confPath + "/vhost.conf"
@@ -447,8 +509,8 @@ context /.well-known/acme-challenge {
                         "\nlistener SSL {\n"
                         "  address                 *:443\n"
                         "  secure                  1\n"
-                        "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                        "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                        "  keyFile                  " + priv_path + "\n"
+                        "  certFile                 " + full_path + "\n"
                         "  certChain               1\n"
                         "  sslProtocol             24\n"
                         "  enableECDHE             1\n"
@@ -471,8 +533,8 @@ context /.well-known/acme-challenge {
                         "\nlistener SSL IPv6 {\n"
                         "  address                 [ANY]:443\n"
                         "  secure                  1\n"
-                        "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                        "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                        "  keyFile                  " + priv_path + "\n"
+                        "  certFile                 " + full_path + "\n"
                         "  certChain               1\n"
                         "  sslProtocol             24\n"
                         "  enableECDHE             1\n"
@@ -539,8 +601,8 @@ context /.well-known/acme-challenge {
                     if vhsslPresense == 0:
                         ssl_block = (
                             "\nvhssl  {\n"
-                            "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                            "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                            "  keyFile                 " + priv_path + "\n"
+                            "  certFile                " + full_path + "\n"
                             "  certChain               1\n"
                             "  sslProtocol             24\n"
                             "  enableECDHE             1\n"
@@ -1107,8 +1169,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
         else:
 
-            pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
-            pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
+            pathToStoreSSLPrivKey, pathToStoreSSLFullChain = sslUtilities._ssl_live_cert_paths(domain)
 
             #### if in any case ssl failed to obtain and CyberPanel try to issue self-signed ssl, first check if ssl already present.
             ### if so, dont issue self-signed ssl, as it may override some existing ssl
@@ -1141,9 +1202,8 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                                 "If you use Cloudflare, turn off proxy (grey cloud) for the site during issuance, "
                                 "or use DNS validation. See error logs. [issueSSLForDomain]"]
 
-            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            if not sslUtilities._ssl_issue_self_signed(domain):
+                return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 
             if sslUtilities.installSSLForDomain(domain) == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Self signed SSL issued for " + domain + ".")
