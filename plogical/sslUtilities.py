@@ -252,7 +252,9 @@ class sslUtilities:
     @staticmethod
     def checkSSLListener():
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            from plogical import installUtilities
+            data = installUtilities.installUtilities._readProtectedConfigLines(
+                "/usr/local/lsws/conf/httpd_config.conf")
             for items in data:
                 if items.find("listener SSL") > -1:
                     return 1
@@ -265,7 +267,9 @@ class sslUtilities:
     @staticmethod
     def checkSSLIPv6Listener():
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            from plogical import installUtilities
+            data = installUtilities.installUtilities._readProtectedConfigLines(
+                "/usr/local/lsws/conf/httpd_config.conf")
             for items in data:
                 if items.find("listener SSL IPv6") > -1:
                     return 1
@@ -438,82 +442,52 @@ context /.well-known/acme-challenge {
                 map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
 
                 if sslUtilities.checkSSLListener() != 1:
-
-                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
-                    listener = "listener SSL {" + "\n"
-                    address = "  address                 *:443" + "\n"
-                    secure = "  secure                  1" + "\n"
-                    keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                    certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
-                    certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             24" + "\n"
-                    enableECDHE = "  enableECDHE             1" + "\n"
-                    renegProtection = "  renegProtection         1" + "\n"
-                    sslSessionCache = "  sslSessionCache         1" + "\n"
-                    enableSpdy = "  enableSpdy              15" + "\n"
-                    enableStapling = "  enableStapling           1" + "\n"
-                    ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
-                    map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-                    final = "}" + "\n" + "\n"
-
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.writelines(listener)
-                    writeDataToFile.writelines(address)
-                    writeDataToFile.writelines(secure)
-                    writeDataToFile.writelines(keyFile)
-                    writeDataToFile.writelines(certFile)
-                    writeDataToFile.writelines(certChain)
-                    writeDataToFile.writelines(sslProtocol)
-                    writeDataToFile.writelines(enableECDHE)
-                    writeDataToFile.writelines(renegProtection)
-                    writeDataToFile.writelines(sslSessionCache)
-                    writeDataToFile.writelines(enableSpdy)
-                    writeDataToFile.writelines(enableStapling)
-                    writeDataToFile.writelines(ocspRespMaxAge)
-                    writeDataToFile.writelines(map)
-                    writeDataToFile.writelines(final)
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.close()
+                    from plogical import installUtilities
+                    listener_block = (
+                        "\nlistener SSL {\n"
+                        "  address                 *:443\n"
+                        "  secure                  1\n"
+                        "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                        "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                        "  certChain               1\n"
+                        "  sslProtocol             24\n"
+                        "  enableECDHE             1\n"
+                        "  renegProtection         1\n"
+                        "  sslSessionCache         1\n"
+                        "  enableSpdy              15\n"
+                        "  enableStapling           1\n"
+                        "  ocspRespMaxAge           86400\n"
+                        "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+                        "}\n\n"
+                    )
+                    ok, err = installUtilities.installUtilities.appendProtectedHttpdConfigBlock(
+                        listener_block, 'Add SSL listener for %s' % virtualHostName)
+                    if not ok:
+                        raise BaseException(err or 'Failed to add SSL listener block')
 
                 elif sslUtilities.checkSSLIPv6Listener() != 1:
-
-                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
-                    listener = "listener SSL IPv6 {" + "\n"
-                    address = "  address                 [ANY]:443" + "\n"
-                    secure = "  secure                  1" + "\n"
-                    keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                    certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
-                    certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             24" + "\n"
-                    enableECDHE = "  enableECDHE             1" + "\n"
-                    renegProtection = "  renegProtection         1" + "\n"
-                    sslSessionCache = "  sslSessionCache         1" + "\n"
-                    enableSpdy = "  enableSpdy              15" + "\n"
-                    enableStapling = "  enableStapling           1" + "\n"
-                    ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
-                    map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-                    final = "}" + "\n" + "\n"
-
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.writelines(listener)
-                    writeDataToFile.writelines(address)
-                    writeDataToFile.writelines(secure)
-                    writeDataToFile.writelines(keyFile)
-                    writeDataToFile.writelines(certFile)
-                    writeDataToFile.writelines(certChain)
-                    writeDataToFile.writelines(sslProtocol)
-                    writeDataToFile.writelines(enableECDHE)
-                    writeDataToFile.writelines(renegProtection)
-                    writeDataToFile.writelines(sslSessionCache)
-                    writeDataToFile.writelines(enableSpdy)
-                    writeDataToFile.writelines(enableStapling)
-                    writeDataToFile.writelines(ocspRespMaxAge)
-                    writeDataToFile.writelines(map)
-                    writeDataToFile.writelines(final)
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.close()
+                    from plogical import installUtilities
+                    listener_block = (
+                        "\nlistener SSL IPv6 {\n"
+                        "  address                 [ANY]:443\n"
+                        "  secure                  1\n"
+                        "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                        "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                        "  certChain               1\n"
+                        "  sslProtocol             24\n"
+                        "  enableECDHE             1\n"
+                        "  renegProtection         1\n"
+                        "  sslSessionCache         1\n"
+                        "  enableSpdy              15\n"
+                        "  enableStapling           1\n"
+                        "  ocspRespMaxAge           86400\n"
+                        "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+                        "}\n\n"
+                    )
+                    ok, err = installUtilities.installUtilities.appendProtectedHttpdConfigBlock(
+                        listener_block, 'Add SSL IPv6 listener for %s' % virtualHostName)
+                    if not ok:
+                        raise BaseException(err or 'Failed to add SSL IPv6 listener block')
 
                 else:
 
@@ -551,7 +525,8 @@ context /.well-known/acme-challenge {
 
                     ###################### Write per host Configs for SSL ###################
 
-                    data = open(completePathToConfigFile, "r").readlines()
+                    from plogical import installUtilities
+                    data = installUtilities.installUtilities._readProtectedConfigLines(completePathToConfigFile)
 
                     ## check if vhssl is already in vhconf file
 
@@ -562,39 +537,24 @@ context /.well-known/acme-challenge {
                             vhsslPresense = 1
 
                     if vhsslPresense == 0:
-                        writeSSLConfig = open(completePathToConfigFile, "a")
-
-                        vhssl = "vhssl  {" + "\n"
-                        keyFile = "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                        certFile = "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
-                        certChain = "  certChain               1" + "\n"
-                        sslProtocol = "  sslProtocol             24" + "\n"
-                        enableECDHE = "  enableECDHE             1" + "\n"
-                        renegProtection = "  renegProtection         1" + "\n"
-                        sslSessionCache = "  sslSessionCache         1" + "\n"
-                        enableSpdy = "  enableSpdy              15" + "\n"
-                        enableStapling = "  enableStapling           1" + "\n"
-                        ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
-                        final = "}"
-
-                        writeSSLConfig.writelines("\n")
-
-                        writeSSLConfig.writelines(vhssl)
-                        writeSSLConfig.writelines(keyFile)
-                        writeSSLConfig.writelines(certFile)
-                        writeSSLConfig.writelines(certChain)
-                        writeSSLConfig.writelines(sslProtocol)
-                        writeSSLConfig.writelines(enableECDHE)
-                        writeSSLConfig.writelines(renegProtection)
-                        writeSSLConfig.writelines(sslSessionCache)
-                        writeSSLConfig.writelines(enableSpdy)
-                        writeSSLConfig.writelines(enableStapling)
-                        writeSSLConfig.writelines(ocspRespMaxAge)
-                        writeSSLConfig.writelines(final)
-
-                        writeSSLConfig.writelines("\n")
-
-                        writeSSLConfig.close()
+                        ssl_block = (
+                            "\nvhssl  {\n"
+                            "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                            "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                            "  certChain               1\n"
+                            "  sslProtocol             24\n"
+                            "  enableECDHE             1\n"
+                            "  renegProtection         1\n"
+                            "  sslSessionCache         1\n"
+                            "  enableSpdy              15\n"
+                            "  enableStapling           1\n"
+                            "  ocspRespMaxAge           86400\n"
+                            "}\n\n"
+                        )
+                        ok, err = installUtilities.installUtilities._writeProtectedConfigLines(
+                            completePathToConfigFile, data + [ssl_block])
+                        if not ok:
+                            raise BaseException(err or 'Failed to write vhssl block to vhost.conf')
 
                 return 1
             except BaseException as msg:
@@ -729,9 +689,9 @@ context /.well-known/acme-challenge {
             if webroot != default_webroot and os.path.isdir(webroot):
                 challenge_path = webroot + '/.well-known/acme-challenge'
                 if not os.path.exists(challenge_path):
-                    os.makedirs(challenge_path, exist_ok=True)
-                    command = f'chmod -R 755 {webroot}/.well-known'
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(challenge_path), None, True)
+                    ProcessUtilities.executioner(
+                        'chmod -R 755 %s' % shlex.quote(webroot + '/.well-known'), None, True)
                 logging.CyberCPLogFileWriter.writeToFile(
                     f"Using domain webroot for ACME challenge: {webroot}")
             else:
@@ -742,8 +702,8 @@ context /.well-known/acme-challenge {
             challenge_path = None
 
         if not os.path.exists(default_webroot + '/.well-known/acme-challenge'):
-            command = f'mkdir -p {default_webroot}/.well-known/acme-challenge'
-            ProcessUtilities.normalExecutioner(command)
+            command = 'mkdir -p %s' % shlex.quote(default_webroot + '/.well-known/acme-challenge')
+            ProcessUtilities.executioner(command, None, True)
 
         command = f'chmod -R 755 {default_webroot}'
         ProcessUtilities.executioner(command)

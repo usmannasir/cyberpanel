@@ -304,6 +304,31 @@ class installUtilities:
             CyberCPLogFileWriter.writeToFile('[repairInvalidPhpHandlers] %s' % str(msg))
 
     @staticmethod
+    def appendProtectedHttpdConfigBlock(conf_block, description, config_file='/usr/local/lsws/conf/httpd_config.conf'):
+        block = conf_block if conf_block.endswith('\n') else conf_block + '\n'
+        try:
+            existing = ''.join(installUtilities._readProtectedConfigLines(config_file))
+            marker = block.strip().split('\n')[0]
+            if marker and marker in existing:
+                return True, None
+
+            def modify_config(lines):
+                new_lines = list(lines)
+                new_lines.append(block)
+                return new_lines
+
+            if config_file == '/usr/local/lsws/conf/httpd_config.conf':
+                return installUtilities.safeModifyHttpdConfig(modify_config, description)
+
+            ok, err = installUtilities._writeProtectedConfigLines(
+                config_file, installUtilities._readProtectedConfigLines(config_file) + [block])
+            if not ok:
+                return False, err
+            return True, None
+        except BaseException as msg:
+            return False, str(msg)
+
+    @staticmethod
     def safeModifyHttpdConfig(config_modifier, description="config modification", skip_validation=False):
         """
         Safely modify httpd_config.conf with backup, validation, and rollback on failure.

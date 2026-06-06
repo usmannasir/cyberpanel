@@ -513,7 +513,8 @@ class mailUtilities:
             configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
 
             if not mailUtilities._opendkimFileContains(keyTable, "default._domainkey." + actualDomain):
-                mailUtilities._opendkimAppendLine(keyTable, configToWrite, createHeader=not os.path.exists(keyTable))
+                if mailUtilities._opendkimAppendLine(keyTable, configToWrite, createHeader=not os.path.exists(keyTable)) != 1:
+                    return 0, 'Failed to update OpenDKIM KeyTable via privileged command.'
 
             ## Edit signing table
 
@@ -521,7 +522,8 @@ class mailUtilities:
             configToWrite = "*@" + actualDomain + " default._domainkey." + actualDomain + "\n"
 
             if not mailUtilities._opendkimFileContains(signingTable, "default._domainkey." + actualDomain):
-                mailUtilities._opendkimAppendLine(signingTable, configToWrite, createHeader=not os.path.exists(signingTable))
+                if mailUtilities._opendkimAppendLine(signingTable, configToWrite, createHeader=not os.path.exists(signingTable)) != 1:
+                    return 0, 'Failed to update OpenDKIM SigningTable via privileged command.'
 
             ## Trusted hosts
 
@@ -529,7 +531,8 @@ class mailUtilities:
             configToWrite = actualDomain + "\n"
 
             if not mailUtilities._opendkimFileContains(trustedHosts, actualDomain):
-                mailUtilities._opendkimAppendLine(trustedHosts, configToWrite, createHeader=not os.path.exists(trustedHosts))
+                if mailUtilities._opendkimAppendLine(trustedHosts, configToWrite, createHeader=not os.path.exists(trustedHosts)) != 1:
+                    return 0, 'Failed to update OpenDKIM TrustedHosts via privileged command.'
 
             ## Restart Postfix and OpenDKIM
 

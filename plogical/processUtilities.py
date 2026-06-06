@@ -233,6 +233,18 @@ class ProcessUtilities(multi.Thread):
                 time.sleep(2)
 
     @staticmethod
+    def ensureCommandToken():
+        token_val = os.environ.get('TOKEN')
+        if token_val:
+            ProcessUtilities.token = token_val
+            try:
+                del os.environ['TOKEN']
+            except KeyError:
+                pass
+        elif ProcessUtilities.token == "unset":
+            ProcessUtilities.token = ""
+
+    @staticmethod
     def sendCommand(command, user=None, dir=None, retries=3):
         """
         Send command to lscpd with retry mechanism
@@ -288,14 +300,9 @@ class ProcessUtilities(multi.Thread):
                 return "-1Internal error: connection result is None"
             sock = ret[0]
             
-            if ProcessUtilities.token == "unset":
-                token_val = os.environ.get('TOKEN')
-                if token_val:
-                    ProcessUtilities.token = token_val
-                    del os.environ['TOKEN']
-                else:
-                    ProcessUtilities.token = ""
-                    logging.writeToFile('TOKEN not set in environment; privileged command may fail [sendCommand]')
+            ProcessUtilities.ensureCommandToken()
+            if not ProcessUtilities.token:
+                logging.writeToFile('TOKEN not set in environment; privileged command may fail [sendCommand]')
 
             if user == None:
                 if command.find('export') > -1:

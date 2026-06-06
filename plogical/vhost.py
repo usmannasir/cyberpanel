@@ -382,13 +382,12 @@ class vhost:
                     display_msg = error_msg or "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"
                     return [0, display_msg]
 
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
                 currentConf = vhostConfs.olsMasterMainConf
                 currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
-                writeDataToFile.write(currentConf)
-
-                writeDataToFile.close()
+                ok, err = installUtilities.installUtilities.appendProtectedHttpdConfigBlock(
+                    currentConf, 'Append master vhost block for %s' % virtualHostName)
+                if not ok:
+                    return [0, err or 'Failed to append master vhost block to httpd_config.conf']
 
                 return [1,"None"]
             except BaseException as msg:
@@ -1050,29 +1049,27 @@ class vhost:
 
         try:
 
-            command = 'sudo -u %s mkdir %s' % (virtualHostUser, path)
-            ProcessUtilities.normalExecutioner(command)
+            command = 'mkdir -p %s' % shlex.quote(path)
+            ProcessUtilities.executioner(command, None, True)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
 
-            command = 'sudo -g %s -u %s chown %s:%s %s' % (groupName, virtualHostUser, virtualHostUser, groupName, path)
-            ProcessUtilities.normalExecutioner(command)
+            command = 'chown %s:%s %s' % (virtualHostUser, groupName, shlex.quote(path))
+            ProcessUtilities.executioner(command, None, True)
 
-
-            command = "sudo -u %s chmod 750 %s" % (virtualHostUser, path)
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            command = "chmod 750 %s" % shlex.quote(path)
+            ProcessUtilities.executioner(command, None, True)
 
             # Create .well-known/acme-challenge so LiteSpeed config validation does not fail (path must exist)
             acme_path = path.rstrip('/') + '/.well-known/acme-challenge'
             try:
-                command = 'sudo -u %s mkdir -p %s' % (virtualHostUser, acme_path)
-                ProcessUtilities.normalExecutioner(command)
-                command = "sudo -u %s chmod 755 %s" % (virtualHostUser, acme_path)
-                subprocess.call(shlex.split(command), stdout=FNULL, stderr=subprocess.STDOUT)
+                command = 'mkdir -p %s' % shlex.quote(acme_path)
+                ProcessUtilities.executioner(command, None, True)
+                command = "chmod 755 %s" % shlex.quote(acme_path)
+                ProcessUtilities.executioner(command, None, True)
             except Exception as acme_err:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(acme_err) + " [createDirectoryForDomain acme-challenge]")
@@ -1080,31 +1077,20 @@ class vhost:
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")
+            return [0, str(msg)]
 
-        try:
-            ## For configuration files permissions will be changed later globally.
-            os.makedirs(confPath)
-        except OSError as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "335 [Not able to create directories for virtual host [createDirectoryForDomain]]")
-            #return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
-
-        try:
-            ## For configuration files permissions will be changed later globally.
-            file = open(completePathToConfigFile, "w+")
-        except IOError as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
-            #return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
+        command = 'mkdir -p %s' % shlex.quote(confPath)
+        if ProcessUtilities.executioner(command, None, True) != 1:
+            err_msg = 'Could not create vhost config directory: %s' % confPath
+            logging.CyberCPLogFileWriter.writeToFile(err_msg + ' [createDirectoryForDomain]')
+            return [0, err_msg]
 
         if vhost.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
                                    administratorEmail, phpVersion, virtualHostUser, openBasedir,
                                    memSoftLimit, memHardLimit, maxConnections, procSoftLimit, procHardLimit) == 1:
             return [1, "None"]
-        else:
-            pass
-            #return [0, "[359 Not able to create per host virtual configurations [createDirectoryForDomain]"]
 
-        return [1, "None"]
+        return [0, 'Could not create per-host virtual host configuration [createDirectoryForDomain]']
 
     @staticmethod
     def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion, virtualHostUser, openBasedir,
@@ -1142,9 +1128,9 @@ class vhost:
                 masterLogDir = f"/home/{masterDomain}/logs"
                 try:
                     if not os.path.exists(masterLogDir):
-                        os.makedirs(masterLogDir, exist_ok=True)
-                        command = f"chown -R {virtualHostUser}:{virtualHostUser} {masterLogDir}"
-                        ProcessUtilities.executioner(command)
+                        ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(masterLogDir), None, True)
+                        command = f"chown -R {virtualHostUser}:{virtualHostUser} {shlex.quote(masterLogDir)}"
+                        ProcessUtilities.executioner(command, None, True)
                     
                     # Create empty log files for the child domain
                     error_log_path = f"{masterLogDir}/{domain}.error_log"
@@ -1152,19 +1138,21 @@ class vhost:
                     
                     for log_path in [error_log_path, access_log_path]:
                         if not os.path.exists(log_path):
-                            with open(log_path, 'w') as f:
-                                f.write('')
-                            command = f"chown {virtualHostUser}:{virtualHostUser} {log_path}"
-                            ProcessUtilities.executioner(command)
-                            command = f"chmod 644 {log_path}"
-                            ProcessUtilities.executioner(command)
+                            ProcessUtilities.executioner('touch %s' % shlex.quote(log_path), None, True)
+                            command = f"chown {virtualHostUser}:{virtualHostUser} {shlex.quote(log_path)}"
+                            ProcessUtilities.executioner(command, None, True)
+                            command = f"chmod 644 {shlex.quote(log_path)}"
+                            ProcessUtilities.executioner(command, None, True)
                 except Exception as logErr:
                     logging.CyberCPLogFileWriter.writeToFile(
                         f'Error creating log files for child domain {domain}: {str(logErr)}')
 
-                confFile = open(vhFile, "w+")
-                confFile.write(currentConf)
-                confFile.close()
+                conf_lines = [currentConf if currentConf.endswith('\n') else currentConf + '\n']
+                ok, err = installUtilities.installUtilities._writeProtectedConfigLines(vhFile, conf_lines)
+                if not ok:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        '%s [IO Error with per host config file [perHostDomainConf]]' % (err or 'write failed'))
+                    return 0
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
@@ -1290,14 +1278,13 @@ class vhost:
                     display_msg = error_msg or "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"
                     return [0, display_msg]
 
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
                 currentConf = vhostConfs.olsChildMainConf
                 currentConf = currentConf.replace('{virtualHostName}', domain)
                 currentConf = currentConf.replace('{masterDomain}', masterDomain)
-                writeDataToFile.write(currentConf)
-
-                writeDataToFile.close()
+                ok, err = installUtilities.installUtilities.appendProtectedHttpdConfigBlock(
+                    currentConf, 'Append child vhost block for %s' % domain)
+                if not ok:
+                    return [0, err or 'Failed to append child vhost block to httpd_config.conf']
 
                 return [1, "None"]
 

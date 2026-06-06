@@ -2486,13 +2486,10 @@ Require valid-user
             except (TypeError, ValueError):
                 openBasedir = 0
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(openBasedir) + ' --path ' + path + ' --websiteOwner ' \
-                       + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
-
-            cli_output = ProcessUtilities.outputExecutioner(execPath, None, True)
+            ProcessUtilities.ensureCommandToken()
+            create_result = virtualHostUtilities.createDomain(
+                masterDomain, domain, phpSelection, path, 1, 1, openBasedir,
+                admin.userName, int(apacheBackend), tempStatusPath, 1, int(alias))
 
             st = ''
             try:
@@ -2502,24 +2499,18 @@ Require valid-user
             except BaseException:
                 st = ''
 
-            out = (cli_output or '').strip()
-            last_line = out.split('\n')[-1] if out else ''
-            cli_ok = last_line.startswith('1,')
-            cli_fail = last_line.startswith('0,')
             status_ok = ('Domain successfully created.' in st and '[200]' in st)
             status_fail = ('[404]' in st)
 
-            if (cli_ok or status_ok) and not status_fail:
+            if create_result[0] == 1 or (status_ok and not status_fail):
                 data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
                             'tempStatusPath': tempStatusPath}
             else:
                 err_msg = 'Child domain creation failed.'
-                if cli_fail and len(last_line) > 2:
-                    err_msg = last_line.split(',', 1)[1].strip() or err_msg
+                if create_result[1] and create_result[1] != 'None':
+                    err_msg = create_result[1].strip() or err_msg
                 elif st:
                     err_msg = st.replace('. [404]', '').strip() or err_msg
-                elif out:
-                    err_msg = out.strip()[:500]
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': err_msg[:2000],
                             'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
