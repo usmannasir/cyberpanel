@@ -127,16 +127,16 @@
             <div class="stat-card" ng-if="!statusError">
                 <div class="stat-card-header">
                     <span class="stat-card-title">{% trans "CPU USAGE" %}</span>
-                    <span class="cp-skeleton cp-skeleton-pill" ng-if="cpuUsage === undefined" aria-hidden="true"></span>
-                    <span class="stat-card-value" ng-if="cpuUsage !== undefined" aria-live="polite"
-                          ng-class="{'bar-ok': cpuUsage < 70, 'bar-warn': cpuUsage >= 70 && cpuUsage < 90, 'bar-crit': cpuUsage >= 90}">({$ cpuUsage $}%)</span>
+                    <span class="cp-skeleton cp-skeleton-pill" ng-if="displayCpuUsage === undefined" aria-hidden="true"></span>
+                    <span class="stat-card-value" ng-if="displayCpuUsage !== undefined" aria-live="polite"
+                          ng-class="{'bar-ok': displayCpuUsage < 70, 'bar-warn': displayCpuUsage >= 70 && displayCpuUsage < 90, 'bar-crit': displayCpuUsage >= 90}">({$ displayCpuUsage $}%)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <span class="cp-skeleton cp-skeleton-bar" ng-if="cpuUsage === undefined" aria-hidden="true"></span>
-                    <div class="progress-bar" ng-if="cpuUsage !== undefined"
-                         ng-class="{'bar-ok': cpuUsage < 70, 'bar-warn': cpuUsage >= 70 && cpuUsage < 90, 'bar-crit': cpuUsage >= 90}"
-                         style="width: {$ cpuUsage $}%;"
-                         role="progressbar" aria-valuenow="{$ cpuUsage $}" aria-valuemin="0" aria-valuemax="100" aria-label="{% trans 'CPU usage percent' %}"></div>
+                    <span class="cp-skeleton cp-skeleton-bar" ng-if="displayCpuUsage === undefined" aria-hidden="true"></span>
+                    <div class="progress-bar" ng-if="displayCpuUsage !== undefined"
+                         ng-class="{'bar-ok': displayCpuUsage < 70, 'bar-warn': displayCpuUsage >= 70 && displayCpuUsage < 90, 'bar-crit': displayCpuUsage >= 90}"
+                         style="width: {$ displayCpuUsage $}%;"
+                         role="progressbar" aria-valuenow="{$ displayCpuUsage $}" aria-valuemin="0" aria-valuemax="100" aria-label="{% trans 'CPU usage percent' %}"></div>
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="cpuCores === undefined" style="max-width:140px;" aria-hidden="true"></span>
@@ -148,16 +148,16 @@
             <div class="stat-card" ng-if="!statusError">
                 <div class="stat-card-header">
                     <span class="stat-card-title">{% trans "MEMORY USAGE" %}</span>
-                    <span class="cp-skeleton cp-skeleton-pill" ng-if="ramUsage === undefined" aria-hidden="true"></span>
-                    <span class="stat-card-value" ng-if="ramUsage !== undefined" aria-live="polite"
-                          ng-class="{'bar-ok': ramUsage < 70, 'bar-warn': ramUsage >= 70 && ramUsage < 90, 'bar-crit': ramUsage >= 90}">({$ ramUsage $}%)</span>
+                    <span class="cp-skeleton cp-skeleton-pill" ng-if="displayRamUsage === undefined" aria-hidden="true"></span>
+                    <span class="stat-card-value" ng-if="displayRamUsage !== undefined" aria-live="polite"
+                          ng-class="{'bar-ok': displayRamUsage < 70, 'bar-warn': displayRamUsage >= 70 && displayRamUsage < 90, 'bar-crit': displayRamUsage >= 90}">({$ displayRamUsage $}%)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <span class="cp-skeleton cp-skeleton-bar" ng-if="ramUsage === undefined" aria-hidden="true"></span>
-                    <div class="progress-bar" ng-if="ramUsage !== undefined"
-                         ng-class="{'bar-ok': ramUsage < 70, 'bar-warn': ramUsage >= 70 && ramUsage < 90, 'bar-crit': ramUsage >= 90}"
-                         style="width: {$ ramUsage $}%;"
-                         role="progressbar" aria-valuenow="{$ ramUsage $}" aria-valuemin="0" aria-valuemax="100" aria-label="{% trans 'Memory usage percent' %}"></div>
+                    <span class="cp-skeleton cp-skeleton-bar" ng-if="displayRamUsage === undefined" aria-hidden="true"></span>
+                    <div class="progress-bar" ng-if="displayRamUsage !== undefined"
+                         ng-class="{'bar-ok': displayRamUsage < 70, 'bar-warn': displayRamUsage >= 70 && displayRamUsage < 90, 'bar-crit': displayRamUsage >= 90}"
+                         style="width: {$ displayRamUsage $}%;"
+                         role="progressbar" aria-valuenow="{$ displayRamUsage $}" aria-valuemin="0" aria-valuemax="100" aria-label="{% trans 'Memory usage percent' %}"></div>
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="ramTotalMB === undefined" style="max-width:160px;" aria-hidden="true"></span>
@@ -169,16 +169,16 @@
             <div class="stat-card" ng-if="!statusError">
                 <div class="stat-card-header">
                     <span class="stat-card-title">{% trans "DISK USAGE" %}</span>
-                    <span class="cp-skeleton cp-skeleton-pill" ng-if="diskUsage === undefined" aria-hidden="true"></span>
-                    <span class="stat-card-value" ng-if="diskUsage !== undefined" aria-live="polite"
-                          ng-class="{'bar-ok': diskUsage < 70, 'bar-warn': diskUsage >= 70 && diskUsage < 90, 'bar-crit': diskUsage >= 90}">({$ diskUsage $}%)</span>
+                    <span class="cp-skeleton cp-skeleton-pill" ng-if="displayDiskUsage === undefined" aria-hidden="true"></span>
+                    <span class="stat-card-value" ng-if="displayDiskUsage !== undefined" aria-live="polite"
+                          ng-class="{'bar-ok': displayDiskUsage < 70, 'bar-warn': displayDiskUsage >= 70 && displayDiskUsage < 90, 'bar-crit': displayDiskUsage >= 90}">({$ displayDiskUsage $}%)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <span class="cp-skeleton cp-skeleton-bar" ng-if="diskUsage === undefined" aria-hidden="true"></span>
-                    <div class="progress-bar" ng-if="diskUsage !== undefined"
-                         ng-class="{'bar-ok': diskUsage < 70, 'bar-warn': diskUsage >= 70 && diskUsage < 90, 'bar-crit': diskUsage >= 90}"
-                         style="width: {$ diskUsage $}%;"
-                         role="progressbar" aria-valuenow="{$ diskUsage $}" aria-valuemin="0" aria-valuemax="100" aria-label="{% trans 'Disk usage percent' %}"></div>
+                    <span class="cp-skeleton cp-skeleton-bar" ng-if="displayDiskUsage === undefined" aria-hidden="true"></span>
+                    <div class="progress-bar" ng-if="displayDiskUsage !== undefined"
+                         ng-class="{'bar-ok': displayDiskUsage < 70, 'bar-warn': displayDiskUsage >= 70 && displayDiskUsage < 90, 'bar-crit': displayDiskUsage >= 90}"
+                         style="width: {$ displayDiskUsage $}%;"
+                         role="progressbar" aria-valuenow="{$ displayDiskUsage $}" aria-valuemin="0" aria-valuemax="100" aria-label="{% trans 'Disk usage percent' %}"></div>
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="diskFreeGB === undefined" style="max-width:200px;" aria-hidden="true"></span>

@@ -346,3 +346,8 @@ row, and the alias SSL button keeps working after the next
   the script. Other extensions (`fileinto`, `imap4flags`) are
   unaffected. Forward filter rules added in the webmail UI now reach
   Dovecot. (Upstream PR #1777, still open.)
+
+### Improved: smoother Overview CPU/Memory/Disk meters (06/06/2026)
+
+- Dashboard Overview metrics use multi-sample CPU reads, EMA smoothing, and capped step size so brief spikes no longer flash 100%.
+- Frontend animates bars and percentages over ~1.5s instead of jumping instantly.
