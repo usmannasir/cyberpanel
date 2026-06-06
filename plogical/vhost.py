@@ -436,17 +436,15 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
-                    vhost.deleteCoreConf(items.domain, numberOfSites)
 
                     # Delete CloudFlare and local DNS records for child domain
                     try:
                         DNS.cleanupHostDNSRecords(items.domain, adminUserName)
                     except Exception as cfError:
-                        # Log error but don't fail deletion if CloudFlare deletion fails
                         logging.CyberCPLogFileWriter.writeToFile(
                             f'CloudFlare DNS deletion failed for child domain {items.domain}: {str(cfError)}')
 
-                    ### Delete ACME Folder
+                    vhost.deleteCoreConf(items.domain, numberOfSites, docRoot=items.path, removeDocRoot=True)
 
                     if os.path.exists('/root/.acme.sh/%s' % (items.domain)):
                         shutil.rmtree('/root/.acme.sh/%s' % (items.domain))
@@ -571,7 +569,8 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
-                    vhost.deleteCoreConf(items.domain, numberOfSites)
+                    vhost.deleteCoreConf(
+                        items.domain, numberOfSites, docRoot=items.path, removeDocRoot=True)
 
 
                 ## child check to make sure no database entires are being deleted from child server
@@ -628,17 +627,107 @@ class vhost:
             return 1
 
     @staticmethod
-    def deleteCoreConf(virtualHostName, numberOfSites):
+    def _resolveDocRootCandidates(virtualHostName, docRoot=None):
+        candidates = []
+        if docRoot:
+            candidates.append(docRoot.rstrip('/'))
+
+        legacy_home = '/home/' + virtualHostName
+        if legacy_home not in candidates:
+            candidates.append(legacy_home)
+
+        try:
+            child = ChildDomains.objects.get(domain=virtualHostName)
+            child_path = (child.path or '').rstrip('/')
+            if child_path and child_path not in candidates:
+                candidates.append(child_path)
+            master_domain = child.master.domain
+            default_child = '/home/%s/%s' % (master_domain, virtualHostName)
+            if default_child not in candidates:
+                candidates.append(default_child)
+        except Exception:
+            if '.' in virtualHostName:
+                master_guess = virtualHostName.split('.', 1)[1]
+                default_child = '/home/%s/%s' % (master_guess, virtualHostName)
+                if default_child not in candidates:
+                    candidates.append(default_child)
+
+        return candidates
+
+    @staticmethod
+    def removeDocRootPaths(virtualHostName, docRoot=None):
+        removed = []
+        for candidate in vhost._resolveDocRootCandidates(virtualHostName, docRoot):
+            if not candidate or not os.path.exists(candidate):
+                continue
+            cmd = 'rm -rf %s' % shlex.quote(candidate)
+            if ProcessUtilities.executioner(cmd, None, True) == 1 or not os.path.exists(candidate):
+                removed.append(candidate)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Removed document root: %s' % candidate, 0)
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Failed to remove document root: %s [removeDocRootPaths]' % candidate)
+        return removed
+
+    @staticmethod
+    def purgeOrphanChildDocRoots(masterDomain):
+        """Remove child-domain folders under a master home that are not in CyberPanel."""
+        removed = []
+        try:
+            active = set(
+                ChildDomains.objects.filter(master__domain=masterDomain).values_list('domain', flat=True)
+            )
+            home = '/home/%s' % masterDomain
+            if not os.path.isdir(home):
+                return removed
+
+            reserved = set(['public_html', 'logs', 'mail', 'backup', 'docker'])
+            for entry in os.listdir(home):
+                full_path = os.path.join(home, entry)
+                if not os.path.isdir(full_path):
+                    continue
+                if entry in reserved:
+                    continue
+                if not entry.endswith('.' + masterDomain):
+                    continue
+                if entry in active:
+                    continue
+                vhost.removeDocRootPaths(entry, full_path)
+                vhost.removeVhostConfigDirectory(entry)
+                removed.append(full_path)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Purged orphan child docroot: %s' % full_path, 0)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'purgeOrphanChildDocRoots failed for %s: %s' % (masterDomain, str(msg)))
+        return removed
+
+    @staticmethod
+    def removeVhostConfigDirectory(virtualHostName):
+        conf_path = vhost.Server_root + '/conf/vhosts/' + virtualHostName
+        if not os.path.exists(conf_path):
+            return True
+        cmd = 'rm -rf %s' % shlex.quote(conf_path)
+        if ProcessUtilities.executioner(cmd, None, True) == 1 or not os.path.exists(conf_path):
+            return True
+        logging.CyberCPLogFileWriter.writeToFile(
+            'Failed to remove vhost config directory: %s [removeVhostConfigDirectory]' % conf_path)
+        return False
+
+    @staticmethod
+    def deleteCoreConf(virtualHostName, numberOfSites, docRoot=None, removeDocRoot=False):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
 
-                virtualHostPath = "/home/" + virtualHostName
-                if os.path.exists(virtualHostPath):
-                    shutil.rmtree(virtualHostPath)
+                if removeDocRoot:
+                    vhost.removeDocRootPaths(virtualHostName, docRoot)
+                else:
+                    virtualHostPath = "/home/" + virtualHostName
+                    if os.path.exists(virtualHostPath):
+                        shutil.rmtree(virtualHostPath)
 
-                confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
-                if os.path.exists(confPath):
-                    shutil.rmtree(confPath)
+                vhost.removeVhostConfigDirectory(virtualHostName)
 
                 def modify_config(lines):
                     """Remove virtual host entries from config"""
@@ -679,8 +768,9 @@ class vhost:
                 
                 if not success:
                     error_msg = error if error else "Unknown error"
-                    logging.writeToFile(f"[deleteCoreConf] Failed to remove vhost config: {error_msg}")
-                    raise BaseException(f"Failed to remove vhost config: {error_msg}")
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        '[deleteCoreConf] Failed to remove vhost config: %s' % error_msg)
+                    raise BaseException('Failed to remove vhost config: %s' % error_msg)
 
                 ## Delete Apache Conf
 

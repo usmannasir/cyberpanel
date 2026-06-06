@@ -1940,7 +1940,7 @@ local_name %s {
                     'CloudFlare DNS rollback failed for %s: %s' % (virtualHostName, str(cf_cleanup_error)))
             if ACLManager.FindIfChild() == 0:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-                vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+                vhost.deleteCoreConf(virtualHostName, numberOfWebsites, docRoot=path, removeDocRoot=True)
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ". [404]")
             logging.CyberCPLogFileWriter.writeToFile(
@@ -1966,11 +1966,12 @@ local_name %s {
                     'CloudFlare DNS deletion failed for %s: %s' % (virtualHostName, str(cfError)))
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
-
-            if DeleteDocRoot:
-                command = 'rm -rf %s' % (doc_root)
-                ProcessUtilities.executioner(command)
+            vhost.deleteCoreConf(
+                virtualHostName,
+                numberOfWebsites,
+                docRoot=doc_root if DeleteDocRoot else None,
+                removeDocRoot=bool(DeleteDocRoot),
+            )
 
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()

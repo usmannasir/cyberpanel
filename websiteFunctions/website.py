@@ -3088,7 +3088,13 @@ Require valid-user
             websiteName = data['websiteName']
 
             try:
-                DeleteDocRoot = int(data['DeleteDocRoot'])
+                raw_delete_doc_root = data['DeleteDocRoot']
+                if isinstance(raw_delete_doc_root, bool):
+                    DeleteDocRoot = 1 if raw_delete_doc_root else 0
+                elif isinstance(raw_delete_doc_root, str):
+                    DeleteDocRoot = 1 if raw_delete_doc_root.lower() in ('1', 'true', 'yes', 'on') else 0
+                else:
+                    DeleteDocRoot = int(raw_delete_doc_root)
             except:
                 DeleteDocRoot = 0
 
