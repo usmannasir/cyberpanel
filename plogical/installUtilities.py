@@ -225,7 +225,7 @@ class installUtilities:
     @staticmethod
     def _readProtectedConfigLines(config_file):
         if getpass.getuser() == 'root' and os.path.isfile(config_file):
-            with open(config_file, 'r') as f:
+            with open(config_file, 'r', encoding='utf-8', errors='replace') as f:
                 return f.readlines()
         content = ProcessUtilities.outputExecutioner('cat %s' % shlex.quote(config_file))
         if content is None or content == '':
@@ -237,13 +237,13 @@ class installUtilities:
     @staticmethod
     def _writeProtectedConfigLines(config_file, lines):
         if getpass.getuser() == 'root':
-            with open(config_file, 'w') as f:
+            with open(config_file, 'w', encoding='utf-8', errors='strict') as f:
                 f.writelines(lines)
             return True, None
         tmp_path = '/home/cyberpanel/.cp_cfg_%s_%s.tmp' % (
             os.getpid(), datetime.now().strftime('%H%M%S%f'))
         try:
-            with open(tmp_path, 'w') as f:
+            with open(tmp_path, 'w', encoding='utf-8', errors='strict') as f:
                 f.writelines(lines)
             cmd = 'cp %s %s' % (shlex.quote(tmp_path), shlex.quote(config_file))
             if ProcessUtilities.executioner(cmd, None, True) == 1:
