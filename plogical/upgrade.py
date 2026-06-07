@@ -1351,6 +1351,19 @@ module cyberpanel_ols {
             Upgrade.stdOut("Module may still work via auto-load", 0)
             return True  # Non-fatal
 
+
+    @staticmethod
+    def ensureCyberPanelPhpmyadminOls():
+        try:
+            from plogical.cyberpanelOlsPhpmyadmin import ensure_cyberpanel_phpmyadmin_ols
+            Upgrade.stdOut("Configuring OpenLiteSpeed phpMyAdmin PHP contexts...", 1)
+            ensure_cyberpanel_phpmyadmin_ols(restart=True, verify=True)
+            Upgrade.stdOut("phpMyAdmin OLS configuration applied", 1)
+            return True
+        except Exception as e:
+            Upgrade.stdOut("WARNING: phpMyAdmin OLS setup failed: %s" % str(e), 0)
+            return False
+
     @staticmethod
     def enable_autossl_httpd_defaults():
         """Ensure autoSSL/acmeEmail appear once in httpd_config.conf (same logic as custom OLS path)."""
@@ -1604,6 +1617,15 @@ $cfg['Servers'][$i]['port'] = '3306';
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp'
             Upgrade.executioner_silent(command, 'chown phpMyAdmin tmp')
 
+            # Ensure signin file exists (idempotent; fixes 404 if copy failed earlier)
+            signin_dest = os.path.join(pma_dir, 'phpmyadminsignin.php')
+            signin_src = '/usr/local/CyberCP/plogical/phpmyadminsignin.php'
+            if not os.path.isfile(signin_dest) and os.path.isfile(signin_src):
+                try:
+                    shutil.copy2(signin_src, signin_dest)
+                except Exception:
+                    pass
+
             try:
                 from plogical.phpmyadmin_utils import ensure_phpmyadmin_sso
                 ensure_phpmyadmin_sso()
@@ -1611,6 +1633,7 @@ $cfg['Servers'][$i]['port'] = '3306';
                 pass
 
             os.chdir(cwd)
+            Upgrade.ensureCyberPanelPhpmyadminOls()
 
         except Exception as e:
             ErrorSanitizer.log_error_securely(e, 'download_install_phpmyadmin')
@@ -6161,6 +6184,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             if all_services_ok:
                 Upgrade.stdOut("All critical services are running successfully!", 1)
                 Upgrade.stdOut("CyberPanel should now be accessible at https://your-server-ip:8090", 1)
+                Upgrade.ensureCyberPanelPhpmyadminOls()
             else:
                 Upgrade.stdOut("Some critical services are not running properly", 0)
                 Upgrade.stdOut("Please check the logs and consider a server restart", 0)
