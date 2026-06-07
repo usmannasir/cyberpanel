@@ -1502,10 +1502,14 @@
                 </div>
                 <div class="resource-title">{% trans "Disk Usage" %}</div>
                 <div class="resource-value">{{ diskInMB }} MB</div>
+                {% if diskInMBTotal == 0 %}
+                <div class="resource-limit">{% trans "Unlimited" %}</div>
+                {% else %}
                 <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
+                {% endif %}
             </div>
             
             <!-- Bandwidth Card -->
@@ -2620,7 +2624,7 @@
 <!-- Add Chart.js and resource monitoring script -->
 <!-- Note: Chart.js is already loaded in base template, but kept here for specific page functionality -->
 <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}"></script>
-<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}"></script>
+<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}?v={% now 'U' %}"></script>
 
 <!-- Fix modal functionality -->
 <script>
