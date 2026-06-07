@@ -174,6 +174,11 @@ def phpMyAdmin(request):
 
 def generateAccess(request):
     try:
+        try:
+            from plogical.phpmyadmin_utils import ensure_phpmyadmin_sso
+            ensure_phpmyadmin_sso()
+        except BaseException:
+            pass
 
         userID = request.session['userID']
         admin = Administrator.objects.get(id=userID)
@@ -258,8 +263,8 @@ def generateAccess(request):
 def fetchDetailsPHPMYAdmin(request):
     try:
         try:
-            from plogical.phpmyadmin_utils import ensure_phpmyadmin_signin_bridge
-            ensure_phpmyadmin_signin_bridge()
+            from plogical.phpmyadmin_utils import ensure_phpmyadmin_sso
+            ensure_phpmyadmin_sso()
         except BaseException:
             pass
 

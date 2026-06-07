@@ -67,15 +67,17 @@ class DNS:
                     params = {'name': zoneDomain, 'per_page': 50}
                     zones = cf.zones.get(params=params)
 
-                    for zone in sorted(zones, key=lambda v: v['name']):
-                        zone = zone['id']
+                    for zone_obj in sorted(zones, key=lambda v: v['name']):
+                        zone_id = zone_obj['id']
+                        zone_name = zone_obj['name']
 
                         domain = Domains.objects.get(name=zoneDomain)
                         records = Records.objects.filter(domain_id=domain.id)
 
                         for record in records:
-                            DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                          record.ttl)
+                            DNS.createDNSRecordCloudFlare(
+                                cf, zone_id, zone_name, record.name, record.type, record.content,
+                                record.prio, record.ttl)
 
                         return 1, None
 
@@ -88,14 +90,16 @@ class DNS:
                 try:
                     zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
 
-                    zone = zone_info['id']
+                    zone_id = zone_info['id']
+                    zone_name = zone_info['name']
 
                     domain = Domains.objects.get(name=zoneDomain)
                     records = Records.objects.filter(domain_id=domain.id)
 
                     for record in records:
-                        DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                      record.ttl)
+                        DNS.createDNSRecordCloudFlare(
+                            cf, zone_id, zone_name, record.name, record.type, record.content,
+                            record.prio, record.ttl)
 
                     return 1, None
 
@@ -691,12 +695,13 @@ class DNS:
                         params = {'name': domain, 'per_page': 50}
                         zones = cf.zones.get(params=params)
 
-                        for zone in sorted(zones, key=lambda v: v['name']):
-                            zone = zone['id']
+                        for zone_obj in sorted(zones, key=lambda v: v['name']):
+                            zone_id = zone_obj['id']
+                            zone_name = zone_obj['name']
 
-                            DNS.createDNSRecordCloudFlare(cf, zone, "default._domainkey." + topLevelDomain, 'TXT',
-                                                          output[leftIndex:rightIndex], 0,
-                                                          3600)
+                            DNS.createDNSRecordCloudFlare(
+                                cf, zone_id, zone_name, "default._domainkey." + topLevelDomain, 'TXT',
+                                output[leftIndex:rightIndex], 0, 3600)
 
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
@@ -716,37 +721,15 @@ class DNS:
             return 0
 
     @staticmethod
-    def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl, proxied=None):
+    def createDNSRecordCloudFlare(cf, zone, zone_name, name, type, value, priority, ttl, proxied=None):
         try:
-
-            if value.find('DKIM') > -1:
-                value = value.replace('\n\t', '')
-                value = value.replace('"', '')
-
-            # A, AAAA and CNAME records can be proxied in CloudFlare.
-            # Auto-enable proxy when Cloudflare is used, except for mail-related domains.
-            if proxied is None and type in ['A', 'AAAA', 'CNAME']:
-                name_lower = name.lower()
-                mail_prefixes = ('mail.', 'smtp.', 'imap.', 'pop3.', 'pop.', 'autodiscover.', 'webmail.')
-                is_mail_domain = (
-                    any(name_lower.startswith(p) for p in mail_prefixes) or
-                    any(f'.{p.rstrip(".")}.' in name_lower for p in mail_prefixes)
-                )
-                proxied = not is_mail_domain
-            elif type not in ['A', 'AAAA', 'CNAME']:
-                # MX, TXT, etc. cannot be proxied
-                proxied = False
-
-            if ttl > 0:
-                dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
-            else:
-                dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
-            
-            # Only add proxied parameter for proxy-capable record types.
-            if type in ['A', 'AAAA', 'CNAME']:
-                dns_record['proxied'] = proxied
-
-            cf.zones.dns_records.post(zone, data=dns_record)
+            import tldextract
+            from plogical.cloudflare_dns_sync import CloudflareDnsSync
+            if not zone_name:
+                parsed = tldextract.TLDExtract(cache_dir=None)(name)
+                zone_name = parsed.domain + '.' + parsed.suffix
+            CloudflareDnsSync.upsert_dns_record(
+                cf, zone, zone_name, name, type, value, priority, ttl, proxied)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
 
@@ -910,10 +893,11 @@ class DNS:
                         params = {'name': zone.name, 'per_page': 50}
                         zones = cf.zones.get(params=params)
 
-                        for zone in sorted(zones, key=lambda v: v['name']):
-                            zone = zone['id']
+                        for zone_obj in sorted(zones, key=lambda v: v['name']):
+                            zone_id = zone_obj['id']
+                            zone_name = zone_obj['name']
 
-                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl)
+                            DNS.createDNSRecordCloudFlare(cf, zone_id, zone_name, name, type, value, priority, ttl)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
                         logging.CyberCPLogFileWriter.writeToFile(str(e))
@@ -935,141 +919,25 @@ class DNS:
             pass
 
     @staticmethod
+    def cleanupHostDNSRecords(domainName, adminUserName=None):
+        """Remove local PowerDNS and Cloudflare records for one website or child domain."""
+        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+        return CloudflareDnsSync.cleanup_host_dns_records(domainName, adminUserName)
+
+    @staticmethod
+    def pruneOrphanCloudflareHosts(apexDomain, adminUserName):
+        """Remove Cloudflare host records under apex that are not managed in CyberPanel."""
+        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+        return CloudflareDnsSync.prune_orphan_cloudflare_hosts(apexDomain, adminUserName)
+
+    @staticmethod
     def deleteCloudFlareDNSRecords(domainName, adminUserName=None):
         """
         Delete all CloudFlare DNS records for a domain when domain is removed from CyberPanel.
         This function is called automatically when domains/sub-domains are deleted.
         """
-        try:
-            # Check if CloudFlare is configured for this admin user
-            if adminUserName:
-                cfFile = '%s%s' % (DNS.CFPath, adminUserName)
-            else:
-                # Try to find admin user from domain
-                try:
-                    from loginSystem.models import Administrator
-                    from websiteFunctions.models import Websites, ChildDomains
-                    try:
-                        website = Websites.objects.get(domain=domainName)
-                        adminUserName = website.admin.userName
-                    except:
-                        try:
-                            childDomain = ChildDomains.objects.get(domain=domainName)
-                            adminUserName = childDomain.master.admin.userName
-                        except:
-                            return 0, "Could not find admin user for domain"
-                    cfFile = '%s%s' % (DNS.CFPath, adminUserName)
-                except:
-                    return 0, "Could not determine admin user"
-
-            if not os.path.exists(cfFile):
-                # CloudFlare not configured for this user, skip deletion
-                return 1, "CloudFlare not configured"
-
-            # Load CloudFlare credentials
-            data = open(cfFile, 'r').readlines()
-            email = data[0].rstrip('\n')
-            token = data[1].rstrip('\n')
-
-            # Initialize CloudFlare API
-            cf = get_cloudflare_client(email, token)
-
-            try:
-                # Find the zone: for subdomains (e.g. status.newstargeted.com) the zone is the parent (newstargeted.com)
-                zone_id = None
-                zone_name = None
-                is_subdomain = False
-
-                # Try zone = domainName first (main domain)
-                params = {'name': domainName, 'per_page': 50}
-                zones = cf.zones.get(params=params)
-                for z in sorted(zones, key=lambda v: v['name']):
-                    if z['name'] == domainName:
-                        zone_id = z['id']
-                        zone_name = z['name']
-                        break
-
-                # If not found, try parent zone (subdomain case: status.newstargeted.com -> newstargeted.com)
-                if not zone_id and '.' in domainName:
-                    parent_domain = domainName.split('.', 1)[1]
-                    params = {'name': parent_domain, 'per_page': 50}
-                    zones = cf.zones.get(params=params)
-                    for z in sorted(zones, key=lambda v: v['name']):
-                        if z['name'] == parent_domain:
-                            zone_id = z['id']
-                            zone_name = z['name']
-                            is_subdomain = True
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                f'Subdomain {domainName}: using parent zone {zone_name}')
-                            break
-
-                if not zone_id:
-                    return 1, "Domain not found in CloudFlare"
-
-                # Get all DNS records for this zone
-                try:
-                    dns_records = cf.zones.dns_records.get(zone_id)
-                    # For subdomains, delete the FQDN and any deeper names (mail.sub, www.sub, _dmarc.sub, etc.)
-                    if is_subdomain:
-                        base_fqdn = domainName.rstrip('.').lower()
-                        zone_fqdn = (zone_name or '').rstrip('.').lower()
-
-                        def record_to_fqdn(record_name):
-                            n = (record_name or '').rstrip('.').lower()
-                            if not zone_fqdn:
-                                return n
-                            if n == zone_fqdn or n.endswith('.' + zone_fqdn):
-                                return n
-                            return ('%s.%s' % (n, zone_fqdn)).rstrip('.')
-
-                        def record_matches(r):
-                            fqdn = record_to_fqdn(r.get('name') or '')
-                            if fqdn == base_fqdn:
-                                return True
-                            return fqdn.endswith('.' + base_fqdn)
-
-                        to_delete = [r for r in dns_records if record_matches(r)]
-                    else:
-                        to_delete = list(dns_records)
-
-                    deleted_count = 0
-                    for record in to_delete:
-                        try:
-                            cf.zones.dns_records.delete(zone_id, record['id'])
-                            deleted_count += 1
-                        except Exception as e:
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                f'Error deleting CloudFlare DNS record {record["id"]} for {domainName}: {str(e)}')
-
-                    if deleted_count > 0:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            f'Deleted {deleted_count} CloudFlare DNS records for {domainName}')
-                        return 1, f"Deleted {deleted_count} DNS records"
-                    else:
-                        return 1, "No DNS records found to delete"
-
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        f'CloudFlare API error deleting DNS records for {domainName}: {str(e)}')
-                    return 0, str(e)
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        f'Error getting CloudFlare DNS records for {domainName}: {str(e)}')
-                    return 0, str(e)
-
-            except CloudFlare.exceptions.CloudFlareAPIError as e:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f'CloudFlare API error for {domainName}: {str(e)}')
-                return 0, str(e)
-            except Exception as e:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f'Error deleting CloudFlare DNS records for {domainName}: {str(e)}')
-                return 0, str(e)
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                f'Error in deleteCloudFlareDNSRecords for {domainName}: {str(msg)}')
-            return 0, str(msg)
+        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+        return CloudflareDnsSync.delete_cloudflare_records_for_host(domainName, adminUserName)
 
     @staticmethod
     def createDNSZone(virtualHostName, admin):

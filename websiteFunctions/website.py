@@ -2481,14 +2481,16 @@ Require valid-user
             except:
                 apacheBackend = "0"
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            try:
+                openBasedir = int(data.get('openBasedir', 1))
+            except (TypeError, ValueError):
+                openBasedir = 0
 
-            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
-                       + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
+            ProcessUtilities.ensureCommandToken()
+            create_result = virtualHostUtilities.createDomain(
+                masterDomain, domain, phpSelection, path, 1, 1, openBasedir,
+                admin.userName, int(apacheBackend), tempStatusPath, 1, int(alias))
 
-            create_result = subprocess.run(execPath, shell=True, capture_output=True, text=True, timeout=1800)
             st = ''
             try:
                 if os.path.isfile(tempStatusPath):
@@ -2496,24 +2498,19 @@ Require valid-user
                         st = sf.read().strip()
             except BaseException:
                 st = ''
-            out = (create_result.stdout or '').strip()
-            last_line = out.split('\n')[-1] if out else ''
-            cli_ok = last_line.startswith('1,')
-            cli_fail = last_line.startswith('0,')
+
             status_ok = ('Domain successfully created.' in st and '[200]' in st)
             status_fail = ('[404]' in st)
 
-            if create_result.returncode == 0 and (cli_ok or status_ok) and not status_fail:
+            if create_result[0] == 1 or (status_ok and not status_fail):
                 data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
                             'tempStatusPath': tempStatusPath}
             else:
                 err_msg = 'Child domain creation failed.'
-                if cli_fail and len(last_line) > 2:
-                    err_msg = last_line.split(',', 1)[1].strip() or err_msg
+                if create_result[1] and create_result[1] != 'None':
+                    err_msg = create_result[1].strip() or err_msg
                 elif st:
                     err_msg = st.replace('. [404]', '').strip() or err_msg
-                elif create_result.stderr and create_result.stderr.strip():
-                    err_msg = create_result.stderr.strip()[:500]
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': err_msg[:2000],
                             'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
@@ -3091,7 +3088,13 @@ Require valid-user
             websiteName = data['websiteName']
 
             try:
-                DeleteDocRoot = int(data['DeleteDocRoot'])
+                raw_delete_doc_root = data['DeleteDocRoot']
+                if isinstance(raw_delete_doc_root, bool):
+                    DeleteDocRoot = 1 if raw_delete_doc_root else 0
+                elif isinstance(raw_delete_doc_root, str):
+                    DeleteDocRoot = 1 if raw_delete_doc_root.lower() in ('1', 'true', 'yes', 'on') else 0
+                else:
+                    DeleteDocRoot = int(raw_delete_doc_root)
             except:
                 DeleteDocRoot = 0
 
@@ -3100,14 +3103,13 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (
-                str(DeleteDocRoot))
-            deleteStatus, deleteOutput = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
-            if deleteStatus == 0:
+            ProcessUtilities.ensureCommandToken()
+            delete_status, delete_output = virtualHostUtilities.deleteDomain(
+                websiteName, DeleteDocRoot)
+            if delete_status == 0:
                 errorMessage = "Not able to remove virtual host configuration."
-                if isinstance(deleteOutput, str) and deleteOutput.strip() != "":
-                    errorMessage = deleteOutput.strip().splitlines()[-1]
+                if isinstance(delete_output, str) and delete_output.strip() != "":
+                    errorMessage = delete_output.strip()
                 data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': errorMessage}
                 return HttpResponse(json.dumps(data_ret))
 

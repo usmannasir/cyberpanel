@@ -96,8 +96,6 @@ if [[ -f /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh ]]; then
   ln -sf /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh /usr/local/bin/cyberpanel-utils 2>/dev/null || true
 fi
 
-Install_Cyberpanel_Ssh_Login_Banner 2>/dev/null || true
-
 if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
 	watchdog kill
 	rm -f /etc/cyberpanel/watchdog.sh
@@ -242,7 +240,11 @@ else
 fi
 
 if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
-    echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+    if declare -F CyberCP_Write_Lscp_Pythonenv_Conf >/dev/null 2>&1; then
+      CyberCP_Write_Lscp_Pythonenv_Conf
+    else
+      echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+    fi
     # Mirror requirements into system Python for lswsgi (PEP 668 aware). The helper is defined in
     # upgrade_modules/08_main_upgrade.sh and is idempotent; pip --ignore-installed re-resolves
     # already-installed packages without harm. Backported from upstream cyberpanel 13c0697.

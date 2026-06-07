@@ -446,6 +446,26 @@ class mailUtilities:
             return 0, str(msg)
 
     @staticmethod
+    def _opendkimFileContains(filePath, needle):
+        if not os.path.exists(filePath):
+            return False
+        try:
+            data = ProcessUtilities.outputExecutioner('cat %s' % shlex.quote(filePath))
+            return needle in (data or '')
+        except BaseException:
+            return False
+
+    @staticmethod
+    def _opendkimAppendLine(filePath, line, createHeader=False):
+        if createHeader and not os.path.exists(filePath):
+            header = "##### CyberPanel Generated File - Do not edit if you don't know what you are doing."
+            command = 'echo "%s" >> %s' % (header.replace('"', '\\"'), shlex.quote(filePath))
+            ProcessUtilities.executioner(command, None, True)
+        safe_line = line.replace('"', '\\"')
+        command = 'echo -n "%s" >> %s' % (safe_line, shlex.quote(filePath))
+        return ProcessUtilities.executioner(command, None, True)
+
+    @staticmethod
     def setupDKIM(virtualHostName):
         try:
             ## Generate DKIM Keys
@@ -462,8 +482,8 @@ class mailUtilities:
             if not os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
 
                 path = '/etc/opendkim/keys/%s' % (virtualHostName)
-                command = 'mkdir %s' % (path)
-                ProcessUtilities.normalExecutioner(command)
+                command = 'mkdir -p %s' % shlex.quote(path)
+                ProcessUtilities.executioner(command, None, True)
 
                 ## Generate keys
 
@@ -473,82 +493,51 @@ class mailUtilities:
                     command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
                     virtualHostName, virtualHostName)
 
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.executioner(command, None, True)
 
 
                 ## Fix permissions
 
                 command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.executioner(command, None, True)
 
                 command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.executioner(command, None, True)
 
                 command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.executioner(command, None, True)
 
             ## Edit key file
 
             keyTable = "/etc/opendkim/KeyTable"
             configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
 
-            if not os.path.exists(keyTable):
-                writeToFile = open(keyTable, 'a')
-                writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.\n")
-                writeToFile.close()
-
-            data = open(keyTable, 'r').read()
-
-            if data.find("default._domainkey." + actualDomain) == -1:
-
-                writeToFile = open(keyTable, 'a')
-                writeToFile.write(configToWrite)
-                writeToFile.close()
+            if not mailUtilities._opendkimFileContains(keyTable, "default._domainkey." + actualDomain):
+                if mailUtilities._opendkimAppendLine(keyTable, configToWrite, createHeader=not os.path.exists(keyTable)) != 1:
+                    return 0, 'Failed to update OpenDKIM KeyTable via privileged command.'
 
             ## Edit signing table
 
             signingTable = "/etc/opendkim/SigningTable"
             configToWrite = "*@" + actualDomain + " default._domainkey." + actualDomain + "\n"
 
-            if not os.path.exists(signingTable):
-                writeToFile = open(signingTable, 'a')
-                writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.\n")
-                writeToFile.close()
-
-            data = open(signingTable, 'r').read()
-
-            if data.find("default._domainkey." + actualDomain) == -1:
-
-                writeToFile = open(signingTable, 'a')
-                writeToFile.write(configToWrite)
-                writeToFile.close()
+            if not mailUtilities._opendkimFileContains(signingTable, "default._domainkey." + actualDomain):
+                if mailUtilities._opendkimAppendLine(signingTable, configToWrite, createHeader=not os.path.exists(signingTable)) != 1:
+                    return 0, 'Failed to update OpenDKIM SigningTable via privileged command.'
 
             ## Trusted hosts
 
             trustedHosts = "/etc/opendkim/TrustedHosts"
             configToWrite = actualDomain + "\n"
 
-            if not os.path.exists(trustedHosts):
-
-                writeToFile = open(trustedHosts, 'a')
-                writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.\n")
-                writeToFile.close()
-
-            data = open(trustedHosts, 'r').read()
-
-            if data.find(actualDomain) == -1:
-
-                writeToFile = open(trustedHosts, 'a')
-                writeToFile.write(configToWrite)
-                writeToFile.close()
+            if not mailUtilities._opendkimFileContains(trustedHosts, actualDomain):
+                if mailUtilities._opendkimAppendLine(trustedHosts, configToWrite, createHeader=not os.path.exists(trustedHosts)) != 1:
+                    return 0, 'Failed to update OpenDKIM TrustedHosts via privileged command.'
 
             ## Restart Postfix and OpenDKIM
 
-            command = "systemctl restart opendkim"
-            subprocess.call(shlex.split(command))
-
-            command = "systemctl restart postfix"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner("systemctl restart opendkim", None, True)
+            ProcessUtilities.executioner("systemctl restart postfix", None, True)
 
             return 1, "None"
 

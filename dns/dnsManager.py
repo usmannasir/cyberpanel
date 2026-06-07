@@ -1057,7 +1057,7 @@ class DNSManager:
                     pass
                 proxied = bool(rec.get('proxy', False) and rec.get('proxiable', True))
                 try:
-                    DNS.createDNSRecordCloudFlare(cf, zone_id, name, rec_type, content, priority, ttl_int, proxied=proxied)
+                    DNS.createDNSRecordCloudFlare(cf, zone_id, zone_domain, name, rec_type, content, priority, ttl_int, proxied=proxied)
                     imported += 1
                 except BaseException as e:
                     failed.append({'name': name, 'error': str(e)})
@@ -1303,7 +1303,7 @@ class DNSManager:
 
                 if (name_lower, 'A') not in existing and server_ip:
                     try:
-                        DNS.createDNSRecordCloudFlare(cf, zone_id, hostname, 'A', server_ip, 0, ttl)
+                        DNS.createDNSRecordCloudFlare(cf, zone_id, zone_domain, hostname, 'A', server_ip, 0, ttl)
                         existing.add((name_lower, 'A'))
                         existing_types_by_name.setdefault(name_lower, set()).add('A')
                         added += 1
@@ -1314,7 +1314,7 @@ class DNSManager:
                     skipped += 1
                 if server_ipv6 and (name_lower, 'AAAA') not in existing:
                     try:
-                        DNS.createDNSRecordCloudFlare(cf, zone_id, hostname, 'AAAA', server_ipv6, 0, ttl)
+                        DNS.createDNSRecordCloudFlare(cf, zone_id, zone_domain, hostname, 'AAAA', server_ipv6, 0, ttl)
                         existing.add((name_lower, 'AAAA'))
                         existing_types_by_name.setdefault(name_lower, set()).add('AAAA')
                         added += 1
@@ -1445,7 +1445,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentA, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentA, 0, ttl)
 
                 elif recordType == "MX":
 
@@ -1461,7 +1461,7 @@ class DNSManager:
                     recordContentMX = data['recordContentMX']
                     priority = data['priority']
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentMX, priority, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentMX, priority, ttl)
 
                 elif recordType == "AAAA":
 
@@ -1476,7 +1476,7 @@ class DNSManager:
 
                     recordContentAAAA = data['recordContentAAAA']  ## IP or pointing value
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentAAAA, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentAAAA, 0, ttl)
 
                 elif recordType == "CNAME":
 
@@ -1491,7 +1491,7 @@ class DNSManager:
 
                     recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCNAME, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentCNAME, 0, ttl)
 
                 elif recordType == "SPF":
 
@@ -1506,7 +1506,7 @@ class DNSManager:
 
                     recordContentSPF = data['recordContentSPF']  ## IP or pointing value
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentSPF, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentSPF, 0, ttl)
 
                 elif recordType == "TXT":
 
@@ -1521,13 +1521,13 @@ class DNSManager:
 
                     recordContentTXT = data['recordContentTXT']  ## IP or pointing value
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentTXT, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentTXT, 0, ttl)
 
                 elif recordType == "SOA":
 
                     recordContentSOA = data['recordContentSOA']
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, recordName, recordType, recordContentSOA, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, recordName, recordType, recordContentSOA, 0, ttl)
 
                 elif recordType == "NS":
 
@@ -1542,7 +1542,7 @@ class DNSManager:
                     else:
                         recordContentNS = recordContentNS + "." + zoneDomain
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, recordName, recordType, recordContentNS, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, recordName, recordType, recordContentNS, 0, ttl)
 
                 elif recordType == "SRV":
 
@@ -1558,7 +1558,7 @@ class DNSManager:
                     recordContentSRV = data['recordContentSRV']
                     priority = data['priority']
 
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentSRV, priority, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentSRV, priority, ttl)
 
                 elif recordType == "CAA":
                     if recordName == "@":
@@ -1570,7 +1570,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
                     recordContentCAA = data['recordContentCAA']  ## IP or pointing value
-                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCAA, 0, ttl)
+                    DNS.createDNSRecordCloudFlare(cf, zone, zoneDomain, value, recordType, recordContentCAA, 0, ttl)
 
                 final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)

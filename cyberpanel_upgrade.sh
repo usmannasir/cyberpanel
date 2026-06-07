@@ -35,6 +35,8 @@ UPGRADE_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-/usr/local/cyberpanel_upg
 MOD_DIR=""
 if [[ -d "$UPGRADE_SCRIPT_DIR/upgrade_modules" ]]; then
   MOD_DIR="$UPGRADE_SCRIPT_DIR/upgrade_modules"
+elif [[ -d /usr/local/CyberCP/upgrade_modules ]]; then
+  MOD_DIR="/usr/local/CyberCP/upgrade_modules"
 else
   MOD_DIR="/tmp/cyberpanel_upgrade_modules_$$"
   mkdir -p "$MOD_DIR"
