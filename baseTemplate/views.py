@@ -720,9 +720,19 @@ def getRecentSSHLogins(request):
         import re, time
         from collections import OrderedDict
 
-        # Run 'last -n 20' to get recent SSH logins
+        # Pagination params
         try:
-            output = ProcessUtilities.outputExecutioner('last -n 20')
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 20))))
+        except (ValueError, TypeError):
+            per_page = 20
+
+        # Run 'last -n 500' to get enough entries for pagination
+        try:
+            output = ProcessUtilities.outputExecutioner('last -n 500')
         except Exception as e:
             return HttpResponse(json.dumps({'error': 'Failed to run last: %s' % str(e)}), content_type='application/json', status=500)
 
@@ -744,25 +754,57 @@ def getRecentSSHLogins(request):
             date_match = re.search(r'([A-Za-z]{3} [A-Za-z]{3} +\d+ [\d:]+)', line)
             date_str = date_match.group(1) if date_match else ''
             session_info = ''
-            if '-' in line:
-                # Session ended
-                session_info = line.split('-')[-1].strip()
-            elif 'still logged in' in line:
+            is_active = False
+            if 'still logged in' in line:
                 session_info = 'still logged in'
-            # GeoIP lookup (cache per request)
+                is_active = True
+            elif '-' in line:
+                # Session ended - parse the end time and duration
+                # Format: "Tue May 27 11:34 - 13:47  (02:13)" or "crash (00:40)"
+                end_part = line.split('-')[-1].strip()
+                # Check if it's a crash or normal logout
+                if 'crash' in end_part.lower():
+                    # Extract crash duration if available
+                    crash_match = re.search(r'crash\s*\(([^)]+)\)', end_part, re.IGNORECASE)
+                    if crash_match:
+                        session_info = f"crash ({crash_match.group(1)})"
+                    else:
+                        session_info = 'crash'
+                else:
+                    # Normal session end - try to extract duration
+                    duration_match = re.search(r'\(([^)]+)\)', end_part)
+                    if duration_match:
+                        session_info = f"ended ({duration_match.group(1)})"
+                    else:
+                        # Just show the end time
+                        time_match = re.search(r'([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+[\d:]+)', end_part)
+                        if time_match:
+                            session_info = f"ended at {time_match.group(1)}"
+                        else:
+                            session_info = 'ended'
+                is_active = False
+            # GeoIP lookup (cache per request) - support both IPv4 and IPv6
             country = flag = ''
-            if re.match(r'\d+\.\d+\.\d+\.\d+', ip) and ip != '127.0.0.1':
+            # Check if IP is IPv4
+            is_ipv4 = re.match(r'^\d+\.\d+\.\d+\.\d+$', ip)
+            # Check if IP is IPv6 (simplified check)
+            is_ipv6 = ':' in ip and not is_ipv4
+            
+            if is_ipv4 and ip != '127.0.0.1':
                 if ip in ip_cache:
                     country, flag = ip_cache[ip]
                 else:
                     try:
-                        geo = requests.get(f'http://ip-api.com/json/{ip}', timeout=2).json()
+                        geo = requests.get(f'http://ip-api.com/json/{ip}', timeout=1).json()
                         country = geo.get('countryCode', '')
                         flag = f"https://flagcdn.com/24x18/{country.lower()}.png" if country else ''
                         ip_cache[ip] = (country, flag)
                     except Exception:
                         country, flag = '', ''
-            elif ip == '127.0.0.1':
+            elif is_ipv6 and ip != '::1':
+                # IPv6 - set flag to indicate IPv6 (GeoIP API may not support IPv6 well)
+                country, flag = 'IPv6', ''
+            elif ip == '127.0.0.1' or ip == '::1':
                 country, flag = 'Local', ''
             logins.append({
                 'user': user,
@@ -771,9 +813,22 @@ def getRecentSSHLogins(request):
                 'flag': flag,
                 'date': date_str,
                 'session': session_info,
+                'is_active': is_active,
                 'raw': line
             })
-        return HttpResponse(json.dumps({'logins': logins}), content_type='application/json')
+        total = len(logins)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logins = logins[start:end]
+        return HttpResponse(json.dumps({
+            'logins': paginated_logins,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -787,18 +842,33 @@ def getRecentSSHLogs(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        # Pagination params
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 25))))
+        except (ValueError, TypeError):
+            per_page = 25
+
         from plogical.processUtilities import ProcessUtilities
+        import re
         distro = ProcessUtilities.decideDistro()
         if distro in [ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20]:
             log_path = '/var/log/auth.log'
         else:
             log_path = '/var/log/secure'
         try:
-            output = ProcessUtilities.outputExecutioner(f'tail -n 100 {log_path}')
+            output = ProcessUtilities.outputExecutioner(f'tail -n 500 {log_path}')
         except Exception as e:
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
         lines = output.split('\n')
         logs = []
+        # IP address regex patterns (IPv4)
+        ipv4_pattern = r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+        
         for line in lines:
             if not line.strip():
                 continue
@@ -809,8 +879,41 @@ def getRecentSSHLogs(request):
             else:
                 timestamp = ''
                 message = line
-            logs.append({'timestamp': timestamp, 'message': message, 'raw': line})
-        return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
+            
+            # Extract IP address from the log line
+            ip_address = None
+            ip_matches = re.findall(ipv4_pattern, line)
+            if ip_matches:
+                # Filter out localhost and common non-external IPs
+                for ip in ip_matches:
+                    if ip not in ['127.0.0.1', '0.0.0.0', '::1'] and not ip.startswith('192.168.') and not ip.startswith('10.') and not ip.startswith('172.'):
+                        ip_address = ip
+                        break
+                # If no external IP found, use the first match anyway (might be needed for internal attacks)
+                if not ip_address and ip_matches:
+                    ip_address = ip_matches[0]
+            
+            logs.append({
+                'timestamp': timestamp, 
+                'message': message, 
+                'raw': line,
+                'ip_address': ip_address
+            })
+        # Reverse so newest logs appear first (page 1 = most recent)
+        logs.reverse()
+        total = len(logs)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logs = logs[start:end]
+        return HttpResponse(json.dumps({
+            'logs': paginated_logs,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -1282,6 +1385,12 @@ def getTopProcesses(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        from django.core.cache import cache
+        cache_key = 'cp_top_processes'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return HttpResponse(json.dumps(cached), content_type='application/json')
         
         import subprocess
         import tempfile
@@ -1322,10 +1431,15 @@ def getTopProcesses(request):
                     }
                     processes.append(process)
             
-            return HttpResponse(json.dumps({
+            payload = {
                 'status': 1,
                 'processes': processes
-            }), content_type='application/json')
+            }
+            try:
+                cache.set(cache_key, payload, 8)
+            except Exception:
+                pass
+            return HttpResponse(json.dumps(payload), content_type='application/json')
             
         finally:
             # Clean up temporary file
@@ -1336,3 +1450,5 @@ def getTopProcesses(request):
                 
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+

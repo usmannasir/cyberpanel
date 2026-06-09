@@ -4,6 +4,7 @@
 
 /* Utilities */
 
+
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -35,6 +36,31 @@ function randomPassword(length) {
 /* Java script code to monitor system status */
 
 var app = angular.module('CyberCP', []);
+
+/* Dashboard API helpers: avoid worker exhaustion from poll storms */
+var DASH_HTTP_TIMEOUT = 25000;
+var dashPollInFlight = {};
+
+function dashGet($http, url, extraConfig) {
+    var cfg = extraConfig || {};
+    cfg.timeout = DASH_HTTP_TIMEOUT;
+    return $http.get(url, cfg);
+}
+
+function dashPollOnce($http, key, url, onSuccess) {
+    if (dashPollInFlight[key]) {
+        return;
+    }
+    dashPollInFlight[key] = true;
+    dashGet($http, url).then(function (response) {
+        dashPollInFlight[key] = false;
+        if (typeof onSuccess === 'function') {
+            onSuccess(response);
+        }
+    }, function () {
+        dashPollInFlight[key] = false;
+    });
+}
 
 var globalScope;
 
@@ -115,31 +141,187 @@ function getWebsiteName(domain) {
     }
 }
 
+/* Smooth Overview metric display (CPU/RAM/Disk cards) */
+var cpMetricAnimator = {
+    lerpFactor: 0.12,
+    snapThreshold: 0.5,
+    animFrameId: null,
+    targets: { cpu: null, ram: null, disk: null },
+    display: { cpu: null, ram: null, disk: null },
+
+    reset: function () {
+        this.cancel();
+        this.targets = { cpu: null, ram: null, disk: null };
+        this.display = { cpu: null, ram: null, disk: null };
+    },
+
+    cancel: function () {
+        if (this.animFrameId !== null) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+    },
+
+    setTargets: function (cpu, ram, disk) {
+        this.targets.cpu = cpu;
+        this.targets.ram = ram;
+        this.targets.disk = disk;
+        if (this.display.cpu === null) {
+            this.display.cpu = cpu;
+        }
+        if (this.display.ram === null) {
+            this.display.ram = ram;
+        }
+        if (this.display.disk === null) {
+            this.display.disk = disk;
+        }
+    },
+
+    stepToward: function (current, target) {
+        if (target === null || target === undefined) {
+            return current;
+        }
+        if (current === null || current === undefined) {
+            return target;
+        }
+        var diff = target - current;
+        if (Math.abs(diff) <= this.snapThreshold) {
+            return target;
+        }
+        return current + (diff * this.lerpFactor);
+    },
+
+  tick: function ($scope) {
+        var self = this;
+        var keys = ['cpu', 'ram', 'disk'];
+        var done = true;
+
+        keys.forEach(function (key) {
+            var target = self.targets[key];
+            if (target === null || target === undefined || isNaN(target)) {
+                target = 0;
+            }
+            var next = self.stepToward(self.display[key], target);
+            if (Math.abs(target - next) > self.snapThreshold) {
+                done = false;
+            }
+            self.display[key] = next;
+        });
+
+        $scope.displayCpuUsage = Math.round(self.display.cpu || 0);
+        $scope.displayRamUsage = Math.round(self.display.ram || 0);
+        $scope.displayDiskUsage = Math.round(self.display.disk || 0);
+
+        if (!done) {
+            self.animFrameId = requestAnimationFrame(function () {
+                self.tick($scope);
+            });
+        } else {
+            self.animFrameId = null;
+            $scope.displayCpuUsage = Math.round(self.targets.cpu || 0);
+            $scope.displayRamUsage = Math.round(self.targets.ram || 0);
+            $scope.displayDiskUsage = Math.round(self.targets.disk || 0);
+            self.display.cpu = self.targets.cpu;
+            self.display.ram = self.targets.ram;
+            self.display.disk = self.targets.disk;
+        }
+
+        if (!$scope.$$phase) {
+            $scope.$apply();
+        }
+    },
+
+    animateTo: function ($scope, cpu, ram, disk) {
+        this.cancel();
+        this.setTargets(cpu, ram, disk);
+        this.tick($scope);
+    }
+};
+
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
-    //getStuff();
+    $scope.uptimeLoaded = false;
+    $scope.uptime = 'Loading...';
+    $scope.statusError = false;
+    $scope.displayCpuUsage = undefined;
+    $scope.displayRamUsage = undefined;
+    $scope.displayDiskUsage = undefined;
+    var statusPollTimer = null;
+    var statusReqPending = false;
+    var STATUS_REFRESH_MS = 60000;
 
-    function getStuff() {
-
-
-        url = "/base/getSystemStatus";
-
-        $http.get(url).then(ListInitialData, cantLoadInitialData);
-
-
-        function ListInitialData(response) {
-
-            $scope.cpuUsage = response.data.cpuUsage;
-            $scope.ramUsage = response.data.ramUsage;
-            $scope.diskUsage = response.data.diskUsage;
-
+    function scheduleStatusRefresh() {
+        if (statusPollTimer) {
+            $timeout.cancel(statusPollTimer);
         }
+        statusPollTimer = $timeout(getStuff, STATUS_REFRESH_MS);
+    }
 
-        function cantLoadInitialData(response) {
+    function resetDisplayMetrics() {
+        cpMetricAnimator.reset();
+        $scope.displayCpuUsage = undefined;
+        $scope.displayRamUsage = undefined;
+        $scope.displayDiskUsage = undefined;
+    }
+
+    getStuff();
+
+    $scope.getSystemStatus = function() {
+        getStuff(true);
+    };
+
+    $scope.retryStatus = function() {
+        $scope.statusError = false;
+        resetDisplayMetrics();
+        $scope.cpuCores = undefined;
+        $scope.ramTotalMB = undefined;
+        $scope.diskTotalGB = undefined;
+        $scope.diskFreeGB = undefined;
+        getStuff(true);
+    };
+
+    $scope.$on('$destroy', function () {
+        cpMetricAnimator.cancel();
+        if (statusPollTimer) {
+            $timeout.cancel(statusPollTimer);
         }
+    });
 
-        //$timeout(getStuff, 2000);
+    function getStuff(force) {
+        if (statusReqPending && !force) {
+            return;
+        }
+        statusReqPending = true;
 
+        dashGet($http, '/base/getSystemStatus').then(function (response) {
+            statusReqPending = false;
+            if (response && response.data) {
+                $scope.statusError = false;
+                cpMetricAnimator.animateTo(
+                    $scope,
+                    response.data.cpuUsage,
+                    response.data.ramUsage,
+                    response.data.diskUsage
+                );
+                $scope.cpuCores = response.data.cpuCores;
+                $scope.ramTotalMB = response.data.ramTotalMB;
+                $scope.diskTotalGB = response.data.diskTotalGB;
+                $scope.diskFreeGB = response.data.diskFreeGB;
+                $scope.uptime = response.data.uptime || 'N/A';
+                $scope.uptimeLoaded = true;
+            } else {
+                $scope.uptime = 'Unavailable';
+                $scope.uptimeLoaded = true;
+                $scope.statusError = true;
+            }
+            scheduleStatusRefresh();
+        }, function () {
+            statusReqPending = false;
+            $scope.uptime = 'Unavailable';
+            $scope.uptimeLoaded = true;
+            $scope.statusError = true;
+            scheduleStatusRefresh();
+        });
     }
 });
 
@@ -387,7 +569,7 @@ app.controller('loadAvg', function ($scope, $http, $timeout) {
             console.log("Can't get load average data");
         }
 
-        //$timeout(getStuff, 2000);
+        //$timeout(getStuff, 60000); // was 2s; reduced panel load
 
     }
 });
@@ -497,7 +679,7 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
             console.log("not good");
         }
 
-        $timeout(getStuff, 2000);
+        $timeout(getStuff, 60000); // was 2s; reduced panel load
 
     }
 
@@ -562,10 +744,20 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
         $scope.updateFinish = true;
         $scope.couldNotConnect = true;
 
+        var data = {
+            branchSelect: document.getElementById("branchSelect").value,
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
 
         url = "/base/upgrade";
-
-        $http.get(url).then(ListInitialData, cantLoadInitialData);
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
@@ -618,6 +810,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
+            console.log(response.data.upgradeLog);
 
 
             if (response.data.upgradeStatus === 1) {
@@ -635,7 +828,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                 } else {
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
-                    $timeout(getUpgradeStatus, 2000);
+                    timeout(getUpgradeStatus, 2000);
                 }
             }
 
@@ -696,7 +889,1272 @@ app.controller('designtheme', function ($scope, $http, $timeout) {
             console.log(response);
         }
 
-        //$timeout(getStuff, 2000);
+        //$timeout(getStuff, 60000); // was 2s; reduced panel load
 
+    };
+});
+
+
+app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.ExecutionStatus = true;
+    $scope.ReportStatus = true;
+    $scope.OnboardineDone = true;
+    
+    var statusTimer = null;
+
+    function statusFunc() {
+        $scope.cyberpanelLoading = false;
+        $scope.ExecutionStatus = false;
+        var url = "/emailPremium/statusFunc";
+
+        var data = {
+            statusFile: statusFile
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.status === 1) {
+                if (response.data.abort === 1) {
+                    $scope.functionProgress = {"width": "100%"};
+                    $scope.functionStatus = response.data.currentStatus;
+                    $scope.cyberpanelLoading = true;
+                    $scope.OnboardineDone = false;
+                    if (statusTimer) {
+                        $timeout.cancel(statusTimer);
+                        statusTimer = null;
+                    }
+                } else {
+                    $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                    $scope.functionStatus = response.data.currentStatus;
+                    statusTimer = $timeout(statusFunc, 3000);
+                }
+
+            } else {
+                $scope.cyberpanelLoading = true;
+                $scope.functionStatus = response.data.error_message;
+                $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                if (statusTimer) {
+                    $timeout.cancel(statusTimer);
+                    statusTimer = null;
+                }
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+            $scope.functionStatus = 'Could not connect to server, please refresh this page.';
+            $timeout.cancel();
+        }
+    }
+
+    $scope.RunOnboarding = function () {
+        $scope.cyberpanelLoading = false;
+        $scope.OnboardineDone = true;
+
+        var url = "/base/runonboarding";
+
+        var data = {
+            hostname: $scope.hostname,
+            rDNSCheck: $scope.rDNSCheck
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                statusFunc();
+
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    };
+
+    $scope.RestartCyberPanel = function () {
+        $scope.cyberpanelLoading = false;
+
+        var url = "/base/RestartCyberPanel";
+
+        var data = {
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+        $scope.cyberpanelLoading = true;
+        new PNotify({
+                    title: 'Success',
+                    text: 'Refresh your browser after 3 seconds to fetch new SSL.',
+                    type: 'success'
+                });
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    };
+
+});
+
+app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
+    // Card values
+    $scope.totalUsers = 0;
+    $scope.totalSites = 0;
+    $scope.totalWPSites = 0;
+    $scope.totalDBs = 0;
+    $scope.totalEmails = 0;
+    $scope.totalFTPUsers = 0;
+    $scope.statsLoaded = false;
+
+    // Hide system charts for non-admin users
+    $scope.hideSystemCharts = false;
+
+    // Top Processes
+    $scope.topProcesses = [];
+    $scope.topProcessesPaginated = [];
+    $scope.topProcessesCurrentPage = 1;
+    $scope.topProcessesPerPage = 5;
+    $scope.topProcessesGoToPageInput = 1;
+    $scope.loadingTopProcesses = true;
+    $scope.errorTopProcesses = '';
+
+    $scope.getTopProcessesTotalPages = function() {
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.topProcesses || []).length / perPage);
+    };
+
+    $scope.getTopProcessesStart = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return ($scope.topProcessesCurrentPage - 1) * perPage + 1;
+    };
+
+    $scope.getTopProcessesEnd = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var end = $scope.topProcessesCurrentPage * perPage;
+        return Math.min(end, $scope.topProcesses.length);
+    };
+
+    $scope.updateTopProcessesPaginated = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            $scope.topProcessesPaginated = [];
+            return;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if ($scope.topProcessesCurrentPage > totalPages) {
+            $scope.topProcessesCurrentPage = totalPages || 1;
+        }
+        if ($scope.topProcessesCurrentPage < 1) {
+            $scope.topProcessesCurrentPage = 1;
+        }
+        $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        var start = ($scope.topProcessesCurrentPage - 1) * perPage;
+        var end = start + perPage;
+        $scope.topProcessesPaginated = $scope.topProcesses.slice(start, end);
+    };
+
+    $scope.topProcessesPrevPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage - 1);
+    };
+
+    $scope.topProcessesNextPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage + 1);
+    };
+
+    $scope.topProcessesChangePerPage = function() {
+        $scope.topProcessesPerPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        $scope.topProcessesCurrentPage = 1;
+        $scope.topProcessesGoToPageInput = 1;
+        $scope.updateTopProcessesPaginated();
+    };
+
+    $scope.topProcessesGoToPage = function(page) {
+        page = parseInt(page, 10);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.topProcessesCurrentPage = page;
+            $scope.updateTopProcessesPaginated();
+        } else {
+            $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        }
+    };
+
+    $scope.topProcessesGoToPageNumber = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesGoToPageInput);
+    };
+
+    $scope.refreshTopProcesses = function() {
+        if (dashPollInFlight.topProcesses) {
+            return;
+        }
+        dashPollInFlight.topProcesses = true;
+        $scope.loadingTopProcesses = true;
+        dashGet($http, '/base/getTopProcesses').then(function (response) {
+            dashPollInFlight.topProcesses = false;
+            $scope.loadingTopProcesses = false;
+            if (response.data && response.data.status === 1 && response.data.processes) {
+                $scope.topProcesses = response.data.processes;
+                $scope.topProcessesCurrentPage = 1;
+                $scope.topProcessesGoToPageInput = 1;
+                $scope.updateTopProcessesPaginated();
+            } else {
+                $scope.topProcesses = [];
+                $scope.topProcessesPaginated = [];
+                $scope.topProcessesGoToPageInput = 1;
+            }
+        }, function () {
+            dashPollInFlight.topProcesses = false;
+            $scope.loadingTopProcesses = false;
+            $scope.errorTopProcesses = 'Failed to load top processes.';
+            $scope.topProcesses = [];
+            $scope.topProcessesPaginated = [];
+            $scope.topProcessesGoToPageInput = 1;
+        });
+    };
+
+    // SSH Logins
+    $scope.sshLogins = [];
+    $scope.sshLoginsPaginated = [];
+    $scope.sshLoginsCurrentPage = 1;
+    $scope.sshLoginsPerPage = 5;
+    $scope.sshLoginsGoToPageInput = 1;
+    $scope.loadingSSHLogins = true;
+    $scope.errorSSHLogins = '';
+    
+    $scope.getSSHLoginsTotalPages = function() {
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogins || []).length / perPage);
+    };
+    
+    $scope.getSSHLoginsStart = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return ($scope.sshLoginsCurrentPage - 1) * perPage + 1;
+    };
+    
+    $scope.getSSHLoginsEnd = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var end = $scope.sshLoginsCurrentPage * perPage;
+        return Math.min(end, $scope.sshLogins.length);
+    };
+    
+    $scope.updateSSHLoginsPaginated = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            $scope.sshLoginsPaginated = [];
+            return;
+        }
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if ($scope.sshLoginsCurrentPage > totalPages) {
+            $scope.sshLoginsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLoginsCurrentPage < 1) {
+            $scope.sshLoginsCurrentPage = 1;
+        }
+        $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
+        var start = ($scope.sshLoginsCurrentPage - 1) * perPage;
+        var end = start + perPage;
+        $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
+    };
+    
+    $scope.sshLoginsPrevPage = function() {
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage - 1);
+    };
+    
+    $scope.sshLoginsNextPage = function() {
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage + 1);
+    };
+
+    $scope.sshLoginsChangePerPage = function() {
+        $scope.sshLoginsPerPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        $scope.sshLoginsCurrentPage = 1;
+        $scope.sshLoginsGoToPageInput = 1;
+        $scope.updateSSHLoginsPaginated();
+    };
+
+    $scope.sshLoginsGoToPage = function(page) {
+        page = parseInt(page, 10);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.sshLoginsCurrentPage = page;
+            $scope.updateSSHLoginsPaginated();
+        } else {
+            $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
+        }
+    };
+    
+    $scope.sshLoginsGoToPageNumber = function() {
+        $scope.sshLoginsGoToPage($scope.sshLoginsGoToPageInput);
+    };
+    
+    $scope.refreshSSHLogins = function() {
+        $scope.loadingSSHLogins = true;
+        $http.get('/base/getRecentSSHLogins').then(function (response) {
+            $scope.loadingSSHLogins = false;
+            if (response.data && response.data.logins && Array.isArray(response.data.logins)) {
+                $scope.sshLogins = response.data.logins;
+                $scope.sshLoginsCurrentPage = 1;
+                $scope.sshLoginsGoToPageInput = 1;
+                $scope.updateSSHLoginsPaginated();
+            } else {
+                $scope.sshLogins = [];
+                $scope.sshLoginsPaginated = [];
+                $scope.sshLoginsGoToPageInput = 1;
+            }
+        }, function () {
+            $scope.loadingSSHLogins = false;
+            $scope.errorSSHLogins = 'Failed to load SSH logins.';
+            $scope.sshLogins = [];
+            $scope.sshLoginsPaginated = [];
+            $scope.sshLoginsGoToPageInput = 1;
+        });
+    };
+
+    // SSH Logs
+    $scope.sshLogs = [];
+    $scope.sshLogsPaginated = [];
+    $scope.sshLogsCurrentPage = 1;
+    $scope.sshLogsPerPage = 5;
+    $scope.sshLogsGoToPageInput = 1;
+    $scope.loadingSSHLogs = true;
+    $scope.errorSSHLogs = '';
+    $scope.securityAlerts = [];
+    $scope.loadingSecurityAnalysis = false;
+    
+    $scope.getSSHLogsTotalPages = function() {
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogs || []).length / perPage);
+    };
+    
+    $scope.getSSHLogsStart = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return ($scope.sshLogsCurrentPage - 1) * perPage + 1;
+    };
+    
+    $scope.getSSHLogsEnd = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var end = $scope.sshLogsCurrentPage * perPage;
+        return Math.min(end, $scope.sshLogs.length);
+    };
+    
+    $scope.updateSSHLogsPaginated = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            $scope.sshLogsPaginated = [];
+            return;
+        }
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if ($scope.sshLogsCurrentPage > totalPages) {
+            $scope.sshLogsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLogsCurrentPage < 1) {
+            $scope.sshLogsCurrentPage = 1;
+        }
+        $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
+        var start = ($scope.sshLogsCurrentPage - 1) * perPage;
+        var end = start + perPage;
+        $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
+    };
+    
+    $scope.sshLogsPrevPage = function() {
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage - 1);
+    };
+    
+    $scope.sshLogsNextPage = function() {
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage + 1);
+    };
+
+    $scope.sshLogsChangePerPage = function() {
+        $scope.sshLogsPerPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        $scope.sshLogsCurrentPage = 1;
+        $scope.sshLogsGoToPageInput = 1;
+        $scope.updateSSHLogsPaginated();
+    };
+
+    $scope.sshLogsGoToPage = function(page) {
+        page = parseInt(page, 10);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.sshLogsCurrentPage = page;
+            $scope.updateSSHLogsPaginated();
+        } else {
+            $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
+        }
+    };
+    
+    $scope.sshLogsGoToPageNumber = function() {
+        $scope.sshLogsGoToPage($scope.sshLogsGoToPageInput);
+    };
+    
+    $scope.refreshSSHLogs = function() {
+        $scope.loadingSSHLogs = true;
+        $http.get('/base/getRecentSSHLogs').then(function (response) {
+            $scope.loadingSSHLogs = false;
+            if (response.data && response.data.logs && Array.isArray(response.data.logs)) {
+                $scope.sshLogs = response.data.logs;
+                $scope.sshLogsCurrentPage = 1;
+                $scope.sshLogsGoToPageInput = 1;
+                $scope.updateSSHLogsPaginated();
+                $scope.analyzeSSHSecurity();
+            } else {
+                $scope.sshLogs = [];
+                $scope.sshLogsPaginated = [];
+                $scope.sshLogsGoToPageInput = 1;
+            }
+        }, function () {
+            $scope.loadingSSHLogs = false;
+            $scope.errorSSHLogs = 'Failed to load SSH logs.';
+            $scope.sshLogs = [];
+            $scope.sshLogsPaginated = [];
+            $scope.sshLogsGoToPageInput = 1;
+        });
+    };
+    
+    // Security Analysis
+    $scope.showAddonRequired = false;
+    $scope.addonInfo = {};
+    $scope.blockingIP = null;
+    $scope.blockedIPs = {};
+
+    function notifyUser(title, text, type, delay) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: title,
+                text: text,
+                type: type || 'info',
+                delay: delay || 5000
+            });
+        }
+    }
+
+    function parseBanResponse(responseData) {
+        if (typeof responseData === 'string') {
+            try {
+                return JSON.parse(responseData);
+            } catch (e) {
+                return null;
+            }
+        }
+        return responseData;
+    }
+
+    function banIPAddress(ipAddress, reason, onSuccess) {
+        ipAddress = String(ipAddress || '').trim();
+        if (!ipAddress) {
+            notifyUser('Error', 'No IP address provided', 'error');
+            return;
+        }
+
+        var ipPattern = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
+        if (!ipPattern.test(ipAddress)) {
+            notifyUser('Error', 'Invalid IP address format: ' + ipAddress, 'error');
+            return;
+        }
+
+        if ($scope.blockingIP === ipAddress) {
+            return;
+        }
+
+        if ($scope.blockedIPs && $scope.blockedIPs[ipAddress]) {
+            notifyUser('Info', 'IP address ' + ipAddress + ' is already banned', 'info', 3000);
+            return;
+        }
+
+        $scope.blockingIP = ipAddress;
+
+        $http.post('/firewall/addBannedIP', {
+            ip: ipAddress,
+            reason: reason,
+            duration: 'permanent'
+        }, {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(function (response) {
+            $scope.blockingIP = null;
+            var responseData = parseBanResponse(response.data);
+
+            if (responseData && (responseData.status === 1 || responseData.status === '1')) {
+                if (!$scope.blockedIPs) {
+                    $scope.blockedIPs = {};
+                }
+                $scope.blockedIPs[ipAddress] = true;
+                notifyUser(
+                    'IP Address Banned',
+                    'IP address ' + ipAddress + ' has been permanently banned and added to the firewall.',
+                    'success'
+                );
+                if (typeof onSuccess === 'function') {
+                    onSuccess();
+                }
+            } else {
+                var errorMsg = 'Failed to block IP address';
+                if (responseData && responseData.error_message) {
+                    errorMsg = responseData.error_message;
+                } else if (responseData && responseData.error) {
+                    errorMsg = responseData.error;
+                } else if (responseData && responseData.message) {
+                    errorMsg = responseData.message;
+                }
+                notifyUser('Error', errorMsg, 'error');
+            }
+        }, function (err) {
+            $scope.blockingIP = null;
+            var errorMessage = 'Failed to block IP address';
+            var errData = err.data;
+            if (typeof errData === 'string') {
+                errData = parseBanResponse(errData);
+            }
+            if (errData && typeof errData === 'object') {
+                errorMessage = errData.error_message || errData.error || errData.message || errorMessage;
+            } else if (err.status) {
+                errorMessage = 'HTTP ' + err.status + ': ' + errorMessage;
+            }
+            notifyUser('Error', errorMessage, 'error');
+        });
+    }
+    
+    $scope.analyzeSSHSecurity = function() {
+        $scope.loadingSecurityAnalysis = true;
+        $scope.showAddonRequired = false;
+        $http.post('/base/analyzeSSHSecurity', {}).then(function (response) {
+            $scope.loadingSecurityAnalysis = false;
+            if (response.data) {
+                if (response.data.addon_required) {
+                    $scope.showAddonRequired = true;
+                    $scope.addonInfo = response.data;
+                    $scope.securityAlerts = [];
+                } else if (response.data.status === 1) {
+                    $scope.securityAlerts = response.data.alerts;
+                    $scope.showAddonRequired = false;
+                }
+            }
+        }, function (err) {
+            $scope.loadingSecurityAnalysis = false;
+        });
+    };
+
+    $scope.blockIPAddress = function(ipAddress) {
+        banIPAddress(
+            ipAddress,
+            'Brute force attack detected from SSH Security Analysis',
+            function () {
+                $scope.analyzeSSHSecurity();
+            }
+        );
+    };
+
+    $scope.banIPFromSSHLog = function(ipAddress) {
+        banIPAddress(
+            ipAddress,
+            'Suspicious activity detected from SSH logs',
+            function () {
+                $scope.refreshSSHLogs();
+            }
+        );
+    };
+
+    // Initial fetch (top processes polled on slower interval below)
+    $scope.refreshSSHLogins();
+    $scope.refreshSSHLogs();
+
+    // Chart.js chart objects
+    var trafficChart, diskIOChart, cpuChart;
+    // Data arrays for live graphs
+    var trafficLabels = [], rxData = [], txData = [];
+    var diskLabels = [], readData = [], writeData = [];
+    var cpuLabels = [], cpuUsageData = [];
+    // For rate calculation
+    var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
+    var lastCPUTimes = null;
+    var pollInterval = 5000; // ms (was 2000; slower poll reduces lscpd worker exhaustion)
+    var topProcessPollInterval = 30000;
+    var maxPoints = 30;
+
+    function pollDashboardStats() {
+        dashPollOnce($http, 'dashboardStats', '/base/getDashboardStats', function(response) {
+            if (response.data.status === 1) {
+                $scope.totalUsers = response.data.total_users;
+                $scope.totalSites = response.data.total_sites;
+                $scope.totalWPSites = response.data.total_wp_sites;
+                $scope.totalDBs = response.data.total_dbs;
+                $scope.totalEmails = response.data.total_emails;
+                $scope.totalFTPUsers = response.data.total_ftp_users;
+                $scope.statsLoaded = true;
+            }
+        });
+    }
+
+    function pollTraffic() {
+        dashPollOnce($http, 'trafficStats', '/base/getTrafficStats', function(response) {
+            if (response.data.admin_only) {
+                // Hide chart for non-admin users
+                $scope.hideSystemCharts = true;
+                return;
+            }
+            if (response.data.status === 1) {
+                var now = new Date();
+                var rx = response.data.rx_bytes;
+                var tx = response.data.tx_bytes;
+                if (lastRx !== null && lastTx !== null) {
+                    var rxRate = (rx - lastRx) / (pollInterval / 1000); // bytes/sec
+                    var txRate = (tx - lastTx) / (pollInterval / 1000);
+                    trafficLabels.push(now.toLocaleTimeString());
+                    rxData.push(rxRate);
+                    txData.push(txRate);
+                    if (trafficLabels.length > maxPoints) {
+                        trafficLabels.shift(); rxData.shift(); txData.shift();
+                    }
+                    if (trafficChart) {
+                        trafficChart.data.labels = trafficLabels.slice();
+                        trafficChart.data.datasets[0].data = rxData.slice();
+                        trafficChart.data.datasets[1].data = txData.slice();
+                        trafficChart.update();
+                    }
+                } else {
+                    // First poll, push zero data point
+                    trafficLabels.push(now.toLocaleTimeString());
+                    rxData.push(0);
+                    txData.push(0);
+                    if (trafficChart) {
+                        trafficChart.data.labels = trafficLabels.slice();
+                        trafficChart.data.datasets[0].data = rxData.slice();
+                        trafficChart.data.datasets[1].data = txData.slice();
+                        trafficChart.update();
+                        setTimeout(function() {
+                            if (window.trafficChart) {
+                                window.trafficChart.resize();
+                                window.trafficChart.update();
+                            }
+                        }, 1000);
+                    }
+                }
+                lastRx = rx; lastTx = tx;
+            }
+        });
+    }
+
+    function pollDiskIO() {
+        dashPollOnce($http, 'diskIOStats', '/base/getDiskIOStats', function(response) {
+            if (response.data.admin_only) {
+                // Hide chart for non-admin users
+                $scope.hideSystemCharts = true;
+                return;
+            }
+            if (response.data.status === 1) {
+                var now = new Date();
+                var read = response.data.read_bytes;
+                var write = response.data.write_bytes;
+                if (lastDiskRead !== null && lastDiskWrite !== null) {
+                    var readRate = (read - lastDiskRead) / (pollInterval / 1000); // bytes/sec
+                    var writeRate = (write - lastDiskWrite) / (pollInterval / 1000);
+                    diskLabels.push(now.toLocaleTimeString());
+                    readData.push(readRate);
+                    writeData.push(writeRate);
+                    if (diskLabels.length > maxPoints) {
+                        diskLabels.shift(); readData.shift(); writeData.shift();
+                    }
+                    if (diskIOChart) {
+                        diskIOChart.data.labels = diskLabels.slice();
+                        diskIOChart.data.datasets[0].data = readData.slice();
+                        diskIOChart.data.datasets[1].data = writeData.slice();
+                        diskIOChart.update();
+                    }
+                } else {
+                    // First poll, push zero data point
+                    diskLabels.push(now.toLocaleTimeString());
+                    readData.push(0);
+                    writeData.push(0);
+                    if (diskIOChart) {
+                        diskIOChart.data.labels = diskLabels.slice();
+                        diskIOChart.data.datasets[0].data = readData.slice();
+                        diskIOChart.data.datasets[1].data = writeData.slice();
+                        diskIOChart.update();
+                    }
+                }
+                lastDiskRead = read; lastDiskWrite = write;
+            }
+        });
+    }
+
+    function pollCPU() {
+        dashPollOnce($http, 'cpuLoadGraph', '/base/getCPULoadGraph', function(response) {
+            if (response.data.admin_only) {
+                // Hide chart for non-admin users
+                $scope.hideSystemCharts = true;
+                return;
+            }
+            if (response.data.status === 1 && response.data.cpu_times && response.data.cpu_times.length >= 4) {
+                var now = new Date();
+                var cpuTimes = response.data.cpu_times;
+                if (lastCPUTimes) {
+                    var idle = cpuTimes[3];
+                    var total = cpuTimes.reduce(function(a, b) { return a + b; }, 0);
+                    var lastIdle = lastCPUTimes[3];
+                    var lastTotal = lastCPUTimes.reduce(function(a, b) { return a + b; }, 0);
+                    var idleDiff = idle - lastIdle;
+                    var totalDiff = total - lastTotal;
+                    var usage = totalDiff > 0 ? (100 * (1 - idleDiff / totalDiff)) : 0;
+                    cpuLabels.push(now.toLocaleTimeString());
+                    cpuUsageData.push(usage);
+                    if (cpuLabels.length > maxPoints) {
+                        cpuLabels.shift(); cpuUsageData.shift();
+                    }
+                    if (cpuChart) {
+                        cpuChart.data.labels = cpuLabels.slice();
+                        cpuChart.data.datasets[0].data = cpuUsageData.slice();
+                        cpuChart.update();
+                    }
+                } else {
+                    // First poll, push zero data point
+                    cpuLabels.push(now.toLocaleTimeString());
+                    cpuUsageData.push(0);
+                    if (cpuChart) {
+                        cpuChart.data.labels = cpuLabels.slice();
+                        cpuChart.data.datasets[0].data = cpuUsageData.slice();
+                        cpuChart.update();
+                    }
+                }
+                lastCPUTimes = cpuTimes;
+            }
+        });
+    }
+
+    function setupCharts() {
+        var trafficCtx = document.getElementById('trafficChart').getContext('2d');
+        trafficChart = new Chart(trafficCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { 
+                        label: 'Download', 
+                        data: [], 
+                        borderColor: '#5b5fcf', 
+                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                        pointBackgroundColor: '#5b5fcf',
+                        pointBorderColor: '#5b5fcf',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                        tension: 0.4, 
+                        fill: true 
+                    },
+                    { 
+                        label: 'Upload', 
+                        data: [], 
+                        borderColor: '#4a90e2', 
+                        backgroundColor: 'rgba(74,144,226,0.1)', 
+                        pointBackgroundColor: '#4a90e2',
+                        pointBorderColor: '#4a90e2',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                        tension: 0.4, 
+                        fill: true 
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                plugins: {
+                    legend: { 
+                        display: true, 
+                        position: 'top',
+                        labels: { 
+                            font: { size: 12, weight: '600' },
+                            color: '#64748b',
+                            usePointStyle: true,
+                            padding: 20
+                        } 
+                    },
+                    title: { display: false },
+                    tooltip: { 
+                        enabled: true, 
+                        mode: 'index', 
+                        intersect: false,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        titleColor: '#2f3640',
+                        bodyColor: '#64748b',
+                        borderColor: '#e8e9ff',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12
+                    }
+                },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                scales: {
+                    x: { 
+                        grid: { color: '#f0f0ff', drawBorder: false }, 
+                        ticks: { 
+                            font: { size: 11 },
+                            color: '#94a3b8',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#f0f0ff', drawBorder: false }, 
+                        ticks: { 
+                            font: { size: 11 },
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
+            }
+        });
+        window.trafficChart = trafficChart;
+        setTimeout(function() {
+            if (window.trafficChart) {
+                window.trafficChart.resize();
+                window.trafficChart.update();
+                console.log('trafficChart resized and updated after setup.');
+            }
+        }, 500);
+        var diskCtx = document.getElementById('diskIOChart').getContext('2d');
+        diskIOChart = new Chart(diskCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { 
+                        label: 'Read', 
+                        data: [], 
+                        borderColor: '#5b5fcf', 
+                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                        pointBackgroundColor: '#5b5fcf',
+                        pointBorderColor: '#5b5fcf',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                        tension: 0.4, 
+                        fill: true 
+                    },
+                    { 
+                        label: 'Write', 
+                        data: [], 
+                        borderColor: '#e74c3c', 
+                        backgroundColor: 'rgba(231,76,60,0.1)', 
+                        pointBackgroundColor: '#e74c3c',
+                        pointBorderColor: '#e74c3c',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                        tension: 0.4, 
+                        fill: true 
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                plugins: {
+                    legend: { 
+                        display: true, 
+                        position: 'top',
+                        labels: { 
+                            font: { size: 12, weight: '600' },
+                            color: '#64748b',
+                            usePointStyle: true,
+                            padding: 20
+                        } 
+                    },
+                    title: { display: false },
+                    tooltip: { 
+                        enabled: true, 
+                        mode: 'index', 
+                        intersect: false,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        titleColor: '#2f3640',
+                        bodyColor: '#64748b',
+                        borderColor: '#e8e9ff',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12
+                    }
+                },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                scales: {
+                    x: { 
+                        grid: { color: '#f0f0ff', drawBorder: false }, 
+                        ticks: { 
+                            font: { size: 11 },
+                            color: '#94a3b8',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#f0f0ff', drawBorder: false }, 
+                        ticks: { 
+                            font: { size: 11 },
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
+            }
+        });
+        var cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        cpuChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { 
+                        label: 'CPU Usage (%)', 
+                        data: [], 
+                        borderColor: '#5b5fcf', 
+                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                        pointBackgroundColor: '#5b5fcf',
+                        pointBorderColor: '#5b5fcf',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                        tension: 0.4, 
+                        fill: true 
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                plugins: {
+                    legend: { 
+                        display: true, 
+                        position: 'top',
+                        labels: { 
+                            font: { size: 12, weight: '600' },
+                            color: '#64748b',
+                            usePointStyle: true,
+                            padding: 20
+                        } 
+                    },
+                    title: { display: false },
+                    tooltip: { 
+                        enabled: true, 
+                        mode: 'index', 
+                        intersect: false,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        titleColor: '#2f3640',
+                        bodyColor: '#64748b',
+                        borderColor: '#e8e9ff',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12
+                    }
+                },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                scales: {
+                    x: { 
+                        grid: { color: '#f0f0ff', drawBorder: false }, 
+                        ticks: { 
+                            font: { size: 11 },
+                            color: '#94a3b8',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100, 
+                        grid: { color: '#f0f0ff', drawBorder: false }, 
+                        ticks: { 
+                            font: { size: 11 },
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
+            }
+        });
+
+        // Redraw charts on tab shown
+        $("a[data-toggle='tab']").on('shown.bs.tab', function (e) {
+            setTimeout(function() {
+                if (trafficChart) trafficChart.resize();
+                if (diskIOChart) diskIOChart.resize();
+                if (cpuChart) cpuChart.resize();
+            }, 100);
+        });
+        
+        // Also handle custom tab switching
+        document.addEventListener('DOMContentLoaded', function() {
+            var tabs = document.querySelectorAll('a[data-toggle="tab"]');
+            tabs.forEach(function(tab) {
+                tab.addEventListener('click', function(e) {
+                    setTimeout(function() {
+                        if (trafficChart) trafficChart.resize();
+                        if (diskIOChart) diskIOChart.resize();
+                        if (cpuChart) cpuChart.resize();
+                    }, 200);
+                });
+            });
+        });
+    }
+
+    // Initial setup (stagger polls so dashboard APIs do not stampede lscpd workers)
+    $timeout(function() {
+        dashGet($http, '/base/getAdminStatus').then(function(response) {
+            if (response.data && response.data.admin === 1) {
+                setupCharts();
+            } else {
+                $scope.hideSystemCharts = true;
+            }
+        }).catch(function() {
+            $scope.hideSystemCharts = true;
+        });
+
+        function pollCharts() {
+            pollDashboardStats();
+            pollTraffic();
+            pollDiskIO();
+            pollCPU();
+            $timeout(pollCharts, pollInterval);
+        }
+
+        function pollTopProcessesSlow() {
+            $scope.refreshTopProcesses();
+            $timeout(pollTopProcessesSlow, topProcessPollInterval);
+        }
+
+        pollCharts();
+        $timeout(pollTopProcessesSlow, 1500);
+    }, 500);
+
+    // SSH User Activity Modal
+    $scope.showSSHActivityModal = false;
+    $scope.sshActivity = { processes: [], w: [] };
+    $scope.sshActivityUser = '';
+    $scope.loadingSSHActivity = false;
+    $scope.errorSSHActivity = '';
+    
+    $scope.viewSSHActivity = function(login) {
+        $scope.showSSHActivityModal = true;
+        $scope.sshActivity = { processes: [], w: [] };
+        $scope.sshActivityUser = login.user;
+        $scope.loadingSSHActivity = true;
+        $scope.errorSSHActivity = '';
+        var tty = '';
+        // Try to extract tty from login.raw or login.session if available
+        if (login.raw) {
+            var match = login.raw.match(/(pts\/[0-9]+)/);
+            if (match) tty = match[1];
+        }
+        console.log('Fetching SSH activity for user:', login.user, 'IP:', login.ip, 'TTY:', tty);
+        $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty, ip: login.ip || '' }, {
+            timeout: 30000
+        }).then(function(response) {
+            console.log('SSH Activity response received:', response);
+            $scope.loadingSSHActivity = false;
+            if (response.data && response.data.error) {
+                console.error('SSH Activity error:', response.data.error);
+                $scope.errorSSHActivity = response.data.error;
+                $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
+            } else if (response.data) {
+                console.log('SSH Activity data:', response.data);
+                $scope.sshActivity = response.data;
+                $scope.errorSSHActivity = '';
+            } else {
+                console.warn('SSH Activity: No data in response');
+                $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
+                $scope.errorSSHActivity = 'No data received from server.';
+            }
+        }, function(err) {
+            $scope.loadingSSHActivity = false;
+            console.error('Error fetching SSH activity:', err);
+            console.error('Error status:', err.status);
+            console.error('Error data:', err.data);
+            if (err.status === 0) {
+                $scope.errorSSHActivity = 'Network error: Unable to connect to server. Please check your connection.';
+            } else if (err.status === -1) {
+                $scope.errorSSHActivity = 'Request timeout. The server took too long to respond.';
+            } else if (err.data && err.data.error) {
+                $scope.errorSSHActivity = err.data.error;
+            } else if (err.data && err.data.errorMessage) {
+                $scope.errorSSHActivity = err.data.errorMessage;
+            } else if (err.status === 403) {
+                $scope.errorSSHActivity = 'Access denied. Admin privileges required.';
+            } else if (err.status === 400) {
+                $scope.errorSSHActivity = 'Invalid request. Please try again.';
+            } else if (err.status === 500) {
+                $scope.errorSSHActivity = 'Server error. Please try again later.';
+            } else {
+                $scope.errorSSHActivity = 'Failed to fetch activity. Status: ' + (err.status || 'Unknown') + '. Please check your connection and try again.';
+            }
+            $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
+        });
+    };
+    
+    $scope.closeSSHActivityModal = function() {
+        $scope.showSSHActivityModal = false;
+        $scope.sshActivity = { processes: [], w: [] };
+        $scope.sshActivityUser = '';
+        $scope.loadingSSHActivity = false;
+        $scope.errorSSHActivity = '';
+    };
+
+    // Close modal when clicking backdrop
+    $scope.closeModalOnBackdrop = function(event) {
+        if (event.target === event.currentTarget) {
+            $scope.closeSSHActivityModal();
+        }
+    };
+    
+    // Kill a specific process
+    $scope.killProcess = function(pid, user) {
+        if (!confirm('Are you sure you want to kill process ' + pid + '? This action cannot be undone.')) {
+            return;
+        }
+        
+        console.log('Killing process:', pid, 'for user:', user);
+        $http.post('/base/killSSHProcess', { pid: pid, user: user }, { timeout: 10000 }).then(function(response) {
+            var notify = window.cpToast || function (m) { alert(m); };
+            if (response.data && response.data.success) {
+                notify('Process ' + pid + ' killed successfully.', 'success');
+                // Reload activity data
+                if ($scope.sshActivityUser) {
+                    var login = { user: $scope.sshActivityUser, ip: '', tty: '' };
+                    $scope.viewSSHActivity(login);
+                }
+            } else if (response.data && response.data.error) {
+                notify('Error: ' + response.data.error, 'error');
+            } else {
+                notify('Unknown error occurred.', 'error');
+            }
+        }, function(err) {
+            console.error('Error killing process:', err);
+            var errorMsg = 'Failed to kill process. ';
+            if (err.data && err.data.error) {
+                errorMsg += err.data.error;
+            } else if (err.status === 403) {
+                errorMsg += 'Access denied.';
+            } else if (err.status === 404) {
+                errorMsg += 'Process not found.';
+            } else {
+                errorMsg += 'Please try again.';
+            }
+            (window.cpToast || function (m) { alert(m); })(errorMsg, 'error');
+        });
+    };
+    
+    // Kill all sessions for a user
+    $scope.killSession = function(user) {
+        if (!confirm('WARNING: This will force close ALL active sessions for user "' + user + '". This action cannot be undone.\n\nAre you sure you want to continue?')) {
+            return;
+        }
+        
+        if (!confirm('Final confirmation: Kill all sessions for user "' + user + '"?')) {
+            return;
+        }
+        
+        console.log('Killing session for user:', user);
+        $http.post('/base/killSSHSession', { user: user }, { timeout: 10000 }).then(function(response) {
+            if (response.data && response.data.success) {
+                alert('All sessions for user ' + user + ' have been terminated successfully.');
+                // Close modal and refresh SSH logins
+                $scope.closeSSHActivityModal();
+                // Refresh SSH logins list
+                if (typeof $scope.loadSSHLogins === 'function') {
+                    $scope.loadSSHLogins();
+                }
+            } else if (response.data && response.data.error) {
+                alert('Error: ' + response.data.error);
+            } else {
+                alert('Unknown error occurred.');
+            }
+        }, function(err) {
+            console.error('Error killing session:', err);
+            var errorMsg = 'Failed to kill session. ';
+            if (err.data && err.data.error) {
+                errorMsg += err.data.error;
+            } else if (err.status === 403) {
+                errorMsg += 'Access denied.';
+            } else {
+                errorMsg += 'Please try again.';
+            }
+            alert(errorMsg);
+        });
     };
 });
