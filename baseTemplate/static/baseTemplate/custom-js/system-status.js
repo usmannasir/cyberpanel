@@ -37,6 +37,31 @@ function randomPassword(length) {
 
 var app = angular.module('CyberCP', []);
 
+/* Dashboard API helpers: avoid worker exhaustion from poll storms */
+var DASH_HTTP_TIMEOUT = 25000;
+var dashPollInFlight = {};
+
+function dashGet($http, url, extraConfig) {
+    var cfg = extraConfig || {};
+    cfg.timeout = DASH_HTTP_TIMEOUT;
+    return $http.get(url, cfg);
+}
+
+function dashPollOnce($http, key, url, onSuccess) {
+    if (dashPollInFlight[key]) {
+        return;
+    }
+    dashPollInFlight[key] = true;
+    dashGet($http, url).then(function (response) {
+        dashPollInFlight[key] = false;
+        if (typeof onSuccess === 'function') {
+            onSuccess(response);
+        }
+    }, function () {
+        dashPollInFlight[key] = false;
+    });
+}
+
 var globalScope;
 
 function GlobalRespSuccess(response) {
@@ -116,70 +141,187 @@ function getWebsiteName(domain) {
     }
 }
 
+/* Smooth Overview metric display (CPU/RAM/Disk cards) */
+var cpMetricAnimator = {
+    lerpFactor: 0.12,
+    snapThreshold: 0.5,
+    animFrameId: null,
+    targets: { cpu: null, ram: null, disk: null },
+    display: { cpu: null, ram: null, disk: null },
+
+    reset: function () {
+        this.cancel();
+        this.targets = { cpu: null, ram: null, disk: null };
+        this.display = { cpu: null, ram: null, disk: null };
+    },
+
+    cancel: function () {
+        if (this.animFrameId !== null) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+    },
+
+    setTargets: function (cpu, ram, disk) {
+        this.targets.cpu = cpu;
+        this.targets.ram = ram;
+        this.targets.disk = disk;
+        if (this.display.cpu === null) {
+            this.display.cpu = cpu;
+        }
+        if (this.display.ram === null) {
+            this.display.ram = ram;
+        }
+        if (this.display.disk === null) {
+            this.display.disk = disk;
+        }
+    },
+
+    stepToward: function (current, target) {
+        if (target === null || target === undefined) {
+            return current;
+        }
+        if (current === null || current === undefined) {
+            return target;
+        }
+        var diff = target - current;
+        if (Math.abs(diff) <= this.snapThreshold) {
+            return target;
+        }
+        return current + (diff * this.lerpFactor);
+    },
+
+  tick: function ($scope) {
+        var self = this;
+        var keys = ['cpu', 'ram', 'disk'];
+        var done = true;
+
+        keys.forEach(function (key) {
+            var target = self.targets[key];
+            if (target === null || target === undefined || isNaN(target)) {
+                target = 0;
+            }
+            var next = self.stepToward(self.display[key], target);
+            if (Math.abs(target - next) > self.snapThreshold) {
+                done = false;
+            }
+            self.display[key] = next;
+        });
+
+        $scope.displayCpuUsage = Math.round(self.display.cpu || 0);
+        $scope.displayRamUsage = Math.round(self.display.ram || 0);
+        $scope.displayDiskUsage = Math.round(self.display.disk || 0);
+
+        if (!done) {
+            self.animFrameId = requestAnimationFrame(function () {
+                self.tick($scope);
+            });
+        } else {
+            self.animFrameId = null;
+            $scope.displayCpuUsage = Math.round(self.targets.cpu || 0);
+            $scope.displayRamUsage = Math.round(self.targets.ram || 0);
+            $scope.displayDiskUsage = Math.round(self.targets.disk || 0);
+            self.display.cpu = self.targets.cpu;
+            self.display.ram = self.targets.ram;
+            self.display.disk = self.targets.disk;
+        }
+
+        if (!$scope.$$phase) {
+            $scope.$apply();
+        }
+    },
+
+    animateTo: function ($scope, cpu, ram, disk) {
+        this.cancel();
+        this.setTargets(cpu, ram, disk);
+        this.tick($scope);
+    }
+};
+
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
     $scope.statusError = false;
+    $scope.displayCpuUsage = undefined;
+    $scope.displayRamUsage = undefined;
+    $scope.displayDiskUsage = undefined;
+    var statusPollTimer = null;
+    var statusReqPending = false;
+    var STATUS_REFRESH_MS = 60000;
+
+    function scheduleStatusRefresh() {
+        if (statusPollTimer) {
+            $timeout.cancel(statusPollTimer);
+        }
+        statusPollTimer = $timeout(getStuff, STATUS_REFRESH_MS);
+    }
+
+    function resetDisplayMetrics() {
+        cpMetricAnimator.reset();
+        $scope.displayCpuUsage = undefined;
+        $scope.displayRamUsage = undefined;
+        $scope.displayDiskUsage = undefined;
+    }
 
     getStuff();
 
     $scope.getSystemStatus = function() {
-        getStuff();
+        getStuff(true);
     };
 
     $scope.retryStatus = function() {
         $scope.statusError = false;
-        $scope.cpuUsage = undefined;
-        $scope.ramUsage = undefined;
-        $scope.diskUsage = undefined;
-        getStuff();
+        resetDisplayMetrics();
+        $scope.cpuCores = undefined;
+        $scope.ramTotalMB = undefined;
+        $scope.diskTotalGB = undefined;
+        $scope.diskFreeGB = undefined;
+        getStuff(true);
     };
 
-    function getStuff() {
+    $scope.$on('$destroy', function () {
+        cpMetricAnimator.cancel();
+        if (statusPollTimer) {
+            $timeout.cancel(statusPollTimer);
+        }
+    });
 
-        url = "/base/getSystemStatus";
+    function getStuff(force) {
+        if (statusReqPending && !force) {
+            return;
+        }
+        statusReqPending = true;
 
-        $http.get(url).then(ListInitialData, cantLoadInitialData);
-
-
-        function ListInitialData(response) {
-
-            $scope.statusError = false;
-            $scope.cpuUsage = response.data.cpuUsage;
-            $scope.ramUsage = response.data.ramUsage;
-            $scope.diskUsage = response.data.diskUsage;
-            
-            // Total system information
-            $scope.cpuCores = response.data.cpuCores;
-            $scope.ramTotalMB = response.data.ramTotalMB;
-            $scope.diskTotalGB = response.data.diskTotalGB;
-            $scope.diskFreeGB = response.data.diskFreeGB;
-            
-            // Get uptime if available
-            if (response.data.uptime) {
-                $scope.uptime = response.data.uptime;
+        dashGet($http, '/base/getSystemStatus').then(function (response) {
+            statusReqPending = false;
+            if (response && response.data) {
+                $scope.statusError = false;
+                cpMetricAnimator.animateTo(
+                    $scope,
+                    response.data.cpuUsage,
+                    response.data.ramUsage,
+                    response.data.diskUsage
+                );
+                $scope.cpuCores = response.data.cpuCores;
+                $scope.ramTotalMB = response.data.ramTotalMB;
+                $scope.diskTotalGB = response.data.diskTotalGB;
+                $scope.diskFreeGB = response.data.diskFreeGB;
+                $scope.uptime = response.data.uptime || 'N/A';
                 $scope.uptimeLoaded = true;
             } else {
-                // Fallback: try to get uptime separately
-                $http.get("/base/getUptime").then(function(uptimeResponse) {
-                    if (uptimeResponse.data.uptime) {
-                        $scope.uptime = uptimeResponse.data.uptime;
-                        $scope.uptimeLoaded = true;
-                    }
-                });
+                $scope.uptime = 'Unavailable';
+                $scope.uptimeLoaded = true;
+                $scope.statusError = true;
             }
-
-        }
-
-        function cantLoadInitialData(response) {
+            scheduleStatusRefresh();
+        }, function () {
+            statusReqPending = false;
             $scope.uptime = 'Unavailable';
             $scope.uptimeLoaded = true;
             $scope.statusError = true;
-        }
-
-        $timeout(getStuff, 60000); // Update every minute
-
+            scheduleStatusRefresh();
+        });
     }
 });
 
@@ -427,7 +569,7 @@ app.controller('loadAvg', function ($scope, $http, $timeout) {
             console.log("Can't get load average data");
         }
 
-        //$timeout(getStuff, 2000);
+        //$timeout(getStuff, 60000); // was 2s; reduced panel load
 
     }
 });
@@ -537,7 +679,7 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
             console.log("not good");
         }
 
-        $timeout(getStuff, 2000);
+        $timeout(getStuff, 60000); // was 2s; reduced panel load
 
     }
 
@@ -747,7 +889,7 @@ app.controller('designtheme', function ($scope, $http, $timeout) {
             console.log(response);
         }
 
-        //$timeout(getStuff, 2000);
+        //$timeout(getStuff, 60000); // was 2s; reduced panel load
 
     };
 });
@@ -929,20 +1071,110 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     // Top Processes
     $scope.topProcesses = [];
+    $scope.topProcessesPaginated = [];
+    $scope.topProcessesCurrentPage = 1;
+    $scope.topProcessesPerPage = 5;
+    $scope.topProcessesGoToPageInput = 1;
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
+
+    $scope.getTopProcessesTotalPages = function() {
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.topProcesses || []).length / perPage);
+    };
+
+    $scope.getTopProcessesStart = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        return ($scope.topProcessesCurrentPage - 1) * perPage + 1;
+    };
+
+    $scope.getTopProcessesEnd = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            return 0;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var end = $scope.topProcessesCurrentPage * perPage;
+        return Math.min(end, $scope.topProcesses.length);
+    };
+
+    $scope.updateTopProcessesPaginated = function() {
+        if (!$scope.topProcesses || $scope.topProcesses.length === 0) {
+            $scope.topProcessesPaginated = [];
+            return;
+        }
+        var perPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if ($scope.topProcessesCurrentPage > totalPages) {
+            $scope.topProcessesCurrentPage = totalPages || 1;
+        }
+        if ($scope.topProcessesCurrentPage < 1) {
+            $scope.topProcessesCurrentPage = 1;
+        }
+        $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        var start = ($scope.topProcessesCurrentPage - 1) * perPage;
+        var end = start + perPage;
+        $scope.topProcessesPaginated = $scope.topProcesses.slice(start, end);
+    };
+
+    $scope.topProcessesPrevPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage - 1);
+    };
+
+    $scope.topProcessesNextPage = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesCurrentPage + 1);
+    };
+
+    $scope.topProcessesChangePerPage = function() {
+        $scope.topProcessesPerPage = Math.max(parseInt($scope.topProcessesPerPage, 10) || 5, 1);
+        $scope.topProcessesCurrentPage = 1;
+        $scope.topProcessesGoToPageInput = 1;
+        $scope.updateTopProcessesPaginated();
+    };
+
+    $scope.topProcessesGoToPage = function(page) {
+        page = parseInt(page, 10);
+        var totalPages = $scope.getTopProcessesTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.topProcessesCurrentPage = page;
+            $scope.updateTopProcessesPaginated();
+        } else {
+            $scope.topProcessesGoToPageInput = $scope.topProcessesCurrentPage;
+        }
+    };
+
+    $scope.topProcessesGoToPageNumber = function() {
+        $scope.topProcessesGoToPage($scope.topProcessesGoToPageInput);
+    };
+
     $scope.refreshTopProcesses = function() {
+        if (dashPollInFlight.topProcesses) {
+            return;
+        }
+        dashPollInFlight.topProcesses = true;
         $scope.loadingTopProcesses = true;
-        $http.get('/base/getTopProcesses').then(function (response) {
+        dashGet($http, '/base/getTopProcesses').then(function (response) {
+            dashPollInFlight.topProcesses = false;
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
+                $scope.topProcessesCurrentPage = 1;
+                $scope.topProcessesGoToPageInput = 1;
+                $scope.updateTopProcessesPaginated();
             } else {
                 $scope.topProcesses = [];
+                $scope.topProcessesPaginated = [];
+                $scope.topProcessesGoToPageInput = 1;
             }
-        }, function (err) {
+        }, function () {
+            dashPollInFlight.topProcesses = false;
             $scope.loadingTopProcesses = false;
             $scope.errorTopProcesses = 'Failed to load top processes.';
+            $scope.topProcesses = [];
+            $scope.topProcessesPaginated = [];
+            $scope.topProcessesGoToPageInput = 1;
         });
     };
 
@@ -950,90 +1182,102 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.sshLogins = [];
     $scope.sshLoginsPaginated = [];
     $scope.sshLoginsCurrentPage = 1;
-    $scope.sshLoginsPerPage = 10;
-    $scope.sshLoginsGoToPage = 1;
+    $scope.sshLoginsPerPage = 5;
+    $scope.sshLoginsGoToPageInput = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
     
     $scope.getSSHLoginsTotalPages = function() {
-        return Math.ceil($scope.sshLogins.length / $scope.sshLoginsPerPage);
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogins || []).length / perPage);
     };
     
     $scope.getSSHLoginsStart = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             return 0;
         }
-        return ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage + 1;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return ($scope.sshLoginsCurrentPage - 1) * perPage + 1;
     };
     
     $scope.getSSHLoginsEnd = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             return 0;
         }
-        var end = $scope.sshLoginsCurrentPage * $scope.sshLoginsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var end = $scope.sshLoginsCurrentPage * perPage;
         return Math.min(end, $scope.sshLogins.length);
     };
     
     $scope.updateSSHLoginsPaginated = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             $scope.sshLoginsPaginated = [];
-            console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
             return;
         }
-        var start = ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage;
-        var end = start + $scope.sshLoginsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if ($scope.sshLoginsCurrentPage > totalPages) {
+            $scope.sshLoginsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLoginsCurrentPage < 1) {
+            $scope.sshLoginsCurrentPage = 1;
+        }
+        $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
+        var start = ($scope.sshLoginsCurrentPage - 1) * perPage;
+        var end = start + perPage;
         $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
-        console.log('updateSSHLoginsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogins.length, 'paginated=', $scope.sshLoginsPaginated.length);
     };
     
     $scope.sshLoginsPrevPage = function() {
-        if ($scope.sshLoginsCurrentPage > 1) {
-            $scope.sshLoginsCurrentPage--;
-            $scope.updateSSHLoginsPaginated();
-        }
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage - 1);
     };
     
     $scope.sshLoginsNextPage = function() {
-        if ($scope.sshLoginsCurrentPage < $scope.getSSHLoginsTotalPages()) {
-            $scope.sshLoginsCurrentPage++;
-            $scope.updateSSHLoginsPaginated();
-        }
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage + 1);
     };
-    
-    $scope.sshLoginsGoToPageNumber = function() {
-        var page = parseInt($scope.sshLoginsGoToPage);
+
+    $scope.sshLoginsChangePerPage = function() {
+        $scope.sshLoginsPerPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        $scope.sshLoginsCurrentPage = 1;
+        $scope.sshLoginsGoToPageInput = 1;
+        $scope.updateSSHLoginsPaginated();
+    };
+
+    $scope.sshLoginsGoToPage = function(page) {
+        page = parseInt(page, 10);
         var totalPages = $scope.getSSHLoginsTotalPages();
         if (page >= 1 && page <= totalPages) {
             $scope.sshLoginsCurrentPage = page;
             $scope.updateSSHLoginsPaginated();
         } else {
-            $scope.sshLoginsGoToPage = $scope.sshLoginsCurrentPage;
+            $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
         }
+    };
+    
+    $scope.sshLoginsGoToPageNumber = function() {
+        $scope.sshLoginsGoToPage($scope.sshLoginsGoToPageInput);
     };
     
     $scope.refreshSSHLogins = function() {
         $scope.loadingSSHLogins = true;
         $http.get('/base/getRecentSSHLogins').then(function (response) {
             $scope.loadingSSHLogins = false;
-            console.log('SSH Logins response:', response.data);
             if (response.data && response.data.logins && Array.isArray(response.data.logins)) {
                 $scope.sshLogins = response.data.logins;
                 $scope.sshLoginsCurrentPage = 1;
-                $scope.sshLoginsGoToPage = 1;
-                console.log('SSH Logins loaded:', $scope.sshLogins.length, 'items');
+                $scope.sshLoginsGoToPageInput = 1;
                 $scope.updateSSHLoginsPaginated();
-                console.log('SSH Logins paginated:', $scope.sshLoginsPaginated.length, 'items');
             } else {
-                console.warn('SSH Logins: No data or invalid format', response.data);
                 $scope.sshLogins = [];
                 $scope.sshLoginsPaginated = [];
+                $scope.sshLoginsGoToPageInput = 1;
             }
-        }, function (err) {
+        }, function () {
             $scope.loadingSSHLogins = false;
-            console.error('SSH Logins error:', err);
             $scope.errorSSHLogins = 'Failed to load SSH logins.';
             $scope.sshLogins = [];
             $scope.sshLoginsPaginated = [];
+            $scope.sshLoginsGoToPageInput = 1;
         });
     };
 
@@ -1041,104 +1285,211 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.sshLogs = [];
     $scope.sshLogsPaginated = [];
     $scope.sshLogsCurrentPage = 1;
-    $scope.sshLogsPerPage = 10;
-    $scope.sshLogsGoToPage = 1;
+    $scope.sshLogsPerPage = 5;
+    $scope.sshLogsGoToPageInput = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
     
     $scope.getSSHLogsTotalPages = function() {
-        return Math.ceil($scope.sshLogs.length / $scope.sshLogsPerPage);
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogs || []).length / perPage);
     };
     
     $scope.getSSHLogsStart = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             return 0;
         }
-        return ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage + 1;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return ($scope.sshLogsCurrentPage - 1) * perPage + 1;
     };
     
     $scope.getSSHLogsEnd = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             return 0;
         }
-        var end = $scope.sshLogsCurrentPage * $scope.sshLogsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var end = $scope.sshLogsCurrentPage * perPage;
         return Math.min(end, $scope.sshLogs.length);
     };
     
     $scope.updateSSHLogsPaginated = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             $scope.sshLogsPaginated = [];
-            console.log('updateSSHLogsPaginated: No data, cleared paginated array');
             return;
         }
-        var start = ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage;
-        var end = start + $scope.sshLogsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if ($scope.sshLogsCurrentPage > totalPages) {
+            $scope.sshLogsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLogsCurrentPage < 1) {
+            $scope.sshLogsCurrentPage = 1;
+        }
+        $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
+        var start = ($scope.sshLogsCurrentPage - 1) * perPage;
+        var end = start + perPage;
         $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
-        console.log('updateSSHLogsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogs.length, 'paginated=', $scope.sshLogsPaginated.length);
     };
     
     $scope.sshLogsPrevPage = function() {
-        if ($scope.sshLogsCurrentPage > 1) {
-            $scope.sshLogsCurrentPage--;
-            $scope.updateSSHLogsPaginated();
-        }
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage - 1);
     };
     
     $scope.sshLogsNextPage = function() {
-        if ($scope.sshLogsCurrentPage < $scope.getSSHLogsTotalPages()) {
-            $scope.sshLogsCurrentPage++;
-            $scope.updateSSHLogsPaginated();
-        }
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage + 1);
     };
-    
-    $scope.sshLogsGoToPageNumber = function() {
-        var page = parseInt($scope.sshLogsGoToPage);
+
+    $scope.sshLogsChangePerPage = function() {
+        $scope.sshLogsPerPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        $scope.sshLogsCurrentPage = 1;
+        $scope.sshLogsGoToPageInput = 1;
+        $scope.updateSSHLogsPaginated();
+    };
+
+    $scope.sshLogsGoToPage = function(page) {
+        page = parseInt(page, 10);
         var totalPages = $scope.getSSHLogsTotalPages();
         if (page >= 1 && page <= totalPages) {
             $scope.sshLogsCurrentPage = page;
             $scope.updateSSHLogsPaginated();
         } else {
-            $scope.sshLogsGoToPage = $scope.sshLogsCurrentPage;
+            $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
         }
+    };
+    
+    $scope.sshLogsGoToPageNumber = function() {
+        $scope.sshLogsGoToPage($scope.sshLogsGoToPageInput);
     };
     
     $scope.refreshSSHLogs = function() {
         $scope.loadingSSHLogs = true;
         $http.get('/base/getRecentSSHLogs').then(function (response) {
             $scope.loadingSSHLogs = false;
-            console.log('SSH Logs response:', response.data);
             if (response.data && response.data.logs && Array.isArray(response.data.logs)) {
                 $scope.sshLogs = response.data.logs;
                 $scope.sshLogsCurrentPage = 1;
-                $scope.sshLogsGoToPage = 1;
-                console.log('SSH Logs loaded:', $scope.sshLogs.length, 'items');
+                $scope.sshLogsGoToPageInput = 1;
                 $scope.updateSSHLogsPaginated();
-                console.log('SSH Logs paginated:', $scope.sshLogsPaginated.length, 'items');
-                // Analyze logs for security issues
                 $scope.analyzeSSHSecurity();
             } else {
-                console.warn('SSH Logs: No data or invalid format', response.data);
                 $scope.sshLogs = [];
                 $scope.sshLogsPaginated = [];
+                $scope.sshLogsGoToPageInput = 1;
             }
-        }, function (err) {
+        }, function () {
             $scope.loadingSSHLogs = false;
-            console.error('SSH Logs error:', err);
             $scope.errorSSHLogs = 'Failed to load SSH logs.';
             $scope.sshLogs = [];
             $scope.sshLogsPaginated = [];
+            $scope.sshLogsGoToPageInput = 1;
         });
     };
     
     // Security Analysis
     $scope.showAddonRequired = false;
     $scope.addonInfo = {};
-    
-    // IP Blocking functionality
     $scope.blockingIP = null;
     $scope.blockedIPs = {};
+
+    function notifyUser(title, text, type, delay) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: title,
+                text: text,
+                type: type || 'info',
+                delay: delay || 5000
+            });
+        }
+    }
+
+    function parseBanResponse(responseData) {
+        if (typeof responseData === 'string') {
+            try {
+                return JSON.parse(responseData);
+            } catch (e) {
+                return null;
+            }
+        }
+        return responseData;
+    }
+
+    function banIPAddress(ipAddress, reason, onSuccess) {
+        ipAddress = String(ipAddress || '').trim();
+        if (!ipAddress) {
+            notifyUser('Error', 'No IP address provided', 'error');
+            return;
+        }
+
+        var ipPattern = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
+        if (!ipPattern.test(ipAddress)) {
+            notifyUser('Error', 'Invalid IP address format: ' + ipAddress, 'error');
+            return;
+        }
+
+        if ($scope.blockingIP === ipAddress) {
+            return;
+        }
+
+        if ($scope.blockedIPs && $scope.blockedIPs[ipAddress]) {
+            notifyUser('Info', 'IP address ' + ipAddress + ' is already banned', 'info', 3000);
+            return;
+        }
+
+        $scope.blockingIP = ipAddress;
+
+        $http.post('/firewall/addBannedIP', {
+            ip: ipAddress,
+            reason: reason,
+            duration: 'permanent'
+        }, {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(function (response) {
+            $scope.blockingIP = null;
+            var responseData = parseBanResponse(response.data);
+
+            if (responseData && (responseData.status === 1 || responseData.status === '1')) {
+                if (!$scope.blockedIPs) {
+                    $scope.blockedIPs = {};
+                }
+                $scope.blockedIPs[ipAddress] = true;
+                notifyUser(
+                    'IP Address Banned',
+                    'IP address ' + ipAddress + ' has been permanently banned and added to the firewall.',
+                    'success'
+                );
+                if (typeof onSuccess === 'function') {
+                    onSuccess();
+                }
+            } else {
+                var errorMsg = 'Failed to block IP address';
+                if (responseData && responseData.error_message) {
+                    errorMsg = responseData.error_message;
+                } else if (responseData && responseData.error) {
+                    errorMsg = responseData.error;
+                } else if (responseData && responseData.message) {
+                    errorMsg = responseData.message;
+                }
+                notifyUser('Error', errorMsg, 'error');
+            }
+        }, function (err) {
+            $scope.blockingIP = null;
+            var errorMessage = 'Failed to block IP address';
+            var errData = err.data;
+            if (typeof errData === 'string') {
+                errData = parseBanResponse(errData);
+            }
+            if (errData && typeof errData === 'object') {
+                errorMessage = errData.error_message || errData.error || errData.message || errorMessage;
+            } else if (err.status) {
+                errorMessage = 'HTTP ' + err.status + ': ' + errorMessage;
+            }
+            notifyUser('Error', errorMessage, 'error');
+        });
+    }
     
     $scope.analyzeSSHSecurity = function() {
         $scope.loadingSecurityAnalysis = true;
@@ -1159,67 +1510,28 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingSecurityAnalysis = false;
         });
     };
-    
+
     $scope.blockIPAddress = function(ipAddress) {
-        if (!$scope.blockingIP) {
-            $scope.blockingIP = ipAddress;
-            
-            var data = {
-                ip_address: ipAddress
-            };
-            
-            var config = {
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            };
-            
-            $http.post('/base/blockIPAddress', data, config).then(function (response) {
-                $scope.blockingIP = null;
-                if (response.data && response.data.status === 1) {
-                    // Mark IP as blocked
-                    $scope.blockedIPs[ipAddress] = true;
-                    
-                    // Show success notification
-                    new PNotify({
-                        title: 'Success',
-                        text: `IP address ${ipAddress} has been blocked successfully using ${response.data.firewall.toUpperCase()}`,
-                        type: 'success',
-                        delay: 5000
-                    });
-                    
-                    // Refresh security analysis to update alerts
-                    $scope.analyzeSSHSecurity();
-                } else {
-                    // Show error notification
-                    new PNotify({
-                        title: 'Error',
-                        text: response.data && response.data.error ? response.data.error : 'Failed to block IP address',
-                        type: 'error',
-                        delay: 5000
-                    });
-                }
-            }, function (err) {
-                $scope.blockingIP = null;
-                var errorMessage = 'Failed to block IP address';
-                if (err.data && err.data.error) {
-                    errorMessage = err.data.error;
-                } else if (err.data && err.data.message) {
-                    errorMessage = err.data.message;
-                }
-                
-                new PNotify({
-                    title: 'Error',
-                    text: errorMessage,
-                    type: 'error',
-                    delay: 5000
-                });
-            });
-        }
+        banIPAddress(
+            ipAddress,
+            'Brute force attack detected from SSH Security Analysis',
+            function () {
+                $scope.analyzeSSHSecurity();
+            }
+        );
     };
 
-    // Initial fetch
-    $scope.refreshTopProcesses();
+    $scope.banIPFromSSHLog = function(ipAddress) {
+        banIPAddress(
+            ipAddress,
+            'Suspicious activity detected from SSH logs',
+            function () {
+                $scope.refreshSSHLogs();
+            }
+        );
+    };
+
+    // Initial fetch (top processes polled on slower interval below)
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
 
@@ -1232,11 +1544,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
-    var pollInterval = 2000; // ms
+    var pollInterval = 5000; // ms (was 2000; slower poll reduces lscpd worker exhaustion)
+    var topProcessPollInterval = 30000;
     var maxPoints = 30;
 
     function pollDashboardStats() {
-        $http.get('/base/getDashboardStats').then(function(response) {
+        dashPollOnce($http, 'dashboardStats', '/base/getDashboardStats', function(response) {
             if (response.data.status === 1) {
                 $scope.totalUsers = response.data.total_users;
                 $scope.totalSites = response.data.total_sites;
@@ -1250,8 +1563,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function pollTraffic() {
-        console.log('pollTraffic called');
-        $http.get('/base/getTrafficStats').then(function(response) {
+        dashPollOnce($http, 'trafficStats', '/base/getTrafficStats', function(response) {
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1275,7 +1587,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         trafficChart.data.datasets[0].data = rxData.slice();
                         trafficChart.data.datasets[1].data = txData.slice();
                         trafficChart.update();
-                        console.log('trafficChart updated:', trafficChart.data.labels, trafficChart.data.datasets[0].data, trafficChart.data.datasets[1].data);
                     }
                 } else {
                     // First poll, push zero data point
@@ -1287,25 +1598,21 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         trafficChart.data.datasets[0].data = rxData.slice();
                         trafficChart.data.datasets[1].data = txData.slice();
                         trafficChart.update();
-                        console.log('trafficChart first update:', trafficChart.data.labels, trafficChart.data.datasets[0].data, trafficChart.data.datasets[1].data);
                         setTimeout(function() {
                             if (window.trafficChart) {
                                 window.trafficChart.resize();
                                 window.trafficChart.update();
-                                console.log('trafficChart forced resize/update after first poll.');
                             }
                         }, 1000);
                     }
                 }
                 lastRx = rx; lastTx = tx;
-            } else {
-                console.log('pollTraffic error or no data:', response);
             }
         });
     }
 
     function pollDiskIO() {
-        $http.get('/base/getDiskIOStats').then(function(response) {
+        dashPollOnce($http, 'diskIOStats', '/base/getDiskIOStats', function(response) {
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1348,7 +1655,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function pollCPU() {
-        $http.get('/base/getCPULoadGraph').then(function(response) {
+        dashPollOnce($http, 'cpuLoadGraph', '/base/getCPULoadGraph', function(response) {
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1391,7 +1698,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function setupCharts() {
-        console.log('setupCharts called, initializing charts...');
         var trafficCtx = document.getElementById('trafficChart').getContext('2d');
         trafficChart = new Chart(trafficCtx, {
             type: 'line',
@@ -1668,35 +1974,33 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         });
     }
 
-    // Initial setup
+    // Initial setup (stagger polls so dashboard APIs do not stampede lscpd workers)
     $timeout(function() {
-        // Check if user is admin before setting up charts
-        $http.get('/base/getAdminStatus').then(function(response) {
+        dashGet($http, '/base/getAdminStatus').then(function(response) {
             if (response.data && response.data.admin === 1) {
                 setupCharts();
             } else {
                 $scope.hideSystemCharts = true;
             }
         }).catch(function() {
-            // If error, assume non-admin and hide charts
             $scope.hideSystemCharts = true;
         });
-        
-        // Immediately poll once so stats are updated on first load
-        pollDashboardStats();
-        pollTraffic();
-        pollDiskIO();
-        pollCPU();
-        // Start polling
-        function pollAll() {
+
+        function pollCharts() {
             pollDashboardStats();
             pollTraffic();
             pollDiskIO();
             pollCPU();
-            $scope.refreshTopProcesses();
-            $timeout(pollAll, pollInterval);
+            $timeout(pollCharts, pollInterval);
         }
-        pollAll();
+
+        function pollTopProcessesSlow() {
+            $scope.refreshTopProcesses();
+            $timeout(pollTopProcessesSlow, topProcessPollInterval);
+        }
+
+        pollCharts();
+        $timeout(pollTopProcessesSlow, 1500);
     }, 500);
 
     // SSH User Activity Modal
