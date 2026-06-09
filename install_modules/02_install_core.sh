@@ -299,7 +299,7 @@ except:
     fi
     
     # Download CyberPanel install tree (fork first, then upstream)
-    local _cp_owner="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+    local _cp_owner="${CYBERPANEL_GITHUB_OWNER:-usmannasir}"
     local _cp_branch="${BRANCH_NAME:-v2.5.5-dev}"
     echo "Downloading from: https://raw.githubusercontent.com/${_cp_owner}/cyberpanel/${_cp_branch}/cyberpanel.sh"
     

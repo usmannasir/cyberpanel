@@ -1326,9 +1326,23 @@ class Upgrade:
             # Check if module is already configured
             with open(CONFIG_FILE, 'r') as f:
                 content = f.read()
-                if 'cyberpanel_ols' in content:
+            if 'cyberpanel_ols' in content:
+                # Re-enable if ls_enabled 0 (upstream #1801 / 6b4059f8).
+                import re
+                new_content = re.sub(
+                    r'(module\s+cyberpanel_ols\s*\{.*?\})',
+                    lambda m: re.sub(r'ls_enabled\s+0', 'ls_enabled          1', m.group(0)),
+                    content,
+                    flags=re.DOTALL,
+                )
+                if new_content != content:
+                    shutil.copy2(CONFIG_FILE, f"{CONFIG_FILE}.backup")
+                    with open(CONFIG_FILE, 'w') as f:
+                        f.write(new_content)
+                    Upgrade.stdOut("Module was disabled (ls_enabled 0); re-enabled LSCache module", 0)
+                else:
                     Upgrade.stdOut("Module already configured", 0)
-                    return True
+                return True
 
             # Add module configuration
             module_config = """
@@ -5080,7 +5094,7 @@ class Migration(migrations.Migration):
                         return 0, 'Failed to remove or quarantine old CyberCP directory'
 
             # Clone the new repository (use CYBERPANEL_GIT_USER for fork, e.g. master3395)
-            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'master3395')
+            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'usmannasir')
             upstream_user = os.environ.get('CYBERPANEL_UPSTREAM_GIT_USER', 'usmannasir')
             checkout_ok = False
 

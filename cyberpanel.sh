@@ -5,9 +5,9 @@
 set -e
 
 # Parse -b/--branch for module download (when not running from repo)
-# master3395 fork: modular install_modules/ live on v2.5.5-dev, not stable
+# usmannasir/cyberpanel v2.5.5-dev: modular install_modules/ live on v2.5.5-dev, not stable
 BRANCH_FOR_MODULES="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
-CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-usmannasir}"
 next=""
 for arg in "$@"; do
   if [[ "$arg" = "-b" ]] || [[ "$arg" = "--branch" ]]; then
@@ -54,7 +54,7 @@ _download_install_module() {
   local name="$1"
   local branch="$2"
   local dest="$3"
-  local owner="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+  local owner="${CYBERPANEL_GITHUB_OWNER:-usmannasir}"
   local url="https://raw.githubusercontent.com/${owner}/cyberpanel/${branch}/install_modules/${name}.sh"
   local http_code
   http_code=$(curl -sL -H 'Cache-Control: no-cache' -w "%{http_code}" -o "$dest" "$url" 2>/dev/null) || http_code="000"
@@ -76,7 +76,7 @@ else
   if [[ "$BRANCH_FOR_MODULES" != "v2.5.5-dev" ]]; then
     _branches_to_try+=("v2.5.5-dev")
   fi
-  if [[ "$BRANCH_FOR_MODULES" != "stable" ]] && [[ "${CYBERPANEL_GITHUB_OWNER:-master3395}" = "usmannasir" ]]; then
+  if [[ "$BRANCH_FOR_MODULES" != "stable" ]] && [[ "${CYBERPANEL_GITHUB_OWNER:-usmannasir}" = "usmannasir" ]]; then
     _branches_to_try+=("stable")
   fi
   for name in "${_module_names[@]}"; do
@@ -119,7 +119,7 @@ if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   fi
   echo "ERROR: Run as root: sudo bash cyberpanel.sh -b ${BRANCH_FOR_MODULES}"
   if grep -qi microsoft /proc/version 2>/dev/null; then
-    echo "WSL: curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
+    echo "WSL: curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
   fi
   exit 1
 fi

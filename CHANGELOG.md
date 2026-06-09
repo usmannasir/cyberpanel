@@ -13,7 +13,17 @@ release.
 For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
+### Security: issue #1764 exposure hardening (09/06/2026)
 
+- **Audit:** `scripts/security/issue-1764-audit.sh` (Rocka374-style checks); operator guide `to-do/ISSUE-1764-HARDENING.md`.
+- **Firewall 8888:** `scripts/security/harden-firewall-8888.sh` plus `plogical/fastapi_ssh_config._try_remove_public_8888_ports()` removes legacy public accept rules and adds priority `-20` reject rules (service stays on `127.0.0.1:8888`).
+- **Post-upgrade:** `upgrade_modules/10_post_tweak.sh` runs `verify_fastapi_ssh_hardening.sh` and firewall hardening.
+- **Admin ports:** `scripts/security/restrict-admin-ports.sh` limits 8090/7080 via `/etc/cyberpanel/admin_ips.conf` (SSH/FTP unchanged).
+- **IoC block:** `scripts/security/block-known-iocs.sh` blocks `94.102.55.18` (optional `--extra` for `80.78.18.178`).
+- **API auth:** `runAWSBackups` requires `get_api_admin()` (upstream `5f648d13`).
+- **Backports:** #1813 webmail secMiddleware skip, #1814 manual SSL `--force 1`, #1816 Modify Website link, OLS **2.5.0** / module **2.7.3** in `install/ols_binaries_config.py`, cyberpanel_ols `ls_enabled` re-enable.
+- **Branding:** install/upgrade defaults and README URLs point at `https://github.com/usmannasir/cyberpanel` branch `v2.5.5-dev`.
+- **UI (#1800/#1804/#1808):** evaluated; fork already ships the v2.4.8 dark-mode shell, no cherry-pick applied.
 
 
 ### Security: remediation SEC-01 through SEC-14 (30/05/2026)

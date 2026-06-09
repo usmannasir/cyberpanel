@@ -1288,9 +1288,9 @@ CYBERCP_MIGRATION_APPS_FALLBACK = [
 
 def cyberpanel_github_owner():
     """GitHub org/user for CyberPanel source (installer exports CYBERPANEL_GITHUB_OWNER)."""
-    owner = (os.environ.get('CYBERPANEL_GITHUB_OWNER') or 'master3395').strip()
+    owner = (os.environ.get('CYBERPANEL_GITHUB_OWNER') or 'usmannasir').strip()
     if not owner or '/' in owner or ' ' in owner:
-        return 'master3395'
+        return 'usmannasir'
     return owner
 
 

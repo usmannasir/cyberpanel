@@ -109,7 +109,7 @@ The upgrade uses a **modular loader** (`cyberpanel_upgrade.sh`) that works on bo
 ### Upgrade to stable (recommended)
 
 ```bash
-sh <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/master3395/cyberpanel/stable/preUpgrade.sh)
+sh <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)
 ```
 
 PreUpgrade downloads the loader from `stable` and runs it with `-b stable`, so modules are taken from the stable branch. No `-b` flag needed.
@@ -122,10 +122,10 @@ Use `-b v2.5.5-dev` so the loader fetches modules from the dev branch.
 
 ```bash
 # Interactive (branch + MariaDB prompts)
-sh <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
+sh <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
 
 # Non-interactive: v2.5.5-dev + MariaDB 11.8 (LTS) — recommended
-sh <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+sh <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
 ```
 
 **MariaDB options:** `10.11`, `11.8` (LTS default), `12.x` (e.g. 12.1, 12.2). Use `--mariadb` for 10.11, or `--mariadb-version X.Y` to set explicitly.
@@ -144,10 +144,10 @@ If you prefer to run the upgrade script without preUpgrade (e.g. already have th
 
 ```bash
 # Stable (default; modules fetched from stable)
-sudo bash <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel_upgrade.sh)
+sudo bash <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh)
 
 # Dev (pass -b so modules are fetched from v2.5.5-dev)
-sudo bash <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel_upgrade.sh) -b v2.5.5-dev
+sudo bash <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh) -b v2.5.5-dev
 ```
 
 Optional flags (same as with preUpgrade): `--mariadb-version 11.8`, `--debug`, `--mirror`, etc.

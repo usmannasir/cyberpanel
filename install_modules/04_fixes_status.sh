@@ -47,7 +47,7 @@ Install_CyberCP_Runtime_Python_Requirements() {
             wget -q -O "$td/r.txt" "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>/dev/null && grep -q "Django==" "$td/r.txt" 2>/dev/null && req_file="$td/r.txt"
             [[ -z "$req_file" ]] && wget -q -O "$td/r.txt" "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>/dev/null && grep -q "Django==" "$td/r.txt" 2>/dev/null && req_file="$td/r.txt"
         fi
-        [[ -z "$req_file" ]] && wget -q -O "$td/d.txt" "https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/requirments.txt" 2>/dev/null \
+        [[ -z "$req_file" ]] && wget -q -O "$td/d.txt" "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/requirments.txt" 2>/dev/null \
             && grep -q "Django==" "$td/d.txt" 2>/dev/null && req_file="$td/d.txt"
         [[ -z "$req_file" ]] && wget -q -O "$td/s.txt" "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt" 2>/dev/null \
             && grep -q "Django==" "$td/s.txt" 2>/dev/null && req_file="$td/s.txt"

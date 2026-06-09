@@ -7,7 +7,7 @@ Post_Upgrade_LSCPD_Sudo_Hardening() {
 
   local src_dir="/usr/local/CyberCP/scripts/sudo"
   local dst_dir="/usr/local/bin"
-  local git_user="${Git_User:-master3395}"
+  local git_user="${Git_User:-usmannasir}"
   local branch="${Branch_Name:-stable}"
   local base="${Git_Content_URL:-https://raw.githubusercontent.com/${git_user}/cyberpanel}"
   local had_error=0
