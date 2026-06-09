@@ -125,7 +125,10 @@ class secMiddleware:
                 except:
                     data = request.POST
 
-                for key, value in data.items():
+                # Skip input validation for webmail (free-form email text; issue #1813).
+                webmailRequest = pathActual.startswith('/webmail/')
+
+                for key, value in ({} if webmailRequest else data).items():
                     valueAlreadyChecked = 0
 
                     # Key/value scanning logging removed

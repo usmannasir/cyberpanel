@@ -8,11 +8,11 @@ if [ "$(id -u)" -ne 0 ]; then
     _branch="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
     if command -v sudo >/dev/null 2>&1; then
         echo "CyberPanel install requires root. Re-running with sudo..."
-        _install_url="https://raw.githubusercontent.com/master3395/cyberpanel/${_branch}/install.sh"
+        _install_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/${_branch}/install.sh"
         exec sudo -E env CYBERPANEL_BRANCH="${_branch}" sh -c "curl -sL '${_install_url}' | sh -s"
     fi
     echo "ERROR: Run the installer as root."
-    echo "  curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
+    echo "  curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
     if grep -qi microsoft /proc/version 2>/dev/null; then
         echo "WSL: the same command from your AlmaLinux shell (sudo will prompt for your Linux password)."
     fi
@@ -155,7 +155,7 @@ mkdir -p "$TEMP_DIR" 2>/dev/null || true
 # Prefer master3395/cyberpanel raw cyberpanel.sh for known branches (includes AlmaLinux 10 etc.)
 if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ] || [ "$BRANCH_NAME" = "v2.4.5" ]; then
     # Try to download from the branch-specific URL
-    if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
+    if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
         if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
             # Make script executable
             chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
@@ -166,7 +166,7 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ] || [ "$BRA
                 # Use absolute path to avoid any relative path issues
                 cd "$TEMP_DIR" || cd /tmp || cd /
                 export CYBERPANEL_BRANCH="${BRANCH_NAME}"
-                export CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+                export CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-usmannasir}"
                 bash "$SCRIPT_PATH" -b "${BRANCH_NAME}" "$@"
                 exit $?
             else

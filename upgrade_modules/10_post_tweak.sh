@@ -497,6 +497,14 @@ if declare -f Post_Upgrade_LSCPD_Sudo_Hardening >/dev/null 2>&1; then
   Post_Upgrade_LSCPD_Sudo_Hardening || return 1
 fi
 
+if [[ -x /usr/local/CyberCP/scripts/verify_fastapi_ssh_hardening.sh ]]; then
+  /usr/local/CyberCP/scripts/verify_fastapi_ssh_hardening.sh || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: fastapi_ssh hardening verify failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+if [[ -x /usr/local/CyberCP/scripts/security/harden-firewall-8888.sh ]]; then
+  bash /usr/local/CyberCP/scripts/security/harden-firewall-8888.sh || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: harden-firewall-8888 failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
 systemctl restart lscpd
 
 }

@@ -937,16 +937,25 @@ def cyberPanelVersion(request):
 @csrf_exempt
 def runAWSBackups(request):
     try:
+        if request.method != 'POST':
+            return HttpResponse(json.dumps({'status': 0, 'error_message': 'POST required'}))
 
         data = json.loads(request.body)
-        randomFile = data['randomFile']
 
-        if os.path.exists(randomFile):
+        admin, auth_error = get_api_admin(request, data, allow_token=False)
+        if auth_error:
+            return api_auth_response(auth_error, 'status')
+
+        randomFile = data.get('randomFile', '')
+        if randomFile and os.path.exists(randomFile):
             s3 = S3Backups(request, None, 'runAWSBackups')
             s3.start()
+
+        return HttpResponse(json.dumps({'status': 1}))
     except Exception as e:
         secure_log_error(e, 'API.runAWSBackups')
         logging.writeToFile('Failed to API.runAWSBackups [API.runAWSBackups]')
+        return HttpResponse(json.dumps({'status': 0, 'error_message': 'Request failed'}))
 
 
 @csrf_exempt

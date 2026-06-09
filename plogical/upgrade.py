@@ -1326,9 +1326,23 @@ class Upgrade:
             # Check if module is already configured
             with open(CONFIG_FILE, 'r') as f:
                 content = f.read()
-                if 'cyberpanel_ols' in content:
+            if 'cyberpanel_ols' in content:
+                # Re-enable if ls_enabled 0 (upstream #1801 / 6b4059f8).
+                import re
+                new_content = re.sub(
+                    r'(module\s+cyberpanel_ols\s*\{.*?\})',
+                    lambda m: re.sub(r'ls_enabled\s+0', 'ls_enabled          1', m.group(0)),
+                    content,
+                    flags=re.DOTALL,
+                )
+                if new_content != content:
+                    shutil.copy2(CONFIG_FILE, f"{CONFIG_FILE}.backup")
+                    with open(CONFIG_FILE, 'w') as f:
+                        f.write(new_content)
+                    Upgrade.stdOut("Module was disabled (ls_enabled 0); re-enabled LSCache module", 0)
+                else:
                     Upgrade.stdOut("Module already configured", 0)
-                    return True
+                return True
 
             # Add module configuration
             module_config = """
@@ -1350,6 +1364,19 @@ module cyberpanel_ols {
             Upgrade.stdOut(f"WARNING: Module configuration failed: {msg}", 0)
             Upgrade.stdOut("Module may still work via auto-load", 0)
             return True  # Non-fatal
+
+
+    @staticmethod
+    def ensureCyberPanelPhpmyadminOls():
+        try:
+            from plogical.cyberpanelOlsPhpmyadmin import ensure_cyberpanel_phpmyadmin_ols
+            Upgrade.stdOut("Configuring OpenLiteSpeed phpMyAdmin PHP contexts...", 1)
+            ensure_cyberpanel_phpmyadmin_ols(restart=True, verify=True)
+            Upgrade.stdOut("phpMyAdmin OLS configuration applied", 1)
+            return True
+        except Exception as e:
+            Upgrade.stdOut("WARNING: phpMyAdmin OLS setup failed: %s" % str(e), 0)
+            return False
 
     @staticmethod
     def enable_autossl_httpd_defaults():
@@ -1604,6 +1631,15 @@ $cfg['Servers'][$i]['port'] = '3306';
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp'
             Upgrade.executioner_silent(command, 'chown phpMyAdmin tmp')
 
+            # Ensure signin file exists (idempotent; fixes 404 if copy failed earlier)
+            signin_dest = os.path.join(pma_dir, 'phpmyadminsignin.php')
+            signin_src = '/usr/local/CyberCP/plogical/phpmyadminsignin.php'
+            if not os.path.isfile(signin_dest) and os.path.isfile(signin_src):
+                try:
+                    shutil.copy2(signin_src, signin_dest)
+                except Exception:
+                    pass
+
             try:
                 from plogical.phpmyadmin_utils import ensure_phpmyadmin_sso
                 ensure_phpmyadmin_sso()
@@ -1611,6 +1647,7 @@ $cfg['Servers'][$i]['port'] = '3306';
                 pass
 
             os.chdir(cwd)
+            Upgrade.ensureCyberPanelPhpmyadminOls()
 
         except Exception as e:
             ErrorSanitizer.log_error_securely(e, 'download_install_phpmyadmin')
@@ -5057,7 +5094,7 @@ class Migration(migrations.Migration):
                         return 0, 'Failed to remove or quarantine old CyberCP directory'
 
             # Clone the new repository (use CYBERPANEL_GIT_USER for fork, e.g. master3395)
-            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'master3395')
+            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'usmannasir')
             upstream_user = os.environ.get('CYBERPANEL_UPSTREAM_GIT_USER', 'usmannasir')
             checkout_ok = False
 
@@ -6161,6 +6198,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             if all_services_ok:
                 Upgrade.stdOut("All critical services are running successfully!", 1)
                 Upgrade.stdOut("CyberPanel should now be accessible at https://your-server-ip:8090", 1)
+                Upgrade.ensureCyberPanelPhpmyadminOls()
             else:
                 Upgrade.stdOut("Some critical services are not running properly", 0)
                 Upgrade.stdOut("Please check the logs and consider a server restart", 0)

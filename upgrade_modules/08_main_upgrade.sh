@@ -68,7 +68,7 @@ Install_CyberCP_Runtime_Python_Requirements() {
         req_file="$tdir/req-dl.txt"
       fi
     fi
-    if [[ -z "$req_file" ]] && wget -q -O "$tdir/req-dev.txt" "https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/requirments.txt" 2>/dev/null \
+    if [[ -z "$req_file" ]] && wget -q -O "$tdir/req-dev.txt" "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/requirments.txt" 2>/dev/null \
       && grep -q "Django==" "$tdir/req-dev.txt" 2>/dev/null; then
       req_file="$tdir/req-dev.txt"
     fi
@@ -145,7 +145,7 @@ fi
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Export Git user so upgrade.py clones from the same repo (master3395 or --repo override)
-export CYBERPANEL_GIT_USER="${Git_User:-master3395}"
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
 # Retry full /usr/local/CyberCP re-clone this many times if download/checkout fails (default 2)
 export CYBERPANEL_UPGRADE_CLONE_ATTEMPTS="${CYBERPANEL_UPGRADE_CLONE_ATTEMPTS:-2}"
 
@@ -227,7 +227,7 @@ elif [[ "$Server_OS" = "openEuler" ]] ; then
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
-export CYBERPANEL_GIT_USER="${Git_User:-master3395}"
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
 /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 FALLBACK_CODE=$?
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log

@@ -17,6 +17,7 @@ import logging
 import os
 import re
 import secrets
+import shutil
 import subprocess
 from typing import Dict, Optional, Tuple
 
@@ -202,22 +203,73 @@ def get_jwt_encode_settings() -> Tuple[str, str, str]:
 
 def _try_remove_public_8888_ports() -> None:
     """
-    Remove simple firewalld port openings for 8888/tcp if present (legacy exposure).
+    Remove firewalld exposure for 8888/tcp (legacy public accept rules and ports).
     """
+    if not shutil.which("firewall-cmd"):
+        return
+    try:
+        result = subprocess.run(
+            ["systemctl", "is-active", "firewalld"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.stdout.strip() != "active":
+            return
+    except OSError:
+        return
+
+    remove_rich = (
+        'rule family="ipv4" source address="0.0.0.0/0" port port="8888" protocol="tcp" accept',
+        'rule family="ipv6" port port="8888" protocol="tcp" accept',
+    )
+    for rule in remove_rich:
+        subprocess.run(
+            ["firewall-cmd", "--permanent", "--remove-rich-rule", rule],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
     for cmd in (
-        "firewall-cmd --permanent --zone=public --remove-port=8888/tcp",
-        "firewall-cmd --reload",
+        ["firewall-cmd", "--permanent", "--remove-port", "8888/tcp"],
+        ["firewall-cmd", "--permanent", "--zone=public", "--remove-port", "8888/tcp"],
     ):
-        try:
+        subprocess.run(
+            cmd,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    reject_rules = (
+        'rule priority="-20" family="ipv4" port port="8888" protocol="tcp" reject',
+        'rule priority="-20" family="ipv6" port port="8888" protocol="tcp" reject',
+    )
+    try:
+        listed = subprocess.run(
+            ["firewall-cmd", "--permanent", "--list-rich-rules"],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout
+    except OSError:
+        listed = ""
+    for rule in reject_rules:
+        if rule not in listed:
             subprocess.run(
-                cmd,
-                shell=True,
+                ["firewall-cmd", "--permanent", "--add-rich-rule", rule],
                 check=False,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-        except OSError as exc:
-            _LOGGER.debug("firewall cmd skipped: %s", exc)
+
+    subprocess.run(
+        ["firewall-cmd", "--reload"],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def apply_security_migration() -> None:

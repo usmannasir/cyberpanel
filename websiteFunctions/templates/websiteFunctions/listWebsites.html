@@ -741,6 +741,11 @@
                                 <a href="/filemanager/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'File Manager' %}">
                                     Filemanager
                                 </a>
+                                {% if admin or modifyWebsite %}
+                                <a href="{% url 'modifyWebsite' %}" class="btn btn-outline btn-sm" title="{% trans 'Modify website: package, owner, email & PHP' %}">
+                                    <i class="fas fa-pen-to-square"></i> {% trans "Modify" %}
+                                </a>
+                                {% endif %}
                             </div>
                         </div>
                         

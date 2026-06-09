@@ -4186,6 +4186,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     self.mysqlhost)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            # Ensure signin file exists (idempotent; fixes 404 if plogical was not present earlier)
+            signin_dest = '/usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            signin_src = '/usr/local/CyberCP/plogical/phpmyadminsignin.php'
+            if not os.path.isfile(signin_dest) and os.path.isfile(signin_src):
+                try:
+                    shutil.copy2(signin_src, signin_dest)
+                except Exception:
+                    pass
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
@@ -5641,6 +5649,20 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             
         except Exception as e:
             preFlightsChecks.stdOut(f"Warning: Could not optimize Makefile: {str(e)}", 1)
+
+
+    def ensureCyberPanelPhpmyadminOls(self):
+        """Write OLS vhost so /phpmyadmin/ runs via lsphp on panel port (not Django download)."""
+        try:
+            from plogical.cyberpanelOlsPhpmyadmin import ensure_cyberpanel_phpmyadmin_ols
+            preFlightsChecks.stdOut("Configuring OpenLiteSpeed phpMyAdmin PHP contexts...", 1)
+            ensure_cyberpanel_phpmyadmin_ols(restart=True, verify=True)
+            preFlightsChecks.stdOut("phpMyAdmin OLS configuration applied", 1)
+            return True
+        except Exception as e:
+            preFlightsChecks.stdOut("WARNING: phpMyAdmin OLS setup failed: %s" % str(e), 0)
+            logging.InstallLog.writeToFile('[WARNING] phpMyAdmin OLS: ' + str(e))
+            return False
 
     def setupLSCPDDaemon(self):
         try:
@@ -7346,6 +7368,7 @@ def main():
     checks.setupPort()
     checks.setupPythonWSGI()
     checks.setupLSCPDDaemon()
+    checks.ensureCyberPanelPhpmyadminOls()
     checks.installDNS_CyberPanelACMEFile()
 
     if args.redis is not None:
