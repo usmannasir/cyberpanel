@@ -4,6 +4,7 @@
 {% block content %}
 
     {% load static %}
+    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
@@ -162,6 +163,9 @@
                     <label><input ng-model="versionManagement" type="checkbox" value=""> {% trans "Version Management" %}</label>
                 </div>
                 <div class="checkbox-wrapper">
+                    <label><input ng-model="managePlugins" type="checkbox" value=""> {% trans "Plugin management" %} ({% trans "Plugin Store and installed plugins" %})</label>
+                </div>
+                <div class="checkbox-wrapper">
                     <div class="form-label" style="margin-bottom: 0.5rem;">{% trans "User Management" %}</div>
                     <label><input ng-model="createNewUser" type="checkbox" value=""> {% trans "Create New User" %}</label>
                     <label><input ng-model="listUsers" type="checkbox" value=""> {% trans "List Users" %}</label>
@@ -216,13 +220,13 @@
                         <i class="fa fa-plus"></i> {% trans "Create ACL" %}
                     </button>
                 </div>
-                <div ng-hide="aclCreated" class="alert alert-success">
-                    <i class="fa fa-check-circle"></i> {% trans "ACL with name:" %} <strong>{$ aclName $}</strong> {% trans "is successfully created." %}
+                <div ng-cloak ng-show="aclCreated === false" class="alert alert-success">
+                    <i class="fa fa-check-circle"></i> {% trans "ACL with name:" %} <strong><span ng-bind="aclName"></span></strong> {% trans "is successfully created." %}
                 </div>
-                <div ng-hide="aclCreationFailed" class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot create ACL. Error message:" %} {$ errorMessage $}
+                <div ng-cloak ng-show="aclCreationFailed === true" class="alert alert-danger">
+                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot create ACL. Error message:" %} <span ng-bind="errorMessage || 'Unknown error'"></span>
                 </div>
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                <div ng-cloak ng-show="couldNotConnect === false" class="alert alert-danger">
                     <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
             </form>
