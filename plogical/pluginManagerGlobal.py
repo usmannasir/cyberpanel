@@ -10,7 +10,7 @@ class pluginManagerGlobal:
         else:
             hookReturn = eventInQuest.send(sender=None, request=request, response = response)
         for items in hookReturn:
-            if type(items[1] == HttpResponse):
+            if isinstance(items[1], HttpResponse):
                 return items[1]
             else:
                 if items[1] == 200:
