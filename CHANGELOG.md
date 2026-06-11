@@ -13,6 +13,11 @@ release.
 For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
+### Fix: OLS + Apache subdomain creation permission denied (11/06/2026)
+
+- **Apache vhosts:** `ApachController/ApacheVhosts.py` writes `/etc/httpd/conf.d/*.conf` and PHP-FPM pool files via `installUtilities._writeProtectedConfigLines` (privileged copy through lscpd) instead of direct `open()`, fixing `[Errno 13] Permission denied` when creating child domains with Apache backend enabled.
+- **Upgrade:** `CPScripts/ensure-cyberpanel-apache-permissions.sh` sets ACLs on httpd conf.d, PHP-FPM pool dirs, and Let's Encrypt accounts; adds `cyberpanel` to `lsadm`. Runs from `upgrade_modules/10_post_tweak.sh`.
+
 ### Security: issue #1764 exposure hardening (09/06/2026)
 
 - **Audit:** `scripts/security/issue-1764-audit.sh` (Rocka374-style checks); operator guide `to-do/ISSUE-1764-HARDENING.md`.
