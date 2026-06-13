@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import shutil
+import shlex
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.models import Administrator
@@ -564,15 +564,19 @@ def FetchRemoteTransferStatus(request):
             if not log_path:
                 return HttpResponse(json.dumps({'fetchStatus': 0, 'error_message': 'Invalid transfer directory.'}))
 
-            try:
-                with open(log_path, 'r') as transfer_log:
-                    status = transfer_log.read()
+            # The transfer directory is created chmod 600 and owned by root by the
+            # backup process, so a non-root web process cannot open() the log
+            # directly (PermissionError) -- doing so leaves the UI stuck on
+            # "Just started.." forever. Read it through the privileged executioner
+            # instead. log_path is already validated (numeric dir under /home/backup)
+            # and quoted for defence in depth.
+            status = ProcessUtilities.outputExecutioner("cat " + shlex.quote(log_path))
 
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
-                return HttpResponse(final_json)
-            except OSError:
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": "Just started.."})
-                return HttpResponse(final_json)
+            if not status or "No such file or directory" in status:
+                status = "Just started.."
+
+            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
+            return HttpResponse(final_json)
 
     except BaseException as msg:
         data = {'fetchStatus': 0, 'error_message': str(msg)}
@@ -595,18 +599,18 @@ def cancelRemoteTransfer(request):
             if not transfer_path or not pid_path:
                 return HttpResponse(json.dumps({'cancelStatus': 0, 'error_message': 'Invalid transfer directory.'}))
 
-            with open(pid_path, 'r') as pid_file:
-                pid = pid_file.read().strip()
+            # pid file and transfer directory are root-owned, so read/kill/remove
+            # through the privileged executioner rather than acting as the (possibly
+            # non-root) web process. Both paths are already validated; pid is
+            # re-checked as numeric before being placed on a command line.
+            pid = ProcessUtilities.outputExecutioner("cat " + shlex.quote(pid_path))
+            pid = pid.strip() if pid else ""
 
             if not is_safe_numeric_id(pid):
                 return HttpResponse(json.dumps({'cancelStatus': 0, 'error_message': 'Invalid transfer process.'}))
 
-            try:
-                os.kill(int(pid), 9)
-            except OSError:
-                pass
-
-            shutil.rmtree(transfer_path, ignore_errors=True)
+            ProcessUtilities.executioner("kill -KILL " + pid)
+            ProcessUtilities.executioner("rm -rf " + shlex.quote(transfer_path))
 
             data = {'cancelStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data)
