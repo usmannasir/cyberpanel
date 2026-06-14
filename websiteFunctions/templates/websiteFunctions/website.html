@@ -1388,6 +1388,7 @@
             <a class="cp-tab" data-wtab="domains"><i class="fas fa-diagram-project"></i> {% trans "Domains" %}</a>
             <a class="cp-tab" data-wtab="logs"><i class="fas fa-file-lines"></i> {% trans "Logs" %}</a>
             <a class="cp-tab" data-wtab="config"><i class="fas fa-sliders"></i> {% trans "Config" %}</a>
+            <a class="cp-tab" data-wtab="ssl"><i class="fas fa-lock"></i> {% trans "SSL" %}</a>
             <a class="cp-tab" data-wtab="files"><i class="fas fa-folder-open"></i> {% trans "Files" %}</a>
             <a class="cp-tab" data-wtab="apps"><i class="fas fa-cubes"></i> {% trans "Apps" %}</a>
         </div>
@@ -2001,68 +2002,11 @@
                         </div>
 
                         <div class="col-md-3">
-                            <a href="#" ng-click="addSSL(); $event.preventDefault()" title="{% trans 'Add Your Own SSL' %}">
-                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
-                                <span class="h4">{% trans "Add SSL" %}</span>
-                            </a>
-                        </div>
-
-                        <div class="col-md-3">
                             <a href="#" ng-click="changePHPMaster(); $event.preventDefault()" title="{% trans 'Change PHP Version' %}">
                                 <img src="{% static 'images/icons/laptop.png' %}" width="65" class="mr-10">
                                 <span class="h4">{% trans "Change PHP" %}</span>
                             </a>
                         </div>
-
-                        <!---- HTML for main ssl file ---->
-
-                        <div class="col-md-12">
-
-                            <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
-
-                                <div ng-hide="sslSaved" class="alert alert-success">
-                                    <p>{% trans "SSL Saved" %}</p>
-                                </div>
-
-
-                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
-                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
-                                </div>
-
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                </div>
-
-
-                                <div ng-hide="" class="form-group">
-                                    <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                        <a ng-click="hidesslbtn()" href=""><img
-                                                src="/static/images/close-32.png"></a>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
-                                                  class="form-control"></textarea>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
-                                                  class="form-control"></textarea>
-                                    </div>
-                                </div>
-
-                                <div ng-hide="" class="form-group">
-                                    <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-4">
-                                        <button type="button" ng-click="saveSSL()"
-                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-
-                        <!----- HTML For SSL ---->
-
 
                         <!---- HTML for main conf file ---->
 
@@ -2235,6 +2179,73 @@
             </div>
         </div>
 
+
+        <!-- SSL Tab -->
+        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="ssl">
+            <div class="panel panel-body">
+                <h3 class="content-box-header">
+                    {% trans "SSL" %}
+                </h3>
+                <div class="content-box-wrapper">
+                    <div class="row mx-10">
+                        <div class="col-md-3">
+                            <a href="{% url 'v2ManageSSL' %}" title="{% trans 'Issue or renew a free SSL certificate' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Issue / Renew SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="#" ng-click="addSSL(); $event.preventDefault()" title="{% trans 'Add Your Own SSL' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Add SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <!---- HTML for main ssl file ---->
+                        <div class="col-md-12">
+                            <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
+
+                                <div ng-hide="sslSaved" class="alert alert-success">
+                                    <p>{% trans "SSL Saved" %}</p>
+                                </div>
+
+                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
+                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+                                <div ng-hide="" class="form-group">
+                                    <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
+                                        <a ng-click="hidesslbtn()" href=""><img
+                                                src="/static/images/close-32.png"></a>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveSSL()"
+                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="files">
             <div class="panel panel-body">
@@ -2677,7 +2688,7 @@ window.addEventListener('load', function() {
   var tabs=document.querySelectorAll('#cp-wtabs .cp-tab');
   var panels=document.querySelectorAll('.cp-wtab-panel');
   if(!tabs.length||!panels.length){return;}
-  var valid=["overview","domains","logs","config","files","apps"];
+  var valid=["overview","domains","logs","config","ssl","files","apps"];
   function activate(name){
     tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-wtab')===name);});
     panels.forEach(function(p){p.style.display=(p.getAttribute('data-wtab')===name)?'':'none';});
