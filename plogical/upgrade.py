@@ -7167,6 +7167,13 @@ slowlog = /var/log/php{version}-fpm-slow.log
 
         Upgrade.fixPermissions()
 
+        try:
+            from plogical.installUtilities import installUtilities
+            installUtilities.installLswsCyberpanelConfPermsHook()
+            installUtilities.repairHttpdMisplacedListenerMaps()
+        except Exception as msg:
+            Upgrade.stdOut('WARNING: LSWS preview/permission repair skipped: %s' % str(msg), 0)
+
         Upgrade.ensure_gunicorn_in_cybercp_venv()
         Upgrade.verify_cybercp_venv_core_modules()
 

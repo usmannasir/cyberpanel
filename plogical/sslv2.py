@@ -24,7 +24,9 @@ class sslUtilities:
     @staticmethod
     def checkIfSSLMap(virtualHostName):
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            from plogical import installUtilities
+            data = installUtilities.installUtilities._readProtectedConfigLines(
+                "/usr/local/lsws/conf/httpd_config.conf")
 
             sslCheck = 0
 
@@ -47,7 +49,9 @@ class sslUtilities:
     @staticmethod
     def checkSSLListener():
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            from plogical import installUtilities
+            data = installUtilities.installUtilities._readProtectedConfigLines(
+                "/usr/local/lsws/conf/httpd_config.conf")
             for items in data:
                 if items.find("listener SSL") > -1:
                     return 1
@@ -60,7 +64,9 @@ class sslUtilities:
     @staticmethod
     def checkSSLIPv6Listener():
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            from plogical import installUtilities
+            data = installUtilities.installUtilities._readProtectedConfigLines(
+                "/usr/local/lsws/conf/httpd_config.conf")
             for items in data:
                 if items.find("listener SSL IPv6") > -1:
                     return 1

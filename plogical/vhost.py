@@ -341,16 +341,29 @@ class vhost:
                 map_entry = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
                 modified = []
                 mapchecker = 1
-                line_lower = None
+                in_default_listener = False
+                map_exists = False
                 for line in lines:
-                    line_lower = line.lower()
-                    # Match listener block: "listener Default" or "listener default" (case-insensitive)
-                    if (mapchecker == 1 and "listener" in line_lower and "default" in line_lower):
+                    line_stripped = line.strip().lower()
+                    if mapchecker == 1 and line_stripped.startswith('listener') and 'default' in line_stripped and '{' in line_stripped and 'ssl' not in line_stripped:
+                        in_default_listener = True
                         modified.append(line)
-                        modified.append(map_entry)
+                        continue
+                    if in_default_listener and line_stripped.startswith('map') and virtualHostName.lower() in line_stripped:
+                        map_exists = True
+                    if in_default_listener and line_stripped.startswith('address'):
+                        modified.append(line)
+                        if not map_exists:
+                            modified.append(map_entry)
                         mapchecker = 0
-                    else:
-                        modified.append(line)
+                        in_default_listener = False
+                        continue
+                    if in_default_listener and line_stripped == '}':
+                        if not map_exists:
+                            modified.append(map_entry)
+                        mapchecker = 0
+                        in_default_listener = False
+                    modified.append(line)
                 if mapchecker != 0:
                     raise ValueError(
                         "Could not find Default listener block in /usr/local/lsws/conf/httpd_config.conf. "

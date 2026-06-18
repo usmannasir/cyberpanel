@@ -646,6 +646,13 @@ module cyberpanel_ols {
             except Exception as e:
                 InstallCyberPanel.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 1)
 
+            try:
+                from plogical.installUtilities import installUtilities
+                installUtilities.installLswsCyberpanelConfPermsHook()
+                InstallCyberPanel.stdOut("Installed LSWS config permission hook for CyberPanel", 1)
+            except Exception as e:
+                InstallCyberPanel.stdOut(f"WARNING: Could not install LSWS permission hook: {e}", 1)
+
         else:
             try:
                 try:
