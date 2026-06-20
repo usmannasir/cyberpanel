@@ -505,6 +505,10 @@ if [[ -x /usr/local/CyberCP/scripts/security/harden-firewall-8888.sh ]]; then
   bash /usr/local/CyberCP/scripts/security/harden-firewall-8888.sh || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: harden-firewall-8888 failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+if [[ -x /usr/local/CyberCP/CPScripts/ensure-cyberpanel-apache-permissions.sh ]]; then
+  bash /usr/local/CyberCP/CPScripts/ensure-cyberpanel-apache-permissions.sh || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: ensure-cyberpanel-apache-permissions failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
 systemctl restart lscpd
 
 }

@@ -81,7 +81,8 @@ class CloudflareDnsSync:
         return records
 
     @staticmethod
-    def upsert_dns_record(cf, zone_id, zone_name, name, record_type, value, priority, ttl, proxied=None):
+    def upsert_dns_record(cf, zone_id, zone_name, name, record_type, value, priority, ttl, proxied=None,
+                          existing_records=None):
         if value and str(value).find('DKIM') > -1:
             value = str(value).replace('\n\t', '').replace('"', '')
 
@@ -99,17 +100,19 @@ class CloudflareDnsSync:
         if ttl and int(ttl) > 0:
             dns_record = {
                 'name': name, 'type': record_type, 'content': value,
-                'ttl': int(ttl), 'priority': priority,
+                'ttl': int(ttl),
             }
         else:
             dns_record = {
-                'name': name, 'type': record_type, 'content': value, 'priority': priority,
+                'name': name, 'type': record_type, 'content': value,
             }
+        if record_type.upper() in ('MX', 'SRV') and priority is not None:
+            dns_record['priority'] = priority
         if record_type in ['A', 'AAAA', 'CNAME']:
             dns_record['proxied'] = proxied
 
         target_fqdn = CloudflareDnsSync.record_to_fqdn(name, zone_name).rstrip('.').lower()
-        existing = CloudflareDnsSync.list_zone_records(cf, zone_id)
+        existing = existing_records if existing_records is not None else CloudflareDnsSync.list_zone_records(cf, zone_id)
         matches = []
         for rec in existing:
             if (rec.get('type') or '').upper() != record_type.upper():
@@ -124,7 +127,7 @@ class CloudflareDnsSync:
             if same_content and same_proxy:
                 return
             cf.zones.dns_records.put(zone_id, rec['id'], data=dns_record)
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 'Updated Cloudflare %s record for %s' % (record_type, name), 0)
             return
 
@@ -153,7 +156,7 @@ class CloudflareDnsSync:
         if deleted:
             from plogical.dnsUtilities import DNS
             DNS.bumpSOASerial(zone)
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 'Deleted %s local DNS records for %s' % (deleted, domain_name), 0)
         return 1, 'Deleted %s local records' % deleted
 
@@ -197,16 +200,16 @@ class CloudflareDnsSync:
                     cf.zones.dns_records.delete(zone_id, record['id'])
                     deleted_count += 1
                 except Exception as exc:
-                    logging.CyberCPLogFileWriter.writeToFile(
+                    logging.writeToFile(
                         'Error deleting Cloudflare record %s for %s: %s' % (
                             record.get('id'), domain_name, str(exc)))
 
             if deleted_count:
-                logging.CyberCPLogFileWriter.writeToFile(
+                logging.writeToFile(
                     'Deleted %s CloudFlare DNS records for %s' % (deleted_count, domain_name))
             return 1, 'Deleted %s DNS records' % deleted_count
         except Exception as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 'Error in delete_cloudflare_records_for_host for %s: %s' % (domain_name, str(msg)))
             return 0, str(msg)
 
@@ -294,10 +297,10 @@ class CloudflareDnsSync:
                     deleted_count += 1
                     CloudflareDnsSync.delete_local_dns_records_for_host(fqdn)
 
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 'Pruned orphan Cloudflare hosts for %s: %s removed' % (apex, deleted_count), 0)
             return 1, 'Pruned %s orphan hosts' % deleted_count
         except Exception as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 'prune_orphan_cloudflare_hosts failed for %s: %s' % (apex_domain, str(msg)))
             return 0, str(msg)

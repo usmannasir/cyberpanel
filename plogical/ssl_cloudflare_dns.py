@@ -28,7 +28,7 @@ def _sync_panel_cf_keys_to_acme():
                 DNS.ConfigureCloudflareInAcme(token, email)
                 return True
     except BaseException as exc:
-        logging.CyberCPLogFileWriter.writeToFile('sync_panel_cf_keys_to_acme: %s' % str(exc))
+        logging.writeToFile('sync_panel_cf_keys_to_acme: %s' % str(exc))
     return False
 
 
@@ -78,13 +78,13 @@ def issue_le_via_cloudflare_dns(virtual_host_name, admin_email, is_hostname=Fals
 
     acme_path = '/root/.acme.sh/acme.sh'
     if not os.path.isfile(acme_path):
-        logging.CyberCPLogFileWriter.writeToFile('acme.sh not found for dns_cf issuance')
+        logging.writeToFile('acme.sh not found for dns_cf issuance')
         return False
 
     _sync_panel_cf_keys_to_acme()
     cf_ok, cf_msg = find_domain_in_cloudflare(virtual_host_name)
     if not cf_ok:
-        logging.CyberCPLogFileWriter.writeToFile(
+        logging.writeToFile(
             'Cloudflare DNS issuance skipped for %s: %s' % (virtual_host_name, cf_msg))
         return False
 
@@ -101,7 +101,7 @@ def issue_le_via_cloudflare_dns(virtual_host_name, admin_email, is_hostname=Fals
         ' --cert-file %s/cert.pem --key-file %s/privkey.pem --fullchain-file %s/fullchain.pem'
         % (acme_path, domain_list, live_dir, live_dir, live_dir)
     )
-    logging.CyberCPLogFileWriter.writeToFile('Cloudflare DNS SSL command: %s' % command, 0)
+    logging.writeToFile('Cloudflare DNS SSL command: %s' % command, 0)
 
     acme_env = _acme_cloudflare_env()
     try:
@@ -114,7 +114,7 @@ def issue_le_via_cloudflare_dns(virtual_host_name, admin_email, is_hostname=Fals
 
     if result.returncode != 0:
         err = (result.stderr or result.stdout or '').strip()
-        logging.CyberCPLogFileWriter.writeToFile(
+        logging.writeToFile(
             'dns_cf issue failed for %s: %s' % (virtual_host_name, err[:2500]))
         return False
 
@@ -132,7 +132,7 @@ def issue_le_via_cloudflare_dns(virtual_host_name, admin_email, is_hostname=Fals
             universal_newlines=True, shell=True, env=acme_env)
 
     if install_result.returncode != 0:
-        logging.CyberCPLogFileWriter.writeToFile(
+        logging.writeToFile(
             'dns_cf install-cert failed for %s' % virtual_host_name)
         return False
 
@@ -141,6 +141,6 @@ def issue_le_via_cloudflare_dns(virtual_host_name, admin_email, is_hostname=Fals
     except BaseException:
         pass
 
-    logging.CyberCPLogFileWriter.writeToFile(
+    logging.writeToFile(
         'Successfully issued SSL via Cloudflare DNS for %s' % virtual_host_name, 0)
     return True

@@ -1124,7 +1124,7 @@ class ACLManager:
                     if ip_obj.version == 6 and not ip_obj.is_loopback and not ip_obj.is_link_local:
                         return str(ip_obj)
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f'Error getting IPv6 address: {str(e)}')
+            logging.writeToFile('Error getting IPv6 address: %s' % str(e))
         
         return None
 

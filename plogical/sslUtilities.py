@@ -284,7 +284,9 @@ class sslUtilities:
     @staticmethod
     def checkIfSSLMap(virtualHostName):
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            from plogical import installUtilities
+            data = installUtilities.installUtilities._readProtectedConfigLines(
+                "/usr/local/lsws/conf/httpd_config.conf")
 
             sslCheck = 0
 

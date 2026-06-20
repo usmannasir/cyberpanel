@@ -530,6 +530,91 @@ class installUtilities:
         return True, None
 
     @staticmethod
+    def fixLswsConfPermissions():
+        """Ensure the cyberpanel user can read/write OpenLiteSpeed httpd_config.conf."""
+        try:
+            conf_dir = '/usr/local/lsws/conf'
+            if not os.path.isdir(conf_dir):
+                return 1
+            script = '/usr/local/bin/cyberpanel-fix-lsws-conf-perms.sh'
+            if os.path.isfile(script) and os.access(script, os.X_OK):
+                cmd = '/bin/bash ' + shlex.quote(script)
+            else:
+                cmd = (
+                    'chgrp -R lsadm ' + shlex.quote(conf_dir) + ' && '
+                    'find ' + shlex.quote(conf_dir) + ' -type d -exec chmod 770 {} + && '
+                    'find ' + shlex.quote(conf_dir) + ' -type f -exec chmod 660 {} +'
+                )
+            if getpass.getuser() == 'root':
+                subprocess.run(cmd, shell=True, check=False, timeout=60)
+            else:
+                ProcessUtilities.executioner(cmd, None, True)
+            return 1
+        except BaseException as msg:
+            CyberCPLogFileWriter.writeToFile(str(msg) + ' [fixLswsConfPermissions]')
+            return 0
+
+    @staticmethod
+    def installLswsCyberpanelConfPermsHook():
+        """Install LSWS permission fix script and systemd drop-in (survives package updates)."""
+        try:
+            if getpass.getuser() != 'root':
+                return 0
+            src_script = '/usr/local/CyberCP/install/litespeed/cyberpanel-fix-lsws-conf-perms.sh'
+            dst_script = '/usr/local/bin/cyberpanel-fix-lsws-conf-perms.sh'
+            src_dropin = '/usr/local/CyberCP/install/litespeed/lsws-cyberpanel-conf-perms.conf'
+            dropin_dir = '/etc/systemd/system/lsws.service.d'
+            dst_dropin = dropin_dir + '/cyberpanel-conf-perms.conf'
+            if os.path.isfile(src_script):
+                shutil.copy2(src_script, dst_script)
+                os.chmod(dst_script, 0o755)
+            dropin_src = src_dropin if os.path.isfile(src_dropin) else None
+            if dropin_src:
+                os.makedirs(dropin_dir, exist_ok=True)
+                shutil.copy2(dropin_src, dst_dropin)
+                subprocess.run(['systemctl', 'daemon-reload'], check=False, timeout=30)
+            installUtilities.fixLswsConfPermissions()
+            return 1
+        except BaseException as msg:
+            CyberCPLogFileWriter.writeToFile(str(msg) + ' [installLswsCyberpanelConfPermsHook]')
+            return 0
+
+    @staticmethod
+    def repairHttpdMisplacedListenerMaps():
+        """Remove listener map lines accidentally written inside the tuning{} block."""
+        try:
+            def modify_config(lines):
+                modified = []
+                in_tuning = False
+                depth = 0
+                for line in lines:
+                    stripped = line.strip().lower()
+                    if not in_tuning and stripped.startswith('tuning') and '{' in stripped:
+                        in_tuning = True
+                        depth = stripped.count('{') - stripped.count('}')
+                        modified.append(line)
+                        continue
+                    if in_tuning:
+                        depth += stripped.count('{') - stripped.count('}')
+                        if stripped.startswith('map'):
+                            continue
+                        modified.append(line)
+                        if depth <= 0:
+                            in_tuning = False
+                        continue
+                    modified.append(line)
+                return modified
+
+            return installUtilities.safeModifyHttpdConfig(
+                modify_config,
+                'Remove misplaced listener map entries from tuning block',
+                skip_validation=True,
+            )
+        except BaseException as msg:
+            CyberCPLogFileWriter.writeToFile(str(msg) + ' [repairHttpdMisplacedListenerMaps]')
+            return False, str(msg)
+
+    @staticmethod
     def changePortTo80():
         try:
             def modify_config(lines):

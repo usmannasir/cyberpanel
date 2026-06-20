@@ -43,11 +43,12 @@ class DNS:
             self.status = data[2].strip() if len(data) > 2 else ''
             return 1
         else:
-            #logging.CyberCPLogFileWriter.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
+            #logging.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
             return 0
 
     def cfTemplate(self, zoneDomain, admin, enableCheck=None):
         try:
+            from plogical.cloudflare_dns_sync import CloudflareDnsSync
             self.admin = admin
             ## Get zone
 
@@ -73,19 +74,20 @@ class DNS:
 
                         domain = Domains.objects.get(name=zoneDomain)
                         records = Records.objects.filter(domain_id=domain.id)
+                        existing_cf = CloudflareDnsSync.list_zone_records(cf, zone_id)
 
                         for record in records:
                             DNS.createDNSRecordCloudFlare(
                                 cf, zone_id, zone_name, record.name, record.type, record.content,
-                                record.prio, record.ttl)
+                                record.prio, record.ttl, existing_records=existing_cf)
 
                         return 1, None
 
 
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                    logging.writeToFile(str(e))
                 except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                    logging.writeToFile(str(e))
 
                 try:
                     zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
@@ -95,11 +97,12 @@ class DNS:
 
                     domain = Domains.objects.get(name=zoneDomain)
                     records = Records.objects.filter(domain_id=domain.id)
+                    existing_cf = CloudflareDnsSync.list_zone_records(cf, zone_id)
 
                     for record in records:
                         DNS.createDNSRecordCloudFlare(
                             cf, zone_id, zone_name, record.name, record.type, record.content,
-                            record.prio, record.ttl)
+                            record.prio, record.ttl, existing_records=existing_cf)
 
                     return 1, None
 
@@ -232,7 +235,7 @@ class DNS:
                         if ipv6Address:
                             DNS.createDNSRecord(zone, topLevelDomain, "AAAA", ipv6Address, 0, 3600)
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
+                        logging.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
 
                     # CNAME Records.
 
@@ -303,7 +306,7 @@ class DNS:
                         if ipv6Address:
                             DNS.createDNSRecord(zone, mxValue, "AAAA", ipv6Address, 0, 3600)
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
+                        logging.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
 
                     ## TXT Records for mail
 
@@ -397,7 +400,7 @@ class DNS:
                         if ipv6Address:
                             DNS.createDNSRecord(zone, topLevelDomain, "AAAA", ipv6Address, 0, 3600)
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
+                        logging.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
 
                     # CNAME Records.
 
@@ -468,7 +471,7 @@ class DNS:
                         if ipv6Address:
                             DNS.createDNSRecord(zone, mxValue, "AAAA", ipv6Address, 0, 3600)
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
+                        logging.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
 
                     ## TXT Records for mail
 
@@ -530,7 +533,8 @@ class DNS:
                     if ipv6Address:
                         DNS.createDNSRecord(zone, actualSubDomain, "AAAA", ipv6Address, 0, 3600)
                 except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for subdomain {actualSubDomain}: {str(e)}')
+                    logging.writeToFile(
+                        'Error creating AAAA record for subdomain %s: %s' % (actualSubDomain, str(e)))
 
                 ## Mail Record
 
@@ -543,7 +547,7 @@ class DNS:
                         if ipv6Address:
                             DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "AAAA", ipv6Address, 0, 3600)
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for mail subdomain {actualSubDomain}: {str(e)}')
+                        logging.writeToFile(f'Error creating AAAA record for mail subdomain {actualSubDomain}: {str(e)}')
 
                 # CNAME Records.
 
@@ -619,7 +623,7 @@ class DNS:
             dns.cfTemplate(domain, admin)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
@@ -705,12 +709,12 @@ class DNS:
 
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
@@ -721,7 +725,8 @@ class DNS:
             return 0
 
     @staticmethod
-    def createDNSRecordCloudFlare(cf, zone, zone_name, name, type, value, priority, ttl, proxied=None):
+    def createDNSRecordCloudFlare(cf, zone, zone_name, name, type, value, priority, ttl, proxied=None,
+                                  existing_records=None):
         try:
             import tldextract
             from plogical.cloudflare_dns_sync import CloudflareDnsSync
@@ -729,9 +734,9 @@ class DNS:
                 parsed = tldextract.TLDExtract(cache_dir=None)(name)
                 zone_name = parsed.domain + '.' + parsed.suffix
             CloudflareDnsSync.upsert_dns_record(
-                cf, zone, zone_name, name, type, value, priority, ttl, proxied)
+                cf, zone, zone_name, name, type, value, priority, ttl, proxied, existing_records)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
+            logging.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
 
     @staticmethod
     def bumpSOASerial(zone):
@@ -747,7 +752,7 @@ class DNS:
                 try:
                     parts[2] = str(int(parts[2]) + 1)
                 except (TypeError, ValueError):
-                    logging.CyberCPLogFileWriter.writeToFile(
+                    logging.writeToFile(
                         'SOA serial bump skipped: invalid serial in record id %s' % (getSOA.id,)
                     )
                     continue
@@ -756,7 +761,7 @@ class DNS:
                 updated = True
             return updated
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [bumpSOASerial]')
+            logging.writeToFile(str(msg) + ' [bumpSOASerial]')
             return False
 
     @staticmethod
@@ -900,14 +905,14 @@ class DNS:
                             DNS.createDNSRecordCloudFlare(cf, zone_id, zone_name, name, type, value, priority, ttl)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
             except:
                 pass
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
+            logging.writeToFile(str(msg) + " [createDNSRecord]")
 
     @staticmethod
     def deleteDNSZone(virtualHostName):
@@ -1022,7 +1027,7 @@ webserver-allow-from=0.0.0.0/0
             return 1, None
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f'ConfigurePowerDNSInAcme, Error: {str(msg)}')
+            logging.writeToFile(f'ConfigurePowerDNSInAcme, Error: {str(msg)}')
             return 0, str(msg)
 
     @staticmethod
@@ -1048,5 +1053,5 @@ SAVED_CF_Email='{SAVED_CF_Email}'
             return 1, None
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f'ConfigureCloudflareInAcme, Error: {str(msg)}')
+            logging.writeToFile(f'ConfigureCloudflareInAcme, Error: {str(msg)}')
             return 0, str(msg)

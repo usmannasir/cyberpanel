@@ -13,6 +13,9 @@ from managePHP.phpManager import PHPManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 import re
+import getpass
+import shlex
+from plogical.installUtilities import installUtilities
 
 class ApacheVhost:
     apacheInstallStatusPath = '/home/cyberpanel/apacheInstallStatus'
@@ -70,6 +73,29 @@ class ApacheVhost:
         sslBasePath = "/etc/httpd/conf.d/ssl/"
     else:
         sslBasePath = "/etc/apache2/conf-enabled/"
+
+    @staticmethod
+    def _writeConfigFile(file_path, content, append=False):
+        if not content.endswith('\n'):
+            content = content + '\n'
+        if append:
+            existing = installUtilities._readProtectedConfigLines(file_path)
+            lines = existing + [content]
+        else:
+            lines = [content]
+        ok, err = installUtilities._writeProtectedConfigLines(file_path, lines)
+        if not ok:
+            raise OSError(err or ('Permission denied: %s' % file_path))
+
+    @staticmethod
+    def _removeConfigFile(file_path):
+        if getpass.getuser() == 'root':
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return
+        cmd = 'rm -f %s' % shlex.quote(file_path)
+        if ProcessUtilities.executioner(cmd, None, True) != 1:
+            raise OSError('Permission denied: %s' % file_path)
 
     @staticmethod
     def DecidePHPPath(php, virtualHostName):
@@ -182,7 +208,6 @@ class ApacheVhost:
             ## Non-SSL Conf
 
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
-            confFile = open(finalConfPath, "w+")
 
             php = PHPManager.getPHPString(phpVersion)
 
@@ -195,13 +220,11 @@ class ApacheVhost:
             currentConf = currentConf.replace('{externalApp}', virtualHostUser)
             currentConf = currentConf.replace('{sockPath}', sockPath)
 
-            confFile.write(currentConf)
-            confFile.close()
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf)
 
             ## SSL Conf
 
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
-            confFile = open(finalConfPath, "a")
 
             php = PHPManager.getPHPString(phpVersion)
 
@@ -215,14 +238,12 @@ class ApacheVhost:
             currentConf = currentConf.replace('{SSLBase}', ApacheVhost.sslBasePath)
             currentConf = currentConf.replace('{sockPath}', sockPath)
 
-            confFile.write(currentConf)
-            confFile.close()
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf, append=True)
 
             ##
 
             finalConfPath = ApacheVhost.DecidePHPPath(php, virtualHostName)
 
-            confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
             currentConf = currentConf.replace('{www}', virtualHostUser)
             currentConf = currentConf.replace('{Sock}', virtualHostName)
@@ -230,7 +251,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{sockPath}', sockPath)
             currentConf = currentConf.replace('{group}', group)
 
-            confFile.write(currentConf)
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf)
 
             ApacheVhost.GenerateSelfSignedSSL(virtualHostName)
 
@@ -306,7 +327,6 @@ class ApacheVhost:
                 group = 'nogroup'
 
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
-            confFile = open(finalConfPath, "w+")
 
             php = PHPManager.getPHPString(phpVersion)
 
@@ -319,13 +339,11 @@ class ApacheVhost:
             currentConf = currentConf.replace('{path}', path)
             currentConf = currentConf.replace('{sockPath}', sockPath)
 
-            confFile.write(currentConf)
-            confFile.close()
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf)
 
             ## SSL Conf
 
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
-            confFile = open(finalConfPath, "a")
 
             php = PHPManager.getPHPString(phpVersion)
 
@@ -339,14 +357,12 @@ class ApacheVhost:
             currentConf = currentConf.replace('{sockPath}', sockPath)
             currentConf = currentConf.replace('{SSLBase}', ApacheVhost.sslBasePath)
 
-            confFile.write(currentConf)
-            confFile.close()
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf, append=True)
 
             ## SSL Conf
 
             finalConfPath = ApacheVhost.DecidePHPPath(php, virtualHostName)
 
-            confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
             currentConf = currentConf.replace('{www}', "".join(re.findall("[a-zA-Z]+", virtualHostName))[:7])
             currentConf = currentConf.replace('{Sock}', virtualHostName)
@@ -354,7 +370,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{sockPath}', sockPath)
             currentConf = currentConf.replace('{group}', group)
 
-            confFile.write(currentConf)
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf)
 
             ApacheVhost.GenerateSelfSignedSSL(virtualHostName)
 
@@ -384,8 +400,7 @@ class ApacheVhost:
         try:
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
 
-            if os.path.exists(finalConfPath):
-                os.remove(finalConfPath)
+            ApacheVhost._removeConfigFile(finalConfPath)
 
             ApacheVhost.deletePHPPath(virtualHostName)
 
@@ -619,7 +634,6 @@ class ApacheVhost:
 
             logging.writeToFile(f'apache php final path: {finalConfPath}')
 
-            confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
             currentConf = currentConf.replace('{www}', externalApp)
             currentConf = currentConf.replace('{Sock}', virtualHostName)
@@ -627,7 +641,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{sockPath}', sockPath)
             currentConf = currentConf.replace('{group}', group)
 
-            confFile.write(currentConf)
+            ApacheVhost._writeConfigFile(finalConfPath, currentConf)
 
             ### minor bug fix of updating default php conf user in selected fpm
 

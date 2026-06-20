@@ -131,3 +131,8 @@ Subject: %s
             statusFile.close()
         except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
+
+
+def writeToFile(message, email=None):
+    """Module-level alias so both import styles can call logging.writeToFile()."""
+    return CyberCPLogFileWriter.writeToFile(message, email)
