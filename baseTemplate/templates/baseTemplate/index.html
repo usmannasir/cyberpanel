@@ -264,6 +264,10 @@
             <div class="icon-wrapper"><i class="fas fa-sliders"></i></div>
             <span>{% trans "Settings" %}</span>
         </a>
+        <a href="{% url 'installed' %}" class="menu-item {% if request.path|slice:':9' == '/plugins/' %}active{% endif %}">
+            <div class="icon-wrapper"><i class="fas fa-puzzle-piece"></i></div>
+            <span>{% trans "Plugins" %}</span>
+        </a>
         {% endif %}
 
         <!-- ============================ HELP ============================ -->
@@ -351,6 +355,7 @@
             {% if admin or createDatabase %}{l:'{% trans "phpMyAdmin" %}', h:'{% url "phpMyAdmin" %}', i:'fa-table', g:'{% trans "Data" %}', t:'_blank'},{% endif %}
             {% if admin %}{l:'{% trans "MySQL Manager" %}', h:'{% url "MysqlManager" %}', i:'fa-sliders', g:'{% trans "Data" %}'},{% endif %}
             {% if admin or listFTPAccounts %}{l:'{% trans "FTP Accounts" %}', h:'{% url "listFTPAccounts" %}', i:'fa-folder', g:'{% trans "Data" %}'},{% endif %}
+            {% if admin %}{l:'{% trans "Plugins" %}', h:'{% url "installed" %}', i:'fa-puzzle-piece', g:'{% trans "Administration" %}'},{% endif %}
             // Backups
             {% if admin or createBackup %}{l:'{% trans "One-Click Backups" %}', h:'{% url "OneClickBackups" %}', i:'fa-bolt', g:'{% trans "Backups" %}'},
             {l:'{% trans "Incremental Backups" %}', h:'{% url "backupDestinationsInc" %}', i:'fa-layer-group', g:'{% trans "Backups" %}'},
