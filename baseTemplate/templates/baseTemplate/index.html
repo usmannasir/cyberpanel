@@ -69,6 +69,7 @@
     </script>
 </head>
 <body>
+    <form id="cp-csrf-seed" style="display:none" aria-hidden="true">{% csrf_token %}</form>
     <a href="#main-content" class="skip-link">{% trans "Skip to main content" %}</a>
     <!-- Header -->
     <header id="header">
