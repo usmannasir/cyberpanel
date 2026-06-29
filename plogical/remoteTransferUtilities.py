@@ -182,7 +182,10 @@ class remoteTransferUtilities:
                         pass
 
                 portpath = "/home/cyberpanel/remote_port"
-                os.remove(portpath)
+                try:
+                    os.remove(portpath)
+                except OSError:
+                    pass
 
                 writeToFile = open(backupLogPath, "a")
                 writeToFile.writelines("[" + time.strftime(
@@ -206,27 +209,42 @@ class remoteTransferUtilities:
             ## complete path is a path to the file need to send
             portpath = "/home/cyberpanel/remote_port"
 
-            logging.CyberCPLogFileWriter.writeToFile("habbi--------open file:%s"%portpath)
-
-            # Read the contents of the file
-            with open(portpath, 'r') as file:
-                sshPort = file.readline().strip()
+            # Default to the standard SSH port when no custom port file is present,
+            # rather than failing the whole send. The file is a best-effort hint.
+            sshPort = "22"
+            try:
+                with open(portpath, 'r') as file:
+                    candidate = file.readline().strip()
+                if candidate.isdigit():
+                    sshPort = candidate
+            except (OSError, IOError):
+                pass
 
             command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel -P "+ sshPort + " " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
             return_Code = subprocess.call(shlex.split(command), stdout=writeToFile)
-            if return_Code == 0:
-                logging.CyberCPLogFileWriter.writeToFile("This backup file is run")
-            else:
-                logging.CyberCPLogFileWriter.writeToFile("This back file is not run")
-
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(command)
 
-            os.remove(completedPathToSend)
+            if return_Code == 0:
+                logging.CyberCPLogFileWriter.writeToFile("Remote backup file sent: %s" % completedPathToSend)
+                writeToFile.writelines("[" + time.strftime(
+                    "%m.%d.%Y_%H-%M-%S") + "]" + " Transfer of " + completedPathToSend + " completed successfully.\n")
+                ## Only remove the local copy once the transfer is confirmed.
+                os.remove(completedPathToSend)
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Remote backup transfer FAILED (scp exit %s): %s" % (return_Code, completedPathToSend))
+                writeToFile.writelines("[" + time.strftime(
+                    "%m.%d.%Y_%H-%M-%S") + "]" + " Transfer of " + completedPathToSend + " FAILED (scp exit code " + str(return_Code) + "). Local copy kept. [5010]\n")
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            try:
+                writeToFile.writelines("[" + time.strftime(
+                    "%m.%d.%Y_%H-%M-%S") + "]" + " Error while sending backup: " + str(msg) + " [5010]\n")
+            except:
+                pass
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendBackup]")
 
     @staticmethod
     def remoteBackupRestore(backupDir, dir):

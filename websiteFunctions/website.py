@@ -188,15 +188,23 @@ class WebsiteManager:
                 'production_status': True
             })
 
+        # WP site titles are attacker-influenceable and get injected into an inline
+        # <script> via |safe, so escape the characters that could break out of the
+        # script context. The result is still valid JSON (JSON.parse decodes it).
+        def _escapeForScript(jsonStr):
+            bs = chr(92)
+            return jsonStr.replace('<', bs + 'u003c').replace('>', bs + 'u003e') \
+                .replace('&', bs + 'u0026').replace(chr(0x2028), bs + 'u2028').replace(chr(0x2029), bs + 'u2029')
+
         context = {
-            "wpsite": json.dumps(sites),
+            "wpsite": _escapeForScript(json.dumps(sites)),
             "status": 1,
             "total_sites": len(sites),
-            "debug_info": json.dumps({
+            "debug_info": _escapeForScript(json.dumps({
                 "user_id": userID,
                 "is_admin": bool(currentACL.get('admin', 0)),
                 "wp_sites_count": wp_sites.count()
-            })
+            }))
         }
 
         proc = httpProc(request, 'websiteFunctions/WPsitesList.html', context)
@@ -2270,10 +2278,10 @@ Require valid-user
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
-                       " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
-                       "' --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
+                       " --administratorEmail " + adminEmail + " --phpVersion " + shlex.quote(phpSelection) + \
+                       " --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
                        + str(1) + " --openBasedir " + str(data['openBasedir']) + \
-                       ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
+                       ' --websiteOwner ' + shlex.quote(websiteOwner) + ' --package ' + shlex.quote(packageName) + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
                            mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -2373,8 +2381,8 @@ Require valid-user
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
+                       " --phpVersion " + shlex.quote(phpSelection) + " --ssl " + str(1) + " --dkimCheck " + str(1) \
+                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + shlex.quote(path) + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -3445,7 +3453,7 @@ context /cyberpanel_suspension_page.html {
             completePathToConfigFile = confPath + "/vhost.conf"
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+            execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
             ProcessUtilities.popenExecutioner(execPath)
 
             ####
@@ -4204,7 +4212,7 @@ context /cyberpanel_suspension_page.html {
         completePathToConfigFile = confPath + "/vhost.conf"
 
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+        execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
         ProcessUtilities.popenExecutioner(execPath)
 
         try:
@@ -4221,7 +4229,7 @@ context /cyberpanel_suspension_page.html {
                     confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + alias.domain
                     completePathToConfigFile = confPath + "/vhost.conf"
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
                     ProcessUtilities.popenExecutioner(execPath)
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(f'Error changing PHP for alias: {str(msg)}')
@@ -5565,8 +5573,8 @@ StrictHostKeyChecking no
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " switchServer --phpVersion '" + phpVersion + "' --server " + str(
-            server) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
+        execPath = execPath + " switchServer --phpVersion " + shlex.quote(phpVersion) + " --server " + shlex.quote(str(
+            server)) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
         ProcessUtilities.popenExecutioner(execPath)
 
         time.sleep(3)

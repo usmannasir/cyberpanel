@@ -320,6 +320,14 @@ def submitUserCreation(request):
 
             elif currentACL['changeUserACL'] == 1:
 
+                # A non-admin must not be able to create an admin-level account.
+                if selectedACL.adminStatus == 1:
+                    data_ret = {'status': 0, 'createStatus': 0,
+                                'error_message': "You are not authorized to access this resource."}
+
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
                 newAdmin = Administrator(firstName=firstName,
                                          lastName=lastName,
                                          email=email,
@@ -979,11 +987,16 @@ def changeACLFunc(request):
         elif currentACL['changeUserACL'] == 1:
             selectedACL = ACL.objects.get(name=data['selectedACL'])
             selectedUser = Administrator.objects.get(userName=data['selectedUser'])
+            loggedUser = Administrator.objects.get(pk=val)
 
-            selectedUser.acl = selectedACL
-            selectedUser.save()
-
-            finalResponse = {'status': 1}
+            # A non-admin may only re-ACL users they own, and may never assign an
+            # admin-level ACL (that would escalate the target to super-admin).
+            if ACLManager.checkUserOwnerShip(currentACL, loggedUser, selectedUser) == 0 or selectedACL.adminStatus == 1:
+                finalResponse = ACLManager.loadErrorJson()
+            else:
+                selectedUser.acl = selectedACL
+                selectedUser.save()
+                finalResponse = {'status': 1}
         else:
             finalResponse = ACLManager.loadErrorJson()
 

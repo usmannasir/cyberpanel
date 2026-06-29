@@ -1,4 +1,6 @@
 {% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block module_scripts %}<script defer src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Create Cloud Linux Package - CyberPanel" %}{% endblock %}
 {% block content %}

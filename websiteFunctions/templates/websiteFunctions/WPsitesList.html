@@ -3,18 +3,10 @@
 {% block title %}{% trans "WordPress Toolkit - CyberPanel" %}{% endblock %}
 
 {% block header_scripts %}
-    <!-- Add Font Awesome CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script>
-        // Create or get the CyberCP module
-        try {
-            angular.module('CyberCP');
-        } catch(err) {
-            angular.module('CyberCP', []);
-        }
+        var cyberCPModule = angular.module('CyberCP');
 
-        // Now add our controller to the module
-        angular.module('CyberCP').controller('listWordPressSites', function($scope, $http) {
+        cyberCPModule.controller('listWordPressSites', function($scope, $http) {
             $scope.wpSites = {{ wpsite|safe }};
             $scope.debug = {{ debug_info|safe }};
             $scope.totalSites = {{ total_sites }};
@@ -364,7 +356,7 @@
         });
 
         // Add a range filter for pagination
-        angular.module('CyberCP').filter('range', function() {
+        cyberCPModule.filter('range', function() {
             return function(input, start, end) {
                 start = parseInt(start);
                 end = parseInt(end);

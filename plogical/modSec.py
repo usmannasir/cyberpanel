@@ -106,6 +106,85 @@ class modSec:
             return False
 
     @staticmethod
+    def detectPlatform():
+        """Detect OS platform for compatible binary selection"""
+        try:
+            # Check for Ubuntu/Debian
+            if os.path.exists('/etc/lsb-release'):
+                with open('/etc/lsb-release', 'r') as f:
+                    content = f.read()
+                    if 'Ubuntu' in content or 'ubuntu' in content:
+                        return 'ubuntu'
+
+            # Check for Debian
+            if os.path.exists('/etc/debian_version'):
+                return 'ubuntu'  # Use Ubuntu binary for Debian
+
+            # Check for RHEL-based distributions
+            if os.path.exists('/etc/os-release'):
+                with open('/etc/os-release', 'r') as f:
+                    content = f.read().lower()
+
+                    # Check for version 8.x
+                    if 'version="8.' in content or 'version_id="8' in content:
+                        return 'rhel8'
+
+                    # Check for version 9.x
+                    if 'version="9.' in content or 'version_id="9' in content:
+                        return 'rhel9'
+
+            return 'rhel9'  # Default to rhel9
+        except:
+            return 'rhel9'
+
+    @staticmethod
+    def downloadCompatibleModSec(platform):
+        """Download and install compatible ModSecurity binary"""
+        try:
+            config = modSec.MODSEC_COMPATIBLE.get(platform)
+            if not config:
+                logging.CyberCPLogFileWriter.writeToFile(f"No compatible ModSecurity for platform {platform}")
+                return False
+
+            modsec_path = "/usr/local/lsws/modules/mod_security.so"
+            tmp_path = "/tmp/mod_security-compatible.so"
+
+            # Download compatible binary
+            command = f"wget -q {config['url']} -O {tmp_path}"
+            result = subprocess.call(shlex.split(command))
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to download compatible ModSecurity")
+                return False
+
+            # Verify checksum
+            import hashlib
+            sha256_hash = hashlib.sha256()
+            with open(tmp_path, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+            actual_sha256 = sha256_hash.hexdigest()
+
+            if actual_sha256 != config['sha256']:
+                logging.CyberCPLogFileWriter.writeToFile(f"ModSecurity checksum mismatch: expected {config['sha256']}, got {actual_sha256}")
+                os.remove(tmp_path)
+                return False
+
+            # Backup original if exists
+            if os.path.exists(modsec_path):
+                shutil.copy2(modsec_path, f"{modsec_path}.stock")
+
+            # Install compatible version
+            shutil.move(tmp_path, modsec_path)
+            os.chmod(modsec_path, 0o644)
+
+            logging.CyberCPLogFileWriter.writeToFile("Installed compatible ModSecurity binary")
+            return True
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [downloadCompatibleModSec]")
+            return False
+
+    @staticmethod
     def isCustomOLSBinaryInstalled():
         """Detect if custom OpenLiteSpeed binary is installed"""
         try:
@@ -130,25 +209,39 @@ class modSec:
 
     @staticmethod
     def detectBinarySuffix():
-        """Detect which binary suffix to use based on OS distribution"""
+        """Detect which binary suffix to use based on OS distribution
+        Returns 'ubuntu' for Ubuntu/Debian systems
+        Returns 'rhel8' for RHEL/AlmaLinux/Rocky 8.x systems
+        Returns 'rhel9' for RHEL/AlmaLinux/Rocky 9.x systems
+        """
         try:
-            # Check if we're on RHEL/CentOS/AlmaLinux 8+ (uses libcrypt.so.2)
+            # Check if we're on RHEL/CentOS/AlmaLinux or Ubuntu/Debian
             if os.path.exists('/etc/os-release'):
                 with open('/etc/os-release', 'r') as f:
                     os_release = f.read().lower()
 
-                # AlmaLinux 9+, Rocky 9+, RHEL 9+, CentOS Stream 9+
-                if any(x in os_release for x in ['almalinux', 'rocky', 'rhel']) and 'version="9' in os_release:
-                    return 'rhel'
-                elif 'centos stream 9' in os_release:
-                    return 'rhel'
+                # Check for Ubuntu/Debian FIRST
+                if 'ubuntu' in os_release or 'debian' in os_release:
+                    return 'ubuntu'
 
-            # Check CentOS/RHEL path
+                # Check for RHEL-based distributions
+                if any(x in os_release for x in ['almalinux', 'rocky', 'rhel', 'centos stream']):
+                    # Extract version number
+                    for line in os_release.split('\n'):
+                        if 'version_id' in line:
+                            version = line.split('=')[1].strip('"').split('.')[0]
+                            if version == '9':
+                                return 'rhel9'
+                            elif version == '8':
+                                return 'rhel8'
+
+            # Check CentOS/RHEL path (legacy method)
             if os.path.exists('/etc/redhat-release'):
                 data = open('/etc/redhat-release', 'r').read()
-                # CentOS/AlmaLinux/Rocky 8+ → rhel suffix
-                if 'release 8' in data or 'release 9' in data:
-                    return 'rhel'
+                if 'release 9' in data:
+                    return 'rhel9'
+                elif 'release 8' in data:
+                    return 'rhel8'
 
             # Default to ubuntu
             return 'ubuntu'
@@ -170,12 +263,16 @@ class modSec:
 
             # Detect OS and select appropriate ModSecurity binary
             binary_suffix = modSec.detectBinarySuffix()
+            BASE_URL = "https://cyberpanel.net/binaries"
 
-            if binary_suffix == 'rhel':
-                MODSEC_URL = "https://cyberpanel.net/mod_security-compatible-rhel.so"
+            if binary_suffix == 'rhel8':
+                MODSEC_URL = f"{BASE_URL}/rhel8/mod_security-compatible-rhel8.so"
+                EXPECTED_SHA256 = "8c769dfb42711851ec539e9b6ea649616c14b0e85a53eb18755d200ce29bc442"
+            elif binary_suffix == 'rhel9':
+                MODSEC_URL = f"{BASE_URL}/rhel9/mod_security-compatible-rhel.so"
                 EXPECTED_SHA256 = "db580afc431fda40d46bdae2249ac74690d9175ff6d8b1843f2837d86f8d602f"
             else:  # ubuntu
-                MODSEC_URL = "https://cyberpanel.net/mod_security-compatible-ubuntu.so"
+                MODSEC_URL = f"{BASE_URL}/ubuntu/mod_security-compatible-ubuntu.so"
                 EXPECTED_SHA256 = "115971fcd44b74bc7c7b097b9cec33ddcfb0fb07bb9b562ec9f4f0691c388a6b"
 
             # Download to temp location
