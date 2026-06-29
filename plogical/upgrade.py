@@ -7316,7 +7316,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
                     configContent = f.read()
 
                 # Check which product the config file is for by looking at the ui_path
-                if 'ui_path =/usr/local/CyberCP/public/imunifyav' in configContent:
+                if 'imunifyav' in configContent:
                     # This is ImunifyAV configuration
                     Upgrade.stdOut("Detected ImunifyAV configuration, reconfiguring...")
                     imunifyAVPath = '/usr/local/CyberCP/public/imunifyav'
@@ -7337,7 +7337,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
                     else:
                         Upgrade.stdOut("ImunifyAV directory not found despite config file existing")
 
-                elif 'ui_path =/usr/local/CyberCP/public/imunify' in configContent:
+                elif '/public/imunify' in configContent and 'imunifyav' not in configContent:
                     # This is Imunify360 configuration
                     Upgrade.stdOut("Detected Imunify360 configuration, checking system installation...")
                     imunify360Path = '/usr/local/CyberCP/public/imunify'

@@ -490,6 +490,35 @@ CyberPanel_Restart_Backend_And_Openlitespeed() {
   fi
 }
 
+# OLS :8090 vhost — public/static path, phpMyAdmin, SnappyMail, Imunify UI contexts.
+if [ -x /usr/local/CyberCP/CPScripts/fix-cyberpanel-phpmyadmin-ols.sh ]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ensuring CyberPanel OLS vhost (static/phpmyadmin/imunify)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  bash /usr/local/CyberCP/CPScripts/fix-cyberpanel-phpmyadmin-ols.sh --restart 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+elif [ -x /usr/local/CyberCP/bin/python ]; then
+  export DJANGO_SETTINGS_MODULE=CyberCP.settings
+  /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.cyberpanelOlsPhpmyadmin import ensure_cyberpanel_phpmyadmin_ols; ensure_cyberpanel_phpmyadmin_ols(restart=True, verify=False)" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+fi
+
+# ImunifyAV/360 — repair integration.conf when CLScript hooks are missing (GitHub #1825).
+if [ -f /etc/sysconfig/imunify360/integration.conf ] && [ -x /usr/local/CyberCP/bin/python ]; then
+  export DJANGO_SETTINGS_MODULE=CyberCP.settings
+  /usr/local/CyberCP/bin/python -c "
+import sys
+sys.path.insert(0, '/usr/local/CyberCP')
+from plogical.imunify_integration import (
+    integration_conf_needs_repair, repair_integration_conf,
+    ensure_install_status_file, ensure_clscripts_executable,
+    chmod_imunify_execute_files, IMUNIFY_AV_UI, IMUNIFY_360_UI,
+)
+ensure_install_status_file()
+ensure_clscripts_executable()
+if integration_conf_needs_repair():
+    repair_integration_conf()
+chmod_imunify_execute_files(IMUNIFY_AV_UI)
+chmod_imunify_execute_files(IMUNIFY_360_UI)
+" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+fi
+
 CyberPanel_Restart_Backend_And_Openlitespeed
 
 # Harden lscpd sudo privileges (replace broad sudo access with allowlisted wrappers)
