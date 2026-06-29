@@ -5735,6 +5735,18 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 except:
                     continue
             
+            # Post-install guard: preUpgrade can leave server/client packages removed
+            ensure_script = "/usr/local/CyberCP/CPScripts/ensure-mariadb-server.sh"
+            if os.path.isfile(ensure_script):
+                try:
+                    result = subprocess.run(["bash", ensure_script], capture_output=True, text=True, timeout=300)
+                    if result.returncode == 0:
+                        Upgrade.stdOut("ensure-mariadb-server.sh completed", 1)
+                    else:
+                        Upgrade.stdOut(f"Warning: ensure-mariadb-server.sh failed: {result.stderr}", 0)
+                except Exception as guard_err:
+                    Upgrade.stdOut(f"Warning: ensure-mariadb-server.sh error: {guard_err}", 0)
+
             Upgrade.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
             
         except Exception as e:

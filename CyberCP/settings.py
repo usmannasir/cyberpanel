@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 from django.utils.translation import gettext_lazy as _
 
 # Load environment variables from .env file
@@ -175,6 +176,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+PUBLIC_ROOT = os.path.join(BASE_DIR, "public/")
 
 STATIC_URL = '/static/'
 
@@ -237,3 +239,99 @@ if os.path.isfile(_csrf_trusted_origins_file):
                         CSRF_TRUSTED_ORIGINS.append(_csrf_line)
     except OSError:
         pass
+
+# ---------------------------------------------------------------------------
+# Plugin auto-sync: register on-disk plugins in INSTALLED_APPS
+# ---------------------------------------------------------------------------
+# External/optional plugins live either as installed marker dirs under
+# /usr/local/CyberCP/<name>/ or as source packages under the plugin store
+# roots below. A plugin is recognised when it ships both meta.xml and urls.py.
+# Without this, plugin models raise:
+#   "Model class <plugin>.models.X doesn't declare an explicit app_label and
+#    isn't in an application in INSTALLED_APPS."
+# Registering the app (not just including its URLs in pluginHolder) is what
+# makes plugin models, admin and migrations work.
+#
+# Safety: a plugin is only registered when it is importable under its own
+# directory name. If it ships an apps.py whose AppConfig `name` differs from
+# the directory name, registering it would raise ImproperlyConfigured and take
+# the whole panel down, so such plugins are skipped (they remain reachable via
+# pluginHolder URL routing, which fails soft per-plugin).
+import re as _re
+
+_PLUGIN_SOURCE_ROOTS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
+# Core apps / reserved path segments that must never be auto-registered.
+_PLUGIN_RESERVED_NAMES = frozenset(list(INSTALLED_APPS) + [
+    'installed', 'help', 'api', 'static', 'public', 'plogical', 'CyberCP',
+])
+_PLUGIN_APPCONFIG_NAME_RE = _re.compile(r"""^\s*name\s*=\s*['"]([^'"]+)['"]""", _re.M)
+
+
+def _plugin_dir_is_app(_dir):
+    try:
+        return (
+            os.path.isdir(_dir)
+            and os.path.exists(os.path.join(_dir, 'meta.xml'))
+            and os.path.exists(os.path.join(_dir, 'urls.py'))
+        )
+    except (OSError, IOError):
+        return False
+
+
+def _plugin_appconfig_name_ok(_dir, _name):
+    """True if the plugin has no apps.py, or its AppConfig.name == dir name."""
+    _apps_py = os.path.join(_dir, 'apps.py')
+    if not os.path.isfile(_apps_py):
+        return True
+    try:
+        with open(_apps_py, 'r', encoding='utf-8', errors='replace') as _f:
+            _txt = _f.read()
+    except (OSError, IOError):
+        return False
+    _m = _PLUGIN_APPCONFIG_NAME_RE.search(_txt)
+    if not _m:
+        return True
+    return _m.group(1) == _name
+
+
+def _plugin_is_registrable(_name):
+    """Locate a plugin dir for _name and decide if it is safe to register."""
+    _cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for _root in [_cybercp_root] + _PLUGIN_SOURCE_ROOTS:
+        _dir = os.path.join(_root, _name)
+        if _plugin_dir_is_app(_dir):
+            return _plugin_appconfig_name_ok(_dir, _name)
+    return False
+
+
+try:
+    _cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Make plugin store roots importable so source-only plugins load.
+    for _src_root in _PLUGIN_SOURCE_ROOTS:
+        try:
+            if os.path.isdir(_src_root) and _src_root not in sys.path:
+                sys.path.append(_src_root)
+        except (OSError, IOError):
+            pass
+
+    _existing_apps = set(INSTALLED_APPS)
+    _candidate_names = set()
+    for _root in [_cybercp_root] + _PLUGIN_SOURCE_ROOTS:
+        if not os.path.isdir(_root):
+            continue
+        try:
+            for _name in os.listdir(_root):
+                if not _name.startswith('.'):
+                    _candidate_names.add(_name)
+        except (OSError, IOError):
+            continue
+
+    for _name in sorted(_candidate_names):
+        if _name in _existing_apps or _name in _PLUGIN_RESERVED_NAMES:
+            continue
+        if _plugin_is_registrable(_name):
+            INSTALLED_APPS.append(_name)
+            _existing_apps.add(_name)
+except (OSError, IOError):
+    pass
