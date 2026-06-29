@@ -278,16 +278,43 @@ class ACLManager:
             finalResponse['mailServerSSL'] = config['mailServerSSL']
             finalResponse['sslReconcile'] = config.get('sslReconcile', 0)
 
-            ## Plugin management (Plugin Store / installed plugins UI and APIs)
+            ## Plugin management (granular: view / use / install)
+            # Three independent permissions, plus the legacy "managePlugins"
+            # flag which (for backward compatibility) implies all three.
+            #   - viewPlugins    : see the installed plugins list / plugin UI
+            #   - usePlugins     : open and use a plugin's settings/features
+            #   - installPlugins : install, upgrade, enable/disable, remove
+            # Derived "can*" keys apply the implication hierarchy and are what
+            # views/templates check (use/install both imply view).
 
-            _mpv = config.get('managePlugins', 0)
-            if _mpv in (1, True, '1', 'true'):
-                finalResponse['managePlugins'] = 1
-            else:
+            def _aclFlag(_v):
+                if _v in (1, True, '1', 'true'):
+                    return 1
                 try:
-                    finalResponse['managePlugins'] = 1 if int(_mpv) else 0
+                    return 1 if int(_v) else 0
                 except (TypeError, ValueError):
-                    finalResponse['managePlugins'] = 0
+                    return 0
+
+            _manage_plugins = _aclFlag(config.get('managePlugins', 0))
+            _view_plugins = _aclFlag(config.get('viewPlugins', 0))
+            _use_plugins = _aclFlag(config.get('usePlugins', 0))
+            _install_plugins = _aclFlag(config.get('installPlugins', 0))
+
+            # Raw flags (persisted as-is on the ACL config).
+            finalResponse['managePlugins'] = _manage_plugins
+            finalResponse['viewPlugins'] = _view_plugins
+            finalResponse['usePlugins'] = _use_plugins
+            finalResponse['installPlugins'] = _install_plugins
+
+            # Effective flags (with implication) used for access decisions.
+            _eff_install = 1 if (_manage_plugins or _install_plugins) else 0
+            _eff_use = 1 if (_manage_plugins or _use_plugins) else 0
+            _eff_view = 1 if (
+                _manage_plugins or _view_plugins or _use_plugins or _install_plugins
+            ) else 0
+            finalResponse['canInstallPlugins'] = _eff_install
+            finalResponse['canUsePlugins'] = _eff_use
+            finalResponse['canViewPlugins'] = _eff_view
 
         return finalResponse
 

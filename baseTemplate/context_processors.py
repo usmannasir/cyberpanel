@@ -128,8 +128,14 @@ def plugin_sidebar_context(request):
 
         acl = ACLManager.loadedACL(uid)
         admin = bool(acl.get('admin'))
-        manage_plugins = bool(acl.get('managePlugins'))
-        show_plugin_management_links = admin or manage_plugins
+        # Granular plugin permissions (legacy managePlugins implies all three;
+        # use/install imply view). These derived flags come from loadedACL.
+        can_view_plugins = admin or bool(acl.get('canViewPlugins'))
+        can_use_plugins = admin or bool(acl.get('canUsePlugins'))
+        can_install_plugins = admin or bool(acl.get('canInstallPlugins'))
+        manage_plugins = can_view_plugins
+        # Menu visibility follows the view permission (the baseline to reach plugins).
+        show_plugin_management_links = can_view_plugins
 
         lpma_plugin_installed = os.path.isdir('/usr/local/CyberCP/limitedPhpmyAdmin')
 
@@ -178,6 +184,9 @@ def plugin_sidebar_context(request):
                 'grant_only_lpma_sidebar': grant_only_lpma_sidebar,
                 'plugin_sidebar_extra_links': extra,
                 'lpma_sidebar_url': '/plugins/limitedPhpmyAdmin/',
+                'canViewPlugins': 1 if can_view_plugins else 0,
+                'canUsePlugins': 1 if can_use_plugins else 0,
+                'canInstallPlugins': 1 if can_install_plugins else 0,
             }
         )
         return defaults

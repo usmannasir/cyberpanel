@@ -13,7 +13,14 @@ import re
 from datetime import datetime, timedelta
 from xml.etree import ElementTree
 from plogical.httpProc import httpProc
-from plogical.plugin_acl import user_can_manage_plugins, deny_plugin_manage_json_response
+from plogical.plugin_acl import (
+    user_can_manage_plugins,
+    user_can_view_plugins,
+    user_can_use_plugins,
+    user_can_install_plugins,
+    deny_plugin_manage_json_response,
+    deny_plugin_json_response,
+)
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import sys
 import urllib.request
@@ -315,7 +322,7 @@ def _set_plugin_state(plugin_name, enabled):
 def help_page(request):
     """Display plugin development help page"""
     mailUtilities.checkHome()
-    proc = httpProc(request, 'pluginHolder/help.html', {}, 'managePlugins')
+    proc = httpProc(request, 'pluginHolder/help.html', {}, 'canViewPlugins')
     return proc.render()
 
 def installed(request):
@@ -744,7 +751,7 @@ def installed(request):
                      'installed_count': installed_count, 'active_count': active_count,
                      'cache_expiry_timestamp': cache_expiry_timestamp,
                      'cache_expired': cache_expired,
-                     'cache_refresh_started': refresh_started}, 'managePlugins')
+                     'cache_refresh_started': refresh_started}, 'canViewPlugins')
     return proc.render()
 
 @csrf_exempt
@@ -1786,8 +1793,8 @@ def _fetch_plugins_from_github():
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
     try:
-        if not user_can_manage_plugins(request):
-            return deny_plugin_manage_json_response(request)
+        if not user_can_view_plugins(request):
+            return deny_plugin_json_response(request, 'view')
         mailUtilities.checkHome()
     except Exception as e:
         logging.writeToFile(f"fetch_plugin_store: checkHome failed: {str(e)}")
@@ -2357,8 +2364,8 @@ def install_from_store(request, plugin_name):
 def debug_loaded_plugins(request):
     """Return which plugins have URL routes loaded and which failed (for diagnosing 404s)."""
     try:
-        if not user_can_manage_plugins(request):
-            return deny_plugin_manage_json_response(request)
+        if not user_can_view_plugins(request):
+            return deny_plugin_json_response(request, 'view')
         import pluginHolder.urls as urls_mod
         loaded = list(getattr(urls_mod, '_loaded_plugins', []))
         failed = dict(getattr(urls_mod, '_failed_plugins', {}))
@@ -2384,9 +2391,9 @@ def plugin_settings_proxy(request, plugin_name):
     import importlib
 
     mailUtilities.checkHome()
-    if not user_can_manage_plugins(request):
+    if not user_can_use_plugins(request):
         from django.http import HttpResponseForbidden
-        return HttpResponseForbidden('You are not authorized to manage plugins.')
+        return HttpResponseForbidden('You are not authorized to use plugins.')
 
     # Basic hardening against path traversal / unexpected module names.
     if not plugin_name or not re.match(r'^[A-Za-z0-9_]+$', plugin_name):
@@ -2789,7 +2796,7 @@ def plugin_help(request, plugin_name):
         'help_content': help_content,
     }
     
-    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'managePlugins')
+    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'canUsePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -2812,8 +2819,8 @@ def check_plugin_subscription(request, plugin_name):
         }
     """
     try:
-        if not user_can_manage_plugins(request):
-            return deny_plugin_manage_json_response(request)
+        if not user_can_view_plugins(request):
+            return deny_plugin_json_response(request, 'view')
         
         # Load plugin metadata
         from .plugin_access import (
