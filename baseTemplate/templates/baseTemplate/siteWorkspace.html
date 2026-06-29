@@ -1,0 +1,152 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{{ domain }} — {% trans "Site Workspace" %}{% endblock %}
+
+{# Workspace is tiles + small inline tab JS — no per-module JS needed #}
+{% block module_scripts %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="dashboard-container">
+
+        <!-- Site header -->
+        <div class="cp-site-head">
+            <div class="cp-site-favicon"><i class="fas fa-globe"></i></div>
+            <div>
+                <h1>{{ domain }}</h1>
+                <div class="cp-site-meta">
+                    {% if siteState == 1 %}<span style="color:var(--success-color);"><i class="fas fa-circle" style="font-size:8px;"></i> {% trans "Active" %}</span>{% else %}<span style="color:var(--danger-color);"><i class="fas fa-circle" style="font-size:8px;"></i> {% trans "Suspended" %}</span>{% endif %}
+                    &nbsp;·&nbsp; PHP {{ phpSelection }}
+                    &nbsp;·&nbsp; {% if sslState == 1 %}<i class="fas fa-lock" style="color:var(--success-color);"></i> SSL{% else %}<i class="fas fa-lock-open" style="color:var(--text-secondary);"></i> {% trans "No SSL" %}{% endif %}
+                    {% if packageName %}&nbsp;·&nbsp; {{ packageName }}{% endif %}
+                </div>
+            </div>
+            <div class="cp-site-actions">
+                <a class="cp-build-btn" style="background:var(--accent-color);color:#fff;" href="https://{{ domain }}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i> {% trans "Visit" %}</a>
+                <a class="cp-build-btn ghost" style="border:1px solid var(--border-color);color:var(--text-primary);" href="{% url 'domain' domain %}"><i class="fas fa-gear"></i> {% trans "Full Settings" %}</a>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="cp-tabs" id="cp-site-tabs">
+            <a class="cp-tab active" data-tab="overview"><i class="fas fa-grip"></i> {% trans "Overview" %}</a>
+            <a class="cp-tab" data-tab="files"><i class="fas fa-folder-open"></i> {% trans "Files" %}</a>
+            <a class="cp-tab" data-tab="ssl"><i class="fas fa-lock"></i> {% trans "SSL & Domains" %}</a>
+            <a class="cp-tab" data-tab="dns"><i class="fas fa-sitemap"></i> {% trans "DNS" %}</a>
+            <a class="cp-tab" data-tab="email"><i class="fas fa-envelope"></i> {% trans "Email" %}</a>
+            <a class="cp-tab" data-tab="db"><i class="fas fa-database"></i> {% trans "Databases" %}</a>
+            <a class="cp-tab" data-tab="backups"><i class="fas fa-shield-halved"></i> {% trans "Backups" %}</a>
+            <a class="cp-tab" data-tab="advanced"><i class="fas fa-terminal"></i> {% trans "Advanced" %}</a>
+        </div>
+
+        <!-- Overview -->
+        <div class="cp-tab-panel active" data-panel="overview">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'domain' domain %}"><span class="cp-tile-ic"><i class="fas fa-gear"></i></span><span><div class="cp-tile-title">{% trans "Site Settings" %}</div><div class="cp-tile-sub">{% trans "PHP, configs, rewrite rules" %}</div></span></a>
+                <a class="cp-tile" href="/filemanager/{{ domain }}"><span class="cp-tile-ic"><i class="fas fa-folder-open"></i></span><span><div class="cp-tile-title">{% trans "File Manager" %}</div><div class="cp-tile-sub">{% trans "Browse and edit files" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'v2ManageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "SSL" %}</div><div class="cp-tile-sub">{% trans "Issue & manage certificates" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'addDeleteDNSRecords' %}"><span class="cp-tile-ic"><i class="fas fa-sitemap"></i></span><span><div class="cp-tile-title">{% trans "DNS" %}</div><div class="cp-tile-sub">{% trans "Manage DNS records" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'listEmails' %}"><span class="cp-tile-ic"><i class="fas fa-envelope"></i></span><span><div class="cp-tile-title">{% trans "Email" %}</div><div class="cp-tile-sub">{% trans "Mailboxes & forwarding" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'backupSite' %}"><span class="cp-tile-ic"><i class="fas fa-shield-halved"></i></span><span><div class="cp-tile-title">{% trans "Backups" %}</div><div class="cp-tile-sub">{% trans "Back up & restore" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- Files -->
+        <div class="cp-tab-panel" data-panel="files">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="/filemanager/{{ domain }}"><span class="cp-tile-ic"><i class="fas fa-folder-open"></i></span><span><div class="cp-tile-title">{% trans "File Manager" %}</div><div class="cp-tile-sub">{% trans "Browse, upload and edit files" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'sshAccess' domain %}"><span class="cp-tile-ic"><i class="fas fa-terminal"></i></span><span><div class="cp-tile-title">{% trans "SSH Access" %}</div><div class="cp-tile-sub">{% trans "Keys & web terminal" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'listFTPAccounts' %}"><span class="cp-tile-ic"><i class="fas fa-folder"></i></span><span><div class="cp-tile-title">{% trans "FTP Accounts" %}</div><div class="cp-tile-sub">{% trans "Manage FTP access" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- SSL & Domains -->
+        <div class="cp-tab-panel" data-panel="ssl">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'v2ManageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Issue & renew certificates" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'domainAlias' domain %}"><span class="cp-tile-ic"><i class="fas fa-clone"></i></span><span><div class="cp-tile-title">{% trans "Domain Aliases" %}</div><div class="cp-tile-sub">{% trans "Add alias domains" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'listChildDomains' %}"><span class="cp-tile-ic"><i class="fas fa-diagram-project"></i></span><span><div class="cp-tile-title">{% trans "Sub / Addon Domains" %}</div><div class="cp-tile-sub">{% trans "Manage child domains" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'CreateNewDomain' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create Sub/Addon Domain" %}</div><div class="cp-tile-sub">{% trans "Add a new domain" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- DNS -->
+        <div class="cp-tab-panel" data-panel="dns">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'addDeleteDNSRecords' %}"><span class="cp-tile-ic"><i class="fas fa-sitemap"></i></span><span><div class="cp-tile-title">{% trans "DNS Records" %}</div><div class="cp-tile-sub">{% trans "Add, edit & delete records" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'addDeleteDNSRecordsCloudFlare' %}"><span class="cp-tile-ic"><i class="fas fa-cloud"></i></span><span><div class="cp-tile-title">{% trans "Cloudflare" %}</div><div class="cp-tile-sub">{% trans "Manage Cloudflare DNS" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'createDNSZone' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create DNS Zone" %}</div><div class="cp-tile-sub">{% trans "Add a new zone" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="cp-tab-panel" data-panel="email">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'listEmails' %}"><span class="cp-tile-ic"><i class="fas fa-envelope"></i></span><span><div class="cp-tile-title">{% trans "Email Accounts" %}</div><div class="cp-tile-sub">{% trans "View all mailboxes" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'createEmailAccount' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create Email" %}</div><div class="cp-tile-sub">{% trans "Add a mailbox" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'emailForwarding' %}"><span class="cp-tile-ic"><i class="fas fa-share"></i></span><span><div class="cp-tile-title">{% trans "Forwarding" %}</div><div class="cp-tile-sub">{% trans "Set up forwarders" %}</div></span></a>
+                <a class="cp-tile" href="/webmail/"><span class="cp-tile-ic"><i class="fas fa-inbox"></i></span><span><div class="cp-tile-title">{% trans "Webmail" %}</div><div class="cp-tile-sub">{% trans "Open webmail" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- Databases -->
+        <div class="cp-tab-panel" data-panel="db">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'listDBs' %}"><span class="cp-tile-ic"><i class="fas fa-database"></i></span><span><div class="cp-tile-title">{% trans "Databases" %}</div><div class="cp-tile-sub">{% trans "View all databases" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'createDatabase' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create Database" %}</div><div class="cp-tile-sub">{% trans "Add a new database" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'phpMyAdmin' %}" target="_blank" rel="noopener"><span class="cp-tile-ic"><i class="fas fa-table"></i></span><span><div class="cp-tile-title">{% trans "phpMyAdmin" %}</div><div class="cp-tile-sub">{% trans "Open phpMyAdmin" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- Backups -->
+        <div class="cp-tab-panel" data-panel="backups">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'backupSite' %}"><span class="cp-tile-ic"><i class="fas fa-box-archive"></i></span><span><div class="cp-tile-title">{% trans "Create Backup" %}</div><div class="cp-tile-sub">{% trans "Back up this site" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'restoreSite' %}"><span class="cp-tile-ic"><i class="fas fa-rotate-left"></i></span><span><div class="cp-tile-title">{% trans "Restore Backup" %}</div><div class="cp-tile-sub">{% trans "Restore from a backup" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'scheduleBackup' %}"><span class="cp-tile-ic"><i class="fas fa-clock"></i></span><span><div class="cp-tile-title">{% trans "Schedule Backup" %}</div><div class="cp-tile-sub">{% trans "Automate backups" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'OneClickBackups' %}"><span class="cp-tile-ic"><i class="fas fa-bolt"></i></span><span><div class="cp-tile-title">{% trans "One-Click Backups" %}</div><div class="cp-tile-sub">{% trans "Managed off-site backups" %}</div></span></a>
+            </div>
+        </div>
+
+        <!-- Advanced -->
+        <div class="cp-tab-panel" data-panel="advanced">
+            <div class="cp-tile-grid">
+                <a class="cp-tile" href="{% url 'setupGit' domain %}"><span class="cp-tile-ic"><i class="fab fa-git-alt"></i></span><span><div class="cp-tile-title">{% trans "Git Deployment" %}</div><div class="cp-tile-sub">{% trans "Deploy from a Git repo" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'setupStaging' domain %}"><span class="cp-tile-ic"><i class="fas fa-code-branch"></i></span><span><div class="cp-tile-title">{% trans "Staging" %}</div><div class="cp-tile-sub">{% trans "Create a staging copy" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'sshAccess' domain %}"><span class="cp-tile-ic"><i class="fas fa-terminal"></i></span><span><div class="cp-tile-title">{% trans "SSH / Terminal" %}</div><div class="cp-tile-sub">{% trans "SSH keys & web terminal" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'ApacheManager' domain %}"><span class="cp-tile-ic"><i class="fas fa-feather"></i></span><span><div class="cp-tile-title">{% trans "Web Server Config" %}</div><div class="cp-tile-sub">{% trans "Apache / LiteSpeed settings" %}</div></span></a>
+                {% if admin or modifyWebsite %}<a class="cp-tile" href="{% url 'modifyWebsite' %}"><span class="cp-tile-ic"><i class="fas fa-pen-to-square"></i></span><span><div class="cp-tile-title">{% trans "Modify Website" %}</div><div class="cp-tile-sub">{% trans "Change package, owner, email & PHP" %}</div></span></a>{% endif %}
+                {% if admin or suspendWebsite %}<a class="cp-tile" href="{% url 'siteState' %}"><span class="cp-tile-ic"><i class="fas fa-pause"></i></span><span><div class="cp-tile-title">{% trans "Suspend Website" %}</div><div class="cp-tile-sub">{% trans "Suspend or unsuspend this site" %}</div></span></a>{% endif %}
+                {% if admin or deleteWebsite %}<a class="cp-tile" href="{% url 'deleteWebsite' %}"><span class="cp-tile-ic"><i class="fas fa-trash"></i></span><span><div class="cp-tile-title">{% trans "Delete Website" %}</div><div class="cp-tile-sub">{% trans "Permanently remove this site" %}</div></span></a>{% endif %}
+            </div>
+            <div class="cp-empty-nudge" style="margin-top:18px;">
+                <div class="cp-empty-ic"><i class="fas fa-rocket"></i></div>
+                <h3>{% trans "Want this site built or customized for you?" %}</h3>
+                <p>{% trans "Our development team can build features, fix issues, or create a companion mobile app." %}</p>
+                <div class="cp-empty-actions">
+                    <a class="cp-build-link" href="{% url 'buildServices' %}"><i class="fas fa-arrow-right"></i> {% trans "Explore Build Services" %}</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    var tabs = document.querySelectorAll('#cp-site-tabs .cp-tab');
+    var panels = document.querySelectorAll('.cp-tab-panel');
+    function activate(name) {
+        tabs.forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-tab') === name); });
+        panels.forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-panel') === name); });
+        try { history.replaceState(null, '', '#' + name); } catch (e) {}
+    }
+    tabs.forEach(function (t) {
+        t.addEventListener('click', function () { activate(t.getAttribute('data-tab')); });
+    });
+    var hash = (window.location.hash || '').replace('#', '');
+    if (hash) { activate(hash); }
+})();
+</script>
+{% endblock %}

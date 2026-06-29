@@ -884,10 +884,10 @@ local_name %s {
             return 0, str(msg)
 
     @staticmethod
-    def issueSSL(virtualHost, path, adminEmail):
+    def issueSSL(virtualHost, path, adminEmail, forceIssue=False):
         try:
 
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path, forceIssue=forceIssue)
 
             if retValues[0] == 0:
                 # Enhanced error reporting
@@ -926,12 +926,12 @@ local_name %s {
             return 0, str(msg)
 
     @staticmethod
-    def issueSSLv2(virtualHost, path, adminEmail):
+    def issueSSLv2(virtualHost, path, adminEmail, forceIssue=False):
         try:
 
             import plogical.sslv2 as sslv2
 
-            retValues = sslv2.issueSSLForDomain(virtualHost, adminEmail, path)
+            retValues = sslv2.issueSSLForDomain(virtualHost, adminEmail, path, forceIssue=forceIssue)
 
             if retValues[0] == 0:
                 print("0," + str(retValues[1]))
@@ -2382,6 +2382,7 @@ def main():
 
     ## Arguments for OpenBasedir
 
+    parser.add_argument('--force', help='Force reissue SSL even if a valid certificate already exists.', default='0')
     parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
     parser.add_argument('--tempStatusPath', help='Temporary Status file path.')
     parser.add_argument('--mailDomain', help='To create or not to create mail domain.')
@@ -2471,9 +2472,11 @@ def main():
         print("0," + str(ret[1]))
         sys.exit(1)
     elif args.function == "issueSSL":
-        virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail)
+        virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail,
+                                      forceIssue=(str(args.force) == '1'))
     elif args.function == "issueSSLv2":
-        virtualHostUtilities.issueSSLv2(args.virtualHostName, args.path, args.administratorEmail)
+        virtualHostUtilities.issueSSLv2(args.virtualHostName, args.path, args.administratorEmail,
+                                        forceIssue=(str(args.force) == '1'))
     elif args.function == "changePHP":
         vhost.changePHP(args.path, args.phpVersion)
     elif args.function == "getAccessLogs":

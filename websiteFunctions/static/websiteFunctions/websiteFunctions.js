@@ -1472,6 +1472,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
+        var url = "/websites/WPCreateBackup";
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
@@ -1819,8 +1820,15 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             $scope.goBackDisable = false;
 
         }
+    };
 
-    }
+    $scope.updateSetting = function(site, setting) {
+        var settingMap = {
+            'search-indexing': 'searchIndex',
+            'debugging': 'debugging',
+            'password-protection': 'passwordProtection',
+            'maintenance-mode': 'maintenanceMode'
+        };
 
     $scope.installwpcore = function () {
 
@@ -1857,14 +1865,37 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 });
                 $('#SecurityResult').html(response.data.result);
             } else {
+                // Revert the change if update failed
+                site[settingMap[setting]] = site[settingMap[setting]] === 1 ? 0 : 1;
                 new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    title: 'Error',
+                    text: response.data.error_message || 'Failed to update setting.',
                     type: 'error'
                 });
-
             }
+        }).catch(function(error) {
+            // Revert the change on error
+            site[settingMap[setting]] = site[settingMap[setting]] === 1 ? 0 : 1;
+            new PNotify({
+                title: 'Error',
+                text: 'Connection failed while updating setting.',
+                type: 'error'
+            });
+        });
+    };
 
+    $scope.submitPasswordProtection = function() {
+        console.log('submitPasswordProtection called');
+        console.log('Current WP:', $scope.currentWP);
+        
+        if (!$scope.currentWP) {
+            console.error('No WordPress site selected');
+            new PNotify({
+                title: 'Error!',
+                text: 'No WordPress site selected.',
+                type: 'error'
+            });
+            return;
         }
 
         function cantLoadInitialDatas(response) {
@@ -1895,6 +1926,8 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             }
         };
 
+        console.log('Sending request with data:', data);
+        $('#passwordProtectionModal').modal('hide');
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
@@ -1912,13 +1945,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 });
                 $('#SecurityResult').html(response.data.result);
             } else {
+                $scope.currentWP.passwordProtection = false;
                 new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    title: 'Error!',
+                    text: response.data.error_message || 'Failed to enable password protection',
                     type: 'error'
                 });
-
             }
+        }).catch(function(error) {
+            console.error('Request failed:', error);
+            $scope.currentWP.passwordProtection = false;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server',
+                type: 'error'
+            });
+        });
+    };
 
         }
 
@@ -1948,11 +1991,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             value: site[settingMap[setting]]
         };
 
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
 
         $http.post('/websites/UpdateWPSettings', data, config).then(function(response) {
             if (response.data.status === 1) {
@@ -2001,6 +2039,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             });
             return;
         }
+    };
 
         if (!$scope.currentWP.PPUsername || !$scope.currentWP.PPPassword) {
             console.error('Missing username or password');
@@ -2498,6 +2537,13 @@ app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window)
                     type: type
                 }
 
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
 
         }
@@ -2626,6 +2672,15 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
         }
         var url = "/websites/UpdateRemoteschedules";
 
+        function ListInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Saved!.',
+                    type: 'success'
+                });
+                location.reload();
 
         var config = {
             headers: {
@@ -2685,6 +2740,8 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
         };
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
+    // alert(domain_check);
+}
 
         function ListInitialDatas(response) {
             $scope.RemoteBackupLoading = true;
@@ -2729,6 +2786,14 @@ function website_create_checkbox_function() {
     var checkBox = document.getElementById("myCheck");
     // Get the output text
 
+    // Initial fetch of websites
+    $scope.getFurtherWebsitesFromDB = function () {
+        $scope.loading = true; // Set loading to true when starting fetch
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
     // If the checkbox is checked, display the output text
     if (checkBox.checked == true) {
@@ -3118,9 +3183,11 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                     location.reload();
                 }
             } else {
+                // Revert the change if update failed
+                wp[settingMap[setting]] = wp[settingMap[setting]] === 1 ? 0 : 1;
                 new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    title: 'Error',
+                    text: response.data.error_message || 'Failed to update setting.',
                     type: 'error'
                 });
                 if (wp.setting === "PasswordProtection") {
@@ -5023,8 +5090,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             }
         };
 
+        var data = {
+            patternAdded: $scope.patternAdded
+        };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        dataurl = "/websites/searchWebsites";
 
         function ListInitialDatas(response) {
 
@@ -5061,6 +5131,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     };
 
+    $scope.goToFileManager = function($event, domain) {
+        $event.stopPropagation();
+        window.location = '/filemanager/' + domain;
+    };
 
     $scope.CreateBackup = function () {
         $('#wordpresshomeloading').show();
@@ -5211,8 +5285,9 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 });
                 $('#SecurityResult').html(response.data.result);
             } else {
+
                 new PNotify({
-                    title: 'Operation Failed!',
+                    title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
                 });
@@ -5363,8 +5438,6 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
 
         function ListInitialDatas(response) {
-            wordpresshomeloading = true;
-            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
                 new PNotify({
@@ -5389,7 +5462,7 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
             }
 
-        }
+    var statusFile;
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
@@ -5413,15 +5486,26 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
             statusFile: statusFile
         };
 
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
+        if ($scope.apacheBackend === true) {
+            apacheBackend = 1;
+        } else {
+            apacheBackend = 0
+        }
 
+        var package = $scope.packageForWebsite;
+        var websiteOwner = $scope.websiteOwner;
+        var WPtitle = $scope.WPtitle;
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        // if (domain_check == 0) {
+        //     var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+        //     var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        // }
+        // if (domain_check == 1) {
+        //
+        //     var domainNameCreate = $scope.own_domainNameCreate;
+        // }
 
+        var domainNameCreate = $scope.domainNameCreate;
 
         function ListInitialDatas(response) {
             if (response.data.abort === 1) {
@@ -5647,6 +5731,7 @@ app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window)
                     EndUrl: $scope.EndpointURL,
                     type: type
                 }
+
             } else {
                 data = {
                     S3keyname: $scope.S3keyName,
@@ -5699,8 +5784,13 @@ app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window)
             });
 
 
-        }
+var DeploytoProductionID;
 
+function DeployToProductionInitial(vall) {
+    DeploytoProductionID = vall;
+}
+
+// Simplified staging domain input - checkbox functionality removed
 
     }
 
@@ -6048,11 +6138,13 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
     function getCreationStatus() {
 
-        url = "/websites/installWordpressStatus";
+        $scope.wordpresshomeloading = false;
+
+        var url = "/websites/GetCurrentThemes";
 
         var data = {
-            statusFile: statusFile
-        };
+            WPid: $('#WPid').html(),
+        }
 
         var config = {
             headers: {
@@ -6100,7 +6192,9 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
 
-                }
+                $('#ThemeBody').html('');
+                var themes = JSON.parse(response.data.themes);
+                themes.forEach(AddThemes);
 
             } else {
                 $("#installProgress").css("width", response.data.installationProgress + "%");
@@ -6865,6 +6959,12 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
                 });
             }
 
+        // Get the staging domain from the simplified input
+        var domainNameCreate = $('#stagingDomainName').val() || $scope.stagingDomainName;
+        var data = {
+            StagingName: $('#stagingName').val(),
+            StagingDomain: domainNameCreate,
+            WPid: $('#WPid').html(),
         }
 
         function cantLoadInitialDatas(response) {
@@ -7084,6 +7184,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
                 $timeout(getCreationStatus, 1000);
             }
 
+            }
         }
 
         function cantLoadInitialDatas(response) {
@@ -7095,8 +7196,16 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
         }
 
+    };
 
-    }
+    $scope.SaveUpdateConfig = function () {
+        $('#wordpresshomeloading').show();
+        var data = {
+            AutomaticUpdates: $('#AutomaticUpdates').find(":selected").text(),
+            Plugins: $('#Plugins').find(":selected").text(),
+            Themes: $('#Themes').find(":selected").text(),
+            WPid: $('#WPid').html(),
+        }
 
     var DeleteDomain;
     $scope.DeleteDocRoot = false;
@@ -7170,6 +7279,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 /* Java script code to delete Website */
 
+        var url = "/websites/DeploytoProduction";
 
 $("#websiteDeleteFailure").hide();
 $("#websiteDeleteSuccess").hide();
@@ -7234,7 +7344,6 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
         }
-
 
     };
 
@@ -7361,6 +7470,7 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
 
         }
     }
+}
 
     $scope.AddNewplugin = function () {
 
@@ -7414,6 +7524,7 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
 
         url = "/websites/deletesPlgin";
 
+        }
 
         var data = {
             pluginname: val,
@@ -7426,10 +7537,21 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
             }
         };
 
+        // console.log(data)
+
+        var d = $('#DesSite').children("option:selected").val();
+        var c = $("input[name=Newdomain]").val();
+        // if (d == -1 || c == "") {
+        //     alert("Please Select Method of Backup Restore");
+        // } else {
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        // }
 
 
         function ListInitialDatas(response) {
+            wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
                 location.reload();
@@ -7440,10 +7562,12 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
                 alert("Status not = 1: Error..." + response.data.error_message)
             }
 
+            }
 
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
 
             alert("Error..." + response)
 
@@ -7653,6 +7777,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             }
 
         }
+    }
 
         function cantLoadInitialDatas(response) {
 
@@ -7685,6 +7810,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
@@ -7749,6 +7875,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
 
         }
 
+    }
 
     }
 
@@ -7809,6 +7936,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         $http.post(url, data, config).then(function(response) {
             $scope.wordpresshomeloading = true;
@@ -7890,6 +8018,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         $http.post(url, data, config).then(function(response) {
             $scope.wordpresshomeloading = true;
@@ -7898,7 +8027,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
-                    text: 'Successfully Updated!',
+                    text: 'Successfully Updated!.',
                     type: 'success'
                 });
                 if (setting === "PasswordProtection") {
@@ -7906,7 +8035,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 }
             } else {
                 new PNotify({
-                    title: 'Operation Failed!',
+                    title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
                 });
@@ -7945,6 +8074,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
@@ -7993,6 +8123,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             WPid: $('#WPid').html(),
         }
 
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -8018,6 +8149,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
             }
 
+
         }
 
         function cantLoadInitialDatas(response) {
@@ -8033,6 +8165,16 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
 
+    };
+    $scope.goBack = function () {
+        $scope.webSiteCreationLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
     };
 
     $scope.UpdatePlugins = function (plugin) {
@@ -8100,15 +8242,28 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         var url = "/websites/DeletePlugins";
 
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
 
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+                } else {
 
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
 
         function ListInitialDatas(response) {
             $('#wordpresshomeloading').hide();
@@ -8121,12 +8276,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     type: 'success'
                 });
             } else {
-                new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
-                    type: 'error'
-                });
-
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
             }
 
         }
@@ -8231,6 +8384,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         var config = {
             headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
@@ -8251,8 +8405,8 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 });
             } else {
                 new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    title: 'Error!',
+                    text: error.message || 'Could not connect to server',
                     type: 'error'
                 });
 
@@ -8464,10 +8618,13 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     function getCreationStatus() {
         $('#wordpresshomeloading').show();
 
-        url = "/websites/installWordpressStatus";
+        // Toggle the state before sending request
+        wp[settingMap[setting]] = wp[settingMap[setting]] === 1 ? 0 : 1;
 
         var data = {
-            statusFile: statusFile
+            siteId: wp.id,
+            setting: setting,
+            value: wp[settingMap[setting]]
         };
 
         var config = {
@@ -8476,6 +8633,39 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             }
         };
 
+        $http.post('/websites/UpdateWPSettings', data, config).then(function(response) {
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Setting updated successfully.',
+                    type: 'success'
+                });
+                if (setting === 'password-protection' && wp[settingMap[setting]] === 1) {
+                    // Show password protection modal if enabling
+                    wp.PPUsername = "";
+                    wp.PPPassword = "";
+                    $scope.currentWP = wp;
+                    $('#passwordProtectionModal').modal('show');
+                }
+            } else {
+                // Revert the change if update failed
+                wp[settingMap[setting]] = wp[settingMap[setting]] === 1 ? 0 : 1;
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Failed to update setting.',
+                    type: 'error'
+                });
+            }
+        }).catch(function(error) {
+            // Revert the change on error
+            wp[settingMap[setting]] = wp[settingMap[setting]] === 1 ? 0 : 1;
+            new PNotify({
+                title: 'Error',
+                text: 'Connection failed while updating setting.',
+                type: 'error'
+            });
+        });
+    };
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
@@ -8532,8 +8722,18 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     }
 
 
+        $http.post(url, data, config).then(function(response) {
+            $('#wordpresshomeloading').hide();
+            
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Updated!',
+                    type: 'success'
+                });
+                if (wp.setting === "PasswordProtection") {
+                    location.reload();
                 }
-
             } else {
 
                 $("#installProgress").css("width", response.data.installationProgress + "%");
@@ -8556,6 +8756,15 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 $timeout(getCreationStatus, 1000);
 
             }
+        }, function(error) {
+            $('#wordpresshomeloading').hide();
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        });
+    };
 
         }
 
@@ -8570,6 +8779,32 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             $scope.couldNotConnect = false;
             $scope.goBackDisable = false;
 
+            console.log('Sending request with data:', data);
+            $http.post('/websites/UpdateWPSettings', data, config).then(function(response) {
+                console.log('Received response:', response);
+                if (!response.data.status) {
+                    wp.passwordProtection = !wp.passwordProtection;
+                    new PNotify({
+                        title: 'Operation Failed!',
+                        text: response.data.error_message || 'Failed to disable password protection',
+                        type: 'error'
+                    });
+                } else {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'Password protection disabled successfully.',
+                        type: 'success'
+                    });
+                }
+            }).catch(function(error) {
+                console.error('Request failed:', error);
+                wp.passwordProtection = !wp.passwordProtection;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: 'Could not connect to server.',
+                    type: 'error'
+                });
+            });
         }
 
 
@@ -8837,6 +9072,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 statusFile = response.data.tempStatusPath;
                 getCreationStatus();
 
+        $http.post(dataurl, data, config).then(function(response) {
+            if (response.data.listWebSiteStatus === 1) {
+                var finalData = JSON.parse(response.data.data);
+                $scope.WebSitesList = finalData;
+                $("#listFail").hide();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -8845,6 +9085,16 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 });
 
             }
+            $scope.loading = false; // Set loading to false when done
+        }).catch(function(error) {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Connect disrupted, refresh the page.',
+                type: 'error'
+            });
+            $scope.loading = false; // Set loading to false on error
+        });
+    };
 
         }
 
@@ -8971,7 +9221,8 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             $scope.wordpresshomeloading = true;
             alert(response)
 
-        }
+    };
+    $scope.getFurtherWebsitesFromDB();
 
     };
 
@@ -9217,6 +9468,10 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
             $('#Newsitediv').hide();
         } else {
 
+        if ($scope.openBasedir === true) {
+            openBasedir = 1;
+        } else {
+            openBasedir = 0
         }
     };
 
@@ -9298,7 +9553,6 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                 });
                 statusFile = response.data.tempStatusPath;
                 getCreationStatus();
-
             } else {
                 $('#wordpresshomeloading').hide();
                 $scope.wordpresshomeloading = true;
@@ -9312,6 +9566,7 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                 $scope.errorMessage = response.data.error_message;
 
             }
+
 
         }
 
@@ -9355,9 +9610,6 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $scope.wordpresshomeloading = true;
                     $scope.stagingDetailsForm = true;
                     $scope.installationProgress = false;
-                    $scope.errorMessageBox = true;
-                    $scope.success = false;
-                    $scope.couldNotConnect = true;
                     $scope.goBackDisable = false;
 
                     $("#installProgress").css("width", "100%");
@@ -9398,12 +9650,9 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $scope.wordpresshomeloading = true;
                     $scope.stagingDetailsForm = true;
                     $scope.installationProgress = false;
-                    $scope.errorMessageBox = false;
-                    $scope.success = true;
-                    $scope.couldNotConnect = true;
                     $scope.goBackDisable = false;
 
-                    $scope.errorMessage = response.data.error_message;
+                    $scope.currentStatus = response.data.error_message;
 
                     $("#installProgress").css("width", "0%");
                     $("#installProgressbackup").css("width", "0%");
@@ -9455,9 +9704,6 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
             $scope.wordpresshomeloading = true;
             $scope.stagingDetailsForm = true;
             $scope.installationProgress = false;
-            $scope.errorMessageBox = true;
-            $scope.success = true;
-            $scope.couldNotConnect = false;
             $scope.goBackDisable = false;
 
         }
@@ -9686,7 +9932,7 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
             });
 
 
-        }
+        $("#deleteWebsiteButton").fadeIn();
 
 
     };
@@ -9797,8 +10043,10 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
             });
 
 
-        }
+var SPVal;
 
+app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $compile) {
+    $scope.webSiteCreationLoading = true;
 
     };
 });
@@ -10122,14 +10370,12 @@ app.controller('listWebsites', function ($scope, $http, $window) {
             virtualHost: virtualHost
         };
 
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
+});
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
+    var checkBox = document.getElementById("myCheck");
+    // Get the output text
 
         function ListInitialDatas(response) {
             $scope.issuingSSL[virtualHost] = false;
@@ -10148,6 +10394,10 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 });
             }
 
+        if ($scope.apacheBackend === true) {
+            apacheBackend = 1;
+        } else {
+            apacheBackend = 0
         }
 
         function cantLoadInitialDatas(response) {

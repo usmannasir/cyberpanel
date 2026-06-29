@@ -14,7 +14,9 @@ from plogical.httpProc import httpProc
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
+import shlex
 from plogical.acl import ACLManager
+from plogical.securityUtils import is_safe_port
 import plogical.CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess

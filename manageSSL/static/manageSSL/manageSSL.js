@@ -294,6 +294,7 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.sslIssuing = false;
 
             $scope.sslIssuing = false;
             if (response.data.SSL == 1) {
@@ -381,6 +382,7 @@ app.controller('sslIssueForMailServer', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.sslIssuing = false;
 
             $scope.sslIssuing = false;
             if (response.data.SSL === 1) {

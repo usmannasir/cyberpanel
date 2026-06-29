@@ -605,15 +605,23 @@
                                 </button>
                             </td>
                             <td>
-                                <button ng-click="remoteAccess(record.dbUser)" 
-                                        data-toggle="modal" 
-                                        data-target="#remoteAccess{$ $index $}" 
-                                        type="button" 
+                                <button ng-click="remoteAccess(record.dbUser)"
+                                        data-toggle="modal"
+                                        data-target="#remoteAccess{$ $index $}"
+                                        type="button"
                                         class="btn btn-primary btn-action">
                                     <i class="fas fa-network-wired"></i>
                                     {% trans "Manage" %}
                                 </button>
-                                
+                                {% if admin or deleteDatabase %}
+                                <a href="{% url 'deleteDatabase' %}"
+                                   class="btn btn-danger btn-action"
+                                   title="{% trans 'Delete Database' %}">
+                                    <i class="fas fa-trash"></i>
+                                    {% trans "Delete" %}
+                                </a>
+                                {% endif %}
+
                                 <!-- Remote Access Modal - Unique ID for each row -->
                                 <div id="remoteAccess{$ $index $}" class="modal fade" role="dialog">
                                     <div class="modal-dialog modal-lg">

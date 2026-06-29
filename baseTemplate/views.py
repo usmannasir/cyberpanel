@@ -188,7 +188,7 @@ def getSystemStatus(request):
 
             import subprocess
             import os
-            
+
             # Calculate user's disk usage
             total_disk_used = 0
             total_disk_limit = 0
@@ -217,7 +217,7 @@ def getSystemStatus(request):
                 if website.package:
                     total_disk_limit += website.package.diskSpace
             
-            # Convert MB to GB for display
+            # du -sm reports MB and package.diskSpace is stored in MB; convert both to GB for display
             total_disk_used_gb = round(total_disk_used / 1024, 2)
             total_disk_limit_gb = round(total_disk_limit / 1024, 2) if total_disk_limit > 0 else 100  # Default 100GB if no limit
             disk_free_gb = max(0, total_disk_limit_gb - total_disk_used_gb)
@@ -245,11 +245,11 @@ def getSystemStatus(request):
             
             # Prepare response data matching the expected format
             user_data = {
-                'cpuUsage': min(100, int((total_websites * 5))),  # Estimate based on website count
-                'ramUsage': min(100, int((total_databases * 10) + (total_emails * 2))),  # Estimate based on resources
+                'cpuUsage': cpu_usage,
+                'ramUsage': ram_usage,
                 'diskUsage': disk_usage_percent,
-                'cpuCores': 2,  # Default for display
-                'ramTotalMB': 4096,  # Default for display
+                'cpuCores': cpu_cores,
+                'ramTotalMB': ram_total_mb,
                 'diskTotalGB': int(total_disk_limit_gb),
                 'diskFreeGB': int(disk_free_gb),
                 'uptime': 'User Account Active'
