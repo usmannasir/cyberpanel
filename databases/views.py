@@ -3,7 +3,7 @@ import time
 from random import randint
 
 from django.shortcuts import redirect, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 from cloudAPI.cloudManager import CloudManager
 from loginSystem.views import loadLoginPage
@@ -23,6 +23,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 # Create your views here.
 
+@ensure_csrf_cookie
 def loadDatabaseHome(request):
     try:
         userID = request.session['userID']
@@ -32,6 +33,7 @@ def loadDatabaseHome(request):
         return redirect(loadLoginPage)
 
 
+@ensure_csrf_cookie
 def createDatabase(request):
     try:
         result = pluginManager.preCreateDatabase(request)
@@ -73,6 +75,7 @@ def submitDBCreation(request):
         return redirect(loadLoginPage)
 
 
+@ensure_csrf_cookie
 def deleteDatabase(request):
     try:
         userID = request.session['userID']
@@ -110,6 +113,7 @@ def submitDatabaseDeletion(request):
         return redirect(loadLoginPage)
 
 
+@ensure_csrf_cookie
 def listDBs(request):
     try:
         userID = request.session['userID']

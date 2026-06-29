@@ -39,6 +39,7 @@ python-jose==3.4.0
 websockets==15.0.1
 PyJWT>=2.10.1
 # Requires Python >=3.10 (CyberCP venv uses 3.11+ on new installs per v2.5.5-dev installer).
-python-dotenv==1.2.2
+python-dotenv==1.2.2; python_version >= "3.10"
+python-dotenv==1.2.1; python_version < "3.10"
 webauthn>=2.0.0
 gunicorn>=21,<24

@@ -131,16 +131,21 @@ if [[ -z "$CP_PYTHON" ]]; then
 fi
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python: $CP_PYTHON" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-# Ensure ols_binaries_config exists (required by upgrade.py; may be missing when upgrading from older versions)
+# Ensure ols_binaries_config and ols_version_policy exist (both required by upgrade.py imports;
+# may be missing when upgrading from older versions). upgrade.py inserts /usr/local/CyberCP/install
+# on sys.path and imports both at module load, so they must exist BEFORE it runs (it cannot self-heal
+# via its own fresh clone because the import happens first).
 mkdir -p /usr/local/CyberCP/install
-if [[ ! -f /usr/local/CyberCP/install/ols_binaries_config.py ]]; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading ols_binaries_config.py (required for upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  wget -q -O /usr/local/CyberCP/install/ols_binaries_config.py "${Git_Content_URL}/${Branch_Name}/install/ols_binaries_config.py" 2>/dev/null || \
-  curl -sL -o /usr/local/CyberCP/install/ols_binaries_config.py "${Git_Content_URL}/${Branch_Name}/install/ols_binaries_config.py" 2>/dev/null || true
-fi
-if [[ ! -f /usr/local/CyberCP/install/ols_binaries_config.py ]]; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: ols_binaries_config.py not found; upgrade.py may fail with ModuleNotFoundError" | tee -a /var/log/cyberpanel_upgrade_debug.log
-fi
+for _ols_mod in ols_binaries_config ols_version_policy; do
+  if [[ ! -f "/usr/local/CyberCP/install/${_ols_mod}.py" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading ${_ols_mod}.py (required for upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    wget -q -O "/usr/local/CyberCP/install/${_ols_mod}.py" "${Git_Content_URL}/${Branch_Name}/install/${_ols_mod}.py" 2>/dev/null || \
+    curl -sL -o "/usr/local/CyberCP/install/${_ols_mod}.py" "${Git_Content_URL}/${Branch_Name}/install/${_ols_mod}.py" 2>/dev/null || true
+  fi
+  if [[ ! -f "/usr/local/CyberCP/install/${_ols_mod}.py" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: ${_ols_mod}.py not found; upgrade.py may fail with ModuleNotFoundError" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+done
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 

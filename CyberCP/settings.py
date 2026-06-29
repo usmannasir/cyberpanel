@@ -14,15 +14,13 @@ import os
 import sys
 from django.utils.translation import gettext_lazy as _
 
-# Patreon OAuth (optional): for paid-plugin verification via Patreon membership.
-# Set these only if you use Patreon-gated plugins; leave unset otherwise.
-# Use environment variables; no defaults so the repo stays generic and safe to push to GitHub.
-PATREON_CLIENT_ID = os.environ.get('PATREON_CLIENT_ID', '')
-PATREON_CLIENT_SECRET = os.environ.get('PATREON_CLIENT_SECRET', '')
-PATREON_CREATOR_ID = os.environ.get('PATREON_CREATOR_ID', '')
-PATREON_MEMBERSHIP_TIER_ID = os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '')
-PATREON_CREATOR_ACCESS_TOKEN = os.environ.get('PATREON_CREATOR_ACCESS_TOKEN', '')
-PATREON_CREATOR_REFRESH_TOKEN = os.environ.get('PATREON_CREATOR_REFRESH_TOKEN', '')
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not available, continue without it
+    pass
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,45 +29,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Loaded from /etc/cyberpanel/django_secret or CYBERPANEL_DJANGO_SECRET_KEY (see plogical/djangoSecrets.py)
-from plogical.djangoSecrets import get_django_secret_key
-_SECRET_FALLBACK = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
-SECRET_KEY = get_django_secret_key(fallback=_SECRET_FALLBACK, create_if_missing=True)
+SECRET_KEY = os.getenv('SECRET_KEY', 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
-
-# When the panel is behind a reverse proxy (e.g. https://panel.example.com -> http://backend:port),
-# the browser sends Origin/Referer with the public domain while the proxy may send Host as the
-# backend address. Django then fails CSRF (Referer vs Host mismatch) and POSTs get 403.
-# Set CSRF_TRUSTED_ORIGINS to your public origin(s) so CSRF passes. Optional; leave unset if
-# you access the panel by IP:port only.
-# Example: export CSRF_TRUSTED_ORIGINS="https://panel.example.com,http://panel.example.com"
-_csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
-_csrf_origins_list = [o.strip() for o in _csrf_origins_env.split(',') if o.strip()]
-# Add default trusted origins for common CyberPanel domains
-_default_origins = [
-    'https://cyberpanel.newstargeted.com',
-    'http://cyberpanel.newstargeted.com',
-]
-# Merge environment and default origins, avoiding duplicates
-CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins_list + _default_origins))
-
-# Optional file: one trusted origin per line (e.g. https://203.0.113.1:2087) for IP:port panel access.
-# Create /etc/cyberpanel/csrf_trusted_origins on the server if JSON POSTs get 403 CSRF when using HTTPS by IP.
-_csrf_trusted_origins_file = '/etc/cyberpanel/csrf_trusted_origins'
-if os.path.isfile(_csrf_trusted_origins_file):
-    try:
-        with open(_csrf_trusted_origins_file, 'r', encoding='utf-8', errors='replace') as _csrf_f:
-            for _csrf_line in _csrf_f:
-                _csrf_line = _csrf_line.strip()
-                if _csrf_line and not _csrf_line.startswith('#'):
-                    if _csrf_line not in CSRF_TRUSTED_ORIGINS:
-                        CSRF_TRUSTED_ORIGINS.append(_csrf_line)
-    except OSError:
-        pass
+# Allow configuration via environment variable, with wildcard fallback for universal compatibility
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # Application definition
 
@@ -80,62 +46,47 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Core apps (no dependencies on other custom apps)
-    'loginSystem',  # Base app - many apps depend on Administrator model
-    'packages',     # websiteFunctions depends on this
-
-    # Apps with single dependency
-    'websiteFunctions',  # Depends on packages and loginSystem
-    'baseTemplate',      # Depends on loginSystem
-    'userManagment',     # Depends on loginSystem
-    'dns',               # Depends on loginSystem
-
-    # Apps depending on websiteFunctions
-    'databases',         # Depends on websiteFunctions
-    'ftp',              # Depends on websiteFunctions
-    'filemanager',      # Depends on websiteFunctions
-    'mailServer',       # Depends on websiteFunctions, ChildDomains
-
-    # Apps with multiple or complex dependencies
-    'emailPremium',
-    # Optional plugins (e.g. emailMarketing, discordWebhooks) - install via Plugin Store
-    # from https://github.com/master3395/cyberpanel-plugins - plugin installer adds them
-    'cloudAPI',         # Depends on websiteFunctions
-    'containerization', # Depends on websiteFunctions
-    'IncBackups',      # Depends on websiteFunctions and loginSystem
-    'CLManager',       # Depends on packages
-
-    # Apps with dependencies on loginSystem only
-    's3Backups',       # Depends on loginSystem
-    'dockerManager',   # Depends on loginSystem
-    'aiScanner',       # Depends on loginSystem
-
-    # Independent apps (no model dependencies found)
+    'baseTemplate',
     'firewall',
+    'loginSystem',
+    'packages',
+    'websiteFunctions',
     'tuning',
     'serverStatus',
+    'dns',
+    'ftp',
+    'userManagment',
+    'databases',
+    'mailServer',
     'serverLogs',
     'backup',
     'managePHP',
     'manageSSL',
     'api',
+    'filemanager',
     'manageServices',
     'pluginHolder',
+    'emailPremium',
+    'emailMarketing',
+    'cloudAPI',
     'highAvailability',
+    's3Backups',
+    'dockerManager',
+    'containerization',
+    'CLManager',
+    'IncBackups',
+    'aiScanner',
     'webmail',
     'emailDelivery',
     #    'WebTerminal'
 ]
-
-# Add plugins that are installed (plugin installer handles adding/removing)
-# Plugins are added by plugin installer when plugins are installed
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'CyberCP.originDedupeMiddleware.OriginDedupeMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -159,10 +110,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'baseTemplate.context_processors.version_context',
                 'baseTemplate.context_processors.cosmetic_context',
-                'baseTemplate.context_processors.notification_preferences_context',
-                'baseTemplate.context_processors.firewall_static_context',
-                'baseTemplate.context_processors.dns_static_context',
-                'baseTemplate.context_processors.plugin_sidebar_context',
             ],
         },
     },
@@ -172,39 +119,24 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-# Prefer password from /etc/cyberpanel/mysqlPassword so panel stays in sync with CLI/install scripts.
-# Do not ship a default password. If env vars and password files are missing, DB access should fail closed.
-_def_mysql_pass = ''
-_def_mysql_root_pass = ''
-try:
-    _mysql_pass_file = '/etc/cyberpanel/mysqlPassword'
-    if os.path.exists(_mysql_pass_file):
-        with open(_mysql_pass_file, 'r') as _f:
-            _def_mysql_pass = (_f.read() or '').strip() or _def_mysql_pass
 
-    _mysql_root_pass_file = '/etc/cyberpanel/mysqlRootPassword'
-    if os.path.exists(_mysql_root_pass_file):
-        with open(_mysql_root_pass_file, 'r') as _f:
-            _def_mysql_root_pass = (_f.read() or '').strip() or _def_mysql_root_pass
-except Exception:
-    pass
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME', 'cyberpanel'),
-        'USER': os.getenv('DB_USER', 'cyberpanel'),
-        'PASSWORD': os.getenv('DB_PASSWORD', _def_mysql_pass),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '3306'),
+        'NAME': 'cyberpanel',
+        'USER': 'cyberpanel',
+        'PASSWORD': '0M0HDAb0PhCkXK',
+        'HOST': 'localhost',
+        'PORT':''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('ROOT_DB_NAME', 'mysql'),
-        'USER': os.getenv('ROOT_DB_USER', 'root'),
-        'PASSWORD': os.getenv('ROOT_DB_PASSWORD', _def_mysql_root_pass or _def_mysql_pass),
-        'HOST': os.getenv('ROOT_DB_HOST', 'localhost'),
-        'PORT': os.getenv('ROOT_DB_PORT', '3306'),
+        'NAME': 'mysql',
+        'USER': 'root',
+        'PASSWORD': '0M0HDAb0PhCkXK',
+        'HOST': 'localhost',
+        'PORT': '',
     },
 }
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
@@ -244,11 +176,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+PUBLIC_ROOT = os.path.join(BASE_DIR, "public/")
 
 STATIC_URL = '/static/'
-
-# Panel public directory (SnappyMail, phpMyAdmin, etc.) – served so /snappymail/ and /phpmyadmin/ work when panel is behind Django
-PUBLIC_ROOT = os.path.join(BASE_DIR, 'public')
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
@@ -281,65 +211,127 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2147483648
 
 # Security settings
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Login URL - CyberPanel uses root path for login
-LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Sync INSTALLED_APPS with plugins on disk so /plugins/<name>/ and /plugins/<name>/settings/ work.
-# Plugins installed under /usr/local/CyberCP/ (or BASE_DIR) are added here if they have meta.xml + urls.py.
-_cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if os.path.isdir(_cybercp_root):
+# Django 4.x sends Origin on HTTPS POSTs; without trusted origins CSRF returns 403 on login.
+_csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+_csrf_origins_list = [o.strip() for o in _csrf_origins_env.split(',') if o.strip()]
+_default_origins = [
+    'https://84.247.184.182:8090',
+    'http://84.247.184.182:8090',
+    'https://127.0.0.1:8090',
+    'http://127.0.0.1:8090',
+    'https://vmi2387806.contaboserver.net:8090',
+    'http://vmi2387806.contaboserver.net:8090',
+]
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins_list + _default_origins))
+# Panel is served over HTTPS on :8090; secure cookies avoid stale CSRF/session mismatches.
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+_csrf_trusted_origins_file = '/etc/cyberpanel/csrf_trusted_origins'
+if os.path.isfile(_csrf_trusted_origins_file):
     try:
-        # Allow importing plugin packages from the on-disk plugin store sources.
-        # This helps when /usr/local/CyberCP/<plugin>/ exists as an "installed marker"
-        # but the full plugin code is missing/incomplete.
-        _plugin_source_roots = [
-            '/home/cyberpanel/plugins',
-            '/home/cyberpanel-plugins',
-        ]
-        for _src_root in _plugin_source_roots:
-            try:
-                if os.path.isdir(_src_root) and _src_root not in sys.path:
-                    sys.path.append(_src_root)
-            except Exception:
-                pass
-
-        _existing_apps = set(INSTALLED_APPS)
-        for _name in os.listdir(_cybercp_root):
-            if _name.startswith('.'):
-                continue
-            _plugin_dir = os.path.join(_cybercp_root, _name)
-            if not os.path.isdir(_plugin_dir):
-                continue
-            if _name in _existing_apps:
-                continue
-
-            _installed_has_meta_and_urls = (
-                os.path.exists(os.path.join(_plugin_dir, 'meta.xml')) and
-                os.path.exists(os.path.join(_plugin_dir, 'urls.py'))
-            )
-
-            # Fallback: if the installed directory exists but is incomplete,
-            # try to treat the plugin as installed if we can find meta.xml + urls.py in source.
-            _source_has_meta_and_urls = False
-            for _src_root in (
-                '/home/cyberpanel/plugins',
-                '/home/cyberpanel-plugins',
-            ):
-                _src_dir = os.path.join(_src_root, _name)
-                if not os.path.isdir(_src_dir):
-                    continue
-                if os.path.exists(os.path.join(_src_dir, 'meta.xml')) and os.path.exists(os.path.join(_src_dir, 'urls.py')):
-                    _source_has_meta_and_urls = True
-                    break
-
-            if _installed_has_meta_and_urls or _source_has_meta_and_urls:
-                INSTALLED_APPS.append(_name)
-                _existing_apps.add(_name)
-    except (OSError, IOError):
+        with open(_csrf_trusted_origins_file, 'r', encoding='utf-8', errors='replace') as _csrf_f:
+            for _csrf_line in _csrf_f:
+                _csrf_line = _csrf_line.strip()
+                if _csrf_line and not _csrf_line.startswith('#'):
+                    if _csrf_line not in CSRF_TRUSTED_ORIGINS:
+                        CSRF_TRUSTED_ORIGINS.append(_csrf_line)
+    except OSError:
         pass
+
+# ---------------------------------------------------------------------------
+# Plugin auto-sync: register on-disk plugins in INSTALLED_APPS
+# ---------------------------------------------------------------------------
+# External/optional plugins live either as installed marker dirs under
+# /usr/local/CyberCP/<name>/ or as source packages under the plugin store
+# roots below. A plugin is recognised when it ships both meta.xml and urls.py.
+# Without this, plugin models raise:
+#   "Model class <plugin>.models.X doesn't declare an explicit app_label and
+#    isn't in an application in INSTALLED_APPS."
+# Registering the app (not just including its URLs in pluginHolder) is what
+# makes plugin models, admin and migrations work.
+#
+# Safety: a plugin is only registered when it is importable under its own
+# directory name. If it ships an apps.py whose AppConfig `name` differs from
+# the directory name, registering it would raise ImproperlyConfigured and take
+# the whole panel down, so such plugins are skipped (they remain reachable via
+# pluginHolder URL routing, which fails soft per-plugin).
+import re as _re
+
+_PLUGIN_SOURCE_ROOTS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
+# Core apps / reserved path segments that must never be auto-registered.
+_PLUGIN_RESERVED_NAMES = frozenset(list(INSTALLED_APPS) + [
+    'installed', 'help', 'api', 'static', 'public', 'plogical', 'CyberCP',
+])
+_PLUGIN_APPCONFIG_NAME_RE = _re.compile(r"""^\s*name\s*=\s*['"]([^'"]+)['"]""", _re.M)
+
+
+def _plugin_dir_is_app(_dir):
+    try:
+        return (
+            os.path.isdir(_dir)
+            and os.path.exists(os.path.join(_dir, 'meta.xml'))
+            and os.path.exists(os.path.join(_dir, 'urls.py'))
+        )
+    except (OSError, IOError):
+        return False
+
+
+def _plugin_appconfig_name_ok(_dir, _name):
+    """True if the plugin has no apps.py, or its AppConfig.name == dir name."""
+    _apps_py = os.path.join(_dir, 'apps.py')
+    if not os.path.isfile(_apps_py):
+        return True
+    try:
+        with open(_apps_py, 'r', encoding='utf-8', errors='replace') as _f:
+            _txt = _f.read()
+    except (OSError, IOError):
+        return False
+    _m = _PLUGIN_APPCONFIG_NAME_RE.search(_txt)
+    if not _m:
+        return True
+    return _m.group(1) == _name
+
+
+def _plugin_is_registrable(_name):
+    """Locate a plugin dir for _name and decide if it is safe to register."""
+    _cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for _root in [_cybercp_root] + _PLUGIN_SOURCE_ROOTS:
+        _dir = os.path.join(_root, _name)
+        if _plugin_dir_is_app(_dir):
+            return _plugin_appconfig_name_ok(_dir, _name)
+    return False
+
+
+try:
+    _cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Make plugin store roots importable so source-only plugins load.
+    for _src_root in _PLUGIN_SOURCE_ROOTS:
+        try:
+            if os.path.isdir(_src_root) and _src_root not in sys.path:
+                sys.path.append(_src_root)
+        except (OSError, IOError):
+            pass
+
+    _existing_apps = set(INSTALLED_APPS)
+    _candidate_names = set()
+    for _root in [_cybercp_root] + _PLUGIN_SOURCE_ROOTS:
+        if not os.path.isdir(_root):
+            continue
+        try:
+            for _name in os.listdir(_root):
+                if not _name.startswith('.'):
+                    _candidate_names.add(_name)
+        except (OSError, IOError):
+            continue
+
+    for _name in sorted(_candidate_names):
+        if _name in _existing_apps or _name in _PLUGIN_RESERVED_NAMES:
+            continue
+        if _plugin_is_registrable(_name):
+            INSTALLED_APPS.append(_name)
+            _existing_apps.add(_name)
+except (OSError, IOError):
+    pass

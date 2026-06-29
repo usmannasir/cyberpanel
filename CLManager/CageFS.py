@@ -13,6 +13,17 @@ from plogical.processUtilities import ProcessUtilities
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
 from serverStatus.serverStatusUtil import ServerStatusUtil
+from plogical.imunify_integration import (
+    build_imunify360_integration_conf,
+    build_imunifyav_integration_conf,
+    write_integration_conf,
+    ensure_clscripts_executable,
+    chmod_imunify_execute_files,
+    ensure_install_status_file,
+    DEPLOY_TMP,
+    IMUNIFY_360_UI,
+    IMUNIFY_AV_UI,
+)
 
 
 class CageFS:
@@ -154,6 +165,7 @@ class CageFS:
             writeToFile.write(key)
             writeToFile.close()
 
+            ensure_install_status_file()
             mailUtilities.checkHome()
 
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
@@ -200,45 +212,24 @@ class CageFS:
             command = 'touch /etc/sysconfig/imunify360/generic/modsec.conf'
             ServerStatusUtil.executioner(command, statusFile)
 
-            integrationFile = '/etc/sysconfig/imunify360/integration.conf'
+            write_integration_conf(build_imunify360_integration_conf())
+            ensure_clscripts_executable()
 
-            content = """[paths]
-ui_path =/usr/local/CyberCP/public/imunify
-[web_server]
-server_type = litespeed
-graceful_restart_script = /usr/local/lsws/bin/lswsctrl restart
-modsec_audit_log = /usr/local/lsws/logs/auditmodsec.log
-modsec_audit_logdir = /usr/local/lsws/logs/
-
-[malware]
-basedir = /home
-pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
-"""
-
-            writeToFile = open(integrationFile, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
-
-            ##
-
-            ### address issue to create imunify dir - https://app.clickup.com/t/86engx249
-
-            command = 'mkdir /usr/local/CyberCP/public/imunify'
-            ProcessUtilities.executioner(command)
-
-            command = 'pkill -f "bash i360deploy.sh"'
+            command = 'mkdir -p %s' % IMUNIFY_360_UI
             ServerStatusUtil.executioner(command, statusFile)
 
-            if not os.path.exists('i360deploy.sh'):
-                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh'
+            deploy_script = '%s/i360deploy.sh' % DEPLOY_TMP
+            commands = [
+                'mkdir -p %s' % DEPLOY_TMP,
+                'pkill -f "bash i360deploy.sh" 2>/dev/null || true',
+                'wget -qO %s https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh' % deploy_script,
+                'bash %s --uninstall --yes' % deploy_script,
+                'bash %s --key %s --yes' % (deploy_script, key),
+            ]
+            for command in commands:
                 ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'bash i360deploy.sh --uninstall --yes'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'bash i360deploy.sh --key %s --yes' % (key)
-            ServerStatusUtil.executioner(command, statusFile)
-
+            chmod_imunify_execute_files(IMUNIFY_360_UI)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Imunify reinstalled..\n", 1)
@@ -269,6 +260,8 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
                 pkg_cmd = 'apt-get update -y >/dev/null 2>&1 && apt-get install -y imunify-antivirus || true'
 
             ServerStatusUtil.executioner(pkg_cmd, statusFile)
+            ensure_clscripts_executable()
+            chmod_imunify_execute_files(IMUNIFY_AV_UI)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       f"ImunifyAV asset verification warning: {str(msg)}\n", 1)
@@ -276,6 +269,7 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
     @staticmethod
     def submitinstallImunifyAV():
         try:
+            ensure_install_status_file()
             mailUtilities.checkHome()
 
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
@@ -316,42 +310,36 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
                 command = 'apt --fix-broken install -y 2>/dev/null || true'
                 ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'mkdir -p /etc/sysconfig/imunify360'
+            command = 'mkdir -p /etc/sysconfig/imunify360/generic'
             ServerStatusUtil.executioner(command, statusFile)
 
-
-            integrationFile = '/etc/sysconfig/imunify360/integration.conf'
-
-            content = """[paths]
-ui_path = /usr/local/CyberCP/public/imunifyav
-ui_path_owner = lscpd:lscpd
-"""
-
-            writeToFile = open(integrationFile, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
-
-            ##
-
-            ### address issue to create imunify dir - https://app.clickup.com/t/86engx249
-
-            command = 'pkill -f "bash imav-deploy.sh"'
+            command = 'mkdir -p %s' % IMUNIFY_AV_UI
             ServerStatusUtil.executioner(command, statusFile)
 
-            if not os.path.exists('imav-deploy.sh'):
-                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh'
+            # integration.conf must exist before imav-deploy.sh (generic panel detection).
+            write_integration_conf(build_imunifyav_integration_conf())
+            ensure_clscripts_executable()
+
+            deploy_script = '%s/imav-deploy.sh' % DEPLOY_TMP
+            commands = [
+                'mkdir -p %s' % DEPLOY_TMP,
+                'pkill -f "bash imav-deploy.sh" 2>/dev/null || true',
+                'wget -qO %s https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh' % deploy_script,
+                'bash %s --uninstall --yes' % deploy_script,
+                'bash %s --yes' % deploy_script,
+            ]
+            for command in commands:
                 ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'bash imav-deploy.sh --uninstall --yes'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'mkdir -p /usr/local/CyberCP/public/imunifyav'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'bash imav-deploy.sh --yes'
-            ServerStatusUtil.executioner(command, statusFile)
-
             CageFS._ensure_imunifyav_assets(statusFile)
+
+            try:
+                from plogical.cyberpanelOlsPhpmyadmin import ensure_cyberpanel_phpmyadmin_ols
+                ensure_cyberpanel_phpmyadmin_ols(restart=True, verify=False)
+            except BaseException as ols_msg:
+                logging.CyberCPLogFileWriter.statusWriter(
+                    ServerStatusUtil.lswsInstallStatusPath,
+                    'OLS vhost refresh note: %s\n' % str(ols_msg), 1)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "ImunifyAV reinstalled..\n", 1)

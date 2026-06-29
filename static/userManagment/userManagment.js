@@ -820,6 +820,12 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
     $scope.versionManagement = false;
 
+    // Plugin Management (granular)
+
+    $scope.viewPlugins = false;
+    $scope.usePlugins = false;
+    $scope.installPlugins = false;
+
     // User Management
 
     $scope.createNewUser = false;
@@ -900,6 +906,12 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
             //
             versionManagement: $scope.versionManagement,
+
+            // Plugin Management (granular)
+
+            viewPlugins: $scope.viewPlugins,
+            usePlugins: $scope.usePlugins,
+            installPlugins: $scope.installPlugins,
 
             // User Management
 
@@ -1023,6 +1035,9 @@ app.controller('createACLCTRL', function ($scope, $http) {
             //
 
             $scope.versionManagement = true;
+            $scope.viewPlugins = true;
+            $scope.usePlugins = true;
+            $scope.installPlugins = true;
 
             // User Management
 
@@ -1094,6 +1109,9 @@ app.controller('createACLCTRL', function ($scope, $http) {
             //
 
             $scope.versionManagement = false;
+            $scope.viewPlugins = false;
+            $scope.usePlugins = false;
+            $scope.installPlugins = false;
 
             // User Management
 
@@ -1279,6 +1297,10 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
 
                 $scope.versionManagement = Boolean(response.data.versionManagement);
 
+                $scope.viewPlugins = Boolean(response.data.viewPlugins);
+                $scope.usePlugins = Boolean(response.data.usePlugins);
+                $scope.installPlugins = Boolean(response.data.installPlugins);
+
                 // User Management
 
                 $scope.createNewUser = Boolean(response.data.createNewUser);
@@ -1379,6 +1401,12 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             adminStatus: $scope.makeAdmin,
             //
             versionManagement: $scope.versionManagement,
+
+            // Plugin Management (granular)
+
+            viewPlugins: $scope.viewPlugins,
+            usePlugins: $scope.usePlugins,
+            installPlugins: $scope.installPlugins,
 
             // User Management
 
@@ -1502,6 +1530,9 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             //
 
             $scope.versionManagement = true;
+            $scope.viewPlugins = true;
+            $scope.usePlugins = true;
+            $scope.installPlugins = true;
 
             // User Management
 
@@ -1573,6 +1604,9 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             //
 
             $scope.versionManagement = false;
+            $scope.viewPlugins = false;
+            $scope.usePlugins = false;
+            $scope.installPlugins = false;
 
             // User Management
 

@@ -5735,6 +5735,18 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 except:
                     continue
             
+            # Post-install guard: preUpgrade can leave server/client packages removed
+            ensure_script = "/usr/local/CyberCP/CPScripts/ensure-mariadb-server.sh"
+            if os.path.isfile(ensure_script):
+                try:
+                    result = subprocess.run(["bash", ensure_script], capture_output=True, text=True, timeout=300)
+                    if result.returncode == 0:
+                        Upgrade.stdOut("ensure-mariadb-server.sh completed", 1)
+                    else:
+                        Upgrade.stdOut(f"Warning: ensure-mariadb-server.sh failed: {result.stderr}", 0)
+                except Exception as guard_err:
+                    Upgrade.stdOut(f"Warning: ensure-mariadb-server.sh error: {guard_err}", 0)
+
             Upgrade.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
             
         except Exception as e:
@@ -7304,7 +7316,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
                     configContent = f.read()
 
                 # Check which product the config file is for by looking at the ui_path
-                if 'ui_path =/usr/local/CyberCP/public/imunifyav' in configContent:
+                if 'imunifyav' in configContent:
                     # This is ImunifyAV configuration
                     Upgrade.stdOut("Detected ImunifyAV configuration, reconfiguring...")
                     imunifyAVPath = '/usr/local/CyberCP/public/imunifyav'
@@ -7325,7 +7337,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
                     else:
                         Upgrade.stdOut("ImunifyAV directory not found despite config file existing")
 
-                elif 'ui_path =/usr/local/CyberCP/public/imunify' in configContent:
+                elif '/public/imunify' in configContent and 'imunifyav' not in configContent:
                     # This is Imunify360 configuration
                     Upgrade.stdOut("Detected Imunify360 configuration, checking system installation...")
                     imunify360Path = '/usr/local/CyberCP/public/imunify'

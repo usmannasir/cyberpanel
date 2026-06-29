@@ -69,6 +69,7 @@
     </script>
 </head>
 <body>
+    <form id="cp-csrf-seed" style="display:none" aria-hidden="true">{% csrf_token %}</form>
     <a href="#main-content" class="skip-link">{% trans "Skip to main content" %}</a>
     <!-- Header -->
     <header id="header">
@@ -266,6 +267,9 @@
         </a>
         {% endif %}
 
+        <!-- Plugins intentionally omitted from the sidebar; available via the
+             Access hub (/base/hub/access) and the command palette instead. -->
+
         <!-- ============================ HELP ============================ -->
         <div class="section-header">{% trans "HELP" %}</div>
 
@@ -351,6 +355,7 @@
             {% if admin or createDatabase %}{l:'{% trans "phpMyAdmin" %}', h:'{% url "phpMyAdmin" %}', i:'fa-table', g:'{% trans "Data" %}', t:'_blank'},{% endif %}
             {% if admin %}{l:'{% trans "MySQL Manager" %}', h:'{% url "MysqlManager" %}', i:'fa-sliders', g:'{% trans "Data" %}'},{% endif %}
             {% if admin or listFTPAccounts %}{l:'{% trans "FTP Accounts" %}', h:'{% url "listFTPAccounts" %}', i:'fa-folder', g:'{% trans "Data" %}'},{% endif %}
+            {% if admin or canViewPlugins %}{l:'{% trans "Plugins" %}', h:'{% url "installed" %}', i:'fa-puzzle-piece', g:'{% trans "Administration" %}'},{% endif %}
             // Backups
             {% if admin or createBackup %}{l:'{% trans "One-Click Backups" %}', h:'{% url "OneClickBackups" %}', i:'fa-bolt', g:'{% trans "Backups" %}'},
             {l:'{% trans "Incremental Backups" %}', h:'{% url "backupDestinationsInc" %}', i:'fa-layer-group', g:'{% trans "Backups" %}'},

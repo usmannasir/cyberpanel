@@ -672,6 +672,10 @@
                     </tbody>
                 </table>
             </div>
+            <div ng-show="records.length === 0" class="empty-state">
+                <i class="fas fa-database"></i>
+                <div class="empty-state-text">{% trans "No databases found for this website" %}</div>
+            </div>
         </div>
     </div>
 </div>
