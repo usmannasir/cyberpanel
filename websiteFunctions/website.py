@@ -17,10 +17,8 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup, \
-    RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites, \
-    FTPQuota, BandwidthResetLog
+    RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites
 from plogical.virtualHostUtilities import virtualHostUtilities
-from plogical.formatUnits import format_size_from_mb
 import subprocess
 import shlex
 from plogical.installUtilities import installUtilities
@@ -37,8 +35,7 @@ from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
-# emailMarketing removed from INSTALLED_APPS
-# from emailMarketing.emACL import emACL
+from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
@@ -48,65 +45,6 @@ from .StagingSetup import StagingSetup
 import validators
 from django.http import JsonResponse
 import ipaddress
-
-
-def _get_ssl_renewal_schedule():
-    """Get formatted SSL renewal schedule (e.g. 'Thursday 12:00 AM').
-    Reads from world-readable config file first (web server can't read root crontab).
-    Cron day_of_week: 0=Sun, 1=Mon, ..., 6=Sat. Python weekday: Mon=0, ..., Sun=6."""
-    try:
-        from datetime import datetime, timedelta
-        # Config file is world-readable; web server (lscpd) cannot read /var/spool/cron/root
-        config_path = '/usr/local/CyberCP/ssl_renewal_schedule.conf'
-        if os.path.exists(config_path):
-            try:
-                with open(config_path, 'r') as f:
-                    line = f.read().strip()
-                if line:
-                    return line
-            except (IOError, OSError):
-                pass
-        cron_paths = ['/var/spool/cron/root', '/var/spool/cron/crontabs/root']
-        cron_content = None
-        for path in cron_paths:
-            if os.path.exists(path):
-                try:
-                    with open(path, 'r') as f:
-                        cron_content = f.read()
-                except (IOError, OSError):
-                    continue
-                break
-        if not cron_content:
-            return None
-        renew_hour, renew_minute, renew_weekday_cron = 0, 0, 4  # default Thursday
-        for line in cron_content.splitlines():
-            line = line.strip()
-            if 'renew.py' in line and not line.startswith('#'):
-                parts = line.split()
-                if len(parts) >= 5:
-                    try:
-                        renew_minute = int(parts[0]) if parts[0].isdigit() else 0
-                        renew_hour = int(parts[1]) if parts[1].isdigit() else 0
-                        dow = parts[4]
-                        renew_weekday_cron = int(dow) if dow.isdigit() and 0 <= int(dow) <= 7 else 4
-                    except (ValueError, IndexError):
-                        pass
-                elif len(parts) >= 2:
-                    renew_minute = int(parts[0]) if parts[0].isdigit() else 0
-                    renew_hour = int(parts[1]) if parts[1].isdigit() else 0
-                break
-        now = datetime.now()
-        # Cron: 0/7=Sun, 1=Mon, ..., 6=Sat -> Python: Mon=0, Tue=1, ..., Sun=6
-        target_weekday = (renew_weekday_cron - 1) % 7 if renew_weekday_cron else 6
-        days_until = (target_weekday - now.weekday()) % 7
-        if days_until == 0 and (now.hour > renew_hour or (now.hour == renew_hour and now.minute >= renew_minute)):
-            days_until = 7
-        next_run = now.replace(hour=renew_hour, minute=renew_minute, second=0, microsecond=0)
-        next_run += timedelta(days=days_until)
-        return next_run.strftime('%B %d, %Y %I:%M %p')
-    except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile('_get_ssl_renewal_schedule: ' + str(e))
-        return None
 
 
 class WebsiteManager:
@@ -575,27 +513,6 @@ class WebsiteManager:
 
         php = PHPManager.getPHPString(WPobj.owner.phpSelection)
         FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-        
-        # Validate PHP binary exists before proceeding
-        is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(WPobj.owner.phpSelection)
-        
-        if not is_valid:
-            # Try to fix PHP configuration
-            fix_success, fix_msg = PHPManager.fixPHPConfiguration(WPobj.owner.phpSelection)
-            if fix_success:
-                # Re-validate after fix attempt
-                is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(WPobj.owner.phpSelection)
-            
-            if not is_valid:
-                # Return error page if no PHP binary found
-                from django.shortcuts import render
-                return render(request, 'websiteFunctions/error.html', {
-                    'error_message': f'PHP configuration issue: {error_msg}. Fix attempt: {fix_msg}'
-                })
-            else:
-                FinalPHPPath = php_path
-        else:
-            FinalPHPPath = php_path
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
@@ -970,28 +887,6 @@ class WebsiteManager:
 
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-            
-            # Validate PHP binary exists before proceeding
-            from managePHP.phpManager import PHPManager
-            is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(PHPVersion)
-            
-            if not is_valid:
-                # Try to fix PHP configuration
-                fix_success, fix_msg = PHPManager.fixPHPConfiguration(PHPVersion)
-                if fix_success:
-                    # Re-validate after fix attempt
-                    is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(PHPVersion)
-                
-                if not is_valid:
-                    final_json = json.dumps({
-                        'status': 0, 
-                        'error_message': f'PHP configuration issue: {error_msg}. Fix attempt: {fix_msg}'
-                    })
-                    return HttpResponse(final_json)
-                else:
-                    FinalPHPPath = php_path
-            else:
-                FinalPHPPath = php_path
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
@@ -2402,22 +2297,13 @@ Require valid-user
             except:
                 alias = 0
 
-            masterDomain = (data.get('masterDomain') or '').strip()
-            domain = (data.get('domainName') or '').strip()
+            masterDomain = data['masterDomain']
+            domain = data['domainName']
 
-            # When user enters only the subdomain label (e.g. "ai"), build full FQDN (e.g. "ai.newstargeted.com")
-            # so validators.domain() passes; single-label "ai" is not a valid domain.
-            if domain and '.' not in domain and masterDomain:
-                domain = domain + '.' + masterDomain
-
-            if not domain:
-                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
 
             if alias == 0:
                 phpSelection = data['phpSelection']
-                path = (data.get('path') or '').strip()
+                path = data['path']
             else:
 
                 ### if master website have apache then create this sub-domain also as ols + apache
@@ -2436,13 +2322,13 @@ Require valid-user
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if domain.find("cyberpanel.website") > -1:
+            if data['domainName'].find("cyberpanel.website") > -1:
                 url = "https://platform.cyberpersons.com/CyberpanelAdOns/CreateDomain"
 
                 domain_data = {
                     "name": "test-domain",
                     "IP": ACLManager.GetServerIP(),
-                    "domain": domain
+                    "domain": data['domainName']
                 }
 
                 import requests
@@ -2459,8 +2345,7 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
-            path_from_data = (data.get('path') or '') if alias == 0 else ''
-            if path_from_data.find('..') > -1:
+            if data['path'].find('..') > -1:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
             if currentACL['admin'] != 1:
@@ -2481,38 +2366,18 @@ Require valid-user
             except:
                 apacheBackend = "0"
 
-            try:
-                openBasedir = int(data.get('openBasedir', 1))
-            except (TypeError, ValueError):
-                openBasedir = 0
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-            ProcessUtilities.ensureCommandToken()
-            create_result = virtualHostUtilities.createDomain(
-                masterDomain, domain, phpSelection, path, 1, 1, openBasedir,
-                admin.userName, int(apacheBackend), tempStatusPath, 1, int(alias))
+            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
+                       " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
+                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
+                       + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
-            st = ''
-            try:
-                if os.path.isfile(tempStatusPath):
-                    with open(tempStatusPath, 'r', encoding='utf-8', errors='replace') as sf:
-                        st = sf.read().strip()
-            except BaseException:
-                st = ''
+            ProcessUtilities.popenExecutioner(execPath)
+            time.sleep(2)
 
-            status_ok = ('Domain successfully created.' in st and '[200]' in st)
-            status_fail = ('[404]' in st)
-
-            if create_result[0] == 1 or (status_ok and not status_fail):
-                data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
-                            'tempStatusPath': tempStatusPath}
-            else:
-                err_msg = 'Child domain creation failed.'
-                if create_result[1] and create_result[1] != 'None':
-                    err_msg = create_result[1].strip() or err_msg
-                elif st:
-                    err_msg = st.replace('. [404]', '').strip() or err_msg
-                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': err_msg[:2000],
-                            'tempStatusPath': tempStatusPath}
+            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
+                        'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -2703,7 +2568,7 @@ Require valid-user
 
             # Calculate disk usage
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
-            diskUsed = format_size_from_mb(DiskUsage)
+            diskUsed = "%sMB" % str(DiskUsage)
 
             # Convert numeric state to text
             state = "Active" if website.state == 1 else "Suspended"
@@ -2725,54 +2590,6 @@ Require valid-user
             })
         return json.dumps(json_data)
 
-
-    @staticmethod
-    def _load_pem_certificate(filePath):
-        """Read PEM cert; fall back to openssl when panel user cannot read the file."""
-        import shlex
-        try:
-            with open(filePath, 'r') as cert_file:
-                return cert_file.read()
-        except (IOError, OSError, PermissionError):
-            pass
-        try:
-            from plogical.processUtilities import ProcessUtilities
-            cmd = 'openssl x509 -in %s -outform PEM 2>/dev/null' % shlex.quote(filePath)
-            out = ProcessUtilities.outputExecutioner(cmd)
-            if out and 'BEGIN CERTIFICATE' in out:
-                return out
-        except BaseException:
-            pass
-        return None
-
-    @staticmethod
-    def _live_tls_certificate_info(domain):
-        """Days until expiry and issuer from the certificate served on port 443."""
-        import ssl
-        import socket
-        from datetime import datetime
-        try:
-            ctx = ssl.create_default_context()
-            with socket.create_connection((domain, 443), timeout=8) as raw:
-                with ctx.wrap_socket(raw, server_hostname=domain) as sock:
-                    cert = sock.getpeercert()
-            if not cert:
-                return None
-            not_after = cert.get('notAfter')
-            if not not_after:
-                return None
-            final_date = datetime.strptime(not_after, '%b %d %H:%M:%S %Y %Z')
-            days = (final_date - datetime.now()).days
-            issuer_org = 'Unknown'
-            for item in cert.get('issuer') or ():
-                for key, value in item:
-                    if key == 'organizationName':
-                        issuer_org = value
-                        break
-            return {'days': days, 'issuer': issuer_org}
-        except BaseException:
-            return None
-
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
         try:
@@ -2793,7 +2610,7 @@ Require valid-user
                         try:
                             x509 = OpenSSL.crypto.load_certificate(
                                 OpenSSL.crypto.FILETYPE_PEM,
-                                WebsiteManager._load_pem_certificate(wildcard_path) or ''
+                                open(wildcard_path, 'r').read()
                             )
                             cn = None
                             for component in x509.get_subject().get_components():
@@ -2818,7 +2635,7 @@ Require valid-user
             # Load and analyze certificate
             x509 = OpenSSL.crypto.load_certificate(
                 OpenSSL.crypto.FILETYPE_PEM,
-                WebsiteManager._load_pem_certificate(filePath) or ''
+                open(filePath, 'r').read()
             )
             
             # Get expiration date
@@ -2871,7 +2688,7 @@ Require valid-user
             if x509.get_issuer() == x509.get_subject():
                 is_self_signed = True
             
-            # Determine status (origin PEM on disk)
+            # Determine status
             if is_self_signed:
                 status = 'self-signed'
             elif days < 0:
@@ -2882,28 +2699,12 @@ Require valid-user
                 status = 'warning'
             else:
                 status = 'valid'
-
-            ssl_source = 'origin'
-            if status == 'expired':
-                live = WebsiteManager._live_tls_certificate_info(domain)
-                if live and live.get('days', -1) >= 0:
-                    days = live['days']
-                    if live.get('issuer'):
-                        issuer_org = live['issuer']
-                    if days > 30:
-                        status = 'valid'
-                    elif days > 7:
-                        status = 'warning'
-                    else:
-                        status = 'expiring'
-                    ssl_source = 'edge'
-
+            
             return {
                 'status': status,
                 'days': days,
                 'issuer': issuer_org,
-                'is_wildcard': is_wildcard,
-                'ssl_source': ssl_source
+                'is_wildcard': is_wildcard
             }
             
         except Exception as e:
@@ -3042,13 +2843,7 @@ Require valid-user
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
-            deleteStatus, deleteOutput = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
-            if deleteStatus == 0:
-                errorMessage = "Not able to remove virtual host configuration."
-                if isinstance(deleteOutput, str) and deleteOutput.strip() != "":
-                    errorMessage = deleteOutput.strip().splitlines()[-1]
-                data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': errorMessage}
-                return HttpResponse(json.dumps(data_ret))
+            ProcessUtilities.popenExecutioner(execPath)
 
             ### delete site from dgdrive backups
 
@@ -3088,13 +2883,7 @@ Require valid-user
             websiteName = data['websiteName']
 
             try:
-                raw_delete_doc_root = data['DeleteDocRoot']
-                if isinstance(raw_delete_doc_root, bool):
-                    DeleteDocRoot = 1 if raw_delete_doc_root else 0
-                elif isinstance(raw_delete_doc_root, str):
-                    DeleteDocRoot = 1 if raw_delete_doc_root.lower() in ('1', 'true', 'yes', 'on') else 0
-                else:
-                    DeleteDocRoot = int(raw_delete_doc_root)
+                DeleteDocRoot = int(data['DeleteDocRoot'])
             except:
                 DeleteDocRoot = 0
 
@@ -3103,15 +2892,10 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
-            ProcessUtilities.ensureCommandToken()
-            delete_status, delete_output = virtualHostUtilities.deleteDomain(
-                websiteName, DeleteDocRoot)
-            if delete_status == 0:
-                errorMessage = "Not able to remove virtual host configuration."
-                if isinstance(delete_output, str) and delete_output.strip() != "":
-                    errorMessage = delete_output.strip()
-                data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': errorMessage}
-                return HttpResponse(json.dumps(data_ret))
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (
+                str(DeleteDocRoot))
+            ProcessUtilities.outputExecutioner(execPath)
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -3145,17 +2929,6 @@ Require valid-user
                 
                 # Ensure suspension page exists and has proper permissions
                 suspensionPagePath = "/usr/local/CyberCP/websiteFunctions/suspension.html"
-                suspensionDir = "/usr/local/CyberCP/websiteFunctions"
-                
-                # Ensure directory exists
-                if not os.path.exists(suspensionDir):
-                    try:
-                        command = f"mkdir -p {suspensionDir}"
-                        ProcessUtilities.executioner(command)
-                        logging.CyberCPLogFileWriter.writeToFile(f"Created suspension directory: {suspensionDir}")
-                    except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension directory: {str(e)}")
-                
                 if not os.path.exists(suspensionPagePath):
                     # Create default suspension page if it doesn't exist
                     defaultSuspensionHTML = """<!DOCTYPE html>
@@ -3224,35 +2997,17 @@ Require valid-user
                         # Use ProcessUtilities to move the file to the final location
                         command = f"mv {tempFile} {suspensionPagePath}"
                         ProcessUtilities.executioner(command)
-                        logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page: {suspensionPagePath}")
-                    except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page: {str(e)}")
-                        # Try alternative method using echo command
-                        try:
-                            escaped_html = defaultSuspensionHTML.replace('"', '\\"')
-                            command = f'echo "{escaped_html}" > {suspensionPagePath}'
-                            ProcessUtilities.executioner(command)
-                            logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page using echo: {suspensionPagePath}")
-                        except Exception as e2:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page with echo: {str(e2)}")
-                            return self.ajaxPre(0, f"Failed to create suspension page: {str(e2)}")
+                    except:
+                        pass
                 
                 # Set proper permissions for suspension page
                 try:
                     command = f"chown lsadm:lsadm {suspensionPagePath}"
-                    result = ProcessUtilities.executioner(command)
-                    if result.find('cannot') > -1:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set ownership for suspension page: {result}")
-                    
+                    ProcessUtilities.executioner(command)
                     command = f"chmod 644 {suspensionPagePath}"
-                    result = ProcessUtilities.executioner(command)
-                    if result.find('cannot') > -1:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set permissions for suspension page: {result}")
-                    
-                    logging.CyberCPLogFileWriter.writeToFile(f"Set permissions for suspension page: {suspensionPagePath}")
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Error setting suspension page permissions: {str(e)}")
-                    # Don't fail the entire operation for permission issues
+                    ProcessUtilities.executioner(command)
+                except:
+                    pass
                 
                 # Create suspension configuration with end marker
                 suspensionConf = """# Website Suspension Configuration
@@ -3283,17 +3038,9 @@ context /cyberpanel_suspension_page.html {
 """
                 
                 try:
-                    # Check if vhost file exists
-                    if not os.path.exists(vhostConfPath):
-                        logging.CyberCPLogFileWriter.writeToFile(f"Error: Vhost configuration file not found: {vhostConfPath}")
-                        return self.ajaxPre(0, f"Vhost configuration file not found for {websiteName}")
-                    
                     # Read current vhost configuration
                     with open(vhostConfPath, 'r') as f:
                         vhostContent = f.read()
-                    
-                    if not vhostContent.strip():
-                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Empty vhost configuration file: {vhostConfPath}")
                     
                     if "# Website Suspension Configuration" not in vhostContent:
                         # Check if there's an existing rewrite block at the root level
@@ -3318,11 +3065,7 @@ context /cyberpanel_suspension_page.html {
                         
                         # Set proper ownership
                         command = f"chown lsadm:lsadm {vhostConfPath}"
-                        result = ProcessUtilities.executioner(command)
-                        if result.find('cannot') > -1:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set vhost ownership: {result}")
-                        
-                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended website: {websiteName}")
+                        ProcessUtilities.executioner(command)
                 except IOError as e:
                     # If direct file access fails, fall back to command-based approach
                     command = f"cat {vhostConfPath}"
@@ -3364,27 +3107,9 @@ context /cyberpanel_suspension_page.html {
                         except:
                             pass
                 
-                # Suspend cron jobs for child domains
+                # Apply same suspension configuration to child domains
                 childDomains = website.childdomains_set.all()
                 
-                for items in childDomains:
-                    # Suspend cron jobs for child domain
-                    try:
-                        CronUtil.CronPrem(1)
-                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-                        execPath = execPath + " suspendWebsiteCrons --externalApp " + items.externalApp
-                        cronOutput = ProcessUtilities.outputExecutioner(execPath, items.externalApp)
-                        CronUtil.CronPrem(0)
-                        
-                        if cronOutput.find("1,") > -1:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended cron jobs for child domain {items.domain}")
-                        else:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to suspend cron jobs for child domain {items.domain}: {cronOutput}")
-                    except Exception as e:
-                        CronUtil.CronPrem(0)  # Ensure permissions are restored
-                        logging.CyberCPLogFileWriter.writeToFile(f"Error suspending cron jobs for child domain {items.domain}: {str(e)}")
-
-                # Apply same suspension configuration to child domains
                 for items in childDomains:
                     childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     childVhostConfPath = childConfPath + "/vhost.conf"
@@ -3429,49 +3154,16 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error suspending child domain {items.domain}: {str(e)}")
                 
-                # Suspend cron jobs for this website
-                try:
-                    CronUtil.CronPrem(1)
-                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-                    execPath = execPath + " suspendWebsiteCrons --externalApp " + website.externalApp
-                    cronOutput = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-                    CronUtil.CronPrem(0)
-                    
-                    if cronOutput.find("1,") > -1:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended cron jobs for {websiteName}")
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to suspend cron jobs for {websiteName}: {cronOutput}")
-                except Exception as e:
-                    CronUtil.CronPrem(0)  # Ensure permissions are restored
-                    logging.CyberCPLogFileWriter.writeToFile(f"Error suspending cron jobs for {websiteName}: {str(e)}")
-
-                # Restart LiteSpeed to apply changes
-                try:
-                    installUtilities.reStartLiteSpeedSocket()
-                    logging.CyberCPLogFileWriter.writeToFile(f"Restarted LiteSpeed after suspending {websiteName}")
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restart LiteSpeed: {str(e)}")
-                
-                website.state = 1
+                installUtilities.reStartLiteSpeedSocket()
+                website.state = 0
             else:
-                # Unsuspend logic
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
                 vhostConfPath = confPath + "/vhost.conf"
                 
-                logging.CyberCPLogFileWriter.writeToFile(f"Attempting to unsuspend website: {websiteName}")
-                
                 try:
-                    # Check if vhost file exists
-                    if not os.path.exists(vhostConfPath):
-                        logging.CyberCPLogFileWriter.writeToFile(f"Error: Vhost configuration file not found: {vhostConfPath}")
-                        return self.ajaxPre(0, f"Vhost configuration file not found for {websiteName}")
-                    
                     # Try direct file access first
                     with open(vhostConfPath, 'r') as f:
                         vhostContent = f.read()
-                    
-                    if not vhostContent.strip():
-                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Empty vhost configuration file: {vhostConfPath}")
                     
                     if "# Website Suspension Configuration" in vhostContent:
                         # Use regex to remove the suspension configuration block
@@ -3497,13 +3189,7 @@ context /cyberpanel_suspension_page.html {
                             f.write(modifiedContent)
                         
                         command = f"chown lsadm:lsadm {vhostConfPath}"
-                        result = ProcessUtilities.executioner(command)
-                        if result.find('cannot') > -1:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set vhost ownership: {result}")
-                        
-                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully unsuspended website: {websiteName}")
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Website {websiteName} is not currently suspended")
+                        ProcessUtilities.executioner(command)
                 except IOError:
                     # Fall back to command-based approach
                     command = f"cat {vhostConfPath}"
@@ -3544,27 +3230,9 @@ context /cyberpanel_suspension_page.html {
                         except:
                             pass
                 
-                # Restore cron jobs for child domains
+                # Remove suspension configuration from child domains
                 childDomains = website.childdomains_set.all()
                 
-                for items in childDomains:
-                    # Restore cron jobs for child domain
-                    try:
-                        CronUtil.CronPrem(1)
-                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-                        execPath = execPath + " restoreWebsiteCrons --externalApp " + items.externalApp
-                        cronOutput = ProcessUtilities.outputExecutioner(execPath, items.externalApp)
-                        CronUtil.CronPrem(0)
-                        
-                        if cronOutput.find("1,") > -1:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored cron jobs for child domain {items.domain}")
-                        else:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Info: {cronOutput} for child domain {items.domain}")
-                    except Exception as e:
-                        CronUtil.CronPrem(0)  # Ensure permissions are restored
-                        logging.CyberCPLogFileWriter.writeToFile(f"Error restoring cron jobs for child domain {items.domain}: {str(e)}")
-                
-                # Remove suspension configuration from child domains
                 for items in childDomains:
                     childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     childVhostConfPath = childConfPath + "/vhost.conf"
@@ -3611,30 +3279,8 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error unsuspending child domain {items.domain}: {str(e)}")
                 
-                # Restore cron jobs for this website
-                try:
-                    CronUtil.CronPrem(1)
-                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-                    execPath = execPath + " restoreWebsiteCrons --externalApp " + website.externalApp
-                    cronOutput = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-                    CronUtil.CronPrem(0)
-                    
-                    if cronOutput.find("1,") > -1:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored cron jobs for {websiteName}")
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Info: {cronOutput} for {websiteName}")
-                except Exception as e:
-                    CronUtil.CronPrem(0)  # Ensure permissions are restored
-                    logging.CyberCPLogFileWriter.writeToFile(f"Error restoring cron jobs for {websiteName}: {str(e)}")
-
-                # Restart LiteSpeed to apply changes
-                try:
-                    installUtilities.reStartLiteSpeedSocket()
-                    logging.CyberCPLogFileWriter.writeToFile(f"Restarted LiteSpeed after unsuspending {websiteName}")
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restart LiteSpeed: {str(e)}")
-                
-                website.state = 0
+                installUtilities.reStartLiteSpeedSocket()
+                website.state = 1
 
             website.save()
 
@@ -3703,19 +3349,10 @@ context /cyberpanel_suspension_page.html {
             email = modifyWeb.adminEmail
             currentPack = modifyWeb.package.packageName
             owner = modifyWeb.admin.userName
-            
-            # Get current home directory information (optional: tables may not exist yet)
-            currentHomeDirectory = 'Default'
-            try:
-                from userManagment.homeDirectoryUtils import HomeDirectoryUtils
-                current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
-                currentHomeDirectory = current_home.name if current_home else 'Default'
-            except Exception:
-                pass
 
             data_ret = {'status': 1, 'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
                         "packages": json_data, "current_pack": currentPack, "adminNames": admin_data,
-                        'currentAdmin': owner, 'currentHomeDirectory': currentHomeDirectory}
+                        'currentAdmin': owner}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
@@ -3783,7 +3420,6 @@ context /cyberpanel_suspension_page.html {
             email = data['email']
             phpVersion = data['phpVersion']
             newUser = data['admin']
-            homeDirectory = data.get('homeDirectory', '')
 
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'modifyWebsite') == 0:
@@ -3822,46 +3458,6 @@ context /cyberpanel_suspension_page.html {
 
             modifyWeb.save()
 
-            # Handle home directory migration if specified
-            if homeDirectory:
-                from userManagment.homeDirectoryUtils import HomeDirectoryUtils
-                from userManagment.models import HomeDirectory, UserHomeMapping
-                
-                try:
-                    # Get the new home directory
-                    new_home_dir = HomeDirectory.objects.get(id=homeDirectory)
-                    
-                    # Get current home directory for the user
-                    current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(newUser)
-                    
-                    if current_home and current_home.id != new_home_dir.id:
-                        # Migrate user to new home directory
-                        success, message = HomeDirectoryUtils.migrateUser(
-                            newUser, 
-                            current_home.path, 
-                            new_home_dir.path
-                        )
-                        
-                        if success:
-                            # Update user-home mapping
-                            UserHomeMapping.objects.update_or_create(
-                                user=newOwner,
-                                defaults={'home_directory': new_home_dir}
-                            )
-                        else:
-                            # Log error but don't fail the website modification
-                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to migrate user {newUser} to home directory {new_home_dir.path}: {message}")
-                    elif not current_home:
-                        # Create new mapping if user doesn't have one
-                        UserHomeMapping.objects.create(
-                            user=newOwner,
-                            home_directory=new_home_dir
-                        )
-                        
-                except Exception as e:
-                    # Log error but don't fail the website modification
-                    logging.CyberCPLogFileWriter.writeToFile(f"Error handling home directory change for {newUser}: {str(e)}")
-
             ## Update disk quota when package changes - Fix for GitHub issue #1442
             if webpack.enforceDiskLimits:
                 spaceString = f'{webpack.diskSpace}M {webpack.diskSpace}M'
@@ -3888,49 +3484,6 @@ context /cyberpanel_suspension_page.html {
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
-    def loadSiteWorkspace(self, request=None, userID=None):
-        """Lightweight single-site hub (tiles). Avoids loadDomainHome heavy work."""
-        import os
-        from plogical.httpProc import httpProc
-
-        if not Websites.objects.filter(domain=self.domain).exists():
-            proc = httpProc(
-                request,
-                'baseTemplate/siteWorkspace.html',
-                {'error': 1, 'domain': self.domain, 'siteState': 0, 'phpSelection': '', 'sslState': 0, 'packageName': ''},
-            )
-            return proc.render()
-
-        currentACL = ACLManager.loadedACL(userID)
-        website = Websites.objects.get(domain=self.domain)
-        admin = Administrator.objects.get(pk=userID)
-
-        if ACLManager.checkOwnership(self.domain, admin, currentACL) != 1:
-            return ACLManager.loadError()
-
-        ssl_state = int(website.ssl or 0)
-        cert_path = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
-        if os.path.isfile(cert_path):
-            ssl_state = 1
-
-        package_name = ''
-        try:
-            if website.package_id:
-                package_name = website.package.packageName
-        except BaseException:
-            package_name = ''
-
-        data = {
-            'domain': self.domain,
-            'siteState': int(website.state if website.state is not None else 1),
-            'phpSelection': website.phpSelection or '',
-            'sslState': ssl_state,
-            'packageName': package_name,
-        }
-        proc = httpProc(request, 'baseTemplate/siteWorkspace.html', data)
-        return proc.render()
-
     def loadDomainHome(self, request=None, userID=None, data=None):
 
         if Websites.objects.filter(domain=self.domain).exists():
@@ -3948,9 +3501,7 @@ context /cyberpanel_suspension_page.html {
 
             from plogical.processUtilities import ProcessUtilities
 
-            # emailMarketing removed - always return False for marketing status
-            # marketingStatus = emACL.checkIfEMEnabled(admin.userName)
-            marketingStatus = False
+            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
 
             Data['marketingStatus'] = marketingStatus
             Data['ftpTotal'] = website.package.ftpAccounts
@@ -3991,7 +3542,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       WebsiteManager._load_pem_certificate(filePath) or '')
+                                                       open(filePath, 'r').read())
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
@@ -4000,8 +3551,6 @@ context /cyberpanel_suspension_page.html {
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
-                renewal_when = _get_ssl_renewal_schedule()
-                Data['renewal_when'] = renewal_when
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
@@ -4010,7 +3559,6 @@ context /cyberpanel_suspension_page.html {
 
             except BaseException as msg:
                 Data['viewSSL'] = 0
-                Data['renewal_when'] = None
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             servicePath = '/home/cyberpanel/pureftpd'
@@ -4028,7 +3576,7 @@ context /cyberpanel_suspension_page.html {
             import requests
             import json
             try:
-                response = requests.post(url, data=json.dumps(addon_data))
+                response = requests.post(url, data=json.dumps(addon_data), timeout=5)
                 Status = response.json().get('status', 0)
             except Exception:
                 Status = 0
@@ -4075,47 +3623,95 @@ context /cyberpanel_suspension_page.html {
 
             Data['accessed_via_ip'] = bool(accessed_via_ip)
 
-            #### Web Terminal: runtime JWT file + localhost-only unit (no public 8888 firewall rule)
+            #### update jwt secret if needed
 
-            from plogical import fastapi_ssh_config
+            import secrets
 
+            fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
             try:
-                fastapi_ssh_config.ensure_web_terminal_runtime_for_panel()
-            except Exception as cfg_exc:
-                CyberCPLogFileWriter.writeLog(
-                    "Web Terminal runtime ensure failed: %s" % str(cfg_exc)
-                )
+                
+                content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
+                if 'REPLACE_ME_WITH_INSTALLER' in content:
+                    new_secret = secrets.token_urlsafe(32)
+                    
+                    sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
+                    ProcessUtilities.outputExecutioner(sed_cmd)
+                    
+                    command = 'systemctl restart fastapi_ssh_server'
+                    ProcessUtilities.outputExecutioner(command)
+            except Exception:
+                CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
+                pass
 
-            try:
-                service_path = "/etc/systemd/system/fastapi_ssh_server.service"
-                check_service = ProcessUtilities.outputExecutioner(
-                    f"test -f {service_path} && echo exists || echo missing"
-                )
-                if "missing" in check_service:
-                    ProcessUtilities.outputExecutioner(
-                        f"cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}"
-                    )
-                    ProcessUtilities.outputExecutioner("systemctl daemon-reload")
-            except Exception as svc_exc:
-                CyberCPLogFileWriter.writeLog(
-                    "Failed to copy or reload fastapi_ssh_server.service: %s"
-                    % str(svc_exc)
-                )
+            #####
 
+            #####
+
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
+            # Ensure FastAPI SSH server systemd service file is in place
             try:
-                ProcessUtilities.outputExecutioner(
-                    "systemctl is-active --quiet fastapi_ssh_server"
-                )
-                ProcessUtilities.outputExecutioner(
-                    "systemctl enable --now fastapi_ssh_server"
-                )
-                ProcessUtilities.outputExecutioner(
-                    "systemctl start fastapi_ssh_server"
-                )
-            except Exception as run_exc:
-                CyberCPLogFileWriter.writeLog(
-                    "Failed to ensure fastapi_ssh_server is running: %s" % str(run_exc)
-                )
+                service_path = '/etc/systemd/system/fastapi_ssh_server.service'
+                if not os.path.exists(service_path):
+                    ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
+                    ProcessUtilities.outputExecutioner('systemctl daemon-reload')
+            except Exception as e:
+                CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+            
+
+            #####
+
+            # Ensure FastAPI SSH server is running using ProcessUtilities
+            try:
+                active = ProcessUtilities.outputExecutioner('systemctl is-active fastapi_ssh_server') or ''
+                if active.strip() != 'active':
+                    ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
+
+                csfPath = '/etc/csf'
+
+                sshPort = '8888'
+
+                if os.path.exists(csfPath):
+                    csf_needs_port = True
+                    try:
+                        with open('/etc/csf/csf.conf', 'r', encoding='utf-8', errors='replace') as csf_conf:
+                            for line in csf_conf:
+                                if line.startswith('TCP_IN'):
+                                    csf_needs_port = sshPort not in line
+                                    break
+                    except OSError:
+                        csf_needs_port = True
+                    if csf_needs_port:
+                        dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
+
+                        # self.modifyPorts is a method in the firewallManager.py file so how can we call it here?
+                        # we need to call the method from the firewallManager.py file
+                        from firewall.firewallManager import FirewallManager
+                        firewallManager = FirewallManager()
+                        firewallManager.modifyPorts(dataIn)
+                        dataIn = {'protocol': 'TCP_OUT', 'ports': sshPort}
+                        firewallManager.modifyPorts(dataIn)
+                else:
+                    from plogical.firewallUtilities import FirewallUtilities
+                    from firewall.models import FirewallRules
+                    try:
+                        updateFW = FirewallRules.objects.get(name="WebTerminalPort")
+                        # Only re-apply the Web Terminal firewall rule if the port actually changed.
+                        if str(updateFW.port) != str(sshPort):
+                            FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                            updateFW.port = sshPort
+                            updateFW.save()
+                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                    except:
+                        try:
+                            newFireWallRule = FirewallRules(name="WebTerminalPort", port=sshPort, proto="tcp")
+                            newFireWallRule.save()
+                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                        except BaseException as msg:
+                            CyberCPLogFileWriter.writeToFile(str(msg))
+
+            except Exception as e:
+                CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
             # Fetch actual resource limits from lscgctl command if they exist
             Data['resource_limits'] = None
@@ -4124,7 +3720,7 @@ context /cyberpanel_suspension_page.html {
                 lscgctl_path = '/usr/local/lsws/lsns/bin/lscgctl'
                 if os.path.exists(lscgctl_path):
                     # Get the website username
-                    username = website.externalApp
+                    username = website.exsysUser
 
                     # Run lscgctl list-user command
                     result = subprocess.run(
@@ -4186,12 +3782,6 @@ context /cyberpanel_suspension_page.html {
             Data['domain'] = self.domain
             Data['childDomain'] = self.childDomain
 
-            try:
-                child_rec = ChildDomains.objects.get(domain=self.childDomain)
-                Data['childPath'] = (child_rec.path or '').rstrip('/')
-            except BaseException:
-                Data['childPath'] = ''
-
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
@@ -4236,7 +3826,6 @@ context /cyberpanel_suspension_page.html {
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
-                Data['renewal_when'] = _get_ssl_renewal_schedule()
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
@@ -4245,7 +3834,6 @@ context /cyberpanel_suspension_page.html {
 
             except BaseException as msg:
                 Data['viewSSL'] = 0
-                Data['renewal_when'] = None
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             proc = httpProc(request, 'websiteFunctions/launchChild.html', Data)
@@ -4254,43 +3842,6 @@ context /cyberpanel_suspension_page.html {
             proc = httpProc(request, 'websiteFunctions/launchChild.html',
                             {"error": 1, "domain": "This child domain does not exists"})
             return proc.render()
-
-    def _get_log_file_path(self, domain_name, log_type):
-        """
-        Get the correct log file path for a domain.
-        For child domains (sub-domains), logs are stored in the master domain's log directory.
-        
-        Args:
-            domain_name: The domain name (could be a child domain)
-            log_type: 1 for access log, 0 for error log
-            
-        Returns:
-            str: The full path to the log file
-        """
-        try:
-            # Check if this is a child domain
-            try:
-                child_domain = ChildDomains.objects.get(domain=domain_name)
-                master_domain = child_domain.master.domain
-                log_dir = f"/home/{master_domain}/logs"
-            except ChildDomains.DoesNotExist:
-                # Not a child domain, use standard path
-                log_dir = f"/home/{domain_name}/logs"
-            
-            # Construct log file path
-            if log_type == 1:
-                log_file = f"{domain_name}.access_log"
-            else:
-                log_file = f"{domain_name}.error_log"
-            
-            return f"{log_dir}/{log_file}"
-        except Exception as e:
-            # Fallback to standard path if anything fails
-            logging.CyberCPLogFileWriter.writeToFile(f'Error determining log path for {domain_name}: {str(e)}')
-            if log_type == 1:
-                return f"/home/{domain_name}/logs/{domain_name}.access_log"
-            else:
-                return f"/home/{domain_name}/logs/{domain_name}.error_log"
 
     def getDataFromLogFile(self, userID=None, data=None):
 
@@ -4306,8 +3857,10 @@ context /cyberpanel_suspension_page.html {
         else:
             return ACLManager.loadErrorJson('logstatus', 0)
 
-        # Use helper method to get correct log file path (handles child domains)
-        fileName = self._get_log_file_path(self.domain, logType)
+        if logType == 1:
+            fileName = "/home/" + self.domain + "/logs/" + self.domain + ".access_log"
+        else:
+            fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
 
         command = 'ls -la %s' % fileName
         result = ProcessUtilities.outputExecutioner(command)
@@ -4317,10 +3870,6 @@ context /cyberpanel_suspension_page.html {
                 {'status': 0, 'logstatus': 0,
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
-        
-        # Only read from the specific domain's log file - don't fallback to master domain
-        # This ensures we only show logs for the requested domain, not mixed logs from other domains
-        # If the log file doesn't exist or is empty, we'll return empty results
 
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
@@ -4342,47 +3891,25 @@ context /cyberpanel_suspension_page.html {
 
         for items in reversed(data):
             if len(items) > 10:
-                try:
-                    logData = items.split(" ")
-                    if len(logData) < 10:
-                        continue
-                    
-                    # Parse log entry: format is "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
-                    # When split by space: [0]="IP, [1]=-, [2]=-, [3]=[timestamp_part1, [4]=timestamp_part2], [5]="GET, [6]=/path?params, [7]=HTTP/2", [8]=status, [9]=size, [10]="referer", [11+]="user-agent"
-                    ipAddress = logData[0].strip('"')
-                    # Reconstruct timestamp from fields 3 and 4
-                    time = (logData[3] + " " + logData[4]).strip("[").strip("]") if len(logData) > 4 else logData[3].strip("[").strip("]")
-                    # Resource path starts at field 6, reconstruct until we hit HTTP/version field
-                    if len(logData) > 6:
-                        resource_parts = []
-                        i = 6
-                        while i < len(logData) and not logData[i].startswith('HTTP/'):
-                            resource_parts.append(logData[i])
-                            i += 1
-                        resource = " ".join(resource_parts).strip('"')
-                    else:
-                        resource = ""
-                    # Size is typically in field 9 (after status code in field 8)
-                    size = logData[9].replace('"', '') if len(logData) > 9 else "0"
-                    
-                    # Note: Log format doesn't include domain name, so domain is determined by which log file is read
-                    # We already ensured we're reading from the correct domain's log file above
+                logData = items.split(" ")
+                domain = logData[5].strip('"')
+                ipAddress = logData[0].strip('"')
+                time = (logData[3]).strip("[").strip("]")
+                resource = logData[6].strip('"')
+                size = logData[9].replace('"', '')
 
-                    dic = {'domain': self.domain,  # Use requested domain since it's determined by log file
-                           'ipAddress': ipAddress,
-                           'time': time,
-                           'resource': resource,
-                           'size': size,
-                           }
+                dic = {'domain': domain,
+                       'ipAddress': ipAddress,
+                       'time': time,
+                       'resource': resource,
+                       'size': size,
+                       }
 
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
-                except (IndexError, ValueError) as e:
-                    # Skip malformed log entries
-                    continue
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
 
         json_data = json_data + ']'
         final_json = json.dumps({'status': 1, 'logstatus': 1, 'error_message': "None", "data": json_data})
@@ -4401,9 +3928,7 @@ context /cyberpanel_suspension_page.html {
         else:
             return ACLManager.loadErrorJson('logstatus', 0)
 
-        # Use helper method to get correct log file path (handles child domains)
-        # log_type 0 = error log
-        fileName = self._get_log_file_path(self.domain, 0)
+        fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
 
         command = 'ls -la %s' % fileName
         result = ProcessUtilities.outputExecutioner(command)
@@ -4463,92 +3988,6 @@ context /cyberpanel_suspension_page.html {
         status = {'status': 1, "configstatus": 1, "configData": configData}
         final_json = json.dumps(status)
         return HttpResponse(final_json)
-
-    def resetVHostConfigToDefault(self, userID=None, data=None):
-        """Reset vHost configuration to default template"""
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] != 1:
-            return ACLManager.loadErrorJson('configstatus', 0)
-
-        virtualHost = data['virtualHost']
-        self.domain = virtualHost
-
-        try:
-            # Get the default vHost configuration template
-            from plogical import vhostConfs
-            
-            # Determine if it's a child domain or main domain
-            try:
-                child_domain = ChildDomains.objects.get(domain=virtualHost)
-                is_child = True
-                master_domain = child_domain.master.domain
-                admin_email = child_domain.master.adminEmail if child_domain.master.adminEmail else child_domain.master.admin.email
-                path = child_domain.path
-            except:
-                is_child = False
-                try:
-                    website = Websites.objects.get(domain=virtualHost)
-                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
-                except:
-                    admin_email = "admin@" + virtualHost
-
-            # Generate default configuration based on server type
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                if is_child:
-                    # Use child domain template
-                    default_config = vhostConfs.olsChildConf
-                    default_config = default_config.replace('{virtualHostName}', virtualHost)
-                    default_config = default_config.replace('{path}', path)
-                    default_config = default_config.replace('{masterDomain}', master_domain)
-                    default_config = default_config.replace('{adminEmails}', admin_email)
-                    default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", virtualHost))[:5] + str(randint(1000, 9999)))
-                    default_config = default_config.replace('{externalAppMaster}', "".join(re.findall("[a-zA-Z]+", master_domain))[:5] + str(randint(1000, 9999)))
-                    default_config = default_config.replace('{php}', '8.1')  # Default PHP version
-                    default_config = default_config.replace('{open_basedir}', '')  # Default open_basedir setting
-                else:
-                    # Use main domain template
-                    default_config = vhostConfs.olsMasterConf
-                    default_config = default_config.replace('{virtualHostName}', virtualHost)
-                    default_config = default_config.replace('{administratorEmail}', admin_email)
-                    default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", virtualHost))[:5] + str(randint(1000, 9999)))
-                    default_config = default_config.replace('{php}', '8.1')  # Default PHP version
-            else:
-                # For other server types, use basic template
-                default_config = f"""# Default vHost Configuration for {virtualHost}
-# Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-# Basic configuration
-# Add your custom configuration here
-"""
-
-            # Save the default configuration
-            mailUtilities.checkHome()
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            
-            vhost = open(tempPath, "w")
-            vhost.write(default_config)
-            vhost.close()
-
-            filePath = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"
-
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
-
-            output = ProcessUtilities.outputExecutioner(execPath)
-
-            if output.find("1,None") > -1:
-                status = {"configstatus": 1, "message": "vHost configuration reset to default successfully."}
-            else:
-                status = {"configstatus": 0, "error_message": f"Failed to reset configuration: {output}"}
-
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
-
-        except Exception as e:
-            status = {"configstatus": 0, "error_message": f"Error resetting configuration: {str(e)}"}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
 
     def saveConfigsToFile(self, userID=None, data=None):
 
@@ -4793,37 +4232,6 @@ context /cyberpanel_suspension_page.html {
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    @staticmethod
-    def _parse_crontab_entries(raw):
-        entries = []
-        for idx, line in enumerate(raw.split("\n")):
-            if not line.strip():
-                continue
-            parts = line.split(" ", 5)
-            if len(parts) != 6:
-                continue
-            entries.append({
-                'file_index': idx,
-                'minute': parts[0],
-                'hour': parts[1],
-                'monthday': parts[2],
-                'month': parts[3],
-                'weekday': parts[4],
-                'command': parts[5],
-            })
-        return entries
-
-    @staticmethod
-    def _get_crontab_entry_by_ui_line(raw, ui_line):
-        try:
-            ui_line = int(ui_line)
-        except (TypeError, ValueError):
-            return None
-        entries = WebsiteManager._parse_crontab_entries(raw)
-        if ui_line < 1 or ui_line > len(entries):
-            return None
-        return entries[ui_line - 1]
-
     def getWebsiteCron(self, userID=None, data=None):
         try:
 
@@ -4876,17 +4284,18 @@ context /cyberpanel_suspension_page.html {
                 return HttpResponse(final_json)
 
             counter = 0
-            for entry in self._parse_crontab_entries(f):
-                counter += 1
-                crons.append({
-                    "line": counter,
-                    "minute": entry['minute'],
-                    "hour": entry['hour'],
-                    "monthday": entry['monthday'],
-                    "month": entry['month'],
-                    "weekday": entry['weekday'],
-                    "command": entry['command'],
-                })
+            for line in f.split("\n"):
+                if line:
+                    split = line.split(" ", 5)
+                    if len(split) == 6:
+                        counter += 1
+                        crons.append({"line": counter,
+                                      "minute": split[0],
+                                      "hour": split[1],
+                                      "monthday": split[2],
+                                      "month": split[3],
+                                      "weekday": split[4],
+                                      "command": split[5]})
 
             data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons": crons}
             final_json = json.dumps(data_ret)
@@ -4918,6 +4327,7 @@ context /cyberpanel_suspension_page.html {
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
+            line -= 1
             website = Websites.objects.get(domain=self.domain)
 
             try:
@@ -4932,8 +4342,11 @@ context /cyberpanel_suspension_page.html {
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-            entry = self._get_crontab_entry_by_ui_line(f, line)
-            if entry is None:
+            f = f.split("\n")
+            cron = f[line]
+
+            cron = cron.split(" ", 5)
+            if len(cron) != 6:
                 dic = {'getWebsiteCron': 0, 'error_message': 'Cron line incorrect'}
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
@@ -4941,14 +4354,14 @@ context /cyberpanel_suspension_page.html {
             data_ret = {"getWebsiteCron": 1,
                         "user": website.externalApp,
                         "cron": {
-                            "minute": entry['minute'],
-                            "hour": entry['hour'],
-                            "monthday": entry['monthday'],
-                            "month": entry['month'],
-                            "weekday": entry['weekday'],
-                            "command": entry['command'],
+                            "minute": cron[0],
+                            "hour": cron[1],
+                            "monthday": cron[2],
+                            "month": cron[3],
+                            "weekday": cron[4],
+                            "command": cron[5],
                         },
-                        "line": int(line)}
+                        "line": line}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
         except BaseException as msg:
@@ -4985,31 +4398,12 @@ context /cyberpanel_suspension_page.html {
             CronUtil.CronPrem(1)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-            execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
-            raw_cron = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-            entry = self._get_crontab_entry_by_ui_line(raw_cron, line)
-            if entry is None:
-                CronUtil.CronPrem(0)
-                dic = {'getWebsiteCron': 0, 'error_message': 'Cron line incorrect'}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " saveCronChanges --externalApp " + website.externalApp + " --line " + str(
-                entry['file_index']) + " --finalCron '" + finalCron + "'"
+                line) + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
-                # Restart cron service to apply changes immediately
-                restart_success, restart_error = CronUtil.restartCronService()
-                
-                if not restart_success:
-                    # Strict mode: return error response if restart fails
-                    dic = {'getWebsiteCron': 0, 'error_message': f'Cron job modified but service restart failed: {restart_error}. Please manually restart cron service.'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-                
                 data_ret = {"getWebsiteCron": 1,
                             "user": website.externalApp,
                             "cron": finalCron,
@@ -5044,32 +4438,13 @@ context /cyberpanel_suspension_page.html {
             CronUtil.CronPrem(1)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-            execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
-            raw_cron = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-            entry = self._get_crontab_entry_by_ui_line(raw_cron, line)
-            if entry is None:
-                CronUtil.CronPrem(0)
-                dic = {'remCronbyLine': 0, 'error_message': 'Cron line incorrect'}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " remCronbyLine --externalApp " + website.externalApp + " --line " + str(
-                entry['file_index'])
+                line)
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
-                # Restart cron service to apply changes immediately
-                restart_success, restart_error = CronUtil.restartCronService()
-                
-                if not restart_success:
-                    # Strict mode: return error response if restart fails
-                    dic = {'remCronbyLine': 0, 'error_message': f'Cron job removed but service restart failed: {restart_error}. Please manually restart cron service.'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-                
                 data_ret = {"remCronbyLine": 1,
                             "user": website.externalApp,
                             "removeLine": output.split(',')[1],
@@ -5126,22 +4501,16 @@ context /cyberpanel_suspension_page.html {
             execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
-            # Set proper permissions for Ubuntu/Debian
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 600 %s' % (cronPath)
+                ProcessUtilities.executioner(command)
+
+                command = 'systemctl restart cron'
                 ProcessUtilities.executioner(command)
 
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
-                # Restart cron service to apply changes immediately (all distributions)
-                restart_success, restart_error = CronUtil.restartCronService()
-                
-                if not restart_success:
-                    # Strict mode: return error response if restart fails
-                    dic = {'addNewCron': 0, 'error_message': f'Cron job added but service restart failed: {restart_error}. Please manually restart cron service.'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data_ret = {"addNewCron": 1,
                             "user": website.externalApp,
@@ -5474,6 +4843,58 @@ context /cyberpanel_suspension_page.html {
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    @staticmethod
+    def webhookSecretPath(domain):
+        return '/home/cyberpanel/git/%s.webhook_secret' % (domain)
+
+    @staticmethod
+    def readWebhookSecret(domain):
+        try:
+            secretPath = WebsiteManager.webhookSecretPath(domain)
+            if os.path.exists(secretPath):
+                secret = open(secretPath, 'r').read().strip()
+                if secret:
+                    return secret
+        except BaseException:
+            pass
+        return ''
+
+    @staticmethod
+    def getOrCreateWebhookSecret(domain):
+        existing = WebsiteManager.readWebhookSecret(domain)
+        if existing:
+            return existing
+        try:
+            import secrets as _secrets
+            gitConfFolder = '/home/cyberpanel/git'
+            if not os.path.exists(gitConfFolder):
+                os.mkdir(gitConfFolder)
+            secret = _secrets.token_urlsafe(32)
+            secretPath = WebsiteManager.webhookSecretPath(domain)
+            fd = os.open(secretPath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, 'w') as secretFile:
+                secretFile.write(secret)
+            return secret
+        except BaseException:
+            return ''
+
+    @staticmethod
+    def verifyWebhookSecret(domain, request=None):
+        # Opt-in authentication: enforce ONLY when a secret has been provisioned
+        # for this repo. Repos created before this feature have no secret file and
+        # therefore keep working exactly as before (no breakage).
+        expected = WebsiteManager.readWebhookSecret(domain)
+        if not expected:
+            return True
+        provided = ''
+        if request is not None:
+            try:
+                provided = request.GET.get('secret', '') or request.META.get('HTTP_X_WEBHOOK_SECRET', '')
+            except BaseException:
+                provided = ''
+        from plogical.securityUtils import constant_time_equal
+        return constant_time_equal(provided, expected)
+
     def setupGit(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -5495,6 +4916,10 @@ context /cyberpanel_suspension_page.html {
             port = ProcessUtilities.fetchCurrentPort()
 
             webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
+
+            webhookSecret = WebsiteManager.readWebhookSecret(self.domain)
+            if webhookSecret:
+                webhookURL = webhookURL + '?secret=' + webhookSecret
 
             proc = httpProc(request, 'websiteFunctions/setupGit.html',
                             {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
@@ -5543,6 +4968,11 @@ StrictHostKeyChecking no
 
             mailUtilities.checkHome()
 
+            # Provision an opt-in webhook secret for this newly set-up repo so the
+            # displayed webhook URLs are authenticated. Repos set up before this
+            # change have no secret file and stay unenforced (backward compatible).
+            WebsiteManager.getOrCreateWebhookSecret(self.domain)
+
             extraArgs = {}
             extraArgs['admin'] = admin
             extraArgs['domainName'] = data['domain']
@@ -5568,8 +4998,11 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def gitNotify(self, userID=None, data=None):
+    def gitNotify(self, userID=None, data=None, request=None):
         try:
+
+            if not WebsiteManager.verifyWebhookSecret(self.domain, request):
+                return HttpResponse(json.dumps({'pulled': 0, 'error_message': 'Invalid or missing webhook secret.'}), status=403)
 
             extraArgs = {}
             extraArgs['domain'] = self.domain
@@ -5936,7 +5369,7 @@ StrictHostKeyChecking no
             except:
                 PHPVersionActual = 'PHP 8.1'
 
-            diskUsed = format_size_from_mb(DiskUsage)
+            diskUsed = "%sMB" % str(DiskUsage)
 
             # Get WordPress sites for this website
             wp_sites = []
@@ -5991,7 +5424,7 @@ StrictHostKeyChecking no
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
 
-            diskUsed = format_size_from_mb(DiskUsage)
+            diskUsed = "%sMB" % str(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
@@ -6078,12 +5511,6 @@ StrictHostKeyChecking no
                 if os.path.exists(finalConfPath):
 
                     phpPath = ApacheVhost.whichPHPExists(self.domain)
-                    if phpPath is None:
-                        # If PHP path is not found, return error response
-                        data_ret = {'status': 0, 'saveStatus': 0, 'error_message': 'PHP configuration file not found for this domain'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    
                     command = 'sudo cat ' + phpPath
                     phpConf = ProcessUtilities.outputExecutioner(command).splitlines()
                     pmMaxChildren = phpConf[8].split(' ')[2]
@@ -6100,8 +5527,7 @@ StrictHostKeyChecking no
                     data['pmMinSpareServers'] = pmMinSpareServers
                     data['pmMaxSpareServers'] = pmMaxSpareServers
                     data['phpPath'] = phpPath
-                    config_output = ProcessUtilities.outputExecutioner(f'cat {finalConfPath}')
-                    data['configData'] = config_output if config_output is not None else ''
+                    data['configData'] = ProcessUtilities.outputExecutioner(f'cat {finalConfPath}')
                 else:
                     data = {}
                     data['status'] = 1
@@ -6259,47 +5685,83 @@ StrictHostKeyChecking no
         website = Websites.objects.get(domain=self.domain)
         externalApp = website.externalApp
 
-        #### Web Terminal: runtime JWT file + localhost-only unit (no public 8888 firewall rule)
+        #### update jwt secret if needed
 
+        import secrets
+        import re
         import os
         from plogical.processUtilities import ProcessUtilities
+
+        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
         from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
-        from plogical import fastapi_ssh_config
-
         try:
-            fastapi_ssh_config.ensure_web_terminal_runtime_for_panel()
-        except Exception as cfg_exc:
-            CyberCPLogFileWriter.writeLog(
-                "Web Terminal runtime ensure failed: %s" % str(cfg_exc)
-            )
+            
+            content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
+            if 'REPLACE_ME_WITH_INSTALLER' in content:
+                new_secret = secrets.token_urlsafe(32)
+                
+                sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
+                ProcessUtilities.outputExecutioner(sed_cmd)
+                
+                command = 'systemctl restart fastapi_ssh_server'
+                ProcessUtilities.outputExecutioner(command)
+        except Exception:
+            CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
+            pass
 
-        try:
-            service_path = "/etc/systemd/system/fastapi_ssh_server.service"
-            check_service = ProcessUtilities.outputExecutioner(
-                f"test -f {service_path} && echo exists || echo missing"
-            )
-            if "missing" in check_service:
-                ProcessUtilities.outputExecutioner(
-                    f"cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}"
-                )
-                ProcessUtilities.outputExecutioner("systemctl daemon-reload")
-        except Exception as svc_exc:
-            CyberCPLogFileWriter.writeLog(
-                "Failed to copy or reload fastapi_ssh_server.service: %s" % str(svc_exc)
-            )
+        #####
 
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
+        # Ensure FastAPI SSH server systemd service file is in place
         try:
-            ProcessUtilities.outputExecutioner(
-                "systemctl is-active --quiet fastapi_ssh_server"
-            )
-            ProcessUtilities.outputExecutioner(
-                "systemctl enable --now fastapi_ssh_server"
-            )
-            ProcessUtilities.outputExecutioner("systemctl start fastapi_ssh_server")
-        except Exception as run_exc:
-            CyberCPLogFileWriter.writeLog(
-                "Failed to ensure fastapi_ssh_server is running: %s" % str(run_exc)
-            )
+            service_path = '/etc/systemd/system/fastapi_ssh_server.service'
+            local_service_path = 'fastapi_ssh_server.service'
+            check_service = ProcessUtilities.outputExecutioner(f'test -f {service_path} && echo exists || echo missing')
+            if 'missing' in check_service:
+                ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
+                ProcessUtilities.outputExecutioner('systemctl daemon-reload')
+        except Exception as e:
+            CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+
+        # Ensure FastAPI SSH server is running using ProcessUtilities
+        try:
+            ProcessUtilities.outputExecutioner('systemctl is-active --quiet fastapi_ssh_server')
+            ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
+            ProcessUtilities.outputExecutioner('systemctl start fastapi_ssh_server')
+
+            csfPath = '/etc/csf'
+
+            sshPort = '8888'
+
+            if os.path.exists(csfPath):
+                    dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
+
+                    # self.modifyPorts is a method in the firewallManager.py file so how can we call it here?
+                    # we need to call the method from the firewallManager.py file
+                    from firewall.firewallManager import FirewallManager
+                    firewallManager = FirewallManager()
+                    firewallManager.modifyPorts(dataIn)
+                    dataIn = {'protocol': 'TCP_OUT', 'ports': sshPort}
+                    firewallManager.modifyPorts(dataIn)
+            else:
+                from plogical.firewallUtilities import FirewallUtilities
+                from firewall.models import FirewallRules
+                try:
+                    updateFW = FirewallRules.objects.get(name="WebTerminalPort")
+                    FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                    updateFW.port = sshPort
+                    updateFW.save()
+                    FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                except:
+                    try:
+                        newFireWallRule = FirewallRules(name="WebTerminalPort", port=sshPort, proto="tcp")
+                        newFireWallRule.save()
+                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                    except BaseException as msg:
+                        CyberCPLogFileWriter.writeToFile(str(msg))
+
+        except Exception as e:
+            CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
         # Add-on check logic
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
@@ -6660,11 +6122,6 @@ StrictHostKeyChecking no
                             except:
                                 self.webhookCommandCurrent = "False"
 
-                            try:
-                                self.webhookSecret = gitConf.get('webhookSecret', '')
-                            except:
-                                self.webhookSecret = ''
-
                             self.confCheck = 0
                             break
 
@@ -6673,7 +6130,6 @@ StrictHostKeyChecking no
                 self.autoPushCurrent = 'Never'
                 self.emailLogsCurrent = 'False'
                 self.webhookCommandCurrent = 'False'
-                self.webhookSecret = ''
                 self.commands = "Add Commands to run after every commit, separate commands using comma."
 
             ##
@@ -6811,10 +6267,11 @@ StrictHostKeyChecking no
 
                 port = ProcessUtilities.fetchCurrentPort()
 
-                from plogical.webhookSecurity import append_token_to_webhook_url
                 webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
-                if getattr(self, 'webhookSecret', ''):
-                    webHookURL = append_token_to_webhook_url(webHookURL, self.webhookSecret)
+
+                webhookSecret = WebsiteManager.readWebhookSecret(self.domain)
+                if webhookSecret:
+                    webHookURL = webHookURL + '?secret=' + webhookSecret
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits,
@@ -7764,16 +7221,6 @@ StrictHostKeyChecking no
 
             dic['folder'] = self.folder
 
-            from plogical.webhookSecurity import generate_webhook_secret
-            if getattr(self, 'confCheck', 1) == 0 and getattr(self, 'finalFile', None) and os.path.exists(self.finalFile):
-                try:
-                    existing = json.loads(open(self.finalFile, 'r').read())
-                    dic['webhookSecret'] = existing.get('webhookSecret') or generate_webhook_secret()
-                except Exception:
-                    dic['webhookSecret'] = generate_webhook_secret()
-            else:
-                dic['webhookSecret'] = generate_webhook_secret()
-
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -7874,6 +7321,9 @@ StrictHostKeyChecking no
 
             self.domain = domain
 
+            if not WebsiteManager.verifyWebhookSecret(domain, request):
+                return HttpResponse(json.dumps({'status': 0, 'error_message': 'Invalid or missing webhook secret.'}), status=403)
+
             ### set default ssh key
 
             try:
@@ -7890,11 +7340,6 @@ StrictHostKeyChecking no
             ## Check if remote exists
 
             self.externalApp = ACLManager.FetchExternalApp(self.domain)
-
-            from plogical.webhookSecurity import verify_git_webhook_for_domain
-            if not verify_git_webhook_for_domain(request, self.masterDomain, self.folder, data):
-                data_ret = {'status': 0, 'error_message': 'Unauthorized'}
-                return HttpResponse(json.dumps(data_ret), status=401)
 
             command = 'git -C %s pull' % (self.folder)
             commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
@@ -8143,84 +7588,6 @@ StrictHostKeyChecking no
         proc = httpProc(request, 'websiteFunctions/ApacheManager.html',
                         {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager, 'apachePHPs': apachePHPs})
         return proc.render()
-
-    def resetApacheConfigToDefault(self, userID=None, data=None):
-        """Reset Apache configuration to default template"""
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] != 1:
-            return ACLManager.loadErrorJson('configstatus', 0)
-
-        domainName = data['domainName']
-        self.domain = domainName
-
-        try:
-            # Get the default Apache configuration template
-            from plogical import vhostConfs
-            
-            # Determine if it's a child domain or main domain
-            try:
-                child_domain = ChildDomains.objects.get(domain=domainName)
-                is_child = True
-                master_domain = child_domain.master.domain
-                admin_email = child_domain.master.adminEmail if child_domain.master.adminEmail else child_domain.master.admin.email
-                path = child_domain.path
-            except:
-                is_child = False
-                try:
-                    website = Websites.objects.get(domain=domainName)
-                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
-                except:
-                    admin_email = "admin@" + domainName
-
-            # Generate default Apache configuration
-            if is_child:
-                # Use child domain Apache template
-                default_config = vhostConfs.apacheConfChild
-                default_config = default_config.replace('{virtualHostName}', domainName)
-                default_config = default_config.replace('{administratorEmail}', admin_email)
-                default_config = default_config.replace('{php}', '8.1')  # Default PHP version
-                default_config = default_config.replace('{adminEmails}', admin_email)
-                default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999)))
-                default_config = default_config.replace('{path}', path)
-                default_config = default_config.replace('{sockPath}', '/var/run/php/')  # Default socket path
-            else:
-                # Use main domain Apache template
-                default_config = vhostConfs.apacheConf
-                default_config = default_config.replace('{virtualHostName}', domainName)
-                default_config = default_config.replace('{administratorEmail}', admin_email)
-                default_config = default_config.replace('{php}', '8.1')  # Default PHP version
-                default_config = default_config.replace('{adminEmails}', admin_email)
-                default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999)))
-                default_config = default_config.replace('{sockPath}', '/var/run/php/')  # Default socket path
-
-            # Save the default configuration
-            mailUtilities.checkHome()
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            
-            vhost = open(tempPath, "w")
-            vhost.write(default_config)
-            vhost.close()
-
-            filePath = ApacheVhost.configBasePath + domainName + '.conf'
-
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " saveApacheConfigsToFile --path " + filePath + " --tempPath " + tempPath
-
-            output = ProcessUtilities.outputExecutioner(execPath)
-
-            if output.find("1,None") > -1:
-                status = {"status": 1, "message": "Apache configuration reset to default successfully."}
-            else:
-                status = {"status": 0, "error_message": f"Failed to reset Apache configuration: {output}"}
-
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
-
-        except Exception as e:
-            status = {"status": 0, "error_message": f"Error resetting Apache configuration: {str(e)}"}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
 
     def saveApacheConfigsToFile(self, userID=None, data=None):
 
@@ -8827,691 +8194,3 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def fixSubdomainLogs(self, request):
-        """Display subdomain log fix interface"""
-        try:
-            currentACL = ACLManager.loadedACL(request.user.pk)
-            admin = ACLManager.loadedAdmin(request.user.pk)
-
-            if ACLManager.currentContextPermission(currentACL, 'websites') == 0:
-                return ACLManager.loadErrorJson('websites', 0)
-
-            return render(request, 'websiteFunctions/fixSubdomainLogs.html', {
-                'acls': currentACL,
-                'admin': admin
-            })
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [fixSubdomainLogs]")
-            return ACLManager.loadErrorJson('websites', 0)
-
-    def fixSubdomainLogsAction(self, request):
-        """Execute subdomain log fix"""
-        try:
-            currentACL = ACLManager.loadedACL(request.user.pk)
-            admin = ACLManager.loadedAdmin(request.user.pk)
-
-            if ACLManager.currentContextPermission(currentACL, 'websites') == 0:
-                return ACLManager.loadErrorJson('websites', 0)
-
-            action = request.POST.get('action')
-            domain = request.POST.get('domain', '').strip()
-            dry_run = request.POST.get('dry_run', 'false').lower() == 'true'
-            create_backup = request.POST.get('create_backup', 'false').lower() == 'true'
-
-            if action == 'fix_all':
-                # Fix all child domains
-                from websiteFunctions.models import ChildDomains
-                child_domains = ChildDomains.objects.all()
-                fixed_count = 0
-                failed_domains = []
-                
-                for child_domain in child_domains:
-                    if self._fix_single_domain_logs(child_domain.domain, dry_run, create_backup):
-                        fixed_count += 1
-                    else:
-                        failed_domains.append(child_domain.domain)
-                
-                if failed_domains:
-                    message = f"Fixed {fixed_count} domains. Failed: {', '.join(failed_domains)}"
-                else:
-                    message = f"Successfully fixed {fixed_count} child domains"
-                    
-                data_ret = {'status': 1, 'message': message}
-                
-            elif action == 'fix_domain' and domain:
-                # Fix specific domain
-                if self._fix_single_domain_logs(domain, dry_run, create_backup):
-                    data_ret = {'status': 1, 'message': f"Successfully fixed logs for {domain}"}
-                else:
-                    data_ret = {'status': 0, 'error_message': f"Failed to fix logs for {domain}"}
-            else:
-                data_ret = {'status': 0, 'error_message': "Invalid action or missing domain"}
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [fixSubdomainLogsAction]")
-            data_ret = {'status': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    def _fix_single_domain_logs(self, domain_name, dry_run=False, create_backup=False):
-        """Fix log configuration for a single domain"""
-        try:
-            import re
-            import shutil
-            from datetime import datetime
-            from websiteFunctions.models import ChildDomains
-            
-            # Get child domain info
-            try:
-                child_domain = ChildDomains.objects.get(domain=domain_name)
-                master_domain = child_domain.master.domain
-                domain_path = child_domain.path
-            except ChildDomains.DoesNotExist:
-                logging.CyberCPLogFileWriter.writeToFile(f'Domain {domain_name} is not a child domain')
-                return False
-            
-            vhost_conf_path = f"/usr/local/lsws/conf/vhosts/{domain_name}/vhost.conf"
-            
-            if not os.path.exists(vhost_conf_path):
-                logging.CyberCPLogFileWriter.writeToFile(f'VHost config not found for {domain_name}')
-                return False
-            
-            # Read current configuration
-            with open(vhost_conf_path, 'r') as f:
-                config_content = f.read()
-            
-            # Check if fix is needed
-            if f'{master_domain}.error_log' not in config_content and f'{master_domain}.access_log' not in config_content:
-                logging.CyberCPLogFileWriter.writeToFile(f'{domain_name} already has correct log configuration')
-                return True
-            
-            if dry_run:
-                logging.CyberCPLogFileWriter.writeToFile(f'[DRY RUN] Would fix log paths for {domain_name}')
-                return True
-            
-            # Create backup if requested
-            if create_backup:
-                backup_path = f"{vhost_conf_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                shutil.copy2(vhost_conf_path, backup_path)
-                logging.CyberCPLogFileWriter.writeToFile(f'Created backup: {backup_path}')
-            
-            # Fix the configuration
-            fixed_content = config_content
-            
-            # Fix error log path
-            fixed_content = re.sub(
-                rf'errorlog\s+\$VH_ROOT/logs/{re.escape(master_domain)}\.error_log',
-                f'errorlog $VH_ROOT/logs/{domain_name}.error_log',
-                fixed_content
-            )
-            
-            # Fix access log path
-            fixed_content = re.sub(
-                rf'accesslog\s+\$VH_ROOT/logs/{re.escape(master_domain)}\.access_log',
-                f'accesslog $VH_ROOT/logs/{domain_name}.access_log',
-                fixed_content
-            )
-            
-            # Fix CustomLog paths (for Apache configurations)
-            fixed_content = re.sub(
-                rf'CustomLog\s+/home/{re.escape(master_domain)}/logs/{re.escape(master_domain)}\.access_log',
-                f'CustomLog /home/{domain_name}/logs/{domain_name}.access_log',
-                fixed_content
-            )
-            
-            # Write the fixed configuration
-            with open(vhost_conf_path, 'w') as f:
-                f.write(fixed_content)
-            
-            # Set proper ownership
-            ProcessUtilities.executioner(f'chown lsadm:lsadm {vhost_conf_path}')
-            
-            # Create the log directory if it doesn't exist
-            log_dir = f"/home/{master_domain}/logs"
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir, exist_ok=True)
-                ProcessUtilities.executioner(f'chown -R {child_domain.master.externalApp}:{child_domain.master.externalApp} {log_dir}')
-            
-            # Create separate log files for the child domain
-            error_log_path = f"{log_dir}/{domain_name}.error_log"
-            access_log_path = f"{log_dir}/{domain_name}.access_log"
-            
-            # Create empty log files if they don't exist
-            for log_path in [error_log_path, access_log_path]:
-                if not os.path.exists(log_path):
-                    with open(log_path, 'w') as f:
-                        f.write('')
-                    ProcessUtilities.executioner(f'chown {child_domain.master.externalApp}:{child_domain.master.externalApp} {log_path}')
-                    ProcessUtilities.executioner(f'chmod 644 {log_path}')
-            
-            # Restart LiteSpeed to apply changes
-            ProcessUtilities.executioner('systemctl restart lsws')
-            
-            logging.CyberCPLogFileWriter.writeToFile(f'Fixed subdomain log configuration for {domain_name}')
-            return True
-            
-        except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f'Error fixing subdomain logs for {domain_name}: {str(e)}')
-            return False
-
-    def getFTPQuotaStatus(self, userID=None, data=None):
-        """
-        Return FTP quota status for the UI: ftp_running, quota_configured.
-        Used on page load to show the right message and button state.
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            if os.path.exists('/etc/lsb-release'):
-                ftp_service = 'pure-ftpd-mysql'
-            else:
-                ftp_service = 'pure-ftpd'
-            conf_path = '/etc/pure-ftpd/pure-ftpd.conf'
-            ftp_running = False
-            quota_configured = False
-            try:
-                out = ProcessUtilities.outputExecutioner(
-                    "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
-                ftp_running = bool(out and out.strip() == 'active')
-            except Exception:
-                pass
-            if ftp_running and os.path.exists(conf_path):
-                try:
-                    quota_line = ProcessUtilities.outputExecutioner(
-                        "grep -E '^Quota[[:space:]]+[0-9]+:[0-9]+' %s 2>/dev/null || true" % conf_path, 'root', True)
-                    quota_configured = bool(quota_line and quota_line.strip())
-                except Exception:
-                    pass
-            data_ret = {
-                'status': 1,
-                'ftp_running': ftp_running,
-                'quota_configured': quota_configured,
-                'ftp_service': ftp_service,
-            }
-            return HttpResponse(json.dumps(data_ret), content_type='application/json')
-        except Exception as e:
-            data_ret = {'status': 0, 'message': str(e)}
-            return HttpResponse(json.dumps(data_ret), content_type='application/json')
-
-    def enableFTPQuota(self, userID=None, data=None):
-        """
-        Enable FTP quota: ensure Quota maxfiles:maxsize in config, start/restart Pure-FTPd if needed.
-        If Pure-FTPd is already running and config already has a valid Quota line, return success
-        without touching config or restarting (avoids breaking a working setup).
-        Uses correct service name (pure-ftpd-mysql on Debian/Ubuntu, pure-ftpd on RHEL/Alma).
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            # Resolve Pure-FTPd service name (Debian/Ubuntu use pure-ftpd-mysql)
-            if os.path.exists('/etc/lsb-release'):
-                ftp_service = 'pure-ftpd-mysql'
-            else:
-                ftp_service = 'pure-ftpd'
-            
-            conf_path = '/etc/pure-ftpd/pure-ftpd.conf'
-            
-            # Early success: if Pure-FTPd is already active and config has valid Quota line, do nothing
-            try:
-                out = ProcessUtilities.outputExecutioner(
-                    "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
-                if out and out.strip() == 'active':
-                    quota_line = ProcessUtilities.outputExecutioner(
-                        "grep -E '^Quota[[:space:]]+[0-9]+:[0-9]+' %s 2>/dev/null || true" % conf_path, 'root', True)
-                    if quota_line and quota_line.strip():
-                        logging.CyberCPLogFileWriter.writeToFile("FTP quota already enabled and Pure-FTPd running")
-                        data_ret = {'status': 1, 'message': 'FTP quota system is already enabled and Pure-FTPd is running.'}
-                        return HttpResponse(json.dumps(data_ret), content_type='application/json')
-            except Exception:
-                pass
-
-            # Require Pure-FTPd to be running before enabling quota (avoid confusing failures)
-            try:
-                out = ProcessUtilities.outputExecutioner(
-                    "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
-                if not (out and out.strip() == 'active'):
-                    msg = ('Pure-FTPd is not running. Please enable Pure-FTPd first '
-                           '(e.g. from Server Status → Services) before enabling the FTP Quota system.')
-                    data_ret = {'status': 0, 'message': msg}
-                    return HttpResponse(json.dumps(data_ret), content_type='application/json')
-            except Exception:
-                pass
-
-            # Only ensure Quota is enabled; do not overwrite existing config (preserves DB credentials, paths)
-            if os.path.exists(conf_path):
-                # Backup current config before we change anything (so we can restore if restart fails)
-                try:
-                    from datetime import datetime
-                    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    ProcessUtilities.executioner(
-                        'cp %s /etc/pure-ftpd/pure-ftpd.conf.backup.%s' % (conf_path, ts), 'root', True)
-                    ProcessUtilities.executioner(
-                        'cp /etc/pure-ftpd/pureftpd-mysql.conf /etc/pure-ftpd/pureftpd-mysql.conf.backup.%s 2>/dev/null || true' % ts, 'root', True)
-                except Exception:
-                    pass
-                # If service is not running, try restoring latest backup (in case a previous run overwrote working config)
-                try:
-                    out = ProcessUtilities.outputExecutioner(
-                        "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
-                    if not (out and out.strip() == 'active'):
-                        # Restore latest backups if present
-                        ProcessUtilities.executioner(
-                            "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
-                            'root', True)
-                        ProcessUtilities.executioner(
-                            "ls -t /etc/pure-ftpd/pureftpd-mysql.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pureftpd-mysql.conf",
-                            'root', True)
-                except Exception:
-                    pass
-                # Add or replace Quota line via root (Pure-FTPd expects maxfiles:maxsizeMB, not "yes")
-                ProcessUtilities.executioner(
-                    "grep -q '^Quota' %s && sed -i 's/^Quota.*/Quota 100000:100000/' %s || echo 'Quota 100000:100000' >> %s" % (conf_path, conf_path, conf_path),
-                    'root', True)
-                logging.CyberCPLogFileWriter.writeToFile("Set Quota 100000:100000 in existing pure-ftpd.conf")
-            else:
-                # First-time: copy from repo
-                from datetime import datetime
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf'):
-                    ProcessUtilities.executioner(
-                        'cp /usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf /etc/pure-ftpd/pure-ftpd.conf', 'root', True)
-                if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf'):
-                    ProcessUtilities.executioner(
-                        'cp /usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf /etc/pure-ftpd/pureftpd-mysql.conf', 'root', True)
-
-            # Safety net: ensure Quota line is valid before restart (Pure-FTPd rejects "Quota yes")
-            try:
-                quota_check = ProcessUtilities.outputExecutioner(
-                    "grep -E '^Quota[[:space:]]+[0-9]+:[0-9]+' %s 2>/dev/null || true" % conf_path, 'root', True)
-                if not (quota_check and quota_check.strip()):
-                    ProcessUtilities.executioner(
-                        "grep -q '^Quota' %s && sed -i 's/^Quota.*/Quota 100000:100000/' %s || echo 'Quota 100000:100000' >> %s" % (conf_path, conf_path, conf_path),
-                        'root', True)
-                    logging.CyberCPLogFileWriter.writeToFile("Corrected invalid Quota line in pure-ftpd.conf before restart")
-            except Exception:
-                pass
-
-            # Final check: if Quota line still invalid (e.g. old panel code wrote "Quota yes"), restore backup and abort
-            try:
-                quota_final = ProcessUtilities.outputExecutioner(
-                    "grep '^Quota' %s 2>/dev/null || true" % conf_path, 'root', True)
-                if quota_final and 'yes' in quota_final.lower():
-                    # Invalid line still present - restore backup and do not restart
-                    ProcessUtilities.executioner(
-                        "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
-                        'root', True)
-                    logging.CyberCPLogFileWriter.writeToFile("Aborted: invalid Quota line (yes) still present; restored backup")
-                    msg = ('Pure-FTPd config was invalid (Quota line). Restored previous config. '
-                           'Please deploy the latest panel code from v2.5.5-dev and run the one-time fix on the server: '
-                           'sudo sed -i "s/^Quota.*/Quota 100000:100000/" /etc/pure-ftpd/pure-ftpd.conf && sudo systemctl start pure-ftpd')
-                    data_ret = {'status': 0, 'message': msg}
-                    return HttpResponse(json.dumps(data_ret), content_type='application/json')
-            except Exception:
-                pass
-
-            # Restart Pure-FTPd
-            logging.CyberCPLogFileWriter.writeToFile("Restarting Pure-FTPd service (%s)..." % ftp_service)
-            ProcessUtilities.executioner('systemctl restart %s' % ftp_service, 'root', True)
-            time.sleep(1)
-            
-            try:
-                output = ProcessUtilities.outputExecutioner('systemctl is-active %s' % ftp_service, 'root', True)
-                is_active = (output and output.strip() == 'active')
-            except Exception:
-                is_active = False
-            
-            if is_active:
-                logging.CyberCPLogFileWriter.writeToFile("FTP quota system enabled successfully")
-                data_ret = {'status': 1, 'message': 'FTP quota system enabled successfully'}
-            else:
-                # Restore backup so service can be started again from Services page
-                try:
-                    ProcessUtilities.executioner(
-                        "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
-                        'root', True)
-                    ProcessUtilities.executioner(
-                        "ls -t /etc/pure-ftpd/pureftpd-mysql.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pureftpd-mysql.conf",
-                        'root', True)
-                    logging.CyberCPLogFileWriter.writeToFile("Restored pure-ftpd config backup after failed start")
-                except Exception:
-                    pass
-                # Capture failure reason for the user
-                try:
-                    status_out = ProcessUtilities.outputExecutioner(
-                        'systemctl status %s --no-pager -l 2>&1 | head -20' % ftp_service, 'root', True)
-                    status_preview = (status_out or '').strip().replace('\n', ' ')[:300]
-                except Exception:
-                    status_preview = ''
-                logging.CyberCPLogFileWriter.writeToFile("Pure-FTPd service not active after restart")
-                msg = 'Pure-FTPd did not start. Config was restored. Run: systemctl status %s' % ftp_service
-                if status_preview:
-                    msg += '. ' + status_preview
-                data_ret = {'status': 0, 'message': msg}
-            
-            return HttpResponse(json.dumps(data_ret), content_type='application/json')
-            
-        except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile("Error enabling FTP quota: %s" % str(e))
-            data_ret = {'status': 0, 'message': 'Error enabling FTP quota: %s' % str(e)}
-            return HttpResponse(json.dumps(data_ret), content_type='application/json')
-
-    def getFTPQuotas(self, userID=None, data=None):
-        """
-        Get FTP quota list
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            quotas = FTPQuota.objects.all().order_by('-created_at')
-            
-            quota_list = []
-            for quota in quotas:
-                quota_list.append({
-                    'id': quota.id,
-                    'ftp_user': quota.ftp_user,
-                    'domain': quota.domain.domain if quota.domain else 'N/A',
-                    'quota_size_mb': quota.quota_size_mb,
-                    'quota_used_mb': quota.quota_used_mb,
-                    'quota_percentage': quota.get_quota_percentage(),
-                    'quota_files': quota.quota_files,
-                    'quota_files_used': quota.quota_files_used,
-                    'is_active': quota.is_active,
-                    'created_at': quota.created_at.strftime('%Y-%m-%d %H:%M:%S')
-                })
-            
-            data_ret = {
-                'status': 1,
-                'quotas': quota_list
-            }
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-            
-        except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error getting FTP quotas: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    def updateFTPQuota(self, userID=None, data=None):
-        """
-        Update FTP quota
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            quota_id = data.get('quota_id')
-            quota_size_mb = int(data.get('quota_size_mb', 0))
-            quota_files = int(data.get('quota_files', 0))
-            
-            try:
-                quota = FTPQuota.objects.get(id=quota_id)
-                quota.quota_size_mb = quota_size_mb
-                quota.quota_files = quota_files
-                quota.save()
-                
-                data_ret = {
-                    'status': 1,
-                    'message': 'FTP quota updated successfully'
-                }
-            except FTPQuota.DoesNotExist:
-                data_ret = {
-                    'status': 0,
-                    'message': 'FTP quota not found'
-                }
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-            
-        except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error updating FTP quota: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    def resetBandwidth(self, userID=None, data=None):
-        """
-        Reset bandwidth usage
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            reset_type = data.get('reset_type', 'manual')
-            domain_name = data.get('domain', None)
-            
-            # Import bandwidth reset functionality
-            from plogical.bandwidthReset import BandwidthReset
-            
-            if domain_name:
-                # Reset individual domain
-                try:
-                    website = Websites.objects.get(domain=domain_name)
-                    BandwidthReset.resetDomainBandwidth(domain_name)
-                    
-                    # Log the reset
-                    BandwidthResetLog.objects.create(
-                        reset_type=reset_type,
-                        domain=website,
-                        reset_by=admin,
-                        domains_affected=1,
-                        notes=f"Reset bandwidth for domain {domain_name}"
-                    )
-                    
-                    data_ret = {
-                        'status': 1,
-                        'message': f'Bandwidth reset for {domain_name} completed successfully'
-                    }
-                except Websites.DoesNotExist:
-                    data_ret = {
-                        'status': 0,
-                        'message': 'Domain not found'
-                    }
-            else:
-                # Reset all domains
-                reset_count, total_reset_mb = BandwidthReset.resetWebsiteBandwidth()
-                
-                # Log the reset
-                BandwidthResetLog.objects.create(
-                    reset_type=reset_type,
-                    reset_by=admin,
-                    domains_affected=reset_count,
-                    bandwidth_reset_mb=total_reset_mb,
-                    notes="Reset bandwidth for all domains"
-                )
-                
-                data_ret = {
-                    'status': 1,
-                    'message': f'Bandwidth reset completed successfully. {reset_count} domains affected.'
-                }
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-            
-        except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error resetting bandwidth: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    def getBandwidthResetLogs(self, userID=None, data=None):
-        """
-        Get bandwidth reset logs
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            logs = BandwidthResetLog.objects.all().order_by('-reset_at')[:50]  # Last 50 entries
-            
-            log_list = []
-            for log in logs:
-                log_list.append({
-                    'id': log.id,
-                    'reset_type': log.get_reset_type_display(),
-                    'domain': log.domain.domain if log.domain else 'All Domains',
-                    'reset_by': log.reset_by.userName,
-                    'reset_at': log.reset_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'domains_affected': log.domains_affected,
-                    'bandwidth_reset_mb': log.bandwidth_reset_mb,
-                    'notes': log.notes or ''
-                })
-            
-            data_ret = {
-                'status': 1,
-                'logs': log_list
-            }
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-            
-        except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error getting bandwidth reset logs: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    def scheduleBandwidthReset(self, userID=None, data=None):
-        """
-        Schedule automatic bandwidth reset
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            schedule_type = data.get('schedule_type', 'monthly')  # monthly, weekly, daily
-            day_of_month = int(data.get('day_of_month', 1))  # 1-31 for monthly
-            hour = int(data.get('hour', 2))  # 0-23
-            minute = int(data.get('minute', 0))  # 0-59
-            
-            if schedule_type == 'monthly':
-                cron_expression = f"{minute} {hour} {day_of_month} * *"
-            elif schedule_type == 'weekly':
-                cron_expression = f"{minute} {hour} * * 0"
-            else:
-                cron_expression = f"{minute} {hour} * * *"
-
-            command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/bandwidthReset.py --reset-all"
-            mailUtilities.checkHome()
-            tmp_path = "/home/cyberpanel/cron_bw_%s.txt" % randint(10000, 99999)
-            existing = ProcessUtilities.outputExecutioner('crontab -l 2>/dev/null || true', 'root', True) or ''
-            lines_out = []
-            for line in existing.splitlines():
-                if 'bandwidthReset.py' in line and '--reset-all' in line:
-                    continue
-                if line.strip().startswith('# cyberpanel_bandwidth_reset'):
-                    continue
-                lines_out.append(line)
-            lines_out.append('# cyberpanel_bandwidth_reset %s' % schedule_type)
-            lines_out.append('%s %s' % (cron_expression, command))
-            body = '\n'.join(lines_out).strip() + '\n'
-            cf = open(tmp_path, 'w')
-            cf.write(body)
-            cf.close()
-            ProcessUtilities.executioner('crontab %s' % tmp_path, 'root', True)
-            try:
-                os.remove(tmp_path)
-            except Exception:
-                pass
-
-            data_ret = {
-                'status': 1,
-                'message': f'Bandwidth reset scheduled for {schedule_type} at {hour:02d}:{minute:02d}'
-            }
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-            
-        except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error scheduling bandwidth reset: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    def checkIPStatus(self, userID=None, data=None):
-        """
-        Check if an IP is blocked
-        """
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            
-            # Check if user has permission
-            if not (currentACL.get('admin', 0) == 1):
-                return ACLManager.loadErrorJson('status', 0)
-            
-            ip_address = data.get('ip_address')
-            
-            if not ip_address:
-                data_ret = {
-                    'status': 0,
-                    'message': 'IP address is required'
-                }
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            
-            # Import firewall utilities
-            from plogical.firewallUtilities import FirewallUtilities
-            
-            # Check if IP is blocked
-            is_blocked = FirewallUtilities.isIPBlocked(ip_address)
-            
-            data_ret = {
-                'status': 1,
-                'ip_address': ip_address,
-                'is_blocked': is_blocked
-            }
-            
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-            
-        except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error checking IP status: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
