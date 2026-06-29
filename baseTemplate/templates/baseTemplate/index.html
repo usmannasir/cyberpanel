@@ -267,15 +267,8 @@
         </a>
         {% endif %}
 
-        {% if admin or managePlugins %}
-        <!-- ============================ EXTENSIONS ============================ -->
-        <div class="section-header">{% trans "EXTENSIONS" %}</div>
-
-        <a href="{% url 'installed' %}" class="menu-item {% if request.path|slice:':9' == '/plugins/' %}active{% endif %}">
-            <div class="icon-wrapper"><i class="fas fa-puzzle-piece"></i></div>
-            <span>{% trans "Plugins" %}</span>
-        </a>
-        {% endif %}
+        <!-- Plugins intentionally omitted from the sidebar; available via the
+             Access hub (/base/hub/access) and the command palette instead. -->
 
         <!-- ============================ HELP ============================ -->
         <div class="section-header">{% trans "HELP" %}</div>
