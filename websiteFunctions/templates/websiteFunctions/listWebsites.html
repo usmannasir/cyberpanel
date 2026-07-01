@@ -268,6 +268,11 @@
             background: #fee2e2;
             color: #ef4444;
         }
+
+        .ssl-badge.cloudflare {
+            background: #fef3c7;
+            color: #d97706;
+        }
         
         .ssl-badge.self-signed {
             background: #fef3c7;
@@ -721,11 +726,13 @@
                                       title="{$ getSslTooltip(web) $}">
                                     <i class="fas" ng-class="{
                                         'fa-lock': web.ssl.status === 'valid',
+                                        'fa-cloud': web.ssl.status === 'cloudflare',
                                         'fa-exclamation-triangle': web.ssl.status === 'warning' || web.ssl.status === 'self-signed',
                                         'fa-exclamation-circle': web.ssl.status === 'expiring' || web.ssl.status === 'expired',
                                         'fa-unlock': web.ssl.status === 'none'
                                     }"></i>
                                     <span ng-if="web.ssl.status === 'valid'">Secure</span>
+                                    <span ng-if="web.ssl.status === 'cloudflare'">Cloudflare</span>
                                     <span ng-if="web.ssl.status === 'warning'">SSL {$ web.ssl.days $}d</span>
                                     <span ng-if="web.ssl.status === 'expiring'">Expiring {$ web.ssl.days $}d</span>
                                     <span ng-if="web.ssl.status === 'expired'">Expired</span>

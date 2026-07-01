@@ -2564,7 +2564,12 @@ Require valid-user
 
         json_data = []
 
+        from websiteFunctions.models import ChildDomains
+        child_domain_names = set(ChildDomains.objects.values_list('domain', flat=True))
+
         for website in websites:
+            if website.domain in child_domain_names:
+                continue
             wp_sites = []
             try:
                 wp_sites = WPSites.objects.filter(owner=website)
@@ -2711,16 +2716,37 @@ Require valid-user
                 status = 'warning'
             else:
                 status = 'valid'
+
+            cloudflare_active = self._domainUsesCloudflare(domain)
+            if cloudflare_active and status in ('expired', 'expiring', 'warning', 'none', 'self-signed'):
+                return {
+                    'status': 'cloudflare',
+                    'days': days,
+                    'issuer': issuer_org,
+                    'is_wildcard': is_wildcard,
+                    'cloudflare': True,
+                    'origin_status': status,
+                }
             
             return {
                 'status': status,
                 'days': days,
                 'issuer': issuer_org,
-                'is_wildcard': is_wildcard
+                'is_wildcard': is_wildcard,
+                'cloudflare': cloudflare_active,
             }
             
         except Exception as e:
-            return {'status': 'none', 'days': 0, 'issuer': '', 'is_wildcard': False}
+            return {'status': 'none', 'days': 0, 'issuer': '', 'is_wildcard': False, 'cloudflare': False}
+
+    def _domainUsesCloudflare(self, domain):
+        """Return True when the apex zone is active in Cloudflare."""
+        try:
+            from plogical.ssl_cloudflare_dns import find_domain_in_cloudflare
+            cf_ok, _msg = find_domain_in_cloudflare(domain)
+            return bool(cf_ok)
+        except BaseException:
+            return False
 
 
     def findDockersitesListJson(self, Dockersite):

@@ -219,5 +219,6 @@ urlpatterns = [
 
     # Catch all for domains (must be last)
     path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
-    path('<domain>', views.domain, name='domain'),
+    path('<domain>/settings', views.domain, name='domain'),
+    path('<domain>', views.siteWorkspace, name='siteWorkspace'),
 ]

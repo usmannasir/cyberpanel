@@ -2896,6 +2896,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -6267,6 +6274,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -10122,6 +10136,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }

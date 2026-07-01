@@ -1112,25 +1112,6 @@ def domain(request, domain):
 
 
 def siteWorkspace(request, domain):
-    """Single-site workspace hub (linked from list websites)."""
-    try:
-        userID = request.session['userID']
-        wm = WebsiteManager(domain)
-        return wm.loadSiteWorkspace(request, userID)
-    except KeyError:
-        return redirect(loadLoginPage)
-
-
-def launchChild(request, domain, childDomain):
-    try:
-        userID = request.session['userID']
-        wm = WebsiteManager(domain, childDomain)
-        return wm.launchChild(request, userID)
-    except KeyError:
-        return redirect(loadLoginPage)
-
-
-def siteWorkspace(request, domain):
     # Single-site workspace: one hub that gathers every action for a domain
     # (files, SSL, DNS, email, databases, backups, advanced) into tabbed tiles.
     try:
@@ -1163,6 +1144,15 @@ def siteWorkspace(request, domain):
         }
         proc = httpProc(request, 'baseTemplate/siteWorkspace.html', data)
         return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def launchChild(request, domain, childDomain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain, childDomain)
+        return wm.launchChild(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
