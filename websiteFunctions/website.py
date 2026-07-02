@@ -2595,6 +2595,13 @@ Require valid-user
             ssl_status = self.getSSLStatus(website.domain)
             convert_master = self._findConvertMasterCandidate(website.domain)
 
+            convert_help = ''
+            if not convert_master:
+                if len(website.domain.split('.')) < 3:
+                    convert_help = 'apex'
+                else:
+                    convert_help = 'no_parent'
+
             json_data.append({
                 'domain': website.domain,
                 'adminEmail': website.adminEmail,
@@ -2608,6 +2615,7 @@ Require valid-user
                 'ssl': ssl_status,
                 'convertMaster': convert_master or '',
                 'canConvertToChild': bool(convert_master),
+                'convertHelp': convert_help,
                 'hasChildDuplicate': is_duplicate_top_level,
                 'duplicateTopLevel': is_duplicate_top_level,
             })
@@ -3822,6 +3830,19 @@ context /cyberpanel_suspension_page.html {
             except Exception as e:
                 # Silently fail - resource limits are optional
                 CyberCPLogFileWriter.writeToFile(f"Could not fetch resource limits for {self.domain}: {str(e)}")
+
+            convert_master = self._findConvertMasterCandidate(self.domain)
+            from websiteFunctions.models import ChildDomains
+            is_duplicate_top_level = ChildDomains.objects.filter(domain=self.domain).exists()
+            Data['convertMaster'] = convert_master or ''
+            Data['canConvertToChild'] = bool(convert_master)
+            Data['hasChildDuplicate'] = is_duplicate_top_level
+            if convert_master:
+                Data['convertHelp'] = ''
+            elif len(self.domain.split('.')) < 3:
+                Data['convertHelp'] = 'apex'
+            else:
+                Data['convertHelp'] = 'no_parent'
 
             proc = httpProc(request, 'websiteFunctions/website.html', Data)
             return proc.render()

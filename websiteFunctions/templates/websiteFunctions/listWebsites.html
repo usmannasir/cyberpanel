@@ -630,6 +630,38 @@
         .mt-3 {
             margin-top: 1rem;
         }
+
+        .convert-info-banner {
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .convert-info-banner h3 {
+            margin: 0 0 8px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .convert-info-banner p {
+            margin: 0;
+            color: var(--text-muted, #6b7280);
+            line-height: 1.5;
+        }
+
+        .btn-convert-sub {
+            border-color: #7c3aed;
+            color: #7c3aed;
+        }
+
+        .btn-convert-sub:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
     </style>
 
     <div ng-controller="listWebsites" class="page-wrapper">
@@ -684,6 +716,11 @@
                             {% trans "Create Website" %}
                         </a>
                     </div>
+                </div>
+
+                <div class="convert-info-banner">
+                    <h3><i class="fas fa-sitemap"></i> {% trans "Convert top-level site to subdomain" %}</h3>
+                    <p>{% trans "If a hostname was created as its own website by mistake (for example ols.example.com while example.com already exists), use Convert to subdomain on that row or open Full Settings for the site. Apex domains such as example.com cannot be converted." %}</p>
                 </div>
 
                 <!-- Search Section -->
@@ -749,6 +786,14 @@
                                 <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
                                     Manage
                                 </a>
+                                <button ng-if="web.canConvertToChild"
+                                        ng-click="convertToChildDomain(web); $event.stopPropagation();"
+                                        ng-disabled="convertingToChild[web.domain]"
+                                        class="btn btn-outline btn-sm btn-convert-sub"
+                                        title="{% trans 'Move this top-level site under its parent domain' %}">
+                                    <span ng-hide="convertingToChild[web.domain]"><i class="fas fa-sitemap"></i> {% trans "Convert" %}</span>
+                                    <span ng-show="convertingToChild[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
+                                </button>
                                 <a href="/filemanager/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'File Manager' %}">
                                     Filemanager
                                 </a>
@@ -781,11 +826,17 @@
                                         <button ng-if="web.canConvertToChild"
                                                 ng-click="convertToChildDomain(web); $event.stopPropagation();"
                                                 ng-disabled="convertingToChild[web.domain]"
-                                                class="btn btn-outline btn-sm"
+                                                class="btn btn-outline btn-sm btn-convert-sub"
                                                 title="{% trans 'Move this top-level site under its parent domain' %}">
-                                            <span ng-hide="convertingToChild[web.domain]">{% trans "Convert to subdomain" %}</span>
+                                            <span ng-hide="convertingToChild[web.domain]"><i class="fas fa-sitemap"></i> {% trans "Convert to subdomain" %}</span>
                                             <span ng-show="convertingToChild[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Converting..." %}</span>
                                         </button>
+                                        <div ng-if="!web.canConvertToChild && web.convertHelp === 'apex'" class="convert-row-hint" style="font-size:12px;color:var(--text-muted,#6b7280);margin-top:8px;">
+                                            {% trans "Apex domain: cannot convert to subdomain." %}
+                                        </div>
+                                        <div ng-if="!web.canConvertToChild && web.convertHelp === 'no_parent'" class="convert-row-hint" style="font-size:12px;color:var(--text-muted,#6b7280);margin-top:8px;">
+                                            {% trans "No parent website found for conversion." %}
+                                        </div>
                                         <button ng-click="showWPSites(web.domain); $event.stopPropagation();" 
                                                 class="btn btn-outline btn-sm" 
                                                 ng-if="(web.wp_sites && web.wp_sites.length) > 0">

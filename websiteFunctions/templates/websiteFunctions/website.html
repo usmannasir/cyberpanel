@@ -957,6 +957,42 @@
         color: #1e3c72;
     }
     
+    /* Convert to subdomain panel */
+    .convert-subdomain-panel {
+        background: var(--bg-secondary, white);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px var(--shadow-color, rgba(0,0,0,0.06));
+    }
+
+    .convert-subdomain-panel h3 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .convert-subdomain-panel p {
+        margin: 0 0 14px;
+        color: var(--text-muted, #6b7280);
+        line-height: 1.5;
+    }
+
+    .convert-subdomain-panel .convert-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .convert-subdomain-panel.info-only {
+        border-style: dashed;
+        background: var(--bg-tertiary, #f9fafb);
+    }
+
     /* Quick Actions Bar */
     .quick-actions {
         background: var(--bg-secondary, white);
@@ -1491,6 +1527,36 @@
                     {% trans "Stress Test" %}
                 </a>
             </div>
+        </div>
+
+        <div class="convert-subdomain-panel{% if not canConvertToChild %} info-only{% endif %}"
+             ng-init="convertMaster='{{ convertMaster|escapejs }}'; canConvertToChild={{ canConvertToChild|yesno:'true,false' }}; hasChildDuplicate={{ hasChildDuplicate|yesno:'true,false' }}; convertingToChild=false;">
+            <h3>
+                <i class="fas fa-sitemap"></i>
+                {% trans "Convert to subdomain" %}
+            </h3>
+            {% if canConvertToChild %}
+            <p>
+                {% blocktrans with master=convertMaster %}Move this top-level site under <strong>{{ master }}</strong> as a child domain. Files will be relocated under the parent home directory unless a child entry already exists.{% endblocktrans %}
+                {% if hasChildDuplicate %}
+                <br><strong>{% trans "Note:" %}</strong> {% trans "A child domain with this name already exists. Conversion will remove the duplicate top-level panel entry and keep existing child files." %}
+                {% endif %}
+            </p>
+            <div class="convert-actions">
+                <button type="button"
+                        class="hero-btn primary"
+                        ng-click="convertCurrentSiteToChild()"
+                        ng-disabled="convertingToChild">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span ng-hide="convertingToChild">{% trans "Convert to subdomain of" %} {{ convertMaster }}</span>
+                    <span ng-show="convertingToChild"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Converting..." %}</span>
+                </button>
+            </div>
+            {% elif convertHelp == 'apex' %}
+            <p>{% trans "This is an apex domain (for example example.com). Apex sites cannot be converted into subdomains. Use this tool on hostnames such as shop.example.com when example.com already exists as a website here." %}</p>
+            {% else %}
+            <p>{% trans "No matching parent website was found for this hostname. Create the parent apex site first (for example example.com), then convert hostnames like shop.example.com from List Websites or this page." %}</p>
+            {% endif %}
         </div>
 
         <!-- Modern Resource Cards Grid -->
