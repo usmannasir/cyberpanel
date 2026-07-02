@@ -2592,6 +2592,7 @@ Require valid-user
 
             # Get SSL status
             ssl_status = self.getSSLStatus(website.domain)
+            convert_master = self._findConvertMasterCandidate(website.domain)
 
             json_data.append({
                 'domain': website.domain,
@@ -2603,9 +2604,40 @@ Require valid-user
                 'admin': website.admin.userName,
                 'wp_sites': wp_sites,
                 'diskUsed': diskUsed,
-                'ssl': ssl_status
+                'ssl': ssl_status,
+                'convertMaster': convert_master or '',
+                'canConvertToChild': bool(convert_master),
+                'hasChildDuplicate': website.domain in child_domain_names,
             })
         return json.dumps(json_data)
+
+    def _findConvertMasterCandidate(self, domain):
+        try:
+            from plogical.convert_to_child import find_master_candidate
+            return find_master_candidate(domain)
+        except BaseException:
+            return None
+
+    def convertWebsiteToChildDomain(self, userID=None, data=None):
+        try:
+            from plogical.convert_to_child import convert_website_to_child_domain
+
+            website_name = data.get('websiteName', '')
+            master_domain = data.get('masterDomain', '')
+            status, message = convert_website_to_child_domain(
+                userID, website_name, master_domain or None)
+            return HttpResponse(json.dumps({
+                'status': status,
+                'convertStatus': status,
+                'error_message': message if status == 0 else 'None',
+                'success': message if status == 1 else None,
+            }))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'convertStatus': 0,
+                'error_message': str(msg),
+            }))
 
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""

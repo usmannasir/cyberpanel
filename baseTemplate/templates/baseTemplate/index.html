@@ -234,29 +234,6 @@
             <span>{% trans "Backups" %}</span>
         </a>
 
-        {% if admin or addDeleteRecords %}
-        <a href="#" class="menu-item" onclick="toggleSubmenu('dns-submenu', this); return false;">
-            <div class="icon-wrapper"><i class="fas fa-sitemap"></i></div>
-            <span>{% trans "Domains & DNS" %}</span>
-        </a>
-        <div id="dns-submenu" class="submenu">
-            <a href="{% url 'addDeleteDNSRecords' %}" class="menu-item">
-                <div class="icon-wrapper"><i class="fas fa-list"></i></div>
-                <span>{% trans "DNS Records" %}</span>
-            </a>
-            <a href="{% url 'addDeleteDNSRecordsCloudFlare' %}" class="menu-item">
-                <div class="icon-wrapper"><i class="fas fa-cloud"></i></div>
-                <span>{% trans "Cloudflare" %}</span>
-            </a>
-            {% if admin or createDNSZone %}
-            <a href="{% url 'createDNSZone' %}" class="menu-item">
-                <div class="icon-wrapper"><i class="fas fa-circle-plus"></i></div>
-                <span>{% trans "Create DNS Zone" %}</span>
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
-
         <!-- Build Services: prominent, available to everyone -->
         <a href="{% url 'buildServices' %}" class="menu-item menu-item-promo">
             <div class="icon-wrapper"><i class="fas fa-rocket"></i></div>

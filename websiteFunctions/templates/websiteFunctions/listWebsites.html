@@ -774,6 +774,14 @@
                                             <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
                                             <span ng-show="issuingSSL[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> Issuing SSL...</span>
                                         </a>
+                                        <button ng-if="web.canConvertToChild"
+                                                ng-click="convertToChildDomain(web); $event.stopPropagation();"
+                                                ng-disabled="convertingToChild[web.domain]"
+                                                class="btn btn-outline btn-sm"
+                                                title="{% trans 'Move this top-level site under its parent domain' %}">
+                                            <span ng-hide="convertingToChild[web.domain]">{% trans "Convert to subdomain" %}</span>
+                                            <span ng-show="convertingToChild[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Converting..." %}</span>
+                                        </button>
                                         <button ng-click="showWPSites(web.domain); $event.stopPropagation();" 
                                                 class="btn btn-outline btn-sm" 
                                                 ng-if="(web.wp_sites && web.wp_sites.length) > 0">
