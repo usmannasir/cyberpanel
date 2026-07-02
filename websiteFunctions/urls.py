@@ -218,8 +218,8 @@ urlpatterns = [
 
     path('checkIPStatus', views.checkIPStatus, name='checkIPStatus'),
 
-    # Catch all for domains (must be last)
-    path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
+    # Catch all for domains (must be last; /settings before /<childDomain>)
     path('<domain>/settings', views.domain, name='domain'),
+    path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
     path('<domain>', views.siteWorkspace, name='siteWorkspace'),
 ]

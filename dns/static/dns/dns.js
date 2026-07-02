@@ -857,24 +857,180 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     $scope.dnsSearch = { filter: '' };
     $scope.cfDeletedBackup = {};
 
+    var cfDnsTypes = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SRV', 'CAA', 'SPF', 'SOA'];
+
+    function normalizeCloudflareRecord(raw) {
+        var record = raw || {};
+        if (!record.type && record.recordType) {
+            record.type = record.recordType;
+        }
+        var ttlRaw = record.ttlNum !== undefined && record.ttlNum !== null ? record.ttlNum : record.ttl;
+        if (ttlRaw === 'AUTO' || ttlRaw === 1 || ttlRaw === '1') {
+            record.ttlNum = 1;
+            record.ttl = 'AUTO';
+        } else {
+            record.ttlNum = parseInt(ttlRaw, 10);
+            if (isNaN(record.ttlNum)) {
+                record.ttlNum = 3600;
+            }
+            record.ttl = record.ttlNum;
+        }
+        var prio = parseInt(record.priority, 10);
+        record.priority = isNaN(prio) ? 0 : prio;
+        return record;
+    }
+
+    function normalizeCloudflareRecords(list) {
+        if (!Array.isArray(list)) {
+            return [];
+        }
+        return list.map(function (r) {
+            return normalizeCloudflareRecord(r);
+        });
+    }
+
     function applyDnsRecordFilter() {
         var q = ($scope.dnsSearch.filter || '').toLowerCase().trim();
         var list = $scope.records || [];
-        if (!q) {
-            $scope.filteredRecords = list;
+        if (q) {
+            list = list.filter(function (r) {
+                var hay = [
+                    r.name || '',
+                    r.type || '',
+                    r.content || '',
+                    String(r.ttl || ''),
+                    String(r.ttlNum || ''),
+                    String(r.priority || '')
+                ].join(' ').toLowerCase();
+                return hay.indexOf(q) !== -1;
+            });
+        }
+        if ($scope.sortColumn) {
+            var col = $scope.sortColumn;
+            var reverse = $scope.sortReverse ? -1 : 1;
+            list = list.slice().sort(function (a, b) {
+                var av = a[col];
+                var bv = b[col];
+                if (col === 'priority' || col === 'ttlNum') {
+                    av = parseInt(av, 10) || 0;
+                    bv = parseInt(bv, 10) || 0;
+                } else if (col === 'proxy') {
+                    av = av ? 1 : 0;
+                    bv = bv ? 1 : 0;
+                } else {
+                    av = (av === undefined || av === null) ? '' : String(av).toLowerCase();
+                    bv = (bv === undefined || bv === null) ? '' : String(bv).toLowerCase();
+                }
+                if (av < bv) {
+                    return -1 * reverse;
+                }
+                if (av > bv) {
+                    return 1 * reverse;
+                }
+                return 0;
+            });
+        }
+        $scope.filteredRecords = list;
+    }
+
+    $scope.sortColumn = 'name';
+    $scope.sortReverse = false;
+    $scope.setSort = function (col) {
+        if ($scope.sortColumn === col) {
+            $scope.sortReverse = !$scope.sortReverse;
+        } else {
+            $scope.sortColumn = col;
+            $scope.sortReverse = false;
+        }
+        applyDnsRecordFilter();
+    };
+
+    $scope.editingCell = null;
+    $scope.isEditing = function (record, field) {
+        return $scope.editingCell && $scope.editingCell.id === record.id && $scope.editingCell.field === field;
+    };
+    $scope.startEdit = function (record, field) {
+        $scope.editingCell = { id: record.id, field: field };
+    };
+
+    $scope.getTypeOptions = function (record) {
+        var current = (record && record.type) ? record.type : 'A';
+        if (cfDnsTypes.indexOf(current) === -1) {
+            return [current].concat(cfDnsTypes);
+        }
+        return cfDnsTypes;
+    };
+
+    $scope.saveInlineField = function (record, field) {
+        $scope.editingCell = null;
+        if (!$scope.selectedZone || !record || !record.id) {
             return;
         }
-        $scope.filteredRecords = list.filter(function (r) {
-            var hay = [
-                r.name || '',
-                r.type || '',
-                r.content || '',
-                String(r.ttl || ''),
-                String(r.priority || '')
-            ].join(' ').toLowerCase();
-            return hay.indexOf(q) !== -1;
+        var url = '/dns/updateDNSRecordCloudFlare';
+        var data = {
+            selectedZone: $scope.selectedZone,
+            id: record.id,
+            name: record.name,
+            recordType: record.type,
+            type: record.type,
+            content: record.content,
+            ttl: record.ttlNum || record.ttl,
+            priority: parseInt(record.priority, 10) || 0,
+            proxied: !!record.proxy
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(function (response) {
+            if (response.data.status === 1 || response.data.update_status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Record updated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message || 'Update failed.',
+                    type: 'error'
+                });
+                populateCurrentRecords();
+            }
+        }, function () {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+            populateCurrentRecords();
         });
-    }
+    };
+
+    $scope.confirmDeleteRecord = function (record) {
+        var msg = 'Delete DNS record?\n\nName: ' + (record.name || '') + '\nType: ' + (record.type || '') + '\nValue: ' + (record.content || '');
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        var zone = $scope.selectedZone;
+        if (!zone) {
+            return;
+        }
+        if (!$scope.cfDeletedBackup[zone]) {
+            $scope.cfDeletedBackup[zone] = [];
+        }
+        $scope.cfDeletedBackup[zone].push({
+            type: record.type,
+            name: record.name,
+            content: record.content,
+            priority: parseInt(record.priority, 10) || 0,
+            ttl: record.ttlNum || record.ttl || 3600,
+            proxy: record.proxy,
+            proxiable: record.proxiable !== false
+        });
+        $scope.deleteRecord(record.id);
+    };
 
     $scope.$watch('dnsSearch.filter', function () {
         applyDnsRecordFilter();
@@ -1083,7 +1239,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
             $scope.loadingRecords = false;
             if (response.data.fetchStatus === 1) {
 
-                $scope.records = JSON.parse(response.data.data);
+                $scope.records = normalizeCloudflareRecords(JSON.parse(response.data.data));
                 applyDnsRecordFilter();
 
                 $scope.currentRecords = false;
@@ -1127,6 +1283,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
             $scope.couldNotConnect = false;
             $scope.couldNotAddRecord = true;
             $scope.records = [];
+            $scope.filteredRecords = [];
 
 
         }

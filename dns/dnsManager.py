@@ -804,18 +804,26 @@ class DNSManager:
                 for dns_record in dns_records:
                     if dns_record['ttl'] == 1:
                         ttl = 'AUTO'
+                        ttl_num = 1
                     else:
-                        ttl = dns_record['ttl']
+                        ttl_num = int(dns_record['ttl'])
+                        ttl = ttl_num
 
                     prio = dns_record.get('priority', 0)
                     if prio is None:
                         prio = 0
+                    else:
+                        try:
+                            prio = int(prio)
+                        except (ValueError, TypeError):
+                            prio = 0
                     dic = {'id': dns_record['id'],
                            'type': dns_record['type'],
                            'name': dns_record['name'],
                            'content': dns_record['content'],
-                           'priority': str(prio),
+                           'priority': prio,
                            'ttl': ttl,
+                           'ttlNum': ttl_num,
                            'proxy': dns_record['proxied'],
                            'proxiable': dns_record['proxiable']
                            }
