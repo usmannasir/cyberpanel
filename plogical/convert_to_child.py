@@ -8,10 +8,13 @@ import time
 from random import randint
 
 from loginSystem.models import Administrator
+from django.db import connection
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from plogical import CyberCPLogFileWriter as logging
-from plogical import virtualHostUtilities
+from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical import vhost as vhost_module
+from plogical import installUtilities
 from websiteFunctions.models import ChildDomains, Websites
 
 
@@ -26,6 +29,22 @@ def find_master_candidate(domain):
         if Websites.objects.filter(domain=candidate).exists():
             return candidate
     return None
+
+
+def _delete_website_row(website):
+    """Delete a Websites row even when optional related tables are missing."""
+    try:
+        website.delete()
+        return
+    except BaseException as exc:
+        logging.writeToFile(
+            'convert_to_child: ORM delete failed for %s (%s), using direct SQL'
+            % (website.domain, exc))
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'DELETE FROM websiteFunctions_websites WHERE id = %s',
+                [website.pk],
+            )
 
 
 def convert_website_to_child_domain(user_id, website_name, master_domain=None):
@@ -89,6 +108,12 @@ def convert_website_to_child_domain(user_id, website_name, master_domain=None):
             logging.writeToFile(
                 'convert_to_child: removing duplicate top-level website %s; child already exists under %s'
                 % (website_name, master_domain))
+            number_of_sites = str(Websites.objects.count() + ChildDomains.objects.count())
+            vhost_module.vhost.deleteCoreConf(website_name, number_of_sites, removeDocRoot=False)
+            _delete_website_row(website)
+            installUtilities.installUtilities.reStartLiteSpeed()
+            return 1, '%s is now managed only as a subdomain of %s.' % (
+                website_name, master_domain)
         else:
             master_home = '/home/%s' % master_domain
             if not os.path.isdir(master_home):
@@ -111,10 +136,6 @@ def convert_website_to_child_domain(user_id, website_name, master_domain=None):
             + shlex.quote(website_name)
         )
         ProcessUtilities.executioner(exec_path)
-
-        if existing_child:
-            return 1, '%s is now managed only as a subdomain of %s.' % (
-                website_name, master_domain)
 
         apache_backend = '0'
         apache_path = '/usr/local/lsws/conf/vhosts/%s.conf' % master_domain

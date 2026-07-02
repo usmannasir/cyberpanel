@@ -2568,7 +2568,8 @@ Require valid-user
         child_domain_names = set(ChildDomains.objects.values_list('domain', flat=True))
 
         for website in websites:
-            if website.domain in child_domain_names:
+            is_duplicate_top_level = website.domain in child_domain_names
+            if is_duplicate_top_level and not self._findConvertMasterCandidate(website.domain):
                 continue
             wp_sites = []
             try:
@@ -2607,7 +2608,8 @@ Require valid-user
                 'ssl': ssl_status,
                 'convertMaster': convert_master or '',
                 'canConvertToChild': bool(convert_master),
-                'hasChildDuplicate': website.domain in child_domain_names,
+                'hasChildDuplicate': is_duplicate_top_level,
+                'duplicateTopLevel': is_duplicate_top_level,
             })
         return json.dumps(json_data)
 

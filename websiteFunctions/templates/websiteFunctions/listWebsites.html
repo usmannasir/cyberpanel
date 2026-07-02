@@ -740,6 +740,10 @@
                                     <span ng-if="web.ssl.status === 'none'">No SSL</span>
                                     <span ng-if="web.ssl.is_wildcard" class="wildcard-indicator" title="Wildcard SSL Certificate">*</span>
                                 </span>
+                                <span ng-if="web.duplicateTopLevel" class="ssl-badge warning" title="{% trans 'This domain is already a child domain. Remove the duplicate top-level entry.' %}">
+                                    <i class="fas fa-clone"></i>
+                                    {% trans "Duplicate top-level" %}
+                                </span>
                             </div>
                             <div class="row-actions">
                                 <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
