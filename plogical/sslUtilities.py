@@ -1081,7 +1081,7 @@ def _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
     return True
 
 
-def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False):
+def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
     try:
         # Check if certificate already exists and try to renew it first
         existingCertPath = '/etc/letsencrypt/live/' + domain + '/fullchain.pem'
