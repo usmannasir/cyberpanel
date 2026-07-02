@@ -118,8 +118,8 @@ class ServerStatusUtil(multi.Thread):
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            if os.path.exists('/usr/local/CyberCP/lsws-6.3.4/'):
-                shutil.rmtree('/usr/local/CyberCP/lsws-6.3.4')
+            if os.path.exists('/usr/local/CyberCP/lsws-6.3.5/'):
+                shutil.rmtree('/usr/local/CyberCP/lsws-6.3.5')
 
             if os.path.exists(f'/usr/local/CyberCP/lsws-{lsws_version}/'):
                 shutil.rmtree(f'/usr/local/CyberCP/lsws-{lsws_version}/')

@@ -1,6 +1,7 @@
 # CyberPanel .gitignore
 
 # Environment variables (CRITICAL - Contains sensitive data)
+secret_key
 .env
 .env.backup
 .env.local
