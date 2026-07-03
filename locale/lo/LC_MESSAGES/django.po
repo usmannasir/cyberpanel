@@ -1,7 +1,7 @@
 # CyberPanel Spanish.
 # Copyright (C) 2018
 # This file is distributed under the same license as the PACKAGE package.
-# Francisco Galan <franciscorodriguezgalan@gmail.com>, 2118.
+# 
 #
 #: baseTemplate/templates/baseTemplate/index.html:219
 #: baseTemplate/templates/baseTemplate/index.html:272
