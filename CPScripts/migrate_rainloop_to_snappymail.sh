@@ -73,13 +73,19 @@ if [ -d "/usr/local/lscp/cyberpanel/rainloop/data" ] && [ "$(ls -A /usr/local/ls
     log "Data migration done"
 fi
 
-# 3) Ownership and permissions
-if id -u lscpd >/dev/null 2>&1; then
+# 3) Ownership and permissions (both rainloop and snappymail trees)
+ENSURE_PERMS="/usr/local/CyberCP/scripts/utils/ensure-snappymail-permissions.sh"
+if [[ -x "$ENSURE_PERMS" ]]; then
+    bash "$ENSURE_PERMS" || true
+    log "Ran ensure-snappymail-permissions.sh"
+elif id -u lscpd >/dev/null 2>&1; then
+    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/ 2>/dev/null || true
     chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
     chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/ 2>/dev/null || true
-    log "Set ownership lscpd:lscpd"
+    log "Set ownership lscpd:lscpd (fallback)"
 fi
 chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/ 2>/dev/null || true
+chmod -R 775 /usr/local/lscp/cyberpanel/rainloop/data/ 2>/dev/null || true
 
 # 4) Restart panel
 log "Restarting lscpd..."

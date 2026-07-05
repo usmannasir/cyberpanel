@@ -9,7 +9,7 @@ tokens. Light mode is never touched. Brand/semantic colors are left alone.
 """
 import os, re, glob, colorsys
 
-ROOT = "/Users/cyberpersons/cyberpanel"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---- value buckets (normalized: lowercase, spaces stripped) ----
 BG_SECONDARY = {"#fff", "#ffffff", "white", "#fefefe", "#fcfcfc", "#fdfdfd"}

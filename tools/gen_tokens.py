@@ -14,7 +14,7 @@ hue, referencing the canonical dark palette so everything stays consistent.
 """
 import re, glob, os, collections, colorsys
 
-ROOT = "/Users/cyberpersons/cyberpanel"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXCLUDE = re.compile(r"/mode/|/static/filemanager/")
 
 # ---- canonical tokens already defined (don't redefine these) ----

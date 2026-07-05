@@ -56,12 +56,14 @@
     
     <!-- Modern Design System -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-tokens.css' %}?v={{ CP_VERSION }}">
 
     {% block header_scripts %}{% endblock %}
 
     <!-- Theme harmonizer: re-skins legacy per-page styles to the design tokens.
          Loads AFTER page styles so it calms every internal page consistently. -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-harmonize.css' %}?v={{ CP_VERSION }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-dark.css' %}?v={{ CP_VERSION }}">
 
     <!-- Apply saved theme before first paint (avoids light/dark flash) -->
     <script>

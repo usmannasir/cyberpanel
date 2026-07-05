@@ -129,6 +129,88 @@
 .modal-footer { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
 
 /* =====================================================================
+   Shared "card surface" idiom classes (#1804)
+   ---------------------------------------------------------------------
+   Many internal pages hardcode white/light backgrounds on hero cards,
+   headers, and table chrome. These rules route common surface idioms
+   through tokens so dark mode stays legible; light mode is unchanged.
+   ===================================================================== */
+#main-content .main-card,
+#main-content .stats-card,
+#main-content .data-card,
+#main-content .section-card {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 1px 2px var(--shadow-color) !important;
+}
+#main-content .card-header,
+#main-content .main-card .card-header,
+#main-content .stats-table thead,
+#main-content .stats-table th,
+#main-content .data-table thead,
+#main-content .data-table th {
+    background: var(--bg-muted) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+}
+#main-content .card-body,
+#main-content .stats-table,
+#main-content .data-table { background: var(--bg-secondary) !important; color: var(--text-primary) !important; }
+#main-content .stats-table td,
+#main-content .data-table td { border-color: var(--border-color) !important; color: var(--text-primary) !important; }
+#main-content .stats-table tbody tr:hover,
+#main-content .data-table tbody tr:hover { background: var(--bg-hover) !important; }
+
+#main-content .docs-link {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+#main-content .code-badge,
+#main-content .code-chip,
+#main-content .mono-badge {
+    background: var(--bg-muted) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] #main-content .close,
+[data-theme="dark"] .modal .close {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    text-shadow: none !important;
+}
+
+/* Email list page: mail config sidebar, tables, disk usage badges */
+#main-content .info-card {
+    background: var(--bg-muted) !important;
+    color: var(--text-primary) !important;
+}
+#main-content .config-table td,
+#main-content .email-table td { color: var(--text-primary) !important; }
+#main-content .disk-usage-badge {
+    background: var(--bg-muted) !important;
+    color: var(--accent-color) !important;
+}
+
+[data-theme="dark"] #main-content select.form-control option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-container .select2-selection--single,
+[data-theme="dark"] .select2-dropdown,
+[data-theme="dark"] .select2-results__option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+[data-theme="dark"] .select2-results__option--highlighted {
+    background: var(--bg-hover) !important;
+    color: var(--text-heading) !important;
+}
+
+/* =====================================================================
    Site management page (website.html) bespoke components — centralized
    here so there is a single source of truth for the calm look.
    ===================================================================== */
