@@ -25,6 +25,15 @@ restart `lscpd`, or re-run upgrade post-tweak. Optional:
 
 ---
 
+## 05/07/2026 — Email forwarding UI spinner fix (v2.5.5-dev)
+
+Fixed `mailServer.js` `emailForwarding` controller: `forwardLoading` stayed `true`
+after successful fetch/create/delete, so the forwarding page showed a perpetual
+spinner even when Postfix rules were saved. Server-side forwarding verified working
+(local test: `abuse@newstargeted.com` delivers to mailbox and forwards to `info@`).
+
+---
+
 ## 29/06/2026 — Sync upstream v2.4.8/stable fixes into v2.5.5-dev
 
 Merged the 90 commits from `usmannasir/cyberpanel` `stable` (v2.4.8 line) into
