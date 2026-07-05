@@ -3,6 +3,7 @@ import socket
 import random
 import os
 import json
+import shlex
 import userManagment.views as um
 from backup.backupManager import BackupManager
 from databases.databaseManager import DatabaseManager
@@ -44,10 +45,6 @@ class CloudManager:
 
     def verifyLogin(self, request):
         try:
-            # Check if token needs to be generated
-            if self.admin.token == 'TOKEN_NEEDS_GENERATION':
-                return 0, self.ajaxPre(0, 'API token needs to be generated. Please reset your password to generate a valid API token.')
-            
             if api_token_matches(request.META.get('HTTP_AUTHORIZATION'), self.admin.token):
                 return 1, self.ajaxPre(1, None)
             else:
@@ -1928,8 +1925,8 @@ class CloudManager:
             writeToFile.close()
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (
-                self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
+            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s --planName %s" % (
+                shlex.quote(self.data['domain']), shlex.quote(self.data['backupFile']), tempStatusPath, shlex.quote(self.data['planName']))
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}

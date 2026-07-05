@@ -188,15 +188,23 @@ class WebsiteManager:
                 'production_status': True
             })
 
+        # WP site titles are attacker-influenceable and get injected into an inline
+        # <script> via |safe, so escape the characters that could break out of the
+        # script context. The result is still valid JSON (JSON.parse decodes it).
+        def _escapeForScript(jsonStr):
+            bs = chr(92)
+            return jsonStr.replace('<', bs + 'u003c').replace('>', bs + 'u003e') \
+                .replace('&', bs + 'u0026').replace(chr(0x2028), bs + 'u2028').replace(chr(0x2029), bs + 'u2029')
+
         context = {
-            "wpsite": json.dumps(sites),
+            "wpsite": _escapeForScript(json.dumps(sites)),
             "status": 1,
             "total_sites": len(sites),
-            "debug_info": json.dumps({
+            "debug_info": _escapeForScript(json.dumps({
                 "user_id": userID,
                 "is_admin": bool(currentACL.get('admin', 0)),
                 "wp_sites_count": wp_sites.count()
-            })
+            }))
         }
 
         proc = httpProc(request, 'websiteFunctions/WPsitesList.html', context)
@@ -2270,10 +2278,10 @@ Require valid-user
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
-                       " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
-                       "' --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
+                       " --administratorEmail " + adminEmail + " --phpVersion " + shlex.quote(phpSelection) + \
+                       " --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
                        + str(1) + " --openBasedir " + str(data['openBasedir']) + \
-                       ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
+                       ' --websiteOwner ' + shlex.quote(websiteOwner) + ' --package ' + shlex.quote(packageName) + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
                            mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -2373,8 +2381,8 @@ Require valid-user
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
+                       " --phpVersion " + shlex.quote(phpSelection) + " --ssl " + str(1) + " --dkimCheck " + str(1) \
+                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + shlex.quote(path) + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -2556,7 +2564,13 @@ Require valid-user
 
         json_data = []
 
+        from websiteFunctions.models import ChildDomains
+        child_domain_names = set(ChildDomains.objects.values_list('domain', flat=True))
+
         for website in websites:
+            is_duplicate_top_level = website.domain in child_domain_names
+            if is_duplicate_top_level and not self._findConvertMasterCandidate(website.domain):
+                continue
             wp_sites = []
             try:
                 wp_sites = WPSites.objects.filter(owner=website)
@@ -2579,6 +2593,14 @@ Require valid-user
 
             # Get SSL status
             ssl_status = self.getSSLStatus(website.domain)
+            convert_master = self._findConvertMasterCandidate(website.domain)
+
+            convert_help = ''
+            if not convert_master:
+                if len(website.domain.split('.')) < 3:
+                    convert_help = 'apex'
+                else:
+                    convert_help = 'no_parent'
 
             json_data.append({
                 'domain': website.domain,
@@ -2590,9 +2612,42 @@ Require valid-user
                 'admin': website.admin.userName,
                 'wp_sites': wp_sites,
                 'diskUsed': diskUsed,
-                'ssl': ssl_status
+                'ssl': ssl_status,
+                'convertMaster': convert_master or '',
+                'canConvertToChild': bool(convert_master),
+                'convertHelp': convert_help,
+                'hasChildDuplicate': is_duplicate_top_level,
+                'duplicateTopLevel': is_duplicate_top_level,
             })
         return json.dumps(json_data)
+
+    def _findConvertMasterCandidate(self, domain):
+        try:
+            from plogical.convert_to_child import find_master_candidate
+            return find_master_candidate(domain)
+        except BaseException:
+            return None
+
+    def convertWebsiteToChildDomain(self, userID=None, data=None):
+        try:
+            from plogical.convert_to_child import convert_website_to_child_domain
+
+            website_name = data.get('websiteName', '')
+            master_domain = data.get('masterDomain', '')
+            status, message = convert_website_to_child_domain(
+                userID, website_name, master_domain or None)
+            return HttpResponse(json.dumps({
+                'status': status,
+                'convertStatus': status,
+                'error_message': message if status == 0 else 'None',
+                'success': message if status == 1 else None,
+            }))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'convertStatus': 0,
+                'error_message': str(msg),
+            }))
 
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
@@ -2703,16 +2758,37 @@ Require valid-user
                 status = 'warning'
             else:
                 status = 'valid'
+
+            cloudflare_active = self._domainUsesCloudflare(domain)
+            if cloudflare_active and status in ('expired', 'expiring', 'warning', 'none', 'self-signed'):
+                return {
+                    'status': 'cloudflare',
+                    'days': days,
+                    'issuer': issuer_org,
+                    'is_wildcard': is_wildcard,
+                    'cloudflare': True,
+                    'origin_status': status,
+                }
             
             return {
                 'status': status,
                 'days': days,
                 'issuer': issuer_org,
-                'is_wildcard': is_wildcard
+                'is_wildcard': is_wildcard,
+                'cloudflare': cloudflare_active,
             }
             
         except Exception as e:
-            return {'status': 'none', 'days': 0, 'issuer': '', 'is_wildcard': False}
+            return {'status': 'none', 'days': 0, 'issuer': '', 'is_wildcard': False, 'cloudflare': False}
+
+    def _domainUsesCloudflare(self, domain):
+        """Return True when the apex zone is active in Cloudflare."""
+        try:
+            from plogical.ssl_cloudflare_dns import find_domain_in_cloudflare
+            cf_ok, _msg = find_domain_in_cloudflare(domain)
+            return bool(cf_ok)
+        except BaseException:
+            return False
 
 
     def findDockersitesListJson(self, Dockersite):
@@ -3445,7 +3521,7 @@ context /cyberpanel_suspension_page.html {
             completePathToConfigFile = confPath + "/vhost.conf"
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+            execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
             ProcessUtilities.popenExecutioner(execPath)
 
             ####
@@ -3754,6 +3830,19 @@ context /cyberpanel_suspension_page.html {
             except Exception as e:
                 # Silently fail - resource limits are optional
                 CyberCPLogFileWriter.writeToFile(f"Could not fetch resource limits for {self.domain}: {str(e)}")
+
+            convert_master = self._findConvertMasterCandidate(self.domain)
+            from websiteFunctions.models import ChildDomains
+            is_duplicate_top_level = ChildDomains.objects.filter(domain=self.domain).exists()
+            Data['convertMaster'] = convert_master or ''
+            Data['canConvertToChild'] = bool(convert_master)
+            Data['hasChildDuplicate'] = is_duplicate_top_level
+            if convert_master:
+                Data['convertHelp'] = ''
+            elif len(self.domain.split('.')) < 3:
+                Data['convertHelp'] = 'apex'
+            else:
+                Data['convertHelp'] = 'no_parent'
 
             proc = httpProc(request, 'websiteFunctions/website.html', Data)
             return proc.render()
@@ -4204,7 +4293,7 @@ context /cyberpanel_suspension_page.html {
         completePathToConfigFile = confPath + "/vhost.conf"
 
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+        execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
         ProcessUtilities.popenExecutioner(execPath)
 
         try:
@@ -4221,7 +4310,7 @@ context /cyberpanel_suspension_page.html {
                     confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + alias.domain
                     completePathToConfigFile = confPath + "/vhost.conf"
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
                     ProcessUtilities.popenExecutioner(execPath)
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(f'Error changing PHP for alias: {str(msg)}')
@@ -5565,8 +5654,8 @@ StrictHostKeyChecking no
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " switchServer --phpVersion '" + phpVersion + "' --server " + str(
-            server) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
+        execPath = execPath + " switchServer --phpVersion " + shlex.quote(phpVersion) + " --server " + shlex.quote(str(
+            server)) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
         ProcessUtilities.popenExecutioner(execPath)
 
         time.sleep(3)

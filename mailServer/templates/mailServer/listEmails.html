@@ -100,7 +100,7 @@
             border-radius: 8px;
             font-size: 0.875rem;
             transition: all 0.3s ease;
-            color: var(--text-dark, #2f3640);
+            color: var(--text-primary, #2f3640);
             background-color: var(--bg-secondary, white);
             background: var(--bg-secondary, white);
         }
@@ -122,7 +122,7 @@
             background-position: right 10px center;
             background-size: 20px;
             padding-right: 40px;
-            color: var(--text-dark, #2f3640) !important;
+            color: var(--text-primary, #2f3640) !important;
             font-size: 0.9375rem !important;
             line-height: 1.5;
             height: auto;
@@ -131,7 +131,7 @@
         
         /* Ensure option text is visible */
         select.form-control option {
-            color: var(--text-dark, #2f3640);
+            color: var(--text-primary, #2f3640);
             background-color: var(--bg-secondary, white);
             padding: 8px;
             font-size: 0.9375rem;
@@ -151,33 +151,32 @@
         /* Specific focus styles for select */
         select.form-control:focus {
             background-color: var(--bg-secondary, white);
-            color: var(--text-dark, #2f3640);
+            color: var(--text-primary, #2f3640);
         }
         
-        /* Additional Windows-specific fixes */
+        /* Additional Windows-specific fixes (light mode only) */
         @supports (-ms-ime-align: auto) {
-            /* Edge/IE specific styles */
-            select.form-control {
-                color: var(--text-dark, #2f3640) !important;
+            :root:not([data-theme="dark"]) select.form-control {
+                color: var(--text-primary, #2f3640) !important;
                 background-color: white !important;
             }
         }
         
         /* Fix for Firefox on Windows */
         select.form-control {
-            color: var(--text-dark, #2f3640) !important;
+            color: var(--text-primary, #2f3640) !important;
             text-shadow: none;
         }
         
         /* Ensure selected option is always visible */
         select.form-control::-ms-value {
-            color: var(--text-dark, #2f3640);
+            color: var(--text-primary, #2f3640);
             background-color: var(--bg-secondary, white);
         }
         
         /* Fix for Chrome on Windows */
         select.form-control:not(:focus):not(:hover) {
-            color: var(--text-dark, #2f3640) !important;
+            color: var(--text-primary, #2f3640) !important;
         }
         
         .btn-primary {
@@ -346,7 +345,7 @@
             padding: 0.875rem 1rem;
             border-bottom: 1px solid var(--border-light, #f3f4f6);
             font-size: 0.9375rem;
-            color: var(--text-dark, #2f3640);
+            color: var(--text-primary, #2f3640);
             line-height: 1.5;
         }
         
@@ -379,7 +378,7 @@
         
         .email-table td {
             padding: 1.25rem 1rem;
-            color: var(--text-dark, #2f3640);
+            color: var(--text-primary, #2f3640);
             font-size: 0.9375rem;
             border-bottom: 1px solid var(--border-light, #f3f4f6);
             line-height: 1.5;
@@ -761,9 +760,7 @@
                                                     <strong class="email-address" ng-bind="record.email"></strong>
                                                 </td>
                                                 <td>
-                                                    <span class="disk-usage-badge">
-                                                        {{ record.DiskUsage }}
-                                                    </span>
+                                                    <span class="disk-usage-badge" ng-bind="record.DiskUsage"></span>
                                                 </td>
                                                 <td style="text-align: right;">
                                                     <div class="action-buttons">

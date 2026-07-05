@@ -90,7 +90,7 @@
     .progress-bar {
         height: 100%;
         border-radius: 4px;
-        transition: width 1.2s ease-out, background-color 0.6s ease;
+        transition: width 0.3s ease;
         background: var(--accent-color, #5b5fcf);
     }
     

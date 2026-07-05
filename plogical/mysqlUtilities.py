@@ -34,6 +34,16 @@ class mysqlUtilities:
     REMOTEHOST = ''
 
     @staticmethod
+    def quoteIdentifier(identifier):
+        # MySQL identifiers (db/table/column names) cannot be passed as bound
+        # parameters. Backtick-quote them and double any embedded backtick so a
+        # malicious value cannot break out of the identifier into SQL. This
+        # preserves every legitimate identifier while neutralising injection.
+        if identifier is None:
+            raise ValueError("identifier cannot be None")
+        return "`" + str(identifier).replace("`", "``") + "`"
+
+    @staticmethod
     def getPagination(records, toShow):
         pages = float(records) / float(toShow)
 
@@ -817,7 +827,7 @@ password=%s
             data = {}
             data['status'] = 1
 
-            cursor.execute("use " + name['databaseName'])
+            cursor.execute("use " + mysqlUtilities.quoteIdentifier(name['databaseName']))
             cursor.execute("SHOW TABLE STATUS")
             result = cursor.fetchall()
 
@@ -863,8 +873,8 @@ password=%s
             data = {}
             data['status'] = 1
 
-            cursor.execute("use " + name['databaseName'])
-            cursor.execute("DROP TABLE " + name['tableName'])
+            cursor.execute("use " + mysqlUtilities.quoteIdentifier(name['databaseName']))
+            cursor.execute("DROP TABLE " + mysqlUtilities.quoteIdentifier(name['tableName']))
 
             return data
 
@@ -889,14 +899,14 @@ password=%s
 
             ##
 
-            cursor.execute("use " + name['databaseName'])
-            cursor.execute("select count(*) from " + name['tableName'])
+            cursor.execute("use " + mysqlUtilities.quoteIdentifier(name['databaseName']))
+            cursor.execute("select count(*) from " + mysqlUtilities.quoteIdentifier(name['tableName']))
             rows = cursor.fetchall()[0][0]
 
 
             ##
 
-            cursor.execute("desc " + name['tableName'])
+            cursor.execute("desc " + mysqlUtilities.quoteIdentifier(name['tableName']))
             result = cursor.fetchall()
 
             data['completeData'] = '<thead><tr>'
@@ -913,7 +923,7 @@ password=%s
             data['pagination'] = mysqlUtilities.getPagination(rows, recordsToShow)
             endPageNumber, finalPageNumber = mysqlUtilities.recordsPointer(page, recordsToShow)
 
-            cursor.execute("select * from " + name['tableName'])
+            cursor.execute("select * from " + mysqlUtilities.quoteIdentifier(name['tableName']))
             result = cursor.fetchall()
 
             for items in result[finalPageNumber:endPageNumber]:
@@ -941,8 +951,8 @@ password=%s
             if connection == 0:
                 return 0
 
-            cursor.execute("use " + name['databaseName'])
-            cursor.execute("desc " + name['tableName'])
+            cursor.execute("use " + mysqlUtilities.quoteIdentifier(name['databaseName']))
+            cursor.execute("desc " + mysqlUtilities.quoteIdentifier(name['tableName']))
             result = cursor.fetchall()
 
             ## Columns List

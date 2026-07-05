@@ -709,7 +709,7 @@ context /.well-known/acme-challenge {
                 return 1
 
     @staticmethod
-    def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None, isHostname=False):
+    def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
         from plogical.acl import ACLManager
         from plogical.sslv2 import sslUtilities as sslv2
         from plogical.customACME import CustomACME
@@ -726,7 +726,13 @@ context /.well-known/acme-challenge {
 
         Status = 1
 
-        if sslUtilities.CheckIfSSLNeedsToBeIssued(virtualHostName) == sslUtilities.ISSUE_SSL:
+        # forceIssue is set when the user explicitly clicks "Issue/Reissue SSL" in the
+        # panel. In that case we must always go through ACME issuance even if the
+        # existing certificate is still valid -- otherwise a manual reissue silently
+        # no-ops while reporting success (see issue #1814). The skip-when-valid check
+        # is kept for automated renewal/bulk callers (forceIssue=False) so they don't
+        # hit Let's Encrypt rate limits.
+        if forceIssue or sslUtilities.CheckIfSSLNeedsToBeIssued(virtualHostName) == sslUtilities.ISSUE_SSL:
             pass
         else:
             return 1
@@ -1075,7 +1081,7 @@ def _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
     return True
 
 
-def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False):
+def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
     try:
         # Check if certificate already exists and try to renew it first
         existingCertPath = '/etc/letsencrypt/live/' + domain + '/fullchain.pem'
@@ -1164,7 +1170,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                     logging.CyberCPLogFileWriter.writeToFile(f"Renewal failed for {domain}. Error: {error_details}")
                     logging.CyberCPLogFileWriter.writeToFile(f"Full error output: {error_output}")
 
-        if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain, isHostname) == 1:
+        if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain, isHostname, forceIssue) == 1:
             if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                 return [1, "None"]
             else:

@@ -34,9 +34,17 @@ Upgrade.downoad_and_install_raindloop()
 " 2>&1 || true
 
 if [[ -f "$PUBLIC/snappymail/index.php" ]]; then
-    echo "Setting ownership to lscpd:lscpd..."
-    chown -R lscpd:lscpd "$PUBLIC/snappymail" 2>/dev/null || true
-    chmod 755 "$PUBLIC/snappymail" 2>/dev/null || true
+    ENSURE_PERMS="$CP/scripts/utils/ensure-snappymail-permissions.sh"
+    if [[ -x "$ENSURE_PERMS" ]]; then
+        bash "$ENSURE_PERMS" --restart
+    else
+        echo "Setting ownership to lscpd:lscpd..."
+        chown -R lscpd:lscpd "$PUBLIC/snappymail" 2>/dev/null || true
+        chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/ 2>/dev/null || true
+        chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/ 2>/dev/null || true
+        chmod 755 "$PUBLIC/snappymail" 2>/dev/null || true
+        systemctl restart lscpd 2>/dev/null || true
+    fi
     echo "Done. SnappyMail is at $PUBLIC/snappymail"
     echo "Test: https://YOUR_IP:2087/snappymail/index.php"
 else

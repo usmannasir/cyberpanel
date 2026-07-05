@@ -1033,21 +1033,32 @@ webserver-allow-from=0.0.0.0/0
     @staticmethod
     def ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email):
         try:
-
-            ## remove existing keys first
+            from plogical.cloudflareClient import _is_global_api_key
 
             path = '/root/.acme.sh/account.conf'
+            secret = (SAVED_CF_Key or '').strip()
+            email = (SAVED_CF_Email or '').strip()
 
-            command = f"sed -i '/SAVED_CF_Key/d;/SAVED_CF_Email/d' {path}"
+            command = (
+                "sed -i '/SAVED_CF_Key/d;/SAVED_CF_Email/d;"
+                "/^CF_Key=/d;/^CF_Email=/d;/^CF_Token=/d' %s" % shlex.quote(path)
+            )
             ProcessUtilities.executioner(command)
 
+            lines = [
+                "SAVED_CF_Key='%s'" % secret.replace("'", "'\\''"),
+                "SAVED_CF_Email='%s'" % email.replace("'", "'\\''"),
+            ]
+            # acme.sh dns_cf: API tokens need CF_Token (Bearer). Global API keys use CF_Key + CF_Email.
+            if secret and not _is_global_api_key(secret):
+                lines.append("CF_Token='%s'" % secret.replace("'", "'\\''"))
+            elif secret:
+                lines.append("CF_Key='%s'" % secret.replace("'", "'\\''"))
+                if email:
+                    lines.append("CF_Email='%s'" % email.replace("'", "'\\''"))
 
-            CFContent = f"""
-SAVED_CF_Key='{SAVED_CF_Key}'
-SAVED_CF_Email='{SAVED_CF_Email}'
-"""
-
-            command = f'echo "{CFContent}" >> {path}'
+            CFContent = '\n'.join(lines) + '\n'
+            command = 'echo %s >> %s' % (shlex.quote(CFContent), shlex.quote(path))
             ProcessUtilities.executioner(command, None, True)
 
             return 1, None

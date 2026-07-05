@@ -895,13 +895,12 @@ app.controller('emailForwarding', function ($scope, $http) {
     $scope.fetchCurrentForwardings = function () {
 
         if ($scope.forwardingOption == null || $scope.selectedEmail == null) {
-            $scope.forwardLoading = true;
-            return 0;
+            return;
         }
 
         $scope.creationBox = false;
         $scope.emailDetails = false;
-        $scope.forwardLoading = false;
+        $scope.forwardLoading = true;
         $scope.forwardError = true;
         $scope.forwardSuccess = true;
         $scope.couldNotConnect = true;
@@ -933,7 +932,7 @@ app.controller('emailForwarding', function ($scope, $http) {
 
                 $scope.creationBox = false;
                 $scope.emailDetails = false;
-                $scope.forwardLoading = true;
+                $scope.forwardLoading = false;
                 $scope.forwardError = true;
                 $scope.forwardSuccess = true;
                 $scope.couldNotConnect = true;
@@ -1006,18 +1005,19 @@ app.controller('emailForwarding', function ($scope, $http) {
 
                 $scope.creationBox = false;
                 $scope.emailDetails = false;
-                $scope.forwardLoading = true;
+                $scope.forwardLoading = false;
                 $scope.forwardError = true;
-                $scope.forwardSuccess = true;
+                $scope.forwardSuccess = false;
+                $scope.successMessage = response.data.successMessage || 'Successfully deleted!';
                 $scope.couldNotConnect = true;
-                $scope.notifyBox = true;
+                $scope.notifyBox = false;
 
                 $scope.fetchCurrentForwardings();
 
             } else {
                 $scope.creationBox = false;
                 $scope.emailDetails = false;
-                $scope.forwardLoading = true;
+                $scope.forwardLoading = false;
                 $scope.forwardError = false;
                 $scope.forwardSuccess = true;
                 $scope.couldNotConnect = true;
@@ -1083,9 +1083,11 @@ app.controller('emailForwarding', function ($scope, $http) {
                 $scope.emailDetails = false;
                 $scope.forwardLoading = false;
                 $scope.forwardError = true;
-                $scope.forwardSuccess = true;
+                $scope.forwardSuccess = false;
+                $scope.successMessage = response.data.successMessage || 'Forwarding created successfully.';
                 $scope.couldNotConnect = true;
-                $scope.notifyBox = true;
+                $scope.notifyBox = false;
+                $scope.destinationEmail = '';
 
                 $scope.fetchCurrentForwardings();
 

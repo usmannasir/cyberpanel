@@ -56,14 +56,26 @@ def find_domain_in_cloudflare(virtual_host_name):
 
 
 def _acme_cloudflare_env():
-    """Build env with CF_Key/CF_Email for acme.sh dns_cf (reads account.conf too)."""
+    """Build env with CF_Token or CF_Key/CF_Email for acme.sh dns_cf."""
     import os as _os
+    from plogical.cloudflareClient import _is_global_api_key
+
     env = dict(_os.environ)
     try:
         ret_status, cf_key, cf_email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
-        if ret_status:
-            env['CF_Key'] = cf_key
-            env['CF_Email'] = cf_email
+        if not ret_status:
+            return env
+        secret = (cf_key or '').strip()
+        email = (cf_email or '').strip()
+        env.pop('CF_Token', None)
+        env.pop('CF_Key', None)
+        env.pop('CF_Email', None)
+        if secret and not _is_global_api_key(secret):
+            env['CF_Token'] = secret
+        elif secret:
+            env['CF_Key'] = secret
+            if email:
+                env['CF_Email'] = email
     except BaseException:
         pass
     return env

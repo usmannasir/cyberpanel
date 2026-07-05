@@ -987,64 +987,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Add to the Angular controller
-app.controller('listOSPackages', function($scope, $http, $timeout) {
-    // ... existing controller code ...
-    
-    // Initialize current tab
-    $scope.currentTab = 'upgrade';
-    
-    // Show/hide modals
-    $scope.showDetails = false;
-    $scope.showUpdate = false;
-    $scope.selectedPackage = '';
-    $scope.updatingPackage = '';
-    $scope.updateComplete = false;
-    
-    $scope.showPackageDetails = function(packageName) {
-        $scope.selectedPackage = packageName;
-        $scope.showDetails = true;
-        $scope.fetchPackageDetails(packageName);
-    };
-    
-    $scope.closeDetails = function() {
-        $scope.showDetails = false;
-        $scope.selectedPackage = '';
-        $scope.packageDetails = '';
-    };
-    
-    $scope.showUpdateModal = function(packageName) {
-        $scope.updatingPackage = packageName;
-        $scope.showUpdate = true;
-        $scope.updateComplete = false;
-        $scope.updatePackage(packageName);
-    };
-    
-    $scope.closeUpdate = function() {
-        $scope.showUpdate = false;
-        $scope.updatingPackage = '';
-        $scope.requestData = '';
-    };
-    
-    $scope.closeModal = function(event) {
-        if (event.target.classList.contains('modal-overlay')) {
-            if ($scope.showDetails) $scope.closeDetails();
-            if ($scope.showUpdate && $scope.updateComplete) $scope.closeUpdate();
-        }
-    };
-    
-    // Override fetchPackages to set current tab
-    var originalFetchPackages = $scope.fetchPackages;
-    $scope.fetchPackages = function(type) {
-        if (type === 'upgrade') $scope.currentTab = 'upgrade';
-        else if (type === 'CyberPanel') $scope.currentTab = 'cyberpanel';
-        else $scope.currentTab = 'all';
-        
-        if (originalFetchPackages) {
-            originalFetchPackages(type);
-        }
-    };
-});
 </script>
 
 {% endblock %}

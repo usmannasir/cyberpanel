@@ -90,6 +90,7 @@ urlpatterns = [
     path('fetchDomains', views.fetchDomains, name='fetchDomains'),
     path('changePHP', views.changePHP, name='changePHP'),
     path('submitDomainDeletion', views.submitDomainDeletion, name='submitDomainDeletion'),
+    path('convertWebsiteToChildDomain', views.convertWebsiteToChildDomain, name='convertWebsiteToChildDomain'),
     path('searchChilds', views.searchChilds, name='searchChilds'),
 
     # Crons
@@ -217,7 +218,8 @@ urlpatterns = [
 
     path('checkIPStatus', views.checkIPStatus, name='checkIPStatus'),
 
-    # Catch all for domains (must be last)
+    # Catch all for domains (must be last; /settings before /<childDomain>)
+    path('<domain>/settings', views.domain, name='domain'),
     path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
-    path('<domain>', views.domain, name='domain'),
+    path('<domain>', views.siteWorkspace, name='siteWorkspace'),
 ]

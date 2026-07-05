@@ -56,12 +56,14 @@
     
     <!-- Modern Design System -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-tokens.css' %}?v={{ CP_VERSION }}">
 
     {% block header_scripts %}{% endblock %}
 
     <!-- Theme harmonizer: re-skins legacy per-page styles to the design tokens.
          Loads AFTER page styles so it calms every internal page consistently. -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-harmonize.css' %}?v={{ CP_VERSION }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-dark.css' %}?v={{ CP_VERSION }}">
 
     <!-- Apply saved theme before first paint (avoids light/dark flash) -->
     <script>
@@ -338,6 +340,12 @@
             {l:'{% trans "WordPress Sites" %}', h:'{% url "ListWPSites" %}', i:'fab fa-wordpress', g:'{% trans "Sites" %}'},
             {l:'{% trans "Sub / Addon Domains" %}', h:'{% url "listChildDomains" %}', i:'fa-diagram-project', g:'{% trans "Sites" %}'},
             {l:'{% trans "Create Sub / Addon Domain" %}', h:'{% url "CreateNewDomain" %}', i:'fa-circle-plus', g:'{% trans "Sites" %}'},
+            {% if admin or addDeleteRecords %}
+            // Domains & DNS
+            {l:'{% trans "DNS Records" %}', h:'{% url "addDeleteDNSRecords" %}', i:'fa-sitemap', g:'{% trans "Domains & DNS" %}'},
+            {l:'{% trans "Cloudflare" %}', h:'{% url "addDeleteDNSRecordsCloudFlare" %}', i:'fa-cloud', g:'{% trans "Domains & DNS" %}'},
+            {% if admin or createDNSZone %}{l:'{% trans "Create DNS Zone" %}', h:'{% url "createDNSZone" %}', i:'fa-circle-plus', g:'{% trans "Domains & DNS" %}'},{% endif %}
+            {% endif %}
             // Email
             {% if admin or listEmails %}{l:'{% trans "Email Accounts" %}', h:'{% url "listEmails" %}', i:'fa-inbox', g:'{% trans "Email" %}'},{% endif %}
             {% if admin or emailForwarding %}{l:'{% trans "Email Forwarding" %}', h:'{% url "emailForwarding" %}', i:'fa-share', g:'{% trans "Email" %}'},

@@ -330,8 +330,13 @@ else
     mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
 fi
 
-# Ensure proper ownership for SnappyMail data directories
-if id -u lscpd >/dev/null 2>&1; then
+# Ensure proper ownership for SnappyMail data directories (rainloop + snappymail)
+ENSURE_SNAPPY="/usr/local/CyberCP/scripts/utils/ensure-snappymail-permissions.sh"
+if [[ -x "$ENSURE_SNAPPY" ]]; then
+    bash "$ENSURE_SNAPPY" || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ran ensure-snappymail-permissions.sh" | tee -a /var/log/cyberpanel_upgrade_debug.log
+elif id -u lscpd >/dev/null 2>&1; then
+    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/ 2>/dev/null || true
     chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
@@ -354,6 +359,7 @@ fi
 
 # Set proper permissions for SnappyMail data directories (group writable)
 chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/
+chmod -R 775 /usr/local/lscp/cyberpanel/rainloop/data/ 2>/dev/null || true
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail data directory permissions to 775 (group writable)" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Ensure web server users are in the lscpd group for access
@@ -536,6 +542,13 @@ fi
 
 if [[ -x /usr/local/CyberCP/CPScripts/ensure-cyberpanel-apache-permissions.sh ]]; then
   bash /usr/local/CyberCP/CPScripts/ensure-cyberpanel-apache-permissions.sh || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: ensure-cyberpanel-apache-permissions failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+# Ensure dark-mode CSS stack and mailServer.js reach public/static after every upgrade
+UI_SYNC="/usr/local/CyberCP/scripts/utils/sync-panel-ui-static.sh"
+if [[ -x "$UI_SYNC" ]]; then
+  bash "$UI_SYNC" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post-upgrade UI static sync completed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
 systemctl restart lscpd

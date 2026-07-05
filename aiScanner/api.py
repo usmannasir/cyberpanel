@@ -122,7 +122,8 @@ def validate_access_token(token, scan_id):
             # Get the scan - must belong to the API key owner
             try:
                 scan = ScanHistory.objects.get(
-                    scan_id=scan_id
+                    scan_id=scan_id,
+                    admin=scanner_settings.admin
                 )
 
                 if scan.admin_id != scanner_settings.admin_id:
@@ -182,7 +183,8 @@ def validate_access_token(token, scan_id):
 
         except Exception as e:
             logging.writeToFile(f'[API] API key validation error: {str(e)}')
-            return None, "Invalid token"
+            # No authentication path matched - fail closed.
+        return None, "Invalid token"
 
     except Exception as e:
         logging.writeToFile(f'[API] Token validation error: {str(e)}')

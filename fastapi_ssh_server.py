@@ -20,70 +20,26 @@ import asyncssh
 import paramiko
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
-from jose import JWTError, jwt
-
-from plogical.fastapi_ssh_config import (
-    CONF_PATH,
-    DEFAULT_AUD,
-    DEFAULT_ISS,
-    is_strong_secret,
-    read_conf_file_dict,
-)
-
-logging.basicConfig(level=logging.INFO)
-_LOGGER = logging.getLogger("cyberpanel.fastapi_ssh_server")
-
-JWT_ALGORITHM = "HS256"
-MAX_TOKEN_LIFETIME_SEC = 15 * 60
-
-
-@dataclass
-class RuntimeSettings:
-    jwt_secret: str
-    jwt_iss: str
-    jwt_aud: str
-    cors_origins: List[str]
-    cors_origin_regex: Optional[str]
-
-
-def _load_runtime_settings() -> RuntimeSettings:
-    secret = (os.environ.get("JWT_SECRET") or "").strip()
-    conf = read_conf_file_dict()
-    if not secret:
-        secret = (conf.get("JWT_SECRET") or "").strip()
-    if not is_strong_secret(secret):
-        _LOGGER.error(
-            "Refusing to start: JWT_SECRET missing, weak, or known-insecure. "
-            "Configure %s (chmod 600) with a random secret (32+ chars).",
-            CONF_PATH,
-        )
-        sys.exit(1)
-
-    iss = (os.environ.get("JWT_ISS") or conf.get("JWT_ISS") or DEFAULT_ISS).strip()
-    aud = (os.environ.get("JWT_AUD") or conf.get("JWT_AUD") or DEFAULT_AUD).strip()
-    origins_csv = (os.environ.get("ALLOWED_ORIGINS") or conf.get("ALLOWED_ORIGINS") or "").strip()
-    origins = [o.strip() for o in origins_csv.split(",") if o.strip()]
-    regex: Optional[str] = None
-    if not origins:
-        regex = r"https?://[\w\-.]+:8090$"
-    return RuntimeSettings(
-        jwt_secret=secret,
-        jwt_iss=iss,
-        jwt_aud=aud,
-        cors_origins=origins,
-        cors_origin_regex=regex,
-    )
-
-
-RUNTIME = _load_runtime_settings()
+import paramiko  # For key generation and manipulation
+import io
+import pwd
+from jose import jwt, JWTError
+import logging
+from plogical.securityUtils import get_terminal_jwt_secret
 
 app = FastAPI()
+JWT_SECRET = get_terminal_jwt_secret(create_if_missing=True)
+JWT_ALGORITHM = "HS256"
 
+allowed_origins = [
+    origin.strip()
+    for origin in os.environ.get("CYBERPANEL_TERMINAL_CORS_ORIGINS", "*").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=RUNTIME.cors_origins if RUNTIME.cors_origins else [],
-    allow_origin_regex=RUNTIME.cors_origin_regex,
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=allowed_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

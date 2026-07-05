@@ -142,6 +142,10 @@
         <div class="cp-tile-grid">
             <a class="cp-tile" href="{% url 'Filemanager' %}"><span class="cp-tile-ic"><i class="fas fa-folder-open"></i></span><span><div class="cp-tile-title">{% trans "Root File Manager" %}</div><div class="cp-tile-sub">{% trans "Server files" %}</div></span></a>
             <a class="cp-tile" href="{% url 'MysqlManager' %}"><span class="cp-tile-ic"><i class="fas fa-database"></i></span><span><div class="cp-tile-title">{% trans "MySQL Manager" %}</div><div class="cp-tile-sub">{% trans "Tune MySQL" %}</div></span></a>
+            {% if admin or addDeleteRecords %}
+            <a class="cp-tile" href="{% url 'addDeleteDNSRecords' %}"><span class="cp-tile-ic"><i class="fas fa-list"></i></span><span><div class="cp-tile-title">{% trans "DNS Records" %}</div><div class="cp-tile-sub">{% trans "Add, edit & delete records" %}</div></span></a>
+            <a class="cp-tile" href="{% url 'addDeleteDNSRecordsCloudFlare' %}"><span class="cp-tile-ic"><i class="fas fa-cloud"></i></span><span><div class="cp-tile-title">{% trans "Cloudflare" %}</div><div class="cp-tile-sub">{% trans "Manage Cloudflare DNS" %}</div></span></a>
+            {% endif %}
             <a class="cp-tile" href="{% url 'createDNSZone' %}"><span class="cp-tile-ic"><i class="fas fa-sitemap"></i></span><span><div class="cp-tile-title">{% trans "DNS Zones" %}</div><div class="cp-tile-sub">{% trans "Create zones" %}</div></span></a>
             <a class="cp-tile" href="{% url 'createNameserver' %}"><span class="cp-tile-ic"><i class="fas fa-server"></i></span><span><div class="cp-tile-title">{% trans "Nameservers" %}</div><div class="cp-tile-sub">{% trans "Create nameservers" %}</div></span></a>
             <a class="cp-tile" href="{% url 'configureDefaultNameServers' %}"><span class="cp-tile-ic"><i class="fas fa-gear"></i></span><span><div class="cp-tile-title">{% trans "Default Nameservers" %}</div><div class="cp-tile-sub">{% trans "Configure defaults" %}</div></span></a>

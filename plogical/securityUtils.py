@@ -107,3 +107,35 @@ def is_safe_port(value):
         return False
     port = int(value)
     return 1 <= port <= 65535
+
+
+def safe_path_under(base_path, *parts):
+    try:
+        real_base = os.path.realpath(base_path)
+        candidate = os.path.realpath(os.path.join(real_base, *[str(part) for part in parts]))
+        if os.path.commonpath([real_base, candidate]) != real_base:
+            return ""
+        return candidate
+    except:
+        return ""
+
+
+def get_remote_transfer_dir_path(transfer_dir, base_path="/home/backup"):
+    if not is_safe_numeric_id(transfer_dir):
+        return ""
+
+    return safe_path_under(base_path, "transfer-%s" % str(transfer_dir))
+
+
+def get_remote_transfer_log_path(transfer_dir, base_path="/home/backup"):
+    if not is_safe_numeric_id(transfer_dir):
+        return ""
+
+    return safe_path_under(base_path, "transfer-%s" % str(transfer_dir), "backup_log")
+
+
+def get_remote_transfer_pid_path(transfer_dir, base_path="/home/backup"):
+    if not is_safe_numeric_id(transfer_dir):
+        return ""
+
+    return safe_path_under(base_path, "transfer-%s" % str(transfer_dir), "pid")

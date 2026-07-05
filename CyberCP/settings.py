@@ -29,7 +29,35 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f')
+# Resolve order: env var -> persistent key file -> generate once and persist.
+# This removes the previously hard-coded (public) fallback key, which let anyone
+# forge session/CSRF/password-reset tokens on installs that never set the env var.
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    _secret_key_path = os.getenv('CYBERPANEL_SECRET_KEY_FILE', '/usr/local/CyberCP/secret_key')
+    try:
+        with open(_secret_key_path) as _skf:
+            SECRET_KEY = _skf.read().strip()
+    except OSError:
+        SECRET_KEY = ''
+
+    if not SECRET_KEY:
+        import secrets as _secrets
+        SECRET_KEY = _secrets.token_urlsafe(50)
+        try:
+            _fd = os.open(_secret_key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(_fd, 'w') as _skf:
+                _skf.write(SECRET_KEY)
+        except FileExistsError:
+            # Another worker created it first; reuse that key so all workers agree.
+            try:
+                with open(_secret_key_path) as _skf:
+                    SECRET_KEY = _skf.read().strip() or SECRET_KEY
+            except OSError:
+                pass
+        except OSError:
+            # Could not persist (e.g. permissions); use the in-memory key for now.
+            pass
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
@@ -119,24 +147,34 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
+# Prefer password from /etc/cyberpanel/mysqlPassword so panel stays in sync with CLI/install scripts.
+_def_mysql_pass = ''
+_def_mysql_root_pass = ''
+try:
+    _mysql_pass_file = '/etc/cyberpanel/mysqlPassword'
+    if os.path.exists(_mysql_pass_file):
+        with open(_mysql_pass_file, 'r') as _f:
+            _def_mysql_pass = (_f.read() or '').strip()
+            _def_mysql_root_pass = _def_mysql_pass
+except Exception:
+    pass
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cyberpanel',
-        'USER': 'cyberpanel',
-        'PASSWORD': '0M0HDAb0PhCkXK',
-        'HOST': 'localhost',
-        'PORT':''
+        'NAME': os.getenv('DB_NAME', 'cyberpanel'),
+        'USER': os.getenv('DB_USER', 'cyberpanel'),
+        'PASSWORD': os.getenv('DB_PASSWORD', _def_mysql_pass),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mysql',
-        'USER': 'root',
-        'PASSWORD': '0M0HDAb0PhCkXK',
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': os.getenv('ROOT_DB_NAME', 'mysql'),
+        'USER': os.getenv('ROOT_DB_USER', 'root'),
+        'PASSWORD': os.getenv('ROOT_DB_PASSWORD', _def_mysql_root_pass or _def_mysql_pass),
+        'HOST': os.getenv('ROOT_DB_HOST', 'localhost'),
+        'PORT': os.getenv('ROOT_DB_PORT', '3306'),
     },
 }
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
