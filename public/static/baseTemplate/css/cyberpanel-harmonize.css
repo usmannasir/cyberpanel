@@ -192,6 +192,15 @@
 #main-content .disk-usage-badge {
     background: var(--bg-muted) !important;
     color: var(--accent-color) !important;
+    min-width: 3.5rem;
+    text-align: center;
+    display: inline-block;
+}
+
+[data-theme="dark"] #main-content .disk-usage-badge {
+    background: var(--bg-hover) !important;
+    color: var(--text-heading) !important;
+    border: 1px solid var(--border-color);
 }
 
 [data-theme="dark"] #main-content select.form-control option {

@@ -25,7 +25,13 @@ restart `lscpd`, or re-run upgrade post-tweak. Optional:
 
 ---
 
-## 05/07/2026 — Email forwarding UI spinner fix (v2.5.5-dev)
+## 06/07/2026 — List Emails disk usage badge empty (v2.5.5-dev)
+
+`listEmails.html` used Django `{{ record.DiskUsage }}` inside an Angular table. Django
+stripped it before render, so the badge was an empty dark box. Switched to
+`ng-bind="record.DiskUsage"` and improved dark-mode badge contrast.
+
+---
 
 Fixed `mailServer.js` `emailForwarding` controller: `forwardLoading` stayed `true`
 after successful fetch/create/delete, so the forwarding page showed a perpetual
