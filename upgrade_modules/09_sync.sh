@@ -121,6 +121,12 @@ Sync_CyberCP_To_Latest() {
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Synced firewall static to public/static" | tee -a /var/log/cyberpanel_upgrade_debug.log || true
   fi
 
+  UI_SYNC="/usr/local/CyberCP/scripts/utils/sync-panel-ui-static.sh"
+  if [[ -x "$UI_SYNC" ]]; then
+    bash "$UI_SYNC" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ran sync-panel-ui-static (theme CSS + mailServer.js)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Sync completed. Current HEAD: $(git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || echo 'unknown')" | tee -a /var/log/cyberpanel_upgrade_debug.log
   return 0
 }

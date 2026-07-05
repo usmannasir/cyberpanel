@@ -31,6 +31,10 @@ restart `lscpd`, or re-run upgrade post-tweak. Optional:
 stripped it before render, so the badge was an empty dark box. Switched to
 `ng-bind="record.DiskUsage"` and improved dark-mode badge contrast.
 
+**Upgrade/install:** `scripts/utils/sync-panel-ui-static.sh` runs from `09_sync.sh` and
+`10_post_tweak.sh` so theme CSS and `mailServer.js` reach `public/static` on every
+v2.5.5-dev install or upgrade.
+
 ---
 
 Fixed `mailServer.js` `emailForwarding` controller: `forwardLoading` stayed `true`
