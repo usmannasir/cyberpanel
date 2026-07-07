@@ -20,7 +20,7 @@ from subprocess import call, CalledProcessError
 from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
-from re import compile
+from re import compile, search
 
 class ACLManager:
 
@@ -617,36 +617,44 @@ class ACLManager:
 
     @staticmethod
     def getPHPString(phpVersion):
-
-        if phpVersion == "PHP 5.3":
-            php = "53"
-        elif phpVersion == "PHP 5.4":
-            php = "54"
-        elif phpVersion == "PHP 5.5":
-            php = "55"
-        elif phpVersion == "PHP 5.6":
-            php = "56"
-        elif phpVersion == "PHP 7.0":
-            php = "70"
-        elif phpVersion == "PHP 7.1":
-            php = "71"
-        elif phpVersion == "PHP 7.2":
-            php = "72"
-        elif phpVersion == "PHP 7.3":
-            php = "73"
-        elif phpVersion == "PHP 7.4":
-            php = "74"
-        elif phpVersion == "PHP 8.0":
-            php = "80"
-        elif phpVersion == "PHP 8.1":
-            php = "81"
-        elif phpVersion == "PHP 8.2":
-            php = "82"
-        elif phpVersion == "PHP 8.3":
-            php = "83"
-        elif phpVersion == "PHP 8.4":
-            php = "84"
-
+        match phpVersion:
+            case "PHP 5.3":
+                php = "53"
+            case "PHP 5.4":
+                php = "54"
+            case "PHP 5.5":
+                php = "55"
+            case "PHP 5.6":
+                php = "56"
+            case "PHP 7.0":
+                php = "70"
+            case "PHP 7.1":
+                php = "71"
+            case "PHP 7.2":
+                php = "72"
+            case "PHP 7.3":
+                php = "73"
+            case "PHP 7.4":
+                php = "74"
+            case "PHP 8.0":
+                php = "80"
+            case "PHP 8.1":
+                php = "81"
+            case "PHP 8.2":
+                php = "82"
+            case "PHP 8.3":
+                php = "83"
+            case "PHP 8.4":
+                php = "84"
+            case "PHP 8.5":
+                php = "85"
+            case _:
+                result = search("(^|\\s)\\d+\\.\\d+", phpVersion)
+                match = ""
+                if result:
+                    match = result.group(0).replace(".","")
+                # Keep match and php separate in case we want to do some checks later
+                php = match
         return php
 
     @staticmethod
