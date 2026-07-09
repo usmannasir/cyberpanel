@@ -95,7 +95,7 @@ def v2IssueSSL(request):
                     ## ssl issue
 
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " issueSSLv2 --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
+                    execPath = execPath + " issueSSLv2 --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path + " --force 1"
                     output = ProcessUtilities.outputExecutioner(execPath)
 
                     if output.find("1,") > -1:
@@ -192,7 +192,7 @@ def issueSSL(request):
                 ## ssl issue
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
+                execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path + " --force 1"
                 output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:

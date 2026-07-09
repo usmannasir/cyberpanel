@@ -43,8 +43,8 @@ scripthandler  {
 extprocessor {virtualHostUser} {
   type                    lsapi
   address                 UDS://tmp/lshttpd/{virtualHostUser}.sock
-  maxConns                10
-  env                     LSAPI_CHILDREN=10
+  maxConns                {maxConnections}
+  env                     LSAPI_CHILDREN={maxConnections}
   initTimeout             600
   retryTimeout            0
   persistConn             1
@@ -54,10 +54,10 @@ extprocessor {virtualHostUser} {
   path                    /usr/local/lsws/lsphp{php}/bin/lsphp
   extUser                 {virtualHostUser}
   extGroup                {virtualHostUser}
-  memSoftLimit            2047M
-  memHardLimit            2047M
-  procSoftLimit           400
-  procHardLimit           500
+  memSoftLimit            {memSoftLimit}M
+  memHardLimit            {memHardLimit}M
+  procSoftLimit           {procSoftLimit}
+  procHardLimit           {procHardLimit}
 }
 
 phpIniOverride  {
@@ -140,8 +140,8 @@ scripthandler  {
 extprocessor {externalApp} {
   type                    lsapi
   address                 UDS://tmp/lshttpd/{externalApp}.sock
-  maxConns                10
-  env                     LSAPI_CHILDREN=10
+  maxConns                {maxConnections}
+  env                     LSAPI_CHILDREN={maxConnections}
   initTimeout             60
   retryTimeout            0
   persistConn             1
@@ -151,10 +151,10 @@ extprocessor {externalApp} {
   path                    /usr/local/lsws/lsphp{php}/bin/lsphp
   extUser                 {externalAppMaster}
   extGroup                {externalAppMaster}
-  memSoftLimit            2047M
-  memHardLimit            2047M
-  procSoftLimit           400
-  procHardLimit           500
+  memSoftLimit            {memSoftLimit}M
+  memHardLimit            {memHardLimit}M
+  procSoftLimit           {procSoftLimit}
+  procHardLimit           {procHardLimit}
 }
 
 rewrite  {

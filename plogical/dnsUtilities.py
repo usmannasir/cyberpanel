@@ -942,7 +942,7 @@ SAVED_CF_Key='{SAVED_CF_Key}'
 SAVED_CF_Email='{SAVED_CF_Email}'
 """
 
-            command = f'echo "{CFContent}" >> {path}'
+            command = f'echo {shlex.quote(CFContent)} >> {path}'
             ProcessUtilities.executioner(command, None, True)
 
             return 1, None

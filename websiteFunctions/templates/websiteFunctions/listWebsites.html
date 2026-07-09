@@ -705,6 +705,16 @@
 
                 <!-- Websites List Container -->
                 <div class="websites-container">
+                    <!-- Empty state with Build Services nudge -->
+                    <div class="cp-empty-nudge" ng-if="WebSitesList && WebSitesList.length === 0">
+                        <div class="cp-empty-ic"><i class="fas fa-globe"></i></div>
+                        <h3>{% trans "No websites yet" %}</h3>
+                        <p>{% trans "Create your first website to get started — or let our team build it for you." %}</p>
+                        <div class="cp-empty-actions">
+                            <a class="btn btn-primary" href="{% url 'createWebsite' %}"><i class="fas fa-plus"></i> {% trans "Create Website" %}</a>
+                            <a class="cp-build-link" href="{% url 'buildServices' %}"><i class="fas fa-rocket"></i> {% trans "Let our team build it for you" %}</a>
+                        </div>
+                    </div>
                     <div ng-repeat="web in WebSitesList track by $index">
                         <!-- Website Row -->
                         <div class="website-row" ng-click="toggleSite(web)" title="Expand/collapse details">
@@ -735,12 +745,30 @@
                                 </span>
                             </div>
                             <div class="row-actions">
-                                <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
-                                    Manage
+                                <a href="/websites/{$ web.domain $}/workspace" class="btn btn-primary btn-sm" title="{% trans 'Open site workspace' %}">
+                                    <i class="fas fa-grip"></i> Manage
+                                </a>
+                                <a href="/websites/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'Full settings page' %}">
+                                    Settings
                                 </a>
                                 <a href="/filemanager/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'File Manager' %}">
                                     Filemanager
                                 </a>
+                                {% if admin or modifyWebsite %}
+                                <a href="{% url 'modifyWebsite' %}" class="btn btn-outline btn-sm" title="{% trans 'Modify website: package, owner, email & PHP' %}">
+                                    <i class="fas fa-pen-to-square"></i> {% trans "Modify" %}
+                                </a>
+                                {% endif %}
+                                {% if admin or suspendWebsite %}
+                                <a href="{% url 'siteState' %}" class="btn btn-outline btn-sm" title="{% trans 'Suspend / Unsuspend Website' %}">
+                                    <i class="fas fa-pause"></i> {% trans "Suspend" %}
+                                </a>
+                                {% endif %}
+                                {% if admin or deleteWebsite %}
+                                <a href="{% url 'deleteWebsite' %}" class="btn btn-outline-danger btn-sm" title="{% trans 'Delete Website' %}">
+                                    <i class="fas fa-trash"></i> {% trans "Delete" %}
+                                </a>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -756,8 +784,10 @@
                                         <a href="http://{$ web.domain $}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
                                             Visit Site
                                         </a>
-                                        <a ng-click="issueSSL(web.domain)" href="javascript:void(0);" class="btn btn-primary btn-sm">
-                                            Issue SSL
+                                        <a ng-click="issueSSL(web.domain)" href="javascript:void(0);" class="btn btn-primary btn-sm"
+                                           ng-class="{'disabled': issuingSSL[web.domain]}">
+                                            <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
+                                            <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin"></i> Issuing SSL...</span>
                                         </a>
                                         <button ng-click="showWPSites(web.domain); $event.stopPropagation();" 
                                                 class="btn btn-outline btn-sm" 

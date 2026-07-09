@@ -761,6 +761,8 @@ class ACLManager:
             else:
                 if childDomain.master.admin.owner == admin.pk:
                     return 1
+                else:
+                    return 0
 
         except:
             domainName = Websites.objects.get(domain=domain)
@@ -1188,9 +1190,10 @@ class ACLManager:
 
             try:
                 def generate_pass(length=14):
+                    import secrets
                     chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
                     size = length
-                    return ''.join(random.choice(chars) for x in range(size))
+                    return ''.join(secrets.choice(chars) for x in range(size))
 
                 content = """<?php
 $_ENV['snappymail_INCLUDE_AS_API'] = true;

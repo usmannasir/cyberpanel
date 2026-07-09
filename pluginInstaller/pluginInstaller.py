@@ -57,7 +57,7 @@ class pluginInstaller:
         for items in data:
             if items.find("manageservices") > -1:
                 writeToFile.writelines(items)
-                writeToFile.writelines("    url(r'^" + pluginName + "/',include('" + pluginName + ".urls')),\n")
+                writeToFile.writelines("    path(\r'" + pluginName + "/', include('" + pluginName + ".urls')),\n")
             else:
                 writeToFile.writelines(items)
 

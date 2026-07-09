@@ -13,7 +13,27 @@ except:
 
 import plogical.CyberCPLogFileWriter as logging
 import argparse
+import re
+import ipaddress
 from plogical.processUtilities import ProcessUtilities
+
+# firewalld rich-rule values are embedded inside a single-quoted shell argument,
+# so they cannot be passed through shlex.quote. Validate them against strict
+# allow-lists instead; legitimate values pass through unchanged.
+_FW_ALLOWED_PROTOCOLS = {'tcp', 'udp', 'sctp', 'dccp'}
+_FW_PORT_RE = re.compile(r'^[0-9]{1,5}(-[0-9]{1,5})?$')
+
+
+def _firewallInputsValid(proto, port, ipAddress):
+    if proto not in _FW_ALLOWED_PROTOCOLS:
+        return False
+    if not _FW_PORT_RE.match(str(port)):
+        return False
+    try:
+        ipaddress.ip_network(str(ipAddress), strict=False)
+    except ValueError:
+        return False
+    return True
 
 
 class FirewallUtilities:
@@ -45,6 +65,9 @@ class FirewallUtilities:
 
     @staticmethod
     def addRule(proto,port,ipAddress):
+        if not _firewallInputsValid(proto, port, ipAddress):
+            logging.CyberCPLogFileWriter.writeToFile("Rejected firewall addRule with invalid input: %s %s %s" % (str(proto), str(port), str(ipAddress)))
+            return 0
         ruleFamily = 'rule family="ipv4"'
         sourceAddress = 'source address="' + ipAddress + '"'
         ruleProtocol = 'port protocol="' + proto + '"'
@@ -81,6 +104,9 @@ class FirewallUtilities:
 
     @staticmethod
     def deleteRule(proto, port, ipAddress):
+        if not _firewallInputsValid(proto, port, ipAddress):
+            logging.CyberCPLogFileWriter.writeToFile("Rejected firewall deleteRule with invalid input: %s %s %s" % (str(proto), str(port), str(ipAddress)))
+            return 0
         ruleFamily = 'rule family="ipv4"'
         sourceAddress = 'source address="' + ipAddress + '"'
         ruleProtocol = 'port protocol="' + proto + '"'

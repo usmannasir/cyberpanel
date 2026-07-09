@@ -284,9 +284,21 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.getFurtherWebsitesFromDB();
 
     $scope.cyberPanelLoading = true;
+    $scope.issuingSSL = {};
 
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -305,6 +317,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -323,6 +336,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -671,9 +685,21 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
     $scope.getFurtherWebsitesFromDB();
 
     $scope.cyberPanelLoading = true;
+    $scope.issuingSSL = {};
 
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -692,6 +718,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -710,6 +737,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',

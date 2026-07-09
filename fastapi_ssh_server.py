@@ -9,17 +9,21 @@ import io
 import pwd
 from jose import jwt, JWTError
 import logging
+from plogical.securityUtils import get_terminal_jwt_secret
 
 app = FastAPI()
-# JWT_SECRET = "YOUR_SECRET_KEY"
-JWT_SECRET = "DAsjK2gl50PE09d1N3uZPTQ6JdwwfiuhlyWKMVbUEpc"
+JWT_SECRET = get_terminal_jwt_secret(create_if_missing=True)
 JWT_ALGORITHM = "HS256"
 
-# Allow CORS for local dev/testing
+allowed_origins = [
+    origin.strip()
+    for origin in os.environ.get("CYBERPANEL_TERMINAL_CORS_ORIGINS", "*").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=allowed_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -151,4 +155,4 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
         if process:
             process.close()
         if conn:
-            conn.close() 
+            conn.close()

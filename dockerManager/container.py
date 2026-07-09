@@ -390,9 +390,7 @@ class ContainerManager(multi.Thread):
 
 
         except Exception as msg:
-            # Ensure error message is properly converted to string
-            error_message = str(msg) if msg else "Unknown error occurred"
-            data_ret = {'createContainerStatus': 0, 'error_message': error_message}
+            data_ret = {'createContainerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

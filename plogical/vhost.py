@@ -25,7 +25,7 @@ from managePHP.phpManager import PHPManager
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
 try:
-    from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites, WPSites, WPStaging
     from databases.models import Databases
 except:
     pass
@@ -190,7 +190,9 @@ class vhost:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeVhostCreation]")
 
     @staticmethod
-    def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion, openBasedir):
+    def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion, openBasedir,
+                                      memSoftLimit=2047, memHardLimit=2047, maxConnections=10,
+                                      procSoftLimit=400, procHardLimit=500):
 
         if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
             command = 'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
@@ -218,13 +220,16 @@ class vhost:
         ## Creating Per vhost Configuration File
 
 
-        if vhost.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion, virtualHostName, openBasedir) == 1:
+        if vhost.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion, virtualHostName, openBasedir,
+                                    memSoftLimit, memHardLimit, maxConnections, procSoftLimit, procHardLimit) == 1:
             return [1,"None"]
         else:
             return [0,"[61 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
     @staticmethod
-    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion, virtualHostName, openBasedir):
+    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion, virtualHostName, openBasedir,
+                          memSoftLimit=2047, memHardLimit=2047, maxConnections=10,
+                          procSoftLimit=400, procHardLimit=500):
         # General Configurations tab
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
@@ -239,6 +244,13 @@ class vhost:
                 currentConf = currentConf.replace('{php}', php)
                 currentConf = currentConf.replace('{adminEmails}', administratorEmail)
                 currentConf = currentConf.replace('{php}', php)
+
+                # Replace resource limits
+                currentConf = currentConf.replace('{memSoftLimit}', str(memSoftLimit))
+                currentConf = currentConf.replace('{memHardLimit}', str(memHardLimit))
+                currentConf = currentConf.replace('{maxConnections}', str(maxConnections))
+                currentConf = currentConf.replace('{procSoftLimit}', str(procSoftLimit))
+                currentConf = currentConf.replace('{procHardLimit}', str(procHardLimit))
 
                 if openBasedir == 1:
                     currentConf = currentConf.replace('{open_basedir}', 'php_admin_value open_basedir "/tmp:$VH_ROOT"')
@@ -404,6 +416,21 @@ class vhost:
 
                 if ACLManager.FindIfChild() == 0:
 
+                    ### Delete WordPress Sites and Staging Sites first
+                    try:
+                        wpSites = WPSites.objects.filter(owner=delWebsite)
+                        for wpSite in wpSites:
+                            # Delete any staging sites associated with this WP site
+                            stagingSites = WPStaging.objects.filter(wpsite=wpSite)
+                            for staging in stagingSites:
+                                staging.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Deleted staging site record: {staging.id}")
+                            # Delete the WP site itself
+                            wpSite.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleted WP site: {wpSite.id}")
+                    except Exception as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
+
                     ### Delete Docker Sites first before website deletion
 
                     if os.path.exists('/home/docker/%s' % (virtualHostName)):
@@ -459,6 +486,12 @@ class vhost:
                 if os.path.exists(gitPath):
                     shutil.rmtree(gitPath)
 
+                ## Remove resource limits for this user (OLS cgroups)
+                try:
+                    from plogical.resourceLimits import resource_manager
+                    resource_manager.remove_user_limits(externalApp)
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove resource limits for user {externalApp}: {str(e)}")
 
                 ### Delete Acme folder
 
@@ -497,6 +530,21 @@ class vhost:
                 ## child check to make sure no database entires are being deleted from child server
 
                 if ACLManager.FindIfChild() == 0:
+                    ### Delete WordPress Sites and Staging Sites first
+                    try:
+                        wpSites = WPSites.objects.filter(owner=delWebsite)
+                        for wpSite in wpSites:
+                            # Delete any staging sites associated with this WP site
+                            stagingSites = WPStaging.objects.filter(wpsite=wpSite)
+                            for staging in stagingSites:
+                                staging.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Deleted staging site record: {staging.id}")
+                            # Delete the WP site itself
+                            wpSite.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleted WP site: {wpSite.id}")
+                    except Exception as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
+
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
@@ -932,7 +980,8 @@ class vhost:
 
     @staticmethod
     def createDirectoryForDomain(masterDomain, domain, phpVersion, path, administratorEmail, virtualHostUser,
-                                 openBasedir):
+                                 openBasedir, memSoftLimit=2047, memHardLimit=2047, maxConnections=10,
+                                 procSoftLimit=400, procHardLimit=500):
 
         FNULL = open(os.devnull, 'w')
 
@@ -977,7 +1026,8 @@ class vhost:
             #return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
         if vhost.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
-                                   administratorEmail, phpVersion, virtualHostUser, openBasedir) == 1:
+                                   administratorEmail, phpVersion, virtualHostUser, openBasedir,
+                                   memSoftLimit, memHardLimit, maxConnections, procSoftLimit, procHardLimit) == 1:
             return [1, "None"]
         else:
             pass
@@ -986,7 +1036,9 @@ class vhost:
         return [1, "None"]
 
     @staticmethod
-    def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion, virtualHostUser, openBasedir):
+    def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion, virtualHostUser, openBasedir,
+                         memSoftLimit=2047, memHardLimit=2047, maxConnections=10,
+                         procSoftLimit=400, procHardLimit=500):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 php = PHPManager.getPHPString(phpVersion)
@@ -1002,6 +1054,12 @@ class vhost:
                 currentConf = currentConf.replace('{adminEmails}', administratorEmail)
                 currentConf = currentConf.replace('{php}', php)
 
+                # Replace resource limits (child domains share parent's limits)
+                currentConf = currentConf.replace('{memSoftLimit}', str(memSoftLimit))
+                currentConf = currentConf.replace('{memHardLimit}', str(memHardLimit))
+                currentConf = currentConf.replace('{maxConnections}', str(maxConnections))
+                currentConf = currentConf.replace('{procSoftLimit}', str(procSoftLimit))
+                currentConf = currentConf.replace('{procHardLimit}', str(procHardLimit))
 
                 if openBasedir == 1:
                     currentConf = currentConf.replace('{open_basedir}', 'php_admin_value open_basedir "/tmp:$VH_ROOT"')

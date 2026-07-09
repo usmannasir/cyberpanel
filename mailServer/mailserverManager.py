@@ -30,13 +30,14 @@ import _thread
 try:
     from dns.models import Domains as dnsDomains
     from dns.models import Records as dnsRecords
-    from mailServer.models import Forwardings, Pipeprograms
+    from mailServer.models import Forwardings, Pipeprograms, CatchAllEmail, EmailServerSettings, PlusAddressingOverride, PatternForwarding
     from plogical.acl import ACLManager
     from plogical.dnsUtilities import DNS
     from loginSystem.models import Administrator
     from websiteFunctions.models import Websites
 except:
     pass
+import re
 import os
 from plogical.processUtilities import ProcessUtilities
 import bcrypt
@@ -2000,6 +2001,559 @@ protocol sieve {
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    ## Catch-All Email Methods
+
+    def catchAllEmail(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/catchAllEmail.html',
+                            {"status": 0}, 'emailForwarding')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/catchAllEmail.html',
+                        {'websiteList': websitesName, "status": 1}, 'emailForwarding')
+        return proc.render()
+
+    def fetchCatchAllConfig(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('fetchStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            try:
+                domainObj = Domains.objects.get(domain=domain)
+                catchAll = CatchAllEmail.objects.get(domain=domainObj)
+                data_ret = {
+                    'status': 1,
+                    'fetchStatus': 1,
+                    'configured': 1,
+                    'destination': catchAll.destination,
+                    'enabled': catchAll.enabled
+                }
+            except CatchAllEmail.DoesNotExist:
+                data_ret = {
+                    'status': 1,
+                    'fetchStatus': 1,
+                    'configured': 0
+                }
+            except Domains.DoesNotExist:
+                data_ret = {
+                    'status': 0,
+                    'fetchStatus': 0,
+                    'error_message': 'Domain not found in email system'
+                }
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def saveCatchAllConfig(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('saveStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+            destination = data['destination']
+            enabled = data.get('enabled', True)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            # Validate destination email
+            if '@' not in destination:
+                data_ret = {'status': 0, 'saveStatus': 0, 'error_message': 'Invalid destination email address'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            domainObj = Domains.objects.get(domain=domain)
+
+            # Create or update catch-all config
+            catchAll, created = CatchAllEmail.objects.update_or_create(
+                domain=domainObj,
+                defaults={'destination': destination, 'enabled': enabled}
+            )
+
+            # Also add/update entry in Forwardings table for Postfix
+            catchAllSource = '@' + domain
+            if enabled:
+                # Remove existing catch-all forwarding if any
+                Forwardings.objects.filter(source=catchAllSource).delete()
+                # Add new forwarding
+                forwarding = Forwardings(source=catchAllSource, destination=destination)
+                forwarding.save()
+            else:
+                # Remove catch-all forwarding when disabled
+                Forwardings.objects.filter(source=catchAllSource).delete()
+
+            data_ret = {
+                'status': 1,
+                'saveStatus': 1,
+                'message': 'Catch-all email configured successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deleteCatchAllConfig(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('deleteStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            domainObj = Domains.objects.get(domain=domain)
+
+            # Delete catch-all config
+            CatchAllEmail.objects.filter(domain=domainObj).delete()
+
+            # Remove from Forwardings table
+            catchAllSource = '@' + domain
+            Forwardings.objects.filter(source=catchAllSource).delete()
+
+            data_ret = {
+                'status': 1,
+                'deleteStatus': 1,
+                'message': 'Catch-all email removed successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    ## Plus-Addressing Methods
+
+    def plusAddressingSettings(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/plusAddressingSettings.html',
+                            {"status": 0}, 'admin')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/plusAddressingSettings.html',
+                        {'websiteList': websitesName, "status": 1, 'admin': currentACL['admin']}, 'admin')
+        return proc.render()
+
+    def fetchPlusAddressingConfig(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            # Get global settings
+            settings = EmailServerSettings.get_settings()
+
+            # Check if plus-addressing is enabled in Postfix
+            postfixEnabled = False
+            try:
+                mainCfPath = '/etc/postfix/main.cf'
+                if os.path.exists(mainCfPath):
+                    with open(mainCfPath, 'r') as f:
+                        content = f.read()
+                        if 'recipient_delimiter' in content:
+                            postfixEnabled = True
+            except:
+                pass
+
+            data_ret = {
+                'status': 1,
+                'fetchStatus': 1,
+                'globalEnabled': settings.plus_addressing_enabled,
+                'delimiter': settings.plus_addressing_delimiter,
+                'postfixEnabled': postfixEnabled
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def savePlusAddressingGlobal(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            # Admin only
+            if currentACL['admin'] != 1:
+                return ACLManager.loadErrorJson('saveStatus', 0)
+
+            data = json.loads(self.request.body)
+            enabled = data['enabled']
+            delimiter = data.get('delimiter', '+')
+
+            # Update database settings
+            settings = EmailServerSettings.get_settings()
+            settings.plus_addressing_enabled = enabled
+            settings.plus_addressing_delimiter = delimiter
+            settings.save()
+
+            # Update Postfix configuration
+            mainCfPath = '/etc/postfix/main.cf'
+            if os.path.exists(mainCfPath):
+                with open(mainCfPath, 'r') as f:
+                    content = f.read()
+
+                # Remove existing recipient_delimiter line
+                lines = content.split('\n')
+                newLines = [line for line in lines if not line.strip().startswith('recipient_delimiter')]
+                content = '\n'.join(newLines)
+
+                if enabled:
+                    # Add recipient_delimiter setting
+                    content = content.rstrip() + f'\nrecipient_delimiter = {delimiter}\n'
+
+                with open(mainCfPath, 'w') as f:
+                    f.write(content)
+
+                # Reload Postfix
+                ProcessUtilities.executioner('postfix reload')
+
+            data_ret = {
+                'status': 1,
+                'saveStatus': 1,
+                'message': 'Plus-addressing settings saved successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def savePlusAddressingDomain(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('saveStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+            enabled = data['enabled']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            domainObj = Domains.objects.get(domain=domain)
+
+            # Create or update per-domain override
+            override, created = PlusAddressingOverride.objects.update_or_create(
+                domain=domainObj,
+                defaults={'enabled': enabled}
+            )
+
+            data_ret = {
+                'status': 1,
+                'saveStatus': 1,
+                'message': f'Plus-addressing {"enabled" if enabled else "disabled"} for {domain}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    ## Pattern Forwarding Methods
+
+    def patternForwarding(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/patternForwarding.html',
+                            {"status": 0}, 'emailForwarding')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/patternForwarding.html',
+                        {'websiteList': websitesName, "status": 1}, 'emailForwarding')
+        return proc.render()
+
+    def fetchPatternRules(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('fetchStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            domainObj = Domains.objects.get(domain=domain)
+            rules = PatternForwarding.objects.filter(domain=domainObj).order_by('priority')
+
+            rulesData = []
+            for rule in rules:
+                rulesData.append({
+                    'id': rule.id,
+                    'pattern': rule.pattern,
+                    'destination': rule.destination,
+                    'pattern_type': rule.pattern_type,
+                    'priority': rule.priority,
+                    'enabled': rule.enabled
+                })
+
+            data_ret = {
+                'status': 1,
+                'fetchStatus': 1,
+                'rules': rulesData
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def createPatternRule(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('createStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+            pattern = data['pattern']
+            destination = data['destination']
+            pattern_type = data.get('pattern_type', 'wildcard')
+            priority = data.get('priority', 100)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            # Validate destination email
+            if '@' not in destination:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'Invalid destination email address'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Validate pattern
+            if pattern_type == 'regex':
+                # Validate regex pattern
+                valid, msg = self._validateRegexPattern(pattern)
+                if not valid:
+                    data_ret = {'status': 0, 'createStatus': 0, 'error_message': f'Invalid regex pattern: {msg}'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+            else:
+                # Validate wildcard pattern
+                if not pattern or len(pattern) > 200:
+                    data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'Invalid wildcard pattern'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            domainObj = Domains.objects.get(domain=domain)
+
+            # Create pattern rule
+            rule = PatternForwarding(
+                domain=domainObj,
+                pattern=pattern,
+                destination=destination,
+                pattern_type=pattern_type,
+                priority=priority,
+                enabled=True
+            )
+            rule.save()
+
+            # Regenerate virtual_regexp file
+            self._regenerateVirtualRegexp()
+
+            data_ret = {
+                'status': 1,
+                'createStatus': 1,
+                'message': 'Pattern forwarding rule created successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deletePatternRule(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
+                return ACLManager.loadErrorJson('deleteStatus', 0)
+
+            data = json.loads(self.request.body)
+            ruleId = data['ruleId']
+
+            # Get the rule and verify ownership
+            rule = PatternForwarding.objects.get(id=ruleId)
+            domain = rule.domain.domain
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            # Delete the rule
+            rule.delete()
+
+            # Regenerate virtual_regexp file
+            self._regenerateVirtualRegexp()
+
+            data_ret = {
+                'status': 1,
+                'deleteStatus': 1,
+                'message': 'Pattern forwarding rule deleted successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def _validateRegexPattern(self, pattern):
+        """Validate regex pattern for security and syntax"""
+        if len(pattern) > 200:
+            return False, "Pattern too long"
+
+        # Dangerous patterns that could cause ReDoS or security issues
+        dangerous = ['\\1', '\\2', '\\3', '(?P', '(?=', '(?!', '(?<', '(?:']
+        for d in dangerous:
+            if d in pattern:
+                return False, f"Disallowed construct: {d}"
+
+        try:
+            re.compile(pattern)
+            return True, "Valid"
+        except re.error as e:
+            return False, str(e)
+
+    def _wildcardToRegex(self, pattern, domain):
+        """Convert wildcard pattern to Postfix regexp format"""
+        # Escape special regex characters except * and ?
+        escaped = re.escape(pattern.replace('*', '__STAR__').replace('?', '__QUESTION__'))
+        # Replace placeholders with regex equivalents
+        regex = escaped.replace('__STAR__', '.*').replace('__QUESTION__', '.')
+        # Return full Postfix regexp format
+        return f'/^{regex}@{re.escape(domain)}$/'
+
+    def _regenerateVirtualRegexp(self):
+        """Regenerate /etc/postfix/virtual_regexp from database"""
+        try:
+            rules = PatternForwarding.objects.filter(enabled=True).order_by('priority')
+
+            content = "# Auto-generated by CyberPanel - DO NOT EDIT MANUALLY\n"
+            for rule in rules:
+                if rule.pattern_type == 'wildcard':
+                    pattern = self._wildcardToRegex(rule.pattern, rule.domain.domain)
+                else:
+                    pattern = f'/^{rule.pattern}@{re.escape(rule.domain.domain)}$/'
+                content += f"{pattern}    {rule.destination}\n"
+
+            # Write the file
+            regexpPath = '/etc/postfix/virtual_regexp'
+            with open(regexpPath, 'w') as f:
+                f.write(content)
+
+            # Set permissions
+            os.chmod(regexpPath, 0o640)
+            ProcessUtilities.executioner('chown root:postfix /etc/postfix/virtual_regexp')
+
+            # Update main.cf to include regexp file if not already present
+            mainCfPath = '/etc/postfix/main.cf'
+            if os.path.exists(mainCfPath):
+                with open(mainCfPath, 'r') as f:
+                    content = f.read()
+
+                if 'virtual_regexp' not in content:
+                    # Add regexp file to virtual_alias_maps
+                    if 'virtual_alias_maps' in content:
+                        content = content.replace(
+                            'virtual_alias_maps =',
+                            'virtual_alias_maps = regexp:/etc/postfix/virtual_regexp,'
+                        )
+                        with open(mainCfPath, 'w') as f:
+                            f.write(content)
+
+            # Reload Postfix
+            ProcessUtilities.executioner('postfix reload')
+            return True
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [_regenerateVirtualRegexp]')
+            return False
+
 
 def main():
 

@@ -12,12 +12,17 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
     $scope.canNotIssue = true;
     $scope.sslIssued = true;
     $scope.couldNotConnect = true;
+    $scope.sslIssuing = false;
 
     $scope.showbtn = function () {
         $scope.issueSSLBtn = false;
     };
 
     $scope.issueSSL = function () {
+        if ($scope.sslIssuing) {
+            return;
+        }
+        $scope.sslIssuing = true;
         $scope.manageSSLLoading = false;
 
         var url = "/manageSSL/issueSSL";
@@ -37,6 +42,7 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.sslIssuing = false;
 
 
             if (response.data.SSL == 1) {
@@ -66,6 +72,7 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.sslIssuing = false;
             $scope.sslIssueCtrl = true;
             $scope.manageSSLLoading = true;
             $scope.issueSSLBtn = false;
@@ -91,6 +98,7 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
     $scope.canNotIssue = true;
     $scope.sslIssued = true;
     $scope.couldNotConnect = true;
+    $scope.sslIssuing = false;
 
     $scope.showbtn = function () {
         $scope.issueSSLBtn = false;
@@ -98,6 +106,10 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
 
 
     $scope.issueSSL = function () {
+        if ($scope.sslIssuing) {
+            return;
+        }
+        $scope.sslIssuing = true;
         $scope.manageSSLLoading = false;
 
         var url = "/manageSSL/obtainHostNameSSL";
@@ -117,6 +129,7 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.sslIssuing = false;
 
 
             if (response.data.SSL == 1) {
@@ -146,6 +159,7 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.sslIssuing = false;
             $scope.sslIssueCtrl = true;
             $scope.manageSSLLoading = true;
             $scope.issueSSLBtn = false;
@@ -171,6 +185,7 @@ app.controller('sslIssueForMailServer', function ($scope, $http) {
     $scope.canNotIssue = true;
     $scope.sslIssued = true;
     $scope.couldNotConnect = true;
+    $scope.sslIssuing = false;
 
     $scope.showbtn = function () {
         $scope.issueSSLBtn = false;
@@ -178,6 +193,10 @@ app.controller('sslIssueForMailServer', function ($scope, $http) {
 
 
     $scope.issueSSL = function () {
+        if ($scope.sslIssuing) {
+            return;
+        }
+        $scope.sslIssuing = true;
 
         $scope.manageSSLLoading = false;
 
@@ -198,6 +217,7 @@ app.controller('sslIssueForMailServer', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.sslIssuing = false;
 
 
             if (response.data.SSL === 1) {
@@ -227,6 +247,7 @@ app.controller('sslIssueForMailServer', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.sslIssuing = false;
             $scope.sslIssueCtrl = true;
             $scope.manageSSLLoading = true;
             $scope.issueSSLBtn = false;

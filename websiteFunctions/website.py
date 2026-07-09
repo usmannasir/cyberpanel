@@ -153,7 +153,25 @@ class WebsiteManager:
                 WPDelete = WPSites.objects.get(pk=DeleteID)
 
                 if ACLManager.checkOwnership(WPDelete.owner.domain, admin, currentACL) == 1:
-                    WPDelete.delete()
+                    # Check if this is a staging site (referenced by WPStaging as wpsite)
+                    staging_records = WPStaging.objects.filter(wpsite=WPDelete)
+
+                    if staging_records.exists():
+                        # This is a staging site - perform complete cleanup
+                        staging_website = WPDelete.owner
+
+                        # Use the same robust deletion method as regular websites
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                        execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + staging_website.domain
+                        ProcessUtilities.popenExecutioner(execPath)
+
+                        # Delete all staging records
+                        staging_records.delete()  # Delete WPStaging records
+                        WPDelete.delete()         # Delete WPSites record
+                        staging_website.delete()  # Delete Websites record
+                    else:
+                        # Regular WP site deletion
+                        WPDelete.delete()
         except BaseException as msg:
             pass
 
@@ -166,15 +184,23 @@ class WebsiteManager:
                 'production_status': True
             })
 
+        # WP site titles are attacker-influenceable and get injected into an inline
+        # <script> via |safe, so escape the characters that could break out of the
+        # script context. The result is still valid JSON (JSON.parse decodes it).
+        def _escapeForScript(jsonStr):
+            bs = chr(92)
+            return jsonStr.replace('<', bs + 'u003c').replace('>', bs + 'u003e') \
+                .replace('&', bs + 'u0026').replace(chr(0x2028), bs + 'u2028').replace(chr(0x2029), bs + 'u2029')
+
         context = {
-            "wpsite": json.dumps(sites),
+            "wpsite": _escapeForScript(json.dumps(sites)),
             "status": 1,
             "total_sites": len(sites),
-            "debug_info": json.dumps({
+            "debug_info": _escapeForScript(json.dumps({
                 "user_id": userID,
                 "is_admin": bool(currentACL.get('admin', 0)),
                 "wp_sites_count": wp_sites.count()
-            })
+            }))
         }
 
         proc = httpProc(request, 'websiteFunctions/WPsitesList.html', context)
@@ -216,10 +242,28 @@ class WebsiteManager:
 
                     if DeleteID != None:
                         wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
+
+                        # Get the associated staging WPSites and Websites records
+                        staging_wpsite = wstagingDelete.wpsite
+                        staging_website = staging_wpsite.owner
+
+                        # Delete the staging Websites record and all associated data BEFORE deleting DB records
+                        # Use the same robust deletion method as regular websites
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                        execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + staging_website.domain
+                        ProcessUtilities.popenExecutioner(execPath)
+
+                        # Delete the WPStaging record
                         wstagingDelete.delete()
 
+                        # Delete the staging WPSites record
+                        staging_wpsite.delete()
+
+                        # Delete the staging Websites record
+                        staging_website.delete()
+
                 except BaseException as msg:
-                    da = str(msg)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
 
                 proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
                                 Data, 'createDatabase')
@@ -2230,10 +2274,10 @@ Require valid-user
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
-                       " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
-                       "' --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
+                       " --administratorEmail " + adminEmail + " --phpVersion " + shlex.quote(phpSelection) + \
+                       " --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
                        + str(1) + " --openBasedir " + str(data['openBasedir']) + \
-                       ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
+                       ' --websiteOwner ' + shlex.quote(websiteOwner) + ' --package ' + shlex.quote(packageName) + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
                            mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -2333,8 +2377,8 @@ Require valid-user
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
+                       " --phpVersion " + shlex.quote(phpSelection) + " --ssl " + str(1) + " --dkimCheck " + str(1) \
+                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + shlex.quote(path) + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -2483,11 +2527,12 @@ Require valid-user
             childDomains = []
 
             for web in websites:
-                for child in web.childdomains_set.filter(alais=0):
-                    if child.domain == f'mail.{web.domain}':
-                        pass
-                    else:
-                        childDomains.append(child)
+                for child in web.childdomains_set.all():
+                    if child.alais == 0:
+                        if child.domain == f'mail.{web.domain}':
+                            pass
+                        else:
+                            childDomains.append(child)
 
             pagination = self.getPagination(len(childDomains), recordsToShow)
             json_data = self.findChildsListJson(childDomains[finalPageNumber:endPageNumber])
@@ -2497,6 +2542,8 @@ Require valid-user
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
         except BaseException as msg:
+            import traceback
+            logging.CyberCPLogFileWriter.writeToFile(f"fetchChildDomainsMain error for userID {userID}: {str(msg)}\n{traceback.format_exc()}")
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -3402,7 +3449,7 @@ context /cyberpanel_suspension_page.html {
             completePathToConfigFile = confPath + "/vhost.conf"
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+            execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
             ProcessUtilities.popenExecutioner(execPath)
 
             ####
@@ -3663,6 +3710,44 @@ context /cyberpanel_suspension_page.html {
 
             except Exception as e:
                 CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
+
+            # Fetch actual resource limits from lscgctl command if they exist
+            Data['resource_limits'] = None
+            try:
+                import subprocess
+                lscgctl_path = '/usr/local/lsws/lsns/bin/lscgctl'
+                if os.path.exists(lscgctl_path):
+                    # Get the website username
+                    username = website.exsysUser
+
+                    # Run lscgctl list-user command
+                    result = subprocess.run(
+                        [lscgctl_path, 'list-user', username],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+
+                    if result.returncode == 0 and result.stdout.strip():
+                        # Parse JSON output
+                        import json
+                        limits_data = json.loads(result.stdout.strip())
+
+                        # Find the user's limits (key is UID)
+                        for uid, user_limits in limits_data.items():
+                            if user_limits.get('name') == username:
+                                # Extract and format the limits for display
+                                Data['resource_limits'] = {
+                                    'cpu': user_limits.get('cpu', ''),
+                                    'memory': user_limits.get('mem', ''),
+                                    'io': user_limits.get('io', ''),
+                                    'tasks': user_limits.get('tasks', ''),
+                                    'iops': user_limits.get('iops', '')
+                                }
+                                break
+            except Exception as e:
+                # Silently fail - resource limits are optional
+                CyberCPLogFileWriter.writeToFile(f"Could not fetch resource limits for {self.domain}: {str(e)}")
 
             proc = httpProc(request, 'websiteFunctions/website.html', Data)
             return proc.render()
@@ -4113,7 +4198,7 @@ context /cyberpanel_suspension_page.html {
         completePathToConfigFile = confPath + "/vhost.conf"
 
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+        execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
         ProcessUtilities.popenExecutioner(execPath)
 
         try:
@@ -4130,7 +4215,7 @@ context /cyberpanel_suspension_page.html {
                     confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + alias.domain
                     completePathToConfigFile = confPath + "/vhost.conf"
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
                     ProcessUtilities.popenExecutioner(execPath)
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(f'Error changing PHP for alias: {str(msg)}')
@@ -4756,6 +4841,58 @@ context /cyberpanel_suspension_page.html {
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    @staticmethod
+    def webhookSecretPath(domain):
+        return '/home/cyberpanel/git/%s.webhook_secret' % (domain)
+
+    @staticmethod
+    def readWebhookSecret(domain):
+        try:
+            secretPath = WebsiteManager.webhookSecretPath(domain)
+            if os.path.exists(secretPath):
+                secret = open(secretPath, 'r').read().strip()
+                if secret:
+                    return secret
+        except BaseException:
+            pass
+        return ''
+
+    @staticmethod
+    def getOrCreateWebhookSecret(domain):
+        existing = WebsiteManager.readWebhookSecret(domain)
+        if existing:
+            return existing
+        try:
+            import secrets as _secrets
+            gitConfFolder = '/home/cyberpanel/git'
+            if not os.path.exists(gitConfFolder):
+                os.mkdir(gitConfFolder)
+            secret = _secrets.token_urlsafe(32)
+            secretPath = WebsiteManager.webhookSecretPath(domain)
+            fd = os.open(secretPath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, 'w') as secretFile:
+                secretFile.write(secret)
+            return secret
+        except BaseException:
+            return ''
+
+    @staticmethod
+    def verifyWebhookSecret(domain, request=None):
+        # Opt-in authentication: enforce ONLY when a secret has been provisioned
+        # for this repo. Repos created before this feature have no secret file and
+        # therefore keep working exactly as before (no breakage).
+        expected = WebsiteManager.readWebhookSecret(domain)
+        if not expected:
+            return True
+        provided = ''
+        if request is not None:
+            try:
+                provided = request.GET.get('secret', '') or request.META.get('HTTP_X_WEBHOOK_SECRET', '')
+            except BaseException:
+                provided = ''
+        from plogical.securityUtils import constant_time_equal
+        return constant_time_equal(provided, expected)
+
     def setupGit(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -4777,6 +4914,10 @@ context /cyberpanel_suspension_page.html {
             port = ProcessUtilities.fetchCurrentPort()
 
             webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
+
+            webhookSecret = WebsiteManager.readWebhookSecret(self.domain)
+            if webhookSecret:
+                webhookURL = webhookURL + '?secret=' + webhookSecret
 
             proc = httpProc(request, 'websiteFunctions/setupGit.html',
                             {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
@@ -4825,6 +4966,11 @@ StrictHostKeyChecking no
 
             mailUtilities.checkHome()
 
+            # Provision an opt-in webhook secret for this newly set-up repo so the
+            # displayed webhook URLs are authenticated. Repos set up before this
+            # change have no secret file and stay unenforced (backward compatible).
+            WebsiteManager.getOrCreateWebhookSecret(self.domain)
+
             extraArgs = {}
             extraArgs['admin'] = admin
             extraArgs['domainName'] = data['domain']
@@ -4850,8 +4996,11 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def gitNotify(self, userID=None, data=None):
+    def gitNotify(self, userID=None, data=None, request=None):
         try:
+
+            if not WebsiteManager.verifyWebhookSecret(self.domain, request):
+                return HttpResponse(json.dumps({'pulled': 0, 'error_message': 'Invalid or missing webhook secret.'}), status=403)
 
             extraArgs = {}
             extraArgs['domain'] = self.domain
@@ -5410,8 +5559,8 @@ StrictHostKeyChecking no
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " switchServer --phpVersion '" + phpVersion + "' --server " + str(
-            server) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
+        execPath = execPath + " switchServer --phpVersion " + shlex.quote(phpVersion) + " --server " + shlex.quote(str(
+            server)) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
         ProcessUtilities.popenExecutioner(execPath)
 
         time.sleep(3)
@@ -6117,6 +6266,10 @@ StrictHostKeyChecking no
                 port = ProcessUtilities.fetchCurrentPort()
 
                 webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
+
+                webhookSecret = WebsiteManager.readWebhookSecret(self.domain)
+                if webhookSecret:
+                    webHookURL = webHookURL + '?secret=' + webhookSecret
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits,
@@ -7161,10 +7314,13 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def webhook(self, domain, data=None):
+    def webhook(self, domain, data=None, request=None):
         try:
 
             self.domain = domain
+
+            if not WebsiteManager.verifyWebhookSecret(domain, request):
+                return HttpResponse(json.dumps({'status': 0, 'error_message': 'Invalid or missing webhook secret.'}), status=403)
 
             ### set default ssh key
 

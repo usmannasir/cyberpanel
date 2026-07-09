@@ -1,4 +1,6 @@
 {% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block module_scripts %}<script defer src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Manage Applications - CyberPanel" %}{% endblock %}
 

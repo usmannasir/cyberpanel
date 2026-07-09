@@ -1,0 +1,872 @@
+/* CyberPanel Webmail Styles */
+
+.webmail-container {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: -20px -15px;
+}
+
+/* Account Switcher */
+.wm-account-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.wm-account-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.wm-account-current i {
+    color: var(--accent-color);
+}
+
+.wm-account-select {
+    padding: 4px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* Main Layout */
+.wm-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.wm-sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 12px 0;
+}
+
+.wm-compose-btn {
+    margin: 0 12px 12px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    background: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    transition: all 0.2s;
+}
+
+.wm-compose-btn:hover {
+    background: var(--accent-hover, #5A4BD1) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(108,92,231,0.3);
+}
+
+.wm-folder-list {
+    flex: 1;
+}
+
+.wm-folder-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    transition: all 0.15s;
+    gap: 10px;
+}
+
+.wm-folder-item:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.wm-folder-item.active {
+    background: var(--bg-primary);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.wm-folder-item i {
+    width: 18px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.wm-folder-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wm-badge {
+    background: var(--accent-color);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+.wm-sidebar-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 16px;
+}
+
+.wm-sidebar-nav {
+    padding: 0 4px;
+}
+
+.wm-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    gap: 10px;
+    transition: all 0.15s;
+}
+
+.wm-nav-link:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.wm-nav-link.active {
+    background: var(--bg-primary);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.wm-nav-link i {
+    width: 18px;
+    text-align: center;
+}
+
+/* Message List Column */
+.wm-message-list {
+    width: 380px;
+    min-width: 320px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+}
+
+.wm-search-bar {
+    display: flex;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.wm-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.wm-search-input:focus {
+    border-color: var(--accent-color);
+}
+
+.wm-search-btn {
+    padding: 8px 12px;
+    border: none;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.wm-search-btn:hover {
+    background: var(--accent-hover, #5A4BD1);
+}
+
+/* Bulk Actions */
+.wm-bulk-actions {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 4px;
+    background: var(--bg-secondary);
+    flex-wrap: wrap;
+}
+
+.wm-action-btn {
+    padding: 4px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all 0.15s;
+}
+
+.wm-action-btn:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.wm-action-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.wm-page-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: auto;
+    padding: 0 4px;
+}
+
+.wm-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+}
+
+.wm-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+.wm-move-dropdown select {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Message Rows */
+.wm-messages {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.wm-msg-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    gap: 8px;
+    transition: background 0.1s;
+    font-size: 13px;
+}
+
+.wm-msg-row:hover {
+    background: var(--bg-primary);
+}
+
+.wm-msg-row.unread {
+    font-weight: 600;
+}
+
+.wm-msg-row.unread .wm-msg-subject {
+    color: var(--text-primary);
+}
+
+.wm-msg-row.selected {
+    background: rgba(108, 92, 231, 0.06);
+}
+
+.wm-star-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 13px;
+}
+
+.wm-starred {
+    color: #F39C12;
+}
+
+.wm-unstarred {
+    color: var(--border-color);
+}
+
+.wm-msg-from {
+    width: 120px;
+    min-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
+
+.wm-msg-subject {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
+
+.wm-msg-date {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 50px;
+    text-align: right;
+}
+
+.wm-empty, .wm-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    gap: 12px;
+}
+
+.wm-empty i {
+    font-size: 48px;
+    opacity: 0.3;
+}
+
+/* Detail Pane */
+.wm-detail-pane {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    padding: 0;
+}
+
+.wm-empty-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    opacity: 0.4;
+    gap: 16px;
+}
+
+/* Read View */
+.wm-read-view {
+    padding: 0;
+}
+
+.wm-read-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.wm-read-toolbar .btn {
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+}
+
+.wm-read-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wm-read-subject {
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-read-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.wm-read-meta strong {
+    color: var(--text-primary);
+}
+
+.wm-attachments {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wm-attachment a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--accent-color);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.wm-attachment a:hover {
+    background: var(--border-color);
+}
+
+.wm-att-size {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.wm-read-body {
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.wm-read-body img {
+    max-width: 100%;
+    height: auto;
+}
+
+.wm-read-body blockquote {
+    border-left: 3px solid var(--border-color);
+    margin: 8px 0;
+    padding: 4px 12px;
+    color: var(--text-secondary);
+}
+
+.wm-read-body pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: var(--bg-primary);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+/* Compose View */
+.wm-compose-view {
+    padding: 20px;
+}
+
+.wm-compose-header h3 {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-compose-form .wm-field {
+    margin-bottom: 12px;
+}
+
+.wm-compose-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.wm-compose-form .form-control {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 14px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.wm-compose-form .form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+}
+
+.wm-toggle-link {
+    font-size: 12px;
+    color: var(--accent-color);
+    cursor: pointer;
+}
+
+.wm-editor-toolbar {
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+}
+
+.wm-editor-toolbar button {
+    padding: 6px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.wm-editor-toolbar button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.wm-editor {
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 8px 8px;
+    background: white;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.wm-editor:focus {
+    border-color: var(--accent-color);
+}
+
+.wm-compose-attachments {
+    margin-top: 12px;
+}
+
+.wm-compose-attachments input[type="file"] {
+    display: none;
+}
+
+.wm-attach-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--bg-primary);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.wm-attach-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.wm-file-list {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.wm-file-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+.wm-file-tag i {
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.wm-file-tag i:hover {
+    color: #E74C3C;
+}
+
+.wm-compose-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.wm-compose-actions .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 14px;
+}
+
+/* Contacts View */
+.wm-contacts-view, .wm-rules-view, .wm-settings-view {
+    padding: 20px;
+}
+
+.wm-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.wm-section-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-contacts-search {
+    margin-bottom: 16px;
+}
+
+.wm-contacts-search .form-control {
+    border-radius: 8px;
+    background: var(--bg-primary);
+}
+
+.wm-contact-list, .wm-rule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wm-contact-item, .wm-rule-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+
+.wm-contact-item:hover, .wm-rule-item:hover {
+    background: var(--border-color);
+}
+
+.wm-contact-info, .wm-rule-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.wm-contact-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.wm-contact-email {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.wm-contact-actions, .wm-rule-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.wm-rule-desc {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Forms */
+.wm-contact-form, .wm-rule-form, .wm-settings-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+}
+
+.wm-contact-form h4, .wm-rule-form h4 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wm-field {
+    margin-bottom: 12px;
+}
+
+.wm-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.wm-field .form-control {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 14px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.wm-field .form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+    outline: none;
+}
+
+.wm-field-row {
+    display: flex;
+    gap: 12px;
+}
+
+.wm-field-row .wm-field {
+    flex: 1;
+}
+
+.wm-form-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.wm-form-actions .btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+}
+
+/* Autocomplete Dropdown */
+.wm-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.wm-autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.wm-autocomplete-item:hover {
+    background: var(--bg-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .wm-sidebar {
+        width: 180px;
+        min-width: 180px;
+    }
+    .wm-message-list {
+        width: 300px;
+        min-width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .wm-layout {
+        flex-direction: column;
+    }
+    .wm-sidebar {
+        width: 100%;
+        min-width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 8px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .wm-folder-list {
+        display: flex;
+        gap: 4px;
+    }
+    .wm-folder-item {
+        white-space: nowrap;
+        padding: 6px 12px;
+        border-radius: 8px;
+    }
+    .wm-sidebar-divider, .wm-sidebar-nav {
+        display: none;
+    }
+    .wm-compose-btn {
+        margin: 0 4px 0 0;
+        padding: 6px 14px;
+        white-space: nowrap;
+    }
+    .wm-message-list {
+        width: 100%;
+        min-width: 100%;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .wm-detail-pane {
+        min-height: 50vh;
+    }
+    .wm-field-row {
+        flex-direction: column;
+    }
+}

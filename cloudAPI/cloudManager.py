@@ -3,6 +3,7 @@ import socket
 import random
 import os
 import json
+import shlex
 import userManagment.views as um
 from backup.backupManager import BackupManager
 from databases.databaseManager import DatabaseManager
@@ -23,6 +24,7 @@ from serverStatus.views import topProcessesStatus, killProcess, switchTOLSWSStat
 from plogical import hashPassword
 from loginSystem.models import ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.securityUtils import api_token_matches
 from managePHP.phpManager import PHPManager
 from managePHP.views import submitExtensionRequest, getRequestStatusApache
 from containerization.views import *
@@ -43,13 +45,13 @@ class CloudManager:
 
     def verifyLogin(self, request):
         try:
-            if request.META['HTTP_AUTHORIZATION'] == self.admin.token:
+            if api_token_matches(request.META.get('HTTP_AUTHORIZATION'), self.admin.token):
                 return 1, self.ajaxPre(1, None)
             else:
                 return 0, self.ajaxPre(0, 'Invalid login information.')
 
         except BaseException as msg:
-            return self.ajaxPre(0, str(msg))
+            return 0, self.ajaxPre(0, str(msg))
 
     def fetchWebsites(self):
         try:
@@ -1923,8 +1925,8 @@ class CloudManager:
             writeToFile.close()
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (
-                self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
+            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s --planName %s" % (
+                shlex.quote(self.data['domain']), shlex.quote(self.data['backupFile']), tempStatusPath, shlex.quote(self.data['planName']))
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -3248,59 +3250,74 @@ class CloudManager:
                 statusWriter.writeToFile(f"Error getting administrator: {str(e)} [404]")
                 return
             
-            # Step 1: Create the website
-            statusWriter.writeToFile('Creating website...,10')
-            logging.writeToFile(f"[_install_n8n_with_website] Creating website for {domain_name}")
-            wm = WebsiteManager()
-            result = wm.submitWebsiteCreation(admin.pk, website_data)
-            result_data = json.loads(result.content)
-            
-            logging.writeToFile(f"[_install_n8n_with_website] Website creation result: {result_data}")
-            
-            if result_data.get('createWebSiteStatus', 0) != 1:
-                statusWriter.writeToFile(f"Failed to create website: {result_data.get('error_message', 'Unknown error')} [404]")
-                return
-            
-            # Wait for website creation to complete - no time limit
-            creation_status_path = result_data.get('tempStatusPath')
-            logging.writeToFile(f"[_install_n8n_with_website] Website creation status path: {creation_status_path}")
-            
-            if creation_status_path:
-                statusWriter.writeToFile('Waiting for website creation to complete (including SSL)...,15')
-                check_count = 0
-                while True:
-                    try:
-                        with open(creation_status_path, 'r') as f:
-                            status = f.read()
-                            if '[200]' in status:
-                                logging.writeToFile(f"[_install_n8n_with_website] Website creation completed successfully")
-                                break
-                            elif '[404]' in status:
-                                logging.writeToFile(f"[_install_n8n_with_website] Website creation failed: {status}")
-                                statusWriter.writeToFile(f"Website creation failed: {status} [404]")
-                                return
-                    except Exception as e:
-                        if check_count % 10 == 0:  # Log every 10 checks
-                            logging.writeToFile(f"[_install_n8n_with_website] Still waiting for website creation... (check #{check_count})")
-                    
-                    check_count += 1
-                    time.sleep(1)
-            
-            # Get the created website object
-            logging.writeToFile(f"[_install_n8n_with_website] Getting website object for {domain_name}")
-            try:
-                website = Websites.objects.get(domain=domain_name)
-                logging.writeToFile(f"[_install_n8n_with_website] Found website object: {website.domain}")
-            except Websites.DoesNotExist:
-                logging.writeToFile(f"[_install_n8n_with_website] Website object not found for {domain_name}")
-                statusWriter.writeToFile('Website creation succeeded but website object not found [404]')
-                return
-            except Exception as e:
-                logging.writeToFile(f"[_install_n8n_with_website] Error getting website object: {str(e)}")
-                statusWriter.writeToFile(f'Error getting website object: {str(e)} [404]')
-                return
-            
-            statusWriter.writeToFile('Website created successfully...,20')
+            # Step 1: Check if website already exists, create only if not
+            existing_website = Websites.objects.filter(domain=domain_name).first()
+
+            if existing_website:
+                # Website already exists, skip creation
+                logging.writeToFile(f"[_install_n8n_with_website] Website {domain_name} already exists, skipping creation")
+                statusWriter.writeToFile(f'Website already exists, proceeding to N8N deployment...,20')
+                website = existing_website
+            else:
+                # Website doesn't exist, create it
+                statusWriter.writeToFile('Creating website...,10')
+                logging.writeToFile(f"[_install_n8n_with_website] Creating website for {domain_name}")
+                wm = WebsiteManager()
+                result = wm.submitWebsiteCreation(admin.pk, website_data)
+                result_data = json.loads(result.content)
+
+                logging.writeToFile(f"[_install_n8n_with_website] Website creation result: {result_data}")
+
+                if result_data.get('createWebSiteStatus', 0) != 1:
+                    statusWriter.writeToFile(f"Failed to create website: {result_data.get('error_message', 'Unknown error')} [404]")
+                    return
+
+                # Wait for website creation to complete - 10 minute timeout
+                creation_status_path = result_data.get('tempStatusPath')
+                logging.writeToFile(f"[_install_n8n_with_website] Website creation status path: {creation_status_path}")
+
+                if creation_status_path:
+                    statusWriter.writeToFile('Waiting for website creation to complete (including SSL)...,15')
+                    check_count = 0
+                    max_checks = 600  # 10 minute timeout (600 seconds)
+                    while check_count < max_checks:
+                        try:
+                            with open(creation_status_path, 'r') as f:
+                                status = f.read()
+                                if '[200]' in status:
+                                    logging.writeToFile(f"[_install_n8n_with_website] Website creation completed successfully")
+                                    break
+                                elif '[404]' in status:
+                                    logging.writeToFile(f"[_install_n8n_with_website] Website creation failed: {status}")
+                                    statusWriter.writeToFile(f"Website creation failed: {status} [404]")
+                                    return
+                        except Exception as e:
+                            if check_count % 10 == 0:  # Log every 10 checks
+                                logging.writeToFile(f"[_install_n8n_with_website] Still waiting for website creation... (check #{check_count})")
+
+                        check_count += 1
+                        time.sleep(1)
+
+                    if check_count >= max_checks:
+                        logging.writeToFile(f"[_install_n8n_with_website] Website creation timed out after 10 minutes")
+                        statusWriter.writeToFile(f"Website creation timed out after 10 minutes [404]")
+                        return
+
+                # Get the created website object
+                logging.writeToFile(f"[_install_n8n_with_website] Getting website object for {domain_name}")
+                try:
+                    website = Websites.objects.get(domain=domain_name)
+                    logging.writeToFile(f"[_install_n8n_with_website] Found website object: {website.domain}")
+                except Websites.DoesNotExist:
+                    logging.writeToFile(f"[_install_n8n_with_website] Website object not found for {domain_name}")
+                    statusWriter.writeToFile('Website creation succeeded but website object not found [404]')
+                    return
+                except Exception as e:
+                    logging.writeToFile(f"[_install_n8n_with_website] Error getting website object: {str(e)}")
+                    statusWriter.writeToFile(f'Error getting website object: {str(e)} [404]')
+                    return
+
+                statusWriter.writeToFile('Website created successfully...,20')
             logging.writeToFile(f"[_install_n8n_with_website] Website creation phase complete")
             
             # Step 2: Create database using native CyberPanel process

@@ -8,6 +8,9 @@ import os
 import sys
 import secrets
 import string
+import socket
+import urllib.request
+import re
 from pathlib import Path
 
 def generate_secure_password(length=24):
@@ -27,15 +30,52 @@ def generate_secure_password(length=24):
 def generate_secret_key(length=64):
     """
     Generate a cryptographically secure Django secret key
-    
+
     Args:
         length: Length of the secret key to generate (default 64)
-    
+
     Returns:
         str: Random secret key
     """
     chars = string.ascii_letters + string.digits + '!@#$%^&*(-_=+)'
     return ''.join(secrets.choice(chars) for _ in range(length))
+
+def get_public_ip():
+    """Get the public IP address of the server using multiple methods"""
+    methods = [
+        'https://ipv4.icanhazip.com',
+        'https://api.ipify.org',
+        'https://checkip.amazonaws.com',
+        'https://ipecho.net/plain'
+    ]
+
+    for url in methods:
+        try:
+            with urllib.request.urlopen(url, timeout=10) as response:
+                ip = response.read().decode('utf-8').strip()
+                # Validate IP format
+                if re.match(r'^(\d{1,3}\.){3}\d{1,3}$', ip):
+                    print(f"✓ Detected public IP: {ip}")
+                    return ip
+        except Exception as e:
+            print(f"Failed to get IP from {url}: {e}")
+            continue
+
+    print("⚠️  Could not detect public IP address")
+    return None
+
+def get_local_ip():
+    """Get the local IP address of the server"""
+    try:
+        # Connect to a remote address to determine the local IP
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            print(f"✓ Detected local IP: {local_ip}")
+            return local_ip
+    except Exception as e:
+        print(f"Failed to detect local IP: {e}")
+        return None
 
 def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_password=None):
     """
@@ -56,15 +96,49 @@ def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_pas
     
     secret_key = generate_secret_key(64)
     
-    # Get hostname for ALLOWED_HOSTS
-    import socket
+    # Auto-detect IP addresses for ALLOWED_HOSTS
+    print("🔍 Auto-detecting server IP addresses...")
+
+    # Get hostname and local hostname resolution
     try:
         hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+        hostname_ip = socket.gethostbyname(hostname)
     except:
         hostname = 'localhost'
-        local_ip = '127.0.0.1'
-    
+        hostname_ip = '127.0.0.1'
+
+    # Get actual local IP address
+    local_ip = get_local_ip()
+
+    # Get public IP address
+    public_ip = get_public_ip()
+
+    # Build ALLOWED_HOSTS list with all detected IPs
+    allowed_hosts = ['localhost', '127.0.0.1']
+
+    # Add hostname if different from localhost
+    if hostname and hostname != 'localhost':
+        allowed_hosts.append(hostname)
+
+    # Add hostname IP if different from localhost
+    if hostname_ip and hostname_ip not in allowed_hosts:
+        allowed_hosts.append(hostname_ip)
+
+    # Add local IP if detected and different
+    if local_ip and local_ip not in allowed_hosts:
+        allowed_hosts.append(local_ip)
+
+    # Add public IP if detected and different
+    if public_ip and public_ip not in allowed_hosts:
+        allowed_hosts.append(public_ip)
+
+    # Add wildcard for maximum compatibility (allows any host)
+    # This ensures CyberPanel works regardless of how the server is accessed
+    allowed_hosts.append('*')
+
+    allowed_hosts_str = ','.join(allowed_hosts)
+    print(f"✓ ALLOWED_HOSTS configured: {allowed_hosts_str}")
+
     # Create .env content
     env_content = f"""# CyberPanel Environment Configuration
 # Generated automatically during installation - DO NOT EDIT MANUALLY
@@ -73,7 +147,7 @@ def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_pas
 # Django Configuration
 SECRET_KEY={secret_key}
 DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,{hostname},{local_ip}
+ALLOWED_HOSTS={allowed_hosts_str}
 
 # Database Configuration - CyberPanel Database
 DB_NAME=cyberpanel

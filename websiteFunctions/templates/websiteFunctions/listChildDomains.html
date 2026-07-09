@@ -673,8 +673,9 @@
                         <div class="detail-content">
                             <div class="detail-label">{% trans "SSL Certificate" %}</div>
                             <div class="detail-value">
-                                <a ng-click="issueSSL(web.domain)" href="">
-                                    {% trans "Issue SSL" %}
+                                <a ng-click="issueSSL(web.domain)" href="" ng-class="{'disabled': issuingSSL[web.domain]}">
+                                    <span ng-hide="issuingSSL[web.domain]">{% trans "Issue SSL" %}</span>
+                                    <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin"></i> {% trans "Issuing SSL..." %}</span>
                                 </a>
                             </div>
                         </div>

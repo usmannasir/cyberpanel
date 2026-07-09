@@ -32,7 +32,7 @@ from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
 
 try:
-    from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
     from loginSystem.models import Administrator
     from packages.models import Package
     from CLManager.models import CLPackages
@@ -53,7 +53,16 @@ class virtualHostUtilities:
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
     vhostConfPath = '/usr/local/lsws/conf'
 
+    @staticmethod
+    def emailServicesInstalled():
+        """
+        Check if email services (Postfix/OpenDKIM) are installed and configured.
+        Returns True if email services are available, False otherwise.
 
+        This checks for the marker file /home/cyberpanel/postfix which is created
+        during email services installation.
+        """
+        return os.path.exists('/home/cyberpanel/postfix')
 
     @staticmethod
     def OnBoardingHostName(Domain, tempStatusPath, skipRDNSCheck):
@@ -82,29 +91,33 @@ class virtualHostUtilities:
         except:
             CurrentHostName = ''
 
-        if skipRDNSCheck:
-            pass
-        else:
-            if os.path.exists('/home/cyberpanel/postfix'):
-                pass
-            else:
-                message = 'This server does not come with postfix installed. [404]'
-                print(message)
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
-                logging.CyberCPLogFileWriter.writeToFile(message)
-                return 0
+        # Check if email services are installed
+        # If not installed and rDNS check is required, log warning but continue
+        # Email-specific operations will be skipped later
+        emailServicesAvailable = virtualHostUtilities.emailServicesInstalled()
+
+        if not skipRDNSCheck and not emailServicesAvailable:
+            message = 'Email services not installed. Hostname setup will continue without email configuration.'
+            print(message)
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+            logging.CyberCPLogFileWriter.writeToFile(message)
 
 
         ####
 
-        # Get postfix hostname with error handling
-        try:
-            PostFixHostname = mailUtilities.FetchPostfixHostname()
-        except Exception as e:
-            message = f'Failed to fetch postfix hostname: {str(e)} [404]'
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
-            logging.CyberCPLogFileWriter.writeToFile(message)
-            return 0
+        # Get postfix hostname with error handling (only if email services are installed)
+        PostFixHostname = None
+        if emailServicesAvailable:
+            try:
+                PostFixHostname = mailUtilities.FetchPostfixHostname()
+            except Exception as e:
+                message = f'Failed to fetch postfix hostname: {str(e)}, continuing without email setup'
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+                logging.CyberCPLogFileWriter.writeToFile(message)
+                emailServicesAvailable = False  # Disable email operations if we can't fetch postfix hostname
+        else:
+            # Set a default hostname when email services are not available
+            PostFixHostname = Domain
 
         # Get server IP with error handling
         try:
@@ -235,7 +248,7 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
 
-            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && systemctl restart dovecot'
+            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && doveadm reload'
             ProcessUtilities.executioner(command, 'root', True)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
         else:
@@ -391,51 +404,66 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname SSL issued,50')
 
+            # Only setup mail server SSL if email services are installed
+            if emailServicesAvailable:
+                virtualHostUtilities.issueSSLForMailServer(Domain, path)
 
-            virtualHostUtilities.issueSSLForMailServer(Domain, path)
+                try:
+                    with open(filePath, 'r') as f:
+                        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
 
-            try:
-                with open(filePath, 'r') as f:
-                    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
-                
-                # Safely extract SSL provider from issuer components
-                issuer_components = x509.get_issuer().get_components()
-                SSLProvider = 'Denial'  # Default to Denial if we can't find the provider
-                
-                # Look for the Organization (O) field in the issuer
-                for component in issuer_components:
-                    if component[0] == b'O':  # Organization field
-                        SSLProvider = component[1].decode('utf-8')
-                        break
-                    elif component[0] == b'CN' and SSLProvider == 'Denial':  # Fallback to CN if O not found
-                        SSLProvider = component[1].decode('utf-8')
-            except (FileNotFoundError, IndexError, OpenSSL.crypto.Error) as e:
-                SSLProvider = 'Denial'
-                logging.CyberCPLogFileWriter.writeToFile(f"Mail server SSL check error: {str(e)}")
+                    # Safely extract SSL provider from issuer components
+                    issuer_components = x509.get_issuer().get_components()
+                    SSLProvider = 'Denial'  # Default to Denial if we can't find the provider
 
-            if SSLProvider == 'Denial':
-                message = 'Failed to issue Mail server SSL, either its DNS record is not propagated or the domain is behind Cloudflare. [404]'
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
-                logging.CyberCPLogFileWriter.writeToFile(message)
-                config['hostname'] = Domain
-                config['onboarding'] = 3
-                config['skipRDNSCheck'] = skipRDNSCheck
-                admin.config = json.dumps(config)
-                admin.save()
-                return 0
+                    # Look for the Organization (O) field in the issuer
+                    for component in issuer_components:
+                        if component[0] == b'O':  # Organization field
+                            SSLProvider = component[1].decode('utf-8')
+                            break
+                        elif component[0] == b'CN' and SSLProvider == 'Denial':  # Fallback to CN if O not found
+                            SSLProvider = component[1].decode('utf-8')
+                except (FileNotFoundError, IndexError, OpenSSL.crypto.Error) as e:
+                    SSLProvider = 'Denial'
+                    logging.CyberCPLogFileWriter.writeToFile(f"Mail server SSL check error: {str(e)}")
+
+                if SSLProvider == 'Denial':
+                    message = 'Failed to issue Mail server SSL, either its DNS record is not propagated or the domain is behind Cloudflare. [404]'
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+                    config['hostname'] = Domain
+                    config['onboarding'] = 3
+                    config['skipRDNSCheck'] = skipRDNSCheck
+                    admin.config = json.dumps(config)
+                    admin.save()
+                    return 0
+                else:
+                    config['hostname'] = Domain
+                    config['onboarding'] = 1
+                    config['skipRDNSCheck'] = skipRDNSCheck
+                    admin.config = json.dumps(config)
+                    admin.save()
+                    # First update the postfix hash database, then restart services
+                    command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && doveadm reload'
+                    ProcessUtilities.executioner(command, 'root', True)
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
             else:
+                # Email services not installed, skip mail server SSL setup
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Email services not installed, skipping mail server SSL setup.')
                 config['hostname'] = Domain
                 config['onboarding'] = 1
                 config['skipRDNSCheck'] = skipRDNSCheck
                 admin.config = json.dumps(config)
                 admin.save()
-                # First update the postfix hash database, then restart services
-                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && systemctl restart dovecot'
-                ProcessUtilities.executioner(command, 'root', True)
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname setup completed (without email configuration). [200]')
 
     @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
+        # Check if email services are installed before proceeding
+        if not virtualHostUtilities.emailServicesInstalled():
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Email services not installed, skipping mail domain setup.')
+            logging.CyberCPLogFileWriter.writeToFile('setupAutoDiscover: Email services not installed, skipping.')
+            return
 
         if mailDomain:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
@@ -472,12 +500,17 @@ local_name %s {
                     writeToFile.close()
 
 
-                command = 'systemctl restart dovecot'
+                command = 'doveadm reload'
                 ProcessUtilities.executioner(command)
 
                 ### Update postfix configurations
 
                 postFixPath = '/etc/postfix/main.cf'
+
+                # Check if main.cf exists before accessing it
+                if not os.path.exists(postFixPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f"setupAutoDiscover: {postFixPath} not found, skipping postfix TLS SNI configuration")
+                    return
 
                 postFixContent = open(postFixPath, 'r').read()
 
@@ -526,7 +559,7 @@ local_name %s {
                 writeToFile.write(content)
                 writeToFile.close()
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             ProcessUtilities.executioner(command)
 
             ### Update postfix configurations
@@ -598,6 +631,41 @@ local_name %s {
                                                               'This website already exists as child domain. [404]')
                     return 0, "This website already exists as child domain."
 
+                # Check for orphaned staging site domain conflicts
+                try:
+                    # Check if there are any WP sites with FinalURL matching this domain
+                    conflicting_wp_sites = WPSites.objects.filter(FinalURL__icontains=virtualHostName)
+                    for wp_site in conflicting_wp_sites:
+                        # Check if the WP site's owner website still exists
+                        try:
+                            owner_website = wp_site.owner
+                            if not Websites.objects.filter(id=owner_website.id).exists():
+                                # Orphaned WP site found, clean it up
+                                wp_site.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned WP site: {wp_site.id} with URL: {wp_site.FinalURL}")
+                        except:
+                            # WP site owner is missing, delete it
+                            wp_site.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned WP site: {wp_site.id} (missing owner)")
+
+                    # Check for orphaned staging sites
+                    orphaned_staging = WPStaging.objects.filter(wpsite__FinalURL__icontains=virtualHostName)
+                    for staging in orphaned_staging:
+                        try:
+                            # Check if the staging site's wpsite still exists and has valid owner
+                            wpsite = staging.wpsite
+                            owner_website = wpsite.owner
+                            if not Websites.objects.filter(id=owner_website.id).exists():
+                                # Owner website doesn't exist, clean up staging
+                                staging.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned staging site: {staging.id}")
+                        except:
+                            # Staging site has invalid references, delete it
+                            staging.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned staging site: {staging.id} (invalid references)")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error during staging site cleanup: {str(e)}")
+
                 ####### Limitations Check End
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
@@ -626,8 +694,20 @@ local_name %s {
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
 
+            # Get package to retrieve resource limits
+            selectedPackage = Package.objects.get(packageName=packageName)
+
+            # Extract resource limits from package
+            memSoftLimit = selectedPackage.memoryLimitMB
+            memHardLimit = selectedPackage.memoryLimitMB
+            maxConnections = selectedPackage.maxConnections
+            procSoftLimit = selectedPackage.procSoftLimit
+            procHardLimit = selectedPackage.procHardLimit
+
             retValues = vhost.createDirectoryForVirtualHost(virtualHostName, administratorEmail,
-                                                            virtualHostUser, phpVersion, openBasedir)
+                                                            virtualHostUser, phpVersion, openBasedir,
+                                                            memSoftLimit, memHardLimit, maxConnections,
+                                                            procSoftLimit, procHardLimit)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
@@ -637,8 +717,6 @@ local_name %s {
                 retValues = vhost.createConfigInMainVirtualHostFile(virtualHostName)
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
-
-            selectedPackage = Package.objects.get(packageName=packageName)
 
             if LimitsCheck:
                 website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
@@ -730,6 +808,23 @@ local_name %s {
                 command = f'setquota -u {virtualHostUser} {spaceString} 0 0 /'
                 ProcessUtilities.executioner(command)
 
+            # Apply OpenLiteSpeed cgroups v2 resource limits and inode quotas
+            if selectedPackage.enforceDiskLimits:
+                try:
+                    from plogical.resourceLimits import resource_manager
+
+                    # Set per-user resource limits using OLS native cgroups API
+                    success = resource_manager.set_user_limits(virtualHostUser, selectedPackage)
+                    if not success:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set resource limits for user {virtualHostUser}")
+
+                    # Set inode limit using filesystem quotas
+                    success = resource_manager.set_inode_limit(virtualHostName, virtualHostUser, selectedPackage.inodeLimit)
+                    if not success:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set inode limit for {virtualHostName}")
+
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error applying resource limits for {virtualHostName}: {str(e)}")
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
@@ -743,10 +838,10 @@ local_name %s {
             return 0, str(msg)
 
     @staticmethod
-    def issueSSL(virtualHost, path, adminEmail):
+    def issueSSL(virtualHost, path, adminEmail, forceIssue=False):
         try:
 
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path, forceIssue=forceIssue)
 
             if retValues[0] == 0:
                 # Enhanced error reporting
@@ -765,7 +860,7 @@ local_name %s {
             command = 'systemctl restart postfix'
             ProcessUtilities.executioner(command)
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             ProcessUtilities.executioner(command)
 
             print("1,None")
@@ -779,12 +874,12 @@ local_name %s {
             return 0, str(msg)
 
     @staticmethod
-    def issueSSLv2(virtualHost, path, adminEmail):
+    def issueSSLv2(virtualHost, path, adminEmail, forceIssue=False):
         try:
 
             import plogical.sslv2 as sslv2
 
-            retValues = sslv2.issueSSLForDomain(virtualHost, adminEmail, path)
+            retValues = sslv2.issueSSLForDomain(virtualHost, adminEmail, path, forceIssue=forceIssue)
 
             if retValues[0] == 0:
                 print("0," + str(retValues[1]))
@@ -796,7 +891,7 @@ local_name %s {
             command = 'systemctl restart postfix'
             ProcessUtilities.executioner(command)
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             ProcessUtilities.executioner(command)
 
             print(f"1,{str(retValues[1])}")
@@ -1046,6 +1141,17 @@ local_name %s {
     @staticmethod
     def issueSSLForMailServer(virtualHost, path):
         try:
+            # Check if email services are installed before proceeding
+            if not virtualHostUtilities.emailServicesInstalled():
+                logging.CyberCPLogFileWriter.writeToFile("Email services not installed, skipping mail server SSL setup")
+                print("1,Email services not installed")
+                return 1, 'Email services not installed'
+
+            # Verify critical email directories exist
+            if not os.path.exists('/etc/postfix'):
+                logging.CyberCPLogFileWriter.writeToFile("/etc/postfix directory not found, skipping mail server SSL")
+                print("1,Postfix directory not found")
+                return 1, 'Postfix directory not found'
 
             srcFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             srcPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
@@ -1120,6 +1226,12 @@ local_name %s {
             ## Update myhostname address postfix
 
             filePath = "/etc/postfix/main.cf"
+
+            # Check if main.cf exists before trying to read it
+            if not os.path.exists(filePath):
+                logging.CyberCPLogFileWriter.writeToFile(f"{filePath} not found, skipping postfix hostname update")
+                print("1,Postfix main.cf not found")
+                return 1, 'Postfix main.cf not found'
 
             data = open(filePath, 'r').readlines()
 
@@ -1539,8 +1651,18 @@ local_name %s {
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating configurations..,50')
 
+            # Get resource limits from master website's package (child domains share parent's limits)
+            masterPackage = master.package
+            memSoftLimit = masterPackage.memoryLimitMB
+            memHardLimit = masterPackage.memoryLimitMB
+            maxConnections = masterPackage.maxConnections
+            procSoftLimit = masterPackage.procSoftLimit
+            procHardLimit = masterPackage.procHardLimit
+
             retValues = vhost.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,
-                                                       master.adminEmail, master.externalApp, openBasedir)
+                                                       master.adminEmail, master.externalApp, openBasedir,
+                                                       memSoftLimit, memHardLimit, maxConnections,
+                                                       procSoftLimit, procHardLimit)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
@@ -2006,6 +2128,7 @@ def main():
 
     ## Arguments for OpenBasedir
 
+    parser.add_argument('--force', help='Force reissue SSL even if a valid certificate already exists.', default='0')
     parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
     parser.add_argument('--tempStatusPath', help='Temporary Status file path.')
     parser.add_argument('--mailDomain', help='To create or not to create mail domain.')
@@ -2085,9 +2208,11 @@ def main():
                                           int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
                                           tempStatusPath, 1, aliasDomain)
     elif args.function == "issueSSL":
-        virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail)
+        virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail,
+                                      forceIssue=(str(args.force) == '1'))
     elif args.function == "issueSSLv2":
-        virtualHostUtilities.issueSSLv2(args.virtualHostName, args.path, args.administratorEmail)
+        virtualHostUtilities.issueSSLv2(args.virtualHostName, args.path, args.administratorEmail,
+                                        forceIssue=(str(args.force) == '1'))
     elif args.function == "changePHP":
         vhost.changePHP(args.path, args.phpVersion)
     elif args.function == "getAccessLogs":

@@ -9,9 +9,17 @@ class Domains(models.Model):
     name = models.CharField(unique=True, max_length=255)
     master = models.CharField(max_length=128, blank=True, null=True)
     last_check = models.IntegerField(blank=True, null=True)
-    type = models.CharField(max_length=6)
-    notified_serial = models.IntegerField(blank=True, null=True)
+    # PDNS 4.7+ widened `type` to VARCHAR(8) to fit catalog-zone identifiers.
+    type = models.CharField(max_length=8)
+    notified_serial = models.PositiveIntegerField(blank=True, null=True)
     account = models.CharField(max_length=40, blank=True, null=True)
+    # PDNS 4.7+ catalog-zones support. The actual ALTER TABLE for legacy
+    # installs is performed by plogical/pdnsSchemaMigration.py — keep these
+    # fields here so Django queries that touch them (or Django's own
+    # makemigrations/migrate on fresh installs) stay in sync with the schema
+    # PDNS expects.
+    catalog = models.CharField(max_length=255, blank=True, null=True)
+    options = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'domains'
@@ -51,6 +59,9 @@ class Cryptokeys(models.Model):
     domain_id = models.IntegerField()
     flags = models.IntegerField()
     active = models.IntegerField(blank=True, null=True)
+    # PDNS 4.3+ requires `published`. plogical/pdnsSchemaMigration.py
+    # backfills this column on legacy installs.
+    published = models.BooleanField(default=True, blank=True, null=True)
     content = models.TextField(blank=True, null=True)
 
     class Meta:

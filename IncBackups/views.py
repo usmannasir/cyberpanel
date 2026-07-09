@@ -230,12 +230,24 @@ def remove_destination(request):
         if 'IPAddress' in data:
             file_name = data['IPAddress']
 
+            # Destination names are single path components (IP/host); reject any
+            # path separators, parent refs or absolute paths to prevent traversal.
+            if (not file_name) or ('/' in file_name) or ('\\' in file_name) \
+                    or file_name in ('.', '..') or os.path.isabs(file_name):
+                return ACLManager.loadErrorJson('destStatus', 0)
+
             if data['type'].lower() == IncBackupProvider.SFTP.name.lower():
-                dest_file = Path(IncBackupPath.SFTP.value) / file_name
+                base = Path(IncBackupPath.SFTP.value).resolve()
+                dest_file = (base / file_name).resolve()
+                if base not in dest_file.parents:
+                    return ACLManager.loadErrorJson('destStatus', 0)
                 dest_file.unlink()
 
             if data['type'].lower() == IncBackupProvider.AWS.name.lower():
-                dest_file = Path(IncBackupPath.AWS.value) / file_name
+                base = Path(IncBackupPath.AWS.value).resolve()
+                dest_file = (base / file_name).resolve()
+                if base not in dest_file.parents:
+                    return ACLManager.loadErrorJson('destStatus', 0)
                 dest_file.unlink()
 
         final_dic = {'status': 1, 'error_message': 'None'}

@@ -17,7 +17,7 @@ import secrets
 import install_utils
 
 VERSION = '2.4'
-BUILD = 4
+BUILD = 8
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -619,7 +619,8 @@ password="%s"
         logging.InstallLog.writeToFile("Generating secure environment configuration!")
 
         # Generate secure environment file instead of hardcoding passwords
-        self.generate_secure_env_file(mysqlPassword, password)
+        # Note: password = MySQL root password, mysqlPassword = CyberPanel DB password
+        self.generate_secure_env_file(password, mysqlPassword)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
@@ -1017,10 +1018,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             elif self.distro == openeuler:
-                command = 'dnf install postfix -y'
+                command = 'dnf install postfix cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
@@ -1043,9 +1044,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if self.distro == centos:
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
             elif self.distro == cent8:
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                clAPVersion = FetchCloudLinuxAlmaVersionVersion()
+                type = clAPVersion.split('-')[0]
+                version = int(clAPVersion.split('-')[1])
+                if type == 'al' and version >= 90:
+                    command = 'dnf install -y dovecot dovecot-mysql'
+                else:
+                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             elif self.distro == openeuler:
-                command = 'dnf install dovecot -y'
+                command = 'dnf install -y dovecot dovecot-mysql'
             else:
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
@@ -1393,6 +1400,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /etc/pki/dovecot/certs/"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                # Copy self-signed certs to where Postfix main.cf expects them
+                command = "cp /etc/dovecot/cert.pem /etc/pki/dovecot/certs/dovecot.pem"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "cp /etc/dovecot/key.pem /etc/pki/dovecot/private/dovecot.pem"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "chmod 600 /etc/pki/dovecot/private/dovecot.pem"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /etc/opendkim/keys/"
@@ -2699,6 +2716,19 @@ vmail
         
         # Start PowerDNS if it was installed
         if os.path.exists('/home/cyberpanel/powerdns'):
+            # Bring the PDNS gmysql schema up to PDNS 4.7+/5.x expectations
+            # before first start. The AlmaLinux/RHEL mirrors may already serve
+            # PDNS 5.x, whose binary requires `domains.catalog` and
+            # `domains.options`. Running this migration here keeps fresh
+            # installs from hitting the same crash-loop that bites upgrades.
+            try:
+                sys.path.append('/usr/local/CyberCP')
+                from plogical.pdnsSchemaMigration import migrate_pdns_schema
+                migrate_pdns_schema(restart_service=False)
+            except BaseException as msg:
+                preFlightsChecks.stdOut(
+                    "[WARNING] PDNS schema pre-flight migration failed: " + str(msg))
+
             preFlightsChecks.stdOut("Starting PowerDNS service...")
             command = 'systemctl start pdns'
             result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2879,11 +2909,13 @@ def main():
         checks.install_postfix_dovecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_dovecot_config(mysql)
+        installCyberPanel.InstallCyberPanel.setupWebmail()
     else:
         if args.postfix == 'ON':
             checks.install_postfix_dovecot()
             checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
             checks.setup_postfix_dovecot_config(mysql)
+            installCyberPanel.InstallCyberPanel.setupWebmail()
 
     checks.install_unzip()
     checks.install_zip()
@@ -2945,13 +2977,19 @@ def main():
         # command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/data/default/configs/'
         # subprocess.call(shlex.split(command))
 
+        # Generate a strong, unique SnappyMail admin password instead of a
+        # well-known default. The same value is applied via SetPassword() below,
+        # so the password recovery in cyberpanel.sh continues to work while no
+        # install ever ships with predictable webmail admin credentials.
+        snappymailAdminPassword = generate_pass()
+
         writeToFile = open('/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini', 'a')
 
         writeToFile.write("""
 [security]
 admin_login = "admin"
-admin_password = "12345"
-""")
+admin_password = "%s"
+""" % (snappymailAdminPassword))
         writeToFile.close()
 
         content = """<?php
@@ -2963,7 +3001,7 @@ $oConfig = \snappymail\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
-?>""" % (generate_pass())
+?>""" % (snappymailAdminPassword)
 
         writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
         writeToFile.write(content)

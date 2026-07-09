@@ -314,12 +314,11 @@ gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
         cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 RHEL10 repository list - AlmaLinux 10 compatible
+# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel10-amd64/
-module_hotfixes=1
+baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -561,8 +560,8 @@ elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
-  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
@@ -1123,14 +1122,8 @@ log_function_start "Pre_Install_Setup_Repository"
 log_info "Setting up package repositories for $Server_OS $Server_OS_Version"
 if [[ $Server_OS = "CentOS" ]] ; then
   log_debug "Importing LiteSpeed GPG key"
-  # Import LiteSpeed GPG key with fallback
-  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed || {
-    warning "Primary GPG key import failed, trying alternative source"
-    rpm --import https://rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed || {
-      error "Failed to import LiteSpeed GPG key from all sources"
-      return 1
-    }
-  }
+  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
+  #import the LiteSpeed GPG key
 
   yum clean all
   yum autoremove -y epel-release
@@ -1360,20 +1353,6 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
 
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel boost-devel boost-program-options
       Check_Return
-    
-    # Fix boost library compatibility for galera-4 on AlmaLinux 10
-    if [[ "$Server_OS_Version" = "10" ]]; then
-      # Create symlink for boost libraries if needed
-      if [ ! -f /usr/lib64/libboost_program_options.so.1.75.0 ]; then
-        BOOST_VERSION=$(find /usr/lib64 -name "libboost_program_options.so.*" | head -1 | sed 's/.*libboost_program_options\.so\.//')
-        if [ -n "$BOOST_VERSION" ]; then
-          ln -sf /usr/lib64/libboost_program_options.so.$BOOST_VERSION /usr/lib64/libboost_program_options.so.1.75.0
-          log_info "Created boost library symlink for galera-4 compatibility: $BOOST_VERSION -> 1.75.0"
-        else
-          warning "Could not find boost libraries, galera-4 may not work properly"
-        fi
-      fi
-    fi
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
@@ -1986,9 +1965,30 @@ Current_Dir="$(pwd)"
 rm -f /usr/local/lsws/cyberpanel-tmp
 mkdir /usr/local/lsws/cyberpanel-tmp
 cd /usr/local/lsws/cyberpanel-tmp || exit
+
+# Try to download timezonedb, but continue if it fails
 wget -O timezonedb.tgz https://cyberpanel.sh/pecl.php.net/get/timezonedb
+if [ ! -f timezonedb.tgz ] || [ ! -s timezonedb.tgz ]; then
+    log_info "WARNING: Failed to download timezonedb, skipping installation"
+    cd "$Current_Dir" || exit
+    rm -rf /usr/local/lsws/cyberpanel-tmp
+    return 0
+fi
+
 tar xzvf timezonedb.tgz
-cd timezonedb-*  || exit
+if [ ! -d timezonedb-* ]; then
+    log_info "WARNING: Failed to extract timezonedb, skipping installation"
+    cd "$Current_Dir" || exit
+    rm -rf /usr/local/lsws/cyberpanel-tmp
+    return 0
+fi
+
+cd timezonedb-* || {
+    log_info "WARNING: Cannot enter timezonedb directory, skipping installation"
+    cd "$Current_Dir" || exit
+    rm -rf /usr/local/lsws/cyberpanel-tmp
+    return 0
+}
 
 # Install required packages for building PHP extensions
 if [[ "$Server_OS" = "Ubuntu" ]] ; then
@@ -2179,6 +2179,85 @@ openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -
 rm -f /root/cyberpanel/cert_conf
 }
 
+# When lscpd sets PYTHONHOME=/usr, lswsgi loads Django from system Python—not the CyberCP venv.
+# Mirror requirements into system site-packages. See https://peps.python.org/pep-0668/
+Install_CyberCP_Runtime_Python_Requirements() {
+  local req_hint="${1:-}"
+  _cprt_log() {
+    echo -e "$1"
+    if touch /var/log/installLogs.txt 2>/dev/null; then
+      echo -e "$1" >> /var/log/installLogs.txt
+    fi
+  }
+
+  local py_cmd=""
+  command -v python3 >/dev/null 2>&1 && py_cmd="$(command -v python3)"
+  [[ -z "$py_cmd" && -x /usr/bin/python3 ]] && py_cmd=/usr/bin/python3
+  if [[ -z "$py_cmd" ]]; then
+    for p in /usr/bin/python3.12 /usr/bin/python3.11 /usr/bin/python3.10; do
+      [[ -x "$p" ]] && py_cmd="$p" && break
+    done
+  fi
+  if [[ -z "$py_cmd" ]]; then
+    _cprt_log "Runtime pip: no python3; skipping system install."
+    return 0
+  fi
+
+  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
+    _cprt_log "Runtime pip: ensurepip for missing pip module..."
+    "$py_cmd" -m ensurepip --upgrade >/dev/null 2>&1 || true
+  fi
+
+  local req_file=""
+  if [[ -n "$req_hint" && -f "$req_hint" ]] && grep -q "Django==" "$req_hint" 2>/dev/null; then
+    req_file="$req_hint"
+  elif [[ -f /etc/cyberpanel/cyberpanel-requirments-runtime.txt ]] && grep -q "Django==" /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then
+    req_file="/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+  elif [[ -f /usr/local/requirments.txt ]] && grep -q "Django==" /usr/local/requirments.txt 2>/dev/null; then
+    req_file="/usr/local/requirments.txt"
+  else
+    local td="/tmp/cyberpanel-req-inst.$$"
+    mkdir -p "$td" 2>/dev/null || td="/tmp"
+    if [[ -n "${Git_Content_URL:-}" && -n "${Branch_Name:-}" ]]; then
+      wget -q -O "$td/r.txt" "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>/dev/null && grep -q "Django==" "$td/r.txt" 2>/dev/null && req_file="$td/r.txt"
+      [[ -z "$req_file" ]] && wget -q -O "$td/r.txt" "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>/dev/null && grep -q "Django==" "$td/r.txt" 2>/dev/null && req_file="$td/r.txt"
+    fi
+    [[ -z "$req_file" ]] && wget -q -O "$td/s.txt" "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt" 2>/dev/null \
+      && grep -q "Django==" "$td/s.txt" 2>/dev/null && req_file="$td/s.txt"
+  fi
+  if [[ -z "$req_file" || ! -f "$req_file" ]]; then
+    _cprt_log "Runtime pip: no usable requirements file; skipping."
+    return 0
+  fi
+  _cprt_log "Runtime pip: using $py_cmd and $req_file"
+
+  local -a PIP_EXTRA=()
+  if compgen -G "/usr/lib/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1 \
+    || compgen -G "/usr/lib64/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1; then
+    PIP_EXTRA+=(--break-system-packages)
+  fi
+
+  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --upgrade pip setuptools wheel packaging "${PIP_EXTRA[@]}" || true
+  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file"
+  local rt=$?
+
+  if [[ $rt -ne 0 ]]; then
+    _cprt_log "Runtime pip: retry with PIP_BREAK_SYSTEM_PACKAGES=1..."
+    env PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_BREAK_SYSTEM_PACKAGES=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed --break-system-packages -r "$req_file"
+    rt=$?
+  fi
+  if [[ $rt -ne 0 ]]; then
+    _cprt_log "ERROR: system pip failed ($rt). Run: $py_cmd -m pip install -r $req_file --break-system-packages"
+    return 0
+  fi
+
+  if env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django, docker" 2>/dev/null; then
+    _cprt_log "Runtime pip: verify OK (django, docker)."
+  else
+    _cprt_log "WARNING: django/docker not importable under PYTHONHOME=/usr."
+  fi
+}
+
 Post_Install_Required_Components() {
 Debug_Log2 "Finalization..,80"
 
@@ -2243,17 +2322,29 @@ else
   echo -e "Django is properly installed"
 fi
 
+mkdir -p /etc/cyberpanel
+if [[ -f /usr/local/requirments.txt ]]; then
+  cp -f /usr/local/requirments.txt /etc/cyberpanel/cyberpanel-requirments-runtime.txt
+fi
+
 if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
   # Ubuntu 24.04 ships with Python 3.12, but using 3.10 for compatibility with CyberPanel
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
 else
   if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
     echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+    Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
   else
     # Uncomment and use the following lines if necessary for other OS versions
     # rsync -av --ignore-existing /usr/lib64/python3.9/ /usr/local/CyberCP/lib64/python3.9/
     # Check_Return
     :
+  fi
+fi
+
+if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /usr/local/lscp/conf/pythonenv.conf 2>/dev/null; then
+  if ! env PYTHONHOME=/usr PYTHONPATH= "$(command -v python3 2>/dev/null || echo /usr/bin/python3)" -c "import django" 2>/dev/null; then
+    Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
   fi
 fi
 

@@ -5,6 +5,11 @@ import json
 from loginSystem.models import Administrator
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import HttpResponse
+try:
+    from django.utils.http import url_has_allowed_host_and_scheme
+except ImportError:
+    from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
+from plogical.securityUtils import api_token_matches
 
 @csrf_exempt
 def router(request):
@@ -453,7 +458,7 @@ def access(request):
         if admin.api == 0:
             return HttpResponse('API Access Disabled.')
 
-        if token == admin.token.lstrip('Basic ').rstrip('='):
+        if api_token_matches(token, admin.token):
             try:
                 del request.session['userID']
             except:
@@ -465,6 +470,11 @@ def access(request):
                 return redirect(renderBase)
             else:
                 from django.shortcuts import redirect
+                if not url_has_allowed_host_and_scheme(
+                        redirectFinal,
+                        allowed_hosts={request.get_host()},
+                        require_https=request.is_secure()):
+                    return HttpResponse('Invalid redirect target.')
                 return redirect(redirectFinal)
         else:
             return HttpResponse('Unauthorized access.')

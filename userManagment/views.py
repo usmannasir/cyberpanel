@@ -197,6 +197,14 @@ def submitUserCreation(request):
 
             elif currentACL['changeUserACL'] == 1:
 
+                # A non-admin must not be able to create an admin-level account.
+                if selectedACL.adminStatus == 1:
+                    data_ret = {'status': 0, 'createStatus': 0,
+                                'error_message': "You are not authorized to access this resource."}
+
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
                 newAdmin = Administrator(firstName=firstName,
                                          lastName=lastName,
                                          email=email,
@@ -371,14 +379,18 @@ def saveModifications(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
-            password = hashPassword.hash_password(data['passwordByPass'])
-
             user.firstName = firstName
             user.lastName = lastName
             user.email = email
-            user.password = password
-            user.token = token
+
+            # Only change the password when a new, non-empty one is supplied.
+            # Leaving the password field blank must preserve the existing password
+            # (otherwise the account would be left with a blank/empty password).
+            newPassword = data.get('passwordByPass') or ''
+            if newPassword.strip():
+                user.password = hashPassword.hash_password(newPassword)
+                user.token = hashPassword.generateToken(accountUsername, newPassword)
+
             user.type = 0
             user.twoFA = twofa
 
@@ -682,11 +694,16 @@ def changeACLFunc(request):
         elif currentACL['changeUserACL'] == 1:
             selectedACL = ACL.objects.get(name=data['selectedACL'])
             selectedUser = Administrator.objects.get(userName=data['selectedUser'])
+            loggedUser = Administrator.objects.get(pk=val)
 
-            selectedUser.acl = selectedACL
-            selectedUser.save()
-
-            finalResponse = {'status': 1}
+            # A non-admin may only re-ACL users they own, and may never assign an
+            # admin-level ACL (that would escalate the target to super-admin).
+            if ACLManager.checkUserOwnerShip(currentACL, loggedUser, selectedUser) == 0 or selectedACL.adminStatus == 1:
+                finalResponse = ACLManager.loadErrorJson()
+            else:
+                selectedUser.acl = selectedACL
+                selectedUser.save()
+                finalResponse = {'status': 1}
         else:
             finalResponse = ACLManager.loadErrorJson()
 

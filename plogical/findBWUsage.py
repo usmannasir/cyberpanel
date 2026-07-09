@@ -20,43 +20,8 @@ class findBWUsage:
     def parse_last_digits(line):
         """Safely parse log line and extract bandwidth data"""
         try:
-            parts = line.split(' ')
-            if len(parts) < 10:
-                return None
-            # Extract the size field (index 9) and clean it
-            size_str = parts[9].replace('"', '').strip()
-            if size_str == '-':
-                return 0
-            return int(size_str)
-        except (ValueError, IndexError, AttributeError):
-            return None
+            path = "/home/"+domainName+"/logs/"+domainName+".access_log"
 
-    @staticmethod
-    def get_file_size_mb(filepath):
-        """Get file size in MB"""
-        try:
-            return os.path.getsize(filepath) / (1024 * 1024)
-        except OSError:
-            return 0
-
-    @staticmethod
-    def set_memory_limit():
-        """Set memory limit to prevent system overload"""
-        try:
-            # Set memory limit to MAX_MEMORY_MB
-            memory_limit = findBWUsage.MAX_MEMORY_MB * 1024 * 1024  # Convert to bytes
-            resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
-        except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Failed to set memory limit: {str(e)}")
-
-    @staticmethod
-    def calculateBandwidth(domainName):
-        """Calculate bandwidth usage for a domain with memory protection"""
-        start_time = time.time()
-        
-        try:
-            path = "/home/" + domainName + "/logs/" + domainName + ".access_log"
-            
             if not os.path.exists(path):
                 return 0
                 
@@ -151,7 +116,7 @@ class findBWUsage:
             if processing_time > 10:  # Log if processing took more than 10 seconds
                 logging.CyberCPLogFileWriter.writeToFile(f"Processed {domainName}: {lines_processed} lines in {processing_time:.2f}s")
 
-        except Exception as msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [calculateBandwidth]")
             return 0
 
@@ -168,30 +133,9 @@ class findBWUsage:
             domains_processed = 0
             
             for directories in os.listdir("/home"):
-                # Check overall processing time
-                if time.time() - start_time > findBWUsage.MAX_PROCESSING_TIME * 2:
-                    logging.CyberCPLogFileWriter.writeToFile("Overall processing timeout reached")
-                    break
-                
                 if validators.domain(directories):
-                    try:
-                        result = findBWUsage.calculateBandwidth(directories)
-                        domains_processed += 1
-                        
-                        # Force garbage collection after each domain
-                        gc.collect()
-                        
-                        # Small delay to prevent system overload
-                        time.sleep(0.1)
-                        
-                    except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Error processing domain {directories}: {str(e)}")
-                        continue
-            
-            total_time = time.time() - start_time
-            logging.CyberCPLogFileWriter.writeToFile(f"Bandwidth calculation completed: {domains_processed} domains in {total_time:.2f}s")
-            
-        except Exception as msg:
+                    findBWUsage.calculateBandwidth(directories)
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startCalculations]")
             return 0
 
@@ -235,6 +179,7 @@ class findBWUsage:
             else:
                 return [0, 0]
 
+
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             return [0, 0]
@@ -259,6 +204,7 @@ class findBWUsage:
             print("        Language Changed to English                ")
             print("###############################################")
 
+
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [changeSystemLanguage]")
             return 0
@@ -269,5 +215,4 @@ class findBWUsage:
         return 1
 
 
-if __name__ == "__main__":
-    findBWUsage.startCalculations()
+findBWUsage.startCalculations()

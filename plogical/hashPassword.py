@@ -3,14 +3,21 @@ import bcrypt
 import hashlib
 
 def hash_password(password):
-    # uuid is used to generate a random number
-    salt = uuid.uuid4().hex
-    return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    # Use bcrypt (slow, salted KDF) for new password hashes. Legacy salted
+    # SHA-256 hashes ("<sha256hex>:<salt>") remain verifiable by check_password,
+    # so existing accounts are not locked out and upgrade on next password set.
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def check_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
+    try:
+        if hashed_password.startswith('$2'):
+            return bcrypt.checkpw(user_password.encode(), hashed_password.encode())
+        # Legacy format: "<sha256hex>:<salt>"
+        password, salt = hashed_password.split(':')
+        return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
+    except Exception:
+        return False
 
 # def generateToken(serverUserName, serverPassword):
 #     credentials = '{0}:{1}'.format(serverUserName, serverPassword).encode()

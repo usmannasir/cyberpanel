@@ -6706,6 +6706,15 @@ class ApplicationInstaller(multi.Thread):
 
             ####
 
+            # Ensure /home/cyberpanel directory exists with proper permissions
+            if not os.path.exists('/home/cyberpanel'):
+                command = 'mkdir -p /home/cyberpanel'
+                ProcessUtilities.executioner(command)
+
+            # Set proper permissions to allow application to write to the directory
+            command = 'chmod 755 /home/cyberpanel'
+            ProcessUtilities.executioner(command)
+
             sftp = ssh.open_sftp()
 
             logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
@@ -6724,26 +6733,33 @@ class ApplicationInstaller(multi.Thread):
             successRet = stdout.read().decode().strip()
             errorRet = stderr.read().decode().strip()
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(f"Command used to retrieve backup {command}")
-                if errorRet:
+            # Check if SCP had errors and fallback to SFTP if needed
+            if errorRet:
+                if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
+                    logging.writeToFile(f"Command used to retrieve backup {command}")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(f"SCP failed, falling back to SFTP...,20")
+                statusFile.close()
+
+                try:
+                    sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}',
+                             callback=self.UpdateDownloadStatus)
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f"Successfully downloaded via SFTP")
+
+                except BaseException as msg:
+                    logging.writeToFile(f"Failed to download file {str(msg)} [404]")
                     statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(f"Error in scp command to retrieve backup {errorRet}.")
+                    statusFile.writelines(f"Failed to download file {str(msg)} [404]")
                     statusFile.close()
-
-                    try:
-                        sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}',
-                                 callback=self.UpdateDownloadStatus)
-                    except BaseException as msg:
-                        logging.writeToFile(f"Failed to download file {str(msg)} [404]")
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines(f"Failed to download file {str(msg)} [404]")
-                        statusFile.close()
-                        return 0
-
-                else:
+                    return 0
+            else:
+                if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+                    logging.writeToFile(f"Command used to retrieve backup {command}")
 
 
 

@@ -2,6 +2,7 @@
 
 from django.http import HttpResponse
 import json
+import shlex
 import plogical.CyberCPLogFileWriter as logging
 from plogical.httpProc import httpProc
 from plogical.installUtilities import installUtilities
@@ -107,8 +108,25 @@ def clearLogFile(request):
 
                 fileName = data['fileName']
 
+                # Only allow clearing the known server log files; never an arbitrary path.
+                allowedLogFiles = {
+                    installUtilities.Server_root_path + "/logs/access.log",
+                    installUtilities.Server_root_path + "/logs/error.log",
+                    "/usr/local/lsws/logs/access.log",
+                    "/usr/local/lsws/logs/error.log",
+                    "/usr/local/lsws/logs/auditmodsec.log",
+                    "/var/log/maillog",
+                    "/var/log/mail.log",
+                    "/var/log/messages",
+                    "/var/log/syslog",
+                    "/home/cyberpanel/error-logs.txt",
+                }
+
+                if fileName not in allowedLogFiles:
+                    return ACLManager.loadErrorJson('cleanStatus', 0)
+
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
-                execPath = execPath + " cleanLogFile --fileName " + fileName
+                execPath = execPath + " cleanLogFile --fileName " + shlex.quote(fileName)
 
                 output = ProcessUtilities.outputExecutioner(execPath)
 

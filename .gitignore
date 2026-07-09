@@ -118,3 +118,7 @@ dmypy.json
 /etc/cyberpanel/
 cyberpanel_password.txt
 mysql_password.txt
+
+# Documentation files (local reference only)
+CHANGES_SUMMARY.md
+RESOURCE_LIMITS_IMPLEMENTATION.md

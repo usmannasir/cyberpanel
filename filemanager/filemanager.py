@@ -158,7 +158,31 @@ class FileManager:
         return HttpResponse(final_json)
 
     def returnPathEnclosed(self, path):
-        return "'" + path + "'"
+        return "'" + str(path).replace("'", "'\"'\"'") + "'"
+
+    def validPermissions(self, permissions):
+        try:
+            permissions = str(permissions)
+            return len(permissions) in (3, 4) and all(ch in '01234567' for ch in permissions)
+        except:
+            return False
+
+    def pathInside(self, path, root):
+        try:
+            real_path = os.path.realpath(path)
+            real_root = os.path.realpath(root)
+            return os.path.commonpath([real_path, real_root]) == real_root
+        except:
+            return False
+
+    def notInside(self, path, root):
+        # Returns True when `path` is NOT safely contained within `root`.
+        # Rejects literal '..' and, after resolving symlinks/'..', any path that
+        # escapes `root`. This fixes the previous substring check which could be
+        # bypassed via symlinks or a non-prefix match of the home path.
+        if '..' in str(path):
+            return True
+        return not self.pathInside(path, root)
 
     def changeOwner(self, path):
         try:
@@ -186,8 +210,7 @@ class FileManager:
 
                 pathCheck = '/home/%s' % (domainName)
 
-                if self.data['completeStartingPath'].find(pathCheck) == -1 or self.data['completeStartingPath'].find(
-                        '..') > -1:
+                if self.notInside(self.data['completeStartingPath'], pathCheck):
                     return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
                 command = "ls -la --group-directories-first " + self.returnPathEnclosed(
@@ -197,8 +220,7 @@ class FileManager:
             except:
                 pathCheck = '/'
 
-                if self.data['completeStartingPath'].find(pathCheck) == -1 or self.data['completeStartingPath'].find(
-                        '..') > -1:
+                if self.notInside(self.data['completeStartingPath'], pathCheck):
                     return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
                 command = "ls -la --group-directories-first " + self.returnPathEnclosed(
@@ -314,21 +336,21 @@ class FileManager:
                 website = Websites.objects.get(domain=domainName)
                 homePath = '/home/%s' % (domainName)
 
-                if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
+                if self.notInside(self.data['fileName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command, website.externalApp)
-                self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+                self.changeOwner(self.data['fileName'])
             except:
                 homePath = '/'
 
-                if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
+                if self.notInside(self.data['fileName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command)
-                self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+                self.changeOwner(self.data['fileName'])
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -345,23 +367,23 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if self.data['folderName'].find('..') > -1 or self.data['folderName'].find(homePath) == -1:
+                if self.notInside(self.data['folderName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
                 ProcessUtilities.executioner(command, website.externalApp)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
+                self.changeOwner(self.data['folderName'])
             except:
                 homePath = '/'
 
-                if self.data['folderName'].find('..') > -1 or self.data['folderName'].find(homePath) == -1:
+                if self.notInside(self.data['folderName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
                 ProcessUtilities.executioner(command)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
+                self.changeOwner(self.data['folderName'])
 
 
             json_data = json.dumps(finalData)
@@ -386,24 +408,23 @@ class FileManager:
 
                 RemoveOK = 1
 
-                command = 'touch %s/hello.txt' % (self.homePath)
+                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                 result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('No such file or directory') > -1:
                     RemoveOK = 0
 
-                    command = 'chattr -R -i %s' % (self.homePath)
+                    command = 'chattr -R -i %s' % (self.returnPathEnclosed(self.homePath))
                     ProcessUtilities.executioner(command)
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (self.homePath)
+                    command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                     ProcessUtilities.executioner(command)
 
 
                 for item in self.data['fileAndFolders']:
 
-                    if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
-                            self.homePath) == -1:
+                    if self.notInside(self.data['path'] + '/' + item, self.homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     if skipTrash:
@@ -412,17 +433,19 @@ class FileManager:
                     else:
                         trashPath = '%s/.trash' % (self.homePath)
 
-                        command = 'mkdir %s' % (trashPath)
+                        command = 'mkdir %s' % (self.returnPathEnclosed(trashPath))
                         ProcessUtilities.executioner(command, website.externalApp)
 
                         Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
                               fileName=self.returnPathEnclosed(item)).save()
 
-                        command = 'mv %s %s' % (self.returnPathEnclosed(self.data['path'] + '/' + item), trashPath)
+                        command = 'mv %s %s' % (
+                            self.returnPathEnclosed(self.data['path'] + '/' + item),
+                            self.returnPathEnclosed(trashPath))
                         ProcessUtilities.executioner(command, website.externalApp)
 
                 if RemoveOK == 0:
-                    command = 'chattr -R +i %s' % (self.homePath)
+                    command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
                     ProcessUtilities.executioner(command)
             except:
                 try:
@@ -435,23 +458,22 @@ class FileManager:
 
                 RemoveOK = 1
 
-                command = 'touch %s/hello.txt' % (self.homePath)
+                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                 result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('No such file or directory') > -1:
                     RemoveOK = 0
 
-                    command = 'chattr -R -i %s' % (self.homePath)
+                    command = 'chattr -R -i %s' % (self.returnPathEnclosed(self.homePath))
                     ProcessUtilities.executioner(command)
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (self.homePath)
+                    command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                     ProcessUtilities.executioner(command)
 
                 for item in self.data['fileAndFolders']:
 
-                    if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
-                            self.homePath) == -1:
+                    if self.notInside(self.data['path'] + '/' + item, self.homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     if skipTrash:
@@ -460,7 +482,7 @@ class FileManager:
 
 
                 if RemoveOK == 0:
-                    command = 'chattr -R +i %s' % (self.homePath)
+                    command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
                     ProcessUtilities.executioner(command)
 
             json_data = json.dumps(finalData)
@@ -486,8 +508,7 @@ class FileManager:
 
             for item in self.data['fileAndFolders']:
 
-                if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
-                        self.homePath) == -1:
+                if self.notInside(self.data['path'] + '/' + item, self.homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 trashPath = '%s/.trash' % (self.homePath)
@@ -517,18 +538,17 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if self.data['newPath'].find('..') > -1 or self.data['newPath'].find(homePath) == -1:
+                if self.notInside(self.data['newPath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if len(self.data['fileAndFolders']) == 1:
 
-                    if (self.data['basePath'] + '/' + self.data['fileAndFolders'][0]).find('..') > -1 or (
-                            self.data['basePath'] + '/' + self.data['fileAndFolders'][0]).find(homePath) == -1:
+                    if self.notInside(self.data['basePath'] + '/' + self.data['fileAndFolders'][0], homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'yes| cp -Rf %s %s' % (
                         self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['fileAndFolders'][0]),
-                        self.data['newPath'])
+                        self.returnPathEnclosed(self.data['newPath']))
                     ProcessUtilities.executioner(command, website.externalApp)
                     self.changeOwner(self.data['newPath'])
                     json_data = json.dumps(finalData)
@@ -538,8 +558,7 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 for item in self.data['fileAndFolders']:
-                    if (self.data['basePath'] + '/' + item).find('..') > -1 or (self.data['basePath'] + '/' + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(
@@ -552,18 +571,17 @@ class FileManager:
 
                 homePath = '/'
 
-                if self.data['newPath'].find('..') > -1 or self.data['newPath'].find(homePath) == -1:
+                if self.notInside(self.data['newPath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if len(self.data['fileAndFolders']) == 1:
 
-                    if (self.data['basePath'] + '/' + self.data['fileAndFolders'][0]).find('..') > -1 or (
-                            self.data['basePath'] + '/' + self.data['fileAndFolders'][0]).find(homePath) == -1:
+                    if self.notInside(self.data['basePath'] + '/' + self.data['fileAndFolders'][0], homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'yes| cp -Rf %s %s' % (
                         self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['fileAndFolders'][0]),
-                        self.data['newPath'])
+                        self.returnPathEnclosed(self.data['newPath']))
                     ProcessUtilities.executioner(command,)
                     self.changeOwner(self.data['newPath'])
                     json_data = json.dumps(finalData)
@@ -573,9 +591,7 @@ class FileManager:
                 ProcessUtilities.executioner(command)
 
                 for item in self.data['fileAndFolders']:
-                    if (self.data['basePath'] + '/' + item).find('..') > -1 or (
-                            self.data['basePath'] + '/' + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(
@@ -606,12 +622,10 @@ class FileManager:
 
                 for item in self.data['fileAndFolders']:
 
-                    if (self.data['basePath'] + '/' + item).find('..') > -1 or (self.data['basePath'] + '/' + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                    if (self.data['newPath'] + '/' + item).find('..') > -1 or (self.data['newPath'] + '/' + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['newPath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'mv ' + self.returnPathEnclosed(
@@ -632,13 +646,10 @@ class FileManager:
 
                 for item in self.data['fileAndFolders']:
 
-                    if (self.data['basePath'] + '/' + item).find('..') > -1 or (
-                            self.data['basePath'] + '/' + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                    if (self.data['newPath'] + '/' + item).find('..') > -1 or (self.data['newPath'] + '/' + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['newPath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'mv ' + self.returnPathEnclosed(
@@ -666,11 +677,10 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if (self.data['basePath'] + '/' + self.data['existingName']).find('..') > -1 or (
-                        self.data['basePath'] + '/' + self.data['existingName']).find(homePath) == -1:
+                if self.notInside(self.data['basePath'] + '/' + self.data['existingName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if (self.data['newFileName']).find('..') > -1 or (self.data['basePath']).find(homePath) == -1:
+                if '..' in str(self.data['newFileName']) or self.notInside(self.data['basePath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'mv ' + self.returnPathEnclosed(
@@ -682,11 +692,10 @@ class FileManager:
             except:
                 homePath = '/'
 
-                if (self.data['basePath'] + '/' + self.data['existingName']).find('..') > -1 or (
-                        self.data['basePath'] + '/' + self.data['existingName']).find(homePath) == -1:
+                if self.notInside(self.data['basePath'] + '/' + self.data['existingName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if (self.data['newFileName']).find('..') > -1 or (self.data['basePath']).find(homePath) == -1:
+                if '..' in str(self.data['newFileName']) or self.notInside(self.data['basePath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'mv ' + self.returnPathEnclosed(
@@ -713,7 +722,7 @@ class FileManager:
 
                 pathCheck = '/home/%s' % (domainName)
 
-                if self.data['fileName'].find(pathCheck) == -1 or self.data['fileName'].find('..') > -1:
+                if self.notInside(self.data['fileName'], pathCheck):
                     return self.ajaxPre(0, 'Not allowed.')
 
                 # Ensure proper UTF-8 handling for file reading
@@ -723,7 +732,7 @@ class FileManager:
             except:
                 pathCheck = '/'
 
-                if self.data['fileName'].find(pathCheck) == -1 or self.data['fileName'].find('..') > -1:
+                if self.notInside(self.data['fileName'], pathCheck):
                     return self.ajaxPre(0, 'Not allowed.')
 
                 # Ensure proper UTF-8 handling for file reading
@@ -753,6 +762,9 @@ class FileManager:
                 domainName = self.data['domainName']
                 website = Websites.objects.get(domain=domainName)
 
+                if not self.pathInside(self.data['fileName'], self.data['home']):
+                    return self.ajaxPre(0, 'Not allowed.')
+
                 writeToFile = open(tempPath, 'wb')
                 writeToFile.write(self.data['fileContent'].encode('utf-8'))
                 writeToFile.close()
@@ -765,7 +777,13 @@ class FileManager:
 
                 os.remove(tempPath)
             except:
+                if self.data.get('domainName', '') != '':
+                    return self.ajaxPre(0, 'Not allowed.')
+
                 self.data['home'] = '/'
+
+                if self.data['fileName'].find('..') > -1 or not self.data['fileName'].startswith('/'):
+                    return self.ajaxPre(0, 'Not allowed.')
 
                 ACLManager.CreateSecureDir()
                 tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
@@ -815,7 +833,7 @@ class FileManager:
                 pathCheck = '/home/%s' % (self.data['domainName'])
                 website = Websites.objects.get(domain=domainName)
 
-                command = 'ls -la %s' % (self.data['completePath'])
+                command = 'ls -la %s' % (self.returnPathEnclosed(self.data['completePath']))
                 result = ProcessUtilities.outputExecutioner(command, website.externalApp)
                 #
                 if result.find('->') > -1:
@@ -824,8 +842,7 @@ class FileManager:
                 if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if (self.data['completePath'] + '/' + myfile.name).find(pathCheck) == -1 or (
-                        (self.data['completePath'] + '/' + myfile.name)).find('..') > -1:
+                if self.notInside(self.data['completePath'] + '/' + myfile.name, pathCheck):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'cp ' + self.returnPathEnclosed(
@@ -833,21 +850,20 @@ class FileManager:
                     self.data['completePath'] + '/' + myfile.name)
                 ProcessUtilities.executioner(command, website.externalApp)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+                self.changeOwner(self.data['completePath'] + '/' + myfile.name)
                 try:
                     os.remove(UploadPath + RanddomFileName)
                 except:
                     pass
             except:
                 pathCheck = '/'
-                command = 'ls -la %s' % (self.data['completePath'])
+                command = 'ls -la %s' % (self.returnPathEnclosed(self.data['completePath']))
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.writeToFile("upload file res %s" % result)
                 if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if (self.data['completePath'] + '/' + myfile.name).find(pathCheck) == -1 or (
-                        (self.data['completePath'] + '/' + myfile.name)).find('..') > -1:
+                if self.notInside(self.data['completePath'] + '/' + myfile.name, pathCheck):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'cp ' + self.returnPathEnclosed(
@@ -855,7 +871,7 @@ class FileManager:
                     self.data['completePath'] + '/' + myfile.name)
                 ProcessUtilities.executioner(command)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+                self.changeOwner(self.data['completePath'] + '/' + myfile.name)
                 try:
                     os.remove(UploadPath + RanddomFileName)
                 except:
@@ -887,10 +903,10 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if self.data['extractionLocation'].find('..') > -1 or self.data['extractionLocation'].find(homePath) == -1:
+                if self.notInside(self.data['extractionLocation'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if self.data['fileToExtract'].find('..') > -1 or self.data['fileToExtract'].find(homePath) == -1:
+                if self.notInside(self.data['fileToExtract'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if self.data['extractionType'] == 'zip':
@@ -907,11 +923,10 @@ class FileManager:
 
                 homePath = '/'
 
-                if self.data['extractionLocation'].find('..') > -1 or self.data['extractionLocation'].find(
-                        homePath) == -1:
+                if self.notInside(self.data['extractionLocation'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if self.data['fileToExtract'].find('..') > -1 or self.data['fileToExtract'].find(homePath) == -1:
+                if self.notInside(self.data['fileToExtract'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if self.data['extractionType'] == 'zip':
@@ -952,13 +967,12 @@ class FileManager:
 
                 for item in self.data['listOfFiles']:
 
-                    if (self.data['basePath'] + item).find('..') > -1 or (self.data['basePath'] + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['basePath'] + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
-                finalCommand = 'cd %s && %s' % (self.data['basePath'], command)
+                finalCommand = 'cd %s && %s' % (self.returnPathEnclosed(self.data['basePath']), command)
 
                 ProcessUtilities.executioner(finalCommand, website.externalApp)
 
@@ -977,12 +991,11 @@ class FileManager:
 
                 for item in self.data['listOfFiles']:
 
-                    if (self.data['basePath'] + item).find('..') > -1 or (self.data['basePath'] + item).find(
-                            homePath) == -1:
+                    if self.notInside(self.data['basePath'] + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
                     command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
-                finalCommand = 'cd %s && %s' % (self.data['basePath'], command)
+                finalCommand = 'cd %s && %s' % (self.returnPathEnclosed(self.data['basePath']), command)
 
                 res = ProcessUtilities.outputExecutioner(finalCommand, "root")
                 logging.writeToFile("compress file res %s"%res)
@@ -1002,6 +1015,9 @@ class FileManager:
             finalData['status'] = 1
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
+
+            if not self.validPermissions(self.data['newPermissions']):
+                return self.ajaxPre(0, 'Invalid permissions.')
 
             if self.data['recursive'] == 1:
                 command = 'chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
@@ -1030,7 +1046,10 @@ class FileManager:
 
         ### symlink checks
 
-        command = 'ls -la /home/%s' % domainName
+        homePath = '/home/%s' % domainName
+        publicHtmlPath = '%s/public_html' % homePath
+
+        command = 'ls -la %s' % self.returnPathEnclosed(homePath)
         result = ProcessUtilities.outputExecutioner(command)
 
         if result.find('->') > -1:
@@ -1039,12 +1058,13 @@ class FileManager:
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
 
-        command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
-        ProcessUtilities.popenExecutioner(command)
+        # Set home directory ownership
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.returnPathEnclosed(homePath))
+        ProcessUtilities.executioner(command)
 
         ### Sym link checks
 
-        command = 'ls -la /home/%s/public_html/' % domainName
+        command = 'ls -la %s' % self.returnPathEnclosed(publicHtmlPath)
         result = ProcessUtilities.outputExecutioner(command)
 
         if result.find('->') > -1:
@@ -1053,29 +1073,26 @@ class FileManager:
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
 
-        command = 'chown -R -P %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
-        ProcessUtilities.popenExecutioner(command)
-
-        command = 'chown -R -P %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
-        ProcessUtilities.popenExecutioner(command)
-
-        # command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
-        # ProcessUtilities.popenExecutioner(command)
-
-        command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
-        ProcessUtilities.popenExecutioner(command)
-
-        command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
-        ProcessUtilities.popenExecutioner(command)
-
-        command = 'chown %s:%s /home/%s/public_html' % (externalApp, groupName, domainName)
+        # Set file permissions first (before ownership to avoid conflicts)
+        command = "find %s -type d -exec chmod 0755 {} \;" % self.returnPathEnclosed(publicHtmlPath)
         ProcessUtilities.executioner(command)
 
-        command = 'chmod 750 /home/%s/public_html' % (domainName)
+        command = "find %s -type f -exec chmod 0644 {} \;" % self.returnPathEnclosed(publicHtmlPath)
         ProcessUtilities.executioner(command)
 
+        # Set ownership for all files inside public_html to user:user
+        command = 'chown -R -P %s:%s %s/*' % (externalApp, externalApp, self.returnPathEnclosed(publicHtmlPath))
+        ProcessUtilities.executioner(command)
+
+        command = 'chown -R -P %s:%s %s/.[^.]*' % (externalApp, externalApp, self.returnPathEnclosed(publicHtmlPath))
+        ProcessUtilities.executioner(command)
+
+        # Process child domains first
         for childs in website.childdomains_set.all():
-            command = 'ls -la %s' % childs.path
+            childPath = childs.path
+            childPathArg = self.returnPathEnclosed(childPath)
+
+            command = 'ls -la %s' % childPathArg
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('->') > -1:
@@ -1084,21 +1101,30 @@ class FileManager:
                      'error_message': "Symlink attack."})
                 return HttpResponse(final_json)
 
+            # Set file permissions first
+            command = "find %s -type d -exec chmod 0755 {} \;" % childPathArg
+            ProcessUtilities.executioner(command)
 
-            command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            command = "find %s -type f -exec chmod 0644 {} \;" % childPathArg
+            ProcessUtilities.executioner(command)
 
-            command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            # Set ownership for all files inside child domain to user:user
+            command = 'chown -R -P %s:%s %s/*' % (externalApp, externalApp, childPathArg)
+            ProcessUtilities.executioner(command)
 
-            command = 'chown -R -P %s:%s %s/*' % (externalApp, externalApp, childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            command = 'chown -R -P %s:%s %s/.[^.]*' % (externalApp, externalApp, childPathArg)
+            ProcessUtilities.executioner(command)
 
-            command = 'chown -R -P %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            # Set child domain directory itself to 755 with user:nogroup
+            command = 'chmod 755 %s' % childPathArg
+            ProcessUtilities.executioner(command)
 
-            command = 'chmod 755 %s' % (childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            command = 'chown %s:%s %s' % (externalApp, groupName, childPathArg)
+            ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (externalApp, groupName, childs.path)
-            ProcessUtilities.popenExecutioner(command)
+        # Set public_html directory itself to user:nogroup with 750 permissions (done at the end)
+        command = 'chown %s:%s %s' % (externalApp, groupName, self.returnPathEnclosed(publicHtmlPath))
+        ProcessUtilities.executioner(command)
+
+        command = 'chmod 750 %s' % self.returnPathEnclosed(publicHtmlPath)
+        ProcessUtilities.executioner(command)

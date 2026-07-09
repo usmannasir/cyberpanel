@@ -113,7 +113,19 @@ class secMiddleware:
                 except:
                     data = request.POST
 
-                for key, value in data.items():
+                # Skip the input character validation for the webmail app.
+                # All webmail input (message bodies, subjects, recipient names,
+                # search queries, sieve rules, contacts) is free-form text that is
+                # handled exclusively through Python IMAP/SMTP/Sieve libraries and
+                # never reaches a shell, so the command-injection character checks
+                # only produce false positives (e.g. an email reply containing ;,
+                # |, $ or backticks). See issue #1813. Note: this only skips input
+                # validation -- the request still falls through to the response
+                # path below where the security headers (nosniff, X-Frame-Options,
+                # CSP, Referrer-Policy) are applied.
+                webmailRequest = pathActual.startswith('/webmail/')
+
+                for key, value in ({} if webmailRequest else data).items():
                     valueAlreadyChecked = 0
 
                     # Key/value scanning logging removed
@@ -192,9 +204,13 @@ class secMiddleware:
                                    pathActual.find('/api/') > -1 or pathActual.find('aiscanner/scheduled-scans') > -1)
                     
                     if isAPIEndpoint:
+                        # Skip validation for fields that contain legitimate code/scripts
+                        if key == 'content' or key == 'fileContent' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'contentNow' or key == 'emailMessage':
+                            continue
+
                         # For API endpoints, still check for the most dangerous command injection characters
-                        if isinstance(value, (str, bytes)) and (value.find('- -') > -1 or value.find('\n') > -1 or value.find(';') > -1 or 
-                            value.find('&&') > -1 or value.find('||') > -1 or value.find('|') > -1 or 
+                        if isinstance(value, (str, bytes)) and (value.find('- -') > -1 or value.find('\n') > -1 or value.find(';') > -1 or
+                            value.find('&&') > -1 or value.find('||') > -1 or value.find('|') > -1 or
                             value.find('...') > -1 or value.find("`") > -1 or value.find("$") > -1 or
                             value.find('../') > -1 or value.find('../../') > -1):
                             logging.writeToFile(request.body)
@@ -212,7 +228,7 @@ class secMiddleware:
                             or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' \
                             or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' \
                             or key == 'fileContent' or key == 'commands' or key == 'gitHost' or key == 'ipv6' or key == 'contentNow' \
-                            or key == 'time_of_day' or key == 'notification_emails' or key == 'domains':
+                            or key == 'time_of_day' or key == 'notification_emails' or key == 'domains' or key == 'content':
                         continue
 
                     # Skip validation for API endpoints that need JSON structure characters

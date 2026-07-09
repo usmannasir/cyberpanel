@@ -35,4 +35,22 @@ urlpatterns = [
     ### email limits
     re_path(r'^EmailLimits$', views.EmailLimits, name='EmailLimits'),
     re_path(r'^SaveEmailLimitsNew$', views.SaveEmailLimitsNew, name='SaveEmailLimitsNew'),
+
+    ## Catch-All Email
+    re_path(r'^catchAllEmail$', views.catchAllEmail, name='catchAllEmail'),
+    re_path(r'^fetchCatchAllConfig$', views.fetchCatchAllConfig, name='fetchCatchAllConfig'),
+    re_path(r'^saveCatchAllConfig$', views.saveCatchAllConfig, name='saveCatchAllConfig'),
+    re_path(r'^deleteCatchAllConfig$', views.deleteCatchAllConfig, name='deleteCatchAllConfig'),
+
+    ## Plus-Addressing
+    re_path(r'^plusAddressingSettings$', views.plusAddressingSettings, name='plusAddressingSettings'),
+    re_path(r'^fetchPlusAddressingConfig$', views.fetchPlusAddressingConfig, name='fetchPlusAddressingConfig'),
+    re_path(r'^savePlusAddressingGlobal$', views.savePlusAddressingGlobal, name='savePlusAddressingGlobal'),
+    re_path(r'^savePlusAddressingDomain$', views.savePlusAddressingDomain, name='savePlusAddressingDomain'),
+
+    ## Pattern Forwarding
+    re_path(r'^patternForwarding$', views.patternForwarding, name='patternForwarding'),
+    re_path(r'^fetchPatternRules$', views.fetchPatternRules, name='fetchPatternRules'),
+    re_path(r'^createPatternRule$', views.createPatternRule, name='createPatternRule'),
+    re_path(r'^deletePatternRule$', views.deletePatternRule, name='deletePatternRule'),
 ]

@@ -6,1260 +6,1484 @@
     {% load static %}
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
-    
+
     <div ng-controller="launchChild" ng-init="childDomainName='{{ childDomain }}'; masterDomain='{{ domain }}'">
 
     <style>
-        /* Ultra-Modern CyberPanel Design System */
-        /* :root block commented out to allow dark mode variables from base template
-        :root {
-            --primary-color: #6366f1;
-            --primary-hover: #5558e3;
-            --primary-light: #eef2ff;
-            --secondary-color: #8b5cf6;
-            --accent-color: #ec4899;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #3b82f6;
-            
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --bg-gradient-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --bg-gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            
-            --bg-light: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-hover: #f1f5f9;
-            --border-color: #e2e8f0;
-            --border-light: #f1f5f9;
-            
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-            
-            --radius-sm: 6px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --radius-xl: 16px;
-            --radius-full: 9999px;
-            
-            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Website Page Specific Styles - Match Main Domain Design */
+    .cyberpanel-website-page {
+        background: transparent;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .cyberpanel-website-page .cyber-card {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+        margin-bottom: 25px;
+        padding: 25px;
+        transition: box-shadow 0.2s;
+    }
+
+    .cyberpanel-website-page .cyber-card:hover {
+        box-shadow: 0 4px 16px var(--shadow-color-hover, rgba(0,0,0,0.12));
+    }
+
+    .cyberpanel-website-page .cyber-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .cyberpanel-website-page .cyber-section-title::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: var(--accent-color, #5b5fcf);
+        border-radius: 2px;
+    }
+
+    /* Legacy panel styles for old sections */
+    .example-box-wrapper {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+        margin-bottom: 25px;
+    }
+
+    .panel {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .panel-body {
+        padding: 25px;
+    }
+
+    .content-box-header {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .content-box-header::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: var(--accent-color, #5b5fcf);
+        border-radius: 2px;
+    }
+
+    .btn {
+        background: var(--accent-color, #5b5fcf);
+        border: 1px solid var(--accent-color, #5b5fcf);
+        color: var(--text-on-accent, white);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+        background: var(--accent-hover, #4b4fbf);
+        border-color: var(--accent-hover, #4b4fbf);
+        color: var(--text-on-accent, white);
+        box-shadow: 0 2px 4px var(--accent-shadow, rgba(91,95,207,0.3));
+    }
+
+    .btn-success {
+        background: var(--success-color, #16a34a);
+        border-color: var(--success-color, #16a34a);
+    }
+
+    .btn-success:hover {
+        background: var(--success-hover, #15803d);
+        border-color: var(--success-hover, #15803d);
+    }
+
+    .btn-link {
+        background: transparent;
+        border: none;
+        color: var(--accent-color, #5b5fcf);
+        padding: 8px;
+    }
+
+    .btn-link:hover {
+        background: transparent;
+        color: var(--accent-hover, #4b4fbf);
+    }
+
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .alert-success {
+        background: var(--success-bg, #f0f9ff);
+        border: 1px solid var(--success-border, #bae6fd);
+        color: var(--success-text, #0c4a6e);
+    }
+
+    .alert-danger {
+        background: var(--danger-bg, #fef2f2);
+        border: 1px solid var(--danger-border, #fecaca);
+        color: var(--danger-text, #991b1b);
+    }
+
+    .alert-warning {
+        background: var(--warning-bg, #fffbeb);
+        border: 1px solid var(--warning-border, #fed7aa);
+        color: var(--warning-text, #92400e);
+    }
+
+    .form-control {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 6px;
+        font-size: 14px;
+        background: var(--bg-secondary, white);
+        color: var(--text-primary, #2f3640);
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-color, #5b5fcf);
+        box-shadow: 0 0 0 3px var(--accent-focus, rgba(91,95,207,0.1));
+    }
+
+    /* General select Windows fix for ALL selectboxes */
+    select.form-control {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f3640' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+        padding-right: 40px;
+        line-height: 1.5;
+        min-height: 38px;
+        color: #2f3640;
+    }
+
+    /* Windows-specific fixes for ALL selectboxes */
+    @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+        select.form-control {
+            color: #2f3640 !important;
+            background-color: white !important;
         }
-        */
-        
-        /* Container Styling */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
-            background: transparent;
+    }
+
+    /* Fix for Windows Edge and Chrome for ALL selectboxes */
+    select.form-control::-ms-expand {
+        display: none;
+    }
+
+    select.form-control:focus {
+        color: #2f3640;
+    }
+
+    /* Grid layout for items in sections */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -15px;
+    }
+
+    /* Ensure logs section displays horizontally */
+    .content-box-wrapper .row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: stretch;
+    }
+
+    .col-md-3, .col-md-4, .col-md-6 {
+        padding: 0 15px;
+        margin-bottom: 20px;
+    }
+
+    .col-md-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .col-md-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+
+    .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 0 15px;
+    }
+
+    .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-6, .col-sm-9, .col-sm-12 {
+        padding: 0 15px;
+    }
+
+    .col-sm-offset-11 {
+        margin-left: 91.666667%;
+    }
+
+    /* Section items styling */
+    .panel-body a {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        padding: 15px;
+        background: var(--bg-hover, #f8f9ff);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-primary, #2f3640);
+        transition: all 0.2s ease;
+        min-height: 80px;
+        gap: 12px;
+    }
+
+    .panel-body a:hover {
+        background: var(--border-color, #e8e9ff);
+        border-color: var(--accent-color, #5b5fcf);
+        text-decoration: none;
+        color: var(--accent-color, #5b5fcf);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--accent-shadow-light, rgba(91,95,207,0.15));
+    }
+
+    /* Special styling for all content sections */
+    .content-box-wrapper .row {
+        display: flex !important;
+        flex-wrap: wrap;
+        margin: 0 -10px;
+    }
+
+    /* Handle different column sizes */
+    .content-box-wrapper .row .col-md-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+        padding: 10px;
+    }
+
+    .content-box-wrapper .row .col-md-4 {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+        padding: 10px;
+    }
+
+    .content-box-wrapper .row .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding: 10px;
+    }
+
+    /* Style all clickable items consistently */
+    .content-box-wrapper .row .col-md-3 > a,
+    .content-box-wrapper .row .col-md-4 > a,
+    .content-box-wrapper .row .col-md-6 > a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        background: var(--bg-hover, #f8f9ff);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: 70px;
+        text-decoration: none;
+        color: var(--text-primary, #2f3640);
+        width: 100%;
+    }
+
+    .content-box-wrapper .row .col-md-3 > a:hover,
+    .content-box-wrapper .row .col-md-4 > a:hover,
+    .content-box-wrapper .row .col-md-6 > a:hover {
+        background: var(--border-color, #e8e9ff);
+        border-color: var(--accent-color, #5b5fcf);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--accent-shadow-light, rgba(91,95,207,0.15));
+        text-decoration: none;
+    }
+
+    /* Icon styling */
+    .content-box-wrapper .row img,
+    .content-box-wrapper .row i.fas,
+    .content-box-wrapper .row i.fab {
+        width: 45px;
+        height: 45px;
+        margin: 0 !important;
+        flex-shrink: 0;
+        font-size: 45px;
+    }
+
+    /* Text styling */
+    .content-box-wrapper .row .h4 {
+        margin: 0 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: var(--text-primary, #2f3640);
+        line-height: 1.2;
+    }
+
+    .content-box-wrapper .row a:hover .h4 {
+        color: var(--accent-color, #5b5fcf);
+    }
+
+    /* Modal and Form Modal Styling for Rewrite Rules */
+    .form-horizontal.bordered-row {
+        background: var(--bg-secondary, white);
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+        margin: 20px 0;
+    }
+
+    /* Rewrite Rules Specific Styling */
+    textarea[ng-model="rewriteRules"],
+    textarea[ng-model="configData"],
+    textarea[ng-model="errorLogsData"] {
+        background: var(--bg-code, #f8fafc);
+        border: 2px solid var(--border-color, #e2e8f0);
+        border-radius: 12px;
+        padding: 16px;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-primary, #1e293b);
+        min-height: 300px;
+    }
+
+    textarea[ng-model="rewriteRules"]:focus,
+    textarea[ng-model="configData"]:focus,
+    textarea[ng-model="errorLogsData"]:focus {
+        background: var(--bg-secondary, white);
+        border-color: var(--accent-color, #5b5fcf);
+        box-shadow: 0 0 0 4px var(--accent-focus, rgba(91, 95, 207, 0.1));
+    }
+
+    textarea[ng-model="cert"],
+    textarea[ng-model="key"] {
+        background: var(--bg-code, #f8fafc);
+        border: 2px solid var(--border-color, #e2e8f0);
+        border-radius: 8px;
+        padding: 12px;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-primary, #1e293b);
+    }
+
+    /* Form group spacing in modal */
+    .form-horizontal.bordered-row .form-group,
+    .form-horizontal .form-group {
+        margin-bottom: 25px;
+    }
+
+    /* Alert styling in modal */
+    .form-horizontal.bordered-row .alert,
+    .form-horizontal .alert {
+        margin-bottom: 25px;
+        font-size: 15px;
+        border-radius: 8px;
+    }
+
+    /* Better button styling for modal forms */
+    .btn-lg {
+        padding: 14px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px var(--accent-shadow, rgba(91, 95, 207, 0.2));
+    }
+
+    .btn-primary.btn-lg:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px var(--accent-shadow, rgba(91, 95, 207, 0.3));
+    }
+
+    /* Style for label */
+    .control-label {
+        font-weight: 600;
+        color: var(--text-primary, #2f3640);
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    /* Creative Hero Section Design */
+    .domain-hero {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        color: white;
+    }
+
+    .domain-hero::before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .domain-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -50px;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .domain-info {
+        position: relative;
+        z-index: 1;
+    }
+
+    .domain-name {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .domain-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.2);
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .domain-description {
+        font-size: 18px;
+        opacity: 0.9;
+        margin-bottom: 30px;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .hero-btn:hover {
+        background: rgba(255,255,255,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        color: white;
+        text-decoration: none;
+    }
+
+    .hero-btn.primary {
+        background: white;
+        color: #1e3c72;
+    }
+
+    .hero-btn.primary:hover {
+        background: #f0f0f0;
+        color: #1e3c72;
+    }
+
+    /* Quick Actions Bar */
+    .quick-actions {
+        background: var(--bg-secondary, white);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px var(--shadow-color, rgba(0,0,0,0.08));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--bg-hover, #f8f9ff);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--text-primary, #2f3640);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s;
+    }
+
+    .action-btn:hover::before {
+        left: 100%;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        text-decoration: none;
+    }
+
+    .action-btn.git {
+        border-color: var(--git-color, #ff6b6b);
+        color: var(--git-color, #ff6b6b);
+    }
+
+    .action-btn.git:hover {
+        background: var(--git-color, #ff6b6b);
+        color: var(--text-on-accent, white);
+    }
+
+    .action-btn.staging {
+        border-color: var(--staging-color, #4ecdc4);
+        color: var(--staging-color, #4ecdc4);
+    }
+
+    .action-btn.staging:hover {
+        background: var(--staging-color, #4ecdc4);
+        color: var(--text-on-accent, white);
+    }
+
+    .action-btn.stress {
+        border-color: var(--stress-color, #f39c12);
+        color: var(--stress-color, #f39c12);
+    }
+
+    .action-btn.stress:hover {
+        background: var(--stress-color, #f39c12);
+        color: var(--text-on-accent, white);
+    }
+
+    /* Modern Resource Cards */
+    .resource-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (min-width: 1200px) {
+        .resource-grid {
+            grid-template-columns: repeat(4, 1fr);
         }
-        
-        /* Page Title Section */
-        #page-title {
-            background: var(--bg-gradient);
-            color: white;
-            padding: 40px;
-            border-radius: var(--radius-xl);
-            margin-bottom: 30px;
-            box-shadow: var(--shadow-xl);
-            position: relative;
-            overflow: hidden;
+
+        /* Make SSL card span 2 columns on large screens */
+        .resource-card.ssl {
+            grid-column: span 2;
         }
-        
-        #page-title::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.3; }
-        }
-        
-        #page-title h2 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        #page-title p {
-            font-size: 16px;
-            opacity: 0.95;
-            margin: 0;
-            position: relative;
-            z-index: 1;
-            line-height: 1.6;
-        }
-        
-        /* Main Panel */
-        .panel {
-            background: var(--bg-secondary, white);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
-            border: 1px solid var(--border-color, #e8e9ff);
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 20px;
-        }
-        
-        .panel-body {
-            padding: 0;
-        }
-        
-        .example-box-wrapper {
-            margin-bottom: 20px;
-        }
-        
-        /* Content Box */
-        .content-box {
-            background: var(--bg-secondary, white);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
-            border: 1px solid var(--border-color, #e8e9ff);
-            overflow: hidden;
-            transition: box-shadow 0.2s;
-        }
-        
-        .content-box:hover {
-            box-shadow: 0 4px 16px var(--shadow-color-hover, rgba(0,0,0,0.12));
-        }
-        
-        /* Content Box Header */
-        .content-box-header {
-            background: linear-gradient(135deg, var(--primary-light, #eef2ff) 0%, var(--bg-secondary, #f8fafc) 100%);
-            padding: 25px 30px;
-            margin: 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary, #2f3640);
-            border-bottom: 1px solid var(--border-color, #e8e9ff);
-            letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        
-        .content-box-header img {
-            width: 24px;
-            height: 24px;
-        }
-        
-        .content-box-wrapper {
-            padding: 30px;
-        }
-        
-        /* Buttons */
-        .btn {
-            padding: 10px 20px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            transition: var(--transition-base);
-            border: none;
-            font-size: 14px;
-            letter-spacing: 0.3px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn:active::before {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .btn-primary {
-            background: var(--bg-gradient);
-            color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-            color: white;
-        }
-        
-        .btn-preview {
-            background: linear-gradient(135deg, var(--accent-color, #ec4899) 0%, #db2777 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
-        }
-        
-        .btn-preview:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
-            color: white;
-        }
-        
-        .btn-git {
-            background: linear-gradient(135deg, var(--warning-color, #f59e0b) 0%, #dc2626 100%);
-            color: white;
-        }
-        
-        .btn-sync {
-            background: linear-gradient(135deg, var(--info-color, #3b82f6) 0%, #2563eb 100%);}
-            color: white;
-        }
-        
-        .btn-stress {
-            background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
-            color: white;
-        }
-        
-        /* Table Styling */
-        .table {
-            margin: 0;
-            background: var(--bg-secondary, white);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
-        }
-        
-        .table thead {
-            background: var(--bg-gradient);
-        }
-        
-        .table thead th {
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 18px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-        
-        .table tbody tr {
-            transition: all var(--transition-base);
-            border-bottom: 1px solid var(--border-light, #f0f0ff);
-        }
-        
-        .table tbody tr:last-child {
-            border-bottom: none;
-        }
-        
-        .table tbody tr:hover {
-            background: var(--bg-hover, #f8f9ff);
-            box-shadow: 0 2px 4px var(--shadow-color, rgba(0,0,0,0.08));
-        }
-        
-        .table tbody td {
-            padding: 18px;
-            border: none;
-            vertical-align: middle;
-            color: var(--text-primary, #2f3640);
-        }
-        
-        .row-title {
-            font-weight: 600;
-            color: var(--text-primary, #2f3640);
-        }
-        
-        /* Progress Bar */
-        .progressbar {
-            position: relative;
-            width: 100%;
-            height: 30px;
-            background: var(--border-color, #e8e9ff);
-            border-radius: var(--radius-full);
-            overflow: hidden;
-            margin-bottom: 20px;
-            box-shadow: inset 0 2px 4px var(--shadow-color, rgba(0,0,0,0.08));
-        }
-        
-        .progressbar-value {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: var(--bg-gradient);
-            transition: width 0.6s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        /* Title Hero */
-        .title-hero {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-primary, #2f3640);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .title-hero::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: var(--bg-gradient);
-            border-radius: 2px;
-        }
-        
-        /* Alert Styling */
-        .alert {
-            border-radius: var(--radius-lg);
-            border: none;
-            padding: 18px 24px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-success {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: var(--success-text, #065f46);
-            border: 1px solid var(--success-border, #6ee7b7);
-        }
-        
-        .alert-danger {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: var(--danger-text, #991b1b);
-            border: 1px solid var(--danger-border, #fca5a5);
-        }
-        
-        /* Loading Animation */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        img[src*="loading.gif"] {
-            animation: spin 1s linear infinite;
-            width: 20px;
-            height: 20px;
-            vertical-align: middle;
-        }
-        
-        /* Icon Box */
-        .icon-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 20px;
-            background: var(--bg-hover, #f8f9ff);
-            border: 1px solid var(--border-color, #e8e9ff);
-            border-radius: var(--radius-lg);
-            transition: var(--transition-base);
-            text-decoration: none;
-            color: var(--text-primary, #2f3640);
-        }
-        
-        .icon-box:hover {
-            background: var(--border-color, #e8e9ff);
-            border-color: var(--accent-color, #5b5fcf);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--accent-shadow-light, rgba(91,95,207,0.15));
-            color: var(--accent-color, #5b5fcf);
-        }
-        
-        .icon-box img {
-            width: 65px;
-            height: 65px;
-            object-fit: contain;
-        }
-        
-        .icon-box .h4 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary, #2f3640);
-        }
-        
-        .icon-box:hover .h4 {
-            color: var(--accent-color, #5b5fcf);
-        }
-        
-        /* Form Styling */
-        .form-horizontal {
-            background: var(--bg-secondary, white);
-            padding: 25px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color, #e8e9ff);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .control-label {
-            font-weight: 600;
-            color: var(--text-primary, #2f3640);
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .form-control {
-            border: 2px solid var(--border-color, #e8e9ff);
-            border-radius: var(--radius-md);
-            padding: 12px 16px;
-            font-size: 15px;
-            transition: var(--transition-base);
-            background: var(--bg-secondary, white);
-            color: var(--text-primary, #2f3640);
-        }
-        
-        .form-control:focus {
-            border-color: var(--accent-color, #5b5fcf);
-            box-shadow: 0 0 0 3px var(--accent-focus, rgba(91,95,207,0.1));
-            outline: none;
-        }
-        
-        textarea.form-control {
-            resize: vertical;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-        }
-        
-        /* Modal and Form Modal Styling */
-        .form-horizontal.bordered-row {
-            background: var(--bg-secondary, white);
-            padding: 30px;
-            border-radius: var(--radius-xl);
-            box-shadow: 0 10px 40px var(--shadow-color, rgba(0,0,0,0.08));
-            border: 1px solid var(--border-color, #e8e9ff);
-            margin: 20px 0;
-        }
-        
-        /* Close button styling */
-        .glyph-icon.icon-close {
+    }
+
+    .resource-card {
+        background: var(--bg-secondary, white);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 20px var(--shadow-color, rgba(0,0,0,0.08));
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .resource-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .resource-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px var(--shadow-color-hover, rgba(0,0,0,0.12));
+    }
+
+    .resource-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--bg-hover, #f8f9ff);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        font-size: 24px;
+    }
+
+    .resource-card.disk .resource-icon {
+        background: var(--info-bg, #e8f5ff);
+        color: var(--info-color, #2196f3);
+    }
+
+    .resource-card.bandwidth .resource-icon {
+        background: var(--purple-bg, #f3e5f5);
+        color: var(--purple-color, #9c27b0);
+    }
+
+    .resource-card.database .resource-icon {
+        background: var(--success-bg, #e8f5e9);
+        color: var(--success-color, #4caf50);
+    }
+
+    .resource-card.ftp .resource-icon {
+        background: var(--warning-bg, #fff3e0);
+        color: var(--warning-color, #ff9800);
+    }
+
+    .resource-card.ssl .resource-icon {
+        background: var(--success-bg, #f0fdf4);
+        color: var(--success-color, #10b981);
+    }
+
+    /* SSL Card Special Styling */
+    .resource-card.ssl::before {
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    }
+
+    .resource-title {
+        font-size: 14px;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .resource-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: 15px;
+    }
+
+    .resource-limit {
+        font-size: 14px;
+        color: var(--text-muted, #94a3b8);
+    }
+
+    .resource-progress {
+        background: var(--border-light, #f1f5f9);
+        height: 8px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 15px;
+    }
+
+    .resource-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        transition: width 0.5s ease;
+    }
+
+    .ssl-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .ssl-text {
+        flex: 1;
+    }
+
+    .ssl-days {
+        font-size: 12px;
+        color: var(--text-muted, #94a3b8);
+        margin-top: 5px;
+    }
+
+    @media (max-width: 900px) {
+        .domain-name {
             font-size: 24px;
-            color: var(--danger-color);
-            transition: var(--transition-base);
-            cursor: pointer;
+            flex-direction: column;
+            align-items: flex-start;
         }
-        
-        .glyph-icon.icon-close:hover {
-            transform: scale(1.2);
-            color: var(--danger-color, #dc2626);
+
+        .resource-grid {
+            grid-template-columns: 1fr;
         }
-        
-        /* Rewrite Rules and Config Specific Styling */
-        textarea[ng-model="rewriteRules"],
-        textarea[ng-model="configData"] {
-            background: var(--bg-code, #f8fafc);
-            border: 2px solid var(--border-color, #e8e9ff);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            color: var(--text-primary, #2f3640);
-            min-height: 300px;
+
+        .resource-card.ssl {
+            grid-column: span 1;
         }
-        
-        textarea[ng-model="rewriteRules"]:focus,
-        textarea[ng-model="configData"]:focus {
-            background: var(--bg-secondary, white);
-            border-color: var(--accent-color, #5b5fcf);
-            box-shadow: 0 0 0 4px var(--accent-focus, rgba(91, 95, 207, 0.1));
+
+        .content-box-wrapper .row .col-md-3,
+        .content-box-wrapper .row .col-md-4,
+        .content-box-wrapper .row .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
         }
-        
-        /* Save button styling */
-        .btn-lg {
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: var(--radius-lg);
-            box-shadow: 0 4px 15px var(--accent-shadow, rgba(91, 95, 207, 0.2));
-        }
-        
-        .btn-primary.btn-lg:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px var(--accent-shadow, rgba(91, 95, 207, 0.3));
-        }
-        
-        /* Form group spacing */
-        .form-horizontal.bordered-row .form-group {
-            margin-bottom: 25px;
-        }
-        
-        /* Alert styling in modal */
-        .form-horizontal.bordered-row .alert {
-            margin-bottom: 25px;
-            font-size: 15px;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            #page-title {
-                padding: 25px;
-            }
-            
-            #page-title h2 {
-                font-size: 24px;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .content-box-wrapper {
-                padding: 20px;
-            }
-            
-            .col-md-6 {
-                margin-bottom: 20px;
-            }
-        }
+    }
+
     </style>
 
-    <div class="container">
+    <div class="cyberpanel-website-page">
 
-        <div id="page-title">
-            <h2>
-                <i class="fas fa-sitemap" style="margin-right: 10px;"></i>
-                <span id="childDomain">{{ childDomain }}</span>
-                <span style="display: none" id="domainNamePage">{{ domain }}</span>
-                <a target="_blank" href="{$ previewUrl $}" class="btn btn-preview" title="Preview Site">
-                    <i class="fas fa-eye"></i>
-                    {% trans "Preview" %}
-                </a>
-            </h2>
-            <p>{% trans "Manage all functions related to your child domain" %} - {% trans "Master domain:" %} {{ domain }}</p>
+        <!-- Creative Hero Section -->
+        <div class="domain-hero">
+            <div class="domain-info">
+                <div class="domain-name">
+                    <span id="childDomain">{{ childDomain }}</span>
+                    <div class="domain-status">
+                        <span class="status-dot"></span>
+                        {% trans "Active" %}
+                    </div>
+                </div>
+                <p class="domain-description">
+                    {% trans "Manage all functions related to your child domain" %} - {% trans "Master domain:" %} {{ domain }}
+                </p>
+                <div class="hero-actions">
+                    <a target="_blank" rel="noopener" href="{$ previewUrl $}" class="hero-btn primary">
+                        <i class="fas fa-external-link-alt"></i>
+                        {% trans "Preview Website" %}
+                    </a>
+                    <a href="/filemanager/{{ childDomain }}" class="hero-btn">
+                        <i class="fas fa-folder"></i>
+                        {% trans "File Manager" %}
+                    </a>
+                </div>
+            </div>
         </div>
 
         {% if not error %}
 
-            <div class="example-box-wrapper">
-                <div class="content-box">
-                    <h3 class="content-box-header">
-                        <span>
-                            <i class="fas fa-chart-line" style="color: var(--primary-color); margin-right: 10px;"></i>
-                            {% trans "Resource Usage" %}
-                        </span>
-                        <div style="display: flex; gap: 10px;">
-                            <a class="btn btn-git"
-                               href="/websites/{{ childDomain }}/manageGIT"
-                               title="Manage Git">
-                                <i class="fab fa-git-alt"></i>
-                                {% trans "Manage Git" %}
-                            </a>
-                            <a class="btn btn-sync"
-                               href="/websites/{{ domain }}/{{ childDomain }}/syncToMaster"
-                               title="Copy/Sync to Master">
-                                <i class="fas fa-sync"></i>
-                                {% trans "Sync to Master" %}
-                            </a>
-                            <a class="btn btn-stress"
-                               href="https://cyberpanel.net/KnowledgeBase/home/child-domains-launcher/"
-                               target="_blank"
-                               title="Stress Test">
-                                <i class="fas fa-tachometer-alt"></i>
-                                {% trans "Stress Test" %}
-                            </a>
-                        </div>
-                    </h3>
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions">
+            <div class="action-group">
+                <a class="action-btn git" href="/websites/{{ childDomain }}/manageGIT" title="Manage Git">
+                    <i class="fas fa-code-branch"></i>
+                    {% trans "Manage Git" %}
+                </a>
+                <a class="action-btn staging" href="/websites/{{ domain }}/{{ childDomain }}/syncToMaster" title="Copy/Sync to Master">
+                    <i class="fas fa-sync"></i>
+                    {% trans "Sync to Master" %}
+                </a>
+                <a class="action-btn stress" href="https://cyberpanel.net/KnowledgeBase/home/child-domains-launcher/" target="_blank" title="Stress Test">
+                    <i class="fas fa-tachometer-alt"></i>
+                    {% trans "Stress Test" %}
+                </a>
+            </div>
+        </div>
 
-                    <div class="content-box-wrapper">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <table class="table">
-                                    <thead>
-                                    <tr>
-                                        <th>{% trans "Resource" %}</th>
-                                        <th>{% trans "Usage" %}</th>
-                                        <th>{% trans "Allowed" %}</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr>
-                                        <td class="row-title">
-                                            <i class="fas fa-upload" style="color: var(--info-color); margin-right: 8px;"></i>
-                                            {% trans "FTP" %}
-                                        </td>
-                                        <td><span class="text-success h4">{{ ftpUsed }}</span></td>
-                                        <td><span class="text-success h4">{{ ftpTotal }}</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="row-title">
-                                            <i class="fas fa-database" style="color: var(--secondary-color); margin-right: 8px;"></i>
-                                            {% trans "Databases" %}
-                                        </td>
-                                        <td><span class="text-success h4">{{ databasesUsed }}</span></td>
-                                        <td><span class="text-success h4">{{ databasesTotal }}</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="row-title">
-                                            <i class="fas fa-hdd" style="color: var(--primary-color); margin-right: 8px;"></i>
-                                            {% trans "Disk Usage" %}
-                                        </td>
-                                        <td><span class="text-success h4">{{ diskInMB }} (MB)</span></td>
-                                        <td><span class="text-success h4">{{ diskInMBTotal }} (MB)</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="row-title">
-                                            <i class="fas fa-wifi" style="color: var(--accent-color); margin-right: 8px;"></i>
-                                            {% trans "Bandwidth Usage" %}
-                                        </td>
-                                        <td><span class="text-success h4">{{ bwInMB }} (MB)</span></td>
-                                        <td><span class="text-success h4">{{ bwInMBTotal }} (MB)</span></td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div style="padding: 20px;">
-                                    {% if viewSSL == 1 %}
-                                        <div class="alert alert-success">
-                                            <i class="fas fa-lock" style="font-size: 20px;"></i>
-                                            <div>
-                                                <h4 style="margin: 0 0 5px 0; font-size: 16px;">{{ authority }}</h4>
-                                                <p style="margin: 0;">{% trans "Your SSL will expire in" %} {{ days }} {% trans "days" %}</p>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                    
-                                    <h3 class="title-hero">
-                                        <i class="fas fa-hdd"></i>
-                                        {% trans "Disk Usage" %}
-                                    </h3>
-                                    <div class="progressbar" data-value="{{ diskUsage }}">
-                                        <div class="progressbar-value" style="width: {{ diskUsage }}%;">
-                                            {{ diskUsage }}%
-                                        </div>
-                                    </div>
-
-                                    <h3 class="title-hero">
-                                        <i class="fas fa-wifi"></i>
-                                        {% trans "Bandwidth Usage" %}
-                                    </h3>
-                                    <div class="progressbar" data-value="{{ bwUsage }}">
-                                        <div class="progressbar-value" style="width: {{ bwUsage }}%;">
-                                            {{ bwUsage }}%
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-
+        <!-- Modern Resource Cards Grid -->
+        <div class="resource-grid">
+            <!-- Disk Usage Card -->
+            <div class="resource-card disk">
+                <div class="resource-icon">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="resource-title">{% trans "Disk Usage" %}</div>
+                <div class="resource-value">{{ diskInMB }} MB</div>
+                <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
+                <div class="resource-progress">
+                    <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
             </div>
 
-
-            <div class="example-box-wrapper">
-                <div class="content-box">
-                    <h3 class="content-box-header">
-                        <span>
-                            <i class="fas fa-file-alt" style="color: var(--primary-color); margin-right: 10px;"></i>
-                            {% trans "Logs" %}
-                            <img ng-hide="logFileLoading" src="/static/images/loading.gif">
-                        </span>
-                    </h3>
-                    <div class="content-box-wrapper">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <a ng-click="fetchLogs(1)" href="" class="icon-box" title="{% trans 'Load Access Logs' %}">
-                                    <i class="fas fa-file-alt" style="font-size: 48px; color: var(--info-color);"></i>
-                                    <span class="h4">{% trans "Access Logs" %}</span>
-                                </a>
-                            </div>
-
-                            <div class="col-md-6">
-                                <a ng-click="fetchErrorLogs(1)" href="" class="icon-box" title="{% trans 'Load Error Logs' %}">
-                                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--danger-color);"></i>
-                                    <span class="h4">{% trans "Error Logs" %}</span>
-                                </a>
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-12" style="margin-top: 20px;">
-                            <form ng-hide="hideLogs" class="form-horizontal">
-                                <div ng-hide="logsFeteched" class="alert alert-success">
-                                    <i class="fas fa-check-circle"></i>
-                                    <p>{% trans "Logs Fetched" %}</p>
-                                </div>
-
-                                <div ng-hide="couldNotFetchLogs" class="alert alert-danger">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <p>{% trans "Could not fetch logs, see the logs file through command line. Error message:" %} {$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <i class="fas fa-wifi"></i>
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                </div>
-
-                                <div ng-hide="fetchedData">
-                                    <div class="row" style="margin-bottom: 20px;">
-                                        <div class="col-sm-3">
-                                            <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
-                                                   class="form-control" required>
-                                        </div>
-
-                                        <div class="col-sm-2">
-                                            <input placeholder="Page Number" type="number" class="form-control"
-                                                   ng-model="pageNumber" required>
-                                        </div>
-
-                                        <div class="col-sm-6">
-                                            <button ng-click="fetchLogs(3)" type="button" class="btn btn-primary">
-                                                <i class="fas fa-chevron-right"></i>
-                                                {% trans "Next" %}
-                                            </button>
-                                            <button ng-click="fetchLogs(4)" type="button" class="btn btn-primary" style="margin-left: 10px;">
-                                                <i class="fas fa-chevron-left"></i>
-                                                {% trans "Previous" %}
-                                            </button>
-                                        </div>
-
-                                        <div class="col-sm-1">
-                                            <button ng-click="hidelogsbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                                <i class="fas fa-times" style="font-size: 20px;"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <table class="table">
-                                            <thead>
-                                            <tr>
-                                                <th>Type</th>
-                                                <th>IP Address</th>
-                                                <th>Time</th>
-                                                <th>Resource</th>
-                                                <th>Size</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr ng-repeat="record in records | filter:logSearch">
-                                                <td ng-bind="record.domain"></td>
-                                                <td ng-bind="record.ipAddress"></td>
-                                                <td ng-bind="record.time"></td>
-                                                <td ng-bind="record.resource"></td>
-                                                <td ng-bind="record.size"></td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-
-                                <div ng-hide="hideErrorLogs">
-                                    <div class="row" style="margin-bottom: 20px;">
-                                        <div class="col-sm-2">
-                                            <input placeholder="Page Number" type="number" class="form-control"
-                                                   ng-model="errorPageNumber" required>
-                                        </div>
-
-                                        <div class="col-sm-9">
-                                            <button ng-click="fetchErrorLogs(3)" type="button" class="btn btn-primary">
-                                                <i class="fas fa-chevron-right"></i>
-                                                {% trans "Next" %}
-                                            </button>
-                                            <button ng-click="fetchErrorLogs(4)" type="button" class="btn btn-primary" style="margin-left: 10px;">
-                                                <i class="fas fa-chevron-left"></i>
-                                                {% trans "Previous" %}
-                                            </button>
-                                        </div>
-
-                                        <div class="col-sm-1">
-                                            <button ng-click="hideErrorLogsbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                                <i class="fas fa-times" style="font-size: 20px;"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-sm-12">
-                                        <textarea ng-model="errorLogsData" rows="20" class="form-control" style="font-family: 'Courier New', monospace;"></textarea>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+            <!-- Bandwidth Card -->
+            <div class="resource-card bandwidth">
+                <div class="resource-icon">
+                    <i class="fas fa-wifi"></i>
+                </div>
+                <div class="resource-title">{% trans "Bandwidth Usage" %}</div>
+                <div class="resource-value">{{ bwInMB }} MB</div>
+                <div class="resource-limit">{% trans "of" %} {{ bwInMBTotal }} MB</div>
+                <div class="resource-progress">
+                    <div class="resource-progress-bar" style="width: {{ bwUsage }}%;"></div>
                 </div>
             </div>
 
-            <div class="example-box-wrapper">
-                <div class="content-box">
-                    <h3 class="content-box-header">
-                        <span>
-                            <i class="fas fa-cog" style="color: var(--primary-color); margin-right: 10px;"></i>
-                            {% trans "Configurations" %}
-                            <img ng-hide="configFileLoading" src="/static/images/loading.gif">
-                        </span>
-                    </h3>
-
-                    <div class="content-box-wrapper">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <a ng-click="fetchConfigurations()" href="" class="icon-box"
-                                   title="{% trans 'Edit vHost Main Configurations' %}">
-                                    <i class="fas fa-file-code" style="font-size: 48px; color: var(--primary-color);"></i>
-                                    <span class="h4">{% trans "vHost Conf" %}</span>
-                                </a>
-                            </div>
-
-                            <div class="col-md-3">
-                                <a href="{% url 'ApacheManager' domain=childDomain %}" class="icon-box"
-                                   title="{% trans 'Apache Manager' %}">
-                                    <i class="fas fa-server" style="font-size: 48px; color: var(--warning-color);"></i>
-                                    <span class="h4">{% trans "Apache Manager" %}</span>
-                                </a>
-                            </div>
-
-                            <div class="col-md-3">
-                                <a ng-click="fetchRewriteFules()" href="" class="icon-box"
-                                   title="{% trans 'Add Rewrite Rules (.htaccess)' %}">
-                                    <i class="fas fa-code" style="font-size: 48px; color: var(--secondary-color);"></i>
-                                    <span class="h4">{% trans "Rewrite Rules" %}</span>
-                                </a>
-                            </div>
-
-                            <div class="col-md-3">
-                                <a ng-click="addSSL()" href="" class="icon-box" title="{% trans 'Add Your Own SSL' %}">
-                                    <i class="fas fa-lock" style="font-size: 48px; color: var(--success-color);"></i>
-                                    <span class="h4">{% trans "Add SSL" %}</span>
-                                </a>
-                            </div>
-
-                            <div class="col-md-3">
-                                <a ng-click="changePHPMaster()" href="" class="icon-box" title="{% trans 'Change PHP Version' %}">
-                                    <i class="fab fa-php" style="font-size: 48px; color: var(--info-color);"></i>
-                                    <span class="h4">{% trans "Change PHP" %}</span>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!---- HTML for main ssl file ---->
-                        <div class="col-md-12" style="margin-top: 20px;">
-                            <form ng-hide="hidsslconfigs" class="form-horizontal">
-                                <div ng-hide="sslSaved" class="alert alert-success">
-                                    <i class="fas fa-check-circle"></i>
-                                    <p>{% trans "SSL Saved" %}</p>
-                                </div>
-
-                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <i class="fas fa-wifi"></i>
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                </div>
-
-                                <div class="form-group">
-                                    <div style="margin-bottom: 20px; text-align: right;">
-                                        <button ng-click="hidesslbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                            <i class="fas fa-times" style="font-size: 20px;"></i>
-                                        </button>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <label class="control-label">
-                                                <i class="fas fa-certificate"></i>
-                                                {% trans "SSL Certificate" %}
-                                            </label>
-                                            <textarea placeholder="Paste Your Certificate Here" ng-model="cert" rows="10"
-                                                      class="form-control"></textarea>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <label class="control-label">
-                                                <i class="fas fa-key"></i>
-                                                {% trans "Private Key" %}
-                                            </label>
-                                            <textarea placeholder="Paste Your Private Key Here" ng-model="key" rows="10"
-                                                      class="form-control"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <button type="button" ng-click="saveSSL()" class="btn btn-primary">
-                                        <i class="fas fa-save"></i>
-                                        {% trans "Save SSL" %}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-
-                            <!----- HTML For SSL ---->
-
-
-                            <!---- HTML for main conf file ---->
-
-                            <div class="col-md-12">
-
-                                <form ng-hide="configurationsBox" class="form-horizontal bordered-row">
-
-                                    <div ng-hide="configsFetched" class="alert alert-success">
-                                        <p>{% trans "Current configuration in the file fetched." %}</p>
-                                    </div>
-
-
-                                    <div ng-hide="couldNotFetchConfigs" class="alert alert-danger">
-                                        <p>{% trans "Could not fetch current configuration. Error message:" %} {$
-                                            errorMessage $}</p>
-                                    </div>
-
-
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                    </div>
-
-                                    <div ng-hide="configSaved" class="alert alert-success">
-                                        <p>{% trans "Configurations saved." %}</p>
-                                    </div>
-
-                                    <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger">
-                                        <p>{% trans "Could not fetch current configuration. Error message:" %} {$
-                                            errorMessage $}</p>
-                                    </div>
-
-
-                                    <div ng-hide="fetchedConfigsData" class="form-group">
-                                        <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                            <a ng-click="hideconfigbtn()" href=""><h3
-                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <textarea ng-model="configData" rows="20" class="form-control"></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div ng-hide="saveConfigBtn" class="form-group">
-                                        <label class="col-sm-3 control-label"></label>
-                                        <div class="col-sm-4">
-                                            <button type="button" ng-click="saveCongiruations()"
-                                                    class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-
-                                        </div>
-                                    </div>
-
-
-                                </form>
-
-                            </div>
-
-                            <!-- HTML For rewrite rules-->
-
-                            <div class="col-md-12">
-
-                                <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row">
-
-
-                                    <div ng-hide="rewriteRulesFetched" class="alert alert-success">
-                                        <p>{% trans "Current rewrite rules in the file fetched." %}</p>
-                                    </div>
-
-
-                                    <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
-                                        <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$
-                                            errorMessage $}</p>
-                                    </div>
-
-
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                    </div>
-
-                                    <div ng-hide="rewriteRulesSaved" class="alert alert-success">
-                                        <p>{% trans "Configurations saved." %}</p>
-                                    </div>
-
-                                    <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger">
-                                        <p>{% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage
-                                            $}</p>
-                                    </div>
-
-
-                                    <div ng-hide="fetchedRewriteRules" class="form-group">
-                                        <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                            <a ng-click="hideRewriteRulesbtn()" href=""><h3
-                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <textarea ng-model="rewriteRules" rows="10" class="form-control"></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div ng-hide="saveRewriteRulesBTN" class="form-group">
-                                        <label class="col-sm-3 control-label"></label>
-                                        <div class="col-sm-4">
-                                            <button type="button" ng-click="saveRewriteRules()"
-                                                    class="btn btn-primary btn-lg">{% trans "Save Rewrite Rules" %}</button>
-
-                                        </div>
-                                    </div>
-
-
-                                </form>
-
-                            </div>
-
-                            <!--- HTML To change PHP --->
-
-                            <div class="col-md-12">
-
-                                <form ng-hide="changePHPView" name="" action="/" class="form-horizontal bordered-row">
-
-
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
-                                        <div class="col-sm-6">
-                                            <select ng-model="phpSelectionMaster" class="form-control">
-                                                {% for php in phps %}
-                                                    <option>{{ php }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-
-                                        <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
-                                               href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
-                                        </div>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label"></label>
-                                        <div class="col-sm-4">
-                                            <button type="button" ng-click="changePHPVersionMaster()"
-                                                    class="btn btn-primary btn-lg">{% trans "Change PHP" %}</button>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label class="col-sm-3 control-label"></label>
-                                        <div class="col-sm-4">
-                                            <div ng-hide="failedToChangePHPMaster" class="alert alert-danger">
-                                                <p>{% trans "Failed to change PHP version. Error message:" %} {$
-                                                    errorMessage $}</p>
-                                            </div>
-
-                                            <div ng-hide="phpChangedMaster" class="alert alert-success">
-                                                <p>{% trans "PHP successfully changed for: " %} <strong>{$ websiteDomain
-                                                    $}</strong></p>
-                                            </div>
-
-                                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                            </div>
-                                        </div>
-
-
-                                    </div>
-
-
-                                </form>
-                            </div>
-
-                        </div>
+            <!-- Database Card -->
+            <div class="resource-card database">
+                <div class="resource-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="resource-title">{% trans "Databases" %}</div>
+                <div class="resource-value">{{ databasesUsed }}</div>
+                <div class="resource-limit">{% trans "of" %} {{ databasesTotal }}</div>
+            </div>
+
+            <!-- FTP Card -->
+            <div class="resource-card ftp">
+                <div class="resource-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <div class="resource-title">{% trans "FTP Accounts" %}</div>
+                <div class="resource-value">{{ ftpUsed }}</div>
+                <div class="resource-limit">{% trans "of" %} {{ ftpTotal }}</div>
+            </div>
+
+            <!-- SSL Card (spans 2 columns on large screens) -->
+            {% if viewSSL == 1 %}
+            <div class="resource-card ssl">
+                <div class="ssl-info">
+                    <div class="resource-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="ssl-text">
+                        <div class="resource-title">{{ authority }}</div>
+                        <div class="ssl-days">{% trans "Your SSL will expire in" %} {{ days }} {% trans "days" %}</div>
                     </div>
                 </div>
             </div>
+            {% endif %}
+        </div>
 
-
-            <div class="example-box-wrapper">
-                <div class="content-box">
+        <!-- Logs Section -->
+        <div class="example-box-wrapper">
+            <div class="panel">
+                <div class="panel-body">
                     <h3 class="content-box-header">
-                        <span>
-                            <i class="fas fa-folder" style="color: var(--primary-color); margin-right: 10px;"></i>
-                            {% trans "Files" %}
-                        </span>
+                        <i class="fas fa-file-alt"></i>
+                        {% trans "Logs" %}
+                        <img ng-hide="logFileLoading" src="/static/images/loading.gif" style="width: 20px; height: 20px; margin-left: 10px;">
                     </h3>
 
-                    <div class="content-box-wrapper">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <a href="{$ fileManagerURL $}" target="_blank" class="icon-box" title="{% trans 'File Manager' %}">
-                                    <i class="fas fa-folder-open" style="font-size: 48px; color: var(--primary-color);"></i>
-                                    <span class="h4">{% trans "File Manager" %}</span>
-                                </a>
-                            </div>
-
-                            <div class="col-md-3">
-                                <a ng-click="openBaseDirView()" href="" class="icon-box" title="{% trans 'open_basedir Protection' %}">
-                                    <i class="fas fa-shield-alt" style="font-size: 48px; color: var(--warning-color);"></i>
-                                    <span class="h4">{% trans "open_basedir" %}</span>
-                                </a>
-                            </div>
-
-                            {% if ftp %}
-                                <div class="col-md-3">
-                                    <a href="{% url 'createFTPAccount' %}" class="icon-box" title="{% trans 'Create FTP Account' %}">
-                                        <i class="fas fa-user-plus" style="font-size: 48px; color: var(--success-color);"></i>
-                                        <span class="h4">{% trans "Create FTP Acct" %}</span>
-                                    </a>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <a href="{% url 'deleteFTPAccount' %}" class="icon-box" title="{% trans 'Delete FTP Account' %}">
-                                        <i class="fas fa-user-minus" style="font-size: 48px; color: var(--danger-color);"></i>
-                                        <span class="h4">{% trans "Delete FTP Acct" %}</span>
-                                    </a>
-                                </div>
-                            {% endif %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}">
+                                <i class="fas fa-file-alt" style="font-size: 45px; color: var(--info-color, #2196f3);"></i>
+                                <span class="h4">{% trans "Access Logs" %}</span>
+                            </a>
                         </div>
 
+                        <div class="col-md-6">
+                            <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 45px; color: var(--danger-color, #ef4444);"></i>
+                                <span class="h4">{% trans "Error Logs" %}</span>
+                            </a>
+                        </div>
+                    </div>
 
-                        <!--- HTML To change open_basedir --->
-                        <div ng-hide="openBaseDirBox" class="col-md-12" style="margin-top: 20px;">
-                            <form action="/" class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">
-                                        <i class="fas fa-shield-alt"></i>
-                                        {% trans "open_basedir Protection" %}
-                                    </label>
+                    <div class="col-md-12" style="margin-top: 20px;">
+                        <form ng-hide="hideLogs" class="form-horizontal">
+                            <div ng-hide="logsFeteched" class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                {% trans "Logs Fetched" %}
+                            </div>
+
+                            <div ng-hide="couldNotFetchLogs" class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {% trans "Could not fetch logs, see the logs file through command line. Error message:" %} {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <i class="fas fa-wifi"></i>
+                                {% trans "Could not connect to server. Please refresh this page." %}
+                            </div>
+
+                            <div ng-hide="fetchedData">
+                                <div class="row" style="margin-bottom: 20px;">
+                                    <div class="col-sm-3">
+                                        <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
+                                               class="form-control" required>
+                                    </div>
+
+                                    <div class="col-sm-2">
+                                        <input placeholder="Page Number" type="number" class="form-control"
+                                               ng-model="pageNumber" required>
+                                    </div>
+
                                     <div class="col-sm-6">
-                                        <select ng-model="openBasedirValue" class="form-control">
-                                            <option>Enable</option>
-                                            <option>Disable</option>
-                                        </select>
-                                    </div>
-
-                                    <div ng-hide="baseDirLoading" class="col-sm-1">
-                                        <img src="{% static 'images/loading.gif' %}">
+                                        <button ng-click="fetchLogs(3)" type="button" class="btn btn-primary">
+                                            <i class="fas fa-chevron-right"></i>
+                                            {% trans "Next" %}
+                                        </button>
+                                        <button ng-click="fetchLogs(4)" type="button" class="btn btn-primary" style="margin-left: 10px;">
+                                            <i class="fas fa-chevron-left"></i>
+                                            {% trans "Previous" %}
+                                        </button>
                                     </div>
 
                                     <div class="col-sm-1">
-                                        <button title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" type="button" class="btn btn-link" style="color: var(--danger-color);">
+                                        <button ng-click="hidelogsbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
+                                            <i class="fas fa-times" style="font-size: 20px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>IP Address</th>
+                                            <th>Time</th>
+                                            <th>Resource</th>
+                                            <th>Size</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="record in records | filter:logSearch">
+                                            <td ng-bind="record.domain"></td>
+                                            <td ng-bind="record.ipAddress"></td>
+                                            <td ng-bind="record.time"></td>
+                                            <td ng-bind="record.resource"></td>
+                                            <td ng-bind="record.size"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+
+                            <div ng-hide="hideErrorLogs">
+                                <div class="row" style="margin-bottom: 20px;">
+                                    <div class="col-sm-2">
+                                        <input placeholder="Page Number" type="number" class="form-control"
+                                               ng-model="errorPageNumber" required>
+                                    </div>
+
+                                    <div class="col-sm-9">
+                                        <button ng-click="fetchErrorLogs(3)" type="button" class="btn btn-primary">
+                                            <i class="fas fa-chevron-right"></i>
+                                            {% trans "Next" %}
+                                        </button>
+                                        <button ng-click="fetchErrorLogs(4)" type="button" class="btn btn-primary" style="margin-left: 10px;">
+                                            <i class="fas fa-chevron-left"></i>
+                                            {% trans "Previous" %}
+                                        </button>
+                                    </div>
+
+                                    <div class="col-sm-1">
+                                        <button ng-click="hideErrorLogsbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
                                             <i class="fas fa-times" style="font-size: 20px;"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-6">
-                                        <button type="button" ng-click="applyOpenBasedirChanges()" class="btn btn-primary">
-                                            <i class="fas fa-save"></i>
-                                            {% trans "Apply Changes" %}
-                                        </button>
-                                    </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="errorLogsData" rows="20" class="form-control"></textarea>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-6">
-                                        <div ng-hide="operationFailed" class="alert alert-danger">
-                                            <i class="fas fa-exclamation-circle"></i>
-                                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
-                                        </div>
-
-                                        <div ng-hide="operationSuccessfull" class="alert alert-success">
-                                            <i class="fas fa-check-circle"></i>
-                                            <p>{% trans "Changes successfully saved." %}</p>
-                                        </div>
-
-                                        <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                            <i class="fas fa-wifi"></i>
-                                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <!--- HTML To change open_basedir --->
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="example-box-wrapper">
-                <div class="content-box">
+        <!-- Configurations Section -->
+        <div class="example-box-wrapper">
+            <div class="panel">
+                <div class="panel-body">
                     <h3 class="content-box-header">
-                        <span>
-                            <i class="fas fa-box" style="color: var(--primary-color); margin-right: 10px;"></i>
-                            {% trans "Application Installer" %}
-                        </span>
+                        <i class="fas fa-cog"></i>
+                        {% trans "Configurations" %}
+                        <img ng-hide="configFileLoading" src="/static/images/loading.gif" style="width: 20px; height: 20px; margin-left: 10px;">
                     </h3>
 
-                    <div class="content-box-wrapper">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <a href="{$ wordPressInstallURL $}" target="_blank" class="icon-box"
-                                   title="{% trans 'Install WordPress with LSCache' %}">
-                                    <i class="fab fa-wordpress" style="font-size: 48px; color: #21759b;"></i>
-                                    <span class="h4">{% trans "WP + LSCache" %}</span>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a ng-click="fetchConfigurations()" href="" title="{% trans 'Edit vHost Main Configurations' %}">
+                                <i class="fas fa-file-code" style="font-size: 45px; color: var(--primary-color, #6366f1);"></i>
+                                <span class="h4">{% trans "vHost Conf" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="{% url 'ApacheManager' domain=childDomain %}" title="{% trans 'Apache Manager' %}">
+                                <i class="fas fa-server" style="font-size: 45px; color: var(--warning-color, #f59e0b);"></i>
+                                <span class="h4">{% trans "Apache Manager" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a ng-click="fetchRewriteFules()" href="" title="{% trans 'Add Rewrite Rules (.htaccess)' %}">
+                                <i class="fas fa-code" style="font-size: 45px; color: var(--secondary-color, #8b5cf6);"></i>
+                                <span class="h4">{% trans "Rewrite Rules" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
+                                <i class="fas fa-lock" style="font-size: 45px; color: var(--success-color, #10b981);"></i>
+                                <span class="h4">{% trans "Add SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
+                                <i class="fab fa-php" style="font-size: 45px; color: var(--info-color, #3b82f6);"></i>
+                                <span class="h4">{% trans "Change PHP" %}</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!---- HTML for SSL file ---->
+                    <div class="col-md-12" style="margin-top: 20px;">
+                        <form ng-hide="hidsslconfigs" class="form-horizontal">
+                            <div ng-hide="sslSaved" class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                {% trans "SSL Saved" %}
+                            </div>
+
+                            <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {% trans "Could not save SSL. Error message:" %} {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <i class="fas fa-wifi"></i>
+                                {% trans "Could not connect to server. Please refresh this page." %}
+                            </div>
+
+                            <div class="form-group">
+                                <div style="margin-bottom: 20px; text-align: right;">
+                                    <button ng-click="hidesslbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
+                                        <i class="fas fa-times" style="font-size: 20px;"></i>
+                                    </button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label class="control-label">
+                                            <i class="fas fa-certificate"></i>
+                                            {% trans "SSL Certificate" %}
+                                        </label>
+                                        <textarea placeholder="Paste Your Certificate Here" ng-model="cert" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="control-label">
+                                            <i class="fas fa-key"></i>
+                                            {% trans "Private Key" %}
+                                        </label>
+                                        <textarea placeholder="Paste Your Private Key Here" ng-model="key" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="button" ng-click="saveSSL()" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    {% trans "Save SSL" %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!---- HTML for main conf file ---->
+                    <div class="col-md-12">
+                        <form ng-hide="configurationsBox" class="form-horizontal bordered-row">
+                            <div ng-hide="configsFetched" class="alert alert-success">
+                                {% trans "Current configuration in the file fetched." %}
+                            </div>
+
+                            <div ng-hide="couldNotFetchConfigs" class="alert alert-danger">
+                                {% trans "Could not fetch current configuration. Error message:" %} {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                {% trans "Could not connect to server. Please refresh this page." %}
+                            </div>
+
+                            <div ng-hide="configSaved" class="alert alert-success">
+                                {% trans "Configurations saved." %}
+                            </div>
+
+                            <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger">
+                                {% trans "Could not fetch current configuration. Error message:" %} {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="fetchedConfigsData" class="form-group">
+                                <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
+                                    <a ng-click="hideconfigbtn()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="configData" rows="20" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+                            <div ng-hide="saveConfigBtn" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="saveCongiruations()" class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- HTML For rewrite rules-->
+                    <div class="col-md-12">
+                        <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row">
+                            <div ng-hide="rewriteRulesFetched" class="alert alert-success">
+                                {% trans "Current rewrite rules in the file fetched." %}
+                            </div>
+
+                            <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
+                                {% trans "Could not fetch current rewrite rules. Error message:" %} {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                {% trans "Could not connect to server. Please refresh this page." %}
+                            </div>
+
+                            <div ng-hide="rewriteRulesSaved" class="alert alert-success">
+                                {% trans "Configurations saved." %}
+                            </div>
+
+                            <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger">
+                                {% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="fetchedRewriteRules" class="form-group">
+                                <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
+                                    <a ng-click="hideRewriteRulesbtn()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="rewriteRules" rows="10" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+                            <div ng-hide="saveRewriteRulesBTN" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="saveRewriteRules()" class="btn btn-primary btn-lg">{% trans "Save Rewrite Rules" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!--- HTML To change PHP --->
+                    <div class="col-md-12">
+                        <form ng-hide="changePHPView" name="" action="/" class="form-horizontal bordered-row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                                <div class="col-sm-6">
+                                    <select ng-model="phpSelectionMaster" class="form-control">
+                                        {% for php in phps %}
+                                            <option>{{ php }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div style="margin-bottom: 1%;" class=" col-sm-1">
+                                    <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="changePHPVersionMaster()" class="btn btn-primary btn-lg">{% trans "Change PHP" %}</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <div ng-hide="failedToChangePHPMaster" class="alert alert-danger">
+                                        {% trans "Failed to change PHP version. Error message:" %} {$ errorMessage $}
+                                    </div>
+
+                                    <div ng-hide="phpChangedMaster" class="alert alert-success">
+                                        {% trans "PHP successfully changed for: " %} <strong>{$ websiteDomain $}</strong>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        {% trans "Could not connect to server. Please refresh this page." %}
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Section -->
+        <div class="example-box-wrapper">
+            <div class="panel">
+                <div class="panel-body">
+                    <h3 class="content-box-header">
+                        <i class="fas fa-folder"></i>
+                        {% trans "Files" %}
+                    </h3>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
+                                <i class="fas fa-folder-open" style="font-size: 45px; color: var(--primary-color, #6366f1);"></i>
+                                <span class="h4">{% trans "File Manager" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
+                                <i class="fas fa-shield-alt" style="font-size: 45px; color: var(--warning-color, #f59e0b);"></i>
+                                <span class="h4">{% trans "open_basedir" %}</span>
+                            </a>
+                        </div>
+
+                        {% if ftp %}
+                            <div class="col-md-3">
+                                <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
+                                    <i class="fas fa-user-plus" style="font-size: 45px; color: var(--success-color, #10b981);"></i>
+                                    <span class="h4">{% trans "Create FTP Acct" %}</span>
                                 </a>
                             </div>
 
-                            <div class="col-md-4">
-                                <a href="/websites/{{ childDomain }}/manageGIT" target="_blank" class="icon-box"
-                                   title="{% trans 'Attach Git with this website!' %}">
-                                    <i class="fab fa-git-alt" style="font-size: 48px; color: #f05032;"></i>
-                                    <span class="h4">{% trans "Git" %}</span>
+                            <div class="col-md-3">
+                                <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
+                                    <i class="fas fa-user-minus" style="font-size: 45px; color: var(--danger-color, #ef4444);"></i>
+                                    <span class="h4">{% trans "Delete FTP Acct" %}</span>
                                 </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!--- HTML To change open_basedir --->
+                    <div ng-hide="openBaseDirBox" class="col-md-12" style="margin-top: 20px;">
+                        <form action="/" class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">
+                                    <i class="fas fa-shield-alt"></i>
+                                    {% trans "open_basedir Protection" %}
+                                </label>
+                                <div class="col-sm-6">
+                                    <select ng-model="openBasedirValue" class="form-control">
+                                        <option>Enable</option>
+                                        <option>Disable</option>
+                                    </select>
+                                </div>
+
+                                <div ng-hide="baseDirLoading" class="col-sm-1">
+                                    <img src="{% static 'images/loading.gif' %}">
+                                </div>
+
+                                <div class="col-sm-1">
+                                    <button title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" type="button" class="btn btn-link" style="color: var(--danger-color);">
+                                        <i class="fas fa-times" style="font-size: 20px;"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <a href="{$ installPrestaURL $}" target="_blank" class="icon-box"
-                                   title="{% trans 'Install Prestashop' %}">
-                                    <i class="fas fa-shopping-cart" style="font-size: 48px; color: var(--accent-color);"></i>
-                                    <span class="h4">{% trans "Prestashop" %}</span>
-                                </a>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-6">
+                                    <button type="button" ng-click="applyOpenBasedirChanges()" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        {% trans "Apply Changes" %}
+                                    </button>
+                                </div>
                             </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-6">
+                                    <div ng-hide="operationFailed" class="alert alert-danger">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {% trans "Error message:" %} {$ errorMessage $}
+                                    </div>
+
+                                    <div ng-hide="operationSuccessfull" class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        {% trans "Changes successfully saved." %}
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <i class="fas fa-wifi"></i>
+                                        {% trans "Could not connect to server. Please refresh this page." %}
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!--- HTML To change open_basedir --->
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Installer Section -->
+        <div class="example-box-wrapper">
+            <div class="panel">
+                <div class="panel-body">
+                    <h3 class="content-box-header">
+                        <i class="fas fa-box"></i>
+                        {% trans "Application Installer" %}
+                    </h3>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="{$ wordPressInstallURL $}" target="_blank" title="{% trans 'Install WordPress with LSCache' %}">
+                                <i class="fab fa-wordpress" style="font-size: 45px; color: #21759b;"></i>
+                                <span class="h4">{% trans "WP + LSCache" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-4">
+                            <a href="/websites/{{ childDomain }}/manageGIT" target="_blank" title="{% trans 'Attach Git with this website!' %}">
+                                <i class="fab fa-git-alt" style="font-size: 45px; color: #f05032;"></i>
+                                <span class="h4">{% trans "Git" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-4">
+                            <a href="{$ installPrestaURL $}" target="_blank" title="{% trans 'Install Prestashop' %}">
+                                <i class="fas fa-shopping-cart" style="font-size: 45px; color: var(--accent-color, #ec4899);"></i>
+                                <span class="h4">{% trans "Prestashop" %}</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
         {% else %}
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i>
-                <p>{{ domain }}</p>
+                {{ domain }}
             </div>
         {% endif %}
 
-
     </div>
 
     </div>
+
+    <style>
+    /* Additional table styling */
+    .table {
+        width: 100%;
+        margin-bottom: 1rem;
+        background-color: transparent;
+        border-collapse: collapse;
+    }
+
+    .table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid var(--border-color, #e8e9ff);
+        padding: 12px;
+        background: var(--bg-hover, #f8f9ff);
+        color: var(--text-primary, #2f3640);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody td {
+        padding: 12px;
+        border-top: 1px solid var(--border-light, #f1f5f9);
+        color: var(--text-primary, #2f3640);
+    }
+
+    .table tbody tr:hover {
+        background-color: var(--bg-hover, #f8f9ff);
+    }
+
+    .glyph-icon.icon-close {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .glyph-icon.icon-close:hover {
+        transform: scale(1.2);
+    }
+
+    .text-danger {
+        color: var(--danger-color, #ef4444) !important;
+    }
+
+    .text-success {
+        color: var(--success-color, #10b981) !important;
+    }
+
+    .mt-5 {
+        margin-top: 0 !important;
+    }
+    </style>
 
 {% endblock %}

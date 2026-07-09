@@ -11,7 +11,9 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
+import shlex
 from plogical.acl import ACLManager
+from plogical.securityUtils import is_safe_port
 import plogical.CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
@@ -451,13 +453,16 @@ class FirewallManager:
             sshPort = data['sshPort']
             rootLogin = data['rootLogin']
 
+            if not is_safe_port(sshPort):
+                return ACLManager.loadErrorJson('saveStatus', 0)
+
             if rootLogin == True:
                 rootLogin = "1"
             else:
                 rootLogin = "0"
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-            execPath = execPath + " saveSSHConfigs --type " + str(type) + " --sshPort " + sshPort + " --rootLogin " + rootLogin
+            execPath = execPath + " saveSSHConfigs --type " + shlex.quote(str(type)) + " --sshPort " + str(sshPort) + " --rootLogin " + rootLogin
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -512,7 +517,7 @@ class FirewallManager:
             key = data['key']
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-            execPath = execPath + " deleteSSHKey --key '" + key + "'"
+            execPath = execPath + " deleteSSHKey --key " + shlex.quote(key)
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1115,6 +1120,54 @@ class FirewallManager:
                         if owaspInstalled == 1 and comodoInstalled == 1:
                             break
 
+                    # Check multiple locations for OWASP CRS installation
+                    if owaspInstalled == 0:
+                        # Check 1: rules.conf for OWASP includes
+                        rulesConfPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
+                        if os.path.exists(rulesConfPath):
+                            try:
+                                command = "sudo cat " + rulesConfPath
+                                rulesConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                                for items in rulesConfig:
+                                    # Check for OWASP includes in rules.conf (case-insensitive)
+                                    if ('owasp' in items.lower() or 'crs-setup' in items.lower()) and \
+                                       ('include' in items.lower() or 'modsecurity_rules_file' in items.lower()):
+                                        owaspInstalled = 1
+                                        break
+                            except:
+                                pass
+
+                        # Check 2: owasp-master.conf exists and has rules loaded
+                        if owaspInstalled == 0:
+                            owaspMasterConf = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf")
+                            if os.path.exists(owaspMasterConf):
+                                try:
+                                    command = "sudo cat " + owaspMasterConf
+                                    owaspConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                                    # Check if at least one rule file is enabled (not commented)
+                                    for items in owaspConfig:
+                                        if items.strip() and not items.strip().startswith('#') and 'include' in items.lower():
+                                            owaspInstalled = 1
+                                            break
+                                except:
+                                    pass
+
+                        # Check 3: OWASP CRS directory exists with rules
+                        if owaspInstalled == 0:
+                            owaspRulesDir = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-3.0-master/rules")
+                            if os.path.exists(owaspRulesDir):
+                                try:
+                                    command = "sudo ls " + owaspRulesDir + " | grep -c '.conf'"
+                                    output = ProcessUtilities.outputExecutioner(command).strip()
+                                    if output.isdigit() and int(output) > 0:
+                                        # Rules exist, check if referenced in httpd_config.conf
+                                        for items in httpdConfig:
+                                            if 'owasp-modsecurity-crs' in items.lower() or 'owasp-master.conf' in items.lower():
+                                                owaspInstalled = 1
+                                                break
+                                except:
+                                    pass
+
                     final_dic = {
                         'modSecInstalled': 1,
                         'owaspInstalled': owaspInstalled,
@@ -1144,6 +1197,7 @@ class FirewallManager:
                 except subprocess.CalledProcessError:
                     pass
 
+                # Check multiple locations for OWASP in LiteSpeed Enterprise
                 try:
                     command = 'cat /usr/local/lsws/conf/modsec.conf'
                     output = ProcessUtilities.outputExecutioner(command)
@@ -1151,6 +1205,20 @@ class FirewallManager:
                         owaspInstalled = 1
                 except:
                     pass
+
+                # Also check owasp-master.conf for LSWS Enterprise
+                if owaspInstalled == 0:
+                    owaspMasterConf = '/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf'
+                    if os.path.exists(owaspMasterConf):
+                        try:
+                            command = "cat " + owaspMasterConf
+                            owaspConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                            for items in owaspConfig:
+                                if items.strip() and not items.strip().startswith('#') and 'include' in items.lower():
+                                    owaspInstalled = 1
+                                    break
+                        except:
+                            pass
 
                 final_dic = {
                     'modSecInstalled': 1,
@@ -1586,7 +1654,7 @@ class FirewallManager:
             ProcessUtilities.executioner(command)
 
             execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + portsPath
+            execPath = execPath + " modifyPorts --protocol " + shlex.quote(protocol) + " --ports " + portsPath
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:

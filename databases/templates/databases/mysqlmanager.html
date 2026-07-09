@@ -1,4 +1,6 @@
 {% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block module_scripts %}<script defer src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "MySQL Manager - CyberPanel" %}{% endblock %}
 {% block content %}
@@ -668,9 +670,8 @@
 </div>
 
 <script>
-    // Add refresh functionality if not already present
-    if (typeof app !== 'undefined') {
-        app.controller('Mysqlmanager', function($scope, $http, $interval) {
+    document.addEventListener('DOMContentLoaded', function() {
+        angular.module('CyberCP').controller('Mysqlmanager', function($scope, $http, $interval) {
             // Existing controller code...
             
             $scope.refreshProcesses = function() {
@@ -683,7 +684,7 @@
                 // The actual refresh logic should be implemented in the controller
             };
         });
-    }
+    });
 </script>
 
 {% endblock %}

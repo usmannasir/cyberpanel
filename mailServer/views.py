@@ -263,4 +263,113 @@ def SaveEmailLimitsNew(request):
         return HttpResponse(json_data)
 
 
+## Catch-All Email
+
+def catchAllEmail(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.catchAllEmail()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchCatchAllConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.fetchCatchAllConfig()
+    except KeyError as msg:
+        data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def saveCatchAllConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.saveCatchAllConfig()
+    except KeyError as msg:
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def deleteCatchAllConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.deleteCatchAllConfig()
+    except KeyError as msg:
+        data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+## Plus-Addressing
+
+def plusAddressingSettings(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.plusAddressingSettings()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchPlusAddressingConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.fetchPlusAddressingConfig()
+    except KeyError as msg:
+        data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def savePlusAddressingGlobal(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.savePlusAddressingGlobal()
+    except KeyError as msg:
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def savePlusAddressingDomain(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.savePlusAddressingDomain()
+    except KeyError as msg:
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+## Pattern Forwarding
+
+def patternForwarding(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.patternForwarding()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchPatternRules(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.fetchPatternRules()
+    except KeyError as msg:
+        data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def createPatternRule(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.createPatternRule()
+    except KeyError as msg:
+        data_ret = {'createStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def deletePatternRule(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.deletePatternRule()
+    except KeyError as msg:
+        data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 

@@ -304,11 +304,34 @@ class AIScannerManager:
                 
                 self.logger.writeToFile(f'[AIScannerManager.startScan] VPS eligible for free scans, getting API key for IP: {server_ip}')
                 vps_key_data = self.get_or_create_vps_api_key(server_ip)
-                
+
                 if vps_key_data:
                     vps_api_key = vps_key_data.get('api_key')
                     free_scans_remaining = vps_key_data.get('free_scans_remaining', 0)
                     self.logger.writeToFile(f'[AIScannerManager.startScan] VPS API key obtained, {free_scans_remaining} free scans remaining')
+
+                    # Save VPS API key to database for future operations (file fixes, etc.)
+                    try:
+                        scanner_settings, created = AIScannerSettings.objects.get_or_create(
+                            admin=admin,
+                            defaults={
+                                'api_key': vps_api_key,
+                                'balance': 0.0000,
+                                'is_payment_configured': True  # VPS accounts have implicit payment
+                            }
+                        )
+
+                        # Update existing settings if API key is different or empty
+                        if not created and (not scanner_settings.api_key or scanner_settings.api_key != vps_api_key):
+                            scanner_settings.api_key = vps_api_key
+                            scanner_settings.is_payment_configured = True
+                            scanner_settings.save()
+                            self.logger.writeToFile(f'[AIScannerManager.startScan] Updated VPS API key in database')
+                        elif created:
+                            self.logger.writeToFile(f'[AIScannerManager.startScan] Saved new VPS API key to database')
+                    except Exception as e:
+                        self.logger.writeToFile(f'[AIScannerManager.startScan] Error saving VPS API key: {str(e)}')
+                        # Continue even if saving fails - scan can still proceed
                 else:
                     self.logger.writeToFile(f'[AIScannerManager.startScan] Failed to get VPS API key')
                     return JsonResponse({'success': False, 'error': 'Failed to authenticate VPS for free scans'})
@@ -492,6 +515,12 @@ class AIScannerManager:
                         if vps_key_data and vps_key_data.get('api_key'):
                             # Use VPS API key for adding payment method
                             api_key_to_use = vps_key_data.get('api_key')
+
+                            # Save VPS API key to database
+                            scanner_settings.api_key = api_key_to_use
+                            scanner_settings.is_payment_configured = True
+                            scanner_settings.save()
+                            self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Saved VPS API key to database')
                         else:
                             return JsonResponse({'success': False, 'error': 'Failed to authenticate VPS'})
                     else:
@@ -510,6 +539,15 @@ class AIScannerManager:
                     if vps_key_data and vps_key_data.get('api_key'):
                         # Use VPS API key for adding payment method
                         api_key_to_use = vps_key_data.get('api_key')
+
+                        # Create scanner settings with VPS API key
+                        AIScannerSettings.objects.create(
+                            admin=admin,
+                            api_key=api_key_to_use,
+                            balance=0.0000,
+                            is_payment_configured=True
+                        )
+                        self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Created new scanner settings with VPS API key')
                     else:
                         return JsonResponse({'success': False, 'error': 'Failed to authenticate VPS'})
                 else:
@@ -609,7 +647,23 @@ class AIScannerManager:
             except ScanHistory.DoesNotExist:
                 self.logger.writeToFile(f'[AIScannerManager.scanCallback] Scan not found: {scan_id}')
                 return JsonResponse({'success': False, 'error': 'Scan not found'})
-            
+
+            # Authenticate the callback: the platform must present the API key
+            # belonging to the admin that owns this scan. Without this check any
+            # unauthenticated request could mutate scan records and balances.
+            provided_key = request.META.get('HTTP_X_API_KEY', '').strip()
+            if not provided_key:
+                self.logger.writeToFile(f'[AIScannerManager.scanCallback] Rejected: missing X-API-Key for scan {scan_id}')
+                return JsonResponse({'success': False, 'error': 'Authentication required'}, status=401)
+            try:
+                scanner_settings = AIScannerSettings.objects.get(admin=scan_history.admin)
+            except AIScannerSettings.DoesNotExist:
+                self.logger.writeToFile(f'[AIScannerManager.scanCallback] Rejected: no scanner settings for scan {scan_id}')
+                return JsonResponse({'success': False, 'error': 'Scan not found'}, status=404)
+            if provided_key != scanner_settings.api_key:
+                self.logger.writeToFile(f'[AIScannerManager.scanCallback] Rejected: invalid API key for scan {scan_id}')
+                return JsonResponse({'success': False, 'error': 'Invalid API key'}, status=403)
+
             # Update scan status and results
             scan_history.status = status
             scan_history.completed_at = timezone.now()

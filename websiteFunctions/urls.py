@@ -199,6 +199,9 @@ urlpatterns = [
     path('saveApacheConfigsToFile', views.saveApacheConfigsToFile, name='saveApacheConfigsToFile'),
     path('getTerminalJWT', views.get_terminal_jwt, name='get_terminal_jwt'),
 
+    # Single-site workspace hub (must precede the domain catch-alls)
+    path('<domain>/workspace', views.siteWorkspace, name='siteWorkspace'),
+
     # Catch all for domains
     path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
     path('<domain>', views.domain, name='domain'),

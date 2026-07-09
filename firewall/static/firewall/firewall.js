@@ -16,10 +16,6 @@ app.controller('firewallController', function ($scope, $http) {
     $scope.couldNotConnect = true;
     $scope.rulesDetails = false;
 
-    // Edit modal variables
-    $scope.showEditModal = false;
-    $scope.editingRule = {};
-
     firewallStatus();
 
     populateCurrentRecords();
@@ -506,249 +502,6 @@ app.controller('firewallController', function ($scope, $http) {
         }
 
     };
-
-    // Export/Import Functions
-    $scope.exportRules = function () {
-        $scope.rulesLoading = false;
-        $scope.actionFailed = true;
-        $scope.actionSuccess = true;
-
-        url = "/firewall/exportFirewallRules";
-
-        var data = {};
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(exportSuccess, exportError);
-
-        function exportSuccess(response) {
-            $scope.rulesLoading = true;
-            
-            // Check if response is JSON (error) or file download
-            if (typeof response.data === 'string' && response.data.includes('{')) {
-                try {
-                    var errorData = JSON.parse(response.data);
-                    if (errorData.exportStatus === 0) {
-                        $scope.actionFailed = false;
-                        $scope.actionSuccess = true;
-                        $scope.errorMessage = errorData.error_message;
-                        return;
-                    }
-                } catch (e) {
-                    // If not JSON, assume it's the file content
-                }
-            }
-            
-            // If we get here, it's a successful file download
-            $scope.actionFailed = true;
-            $scope.actionSuccess = false;
-        }
-
-        function exportError(response) {
-            $scope.rulesLoading = true;
-            $scope.actionFailed = false;
-            $scope.actionSuccess = true;
-            $scope.errorMessage = "Could not connect to server. Please refresh this page.";
-        }
-    };
-
-    $scope.importRules = function () {
-        // Create file input element
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.style.display = 'none';
-        
-        input.onchange = function(event) {
-            var file = event.target.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        var importData = JSON.parse(e.target.result);
-                        
-                        // Validate file format
-                        if (!importData.rules || !Array.isArray(importData.rules)) {
-                            $scope.$apply(function() {
-                                $scope.actionFailed = false;
-                                $scope.actionSuccess = true;
-                                $scope.errorMessage = "Invalid import file format. Please select a valid firewall rules export file.";
-                            });
-                            return;
-                        }
-                        
-                        // Upload file to server
-                        uploadImportFile(file);
-                    } catch (error) {
-                        $scope.$apply(function() {
-                            $scope.actionFailed = false;
-                            $scope.actionSuccess = true;
-                            $scope.errorMessage = "Invalid JSON file. Please select a valid firewall rules export file.";
-                        });
-                    }
-                };
-                reader.readAsText(file);
-            }
-        };
-        
-        document.body.appendChild(input);
-        input.click();
-        document.body.removeChild(input);
-    };
-
-    function uploadImportFile(file) {
-        $scope.rulesLoading = false;
-        $scope.actionFailed = true;
-        $scope.actionSuccess = true;
-
-        var formData = new FormData();
-        formData.append('import_file', file);
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': undefined
-            },
-            transformRequest: angular.identity
-        };
-
-        $http.post("/firewall/importFirewallRules", formData, config).then(importSuccess, importError);
-
-        function importSuccess(response) {
-            $scope.rulesLoading = true;
-            
-            if (response.data.importStatus === 1) {
-                $scope.actionFailed = true;
-                $scope.actionSuccess = false;
-                
-                // Refresh rules list
-                populateCurrentRecords();
-                
-                // Show import summary
-                var summary = `Import completed successfully!\n` +
-                             `Imported: ${response.data.imported_count} rules\n` +
-                             `Skipped: ${response.data.skipped_count} rules\n` +
-                             `Errors: ${response.data.error_count} rules`;
-                
-                if (response.data.errors && response.data.errors.length > 0) {
-                    summary += `\n\nErrors:\n${response.data.errors.join('\n')}`;
-                }
-                
-                alert(summary);
-            } else {
-                $scope.actionFailed = false;
-                $scope.actionSuccess = true;
-                $scope.errorMessage = response.data.error_message;
-            }
-        }
-
-        function importError(response) {
-            $scope.rulesLoading = true;
-            $scope.actionFailed = false;
-            $scope.actionSuccess = true;
-            $scope.errorMessage = "Could not connect to server. Please refresh this page.";
-        }
-    }
-
-    // Edit Rule Functions
-    $scope.editRule = function(rule) {
-        $scope.editingRule = {
-            id: rule.id,
-            name: rule.name,
-            proto: rule.proto,
-            port: rule.port,
-            ipAddress: rule.ipAddress
-        };
-        $scope.showEditModal = true;
-    };
-
-    $scope.closeEditModal = function() {
-        $scope.showEditModal = false;
-        $scope.editingRule = {};
-    };
-
-    $scope.saveEditedRule = function() {
-        // Basic validation
-        if (!$scope.editingRule.name || !$scope.editingRule.port || !$scope.editingRule.ipAddress) {
-            $scope.actionFailed = false;
-            $scope.actionSuccess = true;
-            $scope.errorMessage = "Please fill in all required fields.";
-            return;
-        }
-
-        $scope.rulesLoading = false;
-        $scope.actionFailed = true;
-        $scope.actionSuccess = true;
-
-        url = "/firewall/editRule";
-
-        var data = {
-            id: $scope.editingRule.id,
-            ruleName: $scope.editingRule.name,
-            ruleProtocol: $scope.editingRule.proto,
-            rulePort: $scope.editingRule.port,
-            ruleIP: $scope.editingRule.ipAddress
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(editSuccess, editError);
-
-        function editSuccess(response) {
-            $scope.rulesLoading = true;
-            
-            if (response.data.edit_status === 1) {
-                // Close modal and refresh rules
-                $scope.closeEditModal();
-                populateCurrentRecords();
-                
-                $scope.actionFailed = true;
-                $scope.actionSuccess = false;
-            } else {
-                $scope.actionFailed = false;
-                $scope.actionSuccess = true;
-                $scope.errorMessage = response.data.error_message;
-            }
-        }
-
-        function editError(response) {
-            $scope.rulesLoading = true;
-            $scope.actionFailed = false;
-            $scope.actionSuccess = true;
-            $scope.errorMessage = "Could not connect to server. Please refresh this page.";
-        }
-    };
-
-    // Close modal when clicking outside or pressing Escape
-    $scope.$on('$locationChangeStart', function() {
-        $scope.closeEditModal();
-    });
-
-    // Keyboard support for modal
-    $(document).on('keydown', function(e) {
-        if ($scope.showEditModal && e.keyCode === 27) { // Escape key
-            $scope.$apply(function() {
-                $scope.closeEditModal();
-            });
-        }
-    });
-
-    // Focus management for modal
-    $scope.$watch('showEditModal', function(newVal) {
-        if (newVal) {
-            setTimeout(function() {
-                $('#editRuleModal input[name="ruleName"]').focus();
-            }, 100);
-        }
-    });
 
 
 });
@@ -1473,9 +1226,17 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
     var comodoInstalled = false;
     var counterOWASP = 0;
     var counterComodo = 0;
+    var updatingOWASPStatus = false;
+    var updatingComodoStatus = false;
 
 
     $('#owaspInstalled').change(function () {
+
+        // Prevent triggering installation when status check updates the toggle
+        if (updatingOWASPStatus) {
+            counterOWASP = counterOWASP + 1;  // Still increment counter
+            return;
+        }
 
         owaspInstalled = $(this).prop('checked');
         $scope.ruleFiles = true;
@@ -1492,6 +1253,12 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
     });
 
     $('#comodoInstalled').change(function () {
+
+        // Prevent triggering installation when status check updates the toggle
+        if (updatingComodoStatus) {
+            counterComodo = counterComodo + 1;  // Still increment counter
+            return;
+        }
 
         $scope.ruleFiles = true;
         comodoInstalled = $(this).prop('checked');
@@ -1511,9 +1278,12 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
 
 
     getOWASPAndComodoStatus(true);
-    function getOWASPAndComodoStatus(updateToggle) {
+    function getOWASPAndComodoStatus(updateToggle, showLoader) {
 
-        $scope.modsecLoading = false;
+        // Only show loader if explicitly requested (during installations)
+        if (showLoader === true) {
+            $scope.modsecLoading = false;
+        }
 
 
         url = "/firewall/getOWASPAndComodoStatus";
@@ -1538,6 +1308,10 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
 
                 if (updateToggle === true) {
 
+                    // Set flags to prevent change event from triggering installation
+                    updatingOWASPStatus = true;
+                    updatingComodoStatus = true;
+
                     if (response.data.owaspInstalled === 1) {
                         $('#owaspInstalled').prop('checked', true);
                         $scope.owaspDisable = false;
@@ -1552,6 +1326,7 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
                         $('#comodoInstalled').prop('checked', false);
                         $scope.comodoDisable = true;
                     }
+
                 } else {
 
                     if (response.data.owaspInstalled === 1) {
@@ -1568,10 +1343,19 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
 
             }
 
+            // Always reset flags after status check completes
+            $timeout(function() {
+                updatingOWASPStatus = false;
+                updatingComodoStatus = false;
+            }, 100);
+
         }
 
         function cantLoadInitialDatas(response) {
             $scope.modsecLoading = true;
+            // Reset flags even on error
+            updatingOWASPStatus = false;
+            updatingComodoStatus = false;
         }
 
     }
@@ -1613,7 +1397,10 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
                 $scope.installationFailed = true;
                 $scope.installationSuccess = false;
 
-                getOWASPAndComodoStatus(false);
+                // Update toggle state after a short delay to reflect installation result
+                $timeout(function() {
+                    getOWASPAndComodoStatus(true);
+                }, 500);
 
             } else {
                 $scope.modsecLoading = true;
@@ -1626,6 +1413,11 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
                 $scope.installationSuccess = true;
 
                 $scope.errorMessage = response.data.error_message;
+
+                // Update toggle to reflect failed installation (will show OFF)
+                $timeout(function() {
+                    getOWASPAndComodoStatus(true);
+                }, 500);
             }
 
         }

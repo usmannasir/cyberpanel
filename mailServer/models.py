@@ -49,3 +49,62 @@ class Transport(models.Model):
 class Pipeprograms(models.Model):
     source = models.CharField(max_length=80)
     destination = models.TextField()
+
+    class Meta:
+        db_table = 'e_pipeprograms'
+
+
+class CatchAllEmail(models.Model):
+    """Stores catch-all email configuration per domain"""
+    domain = models.OneToOneField(Domains, on_delete=models.CASCADE, primary_key=True, db_column='domain_id')
+    destination = models.CharField(max_length=255)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'e_catchall'
+        managed = False
+
+
+class EmailServerSettings(models.Model):
+    """Global email server settings (singleton)"""
+    plus_addressing_enabled = models.BooleanField(default=False)
+    plus_addressing_delimiter = models.CharField(max_length=1, default='+')
+
+    class Meta:
+        db_table = 'e_server_settings'
+        managed = False
+
+    @classmethod
+    def get_settings(cls):
+        settings, _ = cls.objects.get_or_create(pk=1)
+        return settings
+
+
+class PlusAddressingOverride(models.Model):
+    """Per-domain plus-addressing override"""
+    domain = models.OneToOneField(Domains, on_delete=models.CASCADE, primary_key=True, db_column='domain_id')
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'e_plus_override'
+        managed = False
+
+
+class PatternForwarding(models.Model):
+    """Stores wildcard/regex forwarding rules"""
+    PATTERN_TYPES = [
+        ('wildcard', 'Wildcard'),
+        ('regex', 'Regular Expression'),
+    ]
+
+    domain = models.ForeignKey(Domains, on_delete=models.CASCADE, db_column='domain_id')
+    pattern = models.CharField(max_length=255)
+    destination = models.CharField(max_length=255)
+    pattern_type = models.CharField(max_length=20, choices=PATTERN_TYPES, default='wildcard')
+    priority = models.IntegerField(default=100)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'e_pattern_forwarding'
+        managed = False
+        ordering = ['priority']

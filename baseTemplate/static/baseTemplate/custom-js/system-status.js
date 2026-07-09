@@ -120,10 +120,19 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
-    
+    $scope.statusError = false;
+
     getStuff();
-    
+
     $scope.getSystemStatus = function() {
+        getStuff();
+    };
+
+    $scope.retryStatus = function() {
+        $scope.statusError = false;
+        $scope.cpuUsage = undefined;
+        $scope.ramUsage = undefined;
+        $scope.diskUsage = undefined;
         getStuff();
     };
 
@@ -136,6 +145,7 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
         function ListInitialData(response) {
 
+            $scope.statusError = false;
             $scope.cpuUsage = response.data.cpuUsage;
             $scope.ramUsage = response.data.ramUsage;
             $scope.diskUsage = response.data.diskUsage;
@@ -165,6 +175,7 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
         function cantLoadInitialData(response) {
             $scope.uptime = 'Unavailable';
             $scope.uptimeLoaded = true;
+            $scope.statusError = true;
         }
 
         $timeout(getStuff, 60000); // Update every minute
@@ -911,7 +922,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.totalDBs = 0;
     $scope.totalEmails = 0;
     $scope.totalFTPUsers = 0;
-    
+    $scope.statsLoaded = false;
+
     // Hide system charts for non-admin users
     $scope.hideSystemCharts = false;
 
@@ -936,43 +948,187 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     // SSH Logins
     $scope.sshLogins = [];
+    $scope.sshLoginsPaginated = [];
+    $scope.sshLoginsCurrentPage = 1;
+    $scope.sshLoginsPerPage = 10;
+    $scope.sshLoginsGoToPage = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
+    
+    $scope.getSSHLoginsTotalPages = function() {
+        return Math.ceil($scope.sshLogins.length / $scope.sshLoginsPerPage);
+    };
+    
+    $scope.getSSHLoginsStart = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            return 0;
+        }
+        return ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage + 1;
+    };
+    
+    $scope.getSSHLoginsEnd = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            return 0;
+        }
+        var end = $scope.sshLoginsCurrentPage * $scope.sshLoginsPerPage;
+        return Math.min(end, $scope.sshLogins.length);
+    };
+    
+    $scope.updateSSHLoginsPaginated = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            $scope.sshLoginsPaginated = [];
+            console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
+            return;
+        }
+        var start = ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage;
+        var end = start + $scope.sshLoginsPerPage;
+        $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
+        console.log('updateSSHLoginsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogins.length, 'paginated=', $scope.sshLoginsPaginated.length);
+    };
+    
+    $scope.sshLoginsPrevPage = function() {
+        if ($scope.sshLoginsCurrentPage > 1) {
+            $scope.sshLoginsCurrentPage--;
+            $scope.updateSSHLoginsPaginated();
+        }
+    };
+    
+    $scope.sshLoginsNextPage = function() {
+        if ($scope.sshLoginsCurrentPage < $scope.getSSHLoginsTotalPages()) {
+            $scope.sshLoginsCurrentPage++;
+            $scope.updateSSHLoginsPaginated();
+        }
+    };
+    
+    $scope.sshLoginsGoToPageNumber = function() {
+        var page = parseInt($scope.sshLoginsGoToPage);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.sshLoginsCurrentPage = page;
+            $scope.updateSSHLoginsPaginated();
+        } else {
+            $scope.sshLoginsGoToPage = $scope.sshLoginsCurrentPage;
+        }
+    };
+    
     $scope.refreshSSHLogins = function() {
         $scope.loadingSSHLogins = true;
         $http.get('/base/getRecentSSHLogins').then(function (response) {
             $scope.loadingSSHLogins = false;
-            if (response.data && response.data.logins) {
+            console.log('SSH Logins response:', response.data);
+            if (response.data && response.data.logins && Array.isArray(response.data.logins)) {
                 $scope.sshLogins = response.data.logins;
+                $scope.sshLoginsCurrentPage = 1;
+                $scope.sshLoginsGoToPage = 1;
+                console.log('SSH Logins loaded:', $scope.sshLogins.length, 'items');
+                $scope.updateSSHLoginsPaginated();
+                console.log('SSH Logins paginated:', $scope.sshLoginsPaginated.length, 'items');
             } else {
+                console.warn('SSH Logins: No data or invalid format', response.data);
                 $scope.sshLogins = [];
+                $scope.sshLoginsPaginated = [];
             }
         }, function (err) {
             $scope.loadingSSHLogins = false;
+            console.error('SSH Logins error:', err);
             $scope.errorSSHLogins = 'Failed to load SSH logins.';
+            $scope.sshLogins = [];
+            $scope.sshLoginsPaginated = [];
         });
     };
 
     // SSH Logs
     $scope.sshLogs = [];
+    $scope.sshLogsPaginated = [];
+    $scope.sshLogsCurrentPage = 1;
+    $scope.sshLogsPerPage = 10;
+    $scope.sshLogsGoToPage = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
+    
+    $scope.getSSHLogsTotalPages = function() {
+        return Math.ceil($scope.sshLogs.length / $scope.sshLogsPerPage);
+    };
+    
+    $scope.getSSHLogsStart = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            return 0;
+        }
+        return ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage + 1;
+    };
+    
+    $scope.getSSHLogsEnd = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            return 0;
+        }
+        var end = $scope.sshLogsCurrentPage * $scope.sshLogsPerPage;
+        return Math.min(end, $scope.sshLogs.length);
+    };
+    
+    $scope.updateSSHLogsPaginated = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            $scope.sshLogsPaginated = [];
+            console.log('updateSSHLogsPaginated: No data, cleared paginated array');
+            return;
+        }
+        var start = ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage;
+        var end = start + $scope.sshLogsPerPage;
+        $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
+        console.log('updateSSHLogsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogs.length, 'paginated=', $scope.sshLogsPaginated.length);
+    };
+    
+    $scope.sshLogsPrevPage = function() {
+        if ($scope.sshLogsCurrentPage > 1) {
+            $scope.sshLogsCurrentPage--;
+            $scope.updateSSHLogsPaginated();
+        }
+    };
+    
+    $scope.sshLogsNextPage = function() {
+        if ($scope.sshLogsCurrentPage < $scope.getSSHLogsTotalPages()) {
+            $scope.sshLogsCurrentPage++;
+            $scope.updateSSHLogsPaginated();
+        }
+    };
+    
+    $scope.sshLogsGoToPageNumber = function() {
+        var page = parseInt($scope.sshLogsGoToPage);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.sshLogsCurrentPage = page;
+            $scope.updateSSHLogsPaginated();
+        } else {
+            $scope.sshLogsGoToPage = $scope.sshLogsCurrentPage;
+        }
+    };
+    
     $scope.refreshSSHLogs = function() {
         $scope.loadingSSHLogs = true;
         $http.get('/base/getRecentSSHLogs').then(function (response) {
             $scope.loadingSSHLogs = false;
-            if (response.data && response.data.logs) {
+            console.log('SSH Logs response:', response.data);
+            if (response.data && response.data.logs && Array.isArray(response.data.logs)) {
                 $scope.sshLogs = response.data.logs;
+                $scope.sshLogsCurrentPage = 1;
+                $scope.sshLogsGoToPage = 1;
+                console.log('SSH Logs loaded:', $scope.sshLogs.length, 'items');
+                $scope.updateSSHLogsPaginated();
+                console.log('SSH Logs paginated:', $scope.sshLogsPaginated.length, 'items');
                 // Analyze logs for security issues
                 $scope.analyzeSSHSecurity();
             } else {
+                console.warn('SSH Logs: No data or invalid format', response.data);
                 $scope.sshLogs = [];
+                $scope.sshLogsPaginated = [];
             }
         }, function (err) {
             $scope.loadingSSHLogs = false;
+            console.error('SSH Logs error:', err);
             $scope.errorSSHLogs = 'Failed to load SSH logs.';
+            $scope.sshLogs = [];
+            $scope.sshLogsPaginated = [];
         });
     };
     
@@ -1088,6 +1244,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 $scope.totalDBs = response.data.total_dbs;
                 $scope.totalEmails = response.data.total_emails;
                 $scope.totalFTPUsers = response.data.total_ftp_users;
+                $scope.statsLoaded = true;
             }
         });
     }
@@ -1561,16 +1718,48 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             var match = login.raw.match(/(pts\/[0-9]+)/);
             if (match) tty = match[1];
         }
-        $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty }).then(function(response) {
+        console.log('Fetching SSH activity for user:', login.user, 'IP:', login.ip, 'TTY:', tty);
+        $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty, ip: login.ip || '' }, {
+            timeout: 30000
+        }).then(function(response) {
+            console.log('SSH Activity response received:', response);
             $scope.loadingSSHActivity = false;
-            if (response.data) {
+            if (response.data && response.data.error) {
+                console.error('SSH Activity error:', response.data.error);
+                $scope.errorSSHActivity = response.data.error;
+                $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
+            } else if (response.data) {
+                console.log('SSH Activity data:', response.data);
                 $scope.sshActivity = response.data;
+                $scope.errorSSHActivity = '';
             } else {
-                $scope.sshActivity = { processes: [], w: [] };
+                console.warn('SSH Activity: No data in response');
+                $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
+                $scope.errorSSHActivity = 'No data received from server.';
             }
         }, function(err) {
             $scope.loadingSSHActivity = false;
-            $scope.errorSSHActivity = (err.data && err.data.error) ? err.data.error : 'Failed to fetch activity.';
+            console.error('Error fetching SSH activity:', err);
+            console.error('Error status:', err.status);
+            console.error('Error data:', err.data);
+            if (err.status === 0) {
+                $scope.errorSSHActivity = 'Network error: Unable to connect to server. Please check your connection.';
+            } else if (err.status === -1) {
+                $scope.errorSSHActivity = 'Request timeout. The server took too long to respond.';
+            } else if (err.data && err.data.error) {
+                $scope.errorSSHActivity = err.data.error;
+            } else if (err.data && err.data.errorMessage) {
+                $scope.errorSSHActivity = err.data.errorMessage;
+            } else if (err.status === 403) {
+                $scope.errorSSHActivity = 'Access denied. Admin privileges required.';
+            } else if (err.status === 400) {
+                $scope.errorSSHActivity = 'Invalid request. Please try again.';
+            } else if (err.status === 500) {
+                $scope.errorSSHActivity = 'Server error. Please try again later.';
+            } else {
+                $scope.errorSSHActivity = 'Failed to fetch activity. Status: ' + (err.status || 'Unknown') + '. Please check your connection and try again.';
+            }
+            $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
         });
     };
     
@@ -1587,5 +1776,81 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         if (event.target === event.currentTarget) {
             $scope.closeSSHActivityModal();
         }
+    };
+    
+    // Kill a specific process
+    $scope.killProcess = function(pid, user) {
+        if (!confirm('Are you sure you want to kill process ' + pid + '? This action cannot be undone.')) {
+            return;
+        }
+        
+        console.log('Killing process:', pid, 'for user:', user);
+        $http.post('/base/killSSHProcess', { pid: pid, user: user }, { timeout: 10000 }).then(function(response) {
+            var notify = window.cpToast || function (m) { alert(m); };
+            if (response.data && response.data.success) {
+                notify('Process ' + pid + ' killed successfully.', 'success');
+                // Reload activity data
+                if ($scope.sshActivityUser) {
+                    var login = { user: $scope.sshActivityUser, ip: '', tty: '' };
+                    $scope.viewSSHActivity(login);
+                }
+            } else if (response.data && response.data.error) {
+                notify('Error: ' + response.data.error, 'error');
+            } else {
+                notify('Unknown error occurred.', 'error');
+            }
+        }, function(err) {
+            console.error('Error killing process:', err);
+            var errorMsg = 'Failed to kill process. ';
+            if (err.data && err.data.error) {
+                errorMsg += err.data.error;
+            } else if (err.status === 403) {
+                errorMsg += 'Access denied.';
+            } else if (err.status === 404) {
+                errorMsg += 'Process not found.';
+            } else {
+                errorMsg += 'Please try again.';
+            }
+            (window.cpToast || function (m) { alert(m); })(errorMsg, 'error');
+        });
+    };
+    
+    // Kill all sessions for a user
+    $scope.killSession = function(user) {
+        if (!confirm('WARNING: This will force close ALL active sessions for user "' + user + '". This action cannot be undone.\n\nAre you sure you want to continue?')) {
+            return;
+        }
+        
+        if (!confirm('Final confirmation: Kill all sessions for user "' + user + '"?')) {
+            return;
+        }
+        
+        console.log('Killing session for user:', user);
+        $http.post('/base/killSSHSession', { user: user }, { timeout: 10000 }).then(function(response) {
+            if (response.data && response.data.success) {
+                alert('All sessions for user ' + user + ' have been terminated successfully.');
+                // Close modal and refresh SSH logins
+                $scope.closeSSHActivityModal();
+                // Refresh SSH logins list
+                if (typeof $scope.loadSSHLogins === 'function') {
+                    $scope.loadSSHLogins();
+                }
+            } else if (response.data && response.data.error) {
+                alert('Error: ' + response.data.error);
+            } else {
+                alert('Unknown error occurred.');
+            }
+        }, function(err) {
+            console.error('Error killing session:', err);
+            var errorMsg = 'Failed to kill session. ';
+            if (err.data && err.data.error) {
+                errorMsg += err.data.error;
+            } else if (err.status === 403) {
+                errorMsg += 'Access denied.';
+            } else {
+                errorMsg += 'Please try again.';
+            }
+            alert(errorMsg);
+        });
     };
 });

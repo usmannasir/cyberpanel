@@ -435,6 +435,117 @@
             </div>
         </div>
 
+        {% if has_addons %}
+        <div class="content-card">
+            <h2 class="card-title">{% trans "Advanced Resource Limits" %}</h2>
+
+            <div class="info-box">
+                <i class="fas fa-server"></i>
+                <div class="info-box-text">
+                    {% trans "These limits are enforced via cgroups v2 and OpenLiteSpeed to prevent resource abuse and ensure server stability." %}
+                </div>
+            </div>
+
+            <div class="resource-section">
+                <div class="resource-title">
+                    <i class="fas fa-microchip"></i>
+                    {% trans "CPU & Memory" %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Memory Limit" %}</label>
+                        <div class="input-group">
+                            <input name="memoryLimitMB" type="number" class="form-control" ng-model="memoryLimitMB"
+                                   value="1024" min="256" max="16384" step="256" required>
+                            <span class="input-suffix">MB</span>
+                        </div>
+                        <div class="help-text">{% trans "RAM allocated per website (256 MB - 16 GB)" %}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">{% trans "CPU Cores" %}</label>
+                        <input name="cpuCores" type="number" class="form-control" ng-model="cpuCores"
+                               value="1" min="1" max="16" required>
+                        <div class="help-text">{% trans "Number of CPU cores (1-16)" %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="resource-section">
+                <div class="resource-title">
+                    <i class="fas fa-hdd"></i>
+                    {% trans "Disk & I/O" %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">{% trans "I/O Limit" %}</label>
+                        <div class="input-group">
+                            <input name="ioLimitMBPS" type="number" class="form-control" ng-model="ioLimitMBPS"
+                                   value="10" min="5" max="100" required>
+                            <span class="input-suffix">MB/s</span>
+                        </div>
+                        <div class="help-text">{% trans "Disk I/O bandwidth limit (5-100 MB/s)" %}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Inode Limit" %}</label>
+                        <input name="inodeLimit" type="number" class="form-control" ng-model="inodeLimit"
+                               value="400000" min="100000" max="2000000" step="100000" required>
+                        <div class="help-text">{% trans "Maximum files/directories (100k - 2M)" %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="resource-section">
+                <div class="resource-title">
+                    <i class="fas fa-cogs"></i>
+                    {% trans "Process Limits" %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Max Connections" %}</label>
+                        <input name="maxConnections" type="number" class="form-control" ng-model="maxConnections"
+                               value="10" min="1" max="100" required>
+                        <div class="help-text">{% trans "Max concurrent PHP connections (1-100)" %}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Process Soft Limit" %}</label>
+                        <input name="procSoftLimit" type="number" class="form-control" ng-model="procSoftLimit"
+                               value="400" min="100" max="2000" required>
+                        <div class="help-text">{% trans "Soft process limit (100-2000)" %}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{% trans "Process Hard Limit" %}</label>
+                    <input name="procHardLimit" type="number" class="form-control" ng-model="procHardLimit"
+                           value="500" min="100" max="2000" required>
+                    <div class="help-text">{% trans "Hard process limit (100-2000)" %}</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="content-card">
+            <h2 class="card-title">{% trans "Advanced Resource Limits" %}</h2>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>{% trans "Premium Feature" %}</strong><br>
+                    {% trans "Advanced resource limits (CPU, Memory, I/O, Inode, Process limits) require CyberPanel Addons." %}<br>
+                    <a href="https://cyberpanel.net/cyberpanel-addons" target="_blank" class="alert-link">
+                        <i class="fas fa-external-link-alt"></i>
+                        {% trans "Purchase CyberPanel Addons" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="content-card" ng-hide="installationDetailsForm">
             <h2 class="card-title">{% trans "Additional Features" %}</h2>
             

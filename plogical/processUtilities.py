@@ -554,6 +554,21 @@ class ProcessUtilities(multi.Thread):
         return None
 
     @staticmethod
+    def getNumberOfCores():
+        """Get the number of CPU cores available on the system"""
+        try:
+            import multiprocessing
+            return multiprocessing.cpu_count()
+        except:
+            try:
+                # Fallback method using /proc/cpuinfo
+                with open('/proc/cpuinfo', 'r') as f:
+                    return len([line for line in f if line.startswith('processor')])
+            except:
+                # Default to 2 if we can't determine
+                return 2
+
+    @staticmethod
     def fetch_latest_prestashop_version():
         import requests
         url = "https://api.github.com/repos/PrestaShop/PrestaShop/releases"

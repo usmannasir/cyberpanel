@@ -631,7 +631,7 @@ class CustomACME:
 
             if response.status_code == 200:
                 # Wait for order to be processed
-                max_attempts = 30
+                max_attempts = 10
                 delay = 2
                 for attempt in range(max_attempts):
                     if not self._get_nonce():
@@ -667,7 +667,7 @@ class CustomACME:
                         f'Order status check failed, attempt {attempt + 1}/{max_attempts}')
                     time.sleep(delay)
 
-                logging.CyberCPLogFileWriter.writeToFile('Order processing timed out')
+                logging.CyberCPLogFileWriter.writeToFile('Order processing timed out after 20 seconds')
                 return False
             return False
         except Exception as e:
@@ -709,7 +709,7 @@ class CustomACME:
             logging.CyberCPLogFileWriter.writeToFile(f'Error downloading certificate: {str(e)}')
             return None
 
-    def _wait_for_challenge_validation(self, challenge_url, max_attempts=30, delay=2):
+    def _wait_for_challenge_validation(self, challenge_url, max_attempts=10, delay=2):
         """Wait for challenge to be validated by the ACME server"""
         try:
             logging.CyberCPLogFileWriter.writeToFile(f'Waiting for challenge validation at URL: {challenge_url}')
@@ -736,14 +736,36 @@ class CustomACME:
                         logging.CyberCPLogFileWriter.writeToFile('Challenge validated successfully')
                         return True
                     elif challenge_status == 'invalid':
-                        logging.CyberCPLogFileWriter.writeToFile('Challenge validation failed')
+                        # Check for DNS-related errors in the response
+                        response_data = response.json()
+                        error_detail = response_data.get('error', {}).get('detail', '')
+
+                        # Common DNS-related error patterns
+                        dns_errors = [
+                            'NXDOMAIN',
+                            'DNS problem',
+                            'No valid IP addresses',
+                            'could not be resolved',
+                            'DNS resolution',
+                            'Timeout during connect',
+                            'Connection refused',
+                            'no such host'
+                        ]
+
+                        is_dns_error = any(err.lower() in error_detail.lower() for err in dns_errors)
+                        if is_dns_error:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                f'Challenge validation failed due to DNS issue: {error_detail}')
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                f'Challenge validation failed: {error_detail}')
                         return False
 
                 logging.CyberCPLogFileWriter.writeToFile(
                     f'Challenge still pending, attempt {attempt + 1}/{max_attempts}')
                 time.sleep(delay)
 
-            logging.CyberCPLogFileWriter.writeToFile('Challenge validation timed out')
+            logging.CyberCPLogFileWriter.writeToFile('Challenge validation timed out after 20 seconds')
             return False
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f'Error waiting for challenge validation: {str(e)}')
@@ -768,94 +790,114 @@ class CustomACME:
         try:
             logging.CyberCPLogFileWriter.writeToFile(f'Checking DNS records for domain: {domain}')
 
-            # List of public DNS servers to check against
+            # List of public DNS servers to check against (reduced to 2 for faster checks)
             dns_servers = [
                 '8.8.8.8',  # Google DNS
-                '1.1.1.1',  # Cloudflare DNS
-                '208.67.222.222'  # OpenDNS
+                '1.1.1.1'   # Cloudflare DNS
             ]
 
-            # Function to check DNS record with specific DNS server
-            def check_with_dns_server(server, record_type='A'):
-                try:
-                    # Create a new socket for each check
-                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    sock.settimeout(5)  # 5 second timeout
-
-                    # Set the DNS server
-                    sock.connect((server, 53))
-
-                    # Create DNS query
-                    query = bytearray()
-                    # DNS header
-                    query += b'\x00\x01'  # Transaction ID
-                    query += b'\x01\x00'  # Flags: Standard query
-                    query += b'\x00\x01'  # Questions: 1
-                    query += b'\x00\x00'  # Answer RRs: 0
-                    query += b'\x00\x00'  # Authority RRs: 0
-                    query += b'\x00\x00'  # Additional RRs: 0
-
-                    # Domain name
-                    for part in domain.split('.'):
-                        query.append(len(part))
-                        query.extend(part.encode())
-                    query += b'\x00'  # End of domain name
-
-                    # Query type and class
-                    if record_type == 'A':
-                        query += b'\x00\x01'  # Type: A
-                    else:  # AAAA
-                        query += b'\x00\x1c'  # Type: AAAA
-                    query += b'\x00\x01'  # Class: IN
-
-                    # Send query
-                    sock.send(query)
-
-                    # Receive response
-                    response = sock.recv(1024)
-
-                    # Check if we got a valid response
-                    if len(response) > 12:  # Minimum DNS response size
-                        # Check if there are answers in the response
-                        answer_count = int.from_bytes(response[6:8], 'big')
-                        if answer_count > 0:
-                            return True
-
-                    return False
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Error checking DNS with server {server}: {str(e)}')
-                    return False
-                finally:
-                    sock.close()
-
-            # Check A records (IPv4) with multiple DNS servers
+            # Use system's DNS resolver as primary check (faster and respects local config)
             a_record_found = False
-            for server in dns_servers:
-                if check_with_dns_server(server, 'A'):
-                    a_record_found = True
-                    break
-
-            # Check AAAA records (IPv6) with multiple DNS servers
             aaaa_record_found = False
-            for server in dns_servers:
-                if check_with_dns_server(server, 'AAAA'):
-                    aaaa_record_found = True
-                    break
 
-            # Also check with system's DNS resolver as a fallback
             try:
-                # Try to resolve A record (IPv4)
+                # Try to resolve A record (IPv4) with timeout
+                old_timeout = socket.getdefaulttimeout()
+                socket.setdefaulttimeout(3)  # 3 second timeout
                 socket.gethostbyname(domain)
                 a_record_found = True
+                socket.setdefaulttimeout(old_timeout)
             except socket.gaierror:
+                socket.setdefaulttimeout(old_timeout)
+                pass
+            except socket.timeout:
+                socket.setdefaulttimeout(old_timeout)
                 pass
 
             try:
-                # Try to resolve AAAA record (IPv6)
+                # Try to resolve AAAA record (IPv6) with timeout
+                old_timeout = socket.getdefaulttimeout()
+                socket.setdefaulttimeout(3)  # 3 second timeout
                 socket.getaddrinfo(domain, None, socket.AF_INET6)
                 aaaa_record_found = True
+                socket.setdefaulttimeout(old_timeout)
             except socket.gaierror:
+                socket.setdefaulttimeout(old_timeout)
                 pass
+            except socket.timeout:
+                socket.setdefaulttimeout(old_timeout)
+                pass
+
+            # If system resolver fails, try public DNS servers as fallback
+            if not a_record_found and not aaaa_record_found:
+                # Function to check DNS record with specific DNS server
+                def check_with_dns_server(server, record_type='A'):
+                    try:
+                        # Create a new socket for each check
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                        sock.settimeout(2)  # 2 second timeout
+
+                        # Set the DNS server
+                        sock.connect((server, 53))
+
+                        # Create DNS query
+                        query = bytearray()
+                        # DNS header
+                        query += b'\x00\x01'  # Transaction ID
+                        query += b'\x01\x00'  # Flags: Standard query
+                        query += b'\x00\x01'  # Questions: 1
+                        query += b'\x00\x00'  # Answer RRs: 0
+                        query += b'\x00\x00'  # Authority RRs: 0
+                        query += b'\x00\x00'  # Additional RRs: 0
+
+                        # Domain name
+                        for part in domain.split('.'):
+                            query.append(len(part))
+                            query.extend(part.encode())
+                        query += b'\x00'  # End of domain name
+
+                        # Query type and class
+                        if record_type == 'A':
+                            query += b'\x00\x01'  # Type: A
+                        else:  # AAAA
+                            query += b'\x00\x1c'  # Type: AAAA
+                        query += b'\x00\x01'  # Class: IN
+
+                        # Send query
+                        sock.send(query)
+
+                        # Receive response
+                        response = sock.recv(1024)
+
+                        # Check if we got a valid response
+                        if len(response) > 12:  # Minimum DNS response size
+                            # Check if there are answers in the response
+                            answer_count = int.from_bytes(response[6:8], 'big')
+                            if answer_count > 0:
+                                return True
+
+                        return False
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error checking DNS with server {server}: {str(e)}')
+                        return False
+                    finally:
+                        try:
+                            sock.close()
+                        except:
+                            pass
+
+                # Check A records (IPv4) with first available DNS server only
+                for server in dns_servers:
+                    if check_with_dns_server(server, 'A'):
+                        a_record_found = True
+                        break
+
+                # Only check AAAA if A record wasn't found and we still have time
+                if not a_record_found:
+                    for server in dns_servers:
+                        if check_with_dns_server(server, 'AAAA'):
+                            aaaa_record_found = True
+                            break
 
             # Log the results
             if a_record_found:
@@ -870,7 +912,7 @@ class CustomACME:
             logging.CyberCPLogFileWriter.writeToFile(f'Error checking DNS records: {str(e)}')
             return False
 
-    def _wait_for_order_processing(self, max_attempts=30, delay=2):
+    def _wait_for_order_processing(self, max_attempts=10, delay=2):
         """Wait for order to be processed"""
         try:
             logging.CyberCPLogFileWriter.writeToFile('Waiting for order processing...')
@@ -910,7 +952,7 @@ class CustomACME:
                     f'Order status check failed, attempt {attempt + 1}/{max_attempts}')
                 time.sleep(delay)
 
-            logging.CyberCPLogFileWriter.writeToFile('Order processing timed out')
+            logging.CyberCPLogFileWriter.writeToFile('Order processing timed out after 20 seconds')
             return False
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f'Error waiting for order processing: {str(e)}')

@@ -24,6 +24,8 @@ import OpenSSL
 from plogical.processUtilities import ProcessUtilities
 import os
 import re
+from plogical.securityUtils import get_terminal_jwt_secret
+
 
 
 def loadWebsitesHome(request):
@@ -1107,6 +1109,43 @@ def launchChild(request, domain, childDomain):
         return redirect(loadLoginPage)
 
 
+def siteWorkspace(request, domain):
+    # Single-site workspace: one hub that gathers every action for a domain
+    # (files, SSL, DNS, email, databases, backups, advanced) into tabbed tiles.
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(domain, admin, currentACL) != 1:
+            return ACLManager.loadError()
+
+        from websiteFunctions.models import Websites
+        try:
+            website = Websites.objects.get(domain=domain)
+        except Websites.DoesNotExist:
+            return ACLManager.loadError()
+
+        try:
+            packageName = website.package.packageName
+        except BaseException:
+            packageName = ''
+
+        data = {
+            'domain': domain,
+            'adminEmail': website.adminEmail,
+            'phpSelection': website.phpSelection,
+            'sslState': website.ssl,
+            'siteState': website.state,
+            'externalApp': website.externalApp,
+            'packageName': packageName,
+        }
+        proc = httpProc(request, 'baseTemplate/siteWorkspace.html', data)
+        return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def getDataFromLogFile(request):
     try:
         userID = request.session['userID']
@@ -1454,7 +1493,7 @@ def setupGitRepo(request):
 def gitNotify(request, domain):
     try:
         wm = WebsiteManager(domain)
-        return wm.gitNotify()
+        return wm.gitNotify(request=request)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1838,7 +1877,7 @@ def addSSHKey(request):
 def webhook(request, domain):
     try:
         wm = WebsiteManager()
-        return wm.webhook(domain, json.loads(request.body))
+        return wm.webhook(domain, json.loads(request.body), request=request)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2107,18 +2146,12 @@ def get_terminal_jwt(request):
     import logging
     logger = logging.getLogger("cyberpanel.ssh.jwt")
     try:
-        logger.error("get_terminal_jwt called")
-        logger.error(f"Request body: {request.body}")
         data = json.loads(request.body)
         domain = data.get('domain')
-        logger.error(f"Domain: {domain}")
         if not domain:
-            logger.error("No domain provided")
             return JsonResponse({'status': 0, 'error_message': 'Domain required'})
         user_id = request.session.get('userID')
-        logger.error(f"User ID from session: {user_id}")
         if not user_id:
-            logger.error("User not authenticated")
             return JsonResponse({'status': 0, 'error_message': 'Not authenticated'})
         from websiteFunctions.models import Websites
         from plogical.acl import ACLManager
@@ -2126,43 +2159,23 @@ def get_terminal_jwt(request):
         admin = Administrator.objects.get(pk=user_id)
         currentACL = ACLManager.loadedACL(user_id)
         if ACLManager.checkOwnership(domain, admin, currentACL) != 1:
-            logger.error("User not authorized for domain")
             return JsonResponse({'status': 0, 'error_message': 'Not authorized'})
         try:
             website = Websites.objects.get(domain=domain)
         except Websites.DoesNotExist:
-            logger.error("Website not found")
             return JsonResponse({'status': 0, 'error_message': 'Website not found'})
         ssh_user = website.externalApp
-        logger.error(f"SSH user: {ssh_user}")
         if not ssh_user:
-            logger.error("SSH user is empty or not set for this website.")
             return JsonResponse({'status': 0, 'error_message': 'SSH user not configured for this website.'})
         from datetime import datetime, timedelta
         import jwt as pyjwt
-        # Read JWT_SECRET from fastapi_ssh_server.py using ProcessUtilities
-        jwt_secret = None
-        try:
-            content = ProcessUtilities.outputExecutioner('cat /usr/local/CyberCP/fastapi_ssh_server.py')
-            for line in content.splitlines():
-                m = re.match(r'\s*JWT_SECRET\s*=\s*[\'"](.+)[\'"]', line)
-                if m and m.group(1) != 'REPLACE_ME_WITH_INSTALLER':
-                    jwt_secret = m.group(1)
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
-                        CyberCPLogFileWriter.writeLog(f"JWT_SECRET: {jwt_secret}")
-                    break
-        except Exception as e:
-            logger.error(f"Could not read JWT_SECRET: {e}")
-        if not jwt_secret:
-            jwt_secret = 'YOUR_SECRET_KEY'  # fallback, should not be used in production
+        jwt_secret = get_terminal_jwt_secret(create_if_missing=True)
         payload = {
             'user_id': user_id,
             'ssh_user': ssh_user,
             'exp': datetime.utcnow() + timedelta(minutes=10)
         }
         token = pyjwt.encode(payload, jwt_secret, algorithm='HS256')
-        logger.error(f"JWT generated: {token}")
         return JsonResponse({'status': 1, 'token': token, 'ssh_user': ssh_user})
     except Exception as e:
         logger.error(f"Exception in get_terminal_jwt: {str(e)}")

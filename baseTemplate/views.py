@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
 import json
 from loginSystem.views import loadLoginPage
-from .models import version, UserNotificationPreferences
+from .models import version
 import requests
 import subprocess
 import shlex
@@ -29,7 +29,7 @@ import pwd
 # Create your views here.
 
 VERSION = '2.4'
-BUILD = 4
+BUILD = 8
 
 
 @ensure_csrf_cookie
@@ -140,10 +140,18 @@ def getSystemStatus(request):
             json_data = json.dumps(HTTPData)
             return HttpResponse(json_data)
         else:
-            # Non-admin users get user-specific resource information
+            # Non-admin users get user-specific resource information.
+            # The disk-usage loop below spawns `du` per website, which is slow
+            # and was running on every dashboard poll — cache the result briefly.
+            from django.core.cache import cache
+            cache_key = 'cp_user_sysstatus_%s' % val
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return HttpResponse(json.dumps(cached))
+
             import subprocess
             import os
-            
+
             # Calculate user's disk usage
             total_disk_used = 0
             total_disk_limit = 0
@@ -172,47 +180,47 @@ def getSystemStatus(request):
                 if website.package:
                     total_disk_limit += website.package.diskSpace
             
-            # Convert MB to GB for display
+            # du -sm reports MB and package.diskSpace is stored in MB; convert both to GB for display
             total_disk_used_gb = round(total_disk_used / 1024, 2)
-            total_disk_limit_gb = total_disk_limit if total_disk_limit > 0 else 100  # Default 100GB if no limit
+            total_disk_limit_gb = round(total_disk_limit / 1024, 2) if total_disk_limit > 0 else 100  # Default 100GB if no limit
             disk_free_gb = max(0, total_disk_limit_gb - total_disk_used_gb)
             disk_usage_percent = min(100, int((total_disk_used_gb / total_disk_limit_gb) * 100)) if total_disk_limit_gb > 0 else 0
-            
-            # Calculate bandwidth usage (simplified - you may want to implement actual bandwidth tracking)
-            bandwidth_used = 0
-            bandwidth_limit = 0
-            for website in user_websites:
-                if website.package:
-                    bandwidth_limit += website.package.bandwidth
-            
-            bandwidth_limit_gb = bandwidth_limit if bandwidth_limit > 0 else 1000  # Default 1000GB if no limit
-            bandwidth_usage_percent = 0  # You can implement actual bandwidth tracking here
-            
-            # Count resources
-            total_websites = user_websites.count()
-            total_databases = 0
-            total_emails = 0
-            
-            website_names = list(user_websites.values_list('domain', flat=True))
-            if website_names:
-                total_databases = Databases.objects.filter(website__domain__in=website_names).count()
-                total_emails = EUsers.objects.filter(emailOwner__domainOwner__domain__in=website_names).count()
-            
+
+            # CPU and RAM are real server metrics (the user's sites run on this server);
+            # disk shown above is the user's own quota usage, not the whole server.
+            try:
+                import psutil
+                vm = psutil.virtual_memory()
+                cpu_usage = int(psutil.cpu_percent())
+                ram_usage = int(vm.percent)
+                cpu_cores = psutil.cpu_count() or 0
+                ram_total_mb = int(vm.total / (1024 * 1024))
+            except Exception:
+                cpu_usage = 0
+                ram_usage = 0
+                cpu_cores = 0
+                ram_total_mb = 0
+
             # Prepare response data matching the expected format
             user_data = {
-                'cpuUsage': min(100, int((total_websites * 5))),  # Estimate based on website count
-                'ramUsage': min(100, int((total_databases * 10) + (total_emails * 2))),  # Estimate based on resources
+                'cpuUsage': cpu_usage,
+                'ramUsage': ram_usage,
                 'diskUsage': disk_usage_percent,
-                'cpuCores': 2,  # Default for display
-                'ramTotalMB': 4096,  # Default for display
+                'cpuCores': cpu_cores,
+                'ramTotalMB': ram_total_mb,
                 'diskTotalGB': int(total_disk_limit_gb),
                 'diskFreeGB': int(disk_free_gb),
                 'uptime': 'User Account Active'
             }
             
+            try:
+                cache.set(cache_key, user_data, 300)
+            except Exception:
+                pass
+
             json_data = json.dumps(user_data)
             return HttpResponse(json_data)
-            
+
     except Exception as e:
         # Return default values on error
         default_data = {
@@ -460,6 +468,28 @@ def onboarding(request):
     return proc.render()
 
 
+@ensure_csrf_cookie
+def cpHub(request, section):
+    # Category landing pages ("hubs") that replace the old deep sidebar
+    # accordions with a scannable grid of labelled tiles.
+    section = (section or '').lower()
+    adminOnly = {'server', 'security', 'settings'}
+    func = 'admin' if section in adminOnly else None
+    template = 'baseTemplate/hub.html'
+    proc = httpProc(request, template, {'section': section}, func)
+    return proc.render()
+
+
+@ensure_csrf_cookie
+def buildServices(request):
+    # In-panel landing for CyberPanel development services (Android, iOS,
+    # web and custom software). The full marketing page lives on
+    # cyberpanel.net; this page introduces the offering and deep-links out.
+    template = 'baseTemplate/buildServices.html'
+    proc = httpProc(request, template, {})
+    return proc.render()
+
+
 def runonboarding(request):
     try:
         userID = request.session['userID']
@@ -566,7 +596,8 @@ def getDashboardStats(request):
                 total_emails = EUsers.objects.filter(emailOwner__domainOwner__domain__in=website_names).count()
                 
                 # Count FTP users associated with user's domains
-                total_ftp_users = FTPUsers.objects.filter(domain__in=website_names).count()
+                # FTPUsers.domain is a ForeignKey to Websites, so filter through the relation
+                total_ftp_users = FTPUsers.objects.filter(domain__domain__in=website_names).count()
             else:
                 total_wp_sites = 0
                 total_dbs = 0
@@ -1433,88 +1464,3 @@ def getTopProcesses(request):
                 
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
-
-@csrf_exempt
-@require_POST
-def dismiss_backup_notification(request):
-    """API endpoint to permanently dismiss the backup notification for the current user"""
-    try:
-        user_id = request.session.get('userID')
-        if not user_id:
-            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
-        
-        # Get or create user notification preferences
-        user = Administrator.objects.get(pk=user_id)
-        preferences, created = UserNotificationPreferences.objects.get_or_create(
-            user=user,
-            defaults={
-                'backup_notification_dismissed': False,
-                'ai_scanner_notification_dismissed': False
-            }
-        )
-        
-        # Mark backup notification as dismissed
-        preferences.backup_notification_dismissed = True
-        preferences.save()
-        
-        return HttpResponse(json.dumps({'status': 1, 'message': 'Backup notification dismissed permanently'}), content_type='application/json')
-        
-    except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
-
-@csrf_exempt
-@require_POST
-def dismiss_ai_scanner_notification(request):
-    """API endpoint to permanently dismiss the AI scanner notification for the current user"""
-    try:
-        user_id = request.session.get('userID')
-        if not user_id:
-            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
-        
-        # Get or create user notification preferences
-        user = Administrator.objects.get(pk=user_id)
-        preferences, created = UserNotificationPreferences.objects.get_or_create(
-            user=user,
-            defaults={
-                'backup_notification_dismissed': False,
-                'ai_scanner_notification_dismissed': False
-            }
-        )
-        
-        # Mark AI scanner notification as dismissed
-        preferences.ai_scanner_notification_dismissed = True
-        preferences.save()
-        
-        return HttpResponse(json.dumps({'status': 1, 'message': 'AI scanner notification dismissed permanently'}), content_type='application/json')
-        
-    except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
-
-@csrf_exempt
-@require_GET
-def get_notification_preferences(request):
-    """API endpoint to get current user's notification preferences"""
-    try:
-        user_id = request.session.get('userID')
-        if not user_id:
-            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
-        
-        # Get user notification preferences
-        user = Administrator.objects.get(pk=user_id)
-        try:
-            preferences = UserNotificationPreferences.objects.get(user=user)
-            return HttpResponse(json.dumps({
-                'status': 1,
-                'backup_notification_dismissed': preferences.backup_notification_dismissed,
-                'ai_scanner_notification_dismissed': preferences.ai_scanner_notification_dismissed
-            }), content_type='application/json')
-        except UserNotificationPreferences.DoesNotExist:
-            # Return default values if preferences don't exist yet
-            return HttpResponse(json.dumps({
-                'status': 1,
-                'backup_notification_dismissed': False,
-                'ai_scanner_notification_dismissed': False
-            }), content_type='application/json')
-        
-    except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)

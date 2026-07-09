@@ -54,7 +54,7 @@ except:
     pass
 
 VERSION = '2.4'
-BUILD = 4
+BUILD = 8
 
 
 ## I am not the monster that you think I am..
@@ -2457,8 +2457,17 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
                 ## This login can be further improved later.
                 logging.CyberCPLogFileWriter.writeToFile('Failed to create database backup for %s. This could be false positive, moving on.' % (dbName))
 
-            command = f'mv /home/cyberpanel/{dbName}.sql {CPHomeStorage}/{dbName}.sql'
-            ProcessUtilities.executioner(command)
+            # Move database backup (check for both .sql.gz and .sql)
+            if os.path.exists(f'/home/cyberpanel/{dbName}.sql.gz'):
+                command = f'mv /home/cyberpanel/{dbName}.sql.gz {CPHomeStorage}/{dbName}.sql.gz'
+                ProcessUtilities.executioner(command)
+                # Also move metadata file if it exists
+                if os.path.exists(f'/home/cyberpanel/{dbName}.backup.json'):
+                    command = f'mv /home/cyberpanel/{dbName}.backup.json {CPHomeStorage}/{dbName}.backup.json'
+                    ProcessUtilities.executioner(command)
+            elif os.path.exists(f'/home/cyberpanel/{dbName}.sql'):
+                command = f'mv /home/cyberpanel/{dbName}.sql {CPHomeStorage}/{dbName}.sql'
+                ProcessUtilities.executioner(command)
 
 
         ##

@@ -582,6 +582,12 @@ InternalHosts	refile:/etc/opendkim/TrustedHosts
 
                 postfixFilePath = "/etc/postfix/main.cf"
 
+                # Check if postfix main.cf exists before configuring
+                if not os.path.exists(postfixFilePath):
+                    logging.CyberCPLogFileWriter.writeToFile(f"configureOpenDKIM: {postfixFilePath} not found, skipping postfix DKIM configuration")
+                    print("1,Postfix not installed")
+                    return
+
                 configData = """
 smtpd_milters = inet:127.0.0.1:8891
 non_smtpd_milters = $smtpd_milters
@@ -684,7 +690,7 @@ milter_default_action = accept
             command = 'systemctl restart postfix'
             subprocess.call(shlex.split(command))
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             subprocess.call(shlex.split(command))
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartServices]")
@@ -1698,6 +1704,109 @@ LogFile /var/log/clamav/clamav.log
 
 
 
+    @staticmethod
+    def configureRelayHost(smtpHost, smtpPort, smtpUser, smtpPassword):
+        try:
+            ## Ensure cyrus-sasl-plain is installed (required for SASL PLAIN auth on RHEL/Alma/CentOS)
+            if os.path.exists('/etc/redhat-release'):
+                ProcessUtilities.executioner('dnf install -y cyrus-sasl-plain')
+            elif os.path.exists('/usr/bin/apt-get'):
+                ProcessUtilities.executioner('apt-get install -y libsasl2-modules')
+
+            postfixPath = '/etc/postfix/main.cf'
+
+            with open(postfixPath, 'r') as f:
+                lines = f.readlines()
+
+            relayKeys = ['relayhost', 'smtp_sasl_auth_enable', 'smtp_sasl_password_maps',
+                         'smtp_sasl_security_options', 'smtp_tls_security_level']
+
+            filteredLines = []
+            for line in lines:
+                stripped = line.strip()
+                skip = False
+                for key in relayKeys:
+                    if stripped.startswith(key + ' ') or stripped.startswith(key + '='):
+                        skip = True
+                        break
+                if not skip:
+                    filteredLines.append(line)
+
+            relayConfig = [
+                '\n# CyberMail SMTP Relay Configuration\n',
+                'relayhost = [%s]:%s\n' % (smtpHost, smtpPort),
+                'smtp_sasl_auth_enable = yes\n',
+                'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd\n',
+                'smtp_sasl_security_options = noanonymous\n',
+                'smtp_tls_security_level = encrypt\n',
+            ]
+
+            with open(postfixPath, 'w') as f:
+                f.writelines(filteredLines)
+                f.writelines(relayConfig)
+
+            saslPath = '/etc/postfix/sasl_passwd'
+            with open(saslPath, 'w') as f:
+                f.write('[%s]:%s %s:%s\n' % (smtpHost, smtpPort, smtpUser, smtpPassword))
+
+            os.chmod(saslPath, 0o600)
+
+            ProcessUtilities.executioner('postmap /etc/postfix/sasl_passwd')
+            ProcessUtilities.executioner('systemctl reload postfix')
+
+            print('1,None')
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [configureRelayHost]')
+            print('0,%s' % str(msg))
+
+    @staticmethod
+    def removeRelayHost():
+        try:
+            postfixPath = '/etc/postfix/main.cf'
+
+            with open(postfixPath, 'r') as f:
+                lines = f.readlines()
+
+            relayKeys = ['relayhost', 'smtp_sasl_auth_enable', 'smtp_sasl_password_maps',
+                         'smtp_sasl_security_options']
+            commentLine = '# CyberMail SMTP Relay Configuration\n'
+
+            filteredLines = []
+            for line in lines:
+                stripped = line.strip()
+                if line == commentLine:
+                    continue
+                skip = False
+                for key in relayKeys:
+                    if stripped.startswith(key + ' ') or stripped.startswith(key + '='):
+                        skip = True
+                        break
+                if not skip:
+                    if stripped.startswith('smtp_tls_security_level'):
+                        filteredLines.append('smtp_tls_security_level = may\n')
+                    else:
+                        filteredLines.append(line)
+
+            with open(postfixPath, 'w') as f:
+                f.writelines(filteredLines)
+
+            saslPath = '/etc/postfix/sasl_passwd'
+            saslDbPath = '/etc/postfix/sasl_passwd.db'
+
+            if os.path.exists(saslPath):
+                os.remove(saslPath)
+            if os.path.exists(saslDbPath):
+                os.remove(saslDbPath)
+
+            ProcessUtilities.executioner('systemctl reload postfix')
+
+            print('1,None')
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [removeRelayHost]')
+            print('0,%s' % str(msg))
+
     ####### Imported below functions from mailserver/mailservermanager, need to refactor later
 
 class MailServerManagerUtils(multi.Thread):
@@ -2259,7 +2368,7 @@ class MailServerManagerUtils(multi.Thread):
                             writeToFile.writelines(items)
                     writeToFile.close()
 
-                command = "systemctl restart dovecot"
+                command = "doveadm reload"
                 ProcessUtilities.executioner(command)
 
             ## For ubuntu 20
@@ -2611,7 +2720,7 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'systemctl restart postfix'
                 ProcessUtilities.executioner(command)
 
-                command = 'systemctl restart dovecot'
+                command = 'doveadm reload'
                 ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
@@ -2713,6 +2822,7 @@ milter_default_action = accept
             return 1, 'All checks are OK.'
 
 
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -2723,6 +2833,10 @@ def main():
     parser.add_argument('--tempConfigPath', help='Temporary Configuration Path!')
     parser.add_argument('--install', help='Enable/Disable Policy Server!')
     parser.add_argument('--tempStatusPath', help='Path of temporary status file.')
+    parser.add_argument('--smtpHost', help='SMTP relay host!')
+    parser.add_argument('--smtpPort', help='SMTP relay port!')
+    parser.add_argument('--smtpUser', help='SMTP relay username!')
+    parser.add_argument('--smtpPassword', help='SMTP relay password!')
 
 
 
@@ -2766,6 +2880,10 @@ def main():
         mailUtilities.SetupEmailLimits()
     elif args.function == 'SaveEmailLimitsNew':
         mailUtilities.SaveEmailLimitsNew(args.tempConfigPath)
+    elif args.function == 'configureRelayHost':
+        mailUtilities.configureRelayHost(args.smtpHost, args.smtpPort, args.smtpUser, args.smtpPassword)
+    elif args.function == 'removeRelayHost':
+        mailUtilities.removeRelayHost()
 
 if __name__ == "__main__":
     main()

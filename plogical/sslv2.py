@@ -401,7 +401,7 @@ class sslUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None):
+    def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None, forceIssue=False):
         # Replace example.org emails with domain-specific email
         if adminEmail and ('example.org' in adminEmail or 'example.com' in adminEmail):
             import re
@@ -417,8 +417,10 @@ class sslUtilities:
         CyberPanel_Check = 0
 
         #### if website already have an SSL, better not issue again - need to check for wild-card
+        #### forceIssue is set on a manual "Issue/Reissue SSL" click and must bypass this
+        #### skip, otherwise the reissue silently no-ops while reporting success (issue #1814).
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
-        if os.path.exists(filePath):
+        if not forceIssue and os.path.exists(filePath):
             import OpenSSL
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
@@ -542,9 +544,9 @@ class sslUtilities:
             return 0, str(msg)
 
 
-def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None):
+def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, forceIssue=False):
     try:
-        retStatus, message = sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain)
+        retStatus, message = sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain, forceIssue)
         if retStatus == 1:
             if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                 return [1, message]
