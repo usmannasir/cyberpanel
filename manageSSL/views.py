@@ -199,7 +199,9 @@ def issueSSL(request):
                     pass
                 else:
                     data_ret = {'status': 0, "SSL": 0,
-                                'error_message': output}
+                                'error_message': output,
+                                'sslLogs': output,
+                                'fullOutput': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
@@ -208,8 +210,14 @@ def issueSSL(request):
                 website.ssl = 1
                 website.save()
 
+                logs = output.split("1,", 1)[1] if "1," in output else output
+                if logs == "None":
+                    logs = ""
+
                 data_ret = {'status': 1, "SSL": 1,
-                            'error_message': "None"}
+                            'error_message': "None",
+                            'sslLogs': logs,
+                            'fullOutput': output}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

@@ -26,6 +26,76 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function ensureCyberPanelSSLProgressPanel() {
+    if ($('#cyberPanelSSLProgressPanel').length) {
+        return;
+    }
+
+    var panelHtml = '' +
+        '<div id="cyberPanelSSLProgressPanel" role="dialog" aria-hidden="true" style="display:none; position:fixed; top:72px; right:24px; width:calc(100vw - 48px); max-width:720px; z-index:25000; pointer-events:none;">' +
+        '  <div style="pointer-events:auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow:0 24px 80px rgba(15,23,42,0.25); overflow:hidden;">' +
+        '    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #e5e7eb;">' +
+        '      <h4 id="cyberPanelSSLProgressTitle" style="margin:0; font-weight:700; color:#1f2937;">SSL issuance</h4>' +
+        '      <button type="button" id="cyberPanelSSLProgressClose" class="btn btn-default" disabled>Close</button>' +
+        '    </div>' +
+        '    <div style="padding:18px 20px;">' +
+        '      <div id="cyberPanelSSLProgressStatus" style="margin-bottom:12px; color:#4b5563; font-size:14px;">Starting request...</div>' +
+        '      <div class="progress" style="height:8px; margin-bottom:14px;">' +
+        '        <div id="cyberPanelSSLProgressBar" class="progress-bar progress-bar-striped active" role="progressbar" style="width:35%; background-color:#5b5fcf;"></div>' +
+        '      </div>' +
+        '      <textarea id="cyberPanelSSLProgressLog" class="form-control" rows="12" readonly style="font-family:Menlo, Monaco, Consolas, monospace; font-size:12px; resize:vertical;"></textarea>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+    $('body').append(panelHtml);
+    $('#cyberPanelSSLProgressClose').on('click', function () {
+        $('#cyberPanelSSLProgressPanel').hide().attr('aria-hidden', 'true');
+        $('body').removeClass('modal-open').css('padding-right', '');
+        $('.modal-backdrop').remove();
+    });
+}
+
+function normalizeCyberPanelSSLLogs(response, fallbackMessage) {
+    var data = response && response.data ? response.data : {};
+    var logs = data.sslLogs || data.fullOutput || data.technicalDetails || data.error_message || fallbackMessage || '';
+
+    if (typeof logs !== 'string') {
+        try {
+            logs = JSON.stringify(logs, null, 2);
+        } catch (e) {
+            logs = String(logs);
+        }
+    }
+
+    if (logs === 'None') {
+        logs = 'No additional details returned by CyberPanel.';
+    }
+
+    return logs;
+}
+
+function updateCyberPanelSSLProgressPanel(options) {
+    ensureCyberPanelSSLProgressPanel();
+
+    $('#cyberPanelSSLProgressTitle').text(options.title || 'SSL issuance');
+    $('#cyberPanelSSLProgressStatus').text(options.status || 'Working...');
+    $('#cyberPanelSSLProgressLog').val(options.logs || '');
+    $('#cyberPanelSSLProgressLog').scrollTop($('#cyberPanelSSLProgressLog')[0].scrollHeight);
+
+    if (options.done) {
+        $('#cyberPanelSSLProgressBar').removeClass('active progress-bar-striped').css('width', '100%');
+        $('#cyberPanelSSLProgressClose').prop('disabled', false);
+    } else {
+        $('#cyberPanelSSLProgressBar').addClass('active progress-bar-striped').css('width', '55%');
+        $('#cyberPanelSSLProgressClose').prop('disabled', true);
+    }
+
+    $('#cyberPanelSSLProgressPanel').show().attr('aria-hidden', 'false');
+    $('body').removeClass('modal-open').css('padding-right', '');
+    $('.modal-backdrop').remove();
+}
+
 
 var arry = []
 
@@ -3212,52 +3282,94 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.cyberPanelLoading = true;
 
     $scope.issueSSL = function (virtualHost) {
+        if (!virtualHost) {
+            return;
+        }
+
+        $scope.issuingSSL = $scope.issuingSSL || {};
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
 
+        var startedAt = new Date();
+        var startingLogs = 'SSL request started for ' + virtualHost + '\n' +
+            'Time: ' + startedAt.toLocaleString() + '\n\n' +
+            'CyberPanel is requesting a certificate for this domain.\n' +
+            'This can take a while if DNS or the ACME challenge is slow.';
+
+        updateCyberPanelSSLProgressPanel({
+            title: 'Issuing SSL for ' + virtualHost,
+            status: 'Request sent. Waiting for CyberPanel and Let\'s Encrypt...',
+            logs: startingLogs,
+            done: false
+        });
+
         var url = "/manageSSL/issueSSL";
-
-
         var data = {
             virtualHost: virtualHost
         };
-
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
+        function finishSSLRequest() {
             $scope.cyberPanelLoading = true;
+            $scope.issuingSSL[virtualHost] = false;
+        }
+
+        $http.post(url, data, config).then(function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'No detailed SSL logs were returned by CyberPanel.');
+            var finishedAt = new Date();
+
             if (response.data.SSL === 1) {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issued for ' + virtualHost,
+                    status: 'Completed. Refreshing the website SSL status...',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Success!',
-                    text: 'SSL successfully issued.',
+                    text: 'SSL successfully issued. If the badge still looks old, refresh the page after a few seconds.',
                     type: 'success'
                 });
+                if (typeof $scope.getFurtherWebsitesFromDB === 'function') {
+                    $scope.getFurtherWebsitesFromDB();
+                }
             } else {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issuance failed for ' + virtualHost,
+                    status: 'Failed. Review the details below, then check DNS and HTTP reachability.',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    text: response.data.error_message || 'SSL issuance failed. Open the progress panel details for more information.',
                     type: 'error'
                 });
             }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            finishSSLRequest();
+        }, function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'Could not connect to the CyberPanel SSL endpoint.');
+            updateCyberPanelSSLProgressPanel({
+                title: 'SSL request could not complete for ' + virtualHost,
+                status: 'Connection failed. Refresh the page and check whether the panel session is still active.',
+                logs: startingLogs + '\n\n[Browser/API response]\n' + logs,
+                done: true
+            });
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
-        }
-
-
+            finishSSLRequest();
+        });
     };
 
     $scope.cyberPanelLoading = true;
@@ -6540,52 +6652,94 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.cyberPanelLoading = true;
 
     $scope.issueSSL = function (virtualHost) {
+        if (!virtualHost) {
+            return;
+        }
+
+        $scope.issuingSSL = $scope.issuingSSL || {};
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
 
+        var startedAt = new Date();
+        var startingLogs = 'SSL request started for ' + virtualHost + '\n' +
+            'Time: ' + startedAt.toLocaleString() + '\n\n' +
+            'CyberPanel is requesting a certificate for this domain.\n' +
+            'This can take a while if DNS or the ACME challenge is slow.';
+
+        updateCyberPanelSSLProgressPanel({
+            title: 'Issuing SSL for ' + virtualHost,
+            status: 'Request sent. Waiting for CyberPanel and Let\'s Encrypt...',
+            logs: startingLogs,
+            done: false
+        });
+
         var url = "/manageSSL/issueSSL";
-
-
         var data = {
             virtualHost: virtualHost
         };
-
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
+        function finishSSLRequest() {
             $scope.cyberPanelLoading = true;
+            $scope.issuingSSL[virtualHost] = false;
+        }
+
+        $http.post(url, data, config).then(function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'No detailed SSL logs were returned by CyberPanel.');
+            var finishedAt = new Date();
+
             if (response.data.SSL === 1) {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issued for ' + virtualHost,
+                    status: 'Completed. Refreshing the website SSL status...',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Success!',
-                    text: 'SSL successfully issued.',
+                    text: 'SSL successfully issued. If the badge still looks old, refresh the page after a few seconds.',
                     type: 'success'
                 });
+                if (typeof $scope.getFurtherWebsitesFromDB === 'function') {
+                    $scope.getFurtherWebsitesFromDB();
+                }
             } else {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issuance failed for ' + virtualHost,
+                    status: 'Failed. Review the details below, then check DNS and HTTP reachability.',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    text: response.data.error_message || 'SSL issuance failed. Open the progress panel details for more information.',
                     type: 'error'
                 });
             }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            finishSSLRequest();
+        }, function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'Could not connect to the CyberPanel SSL endpoint.');
+            updateCyberPanelSSLProgressPanel({
+                title: 'SSL request could not complete for ' + virtualHost,
+                status: 'Connection failed. Refresh the page and check whether the panel session is still active.',
+                logs: startingLogs + '\n\n[Browser/API response]\n' + logs,
+                done: true
+            });
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
-        }
-
-
+            finishSSLRequest();
+        });
     };
 
     $scope.cyberPanelLoading = true;
@@ -6735,52 +6889,94 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
     $scope.cyberPanelLoading = true;
 
     $scope.issueSSL = function (virtualHost) {
+        if (!virtualHost) {
+            return;
+        }
+
+        $scope.issuingSSL = $scope.issuingSSL || {};
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
 
+        var startedAt = new Date();
+        var startingLogs = 'SSL request started for ' + virtualHost + '\n' +
+            'Time: ' + startedAt.toLocaleString() + '\n\n' +
+            'CyberPanel is requesting a certificate for this domain.\n' +
+            'This can take a while if DNS or the ACME challenge is slow.';
+
+        updateCyberPanelSSLProgressPanel({
+            title: 'Issuing SSL for ' + virtualHost,
+            status: 'Request sent. Waiting for CyberPanel and Let\'s Encrypt...',
+            logs: startingLogs,
+            done: false
+        });
+
         var url = "/manageSSL/issueSSL";
-
-
         var data = {
             virtualHost: virtualHost
         };
-
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
+        function finishSSLRequest() {
             $scope.cyberPanelLoading = true;
+            $scope.issuingSSL[virtualHost] = false;
+        }
+
+        $http.post(url, data, config).then(function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'No detailed SSL logs were returned by CyberPanel.');
+            var finishedAt = new Date();
+
             if (response.data.SSL === 1) {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issued for ' + virtualHost,
+                    status: 'Completed. Refreshing the website SSL status...',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Success!',
-                    text: 'SSL successfully issued.',
+                    text: 'SSL successfully issued. If the badge still looks old, refresh the page after a few seconds.',
                     type: 'success'
                 });
+                if (typeof $scope.getFurtherWebsitesFromDB === 'function') {
+                    $scope.getFurtherWebsitesFromDB();
+                }
             } else {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issuance failed for ' + virtualHost,
+                    status: 'Failed. Review the details below, then check DNS and HTTP reachability.',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    text: response.data.error_message || 'SSL issuance failed. Open the progress panel details for more information.',
                     type: 'error'
                 });
             }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            finishSSLRequest();
+        }, function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'Could not connect to the CyberPanel SSL endpoint.');
+            updateCyberPanelSSLProgressPanel({
+                title: 'SSL request could not complete for ' + virtualHost,
+                status: 'Connection failed. Refresh the page and check whether the panel session is still active.',
+                logs: startingLogs + '\n\n[Browser/API response]\n' + logs,
+                done: true
+            });
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
-        }
-
-
+            finishSSLRequest();
+        });
     };
 
     $scope.cyberPanelLoading = true;
@@ -10003,52 +10199,94 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.cyberPanelLoading = true;
 
     $scope.issueSSL = function (virtualHost) {
+        if (!virtualHost) {
+            return;
+        }
+
+        $scope.issuingSSL = $scope.issuingSSL || {};
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
 
+        var startedAt = new Date();
+        var startingLogs = 'SSL request started for ' + virtualHost + '\n' +
+            'Time: ' + startedAt.toLocaleString() + '\n\n' +
+            'CyberPanel is requesting a certificate for this domain.\n' +
+            'This can take a while if DNS or the ACME challenge is slow.';
+
+        updateCyberPanelSSLProgressPanel({
+            title: 'Issuing SSL for ' + virtualHost,
+            status: 'Request sent. Waiting for CyberPanel and Let\'s Encrypt...',
+            logs: startingLogs,
+            done: false
+        });
+
         var url = "/manageSSL/issueSSL";
-
-
         var data = {
             virtualHost: virtualHost
         };
-
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
+        function finishSSLRequest() {
             $scope.cyberPanelLoading = true;
+            $scope.issuingSSL[virtualHost] = false;
+        }
+
+        $http.post(url, data, config).then(function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'No detailed SSL logs were returned by CyberPanel.');
+            var finishedAt = new Date();
+
             if (response.data.SSL === 1) {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issued for ' + virtualHost,
+                    status: 'Completed. Refreshing the website SSL status...',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Success!',
-                    text: 'SSL successfully issued.',
+                    text: 'SSL successfully issued. If the badge still looks old, refresh the page after a few seconds.',
                     type: 'success'
                 });
+                if (typeof $scope.getFurtherWebsitesFromDB === 'function') {
+                    $scope.getFurtherWebsitesFromDB();
+                }
             } else {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issuance failed for ' + virtualHost,
+                    status: 'Failed. Review the details below, then check DNS and HTTP reachability.',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    text: response.data.error_message || 'SSL issuance failed. Open the progress panel details for more information.',
                     type: 'error'
                 });
             }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            finishSSLRequest();
+        }, function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'Could not connect to the CyberPanel SSL endpoint.');
+            updateCyberPanelSSLProgressPanel({
+                title: 'SSL request could not complete for ' + virtualHost,
+                status: 'Connection failed. Refresh the page and check whether the panel session is still active.',
+                logs: startingLogs + '\n\n[Browser/API response]\n' + logs,
+                done: true
+            });
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
-        }
-
-
+            finishSSLRequest();
+        });
     };
 
     $scope.cyberPanelLoading = true;
@@ -10338,52 +10576,94 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
     $scope.cyberPanelLoading = true;
 
     $scope.issueSSL = function (virtualHost) {
+        if (!virtualHost) {
+            return;
+        }
+
+        $scope.issuingSSL = $scope.issuingSSL || {};
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
 
+        var startedAt = new Date();
+        var startingLogs = 'SSL request started for ' + virtualHost + '\n' +
+            'Time: ' + startedAt.toLocaleString() + '\n\n' +
+            'CyberPanel is requesting a certificate for this domain.\n' +
+            'This can take a while if DNS or the ACME challenge is slow.';
+
+        updateCyberPanelSSLProgressPanel({
+            title: 'Issuing SSL for ' + virtualHost,
+            status: 'Request sent. Waiting for CyberPanel and Let\'s Encrypt...',
+            logs: startingLogs,
+            done: false
+        });
+
         var url = "/manageSSL/issueSSL";
-
-
         var data = {
             virtualHost: virtualHost
         };
-
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
+        function finishSSLRequest() {
             $scope.cyberPanelLoading = true;
+            $scope.issuingSSL[virtualHost] = false;
+        }
+
+        $http.post(url, data, config).then(function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'No detailed SSL logs were returned by CyberPanel.');
+            var finishedAt = new Date();
+
             if (response.data.SSL === 1) {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issued for ' + virtualHost,
+                    status: 'Completed. Refreshing the website SSL status...',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Success!',
-                    text: 'SSL successfully issued.',
+                    text: 'SSL successfully issued. If the badge still looks old, refresh the page after a few seconds.',
                     type: 'success'
                 });
+                if (typeof $scope.getFurtherWebsitesFromDB === 'function') {
+                    $scope.getFurtherWebsitesFromDB();
+                }
             } else {
+                updateCyberPanelSSLProgressPanel({
+                    title: 'SSL issuance failed for ' + virtualHost,
+                    status: 'Failed. Review the details below, then check DNS and HTTP reachability.',
+                    logs: startingLogs + '\n\n[CyberPanel response]\n' + logs + '\n\nFinished: ' + finishedAt.toLocaleString(),
+                    done: true
+                });
                 new PNotify({
                     title: 'Operation Failed!',
-                    text: response.data.error_message,
+                    text: response.data.error_message || 'SSL issuance failed. Open the progress panel details for more information.',
                     type: 'error'
                 });
             }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            finishSSLRequest();
+        }, function (response) {
+            var logs = normalizeCyberPanelSSLLogs(response, 'Could not connect to the CyberPanel SSL endpoint.');
+            updateCyberPanelSSLProgressPanel({
+                title: 'SSL request could not complete for ' + virtualHost,
+                status: 'Connection failed. Refresh the page and check whether the panel session is still active.',
+                logs: startingLogs + '\n\n[Browser/API response]\n' + logs,
+                done: true
+            });
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
-        }
-
-
+            finishSSLRequest();
+        });
     };
 
     $scope.cyberPanelLoading = true;
