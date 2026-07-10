@@ -641,10 +641,11 @@ class Upgrade:
                     content = f.read()
                     if 'Ubuntu' in content or 'ubuntu' in content:
                         # The 'ubuntu' artifact is built on 22.04 (needs GLIBC_2.34) and
-                        # does NOT run on Ubuntu 20.04 (glibc 2.31, ticket #OXHTOK7AH).
-                        # Skip the overlay there and keep stock OLS.
-                        if 'DISTRIB_RELEASE=20.04' in content:
-                            Upgrade.stdOut("Ubuntu 20.04 detected: custom OLS binary requires GLIBC_2.34 (22.04+); keeping stock OLS", 0)
+                        # does NOT run on anything older, e.g. 20.04 = glibc 2.31
+                        # (ticket #OXHTOK7AH). Skip the overlay there and keep stock OLS.
+                        release = re.search(r'DISTRIB_RELEASE=(\d+)\.(\d+)', content)
+                        if release and (int(release.group(1)), int(release.group(2))) < (22, 4):
+                            Upgrade.stdOut(f"Ubuntu {release.group(1)}.{release.group(2)} detected: custom OLS binary requires GLIBC_2.34 (Ubuntu 22.04+); keeping stock OLS", 0)
                             return 'skip'
                         return 'ubuntu'
 
@@ -784,38 +785,40 @@ class Upgrade:
                 Upgrade.stdOut("Custom binary installation skipped for this platform; using standard OLS", 0)
                 return True  # Not a failure, just skip
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v2.5.0 — all features config-driven, static linking)
+            # Platform-specific URLs and checksums (OpenLiteSpeed v2.5.1 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
-            # Module v2.7.3: preserves Content-Encoding on LSCache hits
-            # rhel9 artifact covers EL9 + EL10 (AlmaLinux 10); ubuntu artifact covers 22.04/24.04 (not 20.04 — see detectPlatform)
+            # Core v2.5.1: HttpReq::getDocRoot NULL-vhost hardening — no module can crash the worker on unmatched-Host 4xx responses
+            # Module v2.7.5: fixes the 4xx segfault on requests whose Host maps to no vhost (2.7.0-2.7.3 all affected,
+            #   Cloudflare 520 storms); adds a real `ls_enabled 0` kill-switch. NEVER ship 2.7.0-2.7.3 again.
+            # rhel9 artifact covers EL9 + EL10 (AlmaLinux 10); ubuntu artifact covers 22.04/24.04 (not <22.04 — see detectPlatform)
             BINARY_CONFIGS = {
                 'rhel8': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-rhel8',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-rhel8.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.0-x86_64-rhel8.so',
+                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-rhel8',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-rhel8.so',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-rhel8.so',
                     'sha256': {
-                        'binary': '48c8423edfaec3fe1b6eee118925ed3ac55314c53e9bdf2e5bdd4960c4806a62',
-                        'module': '83111c8a3310b40e998070b07002a205975a06e09c6e0f8e8054e8d18b8682e1',
+                        'binary': 'd4ea7459997b4bed06f4a48ebd153e9dd96321e5548b9344f45adb984dfc87a0',
+                        'module': '48450ea904623110d643b85fb064d7a7da2e7713f33b3b19b71fd61f3b9a693c',
                         'modsec': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2',
                     },
                 },
                 'rhel9': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-rhel9',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-rhel9.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.0-x86_64-rhel9.so',
+                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-rhel9',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-rhel9.so',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-rhel9.so',
                     'sha256': {
-                        'binary': '780163ee7c0304c9b1db6abaeeaca2e58dbfc05436de776e921ca1d493462596',
-                        'module': 'a189da7ec5c09c5ba836209aa10746b691bbef21010cbe4c4c622614cf03c5e1',
+                        'binary': '28423bf1076a2d36dab9955bab71e25768f69175f09edbf4f554ddfd5b9280a5',
+                        'module': 'ed1ab032484b05d00133c0f06e99f881e56bd33d8f145e1a5110e20215bc9aa0',
                         'modsec': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629',
                     },
                 },
                 'ubuntu': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-ubuntu.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.0-x86_64-ubuntu.so',
+                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-ubuntu',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-ubuntu.so',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-ubuntu.so',
                     'sha256': {
-                        'binary': '2a836d4bf17fe5152d15dd60fd3817c1d3c294b48b35f12b776fa2efb7771422',
-                        'module': 'f1c1ab881625fa6fe6545e45283220e86245a1e3c96e29c4d86af9ab15fd6c2b',
+                        'binary': 'd61e9c6f474495bcbe7803783ffe301779eaaeed833a5d607e7c65aa38ace5f2',
+                        'module': '61ef59ac7a46f3c9de7ec7156bbc4359a6dc5b12b3ffb03ea986a49895b70148',
                         'modsec': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd',
                     },
                 }
@@ -845,7 +848,9 @@ class Upgrade:
                 if os.path.exists(OLS_BINARY_PATH):
                     shutil.copy2(OLS_BINARY_PATH, f"{backup_dir}/openlitespeed.backup")
                     Upgrade.stdOut(f"Backup created at: {backup_dir}", 0)
-                # Also backup existing ModSecurity if it exists
+                # Also backup existing module/ModSecurity if they exist
+                if os.path.exists(MODULE_PATH):
+                    shutil.copy2(MODULE_PATH, f"{backup_dir}/cyberpanel_ols.so.backup")
                 if os.path.exists(MODSEC_PATH):
                     shutil.copy2(MODSEC_PATH, f"{backup_dir}/mod_security.so.backup")
             except Exception as e:
@@ -904,28 +909,43 @@ class Upgrade:
             # Install OpenLiteSpeed binary
             Upgrade.stdOut("Installing custom binaries...", 0)
 
+            # Full stop before touching the binaries: copying onto a running
+            # (mapped) executable fails with ETXTBSY, and a graceful restart
+            # does not reliably re-exec everything. Full stop/start required.
+            Upgrade.stdOut("Stopping OpenLiteSpeed for binary installation...", 0)
+            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
+                           capture_output=True, timeout=60)
+
             try:
+                if os.path.exists(OLS_BINARY_PATH):
+                    os.remove(OLS_BINARY_PATH)
                 shutil.move(tmp_binary, OLS_BINARY_PATH)
                 os.chmod(OLS_BINARY_PATH, 0o755)
                 Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
             except Exception as e:
                 Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
+                Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH)
                 return False
 
             # Install module (if downloaded)
             if module_downloaded:
                 try:
                     os.makedirs(os.path.dirname(MODULE_PATH), exist_ok=True)
+                    if os.path.exists(MODULE_PATH):
+                        os.remove(MODULE_PATH)
                     shutil.move(tmp_module, MODULE_PATH)
                     os.chmod(MODULE_PATH, 0o644)
                     Upgrade.stdOut("Installed CyberPanel module", 0)
                 except Exception as e:
                     Upgrade.stdOut(f"ERROR: Failed to install module: {e}", 0)
+                    Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH)
                     return False
 
             # Install compatible ModSecurity (if downloaded)
             if modsec_downloaded:
                 try:
+                    if os.path.exists(MODSEC_PATH):
+                        os.remove(MODSEC_PATH)
                     shutil.move(tmp_modsec, MODSEC_PATH)
                     os.chmod(MODSEC_PATH, 0o644)
                     Upgrade.stdOut("Installed compatible ModSecurity module", 0)
@@ -966,6 +986,21 @@ class Upgrade:
                             Upgrade.stdOut("WARNING: Rollback may have failed", 0)
                         return False
 
+                    # Full start (counterpart of the full stop above)
+                    Upgrade.stdOut("Starting OpenLiteSpeed with new binaries...", 0)
+                    subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
+                                   capture_output=True, timeout=60)
+                    time.sleep(3)
+                    if subprocess.run(['pgrep', '-f', 'openlitespeed'],
+                                      capture_output=True).returncode != 0:
+                        Upgrade.stdOut("ERROR: OpenLiteSpeed did not start with new binaries", 0)
+                        Upgrade.stdOut("Initiating auto-rollback...", 0)
+                        if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
+                            Upgrade.stdOut("Rollback completed successfully", 0)
+                        else:
+                            Upgrade.stdOut("WARNING: Rollback may have failed", 0)
+                        return False
+
                     Upgrade.stdOut("=" * 50, 0)
                     Upgrade.stdOut("Custom Binaries Installed Successfully", 0)
                     Upgrade.stdOut("Features enabled:", 0)
@@ -986,6 +1021,12 @@ class Upgrade:
 
         except Exception as msg:
             Upgrade.stdOut(f"ERROR: {msg} [installCustomOLSBinaries]", 0)
+            # If the failure happened after the full stop, don't leave lsws down
+            try:
+                subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
+                               capture_output=True, timeout=60)
+            except Exception:
+                pass
             Upgrade.stdOut("Continuing with standard OLS", 0)
             return True  # Non-fatal error, continue
 
@@ -1003,10 +1044,25 @@ class Upgrade:
                 subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
                              capture_output=True, timeout=30)
 
-                # Restore binary
+                # Restore binary (remove first: cp onto a mapped binary = ETXTBSY)
+                if os.path.exists(binary_path):
+                    os.remove(binary_path)
                 shutil.copy2(backup_binary, binary_path)
                 os.chmod(binary_path, 0o755)
                 Upgrade.stdOut(f"Restored binary from {backup_binary}", 0)
+
+                # Restore module and ModSecurity backups so the old core is
+                # never paired with a newer, possibly ABI-incompatible module
+                for backup_name, target in (
+                        ("cyberpanel_ols.so.backup", module_path or "/usr/local/lsws/modules/cyberpanel_ols.so"),
+                        ("mod_security.so.backup", "/usr/local/lsws/modules/mod_security.so")):
+                    backup_file = os.path.join(backup_dir, backup_name)
+                    if os.path.exists(backup_file):
+                        if os.path.exists(target):
+                            os.remove(target)
+                        shutil.copy2(backup_file, target)
+                        os.chmod(target, 0o644)
+                        Upgrade.stdOut(f"Restored {os.path.basename(target)} from backup", 0)
 
                 # Start OLS after rollback
                 Upgrade.stdOut("Starting OpenLiteSpeed after rollback...", 0)
@@ -5049,10 +5105,13 @@ pm.max_spare_servers = 3
                 except Exception as e:
                     Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
 
-                # Restart OpenLiteSpeed to apply changes and verify it started
-                Upgrade.stdOut("Restarting OpenLiteSpeed...", 0)
-                command = '/usr/local/lsws/bin/lswsctrl restart'
-                Upgrade.executioner(command, 'Restart OpenLiteSpeed', 0)
+                # Full stop/start (NOT graceful restart) to apply config changes:
+                # graceful does not reliably re-exec the binary or reload modules
+                Upgrade.stdOut("Restarting OpenLiteSpeed (full stop/start)...", 0)
+                command = '/usr/local/lsws/bin/lswsctrl stop'
+                Upgrade.executioner(command, 'Stop OpenLiteSpeed', 0)
+                command = '/usr/local/lsws/bin/lswsctrl start'
+                Upgrade.executioner(command, 'Start OpenLiteSpeed', 0)
 
                 # Verify OLS started successfully after restart
                 import time
