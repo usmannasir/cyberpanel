@@ -4,6 +4,44 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## Unreleased
+
+### CyberPanel-OLS stack update (core 2.5.1 / module 2.7.5 / mod_security 2.5.1)
+- Upgraded the custom OpenLiteSpeed stack shipped by `upgrade.py`:
+  OpenLiteSpeed core **2.5.1**, `cyberpanel_ols.so` **2.7.5**,
+  `mod_security.so` **2.5.1**.
+- **Fixes the 4xx segfault / Cloudflare 520 storm**: module versions
+  2.7.0–2.7.3 crashed the OLS worker on every 4xx generated for a request
+  whose `Host` matched no vhost (bot probes), causing random 520s across all
+  sites. Core 2.5.1 additionally hardens OLS itself
+  (`HttpReq::getDocRoot` NULL-vhost check) so no module can trigger this
+  crash class again. Root cause and release notes live in the
+  `cyberpanel_ols` repo (`BUGREPORT_cyberpanel_ols_4xx_segfault.md`,
+  `RELEASE_v2.7.4.md`, `RELEASE_v2.7.5.md`,
+  `docs/FIELD_RECOVERY_AND_ROLLOUT.md`).
+- All artifacts are now verified against pinned SHA256 checksums before
+  install; a mismatch aborts and keeps/restores the previous binaries via the
+  timestamped backup + rollback path. Rollback now also restores the module
+  and mod_security binaries, not just the core.
+- Binary installation now does a **full lsws stop/start** around the swap
+  (never a graceful restart) and removes the target before copying.
+- Ubuntu < 22.04 (e.g. 20.04, glibc 2.31) now skips the custom overlay
+  entirely — the `ubuntu` artifact needs GLIBC ≥ 2.34 (ticket #OXHTOK7AH).
+- AlmaLinux/Rocky/RHEL 10 now install the `rhel9` artifact (el9 binary covers
+  el10).
+
+**Support notes:**
+- Servers where support removed the `module cyberpanel_ols { }` block from
+  `httpd_config.conf` as the emergency 520 mitigation: **restore the block
+  (`ls_enabled 1`) after this upgrade lands** — full procedure in
+  `docs/FIELD_RECOVERY_AND_ROLLOUT.md` §4 (cyberpanel_ols repo).
+- `ls_enabled 0` + a FULL restart is now a safe kill-switch, but **only with
+  module ≥ 2.7.5**. On 2.7.0–2.7.3 it does not stop the crash — upgrade,
+  don't toggle.
+- Never reinstall module 2.7.0/2.7.1/2.7.2/2.7.3 (bad-build sha256 list in
+  the bug report §6).
+- The previous (2.4.4) artifacts remain published for rollback.
+
 ## v2.4.8 (build 8) — 2026-05-30
 
 A panel-wide UI/UX overhaul focused on making CyberPanel easier to use, calmer
