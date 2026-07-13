@@ -17,7 +17,7 @@
 /**
  * Custom 'data' folder path
  */
-define('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');
+define('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/snappymail/data/');
 //define('APP_DATA_FOLDER_PATH', '/var/external-snappymail-data-folder/');
 
 /**
