@@ -318,8 +318,7 @@ def fetchUserDetails(request):
                     "websitesLimit": websitesLimit,
                     "securityLevel": SecurityLevel(user.securityLevel).name,
                     "otpauth": otpauth,
-                    'twofa': user.twoFA,
-                    'secretKey': user.secretKey
+                    'twofa': user.twoFA
                 }
 
                 data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
@@ -393,6 +392,12 @@ def saveModifications(request):
 
             user.type = 0
             user.twoFA = twofa
+
+            # Security: when 2FA is turned off, discard the shared secret so it is
+            # not silently reused if 2FA is later re-enabled. fetchUserDetails
+            # generates a fresh secret (and QR) the next time setup is opened.
+            if twofa == 0:
+                user.secretKey = 'None'
 
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW

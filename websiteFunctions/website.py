@@ -4397,7 +4397,7 @@ context /cyberpanel_suspension_page.html {
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " saveCronChanges --externalApp " + website.externalApp + " --line " + str(
-                line) + " --finalCron '" + finalCron + "'"
+                line) + " --finalCron " + shlex.quote(finalCron)
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
             CronUtil.CronPrem(0)
 
@@ -4496,7 +4496,7 @@ context /cyberpanel_suspension_page.html {
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-            execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
+            execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron " + shlex.quote(finalCron)
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
@@ -5586,6 +5586,30 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            # Security: phpPath is client-supplied and is later `sudo mv`'d as root
+            # (see below). Without containment an attacker could overwrite any file
+            # (e.g. /etc/ld.so.preload) as root. Require it to resolve to this
+            # domain's own PHP-FPM pool file inside a known pool directory.
+            expectedBasename = domainName + '.conf'
+            realPhpPath = os.path.realpath(phpPath)
+            allowedRoots = ('/etc/php/', '/etc/opt/remi/', '/opt/remi/')
+            poolFileOk = realPhpPath.endswith('/fpm/pool.d/' + expectedBasename) or \
+                         realPhpPath.endswith('/php-fpm.d/' + expectedBasename)
+            if '..' in phpPath or os.path.basename(realPhpPath) != expectedBasename \
+                    or not realPhpPath.startswith(allowedRoots) or not poolFileOk:
+                return ACLManager.loadErrorJson()
+            phpPath = realPhpPath
+
+            # Security: pm.* values are substituted verbatim into the pool config;
+            # force them to plain integers so no extra directives can be injected.
+            try:
+                pmMaxChildren = str(int(pmMaxChildren))
+                pmStartServers = str(int(pmStartServers))
+                pmMinSpareServers = str(int(pmMinSpareServers))
+                pmMaxSpareServers = str(int(pmMaxSpareServers))
+            except (ValueError, TypeError):
+                return ACLManager.loadErrorJson()
+
             if int(pmStartServers) < int(pmMinSpareServers) or int(pmStartServers) > int(pmMinSpareServers):
                 data_ret = {'status': 0,
                             'error_message': 'pm.start_servers must not be less than pm.min_spare_servers and not greater than pm.max_spare_servers.'}
@@ -5629,7 +5653,7 @@ StrictHostKeyChecking no
             writeToFile.writelines(phpFPMConf)
             writeToFile.close()
 
-            command = 'sudo mv %s %s' % (tempStatusPath, phpPath)
+            command = 'sudo mv %s %s' % (shlex.quote(tempStatusPath), shlex.quote(phpPath))
             ProcessUtilities.executioner(command)
 
             phpPath = phpPath.split('/')
