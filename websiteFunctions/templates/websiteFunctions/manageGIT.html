@@ -1152,7 +1152,8 @@
                                                 <div class="form-group">
                                                     <select ng-model="recordsToShow"
                                                             ng-change="fetchGitLogs()"
-                                                            class="form-control" id="example-select">
+                                                            class="form-control" id="example-select"
+                                                            aria-label="{% trans 'Records per page' %}">
                                                         <option>10</option>
                                                         <option>50</option>
                                                         <option>100</option>
@@ -1186,7 +1187,8 @@
                                                     <div class="col-md-3">
                                                         <div class="form-group">
                                                             <select ng-model="currentPage" class="form-control"
-                                                                    ng-change="fetchGitLogs()">
+                                                                    ng-change="fetchGitLogs()"
+                                                                    aria-label="{% trans 'Page number' %}">
                                                                 <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
                                                             </select>
                                                         </div>
@@ -1260,7 +1262,7 @@
                                 <span class="bs-label label-success"><strong>{$ totalCommits $}</strong></span>
                             </td>
                             <td>
-                                <select ng-change="changeBranch()" ng-model="branchName" class="form-control">
+                                <select ng-change="changeBranch()" ng-model="branchName" class="form-control" aria-label="{% trans 'Git branch' %}">
                                     <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
                                 </select>
                             </td>

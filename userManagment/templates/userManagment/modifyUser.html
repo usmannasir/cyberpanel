@@ -310,7 +310,7 @@
                             <div class="mt-3">
                                 <p class="help-text mb-2">{% trans "Or manually enter this key:" %}</p>
                                 <div class="input-group" style="max-width:350px;">
-                                    <input type="text" class="form-control" ng-model="formattedSecretKey" readonly style="font-family: monospace; font-size: 14px;">
+                                    <input type="text" class="form-control" ng-model="formattedSecretKey" readonly aria-label="{% trans 'Two-factor authentication secret key' %}" style="font-family: monospace; font-size: 14px;">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary" type="button" ng-click="copySecretKey()" title="{% trans 'Copy to clipboard' %}" aria-label="{% trans 'Copy to clipboard' %}">
                                             <i class="fa fa-copy" aria-hidden="true"></i>

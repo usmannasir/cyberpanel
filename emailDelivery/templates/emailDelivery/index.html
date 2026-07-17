@@ -766,7 +766,7 @@
                         <td style="white-space:nowrap;">{$ cred.created_at $}</td>
                         <td style="text-align:right; white-space:nowrap;">
                             <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="rotatePassword(cred.credential_id)"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> Rotate</button>
-                            <button class="ed-btn ed-btn-danger ed-btn-sm" ng-click="deleteCredential(cred.credential_id)"><i class="fas fa-trash"></i></button>
+                            <button class="ed-btn ed-btn-danger ed-btn-sm" ng-click="deleteCredential(cred.credential_id)" aria-label="Delete credential"><i class="fas fa-trash" aria-hidden="true"></i></button>
                         </td>
                     </tr>
                 </tbody>
@@ -813,14 +813,14 @@
                 <h3>Delivery Logs</h3>
             </div>
             <div class="ed-filters">
-                <select ng-model="logFilters.status" ng-change="loadLogs()">
+                <select ng-model="logFilters.status" ng-change="loadLogs()" aria-label="Filter logs by status">
                     <option value="">All Statuses</option>
                     <option value="delivered">Delivered</option>
                     <option value="bounced">Bounced</option>
                     <option value="failed">Failed</option>
                     <option value="deferred">Deferred</option>
                 </select>
-                <select ng-model="logFilters.days" ng-change="loadLogs()">
+                <select ng-model="logFilters.days" ng-change="loadLogs()" aria-label="Filter logs by time period">
                     <option value="1">Last 24 Hours</option>
                     <option value="3">Last 3 Days</option>
                     <option value="7" selected>Last 7 Days</option>

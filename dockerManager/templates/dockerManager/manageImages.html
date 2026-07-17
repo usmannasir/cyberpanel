@@ -517,8 +517,9 @@
                                 </div>
                             </td>
                             <td>
-                                <select ng-focus="loadTags($event)" ng-click="selectTag()" 
-                                        ng-model="imageTag[image.name2]" 
+                                <select ng-focus="loadTags($event)" ng-click="selectTag()"
+                                        aria-label="{% trans 'Select image tag' %}"
+                                        ng-model="imageTag[image.name2]"
                                         ng-options="tag for tag in tagList[image.name2]" 
                                         ng-attr-id="{$ image.name2 $}" 
                                         data-pageloaded='0' 
@@ -575,7 +576,7 @@
                                 </div>
                             </td>
                             <td>
-                                <select class="form-control tagList" id="{{ forloop.counter }}">
+                                <select class="form-control tagList" id="{{ forloop.counter }}" aria-label="{% trans 'Select image tag' %}">
                                     {% for tag in image.tags %}
                                     <option>{{ tag }}</option>
                                     {% endfor %}

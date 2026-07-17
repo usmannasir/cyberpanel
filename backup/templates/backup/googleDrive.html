@@ -555,8 +555,8 @@
                         <i class="fas fa-file-alt" aria-hidden="true"></i>
                         {% trans "View Logs" %}
                     </button>
-                    <select ng-model="recordsToShow" ng-change="fetchWebsites()" 
-                            class="form-control" style="width: auto;">
+                    <select ng-model="recordsToShow" ng-change="fetchWebsites()"
+                            class="form-control" aria-label="{% trans 'Records per page' %}" style="width: auto;">
                         <option>10</option>
                         <option>50</option>
                         <option>100</option>
@@ -589,8 +589,8 @@
 
                 <!-- Pagination -->
                 <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                    <select ng-model="currentPage" class="form-control" 
-                            ng-change="fetchWebsites()" style="width: auto;">
+                    <select ng-model="currentPage" class="form-control"
+                            ng-change="fetchWebsites()" aria-label="{% trans 'Page number' %}" style="width: auto;">
                         <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
                     </select>
                 </div>
@@ -654,8 +654,8 @@
                 </div>
                 <div class="modal-body">
                     <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                        <select ng-model="recordsToShowLogs" ng-change="fetchLogs()" 
-                                class="form-control" style="width: auto;">
+                        <select ng-model="recordsToShowLogs" ng-change="fetchLogs()"
+                                class="form-control" aria-label="{% trans 'Log records per page' %}" style="width: auto;">
                             <option>10</option>
                             <option>50</option>
                             <option>100</option>
@@ -678,8 +678,8 @@
                     </table>
 
                     <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                        <select ng-model="currentPageLogs" class="form-control" 
-                                ng-change="fetchLogs()" style="width: auto;">
+                        <select ng-model="currentPageLogs" class="form-control"
+                                ng-change="fetchLogs()" aria-label="{% trans 'Log page number' %}" style="width: auto;">
                             <option ng-repeat="page in paginationLogs">{$ $index + 1 $}</option>
                         </select>
                     </div>

@@ -1745,15 +1745,15 @@
                                             <table class="table">
                                                 <tbody>
                                                     <tr>
-                                                        <td width="40%"><strong>Container ID:</strong></td>
+                                                        <th scope="row" width="40%"><strong>Container ID:</strong></th>
                                                         <td><code>{$ web.id $}</code></td>
                                                     </tr>
                                                     <tr>
-                                                        <td><strong>Created:</strong></td>
+                                                        <th scope="row"><strong>Created:</strong></th>
                                                         <td>{$ web.created | date:'medium' $}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td><strong>Uptime:</strong></td>
+                                                        <th scope="row"><strong>Uptime:</strong></th>
                                                         <td>{$ web.uptime $}</td>
                                                     </tr>
                                                 </tbody>
@@ -1953,7 +1953,8 @@
                                                     placeholder="Value" required aria-label="Value">
                                             </div>
                                             <div class="col-sm-1" ng-if="envList.length > 1">
-                                                <button class="btn btn-sm btn-danger" ng-disabled="!envConfirmation" 
+                                                <button class="btn btn-sm btn-danger" ng-disabled="!envConfirmation"
+                                                        aria-label="{% trans 'Remove environment variable' %}"
                                                         ng-click="envList.splice($index, 1)">
                                                     <i class="fa fa-times" aria-hidden="true"></i>
                                                 </button>
@@ -1986,7 +1987,8 @@
                                                     ng-model="volList[$index].src" placeholder="Host Path" required aria-label="Host Path">
                                             </div>
                                             <div class="col-sm-1" ng-if="volList.length > 1">
-                                                <button class="btn btn-sm btn-danger" ng-disabled="!envConfirmation" 
+                                                <button class="btn btn-sm btn-danger" ng-disabled="!envConfirmation"
+                                                        aria-label="{% trans 'Remove volume mapping' %}"
                                                         ng-click="volList.splice($index, 1)">
                                                     <i class="fa fa-times" aria-hidden="true"></i>
                                                 </button>

@@ -51,11 +51,11 @@
                         </div>
 
                         <div ng-hide="scheduleRetention" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
+                            <label class="col-sm-3 control-label" for="cpa11y-backup-retention">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
                             <div class="col-sm-9">
                                 <div class="number">
                                     <label>
-                                        <input ng-model="backupRetention" type="number" value="0">
+                                        <input ng-model="backupRetention" type="number" value="0" id="cpa11y-backup-retention">
                                     </label>
                                 </div>
                             </div>

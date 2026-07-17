@@ -554,9 +554,10 @@
                        type="text" aria-label="{% trans 'Search Docker sites...' %}">
             </div>
             <div class="records-select">
-                <select ng-model="recordsToShow" 
-                        ng-change="getFurtherWebsitesFromDB()" 
-                        class="form-control">
+                <select ng-model="recordsToShow"
+                        ng-change="getFurtherWebsitesFromDB()"
+                        class="form-control"
+                        aria-label="{% trans 'Records per page' %}">
                     <option>10</option>
                     <option>50</option>
                     <option>100</option>
@@ -714,9 +715,10 @@
             <div ng-if="pagination.length > 1" class="pagination-section">
                 <span class="pagination-info">Page {$ currentPage $} of {$ pagination.length $}</span>
                 <div class="pagination-select">
-                    <select ng-model="currentPage" 
+                    <select ng-model="currentPage"
                             class="form-control"
-                            ng-change="getFurtherWebsitesFromDB()">
+                            ng-change="getFurtherWebsitesFromDB()"
+                            aria-label="{% trans 'Page number' %}">
                         <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
                     </select>
                 </div>

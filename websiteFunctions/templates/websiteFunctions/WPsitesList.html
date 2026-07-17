@@ -786,6 +786,7 @@
                     </div>
                     <div style="width: 150px;">
                         <select ng-model="recordsToShow" class="form-control" ng-change="updatePagination()"
+                                aria-label="{% trans 'Records per page' %}"
                                 ng-options="option.value as option.label for option in [{value: 10, label: '10 items'}, {value: 50, label: '50 items'}, {value: 100, label: '100 items'}]">
                         </select>
                     </div>

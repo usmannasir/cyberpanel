@@ -773,7 +773,7 @@
                     <div>
                         <div class="port-label">{% trans "Container Port" %}</div>
                         <div class="input-group">
-                            <input type="text" class="form-control" value="{{ port }}" disabled>
+                            <input type="text" class="form-control" value="{{ port }}" disabled aria-label="{% trans 'Container Port' %}">
                             <span class="input-addon">{{ protocol|upper }}</span>
                         </div>
                     </div>

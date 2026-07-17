@@ -1930,14 +1930,16 @@
                                                     <td ng-bind="record.path"></td>
                                                     <td>
                                                         <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)"
-                                                                ng-model="childBaseDir" class="form-control">
+                                                                ng-model="childBaseDir" class="form-control"
+                                                                aria-label="{% trans 'open_basedir protection' %}">
                                                             <option>Enable</option>
                                                             <option>Disable</option>
                                                         </select>
                                                     </td>
                                                     <td>
                                                         <select ng-change="changePHP(record.childDomain,phpSelection)"
-                                                                ng-model="phpSelection" class="form-control">
+                                                                ng-model="phpSelection" class="form-control"
+                                                                aria-label="{% trans 'PHP version' %}">
                                                             {% for php in phps %}
                                                                 <option>{{ php }}</option>
                                                             {% endfor %}

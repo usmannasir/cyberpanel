@@ -1109,11 +1109,11 @@
                 </div>
                 
                 <div class="fm-view-toggle">
-                    <button class="fm-view-btn" ng-class="{active: viewMode === 'grid'}" ng-click="setViewMode('grid')">
-                        <i class="fas fa-th"></i>
+                    <button class="fm-view-btn" ng-class="{active: viewMode === 'grid'}" ng-click="setViewMode('grid')" aria-label="{% trans 'Grid view' %}">
+                        <i class="fas fa-th" aria-hidden="true"></i>
                     </button>
-                    <button class="fm-view-btn" ng-class="{active: viewMode === 'list'}" ng-click="setViewMode('list')">
-                        <i class="fas fa-list"></i>
+                    <button class="fm-view-btn" ng-class="{active: viewMode === 'list'}" ng-click="setViewMode('list')" aria-label="{% trans 'List view' %}">
+                        <i class="fas fa-list" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>

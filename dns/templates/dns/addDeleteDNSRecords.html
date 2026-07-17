@@ -1025,21 +1025,25 @@
                                     <td>
                                         <input ng-change="setupContent(record.id, 'name', nameNow)"
                                                ng-model="nameNow" type="text" class="editable-input"
+                                               aria-label="{% trans 'Record name' %}"
                                                ng-value="record.name">
                                     </td>
                                     <td>
                                         <input ng-change="setupContent(record.id, 'ttl', ttlNow)"
                                                ng-model="ttlNow" type="number" class="editable-input"
+                                               aria-label="{% trans 'Record TTL' %}"
                                                ng-value="record.ttl">
                                     </td>
                                     <td>
                                         <input ng-change="setupContent(record.id, 'content', contentNow)"
                                                ng-model="contentNow" type="text" class="editable-input"
+                                               aria-label="{% trans 'Record value' %}"
                                                ng-value="record.content">
                                     </td>
                                     <td>
                                         <input ng-change="setupContent(record.id, 'priority', priorityNow)"
                                                type="number" class="editable-input" ng-model="priorityNow"
+                                               aria-label="{% trans 'Record priority' %}"
                                                ng-value="record.priority">
                                     </td>
                                     <td>
@@ -1048,7 +1052,7 @@
                                                 <i class="fas fa-save" aria-hidden="true"></i>
                                                 {% trans "Save" %}
                                             </button>
-                                            <button type="button" ng-click="deleteRecord(record.id)" class="btn-action btn-delete">
+                                            <button type="button" ng-click="deleteRecord(record.id)" class="btn-action btn-delete" aria-label="{% trans 'Delete record' %}">
                                                 <i class="fas fa-trash" aria-hidden="true"></i>
                                             </button>
                                         </div>

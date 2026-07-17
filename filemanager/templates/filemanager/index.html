@@ -648,9 +648,9 @@
                         </tr>
                         <tr>
                             <td></td>
-                            <td><input ng-model="userPermissions" type="number" class="form-control" readonly></td>
-                            <td><input ng-model="groupPermissions" type="number" class="form-control" readonly></td>
-                            <td><input ng-model="wordlPermissions" type="number" class="form-control" readonly></td>
+                            <td><input ng-model="userPermissions" type="number" class="form-control" readonly aria-label="{% trans 'User permissions (octal)' %}"></td>
+                            <td><input ng-model="groupPermissions" type="number" class="form-control" readonly aria-label="{% trans 'Group permissions (octal)' %}"></td>
+                            <td><input ng-model="wordlPermissions" type="number" class="form-control" readonly aria-label="{% trans 'World permissions (octal)' %}"></td>
                         </tr>
                     </tbody>
                 </table>

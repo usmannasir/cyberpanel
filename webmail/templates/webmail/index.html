@@ -31,7 +31,8 @@
         </div>
         <div class="wm-account-switch">
             <select ng-model="currentEmail" ng-change="switchAccount()"
-                    ng-options="a for a in managedAccounts" class="wm-account-select">
+                    ng-options="a for a in managedAccounts" class="wm-account-select"
+                    aria-label="{% trans 'Switch email account' %}">
             </select>
         </div>
     </div>
@@ -83,8 +84,8 @@
             <div class="wm-search-bar">
                 <input type="text" ng-model="searchQuery" placeholder="{% trans 'Search messages...' %}"
                        ng-keyup="$event.keyCode === 13 && searchMessages()" class="wm-search-input" aria-label="{% trans 'Search messages...' %}">
-                <button class="wm-search-btn" ng-click="searchMessages()">
-                    <i class="fa fa-search"></i>
+                <button class="wm-search-btn" ng-click="searchMessages()" aria-label="{% trans 'Search' %}">
+                    <i class="fa fa-search" aria-hidden="true"></i>
                 </button>
             </div>
 
@@ -104,7 +105,7 @@
                 </button>
                 <div class="wm-move-dropdown" ng-if="showMoveDropdown">
                     <select ng-model="moveTarget" ng-change="bulkMove()"
-                            ng-options="f.name for f in folders">
+                            ng-options="f.name for f in folders" aria-label="{% trans 'Move to folder' %}">
                         <option value="">{% trans "Move to..." %}</option>
                     </select>
                 </div>
@@ -112,10 +113,10 @@
                     <i class="fa fa-folder-open" aria-hidden="true"></i>
                 </button>
                 <span class="wm-page-info">{$ currentPage $} / {$ totalPages $}</span>
-                <button class="wm-action-btn" ng-click="prevPage()" ng-disabled="currentPage <= 1">
-                    <i class="fa fa-chevron-left"></i>
+                <button class="wm-action-btn" ng-click="prevPage()" ng-disabled="currentPage <= 1" aria-label="{% trans 'Previous page' %}">
+                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
                 </button>
-                <button class="wm-action-btn" ng-click="nextPage()" ng-disabled="currentPage >= totalPages">
+                <button class="wm-action-btn" ng-click="nextPage()" ng-disabled="currentPage >= totalPages" aria-label="{% trans 'Next page' %}">
                     <i class="fa fa-chevron-right" aria-hidden="true"></i>
                 </button>
             </div>
@@ -128,8 +129,8 @@
                     <label class="wm-checkbox-label" ng-click="$event.stopPropagation()">
                         <input type="checkbox" ng-model="msg.selected">
                     </label>
-                    <button class="wm-star-btn" ng-click="toggleFlag(msg); $event.stopPropagation()">
-                        <i class="fa" ng-class="msg.is_flagged ? 'fa-star wm-starred' : 'fa-star wm-unstarred'"></i>
+                    <button class="wm-star-btn" ng-click="toggleFlag(msg); $event.stopPropagation()" aria-label="{% trans 'Toggle flag' %}">
+                        <i class="fa" ng-class="msg.is_flagged ? 'fa-star wm-starred' : 'fa-star wm-unstarred'" aria-hidden="true"></i>
                     </button>
                     <div class="wm-msg-from">{$ msg.from | limitTo:30 $}</div>
                     <div class="wm-msg-subject">{$ msg.subject | limitTo:60 $}</div>
@@ -197,7 +198,7 @@
                                 ng-change="switchAccount()"
                                 ng-show="managedAccounts.length > 1" class="form-control"></select>
                         <input type="text" value="{$ currentEmail $}" class="form-control" readonly
-                               ng-show="managedAccounts.length <= 1">
+                               ng-show="managedAccounts.length <= 1" aria-label="{% trans 'From address' %}">
                     </div>
                     <div class="wm-field">
                         <label for="cpa11y-to">{% trans "To" %}</label>
@@ -341,8 +342,8 @@
                             </span>
                         </div>
                         <div class="wm-rule-actions">
-                            <button class="wm-action-btn" ng-click="editRule(rule)"><i class="fa fa-pencil"></i></button>
-                            <button class="wm-action-btn" ng-click="removeRule(rule)"><i class="fa fa-trash"></i></button>
+                            <button class="wm-action-btn" ng-click="editRule(rule)" aria-label="{% trans 'Edit rule' %}"><i class="fa fa-pencil" aria-hidden="true"></i></button>
+                            <button class="wm-action-btn" ng-click="removeRule(rule)" aria-label="{% trans 'Delete rule' %}"><i class="fa fa-trash" aria-hidden="true"></i></button>
                         </div>
                     </div>
                 </div>

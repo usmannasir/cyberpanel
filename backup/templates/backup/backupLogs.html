@@ -71,7 +71,8 @@
                     <div ng-hide="logDetails" class="col-sm-2">
                         <div class="form-group">
                             <select ng-model="recordsToShow" ng-change="fetchLogs()"
-                                    class="form-control" id="example-select">
+                                    class="form-control" id="example-select"
+                                    aria-label="{% trans 'Records per page' %}">
                                 <option>10</option>
                                 <option>50</option>
                                 <option>100</option>
@@ -106,7 +107,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <select ng-model="currentPage" class="form-control"
-                                                ng-change="fetchLogs()">
+                                                ng-change="fetchLogs()"
+                                                aria-label="{% trans 'Page number' %}">
                                             <option ng-repeat="page in pagination">{$ $index + 1 $}
                                             </option>
                                         </select>

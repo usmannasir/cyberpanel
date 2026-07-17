@@ -398,7 +398,7 @@
                                 <div class="col-md-1">
                                     <div class="form-group">
                                         <label class="form-label">&nbsp;</label>
-                                        <button type="button" ng-click="createRule()" class="btn-primary" style="width:100%">
+                                        <button type="button" ng-click="createRule()" class="btn-primary" style="width:100%" aria-label="{% trans 'Create rule' %}">
                                             <i class="fas fa-plus" aria-hidden="true"></i>
                                         </button>
                                     </div>
@@ -427,7 +427,7 @@
                                     <td><code ng-bind="rule.pattern"></code>@{$ selectedDomain $}</td>
                                     <td ng-bind="rule.destination"></td>
                                     <td>
-                                        <button type="button" ng-click="deleteRule(rule.id)" class="btn-danger">
+                                        <button type="button" ng-click="deleteRule(rule.id)" class="btn-danger" aria-label="{% trans 'Delete rule' %}">
                                             <i class="fas fa-trash" aria-hidden="true"></i>
                                         </button>
                                     </td>

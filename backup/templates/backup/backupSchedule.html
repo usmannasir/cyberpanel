@@ -551,16 +551,16 @@
                             <td><i class="fas fa-calendar-check" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>{$ lastRun $}</td>
                             <td><span class="frequency-badge">{$ allSites $}</span></td>
                             <td>
-                                <select ng-change="changeFrequency()" ng-model="backupFrequency" 
-                                        class="form-control" style="width: auto; min-width: 120px;">
+                                <select ng-change="changeFrequency()" ng-model="backupFrequency"
+                                        class="form-control" aria-label="{% trans 'Backup frequency' %}" style="width: auto; min-width: 120px;">
                                     <option>Never</option>
                                     <option>Daily</option>
                                     <option>Weekly</option>
                                 </select>
                             </td>
                             <td>
-                                <input ng-model="backupRetention" ng-change="changeFrequency()" 
-                                       type="number" min="0" 
+                                <input ng-model="backupRetention" ng-change="changeFrequency()"
+                                       type="number" min="0" aria-label="{% trans 'Backup retention days' %}"
                                        class="form-control" style="width: 100px;">
                             </td>
                             <td><span class="status-badge">{$ currentStatus $}</span></td>
@@ -608,8 +608,8 @@
 
                 <!-- Sites Table -->
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                    <select ng-model="recordsToShow" ng-change="fetchWebsites()" 
-                            class="form-control" style="width: auto;">
+                    <select ng-model="recordsToShow" ng-change="fetchWebsites()"
+                            class="form-control" aria-label="{% trans 'Records per page' %}" style="width: auto;">
                         <option>10</option>
                         <option>50</option>
                         <option>100</option>
@@ -641,8 +641,8 @@
 
                 <!-- Pagination -->
                 <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                    <select ng-model="currentPage" class="form-control" 
-                            ng-change="fetchWebsites()" style="width: auto;">
+                    <select ng-model="currentPage" class="form-control"
+                            ng-change="fetchWebsites()" aria-label="{% trans 'Page number' %}" style="width: auto;">
                         <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
                     </select>
                 </div>
@@ -664,8 +664,8 @@
                 </div>
                 <div class="modal-body">
                     <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                        <select ng-model="recordsToShowLogs" ng-change="fetchLogs()" 
-                                class="form-control" style="width: auto;">
+                        <select ng-model="recordsToShowLogs" ng-change="fetchLogs()"
+                                class="form-control" aria-label="{% trans 'Log records per page' %}" style="width: auto;">
                             <option>10</option>
                             <option>50</option>
                             <option>100</option>
@@ -688,8 +688,8 @@
                     </table>
 
                     <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                        <select ng-model="currentPageLogs" class="form-control" 
-                                ng-change="fetchLogs()" style="width: auto;">
+                        <select ng-model="currentPageLogs" class="form-control"
+                                ng-change="fetchLogs()" aria-label="{% trans 'Log page number' %}" style="width: auto;">
                             <option ng-repeat="page in paginationLogs">{$ $index + 1 $}</option>
                         </select>
                     </div>

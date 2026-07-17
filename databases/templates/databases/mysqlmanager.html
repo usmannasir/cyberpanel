@@ -597,8 +597,8 @@
                 {% trans "Active MySQL Processes" %}
                 <span ng-show="cyberPanelLoading" class="loading-spinner"></span>
             </h2>
-            <button class="refresh-btn" ng-click="refreshProcesses()">
-                <i class="fas fa-sync-alt"></i>
+            <button class="refresh-btn" ng-click="refreshProcesses()" aria-label="{% trans 'Refresh processes' %}">
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
             </button>
         </div>
         <div class="card-body">

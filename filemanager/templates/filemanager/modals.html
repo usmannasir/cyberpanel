@@ -57,13 +57,13 @@
                                     <span ng-show="item.isError" style="color: #ff6b6b;"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
                                 </td>
                                 <td nowrap>
-                                    <button type="button" class="fm-btn" style="padding: 6px 12px; font-size: 12px;" ng-click="item.upload()" ng-disabled="item.isReady || item.isUploading || item.isSuccess">
+                                    <button type="button" class="fm-btn" style="padding: 6px 12px; font-size: 12px;" ng-click="item.upload()" ng-disabled="item.isReady || item.isUploading || item.isSuccess" aria-label="{% trans 'Upload file' %}">
                                         <i class="fas fa-upload" aria-hidden="true"></i>
                                     </button>
-                                    <button type="button" class="fm-btn" style="padding: 6px 12px; font-size: 12px;" ng-click="item.cancel()" ng-disabled="!item.isUploading">
+                                    <button type="button" class="fm-btn" style="padding: 6px 12px; font-size: 12px;" ng-click="item.cancel()" ng-disabled="!item.isUploading" aria-label="{% trans 'Cancel upload' %}">
                                         <i class="fas fa-pause" aria-hidden="true"></i>
                                     </button>
-                                    <button type="button" class="fm-btn danger" style="padding: 6px 12px; font-size: 12px;" ng-click="item.remove()">
+                                    <button type="button" class="fm-btn danger" style="padding: 6px 12px; font-size: 12px;" ng-click="item.remove()" aria-label="{% trans 'Remove from queue' %}">
                                         <i class="fas fa-times" aria-hidden="true"></i>
                                     </button>
                                 </td>
@@ -449,9 +449,9 @@
                         </tr>
                         <tr style="background: #f8f9ff;">
                             <td><strong>{% trans "Octal" %}</strong></td>
-                            <td><input ng-model="userPermissions" type="number" class="form-control" readonly style="text-align: center;"></td>
-                            <td><input ng-model="groupPermissions" type="number" class="form-control" readonly style="text-align: center;"></td>
-                            <td><input ng-model="wordlPermissions" type="number" class="form-control" readonly style="text-align: center;"></td>
+                            <td><input ng-model="userPermissions" type="number" class="form-control" readonly style="text-align: center;" aria-label="{% trans 'User permissions (octal)' %}"></td>
+                            <td><input ng-model="groupPermissions" type="number" class="form-control" readonly style="text-align: center;" aria-label="{% trans 'Group permissions (octal)' %}"></td>
+                            <td><input ng-model="wordlPermissions" type="number" class="form-control" readonly style="text-align: center;" aria-label="{% trans 'World permissions (octal)' %}"></td>
                         </tr>
                     </tbody>
                 </table>

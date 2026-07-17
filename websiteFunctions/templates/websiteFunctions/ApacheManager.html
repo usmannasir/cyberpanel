@@ -459,7 +459,7 @@
                         <div ng-show="!apacheOLS" class="row">
                             <div class="col-md-12">
                                 <div class="form-group mb-3">
-                                    <label for="example-select">PHP</label>
+                                    <label for="phpApacheSelect">PHP</label>
                                     <select ng-model="phpSelection" class="form-control" id="phpApacheSelect">
                                         {% for php in phps %}
                                             <option value="{{ php }}">{{ php }}</option>
@@ -507,15 +507,15 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.max_children</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-max-children">pm.max_children</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-max-children"
                                                        ng-model="pmMaxChildren"/>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.start_servers</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-start-servers">pm.start_servers</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-start-servers"
                                                        ng-model="pmStartServers"/>
                                             </div>
                                         </div>
@@ -524,15 +524,15 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.min_spare_servers</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-min-spare-servers">pm.min_spare_servers</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-min-spare-servers"
                                                        ng-model="pmMinSpareServers"/>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.max_spare_servers</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-max-spare-servers">pm.max_spare_servers</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-max-spare-servers"
                                                        ng-model="pmMaxSpareServers"/>
                                             </div>
                                         </div>
@@ -590,7 +590,7 @@
                         <div ng-show="!pureOLS" class="row">
                             <div class="col-md-12">
                                 <div class="form-group mb-3">
-                                    <label for="example-select">PHP</label>
+                                    <label for="phpOLSSelect">PHP</label>
                                     <select ng-model="phpSelection" class="form-control" id="phpOLSSelect">
                                         {% for php in apachePHPs %}
                                             <option value="{{ php }}">{{ php }}</option>

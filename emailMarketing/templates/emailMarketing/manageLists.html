@@ -122,7 +122,8 @@
 
                                                         <div style="margin-bottom: 1%;" class="col-sm-2">
                                                             <select ng-change="fetchLogs()" ng-model="recordsToShowLogs"
-                                                                    class="form-control">
+                                                                    class="form-control"
+                                                                    aria-label="{% trans 'Log records per page' %}">
                                                                 <option>10</option>
                                                                 <option>50</option>
                                                                 <option>100</option>
@@ -156,7 +157,8 @@
                                                                             <div class="form-group">
                                                                                 <select ng-model="currentPageLogs"
                                                                                         class="form-control"
-                                                                                        ng-change="fetchLogs()">
+                                                                                        ng-change="fetchLogs()"
+                                                                                        aria-label="{% trans 'Log page number' %}">
                                                                                     <option ng-repeat="page in paginationLogs">
                                                                                         {$ $index + 1
                                                                                         $}
@@ -251,7 +253,7 @@
                             </div>
 
                             <div style="margin-bottom: 1%;" class="col-sm-2">
-                                <select ng-change="fetchRecords()" ng-model="recordstoShow" class="form-control">
+                                <select ng-change="fetchRecords()" ng-model="recordstoShow" class="form-control" aria-label="{% trans 'Records per page' %}">
                                     <option>10</option>
                                     <option>50</option>
                                     <option>100</option>

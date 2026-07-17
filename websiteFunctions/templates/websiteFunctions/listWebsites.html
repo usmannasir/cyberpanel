@@ -693,9 +693,10 @@
                                    class="form-control" 
                                    required aria-label="Search... (Press Enter to search)">
                         </div>
-                        <select ng-model="recordsToShow" 
-                                ng-change="getFurtherWebsitesFromDB()" 
-                                class="form-control form-select">
+                        <select ng-model="recordsToShow"
+                                ng-change="getFurtherWebsitesFromDB()"
+                                class="form-control form-select"
+                                aria-label="{% trans 'Records per page' %}">
                             <option>10</option>
                             <option>50</option>
                             <option>100</option>
@@ -926,9 +927,10 @@
 
                 <!-- Pagination -->
                 <div class="pagination-section">
-                    <select ng-model="currentPage" 
-                            class="form-control pagination-select" 
-                            ng-change="getFurtherWebsitesFromDB()">
+                    <select ng-model="currentPage"
+                            class="form-control pagination-select"
+                            ng-change="getFurtherWebsitesFromDB()"
+                            aria-label="{% trans 'Page number' %}">
                         <option ng-repeat="page in pagination" value="{$ $index + 1 $}">Page {$ $index + 1 $}</option>
                     </select>
                 </div>

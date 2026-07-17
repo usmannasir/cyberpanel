@@ -998,8 +998,8 @@
                                            ng-model="volList[$index].src" placeholder="Host path" required aria-label="Host path">
                                 </div>
                                 <div class="col-sm-1" ng-show="$last">
-                                    <button class="btn btn-danger" type="button" ng-disabled="!envConfirmation" 
-                                            ng-click="removeVolField()">
+                                    <button class="btn btn-danger" type="button" ng-disabled="!envConfirmation"
+                                            ng-click="removeVolField()" aria-label="{% trans 'Remove volume' %}">
                                         <i class="fas fa-times" aria-hidden="true"></i>
                                     </button>
                                 </div>
