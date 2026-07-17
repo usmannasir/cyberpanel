@@ -112,6 +112,7 @@
                         <button type="button" class="cp-notif-clear" id="cp-notif-clear">{% trans "Dismiss all" %}</button>
                     </div>
                     <div class="cp-notif-list" id="cp-notif-list">
+                        {% if not cosmetic.HidePromotions %}
                         <div class="cp-notif-item" data-key="emaildelivery" data-storekey="emailDeliveryNotificationDismissed" data-store="local">
                             <div class="cp-notif-ic ic-accent"><i class="fas fa-paper-plane" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
@@ -121,6 +122,7 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
+                        {% endif %}
                         <div class="cp-notif-item" data-key="backup" data-storekey="backupNotificationDismissed" data-store="session">
                             <div class="cp-notif-ic ic-warn"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
@@ -130,6 +132,7 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
+                        {% if not cosmetic.HidePromotions %}
                         <div class="cp-notif-item" data-key="ai" data-storekey="aiScannerNotificationDismissed" data-store="session">
                             <div class="cp-notif-ic ic-accent"><i class="fas fa-brain" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
@@ -148,6 +151,7 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
+                        {% endif %}
                     </div>
                     <div class="cp-notif-empty" id="cp-notif-empty" hidden>{% trans "You're all caught up." %}</div>
                 </div>
@@ -234,12 +238,14 @@
             <span>{% trans "Backups" %}</span>
         </a>
 
+        {% if not cosmetic.HidePromotions %}
         <!-- Build Services: prominent, available to everyone -->
         <a href="{% url 'buildServices' %}" class="menu-item menu-item-promo">
             <div class="icon-wrapper"><i class="fas fa-rocket"></i></div>
             <span>{% trans "Build Services" %}</span>
             <span class="badge badge-promo">{% trans "HIRE US" %}</span>
         </a>
+        {% endif %}
 
         <!-- ============================ ACCOUNT ============================ -->
         <div class="section-header">{% trans "ACCOUNT" %}</div>
@@ -318,6 +324,7 @@
             {l:'{% trans "Deploy WordPress" %}', h:'{% url "createWordpress" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},
             {% if admin or createEmail %}{l:'{% trans "Create Email Account" %}', h:'{% url "createEmailAccount" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},{% endif %}
             {% if admin or createDatabase %}{l:'{% trans "Create Database" %}', h:'{% url "createDatabase" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},{% endif %}
+            {% if not cosmetic.HidePromotions %}
             {l:'{% trans "Build Services" %}', h:'{% url "buildServices" %}', i:'fa-rocket', g:'{% trans "Quick actions" %}'},
             // Build services (open the marketing pages on cyberpanel.net)
             {l:'{% trans "Website Development" %}', h:'https://cyberpanel.net/custom-development/web?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-globe', g:'{% trans "Build services" %}', t:'_blank'},
@@ -329,6 +336,7 @@
             {l:'{% trans "UI / UX Design" %}', h:'https://cyberpanel.net/custom-development/design?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-pen-ruler', g:'{% trans "Build services" %}', t:'_blank'},
             {l:'{% trans "DevOps & Server Management" %}', h:'https://cyberpanel.net/custom-development/devops?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-server', g:'{% trans "Build services" %}', t:'_blank'},
             {l:'{% trans "Maintenance & Support" %}', h:'https://cyberpanel.net/custom-development/support?utm_source=cyberpanel&utm_medium=panel&utm_campaign=build_services', i:'fa-life-ring', g:'{% trans "Build services" %}', t:'_blank'},
+            {% endif %}
             // Sites
             {l:'{% trans "Dashboard" %}', h:'{% url "index" %}', i:'fa-gauge-high', g:'{% trans "Sites" %}'},
             {l:'{% trans "Websites" %}', h:'{% url "listWebsites" %}', i:'fa-globe', g:'{% trans "Sites" %}'},

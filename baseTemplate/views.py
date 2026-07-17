@@ -408,6 +408,7 @@ def design(request):
     if request.method == 'POST':
         MainDashboardCSS = request.POST.get('MainDashboardCSS', '')
         cosmetic.MainDashboardCSS = MainDashboardCSS
+        cosmetic.HidePromotions = 1 if request.POST.get('HidePromotions') else 0
         cosmetic.save()
         finalData['saved'] = 1
 
