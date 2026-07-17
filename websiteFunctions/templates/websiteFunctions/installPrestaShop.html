@@ -423,7 +423,7 @@
     <div id="page-title">
         <h2>
             <span class="ps-logo">
-                <i class="fas fa-shopping-cart" style="color: var(--primary-color); font-size: 24px;"></i>
+                <i class="fas fa-shopping-cart" style="color: var(--primary-color); font-size: 24px;" aria-hidden="true"></i>
             </span>
             {% trans "Install PrestaShop" %}
         </h2>
@@ -433,14 +433,14 @@
     <div ng-controller="installPrestaShopCTRL" class="panel">
         <div class="panel-body">
             <h3 class="title-hero">
-                <i class="fas fa-store" style="color: var(--primary-color);"></i>
+                <i class="fas fa-store" style="color: var(--primary-color);" aria-hidden="true"></i>
                 <span id="domainNamePage">{{ domainName }}</span> - {% trans "Installation Details" %}
-                <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" id="wpInstallLoading">
+                <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" id="wpInstallLoading" alt="">
             </h3>
             <div class="example-box-wrapper">
 
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "PrestaShop E-commerce Platform" %}</strong><br>
                         {% trans "Set up your online store with PrestaShop - the leading open-source e-commerce solution trusted by over 300,000 merchants worldwide." %}
@@ -449,19 +449,19 @@
 
                 <div class="feature-list">
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "500+ Templates" %}</span>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Multi-language Support" %}</span>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Mobile Responsive" %}</span>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "SEO Optimized" %}</span>
                     </div>
                 </div>
@@ -469,77 +469,77 @@
                 <form name="websiteCreationForm" action="/" id="createPackages" class="form-horizontal bordered-row">
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-store"></i>
+                        <label for="cpa11y-shop-name" class="col-sm-3 control-label">
+                            <i class="fas fa-store" aria-hidden="true"></i>
                             {% trans "Shop Name" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="shopName" placeholder="My Awesome Store" required>
+                            <input id="cpa11y-shop-name" type="text" class="form-control" ng-model="shopName" placeholder="My Awesome Store" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-user"></i>
+                        <label for="cpa11y-first-name" class="col-sm-3 control-label">
+                            <i class="fas fa-user" aria-hidden="true"></i>
                             {% trans "First Name" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="firstName" placeholder="John" required>
+                            <input id="cpa11y-first-name" type="text" class="form-control" ng-model="firstName" placeholder="John" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-user"></i>
+                        <label for="cpa11y-last-name" class="col-sm-3 control-label">
+                            <i class="fas fa-user" aria-hidden="true"></i>
                             {% trans "Last Name" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="lastName" placeholder="Doe" required>
+                            <input id="cpa11y-last-name" type="text" class="form-control" ng-model="lastName" placeholder="Doe" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-envelope"></i>
+                        <label for="cpa11y-email" class="col-sm-3 control-label">
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
                             {% trans "Email" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="email" class="form-control" ng-model="email" placeholder="admin@example.com" required>
+                            <input id="cpa11y-email" type="email" class="form-control" ng-model="email" placeholder="admin@example.com" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-lock"></i>
+                        <label for="cpa11y-password" class="col-sm-3 control-label">
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                             {% trans "Password" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="password" class="form-control" ng-model="password" placeholder="Strong password required" required>
+                            <input id="cpa11y-password" type="password" class="form-control" ng-model="password" placeholder="Strong password required" required>
                             <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "Use a strong password to secure your admin panel" %}
                             </small>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-database"></i>
+                        <label for="cpa11y-database-prefix" class="col-sm-3 control-label">
+                            <i class="fas fa-database" aria-hidden="true"></i>
                             {% trans "Database Prefix" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="databasePrefix" placeholder="ps_" value="ps_" required>
+                            <input id="cpa11y-database-prefix" type="text" class="form-control" ng-model="databasePrefix" placeholder="ps_" value="ps_" required>
                             <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "Default: ps_ (recommended for security)" %}
                             </small>
                         </div>
                     </div>
 
                     <!--<div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                        <label for="cpa11y-path" class="col-sm-3 control-label">{% trans "Path" %}</label>
                         <div class="col-sm-6">
-                            <input placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" class="form-control" ng-model="installPath">
+                            <input id="cpa11y-path" placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" class="form-control" ng-model="installPath">
                         </div>
                     </div>-->
 
@@ -547,7 +547,7 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-6">
                             <button type="button" ng-click="installPrestShop()" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-download"></i>
+                                <i class="fas fa-download" aria-hidden="true"></i>
                                 {% trans "Install Now" %}
                             </button>
                         </div>
@@ -557,7 +557,7 @@
                         <label class="col-sm-2 control-label"></label>
                         <div class="col-sm-8">
 
-                            <div class="alert alert-success text-center">
+                            <div class="alert alert-success text-center" role="status">
                                 <h2>{$ currentStatus $}</h2>
                             </div>
 
@@ -568,13 +568,13 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="installationFailed" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
-                            <div ng-hide="installationSuccessfull" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="installationSuccessfull" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 <p>
                                     {% trans "Installation successful. Visit:" %} 
                                     <a href="{$ installationURL $}" target="_blank" style="font-weight: 600;">
@@ -582,13 +582,13 @@
                                     </a>
                                 </p>
                                 <small style="display: block; margin-top: 10px;">
-                                    <i class="fas fa-lightbulb"></i>
+                                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
                                     {% trans "Tip: Access your admin panel by adding /admin to your store URL" %}
                                 </small>
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-wifi"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-wifi" aria-hidden="true"></i>
                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                             </div>
 
@@ -599,7 +599,7 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-6">
                             <button type="button" ng-disabled="goBackDisable" ng-click="goBack()" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-arrow-left"></i>
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                 {% trans "Go Back" %}
                             </button>
                         </div>

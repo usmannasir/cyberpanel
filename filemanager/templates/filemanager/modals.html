@@ -6,7 +6,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-cloud-upload-alt"></i>
+                    <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
                     {% trans "Upload Files" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -16,7 +16,7 @@
             <div class="modal-body">
                 <div class="my-drop-zone" nv-file-over="" uploader="uploader">
                     <div class="text-center">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #5856d6; margin-bottom: 15px;"></i>
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #5856d6; margin-bottom: 15px;" aria-hidden="true"></i>
                         <h4>{% trans "Drop files here or click to browse" %}</h4>
                         <p class="text-muted">{% trans "Maximum file size: 2GB" %}</p>
                     </div>
@@ -24,7 +24,7 @@
                 
                 <div class="form-group mt-3">
                     <label class="fm-btn primary" style="cursor: pointer; display: inline-block;">
-                        <i class="fas fa-folder-open"></i>
+                        <i class="fas fa-folder-open" aria-hidden="true"></i>
                         {% trans "Browse Files" %}
                         <input type="file" nv-file-select="" uploader="uploader" multiple style="display: none;">
                     </label>
@@ -52,19 +52,19 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <span ng-show="item.isSuccess" style="color: #4ade80;"><i class="fas fa-check-circle"></i></span>
-                                    <span ng-show="item.isCancel" style="color: #fbbf24;"><i class="fas fa-ban"></i></span>
-                                    <span ng-show="item.isError" style="color: #ff6b6b;"><i class="fas fa-exclamation-circle"></i></span>
+                                    <span ng-show="item.isSuccess" style="color: #4ade80;"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
+                                    <span ng-show="item.isCancel" style="color: #fbbf24;"><i class="fas fa-ban" aria-hidden="true"></i></span>
+                                    <span ng-show="item.isError" style="color: #ff6b6b;"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
                                 </td>
                                 <td nowrap>
                                     <button type="button" class="fm-btn" style="padding: 6px 12px; font-size: 12px;" ng-click="item.upload()" ng-disabled="item.isReady || item.isUploading || item.isSuccess">
-                                        <i class="fas fa-upload"></i>
+                                        <i class="fas fa-upload" aria-hidden="true"></i>
                                     </button>
                                     <button type="button" class="fm-btn" style="padding: 6px 12px; font-size: 12px;" ng-click="item.cancel()" ng-disabled="!item.isUploading">
-                                        <i class="fas fa-pause"></i>
+                                        <i class="fas fa-pause" aria-hidden="true"></i>
                                     </button>
                                     <button type="button" class="fm-btn danger" style="padding: 6px 12px; font-size: 12px;" ng-click="item.remove()">
-                                        <i class="fas fa-times"></i>
+                                        <i class="fas fa-times" aria-hidden="true"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -82,13 +82,13 @@
                     
                     <div class="mt-4 text-center">
                         <button type="button" class="fm-btn primary" ng-click="uploader.uploadAll()" ng-disabled="!uploader.getNotUploadedItems().length">
-                            <i class="fas fa-cloud-upload-alt"></i> {% trans "Upload All" %}
+                            <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i> {% trans "Upload All" %}
                         </button>
                         <button type="button" class="fm-btn" ng-click="uploader.cancelAll()" ng-disabled="!uploader.isUploading">
-                            <i class="fas fa-pause"></i> {% trans "Cancel All" %}
+                            <i class="fas fa-pause" aria-hidden="true"></i> {% trans "Cancel All" %}
                         </button>
                         <button type="button" class="fm-btn danger" ng-click="uploader.clearQueue()" ng-disabled="!uploader.queue.length">
-                            <i class="fas fa-trash"></i> {% trans "Clear Queue" %}
+                            <i class="fas fa-trash" aria-hidden="true"></i> {% trans "Clear Queue" %}
                         </button>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-folder-plus"></i>
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
                     {% trans "Create New Folder" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -112,22 +112,22 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "Folder Name" %}</label>
-                    <input ng-model="newFolderName" ng-keypress="createFolderEnter($event)" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-folder-name">{% trans "Folder Name" %}</label>
+                    <input id="cpa11y-folder-name" ng-model="newFolderName" ng-keypress="createFolderEnter($event)" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                     <small class="form-text text-muted">{% trans "Folder will be created in current directory" %}</small>
                 </div>
                 
                 <div ng-hide="errorMessageFolder" class="alert alert-danger" role="alert" style="border-radius: 12px;">
-                    <i class="fas fa-exclamation-circle"></i> {$ error_message $}
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i> {$ error_message $}
                 </div>
                 <div ng-hide="createSuccess" class="alert alert-success" role="alert" style="border-radius: 12px;">
-                    <i class="fas fa-check-circle"></i> {% trans "Folder successfully created" %}
+                    <i class="fas fa-check-circle" aria-hidden="true"></i> {% trans "Folder successfully created" %}
                 </div>
             </div>
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="createNewFolder()" class="fm-btn primary">
-                    <i class="fas fa-folder-plus"></i> {% trans "Create Folder" %}
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i> {% trans "Create Folder" %}
                 </button>
             </div>
         </div>
@@ -140,7 +140,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-file-plus"></i>
+                    <i class="fas fa-file-plus" aria-hidden="true"></i>
                     {% trans "Create New File" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -149,22 +149,22 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "File Name" %}</label>
-                    <input ng-model="newFileName" ng-keypress="createFileEnter($event)" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-file-name">{% trans "File Name" %}</label>
+                    <input id="cpa11y-file-name" ng-model="newFileName" ng-keypress="createFileEnter($event)" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                     <small class="form-text text-muted">{% trans "File will be created in current directory" %}</small>
                 </div>
                 
                 <div ng-hide="errorMessageFile" class="alert alert-danger" role="alert" style="border-radius: 12px;">
-                    <i class="fas fa-exclamation-circle"></i> {$ error_message $}
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i> {$ error_message $}
                 </div>
                 <div ng-hide="createSuccess" class="alert alert-success" role="alert" style="border-radius: 12px;">
-                    <i class="fas fa-check-circle"></i> {% trans "File successfully created" %}
+                    <i class="fas fa-check-circle" aria-hidden="true"></i> {% trans "File successfully created" %}
                 </div>
             </div>
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="createNewFile()" class="fm-btn primary">
-                    <i class="fas fa-file-plus"></i> {% trans "Create File" %}
+                    <i class="fas fa-file-plus" aria-hidden="true"></i> {% trans "Create File" %}
                 </button>
             </div>
         </div>
@@ -177,7 +177,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #ff6b6b; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     {% trans "Confirm Deletion" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -198,7 +198,7 @@
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="deleteFolderOrFile()" class="fm-btn danger">
-                    <i class="fas fa-trash"></i> {% trans "Delete" %}
+                    <i class="fas fa-trash" aria-hidden="true"></i> {% trans "Delete" %}
                 </button>
             </div>
         </div>
@@ -211,7 +211,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit" aria-hidden="true"></i>
                     {% trans "Rename" %} {$ fileToRename $}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -220,14 +220,14 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "New Name" %}</label>
-                    <input ng-model="newFileName" ng-keypress="renameEnter($event)" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-new-name">{% trans "New Name" %}</label>
+                    <input id="cpa11y-new-name" ng-model="newFileName" ng-keypress="renameEnter($event)" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                 </div>
             </div>
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="renameFile()" class="fm-btn primary">
-                    <i class="fas fa-check"></i> {% trans "Rename" %}
+                    <i class="fas fa-check" aria-hidden="true"></i> {% trans "Rename" %}
                 </button>
             </div>
         </div>
@@ -240,7 +240,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-arrows-alt"></i>
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
                     {% trans "Move Files" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -249,19 +249,19 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "Selected Items" %}</label>
-                    <textarea ng-model="listOfFiles" class="form-control" rows="3" readonly style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;"></textarea>
+                    <label for="cpa11y-selected-items">{% trans "Selected Items" %}</label>
+                    <textarea id="cpa11y-selected-items" ng-model="listOfFiles" class="form-control" rows="3" readonly style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Move to" %}</label>
-                    <input ng-model="pathToMoveTo" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-move-to">{% trans "Move to" %}</label>
+                    <input id="cpa11y-move-to" ng-model="pathToMoveTo" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                     <small class="form-text text-muted">{% trans "Enter destination path" %}</small>
                 </div>
             </div>
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="startMoving()" class="fm-btn primary">
-                    <i class="fas fa-arrows-alt"></i> {% trans "Move" %}
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i> {% trans "Move" %}
                 </button>
             </div>
         </div>
@@ -274,7 +274,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-copy"></i>
+                    <i class="fas fa-copy" aria-hidden="true"></i>
                     {% trans "Copy Files" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -283,19 +283,19 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "Selected Items" %}</label>
-                    <textarea ng-model="listOfFiles" class="form-control" rows="3" readonly style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;"></textarea>
+                    <label for="cpa11y-selected-items-2">{% trans "Selected Items" %}</label>
+                    <textarea id="cpa11y-selected-items-2" ng-model="listOfFiles" class="form-control" rows="3" readonly style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Copy to" %}</label>
-                    <input ng-model="pathToCopyTo" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-copy-to">{% trans "Copy to" %}</label>
+                    <input id="cpa11y-copy-to" ng-model="pathToCopyTo" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                     <small class="form-text text-muted">{% trans "Enter destination path" %}</small>
                 </div>
             </div>
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="startCopying()" class="fm-btn primary">
-                    <i class="fas fa-copy"></i> {% trans "Copy" %}
+                    <i class="fas fa-copy" aria-hidden="true"></i> {% trans "Copy" %}
                 </button>
             </div>
         </div>
@@ -308,7 +308,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-file-archive"></i>
+                    <i class="fas fa-file-archive" aria-hidden="true"></i>
                     {% trans "Compress Files" %}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -317,17 +317,17 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "Files to Compress" %}</label>
-                    <textarea ng-model="listOfFiles" class="form-control" rows="3" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;"></textarea>
+                    <label for="cpa11y-files-to-compress">{% trans "Files to Compress" %}</label>
+                    <textarea id="cpa11y-files-to-compress" ng-model="listOfFiles" class="form-control" rows="3" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Archive Name" %}</label>
-                    <input ng-model="compressedFileName" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-archive-name">{% trans "Archive Name" %}</label>
+                    <input id="cpa11y-archive-name" ng-model="compressedFileName" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                     <small class="form-text text-muted">{% trans "Enter without extension" %}</small>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Compression Type" %}</label>
-                    <select ng-model="compressionType" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-compression-type">{% trans "Compression Type" %}</label>
+                    <select id="cpa11y-compression-type" ng-model="compressionType" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                         <option value="zip">ZIP</option>
                         <option value="tar.gz">TAR.GZ</option>
                     </select>
@@ -336,7 +336,7 @@
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="startCompression()" class="fm-btn primary">
-                    <i class="fas fa-file-archive"></i> {% trans "Compress" %}
+                    <i class="fas fa-file-archive" aria-hidden="true"></i> {% trans "Compress" %}
                 </button>
             </div>
         </div>
@@ -349,7 +349,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-file-export"></i>
+                    <i class="fas fa-file-export" aria-hidden="true"></i>
                     {% trans "Extract" %} {$ fileToBeExtracted $}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -358,15 +358,15 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>{% trans "Extract to" %}</label>
-                    <input ng-model="extractionLocation" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
+                    <label for="cpa11y-extract-to">{% trans "Extract to" %}</label>
+                    <input id="cpa11y-extract-to" ng-model="extractionLocation" type="text" class="form-control" style="border-radius: 12px; border: 2px solid #f3f1ff; padding: 12px;">
                     <small class="form-text text-muted">{% trans "Enter . to extract in current directory" %}</small>
                 </div>
             </div>
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="startExtraction()" class="fm-btn primary">
-                    <i class="fas fa-file-export"></i> {% trans "Extract" %}
+                    <i class="fas fa-file-export" aria-hidden="true"></i> {% trans "Extract" %}
                 </button>
             </div>
         </div>
@@ -379,7 +379,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-code"></i>
+                    <i class="fas fa-code" aria-hidden="true"></i>
                     {% trans "Code Editor" %} - {$ fileInEditor $}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -391,14 +391,14 @@
             </div>
             <div class="modal-footer" style="border: none;">
                 <div ng-hide="errorMessageEditor" class="alert alert-danger" role="alert" style="margin: 0; margin-right: auto;">
-                    <i class="fas fa-exclamation-circle"></i> {$ error_message $}
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i> {$ error_message $}
                 </div>
                 <div ng-hide="saveSuccess" class="alert alert-success" role="alert" style="margin: 0; margin-right: auto;">
-                    <i class="fas fa-check-circle"></i> {% trans "File saved successfully" %}
+                    <i class="fas fa-check-circle" aria-hidden="true"></i> {% trans "File saved successfully" %}
                 </div>
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Close" %}</button>
                 <button type="button" ng-click="putFileContents()" class="fm-btn primary">
-                    <i class="fas fa-save"></i> {% trans "Save Changes" %}
+                    <i class="fas fa-save" aria-hidden="true"></i> {% trans "Save Changes" %}
                 </button>
             </div>
         </div>
@@ -411,7 +411,7 @@
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: #5856d6; color: white; border-radius: 16px 16px 0 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-lock"></i>
+                    <i class="fas fa-lock" aria-hidden="true"></i>
                     {% trans "Change Permissions" %} - {$ permissionsPath $}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" style="color: white;">
@@ -459,10 +459,10 @@
             <div class="modal-footer" style="border: none;">
                 <button type="button" class="fm-btn" data-dismiss="modal">{% trans "Cancel" %}</button>
                 <button type="button" ng-click="changePermissions(0)" class="fm-btn primary">
-                    <i class="fas fa-lock"></i> {% trans "Change Permissions" %}
+                    <i class="fas fa-lock" aria-hidden="true"></i> {% trans "Change Permissions" %}
                 </button>
                 <button type="button" ng-click="changePermissionsRecursively()" class="fm-btn primary">
-                    <i class="fas fa-sync"></i> {% trans "Change Recursively" %}
+                    <i class="fas fa-sync" aria-hidden="true"></i> {% trans "Change Recursively" %}
                 </button>
             </div>
         </div>

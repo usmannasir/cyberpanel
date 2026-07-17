@@ -492,10 +492,10 @@
     
     <div id="page-title">
         <h2>
-            <i class="fas fa-clock" style="margin-right: 10px;"></i>
+            <i class="fas fa-clock" style="margin-right: 10px;" aria-hidden="true"></i>
             {% trans "Cron Management" %}
             <a target="_blank" rel="noopener" href="https://cyberpanel.net/KnowledgeBase/home/cron-jobs/" class="btn btn-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Cron Docs" %}
             </a>
         </h2>
@@ -505,20 +505,20 @@
     <div class="panel">
         <div class="panel-body">
             <h3 class="title-hero">
-                <i class="fas fa-tasks" style="color: var(--accent-color, #5b5fcf);"></i>
+                <i class="fas fa-tasks" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                 {% trans "Cron Jobs for" %} <span id="domain">{{ domain }}</span>
-                <img id="manageCronLoading" src="{% static 'images/loading.gif' %}">
+                <img id="manageCronLoading" src="{% static 'images/loading.gif' %}" alt="">
             </h3>
             
             <div class="example-box-wrapper">
                 
                 <div class="action-buttons">
                     <a ng-click="addCronForm()" class="btn btn-primary" href="#">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-plus" aria-hidden="true"></i>
                         {% trans "Add Cron" %}
                     </a>
                     <a ng-click="fetchWebsites()" class="btn btn-border" href="#">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         {% trans "Fetch Current Cron Jobs" %}
                     </a>
                 </div>
@@ -550,10 +550,10 @@
                             <td>
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href="#" title="{% trans 'Edit' %}">
-                                        <i class="fas fa-edit"></i>
+                                        <i class="fas fa-edit" aria-hidden="true"></i>
                                     </a>
                                     <a class="btn btn-warning" ng-click="removeCron(cron.line)" href="#" title="{% trans 'Delete' %}">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                     </a>
                                 </div>
                             </td>
@@ -567,12 +567,12 @@
                         <input type="hidden" ng-value="line" required="">
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-magic" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-pre-defined" class="col-sm-3 control-label">
+                                <i class="fas fa-magic" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Pre defined" %}
                             </label>
                             <div class="col-sm-6">
-                                <select class="form-control" ng-model="defined" ng-change="populate()" required="">
+                                <select id="cpa11y-pre-defined" class="form-control" ng-model="defined" ng-change="populate()" required="">
                                     <option value="* * * * *">{% trans "Every minute" %}</option>
                                     <option value="*/5 * * * *">{% trans "Every 5 minutes" %}</option>
                                     <option value="*/30 * * * *">{% trans "Every 30 minutes" %}</option>
@@ -588,64 +588,64 @@
                         <hr>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-stopwatch" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-minute" class="col-sm-3 control-label">
+                                <i class="fas fa-stopwatch" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Minute" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="minute" placeholder="0-59 or *" required="">
+                                <input id="cpa11y-minute" type="text" class="form-control" ng-model="minute" placeholder="0-59 or *" required="">
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-clock" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-hour" class="col-sm-3 control-label">
+                                <i class="fas fa-clock" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Hour" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="hour" placeholder="0-23 or *" required="">
+                                <input id="cpa11y-hour" type="text" class="form-control" ng-model="hour" placeholder="0-23 or *" required="">
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-calendar-day" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-day-of-month" class="col-sm-3 control-label">
+                                <i class="fas fa-calendar-day" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Day of month" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="monthday" placeholder="1-31 or *" required="">
+                                <input id="cpa11y-day-of-month" type="text" class="form-control" ng-model="monthday" placeholder="1-31 or *" required="">
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-calendar-alt" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-month" class="col-sm-3 control-label">
+                                <i class="fas fa-calendar-alt" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Month" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="month" placeholder="1-12 or *" required="">
+                                <input id="cpa11y-month" type="text" class="form-control" ng-model="month" placeholder="1-12 or *" required="">
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-calendar-week" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-day-of-week" class="col-sm-3 control-label">
+                                <i class="fas fa-calendar-week" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Day of week" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="weekday" placeholder="0-6 or *" required="">
+                                <input id="cpa11y-day-of-week" type="text" class="form-control" ng-model="weekday" placeholder="0-6 or *" required="">
                             </div>
                         </div>
                         
                         <hr>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-terminal" style="color: var(--accent-color, #5b5fcf);"></i>
+                            <label for="cpa11y-command" class="col-sm-3 control-label">
+                                <i class="fas fa-terminal" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                 {% trans "Command" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="command" placeholder="/usr/bin/php /path/to/script.php" required="">
+                                <input id="cpa11y-command" type="text" class="form-control" ng-model="command" placeholder="/usr/bin/php /path/to/script.php" required="">
                             </div>
                         </div>
                         
@@ -653,7 +653,7 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-6">
                                 <button type="button" ng-click="modifyCronFunc()" class="btn btn-primary btn-lg btn-block">
-                                    <i class="fas fa-save"></i>
+                                    <i class="fas fa-save" aria-hidden="true"></i>
                                     {% trans "Save Edits" %}
                                 </button>
                             </div>
@@ -663,7 +663,7 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-6">
                                 <button type="button" ng-click="addCronFunc()" class="btn btn-primary btn-lg btn-block">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
                                     {% trans "Add Cron" %}
                                 </button>
                             </div>
@@ -675,18 +675,18 @@
                 <div class="form-group" style="margin-top: 30px;">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-6">
-                        <div id="fetchCronFailure" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
+                        <div id="fetchCronFailure" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             <p>{% trans "Cannot fetch website details. Error message:" %} {$ errorMessage $}</p>
                         </div>
                         
-                        <div id="addCronFailure" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
+                        <div id="addCronFailure" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             <p>{% trans "Unable to add/save Cron. Error message:" %} {$ errorMessage $}</p>
                         </div>
                         
-                        <div id="cronEditSuccess" class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
+                        <div id="cronEditSuccess" class="alert alert-success" role="status">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             <p>{% trans "Cron job saved successfully!" %}</p>
                         </div>
                     </div>

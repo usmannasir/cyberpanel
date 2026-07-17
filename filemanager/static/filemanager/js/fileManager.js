@@ -36,7 +36,7 @@ function kilobytesToHumanReadable(kilobytes, suffix = 'KB') {
     return kilobytes.toFixed(2) + ' ' + units[i];
 }
 
-var fileManager = angular.module('fileManager', ['angularFileUpload']);
+var fileManager = angular.module('fileManager', ['angularFileUpload', 'ngAria']);
 
 fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
     $interpolateProvider.startSymbol('{$');

@@ -380,15 +380,15 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
+                    <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
                 </div>
                 {% trans "Set up Incremental Backup Destinations" %}
             </h1>
             <p>{% trans "Configure your backup destinations for incremental backups. Currently supporting AWS S3 storage." %}</p>
             <a href="https://cyberpanel.net/docs/1-add-remove-destinations-for-incremental-backups/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "View Documentation" %}
-                <i class="fas fa-external-link-alt" style="font-size: 11px;"></i>
+                <i class="fas fa-external-link-alt" style="font-size: 11px;" aria-hidden="true"></i>
             </a>
         </div>
 
@@ -397,7 +397,7 @@
             <h2 class="section-title">{% trans "Add Backup Destination" %}</h2>
             
             <div class="alert-box">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <div class="alert-box-content">
                     <div class="alert-box-title">{% trans "Important Information" %}</div>
                     <div class="alert-box-text">{% trans "Incremental backups allow you to save storage space and bandwidth by only backing up changes since the last backup." %}</div>
@@ -407,13 +407,13 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label">{% trans "Destination Type" %}</label>
-                    <select ng-change="fetchDetails()" ng-model="destinationType" class="form-select">
+                    <label for="cpa11y-destination-type" class="form-label">{% trans "Destination Type" %}</label>
+                    <select id="cpa11y-destination-type" ng-change="fetchDetails()" ng-model="destinationType" class="form-select">
                         <option value="">{% trans "Select destination type" %}</option>
                         <option value="AWS">AWS S3</option>
                     </select>
                     <div class="form-help">
-                        <i class="fas fa-lightbulb"></i>
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i>
                         {% trans "Choose your backup storage provider" %}
                     </div>
                 </div>
@@ -421,26 +421,26 @@
                 <!-- AWS Configuration -->
                 <div ng-hide="awsHide">
                     <div class="form-group">
-                        <label class="form-label">{% trans "AWS Access Key ID" %}</label>
-                        <input type="text" class="form-control" ng-model="AWS_ACCESS_KEY_ID" placeholder="{% trans 'Enter your AWS access key' %}" required>
+                        <label for="cpa11y-aws-access-key-id" class="form-label">{% trans "AWS Access Key ID" %}</label>
+                        <input id="cpa11y-aws-access-key-id" type="text" class="form-control" ng-model="AWS_ACCESS_KEY_ID" placeholder="{% trans 'Enter your AWS access key' %}" required>
                         <div class="form-help">
-                            <i class="fas fa-key"></i>
+                            <i class="fas fa-key" aria-hidden="true"></i>
                             {% trans "You can find this in your AWS IAM console" %}
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "AWS Secret Access Key" %}</label>
-                        <input type="password" class="form-control" ng-model="AWS_SECRET_ACCESS_KEY" placeholder="{% trans 'Enter your AWS secret key' %}" required>
+                        <label for="cpa11y-aws-secret-access-key" class="form-label">{% trans "AWS Secret Access Key" %}</label>
+                        <input id="cpa11y-aws-secret-access-key" type="password" class="form-control" ng-model="AWS_SECRET_ACCESS_KEY" placeholder="{% trans 'Enter your AWS secret key' %}" required>
                         <div class="form-help">
-                            <i class="fas fa-lock"></i>
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                             {% trans "Keep this key secure and never share it" %}
                         </div>
                     </div>
 
                     <button type="button" ng-click="addDestination('AWS')" class="btn-primary" ng-disabled="cyberpanelLoading">
-                        <i class="fas fa-plus-circle" ng-hide="cyberpanelLoading"></i>
-                        <i class="fas fa-spinner fa-spin" ng-show="cyberpanelLoading" ng-cloak></i>
+                        <i class="fas fa-plus-circle" ng-hide="cyberpanelLoading" aria-hidden="true"></i>
+                        <i class="fas fa-spinner fa-spin" ng-show="cyberpanelLoading" ng-cloak aria-hidden="true"></i>
                         <span ng-hide="cyberpanelLoading">{% trans "Add Destination" %}</span>
                         <span ng-show="cyberpanelLoading" ng-cloak>{% trans "Adding..." %}</span>
                     </button>
@@ -455,7 +455,7 @@
             <h2 class="section-title">{% trans "Configured Destinations" %}</h2>
             
             <div ng-if="!records || records.length === 0" class="empty-state">
-                <i class="fas fa-cloud-slash"></i>
+                <i class="fas fa-cloud-slash" aria-hidden="true"></i>
                 <p>{% trans "No backup destinations configured yet" %}</p>
             </div>
             
@@ -469,12 +469,12 @@
                 <tbody>
                     <tr ng-repeat="record in records track by $index">
                         <td>
-                            <i class="fas fa-key" style="color: #5b5fcf; margin-right: 8px;"></i>
+                            <i class="fas fa-key" style="color: #5b5fcf; margin-right: 8px;" aria-hidden="true"></i>
                             <span ng-bind="record.AWS_ACCESS_KEY_ID"></span>
                         </td>
                         <td style="text-align: right;">
                             <button type="button" class="delete-btn" ng-click="removeDestination('AWS', record.AWS_ACCESS_KEY_ID)">
-                                <i class="fas fa-trash-alt"></i>
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                                 {% trans "Delete" %}
                             </button>
                         </td>

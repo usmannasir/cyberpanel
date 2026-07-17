@@ -14,7 +14,7 @@
         <div ng-controller="createCLPackage" class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
-                    {% trans "Create Package" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+                    {% trans "Create Package" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -23,9 +23,9 @@
 
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Package" %} </label>
+                            <label for="cpa11y-select-package" class="col-sm-3 control-label">{% trans "Select Package" %} </label>
                             <div class="col-sm-6">
-                                <select ng-change="toggleView()" ng-model="selectedPackage" class="form-control">
+                                <select id="cpa11y-select-package" ng-change="toggleView()" ng-model="selectedPackage" class="form-control">
                                     {% for items in packList %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
@@ -39,82 +39,82 @@
                         <div ng-hide="modifyPackageForm">
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
+                                <label for="cpa11y-package-name" class="col-sm-3 control-label">{% trans "Package Name" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="name" required>
+                                    <input id="cpa11y-package-name" type="text" class="form-control" ng-model="name" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "SPEED" %}</label>
+                                <label for="cpa11y-speed" class="col-sm-3 control-label">{% trans "SPEED" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="SPEED" required>
+                                    <input id="cpa11y-speed" type="text" class="form-control" ng-model="SPEED" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 100%</div>
                             </div>
 
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "VMEM" %}</label>
+                                <label for="cpa11y-vmem" class="col-sm-3 control-label">{% trans "VMEM" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="VMEM" required>
+                                    <input id="cpa11y-vmem" type="text" class="form-control" ng-model="VMEM" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 256m or 1G</div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "PMEM" %}</label>
+                                <label for="cpa11y-pmem" class="col-sm-3 control-label">{% trans "PMEM" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="PMEM" required>
+                                    <input id="cpa11y-pmem" type="text" class="form-control" ng-model="PMEM" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 256m or 1G</div>
                             </div>
 
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "IO" %}</label>
+                                <label for="cpa11y-io" class="col-sm-3 control-label">{% trans "IO" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="IO" required>
+                                    <input id="cpa11y-io" type="text" class="form-control" ng-model="IO" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 1024</div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "IOPS" %}</label>
+                                <label for="cpa11y-iops" class="col-sm-3 control-label">{% trans "IOPS" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="IOPS" required>
+                                    <input id="cpa11y-iops" type="text" class="form-control" ng-model="IOPS" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 1024</div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "EP" %}</label>
+                                <label for="cpa11y-ep" class="col-sm-3 control-label">{% trans "EP" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="EP" required>
+                                    <input id="cpa11y-ep" type="text" class="form-control" ng-model="EP" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 10</div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "NPROC" %}</label>
+                                <label for="cpa11y-nproc" class="col-sm-3 control-label">{% trans "NPROC" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="NPROC" required>
+                                    <input id="cpa11y-nproc" type="text" class="form-control" ng-model="NPROC" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 10</div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "INODES soft" %}</label>
+                                <label for="cpa11y-inodes-soft" class="col-sm-3 control-label">{% trans "INODES soft" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="INODESsoft" required>
+                                    <input id="cpa11y-inodes-soft" type="text" class="form-control" ng-model="INODESsoft" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 1024</div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "INODES hard" %}</label>
+                                <label for="cpa11y-inodes-hard" class="col-sm-3 control-label">{% trans "INODES hard" %}</label>
                                 <div class="col-sm-6">
-                                    <input type="text" class="form-control" ng-model="INODEShard" required>
+                                    <input id="cpa11y-inodes-hard" type="text" class="form-control" ng-model="INODEShard" required>
                                 </div>
                                 <div class="current-pack ng-binding">Ex 1024</div>
                             </div>

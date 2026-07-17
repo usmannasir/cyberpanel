@@ -17,7 +17,7 @@
             <div class="panel-body" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
                 <h3 class="title-hero">
                     {% trans "Manage Email Lists" %} <img ng-hide="cyberPanelLoading"
-                                                          src="{% static 'images/loading.gif' %}">
+                                                          src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -26,9 +26,9 @@
 
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select List" %} </label>
+                            <label for="cpa11y-select-list" class="col-sm-3 control-label">{% trans "Select List" %} </label>
                             <div class="col-sm-6">
-                                <select ng-change="fetchEmails(1)" ng-model="listName" class="form-control">
+                                <select id="cpa11y-select-list" ng-change="fetchEmails(1)" ng-model="listName" class="form-control">
                                     {% for items in listNames %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
@@ -52,7 +52,7 @@
                                                     </button>
                                                     <h4 class="modal-title">{% trans "You are doing to delete this list.." %}
                                                         <img ng-hide="cyberPanelLoading"
-                                                             src="{% static 'images/loading.gif' %}"></h4>
+                                                             src="{% static 'images/loading.gif' %}" alt=""></h4>
                                                 </div>
                                                 <div class="modal-body">
                                                     <p>{% trans 'Are you sure?' %}</p>
@@ -90,7 +90,7 @@
                                                     </button>
                                                     <h4 class="modal-title">{% trans "Verification Logs" %}
                                                         <img ng-hide="cyberPanelLoading"
-                                                             src="{% static 'images/loading.gif' %}"></h4>
+                                                             src="{% static 'images/loading.gif' %}" alt=""></h4>
                                                 </div>
                                                 <div class="modal-body">
                                                     <!------ List of records --------------->
@@ -117,7 +117,7 @@
                                                         <div class="col-sm-10">
                                                             <input placeholder="Search Logs..." name="dom" type="text"
                                                                    class="form-control" ng-model="searchLogs"
-                                                                   required>
+                                                                   required aria-label="Search Logs...">
                                                         </div>
 
                                                         <div style="margin-bottom: 1%;" class="col-sm-2">
@@ -192,9 +192,9 @@
                         <!---- Create Email List --->
 
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                            <label for="cpa11y-path" class="col-sm-3 control-label">{% trans "Path" %}</label>
                             <div class="col-sm-6">
-                                <input placeholder="Path to emails file (.txt and .csv accepted)" type="text"
+                                <input id="cpa11y-path" placeholder="Path to emails file (.txt and .csv accepted)" type="text"
                                        class="form-control" ng-model="path" required>
                             </div>
                         </div>
@@ -211,7 +211,7 @@
                         <div ng-hide="installationProgress" class="form-group">
                             <label class="col-sm-2 control-label"></label>
                             <div class="col-sm-7">
-                                <div class="alert alert-success text-center" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                <div class="alert alert-success text-center" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                     <h2>{$ currentStatus $}</h2>
                                 </div>
                             </div>
@@ -232,7 +232,7 @@
                         <div ng-hide="verificationStatus" class="form-group">
                             <label class="col-sm-2 control-label"></label>
                             <div class="col-sm-7">
-                                <div class="alert alert-success text-center" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                <div class="alert alert-success text-center" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                     <h2>{$ currentStatusVerification $}</h2>
                                 </div>
                             </div>
@@ -247,7 +247,7 @@
 
                             <div class="col-sm-10">
                                 <input placeholder="Search Emails..." ng-model="searchEmails" name="dom" type="text"
-                                       class="form-control" ng-model="domainNameCreate" required>
+                                       class="form-control" ng-model="domainNameCreate" required aria-label="Search Emails...">
                             </div>
 
                             <div style="margin-bottom: 1%;" class="col-sm-2">

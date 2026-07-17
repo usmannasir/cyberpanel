@@ -348,13 +348,13 @@
     <div class="modern-container" ng-controller="listFTPAccounts">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-list"></i>
+                <i class="fas fa-list" aria-hidden="true"></i>
                 {% trans "List FTP Accounts" %}
             </h1>
             <p class="page-subtitle">{% trans "View and manage FTP accounts, change passwords, and monitor usage" %}</p>
             <div class="header-actions">
                 <a href="{% url 'createFTPAccount' %}" class="btn-primary">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i>
                     {% trans "Create FTP Account" %}
                 </a>
             </div>
@@ -363,7 +363,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-folder-open"></i>
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
                     {% trans "FTP Account Management" %}
                     <span ng-show="ftpLoading" class="loading-spinner"></span>
                 </h2>
@@ -371,11 +371,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);" aria-hidden="true"></i>
                         <h3>{% trans "PureFTPD is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable PureFTPD to manage FTP accounts" %}</p>
                         <a href="{% url 'managePureFtpd' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable PureFTPD Now" %}
                         </a>
                     </div>
@@ -385,8 +385,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Domain" %}</label>
-                                        <select ng-change="fetchFTPAccounts()" ng-model="selectedDomain" class="form-control">
+                                        <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                                        <select id="cpa11y-select-domain" ng-change="fetchFTPAccounts()" ng-model="selectedDomain" class="form-control">
                                             <option value="">{% trans "Choose a domain..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -399,40 +399,40 @@
 
                         <!-- Change Password Section -->
                         <div ng-hide="changePasswordBox" class="password-section">
-                            <h3><i class="fas fa-key"></i> {% trans "Change Password for" %} {$ ftpUsername $}</h3>
+                            <h3><i class="fas fa-key" aria-hidden="true"></i> {% trans "Change Password for" %} {$ ftpUsername $}</h3>
                             
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "New Password" %}</label>
+                                        <label for="cpa11y-new-password" class="form-label">{% trans "New Password" %}</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" ng-model="ftpPassword" 
+                                            <input id="cpa11y-new-password" type="password" class="form-control" ng-model="ftpPassword" 
                                                    placeholder="{% trans 'Enter new password' %}" required>
                                             <button type="button" ng-click="generatePassword()" class="btn-secondary">
-                                                <i class="fas fa-dice"></i>
+                                                <i class="fas fa-dice" aria-hidden="true"></i>
                                                 {% trans "Generate" %}
                                             </button>
                                         </div>
                                     </div>
 
                                     <div ng-hide="generatedPasswordView" class="form-group">
-                                        <label class="form-label">{% trans "Generated Password" %}</label>
+                                        <label for="cpa11y-generated-password" class="form-label">{% trans "Generated Password" %}</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" ng-model="ftpPassword" readonly>
+                                            <input id="cpa11y-generated-password" type="text" class="form-control" ng-model="ftpPassword" readonly>
                                             <button type="button" ng-click="usePassword()" class="btn-secondary">
-                                                <i class="fas fa-check"></i>
+                                                <i class="fas fa-check" aria-hidden="true"></i>
                                                 {% trans "Use This Password" %}
                                             </button>
                                         </div>
                                         <small style="color: var(--text-secondary, #64748b); margin-top: 0.5rem; display: block; font-size: 0.875rem;">
-                                            <i class="fas fa-info-circle"></i>
+                                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                                             {% trans "Make sure to save this password in a secure location" %}
                                         </small>
                                     </div>
 
                                     <div style="margin-top: 1.5rem;">
                                         <button type="button" ng-click="changePasswordBtn()" class="btn-primary">
-                                            <i class="fas fa-save"></i>
+                                            <i class="fas fa-save" aria-hidden="true"></i>
                                             {% trans "Change Password" %}
                                         </button>
                                     </div>
@@ -456,12 +456,12 @@
                                 <tr ng-repeat="record in records track by $index">
                                     <td><strong ng-bind="record.id"></strong></td>
                                     <td>
-                                        <i class="fas fa-user-circle" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                                        <i class="fas fa-user-circle" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                                         <span ng-bind="record.user"></span>
                                     </td>
                                     <td>
                                         <span class="directory-badge">
-                                            <i class="fas fa-folder"></i>
+                                            <i class="fas fa-folder" aria-hidden="true"></i>
                                             <span ng-bind="record.dir"></span>
                                         </span>
                                     </td>
@@ -470,7 +470,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <button type="button" ng-click="changePassword(record.user)" class="btn-action">
-                                            <i class="fas fa-key"></i>
+                                            <i class="fas fa-key" aria-hidden="true"></i>
                                             {% trans "Change Password" %}
                                         </button>
                                     </td>
@@ -481,23 +481,23 @@
 
                         <!-- Alert Messages -->
                         <div ng-hide="notificationsBox" class="form-section">
-                            <div ng-hide="recordsFetched" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="recordsFetched" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Records successfully fetched for" %} <strong>{$ domainFeteched $}</strong>
                             </div>
 
-                            <div ng-hide="passwordChanged" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="passwordChanged" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Password changed for" %} <strong>{$ ftpUsername $}</strong>
                             </div>
 
-                            <div ng-hide="canNotChangePassword" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="canNotChangePassword" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {% trans "Cannot change password for" %} <strong>{$ ftpUsername $}</strong>. {% trans "Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>

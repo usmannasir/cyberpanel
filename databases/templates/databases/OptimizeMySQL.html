@@ -525,7 +525,7 @@
     <div class="page-header">
         <h1 class="page-title">
             <div class="mysql-icon">
-                <i class="fas fa-database" style="color: #5b5fcf; font-size: 1.75rem;"></i>
+                <i class="fas fa-database" style="color: #5b5fcf; font-size: 1.75rem;" aria-hidden="true"></i>
             </div>
             {% trans "Optimize MySQL" %}
         </h1>
@@ -533,7 +533,7 @@
         <div class="header-actions">
             <div class="ram-info-card">
                 <div class="ram-icon">
-                    <i class="fas fa-memory" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                    <i class="fas fa-memory" style="color: #f59e0b; font-size: 1.5rem;" aria-hidden="true"></i>
                 </div>
                 <div>
                     <p class="ram-label">{% trans "Detected RAM" %}</p>
@@ -546,22 +546,22 @@
     <!-- Action Buttons -->
     <div class="action-buttons">
         <button ng-click="generateRecommendations()" type="button" class="btn-success">
-            <i class="fas fa-magic"></i>
+            <i class="fas fa-magic" aria-hidden="true"></i>
             {% trans "Generate Recommendations" %}
         </button>
         <button ng-click="applyMySQLChanges()" type="button" class="btn-danger">
-            <i class="fas fa-save"></i>
+            <i class="fas fa-save" aria-hidden="true"></i>
             {% trans "Apply Changes" %}
         </button>
         <button ng-click="restartMySQL()" type="button" class="btn-info">
-            <i class="fas fa-sync-alt"></i>
+            <i class="fas fa-sync-alt" aria-hidden="true"></i>
             {% trans "Restart MySQL" %}
         </button>
     </div>
 
     <!-- Recommendation Info -->
     <div class="recommendation-info">
-        <i class="fas fa-info-circle"></i>
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
         <p>{% trans "Generate recommendations based on your server's RAM to optimize MySQL performance. Review the suggested configuration carefully before applying changes. Always backup your current configuration before making modifications." %}</p>
     </div>
 
@@ -569,7 +569,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-file-code"></i>
+                <i class="fas fa-file-code" aria-hidden="true"></i>
                 {% trans "Configuration Editor" %}
                 <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
             </h2>
@@ -580,7 +580,7 @@
                     <div class="config-editor">
                         <div class="editor-header">
                             <h3 class="editor-title">
-                                <i class="fas fa-file-alt"></i>
+                                <i class="fas fa-file-alt" aria-hidden="true"></i>
                                 {% trans "Current my.cnf" %}
                             </h3>
                             <div class="editor-status">
@@ -596,7 +596,7 @@
                     <div class="config-editor">
                         <div class="editor-header">
                             <h3 class="editor-title">
-                                <i class="fas fa-lightbulb"></i>
+                                <i class="fas fa-lightbulb" aria-hidden="true"></i>
                                 {% trans "Suggested Configuration" %}
                             </h3>
                             <div class="editor-status">
@@ -607,7 +607,7 @@
                         </div>
                         <textarea class="editor-textarea" 
                                   ng-model="suggestedContent"
-                                  placeholder="{% trans 'Click Generate Recommendations to generate optimized configuration...' %}"></textarea>
+                                  placeholder="{% trans 'Click Generate Recommendations to generate optimized configuration...' %}" aria-label="{% trans 'Click Generate Recommendations to generate optimized configuration...' %}"></textarea>
                     </div>
                 </div>
             </div>

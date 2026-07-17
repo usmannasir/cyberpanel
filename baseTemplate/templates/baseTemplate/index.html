@@ -2,7 +2,7 @@
 {% get_current_language as LANGUAGE_CODE %}
 {% with CP_VERSION=CYBERPANEL_FULL_VERSION|default:"2.4.8" %}
 <!DOCTYPE html>
-<html lang="en" ng-app="CyberCP">
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" ng-app="CyberCP">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,6 +30,8 @@
     
     <!-- Core Scripts -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}"></script>
+    <!-- ngAria: automatic role/tabindex/keyboard handling for ng-click on non-native elements (WCAG 2.1.1) -->
+    <script src="{% static 'baseTemplate/angular-aria.1.6.5.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <!-- Bootstrap JavaScript -->
 
@@ -70,6 +72,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-dark.css' %}?v={{ CP_VERSION }}">
 </head>
 <body>
+    <div id="cp-sr-live" class="sr-only" aria-live="polite"></div>
     <a href="#main-content" class="skip-link">{% trans "Skip to main content" %}</a>
     <!-- Header -->
     <header id="header">
@@ -88,14 +91,14 @@
         
         <div id="header-right">
             <div class="social-links">
-                <a href="https://web.facebook.com/groups/cyberpanel" target="_blank" rel="noopener" title="Facebook">
-                    <i class="fab fa-facebook-f"></i>
+                <a href="https://web.facebook.com/groups/cyberpanel" target="_blank" rel="noopener" title="Facebook" aria-label="{% trans 'CyberPanel Facebook group' %}">
+                    <i class="fab fa-facebook-f" aria-hidden="true"></i>
                 </a>
-                <a href="https://www.youtube.com/@Cyber-Panel" target="_blank" rel="noopener" title="YouTube">
-                    <i class="fab fa-youtube"></i>
+                <a href="https://www.youtube.com/@Cyber-Panel" target="_blank" rel="noopener" title="YouTube" aria-label="{% trans 'CyberPanel YouTube channel' %}">
+                    <i class="fab fa-youtube" aria-hidden="true"></i>
                 </a>
-                <a href="https://x.com/CyberPanel" target="_blank" rel="noopener" title="X (Twitter)">
-                    <i class="fab fa-twitter"></i>
+                <a href="https://x.com/CyberPanel" target="_blank" rel="noopener" title="X (Twitter)" aria-label="{% trans 'CyberPanel on X (Twitter)' %}">
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
                 </a>
             </div>
             <button id="cp-cmdk-trigger" class="theme-toggle" type="button" title="{% trans 'Search (Ctrl/Cmd-K)' %}" aria-label="{% trans 'Open command palette' %}">
@@ -186,7 +189,7 @@
 
         <div class="server-info" ng-controller="systemStatusInfo" ng-init="getSystemStatus()">
             <div class="server-icon">
-                <i class="fas fa-desktop"></i>
+                <i class="fas fa-desktop" aria-hidden="true"></i>
             </div>
             <div class="server-details">
                 <div class="info-line">
@@ -210,33 +213,33 @@
         <div class="section-header">{% trans "HOSTING" %}</div>
 
         <a href="{% url 'index' %}" class="menu-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-            <div class="icon-wrapper"><i class="fas fa-gauge-high"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-gauge-high" aria-hidden="true"></i></div>
             <span>{% trans "Dashboard" %}</span>
         </a>
         <a href="{% url 'listWebsites' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-globe"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-globe" aria-hidden="true"></i></div>
             <span>{% trans "Websites" %}</span>
         </a>
         <a href="{% url 'ListWPSites' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fab fa-wordpress"></i></div>
+            <div class="icon-wrapper"><i class="fab fa-wordpress" aria-hidden="true"></i></div>
             <span>{% trans "WordPress" %}</span>
         </a>
         <a href="{% url 'cpHub' 'email' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-envelope"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-envelope" aria-hidden="true"></i></div>
             <span>{% trans "Email" %}</span>
         </a>
         <a href="{% url 'cpHub' 'data' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-database"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-database" aria-hidden="true"></i></div>
             <span>{% trans "Databases & FTP" %}</span>
         </a>
         <a href="{% url 'cpHub' 'backups' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-shield-halved"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-shield-halved" aria-hidden="true"></i></div>
             <span>{% trans "Backups" %}</span>
         </a>
 
         <!-- Build Services: prominent, available to everyone -->
         <a href="{% url 'buildServices' %}" class="menu-item menu-item-promo">
-            <div class="icon-wrapper"><i class="fas fa-rocket"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-rocket" aria-hidden="true"></i></div>
             <span>{% trans "Build Services" %}</span>
             <span class="badge badge-promo">{% trans "HIRE US" %}</span>
         </a>
@@ -245,7 +248,7 @@
         <div class="section-header">{% trans "ACCOUNT" %}</div>
 
         <a href="{% url 'cpHub' 'access' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-users"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-users" aria-hidden="true"></i></div>
             <span>{% trans "Users & Plans" %}</span>
         </a>
 
@@ -254,15 +257,15 @@
         <div class="section-header">{% trans "ADMINISTRATION" %}</div>
 
         <a href="{% url 'cpHub' 'server' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-server"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-server" aria-hidden="true"></i></div>
             <span>{% trans "Server" %}</span>
         </a>
         <a href="{% url 'cpHub' 'security' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-shield"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-shield" aria-hidden="true"></i></div>
             <span>{% trans "Security" %}</span>
         </a>
         <a href="{% url 'cpHub' 'settings' %}" class="menu-item">
-            <div class="icon-wrapper"><i class="fas fa-sliders"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-sliders" aria-hidden="true"></i></div>
             <span>{% trans "Settings" %}</span>
         </a>
         {% endif %}
@@ -271,11 +274,11 @@
         <div class="section-header">{% trans "HELP" %}</div>
 
         <a href="https://platform.cyberpersons.com/" class="menu-item" target="_blank" rel="noopener">
-            <div class="icon-wrapper"><i class="fas fa-link"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-link" aria-hidden="true"></i></div>
             <span>{% trans "Connect" %}</span>
         </a>
         <a href="https://cyberpanel.net/KnowledgeBase/" class="menu-item" target="_blank" rel="noopener">
-            <div class="icon-wrapper"><i class="fas fa-comments"></i></div>
+            <div class="icon-wrapper"><i class="fas fa-comments" aria-hidden="true"></i></div>
             <span>{% trans "Community" %}</span>
         </a>
     </nav>
@@ -297,18 +300,19 @@
             <div class="cp-cmdk-search">
                 <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
                 <input type="text" id="cp-cmdk-input" autocomplete="off" spellcheck="false"
+                       role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="cp-cmdk-results"
                        placeholder="{% trans 'Search pages and actions…' %}" aria-label="{% trans 'Search pages and actions' %}">
                 <span class="cp-cmdk-hint">ESC</span>
             </div>
-            <div class="cp-cmdk-results" id="cp-cmdk-results"></div>
-            <div class="cp-cmdk-empty" id="cp-cmdk-empty" hidden>{% trans "No results" %}</div>
+            <div class="cp-cmdk-results" id="cp-cmdk-results" role="listbox" aria-label="{% trans 'Search results' %}"></div>
+            <div class="cp-cmdk-empty" id="cp-cmdk-empty" role="status" hidden>{% trans "No results" %}</div>
         </div>
     </div>
 
     <script>
     /* -------- Command palette: searches nav pages + quick actions -------- */
     (function () {
-        var overlay, input, results, emptyEl, items = [], filtered = [], activeIdx = 0;
+        var overlay, input, results, emptyEl, items = [], filtered = [], activeIdx = 0, lastFocus = null;
 
         // Comprehensive page index — the palette is the universal fast path now
         // that the sidebar is intentionally shallow. ACL-gated server-side.
@@ -433,6 +437,9 @@
                 }
                 var row = document.createElement('a');
                 row.className = 'cp-cmdk-item' + (i === activeIdx ? ' active' : '');
+                row.id = 'cp-cmdk-opt-' + i;
+                row.setAttribute('role', 'option');
+                row.setAttribute('aria-selected', i === activeIdx ? 'true' : 'false');
                 row.href = it.href;
                 if (it.target) { row.target = it.target; }
                 row.innerHTML = '<span class="cp-cmdk-ic"><i class="' + it.icon + '"></i></span>' +
@@ -444,16 +451,21 @@
         }
         function paintActive() {
             var rows = results.querySelectorAll('.cp-cmdk-item');
-            rows.forEach(function (r, i) { r.classList.toggle('active', i === activeIdx); });
+            rows.forEach(function (r, i) {
+                r.classList.toggle('active', i === activeIdx);
+                r.setAttribute('aria-selected', i === activeIdx ? 'true' : 'false');
+            });
+            input.setAttribute('aria-activedescendant', rows[activeIdx] ? rows[activeIdx].id : '');
         }
         function search(term) {
             term = term.trim().toLowerCase();
             if (!term) { filtered = items.slice(0, 8); }
             else { filtered = items.filter(function (it) { return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1; }); }
-            activeIdx = 0; render();
+            activeIdx = 0; render(); paintActive();
         }
         function open() {
             if (!items.length) { buildIndex(); }
+            lastFocus = document.activeElement;
             overlay.hidden = false;
             input.value = ''; search('');
             setTimeout(function () { input.focus(); }, 10);
@@ -462,6 +474,7 @@
         function close() {
             overlay.hidden = true;
             document.removeEventListener('keydown', onKey, true);
+            if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
         }
         function go() {
             var it = filtered[activeIdx];
@@ -474,6 +487,7 @@
             else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); paintActive(); scrollActive(); }
             else if (e.key === 'Enter') { e.preventDefault(); go(); }
             else if (e.key === 'Escape') { e.preventDefault(); close(); }
+            else if (e.key === 'Tab') { e.preventDefault(); input.focus(); }
         }
         function scrollActive() {
             var row = results.querySelectorAll('.cp-cmdk-item')[activeIdx];
@@ -554,10 +568,16 @@
         }
         
         // Copy IP function
+        function cpAnnounce(msg) {
+            var live = document.getElementById('cp-sr-live');
+            if (live) { live.textContent = ''; setTimeout(function () { live.textContent = msg; }, 50); }
+        }
+
         function copyIP(element, ip) {
             navigator.clipboard.writeText(ip).then(function() {
                 const tooltip = element.querySelector('.copy-tooltip');
                 tooltip.classList.add('show');
+                cpAnnounce('{% trans "IP address copied to clipboard" %}');
                 setTimeout(function() {
                     tooltip.classList.remove('show');
                 }, 2000);
@@ -722,6 +742,7 @@
                     }
                 });
                 emptyMsg.hidden = anyVisible;
+                cpAnnounce(anyVisible ? '{% trans "Menu filtered" %}' : '{% trans "No matching menu items" %}');
             }
             input.addEventListener('input', function () {
                 var t = input.value.trim().toLowerCase();

@@ -161,7 +161,7 @@
         <!-- Security Header -->
         <div class="security-header">
             <h1>
-                <i class="fas fa-shield-alt" style="margin-right: 12px; color: #10b981;"></i>
+                <i class="fas fa-shield-alt" style="margin-right: 12px; color: #10b981;" aria-hidden="true"></i>
                 {% trans "Security Information" %}
             </h1>
             <p>{% trans "Comprehensive security measures implemented in the Test Plugin" %}</p>
@@ -190,7 +190,7 @@
         <!-- Security Content -->
         <div class="security-content">
             <a href="{% url 'testPlugin:plugin_home' %}" class="back-button">
-                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 {% trans "Back to Plugin" %}
             </a>
 
@@ -199,22 +199,22 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-lock"></i>
+                        <i class="fas fa-lock" aria-hidden="true"></i>
                     </div>
                     {% trans "Authentication & Authorization" %}
                 </h3>
                 <p>{% trans "Multi-layered authentication and authorization system" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Admin-only access required for all plugin functions" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "User session validation on every request" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Privilege escalation protection" %}
                     </li>
                 </ul>
@@ -223,26 +223,26 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-tachometer-alt"></i>
+                        <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                     </div>
                     {% trans "Rate Limiting & Brute Force Protection" %}
                 </h3>
                 <p>{% trans "Advanced rate limiting to prevent brute force attacks" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "50 requests per 5-minute window per user" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "10 test button clicks per minute limit" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Automatic lockout after 5 failed attempts" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "15-minute lockout duration" %}
                     </li>
                 </ul>
@@ -251,22 +251,22 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-shield-virus"></i>
+                        <i class="fas fa-shield-virus" aria-hidden="true"></i>
                     </div>
                     {% trans "CSRF Protection" %}
                 </h3>
                 <p>{% trans "Cross-Site Request Forgery protection on all POST requests" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "HMAC-based CSRF token validation" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Token expiration after 1 hour" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "User-specific token generation" %}
                     </li>
                 </ul>
@@ -275,30 +275,30 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-filter"></i>
+                        <i class="fas fa-filter" aria-hidden="true"></i>
                     </div>
                     {% trans "Input Validation & Sanitization" %}
                 </h3>
                 <p>{% trans "Comprehensive input validation and sanitization" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Regex-based input validation" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "XSS attack prevention" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "SQL injection prevention" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Path traversal protection" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Maximum input length limits" %}
                     </li>
                 </ul>
@@ -307,26 +307,26 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-eye"></i>
+                        <i class="fas fa-eye" aria-hidden="true"></i>
                     </div>
                     {% trans "Security Monitoring & Logging" %}
                 </h3>
                 <p>{% trans "Comprehensive security event monitoring and logging" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "All security events logged with IP and user agent" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Failed attempt tracking and alerting" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Suspicious activity detection" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Real-time security event monitoring" %}
                     </li>
                 </ul>
@@ -335,34 +335,34 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-server"></i>
+                        <i class="fas fa-server" aria-hidden="true"></i>
                     </div>
                     {% trans "HTTP Security Headers" %}
                 </h3>
                 <p>{% trans "Comprehensive HTTP security headers for additional protection" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "X-Frame-Options: DENY (clickjacking protection)" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "X-Content-Type-Options: nosniff" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "X-XSS-Protection: 1; mode=block" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Content-Security-Policy (CSP)" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Strict-Transport-Security (HSTS)" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Referrer-Policy: strict-origin-when-cross-origin" %}
                     </li>
                 </ul>
@@ -371,26 +371,26 @@
             <div class="security-feature">
                 <h3>
                     <div class="security-icon success">
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-database" aria-hidden="true"></i>
                     </div>
                     {% trans "Data Isolation & Privacy" %}
                 </h3>
                 <p>{% trans "User data isolation and privacy protection" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "User-specific data isolation" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Logs restricted to user's own activities" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "Settings isolated per user" %}
                     </li>
                     <li>
-                        <div class="security-icon success"><i class="fas fa-check"></i></div>
+                        <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                         {% trans "No cross-user data access" %}
                     </li>
                 </ul>
@@ -399,30 +399,30 @@
             <div class="security-feature warning">
                 <h3>
                     <div class="security-icon warning">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     </div>
                     {% trans "Security Recommendations" %}
                 </h3>
                 <p>{% trans "Additional security measures you should implement" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon warning"><i class="fas fa-info"></i></div>
+                        <div class="security-icon warning"><i class="fas fa-info" aria-hidden="true"></i></div>
                         {% trans "Keep CyberPanel and all plugins updated" %}
                     </li>
                     <li>
-                        <div class="security-icon warning"><i class="fas fa-info"></i></div>
+                        <div class="security-icon warning"><i class="fas fa-info" aria-hidden="true"></i></div>
                         {% trans "Use strong, unique passwords" %}
                     </li>
                     <li>
-                        <div class="security-icon warning"><i class="fas fa-info"></i></div>
+                        <div class="security-icon warning"><i class="fas fa-info" aria-hidden="true"></i></div>
                         {% trans "Enable 2FA on your CyberPanel account" %}
                     </li>
                     <li>
-                        <div class="security-icon warning"><i class="fas fa-info"></i></div>
+                        <div class="security-icon warning"><i class="fas fa-info" aria-hidden="true"></i></div>
                         {% trans "Regularly review security logs" %}
                     </li>
                     <li>
-                        <div class="security-icon warning"><i class="fas fa-info"></i></div>
+                        <div class="security-icon warning"><i class="fas fa-info" aria-hidden="true"></i></div>
                         {% trans "Use HTTPS in production environments" %}
                     </li>
                 </ul>
@@ -431,22 +431,22 @@
             <div class="security-feature danger">
                 <h3>
                     <div class="security-icon danger">
-                        <i class="fas fa-bug"></i>
+                        <i class="fas fa-bug" aria-hidden="true"></i>
                     </div>
                     {% trans "Security Vulnerability Reporting" %}
                 </h3>
                 <p>{% trans "If you discover a security vulnerability, please report it responsibly" %}</p>
                 <ul class="security-list">
                     <li>
-                        <div class="security-icon danger"><i class="fas fa-envelope"></i></div>
+                        <div class="security-icon danger"><i class="fas fa-envelope" aria-hidden="true"></i></div>
                         {% trans "Email: security@cyberpanel.net" %}
                     </li>
                     <li>
-                        <div class="security-icon danger"><i class="fas fa-github"></i></div>
+                        <div class="security-icon danger"><i class="fas fa-github" aria-hidden="true"></i></div>
                         {% trans "GitHub: Create a private security issue" %}
                     </li>
                     <li>
-                        <div class="security-icon danger"><i class="fas fa-clock"></i></div>
+                        <div class="security-icon danger"><i class="fas fa-clock" aria-hidden="true"></i></div>
                         {% trans "Response time: Within 24-48 hours" %}
                     </li>
                 </ul>
@@ -457,35 +457,35 @@
             
             <ul class="security-list">
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "OWASP Top 10 vulnerabilities addressed" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No SQL injection vulnerabilities" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No XSS vulnerabilities" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No CSRF vulnerabilities" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No authentication bypass vulnerabilities" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No authorization bypass vulnerabilities" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No information disclosure vulnerabilities" %}
                 </li>
                 <li>
-                    <div class="security-icon success"><i class="fas fa-check"></i></div>
+                    <div class="security-icon success"><i class="fas fa-check" aria-hidden="true"></i></div>
                     {% trans "No path traversal vulnerabilities" %}
                 </li>
             </ul>

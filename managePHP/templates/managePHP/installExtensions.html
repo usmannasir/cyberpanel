@@ -502,7 +502,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="php-icon">
-                    <i class="fas fa-puzzle-piece fa-2x"></i>
+                    <i class="fas fa-puzzle-piece fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "Install PHP Extensions" %}
             </div>
@@ -511,7 +511,7 @@
             </p>
             {% if apache %}
             <a href="{% url 'installExtensions' %}?apache=apache" class="apache-link">
-                <i class="fas fa-feather"></i>
+                <i class="fas fa-feather" aria-hidden="true"></i>
                 {% trans "Manage Apache Extensions" %}
             </a>
             {% endif %}
@@ -522,7 +522,7 @@
     <div class="selector-panel">
         <div class="selector-header">
             <div class="selector-icon">
-                <i class="fas fa-code"></i>
+                <i class="fas fa-code" aria-hidden="true"></i>
             </div>
             <h3 class="selector-title">
                 {% trans "Select PHP Version" %}
@@ -532,8 +532,8 @@
         
         <div class="selector-form">
             <div class="form-group">
-                <label class="form-label">{% trans "PHP Version" %}</label>
-                <select ng-disabled="phpSelectionDisabled" 
+                <label for="cpa11y-php-version" class="form-label">{% trans "PHP Version" %}</label>
+                <select id="cpa11y-php-version" ng-disabled="phpSelectionDisabled" 
                         ng-change="fetchPHPDetails()"
                         ng-model="phpSelection" 
                         class="form-control select-control">
@@ -546,7 +546,7 @@
                     ng-click="fetchPHPDetails()" 
                     ng-disabled="loadingExtensions"
                     class="btn btn-primary">
-                <i class="fas fa-sync-alt"></i>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 {% trans "Load Extensions" %}
             </button>
         </div>
@@ -556,11 +556,11 @@
     <div ng-hide="availableExtensions" class="extensions-panel">
         <div class="controls-bar">
             <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
+                <i class="fas fa-search search-icon" aria-hidden="true"></i>
                 <input type="text" 
                        ng-model="extSearch" 
                        placeholder="{% trans 'Search extensions...' %}"
-                       class="search-input">
+                       class="search-input" aria-label="{% trans 'Search extensions...' %}">
             </div>
         </div>
         
@@ -587,7 +587,7 @@
                         <span class="status-badge" 
                               ng-class="{'status-installed': record.status=='Installed', 
                                          'status-not-installed': record.status=='Not-Installed'}">
-                            <i class="fas fa-circle" style="font-size: 0.5rem; color: inherit;"></i>
+                            <i class="fas fa-circle" style="font-size: 0.5rem; color: inherit;" aria-hidden="true"></i>
                             {$ record.status $}
                         </span>
                     </td>
@@ -596,14 +596,14 @@
                                 type="button"
                                 ng-click="installExt(record.extensionName)"
                                 class="btn btn-sm btn-install">
-                            <i class="fas fa-download"></i>
+                            <i class="fas fa-download" aria-hidden="true"></i>
                             {% trans "Install" %}
                         </button>
                         <button ng-disabled="record.status=='Not-Installed'" 
                                 type="button"
                                 ng-click="uninstallExt(record.extensionName)"
                                 class="btn btn-sm btn-uninstall">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                             {% trans "Uninstall" %}
                         </button>
                     </td>
@@ -617,7 +617,7 @@
         <div class="log-header">
             <div class="log-title">
                 <div class="log-icon">
-                    <i class="fas fa-terminal"></i>
+                    <i class="fas fa-terminal" aria-hidden="true"></i>
                 </div>
                 {% trans "Installation Log" %}
             </div>
@@ -625,7 +625,7 @@
                     type="button"
                     ng-click="fetchPHPDetails()"
                     class="btn btn-back">
-                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 {% trans "Go Back" %}
             </button>
         </div>
@@ -633,24 +633,24 @@
     </div>
     
     <!-- Error Messages -->
-    <div ng-hide="canNotFetch" class="alert alert-danger">
-        <i class="fas fa-exclamation-circle alert-icon"></i>
+    <div ng-hide="canNotFetch" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
         <div>
             <strong>{% trans "Error" %}:</strong> 
             {% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}
         </div>
     </div>
     
-    <div ng-hide="canNotPerform" class="alert alert-danger">
-        <i class="fas fa-exclamation-circle alert-icon"></i>
+    <div ng-hide="canNotPerform" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
         <div>
             <strong>{% trans "Error" %}:</strong> 
             {% trans "Cannot perform operation. Error message:" %} {$ errorMessage $}
         </div>
     </div>
     
-    <div ng-hide="couldNotConnect" class="alert alert-danger">
-        <i class="fas fa-exclamation-circle alert-icon"></i>
+    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
         <div>
             <strong>{% trans "Connection Error" %}:</strong> 
             {% trans "Could not connect. Please refresh this page." %}

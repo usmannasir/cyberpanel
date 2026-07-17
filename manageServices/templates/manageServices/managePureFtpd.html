@@ -341,14 +341,14 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-folder"></i>
+                    <i class="fas fa-folder" aria-hidden="true"></i>
                 </div>
                 {% trans "Manage FTP Server (Pure-FTPd)" %}
             </h1>
             <p>{% trans "Enable or disable FTP services for secure file transfers" %}</p>
             <div style="margin-top: 20px;">
                 <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/setup-ftp-account-in-cyberpanel/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Services Docs" %}
                 </a>
             </div>
@@ -365,7 +365,7 @@
                 
                 <div class="status-box">
                     <div class="status-icon">
-                        <i class="fas fa-server"></i>
+                        <i class="fas fa-server" aria-hidden="true"></i>
                     </div>
                     <h3 class="status-title">{% trans "FTP Service Status" %}</h3>
                     <p class="status-description">{% trans "Control your FTP server service with a single click" %}</p>
@@ -378,13 +378,13 @@
                 
                 <div style="text-align: center;">
                     <button type="button" ng-click="saveStatus('pureftpd')" class="save-btn">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save changes" %}
                     </button>
                 </div>
                 
                 <div class="port-info">
-                    <i class="fas fa-info-circle port-info-icon"></i>
+                    <i class="fas fa-info-circle port-info-icon" aria-hidden="true"></i>
                     <span class="port-info-text">
                         {% trans "Pure-FTPd runs on port" %} <strong>21</strong>. {% trans "Make sure this port is open in your firewall for FTP connections." %}
                     </span>
@@ -392,18 +392,18 @@
                 
                 <!-- Alert Messages -->
                 <div style="margin-top: 30px;">
-                    <div ng-hide="failedToFetch" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="failedToFetch" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Error message: " %} {$ errorMessage $}</span>
                     </div>
 
-                    <div ng-hide="changesApplied" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="changesApplied" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Changes successfully applied." %}</span>
                     </div>
 
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi alert-icon"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -416,7 +416,7 @@
                 <div class="info-grid">
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-lock"></i>
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Secure Transfers" %}</h3>
                         <p class="info-card-description">{% trans "Supports TLS/SSL encryption for secure file transfers" %}</p>
@@ -424,7 +424,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-users"></i>
+                            <i class="fas fa-users" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Virtual Users" %}</h3>
                         <p class="info-card-description">{% trans "Create isolated FTP accounts for each website" %}</p>
@@ -432,7 +432,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-tachometer-alt"></i>
+                            <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Bandwidth Control" %}</h3>
                         <p class="info-card-description">{% trans "Set upload and download speed limits per user" %}</p>
@@ -440,7 +440,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-shield-alt"></i>
+                            <i class="fas fa-shield-alt" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Chroot Jail" %}</h3>
                         <p class="info-card-description">{% trans "Users are restricted to their home directories" %}</p>
@@ -448,7 +448,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-chart-line" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Activity Logging" %}</h3>
                         <p class="info-card-description">{% trans "Comprehensive logging of all FTP activities" %}</p>
@@ -456,7 +456,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-cog"></i>
+                            <i class="fas fa-cog" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Passive Mode" %}</h3>
                         <p class="info-card-description">{% trans "Supports both active and passive FTP modes" %}</p>
@@ -466,8 +466,8 @@
         </div>
         {% else %}
         <div class="content-section">
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Only administrator can manage services." %}</span>
             </div>
         </div>

@@ -419,7 +419,7 @@
                 {% trans "Create Sub/Addon Domain" %}
                 <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/create-sub-addon-domain/" class="learn-more-link">
                     {% trans "Learn about Sub/Addon Domains" %}
-                    <i class="fas fa-external-link-alt"></i>
+                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                 </a>
             </h1>
             <p class="page-subtitle">{% trans "Create sub-domains or addon domains for your websites" %}</p>
@@ -427,8 +427,8 @@
 
         {% if defaultSite == 'NONE' %}
             <div class="content-card">
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
+                <div class="alert alert-warning" role="status">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     <span>{% trans "You need to create a website before creating Sub/Addon domains." %}</span>
                 </div>
             </div>
@@ -441,8 +441,8 @@
                 
                 <form name="websiteCreationForm">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Domain Type" %}</label>
-                        <select ng-change="WebsiteType()" ng-model="websitetype" class="form-control">
+                        <label for="cpa11y-domain-type" class="form-label">{% trans "Domain Type" %}</label>
+                        <select id="cpa11y-domain-type" ng-change="WebsiteType()" ng-model="websitetype" class="form-control">
                             <option>Sub Domain</option>
                             <option>Addon Domain</option>
                         </select>
@@ -451,8 +451,8 @@
                     <span style="display: none" id="defaultSite">{{ defaultSite }}</span>
                     
                     <div class="form-group" ng-hide="webselection">
-                        <label class="form-label">{% trans "Select Website" %}</label>
-                        <select ng-change="WebsiteSelection()" ng-model="masterDomain" class="form-control">
+                        <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                        <select id="cpa11y-select-website" ng-change="WebsiteSelection()" ng-model="masterDomain" class="form-control">
                             <option value="">-- {% trans "Select a website" %} --</option>
                             {% for items in websiteList %}
                                 <option>{{ items }}</option>
@@ -461,8 +461,8 @@
                     </div>
                     
                     <div ng-hide="DomainCreateForm" class="form-group">
-                        <label class="form-label">{% trans "Domain Name" %}</label>
-                        <input name="dom" type="text" class="form-control" ng-model="domainNameCreate" 
+                        <label for="cpa11y-domain-name" class="form-label">{% trans "Domain Name" %}</label>
+                        <input id="cpa11y-domain-name" name="dom" type="text" class="form-control" ng-model="domainNameCreate" 
                                placeholder="{% trans "subdomain.example.com or newdomain.com" %}" required>
                         <div ng-show="websiteCreationForm.dom.$error.pattern" class="field-error">
                             {% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}
@@ -474,13 +474,13 @@
                         <div class="input-group">
                             <span class="input-group-prefix">/home/{$ masterDomain $}/</span>
                             <input type="text" class="form-control" ng-model="docRootPath" 
-                                   placeholder="{% trans "public_html/subdomain" %}" required>
+                                   placeholder="{% trans "public_html/subdomain" %}" required aria-label="{% trans ">
                         </div>
                     </div>
                     
                     <div ng-hide="DomainCreateForm" class="form-group">
-                        <label class="form-label">{% trans "Select PHP Version" %}</label>
-                        <select ng-model="phpSelection" class="form-control">
+                        <label for="cpa11y-select-php-version" class="form-label">{% trans "Select PHP Version" %}</label>
+                        <select id="cpa11y-select-php-version" ng-model="phpSelection" class="form-control">
                             {% for php in phps %}
                                 <option>{{ php }}</option>
                             {% endfor %}
@@ -506,7 +506,7 @@
                                         OpenLiteSpeed + Apache (Backend) - 
                                         <a href="https://cyberpanel.net/KnowledgeBase/home/creating-website/" target="_blank">
                                             Premium Feature
-                                            <i class="fas fa-external-link-alt" style="font-size: 10px;"></i>
+                                            <i class="fas fa-external-link-alt" style="font-size: 10px;" aria-hidden="true"></i>
                                         </a>
                                         <small style="display: block; color: var(--text-secondary, #8893a7); font-weight: normal; margin-top: 4px;">
                                             {% trans "For Ubuntu 22, AlmaLinux 8 and AlmaLinux 9" %}
@@ -519,7 +519,7 @@
                     
                     <div ng-hide="DomainCreateForm" class="button-group">
                         <button type="button" ng-click="createDomain()" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>
+                            <i class="fas fa-plus" aria-hidden="true"></i>
                             {% trans "Create Domain" %}
                         </button>
                     </div>
@@ -537,18 +537,18 @@
                         <div id="installProgress" class="progress-bar-fill" style="width:0%"></div>
                     </div>
                     
-                    <div ng-hide="errorMessageBox" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle"></i>
+                    <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         <span>{% trans "Error message:" %} {$ errorMessage $}</span>
                     </div>
                     
-                    <div ng-hide="success" class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                    <div ng-hide="success" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Domain successfully created." %}</span>
                     </div>
                     
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-times-circle"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-times-circle" aria-hidden="true"></i>
                         <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -556,7 +556,7 @@
                 <div class="button-group">
                     <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
                             class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         {% trans "Go Back" %}
                     </button>
                 </div>

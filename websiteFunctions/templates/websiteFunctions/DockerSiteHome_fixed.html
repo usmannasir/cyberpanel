@@ -367,7 +367,7 @@
         <div class="docker-page-header">
             <div>
                 <h2>
-                    <i class="fa fa-cube"></i> {% trans "Containers" %}
+                    <i class="fa fa-cube" aria-hidden="true"></i> {% trans "Containers" %}
                     <span class="docker-loading" ng-hide="cyberpanelLoading">
                         <img src="{% static 'images/loading.gif' %}" alt="Loading">
                     </span>
@@ -375,7 +375,7 @@
                 <p>{% trans "Manage Docker containers on your server" %}</p>
             </div>
             <a class="create-docker-btn" href="{% url "CreateDockersite" %}">
-                <i class="fa fa-plus-circle"></i> {% trans "Create Container" %}
+                <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Create Container" %}
             </a>
         </div>
 
@@ -386,7 +386,7 @@
                     <div class="docker-container-card">
                         <div class="docker-container-header">
                             <h3>
-                                <i class="fa fa-cube"></i>
+                                <i class="fa fa-cube" aria-hidden="true"></i>
                                 <span>{$ web.name $}</span>
                                 <span class="docker-status" ng-class="{'running': web.status === 'running', 'stopped': web.status !== 'running'}">
                                     <span class="docker-status-indicator"></span>
@@ -395,13 +395,13 @@
                             </h3>
                             <div class="btn-group">
                                 <button class="docker-btn docker-btn-success" ng-click="startContainer(web.id, web.name)" ng-if="web.status !== 'running'">
-                                    <i class="fa fa-play"></i> Start
+                                    <i class="fa fa-play" aria-hidden="true"></i> Start
                                 </button>
                                 <button class="docker-btn docker-btn-warning" ng-click="restartContainer(web.id, web.name)" ng-if="web.status === 'running'">
-                                    <i class="fa fa-refresh"></i> Restart
+                                    <i class="fa fa-refresh" aria-hidden="true"></i> Restart
                                 </button>
                                 <button class="docker-btn docker-btn-danger" ng-click="stopContainer(web.id, web.name)" ng-if="web.status === 'running'">
-                                    <i class="fa fa-stop"></i> Stop
+                                    <i class="fa fa-stop" aria-hidden="true"></i> Stop
                                 </button>
                             </div>
                         </div>
@@ -410,7 +410,7 @@
                             <div class="docker-grid">
                                 <!-- Resource Usage -->
                                 <div class="docker-info-box">
-                                    <h4><i class="fa fa-bar-chart"></i> Resource Usage</h4>
+                                    <h4><i class="fa fa-bar-chart" aria-hidden="true"></i> Resource Usage</h4>
                                     <div style="margin-bottom: 15px;">
                                         <strong>Memory Usage:</strong> {$ web.memoryUsage $}
                                         <div class="docker-progress">
@@ -433,7 +433,7 @@
 
                                 <!-- Container Info -->
                                 <div class="docker-info-box">
-                                    <h4><i class="fa fa-info-circle"></i> Container Info</h4>
+                                    <h4><i class="fa fa-info-circle" aria-hidden="true"></i> Container Info</h4>
                                     <p><strong>ID:</strong> <code>{$ web.id.substring(0, 12) $}</code></p>
                                     <p><strong>Created:</strong> {$ web.created | date:'medium' $}</p>
                                     <p><strong>Uptime:</strong> {$ web.uptime $}</p>
@@ -443,10 +443,10 @@
                             <!-- Logs Section -->
                             <div class="docker-info-box">
                                 <h4>
-                                    <i class="fa fa-file-text-o"></i> Container Logs
+                                    <i class="fa fa-file-text-o" aria-hidden="true"></i> Container Logs
                                     <button class="docker-btn docker-btn-primary" style="float: right; padding: 5px 10px; font-size: 12px;" 
                                             ng-click="getcontainerlog(web.id)">
-                                        <i class="fa fa-refresh"></i> Refresh
+                                        <i class="fa fa-refresh" aria-hidden="true"></i> Refresh
                                     </button>
                                 </h4>
                                 <textarea class="docker-logs" readonly>{$ web.logs $}</textarea>
@@ -459,11 +459,11 @@
             <!-- Empty State -->
             <div ng-show="ContainerList.length === 0 && !cyberpanelLoading" class="docker-container-card">
                 <div class="docker-container-body" style="text-align: center; padding: 60px;">
-                    <i class="fa fa-cube" style="font-size: 48px; color: #e8e9ff; margin-bottom: 20px;"></i>
+                    <i class="fa fa-cube" style="font-size: 48px; color: #e8e9ff; margin-bottom: 20px;" aria-hidden="true"></i>
                     <h3 style="color: #2f3640; margin-bottom: 10px;">No Containers Found</h3>
                     <p style="color: #8893a7; margin-bottom: 20px;">Get started by creating your first Docker container.</p>
                     <a class="create-docker-btn" href="{% url "CreateDockersite" %}">
-                        <i class="fa fa-plus-circle"></i> {% trans "Create Container" %}
+                        <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Create Container" %}
                     </a>
                 </div>
             </div>

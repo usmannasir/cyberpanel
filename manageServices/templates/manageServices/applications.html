@@ -364,7 +364,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-puzzle-piece"></i>
+                    <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
                 </div>
                 {% trans "Manage Applications" %}
             </h1>
@@ -390,12 +390,12 @@
                             <h3 class="app-name">{{ service.name }}</h3>
                             {% if service.installed == 'Installed' %}
                             <span class="app-status installed">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Installed" %}
                             </span>
                             {% else %}
                             <span class="app-status not-installed">
-                                <i class="fas fa-times-circle"></i>
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Not Installed" %}
                             </span>
                             {% endif %}
@@ -419,7 +419,7 @@
                                 data-toggle="modal" 
                                 data-target="#settings"
                                 ng-click="removeInstall('{{ service.name }}', 'Removing')">
-                            <i class="fas fa-trash-alt"></i>
+                            <i class="fas fa-trash-alt" aria-hidden="true"></i>
                             {% trans "Remove" %}
                         </button>
                         {% else %}
@@ -428,7 +428,7 @@
                                 data-toggle="modal" 
                                 data-target="#settings"
                                 ng-click="removeInstall('{{ service.name }}', 'Installing')">
-                            <i class="fas fa-download"></i>
+                            <i class="fas fa-download" aria-hidden="true"></i>
                             {% trans "Install" %}
                         </button>
                         {% endif %}
@@ -439,7 +439,7 @@
             {% else %}
             <div class="empty-state">
                 <div class="empty-icon">
-                    <i class="fas fa-box-open"></i>
+                    <i class="fas fa-box-open" aria-hidden="true"></i>
                 </div>
                 <h3 class="empty-title">{% trans "No Applications Available" %}</h3>
                 <p class="empty-description">{% trans "There are no applications available at this time." %}</p>

@@ -536,18 +536,18 @@
     <div class="page-header">
         <h1 class="page-title">
             <div class="mysql-icon">
-                <i class="fas fa-database" style="color: var(--accent-color); font-size: 1.75rem;"></i>
+                <i class="fas fa-database" style="color: var(--accent-color); font-size: 1.75rem;" aria-hidden="true"></i>
             </div>
             {% trans "MySQL Manager" %}
         </h1>
         <p class="page-subtitle">{% trans "Monitor and manage your MySQL database performance" %}</p>
         <div class="header-actions">
             <a href="{% url 'OptimizeMySQL' %}" class="btn-primary">
-                <i class="fas fa-tachometer-alt"></i>
+                <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                 {% trans "Optimize MySQL" %}
             </a>
             <a href="{% url 'phpMyAdmin' %}" class="btn-secondary">
-                <i class="fas fa-external-link-alt"></i>
+                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                 {% trans "phpMyAdmin" %}
             </a>
         </div>
@@ -559,7 +559,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">{% trans "MySQL Uptime" %}</h3>
                 <div class="stat-icon" style="color: var(--info-color);">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-clock" aria-hidden="true"></i>
                 </div>
             </div>
             <p class="stat-value">{$ uptime $}</p>
@@ -570,7 +570,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">{% trans "Active Connections" %}</h3>
                 <div class="stat-icon" style="color: var(--success-color);">
-                    <i class="fas fa-link"></i>
+                    <i class="fas fa-link" aria-hidden="true"></i>
                 </div>
             </div>
             <p class="stat-value">{$ connections $}</p>
@@ -581,7 +581,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">{% trans "Slow Queries" %}</h3>
                 <div class="stat-icon" style="color: var(--warning-color);">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 </div>
             </div>
             <p class="stat-value">{$ Slow_queries $}</p>
@@ -593,7 +593,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-list-ul"></i>
+                <i class="fas fa-list-ul" aria-hidden="true"></i>
                 {% trans "Active MySQL Processes" %}
                 <span ng-show="cyberPanelLoading" class="loading-spinner"></span>
             </h2>
@@ -624,13 +624,13 @@
                             <td>
                                 <div class="process-user">
                                     <div class="user-icon">
-                                        <i class="fas fa-user"></i>
+                                        <i class="fas fa-user" aria-hidden="true"></i>
                                     </div>
                                     <span ng-bind="process.user"></span>
                                 </div>
                             </td>
                             <td>
-                                <i class="fas fa-database" style="color: var(--text-muted); margin-right: 0.5rem;"></i>
+                                <i class="fas fa-database" style="color: var(--text-muted); margin-right: 0.5rem;" aria-hidden="true"></i>
                                 <span ng-bind="process.database || 'None'"></span>
                             </td>
                             <td>
@@ -658,7 +658,7 @@
                         </tr>
                         <tr ng-if="processes.length === 0">
                             <td colspan="8" class="empty-state">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 <p>{% trans "No active processes found" %}</p>
                             </td>
                         </tr>

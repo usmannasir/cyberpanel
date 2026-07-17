@@ -340,7 +340,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-shield-virus"></i>
+                    <i class="fas fa-shield-virus" aria-hidden="true"></i>
                 </div>
                 {% trans "MailScanner" %}
             </h1>
@@ -352,35 +352,35 @@
         <div class="content-section">
             <div class="install-section">
                 <div class="install-icon">
-                    <i class="fas fa-download"></i>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                 </div>
                 <h2 class="install-title">{% trans "MailScanner is not installed" %}</h2>
                 <p class="install-description">{% trans "Install MailScanner to protect your email server with advanced content filtering and virus scanning" %}</p>
                 <button ng-click="installSpamAssassin()" class="install-btn">
-                    <i class="fas fa-download"></i>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                     {% trans "Install Now" %}
                 </button>
             </div>
 
             <!-- Installation Notifications -->
             <div ng-hide="SpamAssassinNotifyBox">
-                <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Failed to start installation. Error message:" %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-wifi alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect. Please refresh this page." %}</span>
                 </div>
 
-                <div ng-hide="installationFailed" class="alert alert-danger">
-                    <i class="fas fa-times-circle alert-icon"></i>
+                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                    <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Installation failed." %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="SpamAssassinSuccessfullyInstalled" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="SpamAssassinSuccessfullyInstalled" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "MailScanner successfully installed, refreshing page in 3 seconds..." %}</span>
                 </div>
             </div>
@@ -388,7 +388,7 @@
             <!-- Installation Log -->
             <div ng-hide="SpamAssassinInstallBox" class="install-log">
                 <div class="install-log-header">
-                    <i class="fas fa-terminal"></i>
+                    <i class="fas fa-terminal" aria-hidden="true"></i>
                     <h3 class="install-log-title">{% trans "Installation Progress" %}</h3>
                     <span ng-hide="SpamAssassinLoading" class="loading-spinner"></span>
                 </div>
@@ -400,12 +400,12 @@
         <div class="content-section">
             <div class="access-section">
                 <div class="access-icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                 </div>
                 <h2 class="access-title">{% trans "MailScanner is installed" %}</h2>
                 <p class="access-description">{% trans "Your MailScanner installation is ready. Click below to access the MailWatch interface." %}</p>
                 <a href="/mailwatch/mailscanner/" target="_blank" class="access-btn">
-                    <i class="fas fa-external-link-alt"></i>
+                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                     {% trans "Access MailWatch" %}
                 </a>
             </div>
@@ -414,28 +414,28 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-virus-slash"></i>
+                        <i class="fas fa-virus-slash" aria-hidden="true"></i>
                     </div>
                     <h3 class="feature-title">{% trans "Virus Protection" %}</h3>
                     <p class="feature-description">{% trans "Scans emails for viruses and malware" %}</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-filter"></i>
+                        <i class="fas fa-filter" aria-hidden="true"></i>
                     </div>
                     <h3 class="feature-title">{% trans "Content Filtering" %}</h3>
                     <p class="feature-description">{% trans "Advanced content filtering rules" %}</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
                     </div>
                     <h3 class="feature-title">{% trans "MailWatch Interface" %}</h3>
                     <p class="feature-description">{% trans "Monitor and manage email flow" %}</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-ban"></i>
+                        <i class="fas fa-ban" aria-hidden="true"></i>
                     </div>
                     <h3 class="feature-title">{% trans "Spam Detection" %}</h3>
                     <p class="feature-description">{% trans "Integrated spam detection engine" %}</p>

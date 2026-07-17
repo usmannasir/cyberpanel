@@ -592,7 +592,7 @@
     <div class="page-header">
         <div class="container-header">
             <div class="container-icon-large">
-                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 2.5rem;"></i>
+                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 2.5rem;" aria-hidden="true"></i>
             </div>
             <div class="container-title-section">
                 <h1 class="container-name" ng-init="cName='{{ name }}';status='{{ status }}'">
@@ -604,7 +604,7 @@
                 </h1>
                 <div class="container-id">Container ID: {{ cid|slice:":12" }}...</div>
             </div>
-            <i class="fas fa-sync refresh-icon" ng-click="refreshStatus()" title="{% trans 'Refresh status' %}"></i>
+            <i class="fas fa-sync refresh-icon" ng-click="refreshStatus()" title="{% trans 'Refresh status' %}" aria-hidden="true"></i>
         </div>
     </div>
 
@@ -618,7 +618,7 @@
                     <div class="stat-subtitle">{% trans "Processing Power" %}</div>
                 </div>
                 <div class="stat-icon">
-                    <i class="fas fa-microchip"></i>
+                    <i class="fas fa-microchip" aria-hidden="true"></i>
                 </div>
             </div>
             <div class="progress-bar">
@@ -634,7 +634,7 @@
                     <div class="stat-subtitle">{% trans "RAM Utilization" %}</div>
                 </div>
                 <div class="stat-icon">
-                    <i class="fas fa-memory"></i>
+                    <i class="fas fa-memory" aria-hidden="true"></i>
                 </div>
             </div>
             <div class="progress-bar">
@@ -650,7 +650,7 @@
                     <div class="stat-subtitle">{% trans "Allocated Memory" %}</div>
                 </div>
                 <div class="stat-icon">
-                    <i class="fas fa-server"></i>
+                    <i class="fas fa-server" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -660,7 +660,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 {% trans "Container Information" %}
             </h2>
         </div>
@@ -690,10 +690,10 @@
                     <div class="info-label">{% trans "Start on Boot" %}</div>
                     <div class="info-value" ng-init="startOnReboot={{ startOnReboot }}">
                         <span ng-if="startOnReboot" style="color: var(--success-color, #10b981);">
-                            <i class="fas fa-check-circle"></i> {% trans "Enabled" %}
+                            <i class="fas fa-check-circle" aria-hidden="true"></i> {% trans "Enabled" %}
                         </span>
                         <span ng-if="!startOnReboot" style="color: var(--text-secondary, #64748b);">
-                            <i class="fas fa-times-circle"></i> {% trans "Disabled" %}
+                            <i class="fas fa-times-circle" aria-hidden="true"></i> {% trans "Disabled" %}
                         </span>
                     </div>
                 </div>
@@ -705,60 +705,60 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-cogs"></i>
+                <i class="fas fa-cogs" aria-hidden="true"></i>
                 {% trans "Container Actions" %}
-                <img id="actionLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
+                <img id="actionLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner" alt="">
             </h2>
         </div>
         <div class="card-body">
             <div class="action-grid">
                 <div class="action-btn" ng-click="cAction('start')" ng-disabled="status=='running'">
-                    <i class="fas fa-play action-icon" style="color: var(--success-color, #10b981);"></i>
+                    <i class="fas fa-play action-icon" style="color: var(--success-color, #10b981);" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Start" %}</div>
                 </div>
                 
                 <div class="action-btn" ng-click="cAction('restart')" ng-disabled="status!='running'">
-                    <i class="fas fa-sync-alt action-icon" style="color: var(--info-color, #3b82f6);"></i>
+                    <i class="fas fa-sync-alt action-icon" style="color: var(--info-color, #3b82f6);" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Restart" %}</div>
                 </div>
                 
                 <div class="action-btn" ng-click="cAction('stop')" ng-disabled="status!='running'">
-                    <i class="fas fa-stop action-icon" style="color: var(--warning-color, #f59e0b);"></i>
+                    <i class="fas fa-stop action-icon" style="color: var(--warning-color, #f59e0b);" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Stop" %}</div>
                 </div>
                 
                 <div class="action-btn" ng-click="cAction('pause')" ng-disabled="status!='running'">
-                    <i class="fas fa-pause action-icon" style="color: #8b5cf6;"></i>
+                    <i class="fas fa-pause action-icon" style="color: #8b5cf6;" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Pause" %}</div>
                 </div>
                 
                 <div class="action-btn danger" ng-click="cRemove()">
-                    <i class="fas fa-trash action-icon"></i>
+                    <i class="fas fa-trash action-icon" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Remove" %}</div>
                 </div>
                 
                 <div class="action-btn" data-toggle="modal" data-target="#settings">
-                    <i class="fas fa-sliders-h action-icon" style="color: #6366f1;"></i>
+                    <i class="fas fa-sliders-h action-icon" style="color: #6366f1;" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Settings" %}</div>
                 </div>
                 
                 <div class="action-btn" ng-click="recreate()">
-                    <i class="fas fa-redo action-icon" style="color: #06b6d4;"></i>
+                    <i class="fas fa-redo action-icon" style="color: #06b6d4;" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Recreate" %}</div>
                 </div>
                 
                 <a href="/docker/exportContainer/?name={{ name }}" class="action-btn">
-                    <i class="fas fa-download action-icon" style="color: var(--success-color, #10b981);"></i>
+                    <i class="fas fa-download action-icon" style="color: var(--success-color, #10b981);" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Export" %}</div>
                 </a>
                 
                 <div class="action-btn" ng-click="showTop()" ng-disabled="loadingTop">
-                    <i class="fas fa-terminal action-icon" style="color: #ec4899;"></i>
+                    <i class="fas fa-terminal action-icon" style="color: #ec4899;" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Processes" %}</div>
                 </div>
                 
                 <div class="action-btn" ng-click="showCommandModal()" ng-disabled="status!='running'">
-                    <i class="fas fa-code action-icon" style="color: #10b981;"></i>
+                    <i class="fas fa-code action-icon" style="color: #10b981;" aria-hidden="true"></i>
                     <div class="action-text">{% trans "Run Command" %}</div>
                 </div>
             </div>
@@ -769,18 +769,18 @@
     <div class="terminal-card" ng-init="loadLogs('{{ name }}')">
         <div class="terminal-header">
             <h3 class="terminal-title">
-                <i class="fas fa-file-alt"></i>
+                <i class="fas fa-file-alt" aria-hidden="true"></i>
                 {% trans "Container Logs" %}
             </h3>
             <div class="terminal-controls">
                 <button class="terminal-btn" ng-click="loadLogs('{{ name }}')">
-                    <i class="fas fa-sync"></i> {% trans "Refresh" %}
+                    <i class="fas fa-sync" aria-hidden="true"></i> {% trans "Refresh" %}
                 </button>
                 <button class="terminal-btn" onclick="document.querySelector('.terminal-content').scrollTop = 0">
-                    <i class="fas fa-arrow-up"></i> {% trans "Top" %}
+                    <i class="fas fa-arrow-up" aria-hidden="true"></i> {% trans "Top" %}
                 </button>
                 <button class="terminal-btn" onclick="document.querySelector('.terminal-content').scrollTop = document.querySelector('.terminal-content').scrollHeight">
-                    <i class="fas fa-arrow-down"></i> {% trans "Bottom" %}
+                    <i class="fas fa-arrow-down" aria-hidden="true"></i> {% trans "Bottom" %}
                 </button>
             </div>
         </div>
@@ -793,7 +793,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-cog" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Container Settings" %}
                     </h4>
                     <button type="button" class="close" data-dismiss="modal" 
@@ -802,9 +802,9 @@
                 <div class="modal-body">
                     <form name="containerSettingsForm" class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Memory Limit (MB)" %}</label>
+                            <label for="cpa11y-memory-limit-mb" class="col-sm-3 control-label">{% trans "Memory Limit (MB)" %}</label>
                             <div class="col-sm-6">
-                                <input name="memory" type="number" class="form-control" ng-model="memory" required>
+                                <input id="cpa11y-memory-limit-mb" name="memory" type="number" class="form-control" ng-model="memory" required>
                             </div>
                         </div>
 
@@ -866,9 +866,9 @@
                         <!-- Docker Compose Information -->
                         <div class="form-group">
                             <div class="col-sm-12">
-                                <div class="alert alert-info docker-compose-info">
+                                <div class="alert alert-info docker-compose-info" role="status">
                                     <div class="compose-header">
-                                        <i class="fas fa-info-circle"></i>
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                                         <strong>{% trans "Docker Compose Environment Variables" %}</strong>
                                     </div>
                                     <div class="compose-benefits">
@@ -880,13 +880,13 @@
                                         </ul>
                                         <div class="compose-actions">
                                             <button type="button" class="btn btn-primary btn-sm" ng-click="generateDockerCompose()">
-                                                <i class="fas fa-file-code"></i> {% trans "Generate docker-compose.yml" %}
+                                                <i class="fas fa-file-code" aria-hidden="true"></i> {% trans "Generate docker-compose.yml" %}
                                             </button>
                                             <button type="button" class="btn btn-success btn-sm" ng-click="generateEnvFile()">
-                                                <i class="fas fa-file-alt"></i> {% trans "Generate .env file" %}
+                                                <i class="fas fa-file-alt" aria-hidden="true"></i> {% trans "Generate .env file" %}
                                             </button>
                                             <button type="button" class="btn btn-warning btn-sm" ng-click="showComposeHelp()">
-                                                <i class="fas fa-question-circle"></i> {% trans "How to use" %}
+                                                <i class="fas fa-question-circle" aria-hidden="true"></i> {% trans "How to use" %}
                                             </button>
                                         </div>
                                     </div>
@@ -905,14 +905,14 @@
                                     <label class="col-sm-3 control-label" ng-show="$first">
                                         {% trans "Environment Variables" %}
                                     </label>
-                                    <label class="col-sm-3" ng-hide="$first"></label>
+                                    <label for="cpa11y-field" class="col-sm-3" ng-hide="$first"></label>
                                     <div class="col-sm-3">
-                                        <input type="text" class="form-control" ng-disabled="!envConfirmation" 
+                                        <input id="cpa11y-field" type="text" class="form-control" ng-disabled="!envConfirmation" 
                                                ng-model="envList[$index].name" placeholder="Variable name" required>
                                     </div>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" ng-disabled="!envConfirmation" 
-                                               ng-model="envList[$index].value" placeholder="Value" required>
+                                               ng-model="envList[$index].value" placeholder="Value" required aria-label="Value">
                                     </div>
                                 </div>
                             </div>
@@ -921,7 +921,7 @@
                                 <div class="col-sm-offset-3 col-sm-9">
                                     <button type="button" class="btn btn-info" ng-disabled="!envConfirmation" 
                                             ng-click="addEnvField()">
-                                        <i class="fas fa-plus"></i> {% trans "Add Environment Variable" %}
+                                        <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Environment Variable" %}
                                     </button>
                                 </div>
                             </div>
@@ -943,14 +943,14 @@
                                                 </p>
                                             </div>
                                             <div style="display: flex; gap: 0.5rem;">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="importEnvFromContainer()" title="{% trans 'Import from another container' %}">
-                                                    <i class="fas fa-download"></i>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="importEnvFromContainer()" title="{% trans 'Import from another container' %}" aria-label="{% trans 'Import from another container' %}">
+                                                    <i class="fas fa-download" aria-hidden="true"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-outline-success" ng-click="exportEnvToFile()" title="{% trans 'Export to .env file' %}">
-                                                    <i class="fas fa-file-export"></i>
+                                                <button type="button" class="btn btn-sm btn-outline-success" ng-click="exportEnvToFile()" title="{% trans 'Export to .env file' %}" aria-label="{% trans 'Export to .env file' %}">
+                                                    <i class="fas fa-file-export" aria-hidden="true"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="copyEnvToClipboard()" title="{% trans 'Copy to clipboard' %}">
-                                                    <i class="fas fa-copy"></i>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="copyEnvToClipboard()" title="{% trans 'Copy to clipboard' %}" aria-label="{% trans 'Copy to clipboard' %}">
+                                                    <i class="fas fa-copy" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -961,10 +961,10 @@
                                                       placeholder="DATABASE_URL=postgresql://user:pass@localhost/db&#10;API_KEY=your-secret-key&#10;DEBUG=true&#10;PORT=3000"
                                                       style="width: 100%; height: 150px; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.875rem; resize: vertical;"
                                                       ng-disabled="!envConfirmation"
-                                                      ng-init="advancedEnvText = ''"></textarea>
+                                                      ng-init="advancedEnvText = ''" aria-label="DATABASE_URL=postgresql://user:pass@localhost/db&#10;API_KEY=your-secret-key&#10;DEBUG=true&#10;PORT=3000"></textarea>
                                             
                                             <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
-                                                <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                                                <i class="fas fa-info-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                                 <span ng-show="advancedEnvCount > 0">{% trans "Parsed" %} {{ advancedEnvCount }} {% trans "environment variables" %}</span>
                                                 <span ng-show="advancedEnvCount === 0">{% trans "No environment variables detected" %}</span>
                                             </div>
@@ -991,16 +991,16 @@
                             <div class="form-group">
                                 <div class="col-sm-offset-3 col-sm-4">
                                     <input type="text" class="form-control" ng-disabled="!envConfirmation" 
-                                           ng-model="volList[$index].dest" placeholder="Container path" required>
+                                           ng-model="volList[$index].dest" placeholder="Container path" required aria-label="Container path">
                                 </div>
                                 <div class="col-sm-4">
                                     <input type="text" class="form-control" ng-disabled="!envConfirmation" 
-                                           ng-model="volList[$index].src" placeholder="Host path" required>
+                                           ng-model="volList[$index].src" placeholder="Host path" required aria-label="Host path">
                                 </div>
                                 <div class="col-sm-1" ng-show="$last">
                                     <button class="btn btn-danger" type="button" ng-disabled="!envConfirmation" 
                                             ng-click="removeVolField()">
-                                        <i class="fas fa-times"></i>
+                                        <i class="fas fa-times" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
@@ -1010,19 +1010,19 @@
                             <div class="col-sm-offset-3 col-sm-9">
                                 <button type="button" class="btn btn-info" ng-disabled="!envConfirmation" 
                                         ng-click="addVolField()">
-                                    <i class="fas fa-plus"></i> {% trans "Add Volume Mapping" %}
+                                    <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Volume Mapping" %}
                                 </button>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <img id="containerSettingLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
+                    <img id="containerSettingLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner" alt="">
                     <button type="button" class="btn btn-primary" ng-disabled="savingSettings" ng-click="saveSettings()">
-                        <i class="fas fa-save"></i> {% trans "Save Settings" %}
+                        <i class="fas fa-save" aria-hidden="true"></i> {% trans "Save Settings" %}
                     </button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">
-                        <i class="fas fa-times"></i> {% trans "Cancel" %}
+                        <i class="fas fa-times" aria-hidden="true"></i> {% trans "Cancel" %}
                     </button>
                 </div>
             </div>
@@ -1035,7 +1035,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-terminal" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-terminal" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Container Processes" %}
                     </h4>
                     <button type="button" class="close" data-dismiss="modal" 
@@ -1059,10 +1059,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" ng-click="showTop()">
-                        <i class="fas fa-sync"></i> {% trans "Refresh" %}
+                        <i class="fas fa-sync" aria-hidden="true"></i> {% trans "Refresh" %}
                     </button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">
-                        <i class="fas fa-times"></i> {% trans "Close" %}
+                        <i class="fas fa-times" aria-hidden="true"></i> {% trans "Close" %}
                     </button>
                 </div>
             </div>
@@ -1075,7 +1075,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-code" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-code" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Execute Command" %}
                     </h4>
                     <button type="button" class="close" data-dismiss="modal" 
@@ -1084,7 +1084,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="commandInput" class="control-label">
-                            <i class="fas fa-terminal" style="margin-right: 0.5rem;"></i>
+                            <i class="fas fa-terminal" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Command to execute" %}
                         </label>
                         <div class="input-group">
@@ -1097,8 +1097,8 @@
                                    style="font-family: 'Courier New', monospace;">
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary" type="button" ng-click="executeCommand()" ng-disabled="!commandToExecute || executingCommand">
-                                    <i class="fas fa-play" ng-hide="executingCommand"></i>
-                                    <i class="fas fa-spinner fa-spin" ng-show="executingCommand"></i>
+                                    <i class="fas fa-play" ng-hide="executingCommand" aria-hidden="true"></i>
+                                    <i class="fas fa-spinner fa-spin" ng-show="executingCommand" aria-hidden="true"></i>
                                     {% trans "Execute" %}
                                 </button>
                             </div>
@@ -1111,7 +1111,7 @@
                     <!-- Command History -->
                     <div class="form-group" ng-show="commandHistory.length > 0">
                         <label class="control-label">
-                            <i class="fas fa-history" style="margin-right: 0.5rem;"></i>
+                            <i class="fas fa-history" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Command History" %}
                         </label>
                         <div class="command-history">
@@ -1128,7 +1128,7 @@
                     <!-- Output Display -->
                     <div class="form-group" ng-show="commandOutput">
                         <label class="control-label">
-                            <i class="fas fa-terminal" style="margin-right: 0.5rem;"></i>
+                            <i class="fas fa-terminal" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Command Output" %}
                         </label>
                         <div class="terminal-output" style="background: #1a202c; color: #e2e8f0; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.875rem; max-height: 300px; overflow-y: auto; white-space: pre-wrap;">
@@ -1142,15 +1142,15 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" ng-click="executeCommand()" ng-disabled="!commandToExecute || executingCommand">
-                        <i class="fas fa-play" ng-hide="executingCommand"></i>
-                        <i class="fas fa-spinner fa-spin" ng-show="executingCommand"></i>
+                        <i class="fas fa-play" ng-hide="executingCommand" aria-hidden="true"></i>
+                        <i class="fas fa-spinner fa-spin" ng-show="executingCommand" aria-hidden="true"></i>
                         {% trans "Execute Command" %}
                     </button>
                     <button type="button" class="btn btn-secondary" ng-click="clearOutput()" ng-disabled="!commandOutput">
-                        <i class="fas fa-trash"></i> {% trans "Clear Output" %}
+                        <i class="fas fa-trash" aria-hidden="true"></i> {% trans "Clear Output" %}
                     </button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">
-                        <i class="fas fa-times"></i> {% trans "Close" %}
+                        <i class="fas fa-times" aria-hidden="true"></i> {% trans "Close" %}
                     </button>
                 </div>
             </div>
@@ -1164,7 +1164,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">
-                    <i class="fas fa-download"></i>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                     {% trans "Import Environment Variables from Container" %}
                 </h4>
                 <button type="button" class="close" ng-click="showContainerImportModal = false">
@@ -1173,13 +1173,13 @@
             </div>
             <div class="modal-body">
                 <div ng-show="importLoading" class="text-center">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>{% trans "Loading containers..." %}</p>
                 </div>
                 
                 <div ng-hide="importLoading">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
+                    <div class="alert alert-info" role="status">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         {% trans "Select a container to import its environment variables. This will replace your current environment variables." %}
                     </div>
                     
@@ -1190,7 +1190,7 @@
                              ng-class="{'selected': selectedImportContainer && selectedImportContainer.name === container.name}">
                             <div class="container-info">
                                 <div class="container-name">
-                                    <i class="fas fa-cube"></i>
+                                    <i class="fas fa-cube" aria-hidden="true"></i>
                                     {{ container.name }}
                                 </div>
                                 <div class="container-details">
@@ -1200,27 +1200,27 @@
                                     </span>
                                 </div>
                                 <div class="container-env-count" ng-if="container.envCount">
-                                    <i class="fas fa-list"></i>
+                                    <i class="fas fa-list" aria-hidden="true"></i>
                                     {{ container.envCount }} {% trans "environment variables" %}
                                 </div>
                             </div>
                             <div class="container-actions">
                                 <button class="btn btn-primary btn-sm" ng-click="selectContainerForImport(container)">
-                                    <i class="fas fa-download"></i>
+                                    <i class="fas fa-download" aria-hidden="true"></i>
                                     {% trans "Import" %}
                                 </button>
                             </div>
                         </div>
                         
                         <div ng-if="importContainers.length === 0" class="text-center text-muted">
-                            <i class="fas fa-info-circle fa-2x"></i>
+                            <i class="fas fa-info-circle fa-2x" aria-hidden="true"></i>
                             <p>{% trans "No other containers found to import from" %}</p>
                         </div>
                     </div>
                 </div>
                 
                 <div ng-show="importEnvLoading" class="text-center">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>{% trans "Importing environment variables..." %}</p>
                 </div>
             </div>

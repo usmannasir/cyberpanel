@@ -19,7 +19,7 @@
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans "Update Mysql" %} <img ng-hide="dbLoading"
-                                                    src="{% static 'images/loading.gif' %}">
+                                                    src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -27,9 +27,9 @@
                           class="form-horizontal bordered-row panel-body">
 
                         <div ng-hide="installform" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Mysql version" %} </label>
+                            <label for="cpa11y-mysql-version" class="col-sm-3 control-label">{% trans "Mysql version" %} </label>
                             <div class="col-sm-6">
-                                <select ng-model="version" class="form-control" required>
+                                <select id="cpa11y-mysql-version" ng-model="version" class="form-control" required>
                                     {% for version in mysqlversions %}
                                         <option>{{ version }}</option>
                                     {% endfor %}
@@ -50,20 +50,20 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-6">
 
-                                <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
                                     <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage
                                         $}</p>
                                 </div>
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                     <p>{% trans "Could not connect. Please refresh this page." %} </p>
                                 </div>
 
-                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
                                     <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
                                 </div>
 
-                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
+                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success" role="status">
                                     <p>{% trans "Upgrading Done successfully." %}</p>
                                 </div>
                             </div>
@@ -76,8 +76,8 @@
                                 <div class="form-group">
                                     <div class="col-sm-12 text-center">
                                         <h3><img
-                                                src="{% static 'firewall/icons/firewall.png' %}"> {% trans "In winter we must protect each other.." %}
-                                            <img ng-hide="modsecLoading" src="/static/images/loading.gif"></h3>
+                                                src="{% static 'firewall/icons/firewall.png' %}" alt=""> {% trans "In winter we must protect each other.." %}
+                                            <img ng-hide="modsecLoading" src="/static/images/loading.gif" alt=""></h3>
                                     </div>
                                     <div style="margin-top: 2%;" class="col-sm-12">
                                         <textarea ng-model="requestData" rows="15"

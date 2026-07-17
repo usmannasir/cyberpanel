@@ -266,8 +266,8 @@
                 <p class="page-subtitle">{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
             </div>
             {% if Notecheck %}
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div class="alert alert-warning" role="status">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 <span>{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %} <a href="https://cyberpanel.net/KnowledgeBase/home/upgrading-cyberpanel/">Learn how to upgrade CyberPanel.</a></span>
             </div>
             {% endif %}
@@ -282,11 +282,11 @@
                 
                 <div class="btn-group">
                     <button type="button" ng-click="upgrade()" class="btn btn-primary">
-                        <i class="fas fa-arrow-up"></i>
+                        <i class="fas fa-arrow-up" aria-hidden="true"></i>
                         {% trans "Upgrade CyberPanel to selected branch (Beta)" %}
                     </button>
                     <button type="button" onclick="refreshPage()" class="btn btn-secondary">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         {% trans "Refresh page" %}
                     </button>
                 </div>

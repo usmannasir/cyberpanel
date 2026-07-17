@@ -378,7 +378,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-server"></i>
+                    <i class="fas fa-server" aria-hidden="true"></i>
                 </div>
                 {% trans "Services Status" %}
                 <span ng-show="actionLoader" class="loading-spinner"></span>
@@ -399,7 +399,7 @@
                     <div class="service-info">
                         <h3 class="service-name">{{ serverName }}</h3>
                         <span class="service-status" ng-class="{'running': olsStatus === 'Running', 'stopped': olsStatus === 'Stopped'}">
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle" aria-hidden="true"></i>
                             <span ng-bind="olsStatus">{% trans "Stopped" %}</span>
                         </span>
                     </div>
@@ -413,7 +413,7 @@
                                 ng-show="olsStart" 
                                 ng-click="serviceAction('lsws','start')"
                                 title="{% trans 'Start' %}">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             {% trans "Start" %}
                         </button>
                         <button type="button" 
@@ -422,7 +422,7 @@
                                 ng-show="olsStop" 
                                 ng-click="serviceAction('lsws','stop')"
                                 title="{% trans 'Stop' %}">
-                            <i class="fas fa-pause"></i>
+                            <i class="fas fa-pause" aria-hidden="true"></i>
                             {% trans "Stop" %}
                         </button>
                         <button type="button" 
@@ -430,7 +430,7 @@
                                 ng-disabled="btnDisable" 
                                 ng-click="serviceAction('lsws','restart')"
                                 title="{% trans 'Restart' %}">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Restart" %}
                         </button>
                     </div>
@@ -444,7 +444,7 @@
                     <div class="service-info">
                         <h3 class="service-name">MariaDB</h3>
                         <span class="service-status" ng-class="{'running': sqlStatus === 'Running', 'stopped': sqlStatus === 'Stopped'}">
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle" aria-hidden="true"></i>
                             <span ng-bind="sqlStatus">{% trans "Stopped" %}</span>
                         </span>
                     </div>
@@ -458,7 +458,7 @@
                                 ng-show="sqlStart" 
                                 ng-click="serviceAction('mysql','start')"
                                 title="{% trans 'Start' %}">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             {% trans "Start" %}
                         </button>
                         <button type="button" 
@@ -467,7 +467,7 @@
                                 ng-show="sqlStop" 
                                 ng-click="serviceAction('mysql','stop')"
                                 title="{% trans 'Stop' %}">
-                            <i class="fas fa-pause"></i>
+                            <i class="fas fa-pause" aria-hidden="true"></i>
                             {% trans "Stop" %}
                         </button>
                         <button type="button" 
@@ -475,7 +475,7 @@
                                 ng-disabled="btnDisable" 
                                 ng-click="serviceAction('mysql','restart')"
                                 title="{% trans 'Restart' %}">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Restart" %}
                         </button>
                     </div>
@@ -489,7 +489,7 @@
                     <div class="service-info">
                         <h3 class="service-name">PowerDNS</h3>
                         <span class="service-status" ng-class="{'running': dnsStatus === 'Running', 'stopped': dnsStatus === 'Stopped'}">
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle" aria-hidden="true"></i>
                             <span ng-bind="dnsStatus">{% trans "Stopped" %}</span>
                         </span>
                     </div>
@@ -503,7 +503,7 @@
                                 ng-show="dnsStart" 
                                 ng-click="serviceAction('pdns','start')"
                                 title="{% trans 'Start' %}">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             {% trans "Start" %}
                         </button>
                         <button type="button" 
@@ -512,7 +512,7 @@
                                 ng-show="dnsStop" 
                                 ng-click="serviceAction('pdns','stop')"
                                 title="{% trans 'Stop' %}">
-                            <i class="fas fa-pause"></i>
+                            <i class="fas fa-pause" aria-hidden="true"></i>
                             {% trans "Stop" %}
                         </button>
                         <button type="button" 
@@ -520,7 +520,7 @@
                                 ng-disabled="btnDisable" 
                                 ng-click="serviceAction('pdns','restart')"
                                 title="{% trans 'Restart' %}">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Restart" %}
                         </button>
                     </div>
@@ -534,7 +534,7 @@
                     <div class="service-info">
                         <h3 class="service-name">PureFTPd</h3>
                         <span class="service-status" ng-class="{'running': ftpStatus === 'Running', 'stopped': ftpStatus === 'Stopped'}">
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle" aria-hidden="true"></i>
                             <span ng-bind="ftpStatus">{% trans "Stopped" %}</span>
                         </span>
                     </div>
@@ -548,7 +548,7 @@
                                 ng-show="ftpStart" 
                                 ng-click="serviceAction('pure-ftpd','start')"
                                 title="{% trans 'Start' %}">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             {% trans "Start" %}
                         </button>
                         <button type="button" 
@@ -557,7 +557,7 @@
                                 ng-show="ftpStop" 
                                 ng-click="serviceAction('pure-ftpd','stop')"
                                 title="{% trans 'Stop' %}">
-                            <i class="fas fa-pause"></i>
+                            <i class="fas fa-pause" aria-hidden="true"></i>
                             {% trans "Stop" %}
                         </button>
                         <button type="button" 
@@ -565,7 +565,7 @@
                                 ng-disabled="btnDisable" 
                                 ng-click="serviceAction('pure-ftpd','restart')"
                                 title="{% trans 'Restart' %}">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Restart" %}
                         </button>
                     </div>
@@ -580,7 +580,7 @@
                     <div class="service-info">
                         <h3 class="service-name">Docker</h3>
                         <span class="service-status" ng-class="{'running': dockerStatus === 'Running', 'stopped': dockerStatus === 'Stopped'}">
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle" aria-hidden="true"></i>
                             <span ng-bind="dockerStatus">{% trans "Stopped" %}</span>
                         </span>
                     </div>
@@ -594,7 +594,7 @@
                                 ng-show="dockerStart" 
                                 ng-click="serviceAction('docker','start')"
                                 title="{% trans 'Start' %}">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             {% trans "Start" %}
                         </button>
                         <button type="button" 
@@ -603,7 +603,7 @@
                                 ng-show="dockerStop" 
                                 ng-click="serviceAction('docker','stop')"
                                 title="{% trans 'Stop' %}">
-                            <i class="fas fa-pause"></i>
+                            <i class="fas fa-pause" aria-hidden="true"></i>
                             {% trans "Stop" %}
                         </button>
                         <button type="button" 
@@ -611,7 +611,7 @@
                                 ng-disabled="btnDisable" 
                                 ng-click="serviceAction('docker','restart')"
                                 title="{% trans 'Restart' %}">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Restart" %}
                         </button>
                     </div>
@@ -621,16 +621,16 @@
 
             <!-- Alert Messages -->
             <div class="alerts-container">
-                <div ng-show="ActionFailed" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-show="ActionFailed" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Action Failed" %}</span>
                 </div>
-                <div ng-show="ActionSuccessfull" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-show="ActionSuccessfull" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Action Completed Successfully" %}</span>
                 </div>
-                <div ng-show="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-wifi alert-icon"></i>
+                <div ng-show="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
                 </div>
             </div>

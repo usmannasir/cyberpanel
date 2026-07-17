@@ -573,17 +573,17 @@
     <div class="modern-container" ng-controller="listEmails">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-envelope-open-text"></i>
+                <i class="fas fa-envelope-open-text" aria-hidden="true"></i>
                 {% trans "List Email Accounts" %}
             </h1>
             <p class="page-subtitle">{% trans "Manage email accounts, change passwords, and configure mail clients" %}</p>
             <div class="header-actions">
                 <a href="{% url 'createEmailAccount' %}" class="btn-primary">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i>
                     {% trans "Create Email" %}
                 </a>
                 <a target="_blank" rel="noopener" href="https://cyberpanel.net/KnowledgeBase/home/email-debugger-cyberpanel/" class="btn-secondary">
-                    <i class="fas fa-bug"></i>
+                    <i class="fas fa-bug" aria-hidden="true"></i>
                     {% trans "Debug Email Issues" %}
                 </a>
             </div>
@@ -592,7 +592,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-list"></i>
+                    <i class="fas fa-list" aria-hidden="true"></i>
                     {% trans "Email Accounts" %}
                     <span ng-show="cyberpanelLoading" class="loading-spinner"></span>
                 </h2>
@@ -600,11 +600,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);" aria-hidden="true"></i>
                         <h3>{% trans "Postfix is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable Postfix to manage email accounts" %}</p>
                         <a href="{% url 'managePostfix' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable Postfix Now" %}
                         </a>
                     </div>
@@ -614,8 +614,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Domain" %}</label>
-                                        <select ng-change="populateCurrentRecords()" ng-model="selectedDomain" class="form-control" aria-label="{% trans 'Select Domain' %}">
+                                        <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                                        <select id="cpa11y-select-domain" ng-change="populateCurrentRecords()" ng-model="selectedDomain" class="form-control" aria-label="{% trans 'Select Domain' %}">
                                             <option value="">{% trans "Choose a domain..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -628,15 +628,15 @@
 
                         <div ng-hide="emailsAccounts">
                             <!-- SSL Warning -->
-                            <div ng-hide="mailConfigured==1" class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle"></i>
+                            <div ng-hide="mailConfigured==1" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                                 <div>
                                     <p style="margin: 0;">{% trans "SSL for email is not configured properly. You may get self-signed errors in mail clients like Outlook and Thunderbird." %}</p>
                                     <a href="https://community.cyberpanel.net/t/6-self-signed-ssl-error-on-outlook-thunderbird/207" target="_blank" rel="noopener" style="color: var(--danger-text, #991b1b); text-decoration: underline;">{% trans "Learn more" %}</a>
                                 </div>
                             </div>
                             <button type="button" ng-hide="mailConfigured==1" ng-click='fixMailSSL()' class="btn-primary mb-4">
-                                <i class="fas fa-wrench"></i>
+                                <i class="fas fa-wrench" aria-hidden="true"></i>
                                 {% trans "Fix SSL Now" %}
                             </button>
 
@@ -644,7 +644,7 @@
                                 <!-- Mail Configuration Details -->
                                 <div class="col-md-4">
                                     <div class="info-card">
-                                        <h4><i class="fas fa-cog"></i> {% trans "Mail Client Configuration" %}</h4>
+                                        <h4><i class="fas fa-cog" aria-hidden="true"></i> {% trans "Mail Client Configuration" %}</h4>
                                         
                                         <table class="config-table">
                                             <thead>
@@ -753,7 +753,7 @@
                                         <tbody>
                                             <tr ng-repeat="record in records track by $index">
                                                 <td>
-                                                    <i class="fas fa-user-circle email-icon"></i>
+                                                    <i class="fas fa-user-circle email-icon" aria-hidden="true"></i>
                                                     <strong class="email-address" ng-bind="record.email"></strong>
                                                 </td>
                                                 <td>
@@ -768,7 +768,7 @@
                                                            class="btn-action"
                                                            href="#"
                                                            title="">
-                                                            <i class="fas fa-key"></i>
+                                                            <i class="fas fa-key" aria-hidden="true"></i>
                                                             <span>{% trans 'Change Password' %}</span>
                                                         </a>
                                                         <a ng-click="confirmDeleteEmail(record.email)"
@@ -777,7 +777,7 @@
                                                            title=""
                                                            data-toggle="modal" 
                                                            data-target="#deleteConfirmModal">
-                                                            <i class="fas fa-trash"></i>
+                                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                                             <span>{% trans 'Delete' %}</span>
                                                         </a>
                                                         
@@ -795,18 +795,18 @@
                                                                     <div class="modal-body">
                                                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
                                                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                                                <label class="col-sm-3 control-label">{% trans "Email" %}</label>
+                                                                                <label for="cpa11y-email" class="col-sm-3 control-label">{% trans "Email" %}</label>
                                                                                 <div class="col-sm-6">
-                                                                                    <input name="name" type="text" class="form-control" ng-model="email" readonly aria-label="Email address">
+                                                                                    <input id="cpa11y-email" name="name" type="text" class="form-control" ng-model="email" readonly aria-label="Email address">
                                                                                 </div>
                                                                             </div>
 
                                                                             <hr>
 
                                                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                                                <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                                                                <label for="cpa11y-password" class="col-sm-3 control-label">{% trans "Password" %}</label>
                                                                                 <div class="col-sm-6">
-                                                                                    <input type="password" class="form-control" ng-model="$parent.password" aria-label="Password">
+                                                                                    <input id="cpa11y-password" type="password" class="form-control" ng-model="$parent.password" aria-label="Password">
                                                                                 </div>
                                                                             </div>
                                                                         </form>
@@ -847,13 +847,13 @@
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                         <h4 class="modal-title">
-                            <i class="fas fa-exclamation-triangle" style="color: var(--danger-color, #ef4444);"></i>
+                            <i class="fas fa-exclamation-triangle" style="color: var(--danger-color, #ef4444);" aria-hidden="true"></i>
                             {% trans "Confirm Email Deletion" %}
                         </h4>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
+                        <div class="alert alert-warning" role="status">
+                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                             <div>
                                 <strong>{% trans "Warning: This action cannot be undone!" %}</strong>
                                 <p style="margin: 0.5rem 0 0 0;">{% trans "This will permanently delete the email account and all associated data including emails, folders, and settings." %}</p>
@@ -867,11 +867,11 @@
                                 class="btn btn-danger" 
                                 ng-click="deleteEmailAccountFinal(emailToDelete)"
                                 data-dismiss="modal">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                             {% trans "Yes, Delete Email" %}
                         </button>
                         <button type="button" class="btn btn-default" data-dismiss="modal">
-                            <i class="fas fa-times"></i>
+                            <i class="fas fa-times" aria-hidden="true"></i>
                             {% trans "Cancel" %}
                         </button>
                     </div>

@@ -470,27 +470,27 @@
     <div class="default-ns-container">
         <div class="default-ns-header">
             <h1 class="default-ns-title">
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-cog" aria-hidden="true"></i>
                 {% trans "Configure Default Nameservers" %}
             </h1>
             <p class="default-ns-subtitle">
                 {% trans "Set up default nameservers that will be automatically assigned to all new DNS zones created on this server" %}
             </p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/manage-dns-in-cyberpanel/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "DNS Documentation" %}
             </a>
         </div>
 
         {% if not status %}
         <div class="powerdns-disabled">
-            <i class="fas fa-exclamation-circle"></i>
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <h3>{% trans "PowerDNS is disabled" %}</h3>
             <p style="margin-bottom: 24px; color: var(--text-secondary, #64748b);">
                 {% trans "You need to enable PowerDNS to configure default nameservers" %}
             </p>
             <a href="{% url 'managePowerDNS' %}" class="enable-btn">
-                <i class="fas fa-power-off"></i>
+                <i class="fas fa-power-off" aria-hidden="true"></i>
                 {% trans "Enable PowerDNS" %}
             </a>
         </div>
@@ -499,7 +499,7 @@
         <!-- Info Section -->
         <div class="info-section">
             <div class="info-icon">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
             </div>
             <div class="info-content">
                 <div class="info-title">{% trans "About Default Nameservers" %}</div>
@@ -524,7 +524,7 @@
                     <div class="nameserver-card">
                         <div class="nameserver-header">
                             <div class="nameserver-icon">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                             </div>
                             <div class="nameserver-info">
                                 <div class="nameserver-label">{% trans "Required" %}</div>
@@ -535,7 +535,7 @@
                                ng-model="firstNS" 
                                ng-init="firstNS='{{ firstNS }}'"
                                placeholder="ns1.example.com" 
-                               required>
+                               required aria-label="ns1.example.com">
                         <div class="nameserver-hint">{% trans "Main nameserver for DNS resolution" %}</div>
                     </div>
 
@@ -543,7 +543,7 @@
                     <div class="nameserver-card">
                         <div class="nameserver-header">
                             <div class="nameserver-icon">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                             </div>
                             <div class="nameserver-info">
                                 <div class="nameserver-label">{% trans "Required" %}</div>
@@ -554,7 +554,7 @@
                                ng-model="secondNS" 
                                ng-init="secondNS='{{ secondNS }}'"
                                placeholder="ns2.example.com" 
-                               required>
+                               required aria-label="ns2.example.com">
                         <div class="nameserver-hint">{% trans "Backup nameserver for redundancy" %}</div>
                     </div>
 
@@ -562,7 +562,7 @@
                     <div class="nameserver-card">
                         <div class="nameserver-header">
                             <div class="nameserver-icon">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                             </div>
                             <div class="nameserver-info">
                                 <div class="nameserver-label">
@@ -575,7 +575,7 @@
                         <input type="text" class="nameserver-input" 
                                ng-model="thirdNS" 
                                ng-init="thirdNS='{{ thirdNS }}'"
-                               placeholder="ns3.example.com (optional)">
+                               placeholder="ns3.example.com (optional)" aria-label="ns3.example.com (optional)">
                         <div class="nameserver-hint">{% trans "Additional nameserver for extra reliability" %}</div>
                     </div>
 
@@ -583,7 +583,7 @@
                     <div class="nameserver-card">
                         <div class="nameserver-header">
                             <div class="nameserver-icon">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                             </div>
                             <div class="nameserver-info">
                                 <div class="nameserver-label">
@@ -596,7 +596,7 @@
                         <input type="text" class="nameserver-input" 
                                ng-model="forthNS" 
                                ng-init="forthNS='{{ forthNS }}'"
-                               placeholder="ns4.example.com (optional)">
+                               placeholder="ns4.example.com (optional)" aria-label="ns4.example.com (optional)">
                         <div class="nameserver-hint">{% trans "Maximum redundancy configuration" %}</div>
                     </div>
                 </div>
@@ -606,19 +606,19 @@
                     <div class="preview-title">{% trans "Current Configuration" %}</div>
                     <div class="preview-list">
                         <div class="preview-item" ng-show="firstNS">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             <span>{$ firstNS $}</span>
                         </div>
                         <div class="preview-item" ng-show="secondNS">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             <span>{$ secondNS $}</span>
                         </div>
                         <div class="preview-item" ng-show="thirdNS">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             <span>{$ thirdNS $}</span>
                         </div>
                         <div class="preview-item" ng-show="forthNS">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             <span>{$ forthNS $}</span>
                         </div>
                     </div>
@@ -628,7 +628,7 @@
                 <div class="form-actions">
                     <button type="button" ng-click="saveNSConfigurations()" class="btn-save" 
                             ng-disabled="!firstNS || !secondNS">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Configuration" %}
                         <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
                     </button>

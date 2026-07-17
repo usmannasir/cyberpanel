@@ -513,7 +513,7 @@
 
         {% if Deleted %}
             <div class="alert alert-success" role="alert">
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
                 <div>
                     <strong>Success!</strong> Website successfully deleted.
                 </div>
@@ -523,7 +523,7 @@
 
         {% if LPError %}
             <div class="alert alert-danger" role="alert">
-                <i class="fas fa-exclamation-circle"></i>
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                 <div>
                     <strong>Error!</strong> {{ LPMessage }}
                 </div>
@@ -534,12 +534,12 @@
         <div class="page-header">
             <h1>
                 <span class="docker-icon">
-                    <i class="fab fa-docker"></i>
+                    <i class="fab fa-docker" aria-hidden="true"></i>
                 </span>
                 {% trans "Docker Sites" %}
             </h1>
             <a href="{% url "CreateDockersite" %}" class="create-docker-btn">
-                <i class="fas fa-plus-circle"></i>
+                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                 {% trans "Create Docker App" %}
             </a>
             <p>{% trans "Launch, manage, modify and delete Docker applications from your server." %}</p>
@@ -547,11 +547,11 @@
 
         <div class="search-filter-section">
             <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
+                <i class="fas fa-search search-icon" aria-hidden="true"></i>
                 <input ng-change="searchWebsites()" 
                        placeholder="{% trans 'Search Docker sites...' %}" 
                        ng-model="patternAdded" 
-                       type="text">
+                       type="text" aria-label="{% trans 'Search Docker sites...' %}">
             </div>
             <div class="records-select">
                 <select ng-model="recordsToShow" 
@@ -565,19 +565,19 @@
         </div>
 
         <div ng-show="cyberPanelLoading" class="loading-container">
-            <img src="{% static 'images/loading.gif' %}" class="loading-spinner">
+            <img src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             <p>Loading Docker sites...</p>
         </div>
 
         <div ng-hide="cyberPanelLoading">
             <div ng-if="!WebSitesList || WebSitesList.length === 0" class="empty-state">
                 <div class="empty-state-icon">
-                    <i class="fab fa-docker"></i>
+                    <i class="fab fa-docker" aria-hidden="true"></i>
                 </div>
                 <h3>{% trans "No Docker Sites Found" %}</h3>
                 <p>{% trans "Get started by creating your first Docker application." %}</p>
                 <a href="{% url "CreateDockersite" %}" class="create-docker-btn">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i>
                     {% trans "Create Docker App" %}
                 </a>
             </div>
@@ -588,12 +588,12 @@
                         <h2>
                             <a href="http://{$ web.domain $}" target="_blank" title="Visit Site">
                                 {$ web.domain $}
-                                <i class="fas fa-external-link-alt external-link"></i>
+                                <i class="fas fa-external-link-alt external-link" aria-hidden="true"></i>
                             </a>
                         </h2>
                     </div>
                     <a href="/docker/manage/{$ web.id $}/app" class="manage-btn">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                         {% trans "Manage" %}
                     </a>
                 </div>
@@ -602,7 +602,7 @@
                     <div class="details-grid">
                         <div class="detail-item">
                             <div class="detail-icon">
-                                <i class="fas fa-circle"></i>
+                                <i class="fas fa-circle" aria-hidden="true"></i>
                             </div>
                             <div class="detail-content">
                                 <div class="detail-label">Status</div>
@@ -616,7 +616,7 @@
 
                         <div class="detail-item">
                             <div class="detail-icon">
-                                <i class="fas fa-network-wired"></i>
+                                <i class="fas fa-network-wired" aria-hidden="true"></i>
                             </div>
                             <div class="detail-content">
                                 <div class="detail-label">IP Address</div>
@@ -626,7 +626,7 @@
 
                         <div class="detail-item">
                             <div class="detail-icon">
-                                <i class="fas fa-microchip"></i>
+                                <i class="fas fa-microchip" aria-hidden="true"></i>
                             </div>
                             <div class="detail-content">
                                 <div class="detail-label">CPU Usage</div>
@@ -636,7 +636,7 @@
 
                         <div class="detail-item">
                             <div class="detail-icon">
-                                <i class="fas fa-memory"></i>
+                                <i class="fas fa-memory" aria-hidden="true"></i>
                             </div>
                             <div class="detail-content">
                                 <div class="detail-label">Memory Usage</div>
@@ -646,7 +646,7 @@
 
                         <div class="detail-item">
                             <div class="detail-icon">
-                                <i class="fas fa-cube"></i>
+                                <i class="fas fa-cube" aria-hidden="true"></i>
                             </div>
                             <div class="detail-content">
                                 <div class="detail-label">Package</div>
@@ -656,7 +656,7 @@
 
                         <div class="detail-item">
                             <div class="detail-icon">
-                                <i class="fas fa-user-shield"></i>
+                                <i class="fas fa-user-shield" aria-hidden="true"></i>
                             </div>
                             <div class="detail-content">
                                 <div class="detail-label">Owner</div>
@@ -671,7 +671,7 @@
                             ng-click="DeleteDockersite('{% url 'ListDockerSites' %}?DeleteID=', web.id)"
                             data-toggle="modal" 
                             data-target="#deleteDockersite">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
                         {% trans "Delete" %}
                     </button>
                 </div>
@@ -683,7 +683,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h4 class="modal-title">
-                                <i class="fas fa-exclamation-triangle" style="color: #dc2626; margin-right: 8px;"></i>
+                                <i class="fas fa-exclamation-triangle" style="color: #dc2626; margin-right: 8px;" aria-hidden="true"></i>
                                 Delete Docker App
                             </h4>
                             <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -706,8 +706,8 @@
                 </div>
             </div>
 
-            <div id="listFail" class="alert alert-danger" style="display: none;">
-                <i class="fas fa-exclamation-circle"></i>
+            <div id="listFail" class="alert alert-danger" style="display: none;" role="alert">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                 <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
             </div>
 

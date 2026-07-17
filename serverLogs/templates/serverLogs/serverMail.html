@@ -412,7 +412,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="mail-icon">
-                    <i class="fas fa-envelope fa-2x"></i>
+                    <i class="fas fa-envelope fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "Server Mail Configuration" %}
             </div>
@@ -420,7 +420,7 @@
                 {% trans "Configure how CyberPanel sends notifications and error emails" %}
             </p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/email-in-cyberpanel/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Mail Documentation" %}
             </a>
         </div>
@@ -431,7 +431,7 @@
         <div class="panel-header">
             <div class="panel-title">
                 <div class="panel-icon">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" aria-hidden="true"></i>
                 </div>
                 {% trans "SMTP Configuration" %}
             </div>
@@ -445,7 +445,7 @@
         <div class="form-section">
             <!-- Info Box -->
             <div class="info-box">
-                <i class="fas fa-info-circle info-icon"></i>
+                <i class="fas fa-info-circle info-icon" aria-hidden="true"></i>
                 <div class="info-text">
                     {% trans "Configure your mail settings below. Choose between the default mail system or configure custom SMTP settings for better deliverability." %}
                 </div>
@@ -455,15 +455,15 @@
             <div class="mailer-type-selector">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
                     </div>
                     <h3 class="section-title">{% trans "Mail Delivery Method" %}</h3>
                 </div>
                 
                 <div class="form-row">
-                    <label class="form-label">{% trans "Mailer Type" %}</label>
+                    <label for="cpa11y-mailer-type" class="form-label">{% trans "Mailer Type" %}</label>
                     <div>
-                        <select ng-change="mailerSettings()" 
+                        <select id="cpa11y-mailer-type" ng-change="mailerSettings()" 
                                 ng-model="mailer" 
                                 class="form-control select-control">
                             <option value="Default">{% trans "Default (System Mail)" %}</option>
@@ -477,15 +477,15 @@
             <div ng-hide="installationDetailsForm" class="smtp-fields">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-server"></i>
+                        <i class="fas fa-server" aria-hidden="true"></i>
                     </div>
                     <h3 class="section-title">{% trans "SMTP Server Details" %}</h3>
                 </div>
                 
                 <div class="form-row">
-                    <label class="form-label">{% trans "SMTP Host" %}</label>
+                    <label for="cpa11y-smtp-host" class="form-label">{% trans "SMTP Host" %}</label>
                     <div>
-                        <input type="text" 
+                        <input id="cpa11y-smtp-host" type="text" 
                                class="form-control" 
                                ng-model="smtpHost" 
                                ng-init="smtpHost='{{ smtpHost }}'"
@@ -495,9 +495,9 @@
                 </div>
                 
                 <div class="form-row">
-                    <label class="form-label">{% trans "Port" %}</label>
+                    <label for="cpa11y-port" class="form-label">{% trans "Port" %}</label>
                     <div>
-                        <input type="text" 
+                        <input id="cpa11y-port" type="text" 
                                class="form-control" 
                                ng-model="smtpPort" 
                                ng-init="smtpPort='{{ smtpPort }}'"
@@ -507,9 +507,9 @@
                 </div>
                 
                 <div class="form-row">
-                    <label class="form-label">{% trans "Username" %}</label>
+                    <label for="cpa11y-username" class="form-label">{% trans "Username" %}</label>
                     <div>
-                        <input type="text" 
+                        <input id="cpa11y-username" type="text" 
                                class="form-control" 
                                ng-model="smtpUserName" 
                                ng-init="smtpUserName='{{ smtpUserName }}'"
@@ -519,9 +519,9 @@
                 </div>
                 
                 <div class="form-row">
-                    <label class="form-label">{% trans "Password" %}</label>
+                    <label for="cpa11y-password" class="form-label">{% trans "Password" %}</label>
                     <div>
-                        <input type="password" 
+                        <input id="cpa11y-password" type="password" 
                                class="form-control" 
                                ng-model="smtpPassword" 
                                ng-init="smtpPassword='{{ smtpPassword }}'"
@@ -536,7 +536,7 @@
                 <button type="button" 
                         ng-click="saveSMTPSettings()" 
                         class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <i class="fas fa-save" aria-hidden="true"></i>
                     {% trans "Save Configuration" %}
                 </button>
             </div>

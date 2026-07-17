@@ -459,7 +459,7 @@
             <!-- Warning Box -->
             <div class="warning-box">
                 <div class="warning-box-title">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     {% trans "Important Notice" %}
                 </div>
                 <div class="warning-box-content">
@@ -470,7 +470,7 @@
             <!-- Info Box -->
             <div class="info-box">
                 <div class="info-box-title">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     {% trans "Current Configuration" %}
                 </div>
                 <div class="info-box-content">
@@ -481,9 +481,9 @@
             <div class="form-content">
                 <form action="/" method="post">
                     <div class="form-group">
-                        <label class="form-label">{% trans "New Port Number" %}</label>
+                        <label for="cpa11y-new-port-number" class="form-label">{% trans "New Port Number" %}</label>
                         <div class="form-control-wrapper">
-                            <input type="text" 
+                            <input id="cpa11y-new-port-number" type="text" 
                                    name="port" 
                                    class="form-control" 
                                    ng-model="port" 
@@ -495,7 +495,7 @@
                                    max="65535">
                         </div>
                         <div class="form-help">
-                            <i class="fas fa-lightbulb"></i>
+                            <i class="fas fa-lightbulb" aria-hidden="true"></i>
                             {% trans "Valid port range: 1 - 65535. Common ports: 8090, 8443, 7080." %}
                         </div>
                     </div>
@@ -505,7 +505,7 @@
                                 class="btn-primary" 
                                 ng-click="changeCPPort()"
                                 ng-disabled="cyberpanelLoading">
-                            <i class="fas fa-save" ng-class="{'ng-hide': cyberpanelLoading}"></i>
+                            <i class="fas fa-save" ng-class="{'ng-hide': cyberpanelLoading}" aria-hidden="true"></i>
                             <span class="loading-spinner" ng-class="{'ng-hide': !cyberpanelLoading}"></span>
                             <span ng-class="{'ng-hide': cyberpanelLoading}">{% trans "Change Port" %}</span>
                             <span ng-class="{'ng-hide': !cyberpanelLoading}">{% trans "Changing..." %}</span>

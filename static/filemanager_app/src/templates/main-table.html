@@ -46,8 +46,8 @@
         <tr class="item-list" ng-repeat="item in $parent.fileList = (fileNavigator.fileList | filter: {model:{name: query}} | orderBy:predicate:reverse)" ng-show="!fileNavigator.requesting" ng-click="selectOrUnselect(item, $event)" ng-dblclick="smartClick(item)" ng-right-click="selectOrUnselect(item, $event)" ng-class="{selected: isSelected(item)}">
             <td>
                 <a href="" title="{{item.model.name}} ({{item.model.size | humanReadableFileSize}})">
-                    <i class="glyphicon glyphicon-folder-close" ng-show="item.model.type === 'dir'"></i>
-                    <i class="glyphicon glyphicon-file" ng-show="item.model.type === 'file'"></i>
+                    <i class="glyphicon glyphicon-folder-close" ng-show="item.model.type === 'dir'" aria-hidden="true"></i>
+                    <i class="glyphicon glyphicon-file" ng-show="item.model.type === 'file'" aria-hidden="true"></i>
                     {{item.model.name | strLimit : 64}}
                 </a>
             </td>

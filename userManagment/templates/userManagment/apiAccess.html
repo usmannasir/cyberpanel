@@ -188,16 +188,16 @@
             <div class="content-card" ng-controller="apiAccessCTRL">
                 <h3 class="section-title">
                     {% trans "Configure API Access" %}
-                    <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                    <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="info-box">
-                    <h4><i class="fa fa-info-circle"></i> {% trans "Important Information" %}</h4>
+                    <h4><i class="fa fa-info-circle" aria-hidden="true"></i> {% trans "Important Information" %}</h4>
                     <p>{% trans "API access allows external applications to interact with CyberPanel on behalf of users. This includes cloud platform connections, third-party modules, and automated tools." %}</p>
                 </div>
                 <form action="/" class="form-horizontal">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select User Account" %}</label>
-                        <select ng-change="showApiAccessDropDown()" ng-model="accountUsername" class="form-control">
+                        <label for="cpa11y-select-user-account" class="form-label">{% trans "Select User Account" %}</label>
+                        <select id="cpa11y-select-user-account" ng-change="showApiAccessDropDown()" ng-model="accountUsername" class="form-control">
                             <option value="">-- {% trans "Choose a user" %} --</option>
                             {% for items in acctNames %}
                                 <option>{{ items }}</option>
@@ -209,16 +209,16 @@
                         <label class="form-label">
                             {% trans "API Access Status" %}
                             <span ng-if="access=='Enable'" class="access-status access-enabled">
-                                <i class="fa fa-check-circle"></i> {% trans "Currently Enabled" %}
+                                <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Currently Enabled" %}
                             </span>
                             <span ng-if="access=='Disable'" class="access-status access-disabled">
-                                <i class="fa fa-times-circle"></i> {% trans "Currently Disabled" %}
+                                <i class="fa fa-times-circle" aria-hidden="true"></i> {% trans "Currently Disabled" %}
                             </span>
                         </label>
                         <div class="mt-3">
                             <label class="toggle-option">
                                 <input type="radio" ng-model="access" value="Enable" name="apiAccess">
-                                <i class="fa fa-power-off toggle-enable"></i>
+                                <i class="fa fa-power-off toggle-enable" aria-hidden="true"></i>
                                 <div>
                                     <strong>{% trans "Enable API Access" %}</strong><br>
                                     <small class="text-muted">{% trans "Allow external applications to connect to this account" %}</small>
@@ -226,7 +226,7 @@
                             </label>
                             <label class="toggle-option">
                                 <input type="radio" ng-model="access" value="Disable" name="apiAccess">
-                                <i class="fa fa-power-off toggle-disable"></i>
+                                <i class="fa fa-power-off toggle-disable" aria-hidden="true"></i>
                                 <div>
                                     <strong>{% trans "Disable API Access" %}</strong><br>
                                     <small class="text-muted">{% trans "Block all API connections for this account" %}</small>
@@ -236,7 +236,7 @@
                     </div>
                     <div class="form-group mt-4">
                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg">
-                            <i class="fa fa-save"></i> {% trans "Save Changes" %}
+                            <i class="fa fa-save" aria-hidden="true"></i> {% trans "Save Changes" %}
                         </button>
                     </div>
                 </form>

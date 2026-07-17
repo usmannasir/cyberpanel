@@ -96,7 +96,7 @@
     <div class="container">
         <div id="page-title">
             <h2>{% trans "Switch off security rules" %} <img src="{% static 'images/lsON.png' %}"
-                                                             style="margin-bottom: 5px;"></h2>
+                                                             style="margin-bottom: 5px;" alt=""></h2>
             <p>{% trans "Here you can switch off security rules. It is handy if you find out that a security rule is too restrictive for some websites. To deactivate security rules, specify their IDs (for example, 340003 or 340005-340007), tags (for example, CVE-2011-4898), or regular expressions used in rule messages (for example, XSS)." %}</p>
         </div>
 
@@ -105,7 +105,7 @@
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans "Security Rules" %} <img ng-hide="securityruleLoading"
-                                                      src="{% static 'images/loading.gif' %}">
+                                                      src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -113,9 +113,9 @@
                           class="form-horizontal bordered-row panel-body">
 
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Security Rule IDs" %}</label>
+                            <label for="cpa11y-security-rule-ids" class="col-sm-3 control-label">{% trans "Security Rule IDs" %}</label>
                             <div class="col-sm-6">
-                                <input name="dom" type="text" class="form-control" ng-model="ruleID"
+                                <input id="cpa11y-security-rule-ids" name="dom" type="text" class="form-control" ng-model="ruleID"
                                        required>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
                                 <div class="tags-label">Activate Tags</div>
                                 <div class="tags-container">
                                     <input type="text" ng-model="tagFilter" placeholder="Search tags"
-                                           class="search-input">
+                                           class="search-input" aria-label="Search tags">
                                     <div ng-repeat="tag in ActivateTags | filter:tagFilter"
                                          ng-click="toggleActivation(tag)">
                                         <span class="tags">{$ tag $}
@@ -145,7 +145,7 @@
                                 <div class="tags-label">Deactivated Tags</div>
                                 <div class="tags-container">
                                     <input type="text" ng-model="deactivatedTagFilter" placeholder="Search tags"
-                                           class="search-input">
+                                           class="search-input" aria-label="Search tags">
                                     <div ng-repeat="tag in DeactivatedTags | filter:deactivatedTagFilter"
                                          ng-click="toggleActivation(tag)">
                                             <span class="tags">{$ tag $}
@@ -164,9 +164,9 @@
 
 
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Regular expressions in rule messages " %}</label>
+                            <label for="cpa11y-regular-expressions-in-rule-mess" class="col-sm-3 control-label">{% trans "Regular expressions in rule messages " %}</label>
                             <div class="col-sm-6">
-                                <textarea name="dom" type="text" class="form-control" ng-model="Regular_expressions"
+                                <textarea id="cpa11y-regular-expressions-in-rule-mess" name="dom" type="text" class="form-control" ng-model="Regular_expressions"
                                           rows="5"
                                           required> </textarea>
                             </div>

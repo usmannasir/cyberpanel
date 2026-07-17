@@ -21,6 +21,7 @@
     <!-- Angular JS -->
 
     <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
+<script src="https://code.angularjs.org/1.6.5/angular-aria.min.js"></script>
 
     <!-- Fix for old browsers -->
     <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
@@ -56,7 +57,7 @@
 
 <nav id="navBar" class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="header-logo">
-        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}"> <span style="display: none"
+        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}" alt=""> <span style="display: none"
                                                                                         id="domainNameInitial">{{ domainName }}</span></a>
     </div>
     <!--- second bar ---->
@@ -150,7 +151,7 @@
         </ul>
         <button style="float:right" ng-click="putFileContents()" type="button"
                 class="btn btn-light">{% trans "Save Changes" %} <img ng-hide="cyberPanelLoading"
-                                                                                src="{% static 'filemanager/images/loadingSmall.gif' %}">
+                                                                                src="{% static 'filemanager/images/loadingSmall.gif' %}" alt="">
         </button>
         <button style="float:right; margin-left: 1%" ng-click="closeWindow()" type="button"
                 class="btn btn-danger">{% trans "Close" %}

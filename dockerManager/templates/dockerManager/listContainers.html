@@ -474,18 +474,18 @@
     <div class="page-header">
         <h1 class="page-title">
             <div class="docker-icon">
-                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;"></i>
+                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;" aria-hidden="true"></i>
             </div>
             {% trans "Container Management" %}
         </h1>
         <p class="page-subtitle">{% trans "Manage and monitor Docker containers on your server" %}</p>
         <div class="header-actions">
             <a href="{% url 'containerImage' %}" class="btn-primary">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-plus" aria-hidden="true"></i>
                 {% trans "Create Container" %}
             </a>
             <a href="{% url 'manageImages' %}" class="btn-primary">
-                <i class="fas fa-hdd"></i>
+                <i class="fas fa-hdd" aria-hidden="true"></i>
                 {% trans "Manage Images" %}
             </a>
         </div>
@@ -495,7 +495,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-cube"></i>
+                <i class="fas fa-cube" aria-hidden="true"></i>
                 {% trans "Active Containers" %}
                 <span id="imageLoading" style="display: none;" class="loading-spinner"></span>
             </h2>
@@ -517,7 +517,7 @@
                             <td>
                                 <div class="container-name">
                                     <div class="container-icon">
-                                        <i class="fab fa-docker"></i>
+                                        <i class="fab fa-docker" aria-hidden="true"></i>
                                     </div>
                                     <div>
                                         <strong ng-bind="web.name"></strong>
@@ -530,13 +530,13 @@
                             <td style="text-align: center;">
                                 <div class="action-buttons">
                                     <a class="btn-success" href="/docker/view/{$ web.name $}" title="{% trans 'Manage Container' %}">
-                                        <i class="fas fa-cog"></i>
+                                        <i class="fas fa-cog" aria-hidden="true"></i>
                                     </a>
-                                    <button class="btn-info" ng-click="showLog(web.name)" title="{% trans 'View Logs' %}">
-                                        <i class="fas fa-file-alt"></i>
+                                    <button class="btn-info" ng-click="showLog(web.name)" title="{% trans 'View Logs' %}" aria-label="{% trans 'View Logs' %}">
+                                        <i class="fas fa-file-alt" aria-hidden="true"></i>
                                     </button>
-                                    <button class="btn-danger" ng-click="delContainer(web.name)" title="{% trans 'Delete Container' %}">
-                                        <i class="fas fa-trash"></i>
+                                    <button class="btn-danger" ng-click="delContainer(web.name)" title="{% trans 'Delete Container' %}" aria-label="{% trans 'Delete Container' %}">
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </td>
@@ -546,7 +546,7 @@
             </div>
 
             <div id="listFail" class="alert" ng-show="errorMessage">
-                <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+                <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                 <strong>{% trans "Error:" %}</strong> {$ errorMessage $}
             </div>
 
@@ -567,13 +567,13 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-question-circle"></i>
+                <i class="fas fa-question-circle" aria-hidden="true"></i>
                 {% trans "Unlisted Containers" %}
             </h2>
         </div>
         <div class="card-body">
             <p style="color: #64748b; margin-bottom: 1.5rem;">
-                <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                <i class="fas fa-info-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                 {% trans "Containers listed below were either not created through the panel or were not saved to database properly" %}
             </p>
             <div class="table-responsive">
@@ -591,7 +591,7 @@
                             <td>
                                 <div class="container-name">
                                     <div class="container-icon">
-                                        <i class="fab fa-docker"></i>
+                                        <i class="fab fa-docker" aria-hidden="true"></i>
                                     </div>
                                     <div>
                                         <strong>{{container.name}}</strong>
@@ -605,14 +605,14 @@
                             </td>
                             <td style="text-align: center;">
                                 <div class="action-buttons">
-                                    <button class="btn-success" ng-click="assignContainer('{{container.name}}')" title="{% trans 'Assign to User' %}">
-                                        <i class="fas fa-user-plus"></i>
+                                    <button class="btn-success" ng-click="assignContainer('{{container.name}}')" title="{% trans 'Assign to User' %}" aria-label="{% trans 'Assign to User' %}">
+                                        <i class="fas fa-user-plus" aria-hidden="true"></i>
                                     </button>
-                                    <button class="btn-info" ng-click="showLog('{{container.name}}')" title="{% trans 'View Logs' %}">
-                                        <i class="fas fa-file-alt"></i>
+                                    <button class="btn-info" ng-click="showLog('{{container.name}}')" title="{% trans 'View Logs' %}" aria-label="{% trans 'View Logs' %}">
+                                        <i class="fas fa-file-alt" aria-hidden="true"></i>
                                     </button>
-                                    <button class="btn-danger" ng-click="delContainer('{{container.name}}', true)" title="{% trans 'Delete Container' %}">
-                                        <i class="fas fa-trash"></i>
+                                    <button class="btn-danger" ng-click="delContainer('{{container.name}}', true)" title="{% trans 'Delete Container' %}" aria-label="{% trans 'Delete Container' %}">
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </td>
@@ -631,7 +631,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">
-                    <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+                    <i class="fas fa-file-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                     {% trans "Container Logs" %}
                 </h4>
                 <button type="button" class="close" data-dismiss="modal" 
@@ -643,11 +643,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" ng-click="showLog('', true)">
-                    <i class="fas fa-sync-alt"></i>
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                     {% trans "Refresh" %}
                 </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     {% trans "Close" %}
                 </button>
             </div>
@@ -661,7 +661,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">
-                    <i class="fas fa-user-plus" style="margin-right: 0.5rem;"></i>
+                    <i class="fas fa-user-plus" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                     {% trans "Assign Container to User" %}
                 </h4>
                 <button type="button" class="close" data-dismiss="modal" 
@@ -669,10 +669,10 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1e293b);">
+                    <label for="cpa11y-select-owner" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1e293b);">
                         {% trans "Select Owner" %}
                     </label>
-                    <select ng-model="dockerOwner" class="form-control" 
+                    <select id="cpa11y-select-owner" ng-model="dockerOwner" class="form-control" 
                             style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px;">
                         {% for user in adminNames %}
                             <option>{{user}}</option>
@@ -685,11 +685,11 @@
                     Test Scope
                 </button>
                 <button type="button" class="btn btn-primary" ng-click="submitAssignContainer()">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" aria-hidden="true"></i>
                     {% trans "Assign" %}
                 </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     {% trans "Cancel" %}
                 </button>
             </div>

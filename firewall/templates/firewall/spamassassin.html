@@ -17,7 +17,7 @@
 <div ng-controller="modSec" class="example-box-wrapper">
         <div style="border-radius: 25px;border-color:#3498db" class="content-box">
             <h3 class="content-box-header bg-blue">
-                {% trans "SpamAssassin" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
+                {% trans "SpamAssassin" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif" alt="">
             </h3>
 
             <div class="content-box-wrapper">
@@ -29,7 +29,7 @@
                                 <h3>{% trans "ModSecurity is not installed " %}
                                     <button ng-click="installModSec()" class="btn btn-alt btn-hover btn-blue-alt">
                                         <span>{% trans "Install Now." %}</span>
-                                        <i class="glyph-icon icon-arrow-right"></i>
+                                        <i class="glyph-icon icon-arrow-right" aria-hidden="true"></i>
                                     </button></h3>
                     </div>
 
@@ -39,19 +39,19 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-md-6">
 
-                                <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
                                             <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage $}</p>
                                 </div>
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                         <p>{% trans "Could not connect. Please refresh this page." %} </p>
                                 </div>
 
-                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
                                         <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
                                 </div>
 
-                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
+                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success" role="status">
                                         <p>{% trans "ModSecurity successfully installed, refreshing page in 3 seconds.." %}</p>
                                 </div>
                         </div>
@@ -63,7 +63,7 @@
                         <form  action="/" id="" class="form-horizontal bordered-row">
                             <div class="form-group">
                                     <div class="col-sm-12 text-center">
-                                         <h3><img  src="{% static 'firewall/icons/firewall.png'  %}"> {% trans "Winter is coming, but so is ModSecurity." %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif"></h3>
+                                         <h3><img  src="{% static 'firewall/icons/firewall.png'  %}" alt=""> {% trans "Winter is coming, but so is ModSecurity." %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif" alt=""></h3>
                                     </div>
                                     <div style="margin-top: 2%;" class="col-sm-12">
                                         <textarea ng-model="requestData" rows="15" class="form-control">{{ requestData }}</textarea>
@@ -80,21 +80,21 @@
                     <form  action="/" id="createPackages" class="form-horizontal bordered-row">
 
                         <div ng-hide="phpDetailsBox" class="form-group">
-                            <label class="col-sm-4 control-label">ModSecurity Status</label>
+                            <label for="modsecurity_status" class="col-sm-4 control-label">ModSecurity Status</label>
                             <div class="col-sm-6">
                                 <input type="checkbox" id="modsecurity_status" data-toggle="toggle">
                             </div>
                         </div>
 
                         <div ng-hide="phpDetailsBox" class="form-group">
-                            <label class="col-sm-4 control-label">SecAuditEngine</label>
+                            <label for="SecAuditEngine" class="col-sm-4 control-label">SecAuditEngine</label>
                             <div class="col-sm-6">
                                 <input type="checkbox" id="SecAuditEngine" data-toggle="toggle">
                             </div>
                         </div>
 
                         <div ng-hide="phpDetailsBox" class="form-group">
-                            <label class="col-sm-4 control-label">SecRuleEngine</label>
+                            <label for="SecRuleEngine" class="col-sm-4 control-label">SecRuleEngine</label>
                             <div class="col-sm-6">
                                 <input type="checkbox" id="SecRuleEngine" data-toggle="toggle">
                             </div>
@@ -113,7 +113,7 @@
                                     <option>7</option>
                                     <option>8</option>
                                     <option>9</option>
-                                </select><i class="glyph-icon icon-caret-down"></i></div>
+                                </select><i class="glyph-icon icon-caret-down" aria-hidden="true"></i></div>
                             </div>
                         </div>
 
@@ -130,22 +130,22 @@
                                     <option>ABIJDEF</option>
                                     <option>ABIJDEFH</option>
                                     <option>ABIJDEFHZ</option>
-                                </select><i class="glyph-icon icon-caret-down"></i></div>
+                                </select><i class="glyph-icon icon-caret-down" aria-hidden="true"></i></div>
                             </div>
                         </div>
 
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">SecAuditLogRelevantStatus</label>
+                            <label for="cpa11y-secauditlogrelevantstatus" class="col-sm-4 control-label">SecAuditLogRelevantStatus</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="SecAuditLogRelevantStatus"  required>
+                                <input id="cpa11y-secauditlogrelevantstatus" type="text" class="form-control" ng-model="SecAuditLogRelevantStatus"  required>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">SecAuditLogType</label>
+                            <label for="cpa11y-secauditlogtype" class="col-sm-4 control-label">SecAuditLogType</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="SecAuditLogType"  required>
+                                <input id="cpa11y-secauditlogtype" type="text" class="form-control" ng-model="SecAuditLogType"  required>
                             </div>
                         </div>
 
@@ -165,15 +165,15 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
 
-                                    <div ng-hide="failedToSave" class="alert alert-danger">
+                                    <div ng-hide="failedToSave" class="alert alert-danger" role="alert">
                                                 <p>{% trans "Failed to save ModSecurity configurations. Error message: " %} {$ errorMessage $}</p>
                                     </div>
 
-                                    <div ng-hide="successfullySaved" class="alert alert-success">
+                                    <div ng-hide="successfullySaved" class="alert alert-success" role="status">
                                         <p>{% trans "ModSecurity configurations successfully saved." %}</p>
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                             <p>{% trans "Could not connect. Please refresh this page." %} </p>
                                     </div>
 

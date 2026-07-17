@@ -501,7 +501,7 @@
 <div class="modern-container" ng-controller="remoteBackupControl">
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-server"></i>
+            <i class="fas fa-server" aria-hidden="true"></i>
             {% trans "Remote Backups" %}
         </h1>
         <p class="page-subtitle">{% trans "Import websites from remote CyberPanel servers via SSH" %}</p>
@@ -509,7 +509,7 @@
             <a href="https://cyberpanel.net/docs/transfer-website-from-another-server-using-remote-transfer/" 
                target="_blank" 
                class="btn-secondary">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Remote Transfer Guide" %}
             </a>
         </div>
@@ -519,7 +519,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-network-wired"></i>
+                <i class="fas fa-network-wired" aria-hidden="true"></i>
                 {% trans "Remote Server Connection" %}
                 <span ng-hide="backupLoading" class="loading-spinner"></span>
             </h2>
@@ -529,21 +529,21 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-map-marker-alt" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-remote-server-ip-address" class="form-label">
+                                <i class="fas fa-map-marker-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Remote Server IP Address" %}
                             </label>
-                            <input type="text" class="form-control" ng-model="IPAddress" 
+                            <input id="cpa11y-remote-server-ip-address" type="text" class="form-control" ng-model="IPAddress" 
                                    placeholder="192.168.1.100" required>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-key" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-root-password" class="form-label">
+                                <i class="fas fa-key" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Root Password" %}
                             </label>
-                            <input ng-change="passwordEnter()" type="password" class="form-control" 
+                            <input id="cpa11y-root-password" ng-change="passwordEnter()" type="password" class="form-control" 
                                    ng-model="password" placeholder="••••••••" required>
                         </div>
                     </div>
@@ -552,7 +552,7 @@
                 <div ng-hide="backupButton" class="action-buttons">
                     <button type="button" ng-disabled="fetchAccountsBtn" 
                             ng-click="fetchAccountsFromRemoteServer()" class="btn-primary">
-                        <i class="fas fa-cloud-download-alt"></i>
+                        <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>
                         {% trans "Fetch Accounts" %}
                     </button>
                 </div>
@@ -562,24 +562,24 @@
 
     <!-- Notifications -->
     <div ng-hide="notificationsBox">
-        <div ng-hide="errorMessage" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+        <div ng-hide="errorMessage" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <p>{$ error_message $}</p>
         </div>
-        <div ng-hide="couldNotConnect" class="alert alert-danger">
-            <i class="fas fa-times-circle"></i>
+        <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+            <i class="fas fa-times-circle" aria-hidden="true"></i>
             <p>{% trans "Could not connect, please refresh this page." %}</p>
         </div>
-        <div ng-hide="accountsFetched" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div ng-hide="accountsFetched" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <p>{% trans "Accounts Successfully Fetched from remote server." %}</p>
         </div>
-        <div ng-hide="backupProcessStarted" class="alert alert-success">
-            <i class="fas fa-play-circle"></i>
+        <div ng-hide="backupProcessStarted" class="alert alert-success" role="status">
+            <i class="fas fa-play-circle" aria-hidden="true"></i>
             <p>{% trans "Backup Process successfully started." %}</p>
         </div>
-        <div ng-hide="backupCancelled" class="alert alert-success">
-            <i class="fas fa-stop-circle"></i>
+        <div ng-hide="backupCancelled" class="alert alert-success" role="status">
+            <i class="fas fa-stop-circle" aria-hidden="true"></i>
             <p>{% trans "Backup successfully cancelled." %}</p>
         </div>
     </div>
@@ -588,16 +588,16 @@
     <div ng-hide="accountsInRemoteServerTable" class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-list"></i>
+                <i class="fas fa-list" aria-hidden="true"></i>
                 {% trans "Available Websites on Remote Server" %}
             </h2>
         </div>
         <div class="card-body">
             <div class="search-box">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search" aria-hidden="true"></i>
                 <input type="text" ng-model="accountsSearch" 
                        placeholder="{% trans 'Search websites...' %}" 
-                       class="search-input">
+                       class="search-input" aria-label="{% trans 'Search websites...' %}">
             </div>
             
             <div class="table-responsive">
@@ -620,7 +620,7 @@
                     <tbody>
                         <tr ng-repeat="record in records | filter:accountsSearch">
                             <td>
-                                <i class="fas fa-globe" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                                <i class="fas fa-globe" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                                 <strong ng-bind="record.website"></strong>
                             </td>
                             <td>
@@ -630,7 +630,7 @@
                                 <span class="package-badge" ng-bind="record.package"></span>
                             </td>
                             <td>
-                                <i class="fas fa-envelope" style="color: var(--text-secondary, #94a3b8); margin-right: 0.5rem;"></i>
+                                <i class="fas fa-envelope" style="color: var(--text-secondary, #94a3b8); margin-right: 0.5rem;" aria-hidden="true"></i>
                                 <span ng-bind="record.email"></span>
                             </td>
                             <td style="text-align: center;">
@@ -648,12 +648,12 @@
             <div ng-hide="transferBoxBtn" class="action-buttons">
                 <button type="button" ng-disabled="startTransferbtn" 
                         ng-click="startTransfer()" class="btn-success">
-                    <i class="fas fa-exchange-alt"></i>
+                    <i class="fas fa-exchange-alt" aria-hidden="true"></i>
                     {% trans "Start Transfer" %}
                 </button>
                 <button type="button" ng-disabled="stopTransferbtn" 
                         ng-click="cancelRemoteBackup()" class="btn-danger">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     {% trans "Cancel Transfer" %}
                 </button>
             </div>
@@ -664,7 +664,7 @@
     <div ng-hide="backupStatus" class="terminal-section">
         <div class="terminal-header">
             <div class="terminal-title">
-                <i class="fas fa-terminal"></i>
+                <i class="fas fa-terminal" aria-hidden="true"></i>
                 {% trans "Transfer Progress" %}
             </div>
             <div class="terminal-dots">

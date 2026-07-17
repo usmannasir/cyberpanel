@@ -771,7 +771,7 @@
         <div class="header-content">
             <h1 class="page-title">
                 <div class="package-icon">
-                    <i class="fas fa-cube"></i>
+                    <i class="fas fa-cube" aria-hidden="true"></i>
                 </div>
                 {% trans "System Package Manager" %}
             </h1>
@@ -780,11 +780,11 @@
             </p>
             <div class="stats-bar">
                 <div class="stat-badge">
-                    <i class="fas fa-boxes"></i>
+                    <i class="fas fa-boxes" aria-hidden="true"></i>
                     <span>{% trans "Total Packages:" %} <span class="stat-value">{$ totalPackages || 0 $}</span></span>
                 </div>
                 <div class="stat-badge">
-                    <i class="fas fa-eye"></i>
+                    <i class="fas fa-eye" aria-hidden="true"></i>
                     <span>{% trans "Showing:" %} <span class="stat-value">{$ fetchedPackages || 0 $}</span></span>
                 </div>
                 <div class="stat-badge" ng-hide="cyberpanelLoading">
@@ -798,15 +798,15 @@
         <!-- Tab Navigation -->
         <div class="modern-tabs">
             <button type="button" class="tab-item active" ng-click="fetchPackages('upgrade')" data-tab="updates" aria-label="{% trans 'View available updates' %}">
-                <i class="fas fa-sync-alt tab-icon"></i>
+                <i class="fas fa-sync-alt tab-icon" aria-hidden="true"></i>
                 {% trans "Available Updates" %}
             </button>
             <button type="button" class="tab-item" ng-click="fetchPackages()" data-tab="all" aria-label="{% trans 'View all packages' %}">
-                <i class="fas fa-list tab-icon"></i>
+                <i class="fas fa-list tab-icon" aria-hidden="true"></i>
                 {% trans "All Packages" %}
             </button>
             <button type="button" class="tab-item" ng-click="fetchPackages('CyberPanel')" data-tab="cyberpanel" aria-label="{% trans 'View CyberPanel packages' %}">
-                <i class="fas fa-shield-alt tab-icon"></i>
+                <i class="fas fa-shield-alt tab-icon" aria-hidden="true"></i>
                 {% trans "CyberPanel Packages" %}
             </button>
         </div>
@@ -816,7 +816,7 @@
             <!-- Controls Bar -->
             <div class="controls-bar">
                 <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
+                    <i class="fas fa-search search-icon" aria-hidden="true"></i>
                     <input type="text" class="search-input" placeholder="{% trans 'Search packages...' %}" 
                            ng-model="packSearch" aria-label="{% trans 'Search packages' %}">
                 </div>
@@ -832,15 +832,15 @@
                     
                     <button type="button" class="btn btn-success" ng-click="updatePackage('all')" 
                             ng-show="currentTab === 'upgrade'" aria-label="{% trans 'Update all packages' %}">
-                        <i class="fas fa-download"></i>
+                        <i class="fas fa-download" aria-hidden="true"></i>
                         {% trans "Update All" %}
                     </button>
                 </div>
             </div>
 
             <!-- Alert for important info -->
-            <div class="alert alert-info" ng-show="currentTab === 'upgrade' && totalPackages > 0">
-                <i class="fas fa-info-circle"></i>
+            <div class="alert alert-info" ng-show="currentTab === 'upgrade' && totalPackages role="status"> 0">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <span>{% trans "Important: Always backup your system before performing major updates. Some updates may require system restart." %}</span>
             </div>
 
@@ -871,7 +871,7 @@
                             </td>
                             <td ng-show="currentTab === 'upgrade'">
                                 <span class="upgrade-badge">
-                                    <i class="fas fa-arrow-up"></i>
+                                    <i class="fas fa-arrow-up" aria-hidden="true"></i>
                                     {$ package.upgrade || '-' $}
                                 </span>
                             </td>
@@ -881,20 +881,20 @@
                                         ng-click="lockStatus(package.package, package.lock == 1 ? 1 : 0)"
                                         aria-label="{$ package.lock == 1 ? 'Unlock package' : 'Lock package' $}">
                                     <i class="fas" 
-                                       ng-class="{'fa-lock': package.lock == 1, 'fa-lock-open': package.lock == 0}"></i>
+                                       ng-class="{'fa-lock': package.lock == 1, 'fa-lock-open': package.lock == 0}" aria-hidden="true"></i>
                                 </button>
                             </td>
                             <td>
                                 <div class="action-buttons">
                                     <button type="button" class="btn btn-info btn-sm" 
                                             ng-click="showPackageDetails(package.package)" aria-label="{% trans 'View package details' %}">
-                                        <i class="fas fa-info-circle"></i>
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                                         {% trans "Details" %}
                                     </button>
                                     <button type="button" class="btn btn-primary btn-sm" 
                                             ng-click="showUpdateModal(package.package)"
                                             ng-show="currentTab === 'upgrade' || currentTab === 'cyberpanel'" aria-label="{% trans 'Update package' %}">
-                                        <i class="fas fa-download"></i>
+                                        <i class="fas fa-download" aria-hidden="true"></i>
                                         {% trans "Update" %}
                                     </button>
                                 </div>
@@ -907,7 +907,7 @@
             <!-- Empty State -->
             <div class="empty-state" ng-show="allPackages.length === 0 && cyberpanelLoading">
                 <div class="empty-icon">
-                    <i class="fas fa-cube"></i>
+                    <i class="fas fa-cube" aria-hidden="true"></i>
                 </div>
                 <h3>{% trans "No packages found" %}</h3>
                 <p>{% trans "Try adjusting your search criteria or check your connection" %}</p>
@@ -939,11 +939,11 @@
         <div class="modal-content" ng-click="$event.stopPropagation()">
             <div class="modal-header">
                 <h3 class="modal-title">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     {% trans "Package Details:" %} {$ selectedPackage $}
                 </h3>
                 <button type="button" class="modal-close" ng-click="closeDetails()" aria-label="{% trans 'Close details modal' %}">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body">
@@ -957,12 +957,12 @@
         <div class="modal-content" ng-click="$event.stopPropagation()">
             <div class="modal-header">
                 <h3 class="modal-title">
-                    <i class="fas fa-download"></i>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                     {% trans "Updating Package:" %} {$ updatingPackage $}
                     <span ng-hide="cyberpanelLoading" class="loading-spinner loading-spinner-inline"></span>
                 </h3>
                 <button type="button" class="modal-close" ng-click="closeUpdate()" ng-disabled="!updateComplete" aria-label="{% trans 'Close update modal' %}">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body">

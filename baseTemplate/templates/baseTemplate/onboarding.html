@@ -419,12 +419,12 @@
         <!-- Page Header -->
         <div class="page-header">
             <h1>
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-cog" aria-hidden="true"></i>
                 {% trans "Initial Configurations" %}
             </h1>
             <p>{% trans "Configure Hostname and other default Settings for CyberPanel" %}</p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/onboarding-and-initial-cyberpanel-configurations/" target="_blank" rel="noopener" class="learn-more-btn">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Learn More" %}
             </a>
         </div>
@@ -433,13 +433,13 @@
         <div class="configuration-section">
             <h2 class="section-title">
                 {% trans "Server Configuration" %}
-                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h2>
             
             <!-- Alert Box -->
             <div ng-hide="success" class="alert-box">
                 <div class="alert-box-header">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     <h4>{% trans "Important Configuration Notes" %}</h4>
                 </div>
                 <ul>
@@ -461,13 +461,13 @@
             <!-- Configuration Form -->
             <form class="config-form">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Hostname" %}</label>
-                    <input type="text" class="form-control" ng-model="hostname" 
+                    <label for="cpa11y-hostname" class="form-label">{% trans "Hostname" %}</label>
+                    <input id="cpa11y-hostname" type="text" class="form-control" ng-model="hostname" 
                            placeholder="mail.example.com" required>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Additional Features" %}</label>
+                    <label for="rdnsCheck" class="form-label">{% trans "Additional Features" %}</label>
                     <div class="checkbox-wrapper">
                         <input type="checkbox" id="rdnsCheck" ng-model="rDNSCheck">
                         <label for="rdnsCheck" class="checkbox-label">
@@ -479,13 +479,13 @@
                 
                 <div class="button-group">
                     <button type="button" ng-click="RunOnboarding()" class="btn-primary">
-                        <i class="fas fa-play"></i>
+                        <i class="fas fa-play" aria-hidden="true"></i>
                         {% trans "Start Configurations" %}
                     </button>
                     
                     <button type="button" ng-click="RestartCyberPanel()" 
                             ng-hide="OnboardineDone" class="btn-secondary">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         {% trans "Restart CyberPanel" %}
                     </button>
                 </div>
@@ -495,13 +495,13 @@
         <!-- Progress Section -->
         <div ng-hide="ExecutionStatus" class="progress-section">
             <div class="progress-info">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <p>{% trans "Note: Once configurations are completed, click Restart CyberPanel above. After clicking Restart CyberPanel, refresh the page to fetch new SSL from the browser." %}</p>
             </div>
             
             <div class="progress-status">
                 {$ functionStatus $}
-                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </div>
             
             <div class="progress-bar-wrapper">

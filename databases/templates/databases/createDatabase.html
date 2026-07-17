@@ -398,7 +398,7 @@
         </div>
 
         <div class="info-box">
-            <i class="fas fa-info-circle"></i>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
             <div class="info-box-text">
                 {% trans "Each database will be prefixed with your domain name for security and organization." %}
             </div>
@@ -413,7 +413,7 @@
             <form name="createDatabaseForm">
                 <div class="website-selector-card">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select Website" %}</label>
+                        <label for="create-database-select" class="form-label">{% trans "Select Website" %}</label>
                         <select id="create-database-select" ng-model="databaseWebsite" ng-change="websiteChanged()" class="form-control">
                             <option value="">-- {% trans "Select a website" %} --</option>
                             {% for items in websitesList %}
@@ -425,8 +425,8 @@
 
                 <div class="dbDetails">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Database Name" %}</label>
-                        <input name="dbName" type="text" class="form-control" ng-model="dbName" 
+                        <label for="cpa11y-database-name" class="form-label">{% trans "Database Name" %}</label>
+                        <input id="cpa11y-database-name" name="dbName" type="text" class="form-control" ng-model="dbName" 
                                placeholder="{% trans 'Enter database name' %}" required>
                         <div class="name-preview" ng-show="dbName">
                             <span id="domainDatabase"></span>_{$ dbName $}
@@ -435,8 +435,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "Database User" %}</label>
-                        <input type="text" name="dbUsername" class="form-control" ng-model="dbUsername" 
+                        <label for="cpa11y-database-user" class="form-label">{% trans "Database User" %}</label>
+                        <input id="cpa11y-database-user" type="text" name="dbUsername" class="form-control" ng-model="dbUsername" 
                                placeholder="{% trans 'Enter username' %}" required>
                         <div class="name-preview" ng-show="dbUsername">
                             <span id="domainUsername"></span>_{$ dbUsername $}
@@ -450,14 +450,14 @@
                             <div class="password-input-wrapper">
                                 <div class="password-input">
                                     <input type="password" id="dbPassword" name="dbPassword" class="form-control" 
-                                           ng-model="dbPassword" placeholder="{% trans 'Enter password' %}" required>
+                                           ng-model="dbPassword" placeholder="{% trans 'Enter password' %}" required aria-label="{% trans 'Enter password' %}">
                                     <div class="password-toggle" onclick="togglePasswordVisibility()">
-                                        <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                                        <i class="fas fa-eye" id="passwordToggleIcon" aria-hidden="true"></i>
                                     </div>
                                 </div>
                             </div>
                             <button type="button" ng-click="generatePassword()" class="btn btn-secondary">
-                                <i class="fas fa-sync"></i>
+                                <i class="fas fa-sync" aria-hidden="true"></i>
                                 {% trans "Generate" %}
                             </button>
                         </div>
@@ -468,7 +468,7 @@
                         <div class="generated-password-label">{% trans "Generated Password" %}</div>
                         <div class="generated-password-value">{$ generatedPassword $}</div>
                         <button type="button" ng-click="usePassword()" class="btn btn-success btn-sm">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-check" aria-hidden="true"></i>
                             {% trans "Use This Password" %}
                         </button>
                     </div>
@@ -476,7 +476,7 @@
                     <div class="button-container">
                         <button type="button" ng-click="createDatabase()" class="btn btn-primary btn-lg" 
                                 ng-disabled="!databaseWebsite || !dbName || !dbUsername || !dbPassword">
-                            <i class="fas fa-database"></i>
+                            <i class="fas fa-database" aria-hidden="true"></i>
                             {% trans "Create Database" %}
                         </button>
                     </div>

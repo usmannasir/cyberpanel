@@ -18,7 +18,7 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger" role="alert">
                         <p>{% trans "Containerization is only available on CyberPanel Ent. " %} <a target="_blank"
                                                                                        href="https://cyberpanel.net/docs/switching-from-openlitespeed-to-litespeed-enterprise-webserver/">Click
                             Here</a> {% trans " for conversion details." %}</p>
@@ -32,7 +32,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Install Packages" %} <img ng-hide="installDockerStatus"
-                                                      src="{% static 'images/loading.gif' %}">
+                                                      src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 

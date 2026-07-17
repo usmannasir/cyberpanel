@@ -261,7 +261,7 @@
     <div class="modern-container" ng-controller="plusAddressing" ng-init="isAdmin={{ admin|yesno:'true,false' }}">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-plus-circle"></i>
+                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                 {% trans "Plus-Addressing" %}
             </h1>
             <p class="page-subtitle">{% trans "Enable email sub-addressing (user+tag@domain.com)" %}</p>
@@ -271,11 +271,11 @@
             <div class="main-card">
                 <div class="card-body">
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon" aria-hidden="true"></i>
                         <h3>{% trans "Postfix is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable Postfix to configure plus-addressing" %}</p>
                         <a href="{% url 'managePostfix' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable Postfix Now" %}
                         </a>
                     </div>
@@ -286,14 +286,14 @@
             <div class="main-card" ng-show="isAdmin">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-globe"></i>
+                        <i class="fas fa-globe" aria-hidden="true"></i>
                         {% trans "Global Settings" %}
                         <span ng-show="loading" class="loading-spinner"></span>
                     </h2>
                 </div>
                 <div class="card-body">
                     <div class="info-box">
-                        <h4><i class="fas fa-info-circle"></i> {% trans "What is Plus-Addressing?" %}</h4>
+                        <h4><i class="fas fa-info-circle" aria-hidden="true"></i> {% trans "What is Plus-Addressing?" %}</h4>
                         <p>{% trans "Plus-addressing allows users to receive email at user+anything@domain.com which will be delivered to user@domain.com. This is useful for filtering and tracking email sources." %}</p>
                     </div>
 
@@ -314,8 +314,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">{% trans "Delimiter Character" %}</label>
-                                <select class="form-control" ng-model="delimiter" style="width: auto;">
+                                <label for="cpa11y-delimiter-character" class="form-label">{% trans "Delimiter Character" %}</label>
+                                <select id="cpa11y-delimiter-character" class="form-control" ng-model="delimiter" style="width: auto;">
                                     <option value="+">+ (Plus)</option>
                                     <option value="-">- (Hyphen)</option>
                                     <option value="_">_ (Underscore)</option>
@@ -325,18 +325,18 @@
                     </div>
 
                     <button type="button" ng-click="saveGlobalSettings()" class="btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Global Settings" %}
                     </button>
 
                     <!-- Alert Messages -->
                     <div ng-hide="globalNotifyBox" class="mt-3">
-                        <div ng-hide="globalErrorBox" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
+                        <div ng-hide="globalErrorBox" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             {$ globalErrorMessage $}
                         </div>
-                        <div ng-hide="globalSuccessBox" class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
+                        <div ng-hide="globalSuccessBox" class="alert alert-success" role="status">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             {$ globalSuccessMessage $}
                         </div>
                     </div>
@@ -347,21 +347,21 @@
             <div class="main-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-sitemap"></i>
+                        <i class="fas fa-sitemap" aria-hidden="true"></i>
                         {% trans "Per-Domain Settings" %}
                     </h2>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info mb-3">
-                        <i class="fas fa-info-circle"></i>
+                    <div class="alert alert-info mb-3" role="status">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         {% trans "Per-domain settings allow you to track which domains should use plus-addressing. Note: Actual filtering is server-wide in Postfix." %}
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">{% trans "Select Domain" %}</label>
-                                <select ng-model="selectedDomain" class="form-control">
+                                <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                                <select id="cpa11y-select-domain" ng-model="selectedDomain" class="form-control">
                                     <option value="">{% trans "Choose a domain..." %}</option>
                                     {% for items in websiteList %}
                                         <option value="{{ items }}">{{ items }}</option>
@@ -383,18 +383,18 @@
                     </div>
 
                     <button type="button" ng-show="selectedDomain" ng-click="saveDomainSettings()" class="btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Domain Settings" %}
                     </button>
 
                     <!-- Alert Messages -->
                     <div ng-hide="domainNotifyBox" class="mt-3">
-                        <div ng-hide="domainErrorBox" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
+                        <div ng-hide="domainErrorBox" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             {$ domainErrorMessage $}
                         </div>
-                        <div ng-hide="domainSuccessBox" class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
+                        <div ng-hide="domainSuccessBox" class="alert alert-success" role="status">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             {$ domainSuccessMessage $}
                         </div>
                     </div>

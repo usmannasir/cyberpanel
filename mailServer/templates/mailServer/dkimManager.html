@@ -419,10 +419,10 @@
     <div class="modern-container" ng-controller="dkimManager">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-shield-alt"></i>
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
                 {% trans "DKIM Manager" %}
                 <a target="_blank" rel="noopener" href="https://cyberpanel.net/KnowledgeBase/home/dkim-set-up-and-configurations/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "DKIM Docs" %}
                 </a>
             </h1>
@@ -433,36 +433,36 @@
             <div class="main-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-download"></i>
+                        <i class="fas fa-download" aria-hidden="true"></i>
                         {% trans "OpenDKIM Installation" %}
                         <span ng-show="manageDKIMLoading" class="loading-spinner"></span>
                     </h2>
                 </div>
                 <div class="card-body">
                     <div class="install-notice">
-                        <i class="fas fa-exclamation-circle fa-3x mb-3 install-icon"></i>
+                        <i class="fas fa-exclamation-circle fa-3x mb-3 install-icon" aria-hidden="true"></i>
                         <h3>{% trans "OpenDKIM is not installed" %}</h3>
                         <p class="mb-3">{% trans "OpenDKIM is required to manage DKIM keys for your domains" %}</p>
                         <a href="" ng-click="installOpenDKIM()" class="install-link">
-                            <i class="fas fa-download"></i>
+                            <i class="fas fa-download" aria-hidden="true"></i>
                             {% trans "Install OpenDKIM Now" %}
                         </a>
                     </div>
 
                     <!-- Alert Messages -->
                     <div ng-hide="openDKIMNotifyBox">
-                        <div ng-hide="openDKIMError" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
+                        <div ng-hide="openDKIMError" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             {% trans "Error message:" %} {$ errorMessage $}
                         </div>
 
-                        <div ng-hide="couldNotConnect" class="alert alert-danger">
-                            <i class="fas fa-times-circle"></i>
+                        <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                            <i class="fas fa-times-circle" aria-hidden="true"></i>
                             {% trans "Could not connect. Please refresh this page." %}
                         </div>
 
-                        <div ng-hide="openDKIMSuccessfullyInstalled" class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
+                        <div ng-hide="openDKIMSuccessfullyInstalled" class="alert alert-success" role="status">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             {% trans "OpenDKIM successfully installed, refreshing page in 3 seconds..." %}
                         </div>
                     </div>
@@ -470,7 +470,7 @@
                     <!-- Installation Log -->
                     <div ng-hide="openDKIMInstallBox">
                         <h3 class="progress-title">
-                            <i class="fas fa-terminal"></i>
+                            <i class="fas fa-terminal" aria-hidden="true"></i>
                             {% trans "Installation Progress" %}
                         </h3>
                         <div class="terminal-box">
@@ -483,7 +483,7 @@
             <div class="main-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-key"></i>
+                        <i class="fas fa-key" aria-hidden="true"></i>
                         {% trans "DKIM Key Management" %}
                         <span ng-show="manageDKIMLoading" class="loading-spinner"></span>
                     </h2>
@@ -492,15 +492,15 @@
                     <form action="/" method="post">
                         <div class="form-section">
                             <div class="info-box">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "DKIM adds a digital signature to your emails, helping prevent spoofing and improving deliverability" %}
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Website" %}</label>
-                                        <select ng-change="fetchKeys()" ng-model="domainName" class="form-control" aria-label="{% trans 'Select Website' %}">
+                                        <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                                        <select id="cpa11y-select-website" ng-change="fetchKeys()" ng-model="domainName" class="form-control" aria-label="{% trans 'Select Website' %}">
                                             <option value="">{% trans "Choose a website..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -513,11 +513,11 @@
 
                         <!-- No Keys Available -->
                         <div ng-hide="noKeysAvailable" class="generate-notice">
-                            <i class="fas fa-key fa-3x mb-3" style="color: #ffa000;"></i>
+                            <i class="fas fa-key fa-3x mb-3" style="color: #ffa000;" aria-hidden="true"></i>
                             <h3>{% trans "Keys not available for this domain" %}</h3>
                             <p class="mb-3">{% trans "DKIM keys need to be generated for this domain to enable email authentication" %}</p>
                             <a href="" ng-click="createDomainDKIMKeys()" class="generate-link">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                 {% trans "Generate DKIM Keys" %}
                             </a>
                         </div>
@@ -536,21 +536,21 @@
                                 <tr>
                                     <td>
                                         <span class="domain-badge">
-                                            <i class="fas fa-globe"></i>
+                                            <i class="fas fa-globe" aria-hidden="true"></i>
                                             <span ng-bind="domainName"></span>
                                         </span>
                                     </td>
                                     <td>
                                         <textarea ng-bind="privateKey" rows="10" class="key-textarea" readonly aria-label="{% trans 'Private Key' %}"></textarea>
                                         <small class="key-hint">
-                                            <i class="fas fa-lock"></i>
+                                            <i class="fas fa-lock" aria-hidden="true"></i>
                                             {% trans "Keep this private key secure" %}
                                         </small>
                                     </td>
                                     <td>
                                         <textarea ng-bind="publicKey" rows="10" class="key-textarea" readonly aria-label="{% trans 'Public Key' %}"></textarea>
                                         <small class="key-hint">
-                                            <i class="fas fa-info-circle"></i>
+                                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                                             {% trans "Add this as a TXT record in your DNS" %}
                                         </small>
                                     </td>
@@ -561,18 +561,18 @@
 
                         <!-- Alert Messages -->
                         <div class="form-section">
-                            <div ng-hide="dkimSuccess" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="dkimSuccess" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {$ dkimSuccessMessage $}
                             </div>
 
-                            <div ng-hide="dkimError" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="dkimError" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>

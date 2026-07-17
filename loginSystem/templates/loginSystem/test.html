@@ -9,7 +9,7 @@
 <!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
 <title> Login - CyberCP </title>
 <meta name="description" content="">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Favicons -->
 {% load static %}
@@ -204,15 +204,15 @@
                     <div class="divider"></div>
                     <ul class="reset-ul">
                         <li class="pad10A font-size-16">
-                            <i class="glyph-icon icon-camera mrg10R font-green"></i>
+                            <i class="glyph-icon icon-camera mrg10R font-green" aria-hidden="true"></i>
                             LiteSpeed Webserver
                         </li>
                         <li class="pad10A font-size-16">
-                            <i class="glyph-icon icon-cog mrg10R font-red"></i>
+                            <i class="glyph-icon icon-cog mrg10R font-red" aria-hidden="true"></i>
                             Multiple PHPs
                         </li>
                         <li class="pad10A font-size-16">
-                            <i class="glyph-icon icon-bullhorn mrg10R font-orange"></i>
+                            <i class="glyph-icon icon-bullhorn mrg10R font-orange" aria-hidden="true"></i>
                             Request throttling.
                         </li>
                     </ul>
@@ -226,7 +226,7 @@
                         <div class="content-box">
                             <h3 class="content-box-header content-box-header-alt bg-default">
                                 <span class="icon-separator">
-                                    <i class="glyph-icon icon-cog"></i>
+                                    <i class="glyph-icon icon-cog" aria-hidden="true"></i>
                                 </span>
                                 <span class="header-wrapper">
                                     Administrative area
@@ -237,20 +237,20 @@
                                 <div class="form-group">
 
                                     <div class="input-group">
-                                        <input ng-model="username" type="text" class="form-control" name="username" placeholder="Enter username" required>
+                                        <input ng-model="username" type="text" class="form-control" name="username" placeholder="Enter username" required aria-label="Enter username">
                                         <span class="input-group-addon bg-blue">
-                                            <i class="glyph-icon icon-envelope-o"></i>
+                                            <i class="glyph-icon icon-envelope-o" aria-hidden="true"></i>
                                         </span>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <input ng-model="password" type="password" class="form-control" id="password" placeholder="Password" required>
+                                        <input ng-model="password" type="password" class="form-control" id="password" placeholder="Password" required aria-label="Password">
                                         <span class="input-group-addon bg-blue">
-                                            <i class="glyph-icon icon-unlock-alt"></i>
+                                            <i class="glyph-icon icon-unlock-alt" aria-hidden="true"></i>
                                         </span>
                                     </div>
-                                    <img id="verifyingLogin" class="center-block" src="{% static 'images/loading.gif' %}">
+                                    <img id="verifyingLogin" class="center-block" src="{% static 'images/loading.gif' %}" alt="">
                                 </div>
 
 
@@ -259,7 +259,7 @@
                             </div>
                         </div>
                     </form>
-                    <div id="loginFailed" class="alert alert-danger">
+                    <div id="loginFailed" class="alert alert-danger" role="alert">
                         <p>Could Not Login, Error message: {$ errorMessage $}</p>
                 </div>
                 </div>

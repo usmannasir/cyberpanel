@@ -32,13 +32,13 @@
         <tr ng-repeat="item in fileNavigator.fileList | orderBy:predicate:reverse" ng-show="!fileNavigator.requesting && item.model.type === 'dir'" ng-if="!selectedFilesAreChildOfPath(item)">
             <td>
                 <a href="" ng-click="fileNavigator.folderClick(item)" title="{{item.model.name}} ({{item.model.size | humanReadableFileSize}})">
-                    <i class="glyphicon glyphicon-folder-close"></i>
+                    <i class="glyphicon glyphicon-folder-close" aria-hidden="true"></i>
                     {{item.model.name | strLimit : 32}}
                 </a>
             </td>
             <td class="text-right">
                 <button class="btn btn-sm btn-default" ng-click="select(item)">
-                    <i class="glyphicon glyphicon-hand-up"></i> {{"select_this" | translate}}
+                    <i class="glyphicon glyphicon-hand-up" aria-hidden="true"></i> {{"select_this" | translate}}
                 </button>
             </td>
         </tr>

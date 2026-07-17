@@ -1,4 +1,4 @@
-<div class="modal animated fadeIn" id="imagepreview">
+<div class="modal animated fadeIn" id="imagepreview" role="dialog" aria-labelledby="cpa11y-mt-21">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -6,7 +6,7 @@
             <span aria-hidden="true">&times;</span>
             <span class="sr-only">{{"close" | translate}}</span>
         </button>
-        <h4 class="modal-title">{{"preview" | translate}}</h4>
+        <h4 id="cpa11y-mt-21" class="modal-title">{{"preview" | translate}}</h4>
       </div>
       <div class="modal-body">
         <div class="text-center">
@@ -22,7 +22,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="remove">
+<div class="modal animated fadeIn" id="remove" role="dialog" aria-labelledby="cpa11y-mt-22">
   <div class="modal-dialog">
     <div class="modal-content">
     <form ng-submit="remove()">
@@ -31,7 +31,7 @@
             <span aria-hidden="true">&times;</span>
             <span class="sr-only">{{"close" | translate}}</span>
         </button>
-        <h4 class="modal-title">{{"confirm" | translate}}</h4>
+        <h4 id="cpa11y-mt-22" class="modal-title">{{"confirm" | translate}}</h4>
       </div>
       <div class="modal-body">
         {{'sure_to_delete' | translate}} <span ng-include data-src="'selected-files-msg'"></span>
@@ -47,7 +47,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="move">
+<div class="modal animated fadeIn" id="move" role="dialog" aria-labelledby="cpa11y-mt-23">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="move()">
@@ -56,7 +56,7 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'move' | translate}}</h4>
+              <h4 id="cpa11y-mt-23" class="modal-title">{{'move' | translate}}</h4>
             </div>
             <div class="modal-body">
               <div ng-include data-src="'path-selector'" class="clearfix"></div>
@@ -72,7 +72,7 @@
 </div>
 
 
-<div class="modal animated fadeIn" id="rename">
+<div class="modal animated fadeIn" id="rename" role="dialog" aria-labelledby="cpa11y-mt-24">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="rename()">
@@ -81,11 +81,11 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'rename' | translate}}</h4>
+              <h4 id="cpa11y-mt-24" class="modal-title">{{'rename' | translate}}</h4>
             </div>
             <div class="modal-body">
-              <label class="radio">{{'enter_new_name_for' | translate}} <b>{{singleSelection() && singleSelection().model.name}}</b></label>
-              <input class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
+              <label for="cpa11y-field" class="radio">{{'enter_new_name_for' | translate}} <b>{{singleSelection() && singleSelection().model.name}}</b></label>
+              <input id="cpa11y-field" class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
 
               <div ng-include data-src="'error-bar'" class="clearfix"></div>
             </div>
@@ -98,7 +98,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="copy">
+<div class="modal animated fadeIn" id="copy" role="dialog" aria-labelledby="cpa11y-mt-25">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="copy()">
@@ -107,12 +107,12 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'copy_file' | translate}}</h4>
+              <h4 id="cpa11y-mt-25" class="modal-title">{{'copy_file' | translate}}</h4>
             </div>
             <div class="modal-body">
               <div ng-show="singleSelection()">
-                <label class="radio">{{'enter_new_name_for' | translate}} <b>{{singleSelection().model.name}}</b></label>
-                <input class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
+                <label for="cpa11y-field-2" class="radio">{{'enter_new_name_for' | translate}} <b>{{singleSelection().model.name}}</b></label>
+                <input id="cpa11y-field-2" class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
               </div>
 
               <div ng-include data-src="'path-selector'" class="clearfix"></div>
@@ -127,7 +127,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="compress">
+<div class="modal animated fadeIn" id="compress" role="dialog" aria-labelledby="cpa11y-mt-26">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="compress()">
@@ -136,7 +136,7 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'compress' | translate}}</h4>
+              <h4 id="cpa11y-mt-26" class="modal-title">{{'compress' | translate}}</h4>
             </div>
             <div class="modal-body">
               <div ng-show="apiMiddleware.apiHandler.asyncSuccess">
@@ -147,11 +147,11 @@
                     {{'sure_to_start_compression_with' | translate}} <b>{{singleSelection().model.name}}</b> ?
                   </div>
                   <div ng-show="config.allowedActions.compressChooseName">
-                    <label class="radio">
+                    <label for="cpa11y-field-3" class="radio">
                       {{'enter_file_name_for_compression' | translate}}
                       <span ng-include data-src="'selected-files-msg'"></span>
                     </label>
-                    <input class="form-control" ng-model="temp.tempModel.name" autofocus="autofocus">
+                    <input id="cpa11y-field-3" class="form-control" ng-model="temp.tempModel.name" autofocus="autofocus">
                   </div>
               </div>
 
@@ -171,7 +171,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="extract" ng-init="singleSelection().emptyName()">
+<div class="modal animated fadeIn" id="extract" ng-init="singleSelection().emptyName()" role="dialog" aria-labelledby="cpa11y-mt-27">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="extract()">
@@ -180,15 +180,15 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'extract_item' | translate}}</h4>
+              <h4 id="cpa11y-mt-27" class="modal-title">{{'extract_item' | translate}}</h4>
             </div>
             <div class="modal-body">
               <div ng-show="apiMiddleware.apiHandler.asyncSuccess">
                   <div class="label label-success error-msg">{{'extraction_started' | translate}}</div>
               </div>
               <div ng-hide="apiMiddleware.apiHandler.asyncSuccess">
-                  <label class="radio">{{'enter_folder_name_for_extraction' | translate}} <b>{{singleSelection().model.name}}</b></label>
-                  <input class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
+                  <label for="cpa11y-field-4" class="radio">{{'enter_folder_name_for_extraction' | translate}} <b>{{singleSelection().model.name}}</b></label>
+                  <input id="cpa11y-field-4" class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
               </div>
               <div ng-include data-src="'error-bar'" class="clearfix"></div>
             </div>
@@ -206,7 +206,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="edit" ng-class="{'modal-fullscreen': fullscreen}">
+<div class="modal animated fadeIn" id="edit" ng-class="{'modal-fullscreen': fullscreen}" role="dialog" aria-labelledby="cpa11y-mt-28">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
         <form ng-submit="edit()">
@@ -216,10 +216,10 @@
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
               <button type="button" class="close fullscreen" ng-click="fullscreen=!fullscreen">
-                  <i class="glyphicon glyphicon-fullscreen"></i>
+                  <i class="glyphicon glyphicon-fullscreen" aria-hidden="true"></i>
                   <span class="sr-only">{{'toggle_fullscreen' | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'edit_file' | translate}}</h4>
+              <h4 id="cpa11y-mt-28" class="modal-title">{{'edit_file' | translate}}</h4>
             </div>
             <div class="modal-body">
                 <label class="radio bold">{{ singleSelection().model.fullPath() }}</label>
@@ -236,7 +236,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="newfolder">
+<div class="modal animated fadeIn" id="newfolder" role="dialog" aria-labelledby="cpa11y-mt-29">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="createFolder()">
@@ -245,11 +245,11 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'new_folder' | translate}}</h4>
+              <h4 id="cpa11y-mt-29" class="modal-title">{{'new_folder' | translate}}</h4>
             </div>
             <div class="modal-body">
-              <label class="radio">{{'folder_name' | translate}}</label>
-              <input class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
+              <label for="cpa11y-field-5" class="radio">{{'folder_name' | translate}}</label>
+              <input id="cpa11y-field-5" class="form-control" ng-model="singleSelection().tempModel.name" autofocus="autofocus">
               <div ng-include data-src="'error-bar'" class="clearfix"></div>
             </div>
             <div class="modal-footer">
@@ -261,7 +261,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="uploadfile">
+<div class="modal animated fadeIn" id="uploadfile" role="dialog" aria-labelledby="cpa11y-mt-30">
   <div class="modal-dialog">
     <div class="modal-content">
         <form>
@@ -270,7 +270,7 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{"upload_files" | translate}}</h4>
+              <h4 id="cpa11y-mt-30" class="modal-title">{{"upload_files" | translate}}</h4>
             </div>
             <div class="modal-body">
               <label class="radio">
@@ -311,7 +311,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="changepermissions">
+<div class="modal animated fadeIn" id="changepermissions" role="dialog" aria-labelledby="cpa11y-mt-31">
   <div class="modal-dialog">
     <div class="modal-content">
         <form ng-submit="changePermissions()">
@@ -320,7 +320,7 @@
                   <span aria-hidden="true">&times;</span>
                   <span class="sr-only">{{"close" | translate}}</span>
               </button>
-              <h4 class="modal-title">{{'change_permissions' | translate}}</h4>
+              <h4 id="cpa11y-mt-31" class="modal-title">{{'change_permissions' | translate}}</h4>
             </div>
             <div class="modal-body">
               <table class="table mb0">
@@ -371,7 +371,7 @@
   </div>
 </div>
 
-<div class="modal animated fadeIn" id="selector" ng-controller="ModalFileManagerCtrl">
+<div class="modal animated fadeIn" id="selector" ng-controller="ModalFileManagerCtrl" role="dialog" aria-labelledby="cpa11y-mt-32">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -379,7 +379,7 @@
             <span aria-hidden="true">&times;</span>
             <span class="sr-only">{{"close" | translate}}</span>
         </button>
-        <h4 class="modal-title">{{"select_destination_folder" | translate}}</h4>
+        <h4 id="cpa11y-mt-32" class="modal-title">{{"select_destination_folder" | translate}}</h4>
       </div>
       <div class="modal-body">
         <div>
@@ -387,7 +387,7 @@
             <div ng-include="config.tplPath + '/main-table-modal.html'"></div>
             <hr />
             <button class="btn btn-sm btn-default" ng-click="selectCurrent()">
-                <i class="glyphicon"></i> {{"select_this" | translate}}
+                <i class="glyphicon" aria-hidden="true"></i> {{"select_this" | translate}}
             </button>
         </div>
       </div>
@@ -420,7 +420,7 @@
 
 <script type="text/ng-template" id="error-bar">
   <div class="label label-danger error-msg pull-left animated fadeIn" ng-show="apiMiddleware.apiHandler.error">
-    <i class="glyphicon glyphicon-remove-circle"></i>
+    <i class="glyphicon glyphicon-remove-circle" aria-hidden="true"></i>
     <span>{{apiMiddleware.apiHandler.error}}</span>
   </div>
 </script>

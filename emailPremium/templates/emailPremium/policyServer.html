@@ -19,7 +19,7 @@
 <div ng-controller="policyServer" class="example-box-wrapper">
         <div class="panel panel-body">
             <h3 class="content-box-header">
-                {% trans "Email Policy Server" %} <img ng-hide="policyServerLoading"  src="/static/images/loading.gif">
+                {% trans "Email Policy Server" %} <img ng-hide="policyServerLoading"  src="/static/images/loading.gif" alt="">
             </h3>
 
             <div class="content-box-wrapper">
@@ -29,7 +29,7 @@
                     <form  action="/" id="createPackages" class="form-horizontal bordered-row panel-body">
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Server Status" %}</label>
+                            <label for="policServerStatus" class="col-sm-3 control-label">{% trans "Server Status" %}</label>
                             <div class="col-sm-6">
                                 <input type="checkbox" id="policServerStatus" data-toggle="toggle">
                             </div>
@@ -50,15 +50,15 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
 
-                                    <div ng-hide="failedToFetch" class="alert alert-danger">
+                                    <div ng-hide="failedToFetch" class="alert alert-danger" role="alert">
                                                 <p>{% trans "Error message: " %} {$ errorMessage $}</p>
                                     </div>
 
-                                    <div ng-hide="changesApplied" class="alert alert-success">
+                                    <div ng-hide="changesApplied" class="alert alert-success" role="status">
                                                 <p>{% trans "Changes successfully applied." %}</p>
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                             <p>{% trans "Could not connect. Please refresh this page." %} </p>
                                     </div>
 

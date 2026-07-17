@@ -1028,7 +1028,7 @@
                 
                 if (!button.hasClass('loading') && !button.hasClass('no-loading')) {
                     button.addClass('loading');
-                    button.html('<i class="fa fa-spinner fa-spin"></i> <span>Loading...</span>');
+                    button.html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> <span>Loading...</span>');
                     
                     // Reset button after a timeout (for demo purposes)
                     setTimeout(function() {
@@ -1063,14 +1063,14 @@
                 <h3 class="content-box-header">
                     {% trans "Containers" %} {{ dockerSite.SiteName }}<img id="imageLoading"
                                                                            src="/static/images/loading.gif"
-                                                                           style="display: none;">
+                                                                           style="display: none;" alt="">
                 </h3>
                 <span style="display: none" id="sitename">{{ dockerSite.SiteName }}</span>
                 <div class="example-box-wrapper">
                     <div ng-repeat="web in ContainerList track by $index" ng-init="Lunchcontainer(web.id)"></div>
                 </div>
 
-                <div id="listFail" class="alert alert-danger">
+                <div id="listFail" class="alert alert-danger" role="alert">
                     <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                 </div>
 
@@ -1123,13 +1123,13 @@
                                         </span>
                                     </td>
                                     <td class="action-buttons">
-                                        <button class="btn btn-danger" ng-click="delContainer('{{ container.name }}', true)" title="Delete">
+                                        <button class="btn btn-danger" ng-click="delContainer('{{ container.name }}', true)" title="Delete" aria-label="Delete">
                                             <i class="fa fa-trash" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn btn-info" ng-click="showLog('{{ container.name }}')" title="View Logs">
+                                        <button class="btn btn-info" ng-click="showLog('{{ container.name }}')" title="View Logs" aria-label="View Logs">
                                             <i class="fa fa-file-text" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn btn-primary" ng-click="assignContainer('{{ container.name }}')" title="Assign">
+                                        <button class="btn btn-primary" ng-click="assignContainer('{{ container.name }}')" title="Assign" aria-label="Assign">
                                             <i class="fa fa-user" aria-hidden="true"></i>
                                         </button>
                                     </td>
@@ -1175,9 +1175,9 @@
                             <div class="modal-body">
                                 <form action="/" class="form-horizontal">
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
+                                        <label for="cpa11y-select-owner" class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
                                         <div class="col-sm-6">
-                                            <select ng-model="dockerOwner" class="form-control">
+                                            <select id="cpa11y-select-owner" ng-model="dockerOwner" class="form-control">
                                                 {% for user in adminNames %}
                                                     <option>{{ user }}</option>
                                                 {% endfor %}
@@ -1208,27 +1208,27 @@
                         <div ng-if="web.environment && (web.environment | filter:'n8n').length > 0" class="container-card">
                             <div class="container-header">
                                 <h3>
-                                    <i class="fa fa-cube"></i>
+                                    <i class="fa fa-cube" aria-hidden="true"></i>
                                     n8n Container: {$ web.name $}
                                     <span class="version-badge">
                                         <span style="display: none;">Debug - Environment: {$ web.environment | json $}</span>
-                                        <i class="fa fa-tag"></i> 
+                                        <i class="fa fa-tag" aria-hidden="true"></i> 
                                         <span ng-bind="'v' + getN8nVersion(web)"></span>
                                     </span>
                                     <span class="workflow-status" ng-class="{'active': web.status === 'running', 'error': web.status !== 'running'}">
-                                        <i class="fa" ng-class="{'fa-check-circle': web.status === 'running', 'fa-times-circle': web.status !== 'running'}"></i>
+                                        <i class="fa" ng-class="{'fa-check-circle': web.status === 'running', 'fa-times-circle': web.status !== 'running'}" aria-hidden="true"></i>
                                         {$ web.status $}
                                     </span>
                                 </h3>
                                 <div class="btn-group">
                                     <button class="btn btn-success" ng-click="handleAction('start', web)" ng-if="web.status !== 'running'">
-                                        <i class="fa fa-play"></i><span>Start</span>
+                                        <i class="fa fa-play" aria-hidden="true"></i><span>Start</span>
                                     </button>
                                     <button class="btn btn-warning" ng-click="handleAction('restart', web)" ng-if="web.status === 'running'">
-                                        <i class="fa fa-refresh"></i><span>Restart</span>
+                                        <i class="fa fa-refresh" aria-hidden="true"></i><span>Restart</span>
                                     </button>
                                     <button class="btn btn-danger" ng-click="handleAction('stop', web)" ng-if="web.status === 'running'">
-                                        <i class="fa fa-stop"></i><span>Stop</span>
+                                        <i class="fa fa-stop" aria-hidden="true"></i><span>Stop</span>
                                     </button>
                                 </div>
                             </div>
@@ -1274,7 +1274,7 @@
                                         </div>
 
                                         <div class="info-box">
-                                            <h4><i class="fa fa-exchange"></i> <span>Network & Ports</span></h4>
+                                            <h4><i class="fa fa-exchange" aria-hidden="true"></i> <span>Network & Ports</span></h4>
                                             <div ng-if="web.ports" class="table-responsive">
                                                 <table class="table table-hover">
                                                     <thead>
@@ -1303,7 +1303,7 @@
 
                                     <div class="col-md-6">
                                         <div class="info-box">
-                                            <h4><i class="fa fa-hdd-o"></i> <span>Volumes</span></h4>
+                                            <h4><i class="fa fa-hdd-o" aria-hidden="true"></i> <span>Volumes</span></h4>
                                             <div ng-if="web.volumes && web.volumes.length > 0" class="table-responsive">
                                                 <table class="table table-hover">
                                                     <thead>
@@ -1326,7 +1326,7 @@
                                         </div>
 
                                         <div class="info-box">
-                                            <h4><i class="fa fa-list"></i> <span>Environment Variables</span></h4>
+                                            <h4><i class="fa fa-list" aria-hidden="true"></i> <span>Environment Variables</span></h4>
                                             <div ng-if="web.environment && web.environment.length > 0" class="table-responsive">
                                                 <table class="table table-hover">
                                                     <thead>
@@ -1352,9 +1352,9 @@
 
                                 <div class="info-box">
                                     <h4>
-                                        <i class="fa fa-file-text-o"></i> <span>{% trans "Logs" %}</span>
+                                        <i class="fa fa-file-text-o" aria-hidden="true"></i> <span>{% trans "Logs" %}</span>
                                         <button class="btn btn-sm btn-primary pull-right" ng-click="getcontainerlog(web.id)">
-                                            <i class="fa fa-refresh"></i> <span>Refresh</span>
+                                            <i class="fa fa-refresh" aria-hidden="true"></i> <span>Refresh</span>
                                         </button>
                                     </h4>
                                     <textarea class="logs" readonly>{$ web.logs $}</textarea>
@@ -1366,7 +1366,7 @@
                         <div ng-if="!web.environment || (web.environment | filter:'n8n').length === 0" class="container-card">
                             <div class="container-header">
                                 <h3>
-                                    <i class="fa fa-cube"></i> <span>{% trans "Container: " %} {$ web.name $}</span>
+                                    <i class="fa fa-cube" aria-hidden="true"></i> <span>{% trans "Container: " %} {$ web.name $}</span>
                                     <span class="workflow-status" ng-class="{'active': web.status === 'running', 'error': web.status !== 'running'}">
                                         <span ng-if="web.status === 'running'" class="status-running"></span>
                                         <span ng-if="web.status !== 'running'" class="status-stopped"></span>
@@ -1375,13 +1375,13 @@
                                 </h3>
                                 <div class="btn-group">
                                     <button class="btn btn-success" ng-click="handleAction('start', web)" ng-if="web.status !== 'running'">
-                                        <i class="fa fa-play"></i><span>Start</span>
+                                        <i class="fa fa-play" aria-hidden="true"></i><span>Start</span>
                                     </button>
                                     <button class="btn btn-warning" ng-click="handleAction('restart', web)" ng-if="web.status === 'running'">
-                                        <i class="fa fa-refresh"></i><span>Restart</span>
+                                        <i class="fa fa-refresh" aria-hidden="true"></i><span>Restart</span>
                                     </button>
                                     <button class="btn btn-danger" ng-click="handleAction('stop', web)" ng-if="web.status === 'running'">
-                                        <i class="fa fa-stop"></i><span>Stop</span>
+                                        <i class="fa fa-stop" aria-hidden="true"></i><span>Stop</span>
                                     </button>
                                 </div>
                             </div>
@@ -1390,7 +1390,7 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="info-box">
-                                            <h4><i class="fa fa-info-circle"></i> <span>Basic Information</span></h4>
+                                            <h4><i class="fa fa-info-circle" aria-hidden="true"></i> <span>Basic Information</span></h4>
                                             <table class="table">
                                                 <tbody>
                                                     <tr>
@@ -1410,7 +1410,7 @@
                                         </div>
 
                                         <div class="info-box">
-                                            <h4><i class="fa fa-bar-chart-o"></i> <span>Resource Usage</span></h4>
+                                            <h4><i class="fa fa-bar-chart-o" aria-hidden="true"></i> <span>Resource Usage</span></h4>
                                             <div class="mb-3">
                                                 <label class="mb-2">Memory Usage: {$ web.memoryUsage $}</label>
                                                 <div class="progress">
@@ -1438,7 +1438,7 @@
 
                                     <div class="col-md-6">
                                         <div class="info-box">
-                                            <h4><i class="fa fa-exchange"></i> <span>Network & Ports</span></h4>
+                                            <h4><i class="fa fa-exchange" aria-hidden="true"></i> <span>Network & Ports</span></h4>
                                             <div ng-if="web.ports" class="table-responsive">
                                                 <table class="table table-hover">
                                                     <thead>
@@ -1465,7 +1465,7 @@
                                         </div>
 
                                         <div class="info-box">
-                                            <h4><i class="fa fa-hdd-o"></i> <span>Volumes</span></h4>
+                                            <h4><i class="fa fa-hdd-o" aria-hidden="true"></i> <span>Volumes</span></h4>
                                             <div ng-if="web.volumes && web.volumes.length > 0" class="table-responsive">
                                                 <table class="table table-hover">
                                                     <thead>
@@ -1492,7 +1492,7 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="info-box">
-                                            <h4><i class="fa fa-list"></i> <span>Environment Variables</span></h4>
+                                            <h4><i class="fa fa-list" aria-hidden="true"></i> <span>Environment Variables</span></h4>
                                             <div ng-if="web.environment && web.environment.length > 0" class="table-responsive">
                                                 <table class="table table-hover">
                                                     <thead>
@@ -1518,9 +1518,9 @@
 
                                 <div class="info-box">
                                     <h4>
-                                        <i class="fa fa-file-text-o"></i> <span>{% trans "Logs" %}</span>
+                                        <i class="fa fa-file-text-o" aria-hidden="true"></i> <span>{% trans "Logs" %}</span>
                                         <button class="btn btn-sm btn-primary pull-right" ng-click="getcontainerlog(web.id)">
-                                            <i class="fa fa-refresh"></i> <span>Refresh</span>
+                                            <i class="fa fa-refresh" aria-hidden="true"></i> <span>Refresh</span>
                                         </button>
                                     </h4>
                                     <textarea class="logs" readonly>{$ web.logs $}</textarea>
@@ -1536,20 +1536,20 @@
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                                 <h4 class="modal-title">
-                                    <i class="fa fa-cog"></i> Container Settings
+                                    <i class="fa fa-cog" aria-hidden="true"></i> Container Settings
                                     <img id="containerSettingLoading" src="/static/images/loading.gif"
-                                         style="display: none;">
+                                         style="display: none;" alt="">
                                 </h4>
                             </div>
                             <div class="modal-body">
                                 <form name="containerSettingsForm" action="/" class="form-horizontal">
                                     <div class="info-box">
-                                        <h4><i class="fa fa-cog"></i> Resource Settings</h4>
+                                        <h4><i class="fa fa-cog" aria-hidden="true"></i> Resource Settings</h4>
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label">{% trans "Memory limit (MB)" %}</label>
+                                            <label for="cpa11y-memory-limit-mb" class="col-sm-4 control-label">{% trans "Memory limit (MB)" %}</label>
                                             <div class="col-sm-8">
                                                 <div class="input-group">
-                                                    <input name="memory" type="number" class="form-control"
+                                                    <input id="cpa11y-memory-limit-mb" name="memory" type="number" class="form-control"
                                                         ng-model="web.memoryLimit" required>
                                                     <span class="input-group-addon">MB</span>
                                                 </div>
@@ -1570,9 +1570,9 @@
                                     </div>
 
                                     <div class="info-box">
-                                        <h4><i class="fa fa-warning"></i> Advanced Settings</h4>
-                                        <div class="alert alert-warning">
-                                            <i class="fa fa-warning"></i> Editing environment variables or volumes will recreate the container. Data outside mounted volumes may be lost.
+                                        <h4><i class="fa fa-warning" aria-hidden="true"></i> Advanced Settings</h4>
+                                        <div class="alert alert-warning" role="status">
+                                            <i class="fa fa-warning" aria-hidden="true"></i> Editing environment variables or volumes will recreate the container. Data outside mounted volumes may be lost.
                                         </div>
                                         
                                         <div class="form-group">
@@ -1588,23 +1588,23 @@
                                     </div>
 
                                     <div class="info-box" ng-class="{'disabled': !envConfirmation}">
-                                        <h4><i class="fa fa-list"></i> Environment Variables</h4>
+                                        <h4><i class="fa fa-list" aria-hidden="true"></i> Environment Variables</h4>
                                         
                                         <div ng-repeat="env in envList track by $index" class="form-group">
                                             <div class="col-sm-5">
                                                 <input name="envname_$index" ng-disabled="!envConfirmation" type="text"
                                                     class="form-control" ng-model="envList[$index].name"
-                                                    placeholder="Variable name" required>
+                                                    placeholder="Variable name" required aria-label="Variable name">
                                             </div>
                                             <div class="col-sm-6">
                                                 <input name="envvalue_$index" ng-disabled="!envConfirmation" type="text"
                                                     class="form-control" ng-model="envList[$index].value"
-                                                    placeholder="Value" required>
+                                                    placeholder="Value" required aria-label="Value">
                                             </div>
                                             <div class="col-sm-1" ng-if="envList.length > 1">
                                                 <button class="btn btn-sm btn-danger" ng-disabled="!envConfirmation" 
                                                         ng-click="envList.splice($index, 1)">
-                                                    <i class="fa fa-times"></i>
+                                                    <i class="fa fa-times" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -1613,31 +1613,31 @@
                                             <div class="col-sm-12">
                                                 <button type="button" ng-disabled="!envConfirmation" class="btn btn-sm btn-info"
                                                         ng-click="addEnvField()">
-                                                    <i class="fa fa-plus"></i> Add Environment Variable
+                                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Environment Variable
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="info-box" ng-class="{'disabled': !envConfirmation}">
-                                        <h4><i class="fa fa-hdd-o"></i> Volume Mappings</h4>
+                                        <h4><i class="fa fa-hdd-o" aria-hidden="true"></i> Volume Mappings</h4>
                                         
                                         <div ng-repeat="volume in volList track by $index" class="form-group">
                                             <div class="col-sm-5">
                                                 <input type="text" ng-disabled="!envConfirmation"
                                                     class="form-control"
                                                     ng-model="volList[$index].dest" placeholder="Container Path"
-                                                    required>
+                                                    required aria-label="Container Path">
                                             </div>
                                             <div class="col-sm-6">
                                                 <input type="text" ng-disabled="!envConfirmation"
                                                     class="form-control"
-                                                    ng-model="volList[$index].src" placeholder="Host Path" required>
+                                                    ng-model="volList[$index].src" placeholder="Host Path" required aria-label="Host Path">
                                             </div>
                                             <div class="col-sm-1" ng-if="volList.length > 1">
                                                 <button class="btn btn-sm btn-danger" ng-disabled="!envConfirmation" 
                                                         ng-click="volList.splice($index, 1)">
-                                                    <i class="fa fa-times"></i>
+                                                    <i class="fa fa-times" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -1646,7 +1646,7 @@
                                             <div class="col-sm-12">
                                                 <button type="button" ng-disabled="!envConfirmation" class="btn btn-sm btn-info"
                                                         ng-click="addVolField()">
-                                                    <i class="fa fa-plus"></i> Add Volume Mapping
+                                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Volume Mapping
                                                 </button>
                                             </div>
                                         </div>
@@ -1656,7 +1656,7 @@
                             <div class="modal-footer">
                                 <button type="button" ng-disabled="savingSettings" class="btn btn-primary"
                                         ng-click="saveSettings()">
-                                    <i class="fa fa-save"></i> Save Changes
+                                    <i class="fa fa-save" aria-hidden="true"></i> Save Changes
                                 </button>
                                 <button type="button" ng-disabled="savingSettings" class="btn btn-default"
                                         data-dismiss="modal">

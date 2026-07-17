@@ -429,14 +429,14 @@ AI Security Scanner - CyberPanel
         <!-- Page Header -->
         <div class="scanner-section">
             <h2 class="scanner-title">
-                <i class="fas fa-shield-alt" style="color: #5856d6;"></i>
+                <i class="fas fa-shield-alt" style="color: #5856d6;" aria-hidden="true"></i>
                 AI Security Scanner
             </h2>
             
             <!-- Error Display -->
             {% if error %}
-            <div class="scanner-alert scanner-alert-danger">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div class="scanner-alert scanner-alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 <div class="scanner-alert-content">
                     <p>{{ error }}</p>
                 </div>
@@ -447,7 +447,7 @@ AI Security Scanner - CyberPanel
             {% if messages %}
                 {% for message in messages %}
                     <div class="scanner-alert scanner-alert-{{ message.tags }}">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         <div class="scanner-alert-content">
                             <p>{{ message }}</p>
                         </div>
@@ -459,8 +459,8 @@ AI Security Scanner - CyberPanel
         <!-- Payment Setup Section -->
         {% if not is_payment_configured and not vps_info.is_vps|default:False|default:False %}
         <div class="scanner-section">
-            <div class="scanner-alert scanner-alert-info">
-                <i class="fas fa-credit-card"></i>
+            <div class="scanner-alert scanner-alert-info" role="status">
+                <i class="fas fa-credit-card" aria-hidden="true"></i>
                 <div class="scanner-alert-content">
                     <h4>Setup Required</h4>
                     <p>Configure your payment method to start scanning WordPress sites for malware and security vulnerabilities. Your card will be charged <strong>$10 initially</strong> to fund your scanning account.</p>
@@ -487,7 +487,7 @@ AI Security Scanner - CyberPanel
                     {% endif %}
                     
                     <button type="button" class="btn-primary btn-lg" onclick="setupPayment()">
-                        <i class="fas fa-credit-card"></i> Setup Payment ($10 Initial Charge)
+                        <i class="fas fa-credit-card" aria-hidden="true"></i> Setup Payment ($10 Initial Charge)
                     </button>
                 </div>
             </div>
@@ -497,8 +497,8 @@ AI Security Scanner - CyberPanel
         <!-- VPS Free Scans Notice -->
         {% if vps_info.is_vps|default:False|default:False and vps_info.has_free_scans|default:False|default:False %}
         <div class="scanner-section">
-            <div class="scanner-alert scanner-alert-success">
-                <i class="fas fa-gift"></i>
+            <div class="scanner-alert scanner-alert-success" role="status">
+                <i class="fas fa-gift" aria-hidden="true"></i>
                 <div class="scanner-alert-content">
                     <h4>VPS Free Scans Available</h4>
                     <p>Great news! Your CyberPanel VPS hosting includes <strong>{{ vps_info.free_scans_available|default:0 }} free AI security scans</strong> this month ({{ vps_info.scans_used_this_month|default:0 }}/{{ vps_info.free_scans_per_month|default:0 }} used).</p>
@@ -510,8 +510,8 @@ AI Security Scanner - CyberPanel
         </div>
         {% elif vps_info.is_vps|default:False|default:False and not vps_info.has_free_scans|default:False|default:True %}
         <div class="scanner-section">
-            <div class="scanner-alert scanner-alert-warning">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div class="scanner-alert scanner-alert-warning" role="status">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 <div class="scanner-alert-content">
                     <h4>Free Scans Exhausted</h4>
                     <p>You've used all {{ vps_info.free_scans_per_month|default:0 }} free AI security scans for this month. Setup payment to continue scanning.</p>
@@ -525,7 +525,7 @@ AI Security Scanner - CyberPanel
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-card-icon success">
-                    <i class="fas fa-wallet"></i>
+                    <i class="fas fa-wallet" aria-hidden="true"></i>
                 </div>
                 {% if vps_info.is_vps|default:False|default:False and vps_info.has_free_scans|default:False|default:False %}
                     <h2>{{ vps_info.free_scans_available|default:0 }}</h2>
@@ -539,14 +539,14 @@ AI Security Scanner - CyberPanel
                 {% endif %}
                 {% if is_payment_configured %}
                 <button class="btn-default btn-xs" style="margin-top: 10px;" onclick="refreshBalance()">
-                    <i class="fas fa-sync"></i> Refresh
+                    <i class="fas fa-sync" aria-hidden="true"></i> Refresh
                 </button>
                 {% endif %}
             </div>
             
             <div class="stat-card">
                 <div class="stat-card-icon info">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
                 </div>
                 <h2>{{ recent_scans|length }}</h2>
                 <p>Recent Scans</p>
@@ -555,7 +555,7 @@ AI Security Scanner - CyberPanel
             
             <div class="stat-card">
                 <div class="stat-card-icon warning">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 </div>
                 <h2>
                     {% for scan in recent_scans %}{% if scan.status == 'completed' %}{{ scan.issues_found|add:0 }}{% endif %}{% endfor %}
@@ -569,28 +569,28 @@ AI Security Scanner - CyberPanel
         <div class="scanner-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 class="scanner-title" style="margin: 0;">
-                    <i class="fas fa-credit-card" style="color: #5856d6;"></i>
+                    <i class="fas fa-credit-card" style="color: #5856d6;" aria-hidden="true"></i>
                     Payment Methods
                 </h3>
                 {% if not vps_info.is_vps|default:False or is_payment_configured %}
                 <button class="btn-primary btn-xs" onclick="addPaymentMethod()">
-                    <i class="fas fa-plus"></i> Add Payment Method
+                    <i class="fas fa-plus" aria-hidden="true"></i> Add Payment Method
                 </button>
                 {% else %}
                 <button class="btn-default btn-xs" onclick="addPaymentMethod()">
-                    <i class="fas fa-plus"></i> Add Payment (Optional)
+                    <i class="fas fa-plus" aria-hidden="true"></i> Add Payment (Optional)
                 </button>
                 {% endif %}
             </div>
             
             {% if vps_info.is_vps|default:False and not is_payment_configured %}
             <p style="color: var(--text-secondary, #64748b); margin-bottom: 15px;">
-                <i class="fas fa-info-circle"></i> 
+                <i class="fas fa-info-circle" aria-hidden="true"></i> 
                 Payment setup is optional for VPS users. You have {{ vps_info.free_scans_available|default:0 }} free scans available.
             </p>
             {% else %}
             <p style="color: var(--text-secondary, #64748b); margin-bottom: 15px;">
-                <i class="fas fa-info-circle"></i> 
+                <i class="fas fa-info-circle" aria-hidden="true"></i> 
                 Your account uses automatic billing. Add multiple payment methods for backup security.
             </p>
             {% endif %}
@@ -606,7 +606,7 @@ AI Security Scanner - CyberPanel
         <!-- Scan Form -->
         <div class="scanner-section">
             <h3 class="scanner-title">
-                <i class="fas fa-search" style="color: #5856d6;"></i>
+                <i class="fas fa-search" style="color: #5856d6;" aria-hidden="true"></i>
                 Start New Scan
             </h3>
             <form id="scanForm">
@@ -630,14 +630,14 @@ AI Security Scanner - CyberPanel
                     <div>
                         {% if vps_info.is_vps|default:False and not vps_info.has_free_scans|default:False and not is_payment_configured %}
                         <button type="button" class="btn-primary" disabled style="width: 100%;">
-                            <i class="fas fa-lock"></i> Free Scans Exhausted
+                            <i class="fas fa-lock" aria-hidden="true"></i> Free Scans Exhausted
                         </button>
                         {% else %}
                         <button type="submit" class="btn-primary" id="scanButton" style="width: 100%;">
                             {% if vps_info.is_vps|default:False|default:False and vps_info.has_free_scans|default:False|default:False %}
-                            <i class="fas fa-search"></i> Start Free Scan
+                            <i class="fas fa-search" aria-hidden="true"></i> Start Free Scan
                             {% else %}
-                            <i class="fas fa-search"></i> Start Scan
+                            <i class="fas fa-search" aria-hidden="true"></i> Start Scan
                             {% endif %}
                         </button>
                         {% endif %}
@@ -651,11 +651,11 @@ AI Security Scanner - CyberPanel
         <div class="scanner-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 class="scanner-title" style="margin: 0;">
-                    <i class="fas fa-calendar-alt" style="color: #5856d6;"></i>
+                    <i class="fas fa-calendar-alt" style="color: #5856d6;" aria-hidden="true"></i>
                     Scheduled Scans
                 </h3>
                 <button class="btn-primary btn-xs" onclick="showScheduleModal()">
-                    <i class="fas fa-plus"></i> Schedule New Scan
+                    <i class="fas fa-plus" aria-hidden="true"></i> Schedule New Scan
                 </button>
             </div>
             
@@ -673,11 +673,11 @@ AI Security Scanner - CyberPanel
         <div class="scanner-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 class="scanner-title" style="margin: 0;">
-                    <i class="fas fa-history" style="color: #5856d6;"></i>
+                    <i class="fas fa-history" style="color: #5856d6;" aria-hidden="true"></i>
                     Recent Scans
                 </h3>
                 <button class="btn-default btn-xs" onclick="refreshScanHistory()">
-                    <i class="fas fa-sync"></i> Refresh
+                    <i class="fas fa-sync" aria-hidden="true"></i> Refresh
                 </button>
             </div>
             <div class="table-container">
@@ -744,11 +744,11 @@ AI Security Scanner - CyberPanel
                             <td>
                                 <div style="display: flex; gap: 5px;">
                                     <button class="btn-default btn-xs" onclick="viewScanDetails('{{ scan.scan_id }}')">
-                                        <i class="fas fa-eye"></i> View
+                                        <i class="fas fa-eye" aria-hidden="true"></i> View
                                     </button>
                                     {% if scan.status == 'completed' %}
                                     <button class="btn-primary btn-xs" onclick="viewOnPlatform('{{ scan.scan_id }}')" title="View detailed AI analysis on platform">
-                                        <i class="fas fa-external-link-alt"></i> AI Analysis
+                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i> AI Analysis
                                     </button>
                                     {% endif %}
                                 </div>
@@ -770,7 +770,7 @@ AI Security Scanner - CyberPanel
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">
-                    <i class="fas fa-search"></i> Scan Results
+                    <i class="fas fa-search" aria-hidden="true"></i> Scan Results
                 </h4>
                 <button type="button" class="close" data-dismiss="modal" style="font-size: 24px;">&times;</button>
             </div>
@@ -782,7 +782,7 @@ AI Security Scanner - CyberPanel
                             <h5>
                                 <span id="scanPhase" class="status-label info">Loading...</span>
                                 <button class="btn-default btn-xs pull-right" onclick="refreshScanProgress()">
-                                    <i class="fas fa-sync-alt"></i> Refresh
+                                    <i class="fas fa-sync-alt" aria-hidden="true"></i> Refresh
                                 </button>
                             </h5>
                         </div>
@@ -859,7 +859,7 @@ AI Security Scanner - CyberPanel
 
                 <!-- Loading Section -->
                 <div id="loadingSection" class="text-center">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
                     <p>Loading scan details...</p>
                 </div>
 
@@ -890,7 +890,7 @@ function setupPayment() {
     // Show loading
     const button = event.target;
     const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Setting up...';
     button.disabled = true;
     
     fetch('/aiscanner/setup-payment/', {
@@ -935,7 +935,7 @@ if (scanForm) {
     
     // Show loading
     const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Starting...';
     button.disabled = true;
     
     fetch('/aiscanner/start-scan/', {
@@ -997,11 +997,11 @@ function updateScanHistoryTable(scans) {
         
         const actionsHtml = `<div style="display: flex; gap: 5px;">
                 <button class="btn-default btn-xs" onclick="viewScanDetails('${safeScanId}')">
-                    <i class="fas fa-eye"></i> View
+                    <i class="fas fa-eye" aria-hidden="true"></i> View
                 </button>
                 ${scan.status === 'completed' ? `
                 <button class="btn-primary btn-xs" onclick="viewOnPlatform('${safeScanId}')" title="View detailed AI analysis on platform">
-                    <i class="fas fa-external-link-alt"></i> AI Analysis
+                    <i class="fas fa-external-link-alt" aria-hidden="true"></i> AI Analysis
                 </button>
                 ` : ''}
             </div>`;
@@ -1213,8 +1213,8 @@ function fetchCompletedScanDetails(scanId) {
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('completedSection').style.display = 'block';
             document.getElementById('completedSection').innerHTML = 
-                `<div class="scanner-alert scanner-alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
+                `<div class="scanner-alert scanner-alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     <div class="scanner-alert-content">
                         <p>Error: ${escapeHtml(data.error)}</p>
                     </div>
@@ -1227,8 +1227,8 @@ function fetchCompletedScanDetails(scanId) {
         document.getElementById('progressSection').style.display = 'none';
         document.getElementById('completedSection').style.display = 'block';
         document.getElementById('completedSection').innerHTML = 
-            `<div class="scanner-alert scanner-alert-danger">
-                <i class="fas fa-exclamation-triangle"></i>
+            `<div class="scanner-alert scanner-alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 <div class="scanner-alert-content">
                     <p>Failed to load scan details. Please try again.</p>
                 </div>
@@ -1267,8 +1267,8 @@ function displayCompletedScanDetails(scan) {
         });
         findingsHtml += '</div>';
     } else {
-        findingsHtml = `<div class="scanner-alert scanner-alert-success">
-            <i class="fas fa-check-circle"></i>
+        findingsHtml = `<div class="scanner-alert scanner-alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <div class="scanner-alert-content">
                 <p>No security issues found!</p>
             </div>
@@ -1287,14 +1287,14 @@ function displayCompletedScanDetails(scan) {
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
             <div class="stat-card" style="padding: 20px;">
                 <div class="stat-card-icon info" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 10px;">
-                    <i class="fas fa-file"></i>
+                    <i class="fas fa-file" aria-hidden="true"></i>
                 </div>
                 <h4 style="margin: 0; font-size: 24px; font-weight: 700;">${filesScanned}${filesDiscovered > filesScanned ? `/${filesDiscovered}` : ''}</h4>
                 <p style="margin: 5px 0 0 0; font-size: 13px;">Files Scanned</p>
             </div>
             <div class="stat-card" style="padding: 20px;">
                 <div class="stat-card-icon ${threatsFound > 0 ? 'danger' : 'success'}" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 10px;">
-                    <i class="fas ${threatsFound > 0 ? 'fa-exclamation-triangle' : 'fa-check'}"></i>
+                    <i class="fas ${threatsFound > 0 ? 'fa-exclamation-triangle' : 'fa-check'}" aria-hidden="true"></i>
                 </div>
                 <h4 style="margin: 0; font-size: 24px; font-weight: 700;">${threatsFound}</h4>
                 <p style="margin: 5px 0 0 0; font-size: 13px;">Threats Found</p>
@@ -1302,14 +1302,14 @@ function displayCompletedScanDetails(scan) {
             </div>
             <div class="stat-card" style="padding: 20px;">
                 <div class="stat-card-icon info" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 10px;">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="fas fa-dollar-sign" aria-hidden="true"></i>
                 </div>
                 <h4 style="margin: 0; font-size: 24px; font-weight: 700;">${scan.cost_usd ? '$' + scan.cost_usd.toFixed(4) : 'Free'}</h4>
                 <p style="margin: 5px 0 0 0; font-size: 13px;">Cost</p>
             </div>
             <div class="stat-card" style="padding: 20px;">
                 <div class="stat-card-icon info" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 10px;">
-                    <i class="fas fa-calendar"></i>
+                    <i class="fas fa-calendar" aria-hidden="true"></i>
                 </div>
                 <h4 style="margin: 0; font-size: 24px; font-weight: 700;">${new Date(scan.started_at).toLocaleDateString()}</h4>
                 <p style="margin: 5px 0 0 0; font-size: 13px;">Scan Date</p>
@@ -1318,7 +1318,7 @@ function displayCompletedScanDetails(scan) {
         ${findingsHtml}
         <div style="margin-top: 20px; text-align: center;">
             <button class="btn-primary" onclick="viewOnPlatform('${safeScanId}')" style="padding: 0.75rem 2rem;">
-                <i class="fas fa-external-link-alt"></i> View Full AI Analysis on Platform
+                <i class="fas fa-external-link-alt" aria-hidden="true"></i> View Full AI Analysis on Platform
             </button>
         </div>
     `;
@@ -1502,7 +1502,7 @@ function getCookie(name) {
 function refreshBalance() {
     const button = event.target.closest('button');
     const originalHtml = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Refreshing...';
     button.disabled = true;
     
     fetch('/aiscanner/refresh-balance/', {
@@ -1541,7 +1541,7 @@ function refreshBalance() {
 function addPaymentMethod() {
     const button = event.target.closest('button');
     const originalHtml = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Setting up...';
     button.disabled = true;
     
     fetch('/aiscanner/add-payment-method/', {
@@ -1640,15 +1640,15 @@ function displayScheduledScans(scans) {
                 </div>
                 <div class="scheduled-scan-actions">
                     <button class="btn-xs btn-default" onclick="editScheduledScan(${scan.id})">
-                        <i class="fas fa-edit"></i> Edit
+                        <i class="fas fa-edit" aria-hidden="true"></i> Edit
                     </button>
                     <button class="btn-xs btn-${scan.status === 'active' ? 'warning' : 'success'}" 
                             onclick="toggleScheduledScan(${scan.id})">
-                        <i class="fas fa-${scan.status === 'active' ? 'pause' : 'play'}"></i> 
+                        <i class="fas fa-${scan.status === 'active' ? 'pause' : 'play'}" aria-hidden="true"></i> 
                         ${scan.status === 'active' ? 'Pause' : 'Activate'}
                     </button>
                     <button class="btn-xs btn-danger" onclick="deleteScheduledScan(${scan.id})">
-                        <i class="fas fa-trash"></i> Delete
+                        <i class="fas fa-trash" aria-hidden="true"></i> Delete
                     </button>
                 </div>
             </div>
@@ -1948,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     
                     <div class="form-group">
-                        <label>Notification Preferences</label>
+                        <label for="notifyOnThreats">Notification Preferences</label>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="notifyOnThreats" name="notify_on_threats" checked>
                             <label class="form-check-label" for="notifyOnThreats">

@@ -439,11 +439,11 @@
                target="_blank" 
                rel="noopener"
                class="btn-secondary">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Documentation" %}
             </a>
             <button type="button" class="btn-primary" data-toggle="modal" data-target="#setupGdrive">
-                <i class="fas fa-plus-circle"></i>
+                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                 {% trans "Setup New Account" %}
             </button>
         </div>
@@ -453,7 +453,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-cog" aria-hidden="true"></i>
                 {% trans "Google Drive Backup Configuration" %}
                 <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
             </h2>
@@ -462,19 +462,19 @@
             <!-- Account Selector -->
             <div class="account-selector">
                 <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-user-circle" style="margin-right: 0.5rem;"></i>
+                    <label for="cpa11y-select-google-drive-account" class="form-label">
+                        <i class="fas fa-user-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Select Google Drive Account" %}
                     </label>
                     <div style="display: flex; gap: 1rem; align-items: center;">
-                        <select ng-change="fetchWebsites()" ng-model="selectedAccount" class="form-control">
+                        <select id="cpa11y-select-google-drive-account" ng-change="fetchWebsites()" ng-model="selectedAccount" class="form-control">
                             <option value="">{% trans "Choose an account..." %}</option>
                             {% for items in accounts %}
                                 <option>{{ items }}</option>
                             {% endfor %}
                         </select>
                         <button ng-hide="driveHidden" type="button" ng-click="deleteAccount()" class="btn-danger">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                             {% trans "Delete" %}
                         </button>
                     </div>
@@ -486,11 +486,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-backup-frequency" class="form-label">
+                                <i class="fas fa-sync-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Backup Frequency" %}
                             </label>
-                            <select ng-change="changeFrequency()" ng-model="backupFrequency" class="form-control">
+                            <select id="cpa11y-backup-frequency" ng-change="changeFrequency()" ng-model="backupFrequency" class="form-control">
                                 <option>Never</option>
                                 <option>Daily</option>
                                 <option>Weekly</option>
@@ -502,8 +502,8 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-history" style="margin-right: 0.5rem;"></i>
+                            <label for="fileretention" class="form-label">
+                                <i class="fas fa-history" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Backup File Retention" %}
                             </label>
                             <select id="fileretention" ng-model="Retentiontime" ng-change="changeRetention()" class="form-control">
@@ -518,7 +518,7 @@
 
                 <!-- Retention Info -->
                 <div class="retention-info">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     <p>
                         {% trans "Backup retention is a" %} 
                         <a href="https://cyberpanel.net/cyberpanel-addons" target="_blank" rel="noopener">{% trans "paid feature" %}</a>. 
@@ -529,19 +529,19 @@
                 <!-- Site Management -->
                 <div class="form-section">
                     <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-globe" style="margin-right: 0.5rem;"></i>
+                        <label for="cpa11y-add-sites-for-backup" class="form-label">
+                            <i class="fas fa-globe" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Add Sites for Backup" %}
                         </label>
                         <div style="display: flex; gap: 1rem; align-items: center;">
-                            <select ng-model="selectedWebsite" class="form-control">
+                            <select id="cpa11y-add-sites-for-backup" ng-model="selectedWebsite" class="form-control">
                                 <option value="">{% trans "Choose a website..." %}</option>
                                 {% for items in websites %}
                                     <option>{{ items }}</option>
                                 {% endfor %}
                             </select>
                             <button type="button" ng-click="addSite()" class="btn-primary">
-                                <i class="fas fa-plus"></i>
+                                <i class="fas fa-plus" aria-hidden="true"></i>
                                 {% trans "Add Site" %}
                             </button>
                         </div>
@@ -552,7 +552,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <button data-toggle="modal" data-target="#backupLogs" 
                             type="button" ng-click="fetchLogs()" class="btn-gray">
-                        <i class="fas fa-file-alt"></i>
+                        <i class="fas fa-file-alt" aria-hidden="true"></i>
                         {% trans "View Logs" %}
                     </button>
                     <select ng-model="recordsToShow" ng-change="fetchWebsites()" 
@@ -574,12 +574,12 @@
                     <tbody>
                         <tr ng-repeat="website in websites track by $index">
                             <td>
-                                <i class="fas fa-globe" style="color: #5b5fcf; margin-right: 0.5rem;"></i>
+                                <i class="fas fa-globe" style="color: #5b5fcf; margin-right: 0.5rem;" aria-hidden="true"></i>
                                 <strong ng-bind="website.name"></strong>
                             </td>
                             <td style="text-align: center;">
                                 <button type="button" ng-click="deleteSite(website.name)" class="btn-danger">
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-times" aria-hidden="true"></i>
                                     {% trans "Remove" %}
                                 </button>
                             </td>
@@ -604,7 +604,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-user-plus" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-user-plus" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Set up Google Drive Account" %}
                     </h4>
                     <button type="button" class="close" data-dismiss="modal" style="font-size: 1.5rem;">&times;</button>
@@ -612,11 +612,11 @@
                 <div class="modal-body">
                     <form name="containerSettingsForm" action="/" method="post">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-tag" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-account-name" class="form-label">
+                                <i class="fas fa-tag" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Account Name" %}
                             </label>
-                            <input name="accountName" type="text" class="form-control" 
+                            <input id="cpa11y-account-name" name="accountName" type="text" class="form-control" 
                                    ng-model="accountName" 
                                    placeholder="{% trans 'e.g., My Google Drive Backup' %}" required>
                             <small class="form-text text-muted">
@@ -627,11 +627,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-times" aria-hidden="true"></i>
                         {% trans "Cancel" %}
                     </button>
                     <button type="button" class="btn-primary" ng-click="setupAccount()">
-                        <i class="fas fa-check"></i>
+                        <i class="fas fa-check" aria-hidden="true"></i>
                         {% trans "Continue Setup" %}
                         <span ng-hide="cyberPanelLoading" class="loading-spinner" style="width: 16px; height: 16px;"></span>
                     </button>
@@ -646,7 +646,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-file-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Backup Logs" %}
                         <span ng-hide="cyberPanelLoading" class="loading-spinner" style="width: 16px; height: 16px;"></span>
                     </h4>

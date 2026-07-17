@@ -332,7 +332,7 @@
             <div class="header-actions">
                 <h2 class="section-title">CONFIGURE PLUGIN BUCKETS</h2>
                 <a href="{% url 'Addnewplugin' %}" class="btn-primary">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-plus" aria-hidden="true"></i>
                     {% trans "Create New Bucket" %}
                 </a>
             </div>
@@ -343,7 +343,7 @@
         <div class="plugins-section">
             <h3 class="section-title">
                 PLUGIN BUCKETS
-                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h3>
             
             {% if Selectedplugins %}
@@ -366,12 +366,12 @@
                                     <td>
                                         <div class="action-buttons">
                                             <a href="{% url 'EidtPlugin' %}?ID={{ sub.id }}" class="btn-action btn-edit">
-                                                <i class="fas fa-edit"></i>
+                                                <i class="fas fa-edit" aria-hidden="true"></i>
                                                 Edit
                                             </a>
                                             <button onclick="DeletePluginBuucket('{% url 'ConfigurePlugins' %}?delete={{ sub.id }}')"
                                                     class="btn-action btn-delete">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
                                                 Delete
                                             </button>
                                         </div>
@@ -389,7 +389,7 @@
                     <h3>No Plugin Buckets Found</h3>
                     <p>Create your first plugin bucket to get started.</p>
                     <a href="{% url 'Addnewplugin' %}" class="btn-primary">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-plus" aria-hidden="true"></i>
                         Create Plugin Bucket
                     </a>
                 </div>
@@ -414,7 +414,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" onclick="FinalDeletePluginBuucket()" class="btn btn-danger">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     Delete
                 </button>
             </div>

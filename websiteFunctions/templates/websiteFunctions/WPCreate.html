@@ -568,7 +568,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fab fa-wordpress"></i>
+                    <i class="fab fa-wordpress" aria-hidden="true"></i>
                 </div>
                 {% trans "Deploy WordPress" %}
             </h1>
@@ -580,24 +580,24 @@
             <div class="wp-section">
                 <h3 class="section-title">
                     {% trans "WordPress Configuration" %}
-                    <img ng-hide="webSiteCreationLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                    <img ng-hide="webSiteCreationLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
                 </h3>
                 
                 <form name="websiteCreationForm" ng-hide="installationDetailsForm">
                     <!-- Basic Information Section -->
                     <div class="form-section">
                         <h4 class="form-section-title">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                             {% trans "Basic Information" %}
                         </h4>
                         
                         <!-- Domain Name -->
                         <div class="form-group">
-                            <label class="form-label">{% trans "Domain Name" %}</label>
-                            <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"
+                            <label for="cpa11y-domain-name" class="form-label">{% trans "Domain Name" %}</label>
+                            <input id="cpa11y-domain-name" name="dom" type="text" class="form-control" ng-model="domainNameCreate"
                                    placeholder="example.com" required>
                             <p class="help-text">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "Enter domain without http:// or www" %}
                             </p>
                             <div ng-show="websiteCreationForm.dom.$error.pattern" class="error-text">
@@ -607,15 +607,15 @@
 
                         <!-- Site Title -->
                         <div class="form-group">
-                            <label class="form-label">{% trans "Site Title" %}</label>
-                            <input type="text" name="WPtitle" class="form-control" ng-model="WPtitle" 
+                            <label for="cpa11y-site-title" class="form-label">{% trans "Site Title" %}</label>
+                            <input id="cpa11y-site-title" type="text" name="WPtitle" class="form-control" ng-model="WPtitle" 
                                    placeholder="My Awesome WordPress Site" required>
                         </div>
 
                         <!-- Package & Owner -->
                         <div class="form-group">
-                            <label class="form-label">{% trans "Package" %}</label>
-                            <select ng-model="packageForWebsite" class="form-control">
+                            <label for="cpa11y-package" class="form-label">{% trans "Package" %}</label>
+                            <select id="cpa11y-package" ng-model="packageForWebsite" class="form-control">
                                 <option value="">-- {% trans "Select a package" %} --</option>
                                 {% for items in packageList %}
                                     <option>{{ items }}</option>
@@ -624,8 +624,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Owner" %}</label>
-                            <select ng-model="websiteOwner" class="form-control">
+                            <label for="cpa11y-owner" class="form-label">{% trans "Owner" %}</label>
+                            <select id="cpa11y-owner" ng-model="websiteOwner" class="form-control">
                                 <option value="">-- {% trans "Select owner" %} --</option>
                                 {% for items in owernList %}
                                     <option>{{ items }}</option>
@@ -637,19 +637,19 @@
                     <!-- WordPress Admin Section -->
                     <div class="form-section">
                         <h4 class="form-section-title">
-                            <i class="fas fa-user-shield"></i>
+                            <i class="fas fa-user-shield" aria-hidden="true"></i>
                             {% trans "Administrator Account" %}
                         </h4>
                         
                         <div class="form-group">
-                            <label class="form-label">{% trans "Admin Username" %}</label>
-                            <input name="Username" type="text" class="form-control" ng-model="WPUsername"
+                            <label for="cpa11y-admin-username" class="form-label">{% trans "Admin Username" %}</label>
+                            <input id="cpa11y-admin-username" name="Username" type="text" class="form-control" ng-model="WPUsername"
                                    placeholder="admin" required>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Admin Email" %}</label>
-                            <input type="email" name="email" class="form-control" ng-model="adminEmail" 
+                            <label for="cpa11y-admin-email" class="form-label">{% trans "Admin Email" %}</label>
+                            <input id="cpa11y-admin-email" type="email" name="email" class="form-control" ng-model="adminEmail" 
                                    placeholder="admin@example.com" required>
                             <div ng-show="websiteCreationForm.email.$error.email" class="error-text">
                                 {% trans "Please enter a valid email address" %}
@@ -657,17 +657,17 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Admin Password" %}</label>
+                            <label for="cpa11y-admin-password" class="form-label">{% trans "Admin Password" %}</label>
                             <div class="input-group">
-                                <input name="password" type="{$ showPassword ? 'text' : 'password' $}" class="form-control" ng-model="WPPassword"
+                                <input id="cpa11y-admin-password" name="password" type="{$ showPassword ? 'text' : 'password' $}" class="form-control" ng-model="WPPassword"
                                        placeholder="Strong password required" required>
                                 <button type="button" class="btn btn-generate" ng-click="WPPassword = randomPassword(16); showPassword = true">
-                                    <i class="fas fa-magic"></i>
+                                    <i class="fas fa-magic" aria-hidden="true"></i>
                                     {% trans "Generate" %}
                                 </button>
                             </div>
                             <p class="help-text">
-                                <i class="fas fa-lock"></i>
+                                <i class="fas fa-lock" aria-hidden="true"></i>
                                 {% trans "Use a strong password with letters, numbers, and symbols" %}
                             </p>
                         </div>
@@ -676,13 +676,13 @@
                     <!-- WordPress Configuration Section -->
                     <div class="form-section">
                         <h4 class="form-section-title">
-                            <i class="fas fa-cog"></i>
+                            <i class="fas fa-cog" aria-hidden="true"></i>
                             {% trans "WordPress Configuration" %}
                         </h4>
                         
                         <div class="form-group">
-                            <label class="form-label">{% trans "WordPress Version" %}</label>
-                            <select ng-model="WPVersions" class="form-control">
+                            <label for="cpa11y-wordpress-version" class="form-label">{% trans "WordPress Version" %}</label>
+                            <select id="cpa11y-wordpress-version" ng-model="WPVersions" class="form-control">
                                 {% for wp in WPVersions %}
                                     <option>{{ wp }}</option>
                                 {% endfor %}
@@ -690,15 +690,15 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Plugin/Theme Bundle" %}</label>
-                            <select ng-model="pluginbucket" class="form-control">
+                            <label for="cpa11y-plugin-theme-bundle" class="form-label">{% trans "Plugin/Theme Bundle" %}</label>
+                            <select id="cpa11y-plugin-theme-bundle" ng-model="pluginbucket" class="form-control">
                                 <option value="-1" selected>-- {% trans "None (Clean Installation)" %} --</option>
                                 {% for wp in Plugins %}
                                     <option value="{{ wp.id }}">{{ wp.Name }}</option>
                                 {% endfor %}
                             </select>
                             <p class="help-text">
-                                <i class="fas fa-puzzle-piece"></i>
+                                <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
                                 {% trans "Pre-configured plugin and theme bundles for quick setup" %}
                             </p>
                         </div>
@@ -707,13 +707,13 @@
                     <!-- Update Settings Section -->
                     <div class="form-section">
                         <h4 class="form-section-title">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Update Settings" %}
                         </h4>
                         
                         <div class="form-group">
-                            <label class="form-label">{% trans "Core Updates" %}</label>
-                            <select ng-model="autoupdates" class="form-control">
+                            <label for="cpa11y-core-updates" class="form-label">{% trans "Core Updates" %}</label>
+                            <select id="cpa11y-core-updates" ng-model="autoupdates" class="form-control">
                                 <option>Minor and Security Updates</option>
                                 <option>All minor and major</option>
                                 <option>Disabled</option>
@@ -721,16 +721,16 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Plugin Updates" %}</label>
-                            <select ng-model="pluginupdates" ng-init="pluginupdates='Enabled'" class="form-control">
+                            <label for="cpa11y-plugin-updates" class="form-label">{% trans "Plugin Updates" %}</label>
+                            <select id="cpa11y-plugin-updates" ng-model="pluginupdates" ng-init="pluginupdates='Enabled'" class="form-control">
                                 <option>Enabled</option>
                                 <option>Disabled</option>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Theme Updates" %}</label>
-                            <select ng-model="themeupdates" ng-init="themeupdates='Enabled'" class="form-control">
+                            <label for="cpa11y-theme-updates" class="form-label">{% trans "Theme Updates" %}</label>
+                            <select id="cpa11y-theme-updates" ng-model="themeupdates" ng-init="themeupdates='Enabled'" class="form-control">
                                 <option>Enabled</option>
                                 <option>Disabled</option>
                             </select>
@@ -740,7 +740,7 @@
                     <!-- Additional Features -->
                     <div class="form-section">
                         <h4 class="form-section-title">
-                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
                             {% trans "Additional Features" %}
                         </h4>
                         
@@ -754,7 +754,7 @@
                                     <span class="switch-label">
                                         {% trans "Enable Apache Backend" %}
                                         <p class="help-text" style="margin: 5px 0 0 0;">
-                                            <i class="fas fa-server"></i>
+                                            <i class="fas fa-server" aria-hidden="true"></i>
                                             {% trans "OpenLiteSpeed + Apache for enhanced compatibility" %}
                                         </p>
                                     </span>
@@ -766,11 +766,11 @@
                                     <span class="switch-label">
                                         {% trans "Apache Backend" %}
                                         <span class="premium-badge">
-                                            <i class="fas fa-crown"></i>
+                                            <i class="fas fa-crown" aria-hidden="true"></i>
                                             {% trans "Premium" %}
                                         </span>
                                         <a href="https://cyberpanel.net/KnowledgeBase/home/deploy-a-wordpress-on-cyberpanel/" target="_blank" style="margin-left: 10px;">
-                                            <i class="fas fa-external-link-alt"></i>
+                                            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                                         </a>
                                     </span>
                                 {% endif %}
@@ -781,7 +781,7 @@
                     <!-- Submit Button -->
                     <div class="btn-group">
                         <button type="button" ng-click="createWordPresssite()" class="btn btn-primary">
-                            <i class="fab fa-wordpress"></i>
+                            <i class="fab fa-wordpress" aria-hidden="true"></i>
                             {% trans "Deploy WordPress" %}
                         </button>
                     </div>
@@ -790,7 +790,7 @@
                 <!-- Progress Section -->
                 <div ng-hide="installationProgress" class="progress-section">
                     <div class="progress-icon">
-                        <i class="fas fa-rocket"></i>
+                        <i class="fas fa-rocket" aria-hidden="true"></i>
                     </div>
                     
                     <div class="status-message">
@@ -804,22 +804,22 @@
                         </div>
                     </div>
 
-                    <div ng-hide="errorMessageBox" class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                         <div>
                             <strong>{% trans "Error:" %}</strong> {$ errorMessage $}
                         </div>
                     </div>
 
-                    <div ng-hide="success" class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                    <div ng-hide="success" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <div>
                             <strong>{% trans "Success!" %}</strong> {% trans "WordPress site has been successfully deployed." %}
                         </div>
                     </div>
 
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi" aria-hidden="true"></i>
                         <div>
                             <strong>{% trans "Connection Error" %}</strong> {% trans "Could not connect to server. Please refresh this page." %}
                         </div>
@@ -827,7 +827,7 @@
 
                     <div class="btn-group">
                         <button type="button" ng-disabled="goBackDisable" ng-click="goBack()" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i>
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
                             {% trans "Go Back" %}
                         </button>
                     </div>
@@ -837,32 +837,32 @@
             <!-- Sidebar Info -->
             <div class="info-card">
                 <h3>
-                    <i class="fas fa-sparkles"></i>
+                    <i class="fas fa-sparkles" aria-hidden="true"></i>
                     {% trans "Features" %}
                 </h3>
                 <ul class="feature-list">
                     <li>
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-bolt" aria-hidden="true"></i>
                         <span>{% trans "One-click WordPress installation" %}</span>
                     </li>
                     <li>
-                        <i class="fas fa-shield-alt"></i>
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i>
                         <span>{% trans "Automatic security hardening" %}</span>
                     </li>
                     <li>
-                        <i class="fas fa-tachometer-alt"></i>
+                        <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                         <span>{% trans "Optimized for performance" %}</span>
                     </li>
                     <li>
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         <span>{% trans "Automatic updates available" %}</span>
                     </li>
                     <li>
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-database" aria-hidden="true"></i>
                         <span>{% trans "Automatic database creation" %}</span>
                     </li>
                     <li>
-                        <i class="fas fa-lock"></i>
+                        <i class="fas fa-lock" aria-hidden="true"></i>
                         <span>{% trans "Free SSL certificate" %}</span>
                     </li>
                 </ul>

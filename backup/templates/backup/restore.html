@@ -377,13 +377,13 @@
 <div class="modern-container" ng-controller="restoreWebsiteControl">
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-undo-alt"></i>
+            <i class="fas fa-undo-alt" aria-hidden="true"></i>
             {% trans "Restore Website" %}
         </h1>
         <p class="page-subtitle">{% trans "Restore your websites from backups created by CyberPanel" %}</p>
         <div class="header-actions">
             <a href="https://cyberpanel.net/KnowledgeBase/home/backup-restore/" target="_blank" class="btn-secondary">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Backup Documentation" %}
             </a>
         </div>
@@ -391,14 +391,14 @@
 
     <!-- Info Box -->
     <div class="info-box">
-        <i class="fas fa-info-circle"></i>
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
         <p>{% trans "This tool detects all backups under" %} <strong>/home/backup</strong>. {% trans "Backups should be generated from CyberPanel's backup generation tool." %}</p>
     </div>
 
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-folder-open"></i>
+                <i class="fas fa-folder-open" aria-hidden="true"></i>
                 {% trans "Select Backup to Restore" %}
                 <span ng-hide="restoreLoading" class="loading-spinner"></span>
             </h2>
@@ -407,14 +407,14 @@
             <form action="/" method="post">
                 <div class="backup-select-card">
                     <div class="backup-icon">
-                        <i class="fas fa-archive"></i>
+                        <i class="fas fa-archive" aria-hidden="true"></i>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-database" style="margin-right: 0.5rem;"></i>
+                        <label for="cpa11y-available-backups" class="form-label">
+                            <i class="fas fa-database" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Available Backups" %}
                         </label>
-                        <select ng-change="fetchDetails()" ng-model="backupFile" class="form-control">
+                        <select id="cpa11y-available-backups" ng-change="fetchDetails()" ng-model="backupFile" class="form-control">
                             <option value="">{% trans "Choose a backup file..." %}</option>
                             {% for items in backups %}
                                 <option>{{ items }}</option>
@@ -424,7 +424,7 @@
                     
                     <div ng-hide="restoreButton" style="text-align: center; margin-top: 2rem;">
                         <button type="button" ng-click="restoreBackup()" id="restoreBackup" class="btn-primary">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             {% trans "Start Restoration" %}
                         </button>
                     </div>
@@ -435,7 +435,7 @@
                     <div class="progress-status">
                         <div class="status-info">
                             <div class="status-icon">
-                                <i class="fas fa-sync-alt fa-spin" style="color: white;"></i>
+                                <i class="fas fa-sync-alt fa-spin" style="color: white;" aria-hidden="true"></i>
                             </div>
                             <div class="status-details">
                                 <h4>{% trans "Restoration in Progress" %}</h4>
@@ -466,18 +466,18 @@
                 </div>
 
                 <!-- Alert Messages -->
-                <div ng-hide="backupError" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div ng-hide="backupError" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     {% trans "Error message:" %} {$ errorMessage $}
                 </div>
 
-                <div ng-hide="siteExists" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
+                <div ng-hide="siteExists" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     {% trans "Site related to this backup already exists." %}
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-times-circle"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-times-circle" aria-hidden="true"></i>
                     {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
             </form>

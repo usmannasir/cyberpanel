@@ -10,6 +10,7 @@
     
     <!-- Angular JS for File Manager -->
     <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
+<script src="https://code.angularjs.org/1.6.5/angular-aria.min.js"></script>
     <script src="{% static 'filemanager/js/fileManager.js' %}"></script>
     
     <!-- Fix for old browsers -->
@@ -450,7 +451,7 @@
         </div>
         
         <div class="root-alert">
-            <i class="fas fa-exclamation-triangle"></i>
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
             <div>
                 <strong>{% trans "Warning: Root Access" %}</strong><br>
                 {% trans "You are browsing with root privileges. Be careful when modifying system files." %}
@@ -524,7 +525,7 @@
                     <div class="content-box">
                         <div class="card-header">
                             <div>
-                                <label>{% trans "Current Path" %} <img ng-hide="treeLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></label>
+                                <label for="currentRPath">{% trans "Current Path" %} <img ng-hide="treeLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></label>
                                 <input type="text" class="form-control" id="currentRPath" ng-model="currentRPath" readonly>
                             </div>
                         </div>
@@ -678,7 +679,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{$fileInEditor$} - HTML Editor <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{$fileInEditor$} - HTML Editor <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -711,7 +712,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Create new folder!" %} <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Create new folder!" %} <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -719,8 +720,8 @@
             <div class="modal-body">
                 <form action="/">
                     <div class="form-group">
-                        <label>{% trans "New Folder Name" %}</label>
-                        <input ng-keypress="createFolderEnter($event)" ng-model="newFolderName" type="text" class="form-control">
+                        <label for="cpa11y-new-folder-name">{% trans "New Folder Name" %}</label>
+                        <input id="cpa11y-new-folder-name" ng-keypress="createFolderEnter($event)" ng-model="newFolderName" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Folder will be created in your current directory" %}</small>
                     </div>
                     <button type="button" ng-click="createNewFolder()" class="btn btn-primary">{% trans "Create Folder" %}</button>
@@ -748,7 +749,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Create new file!" %} <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Create new file!" %} <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -756,8 +757,8 @@
             <div class="modal-body">
                 <form action="/">
                     <div class="form-group">
-                        <label>{% trans "New File Name" %}</label>
-                        <input ng-keypress="createFileEnter($event)" ng-model="newFileName" type="text" class="form-control">
+                        <label for="cpa11y-new-file-name">{% trans "New File Name" %}</label>
+                        <input id="cpa11y-new-file-name" ng-keypress="createFileEnter($event)" ng-model="newFileName" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "File will be created in your current directory, if it already exists it will not overwirte." %}</small>
                     </div>
                     <button type="button" ng-click="createNewFile()" class="btn btn-primary">{% trans "Create File" %}</button>
@@ -785,7 +786,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Confirm Deletion!" %} <img ng-hide="deleteLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Confirm Deletion!" %} <img ng-hide="deleteLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -812,7 +813,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Compress" %} <img ng-hide="compressionLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Compress" %} <img ng-hide="compressionLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -820,17 +821,17 @@
             <div class="modal-body">
                 <form>
                     <div class="form-group">
-                        <label>{% trans "List of files/folder!" %}</label>
-                        <textarea ng-model="listOfFiles" class="form-control" rows="3"></textarea>
+                        <label for="cpa11y-list-of-files-folder">{% trans "List of files/folder!" %}</label>
+                        <textarea id="cpa11y-list-of-files-folder" ng-model="listOfFiles" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Compressed File Name" %}</label>
-                        <input ng-model="compressedFileName" type="text" class="form-control">
+                        <label for="cpa11y-compressed-file-name">{% trans "Compressed File Name" %}</label>
+                        <input id="cpa11y-compressed-file-name" ng-model="compressedFileName" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Enter without extension name!" %}</small>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Compression Type" %}</label>
-                        <select ng-model="compressionType" class="form-control">
+                        <label for="cpa11y-compression-type">{% trans "Compression Type" %}</label>
+                        <select id="cpa11y-compression-type" ng-model="compressionType" class="form-control">
                             <option>zip</option>
                             <option>tar.gz</option>
                         </select>
@@ -850,7 +851,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Extracting" %} {$ fileToBeExtracted $} <img ng-hide="extractionLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Extracting" %} {$ fileToBeExtracted $} <img ng-hide="extractionLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -858,8 +859,8 @@
             <div class="modal-body">
                 <form action="/">
                     <div class="form-group">
-                        <label>{% trans "Extract in" %}</label>
-                        <input ng-model="extractionLocation" type="text" class="form-control">
+                        <label for="cpa11y-extract-in">{% trans "Extract in" %}</label>
+                        <input id="cpa11y-extract-in" ng-model="extractionLocation" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "You can enter . to extract in current directory!" %}</small>
                     </div>
                     <button type="button" ng-click="startExtraction()" class="btn btn-primary">{% trans "Extract" %}</button>
@@ -874,7 +875,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Move Files" %} <img ng-hide="moveLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Move Files" %} <img ng-hide="moveLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -882,12 +883,12 @@
             <div class="modal-body">
                 <form>
                     <div class="form-group">
-                        <label>{% trans "List of files/folders!" %}</label>
-                        <textarea ng-model="listOfFiles" class="form-control" rows="3"></textarea>
+                        <label for="cpa11y-list-of-files-folders">{% trans "List of files/folders!" %}</label>
+                        <textarea id="cpa11y-list-of-files-folders" ng-model="listOfFiles" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Move to" %}</label>
-                        <input ng-model="pathToMoveTo" type="text" class="form-control">
+                        <label for="cpa11y-move-to">{% trans "Move to" %}</label>
+                        <input id="cpa11y-move-to" ng-model="pathToMoveTo" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Enter a path to move your files!" %}</small>
                     </div>
                 </form>
@@ -905,7 +906,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Copy Files" %} <img ng-hide="copyLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Copy Files" %} <img ng-hide="copyLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -913,12 +914,12 @@
             <div class="modal-body">
                 <form>
                     <div class="form-group">
-                        <label>{% trans "List of files/folders!" %}</label>
-                        <textarea ng-model="listOfFiles" class="form-control" rows="3"></textarea>
+                        <label for="cpa11y-list-of-files-folders-2">{% trans "List of files/folders!" %}</label>
+                        <textarea id="cpa11y-list-of-files-folders-2" ng-model="listOfFiles" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Copy to" %}</label>
-                        <input ng-model="pathToCopyTo" type="text" class="form-control">
+                        <label for="cpa11y-copy-to">{% trans "Copy to" %}</label>
+                        <input id="cpa11y-copy-to" ng-model="pathToCopyTo" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Enter a path to copy your files to!" %}</small>
                     </div>
                 </form>
@@ -936,7 +937,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Renaming" %} {$ fileToRename $} <img ng-hide="renameLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Renaming" %} {$ fileToRename $} <img ng-hide="renameLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}" alt=""></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -944,8 +945,8 @@
             <div class="modal-body">
                 <form>
                     <div class="form-group">
-                        <label>{% trans "New Name" %}</label>
-                        <input ng-keypress="renameEnter($event)" ng-model="newFileName" type="text" class="form-control">
+                        <label for="cpa11y-new-name">{% trans "New Name" %}</label>
+                        <input id="cpa11y-new-name" ng-keypress="renameEnter($event)" ng-model="newFileName" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Enter new name of file!" %}</small>
                     </div>
                 </form>

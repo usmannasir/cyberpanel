@@ -505,14 +505,14 @@
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div style="flex: 1;">
                     <h2>
-                        <i class="fas fa-terminal" style="margin-right: 10px;"></i>
+                        <i class="fas fa-terminal" style="margin-right: 10px;" aria-hidden="true"></i>
                         {% trans "SSH Access" %}
                     </h2>
                     <p>{% trans "Set up SSH access and enable/disable CageFS for" %} <span id="domainName">{{ domainName }}</span>. {% trans "CageFS requires CloudLinux OS." %}</p>
                 </div>
                 <div class="terminal-btn-wrapper">
                     <button type="button" class="btn btn-success btn-lg" ng-click="openWebTerminal()">
-                        <i class="fas fa-desktop"></i>
+                        <i class="fas fa-desktop" aria-hidden="true"></i>
                         {% trans "Open Terminal" %}
                     </button>
                 </div>
@@ -524,13 +524,13 @@
                 <div class="example-box-wrapper">
                     
                     {% if accessed_via_ip %}
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 20px;"></i>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 20px;" aria-hidden="true"></i>
                         <div>
                             <strong>{% trans "Notice:" %}</strong> {% trans "You are accessing CyberPanel via an IP address." %}<br>
                             {% trans "The Web Terminal will not work when accessed via IP. Please issue a hostname SSL and access the panel using your hostname (with valid SSL) to enable the terminal." %}<br>
                             <a href="{{ ssl_issue_link }}" target="_blank" rel="noopener" class="btn btn-warning" style="margin-top:10px;">
-                                <i class="fas fa-lock"></i>
+                                <i class="fas fa-lock" aria-hidden="true"></i>
                                 {% trans "Issue Hostname SSL" %}
                             </a>
                         </div>
@@ -538,13 +538,13 @@
                     {% endif %}
                     
                     {% if is_selfsigned_ssl %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-shield-alt" style="font-size: 20px;"></i>
+                    <div class="alert alert-warning" role="status">
+                        <i class="fas fa-shield-alt" style="font-size: 20px;" aria-hidden="true"></i>
                         <div>
                             <strong>{% trans "Warning:" %}</strong> {% trans "Your server is using a self-signed SSL certificate for the web terminal." %}<br>
                             {% trans "For security and browser compatibility, please issue a valid hostname SSL certificate." %}<br>
                             <a href="{{ ssl_issue_link }}" target="_blank" rel="noopener" class="btn btn-warning" style="margin-top:10px;">
-                                <i class="fas fa-lock"></i>
+                                <i class="fas fa-lock" aria-hidden="true"></i>
                                 {% trans "Issue SSL Now" %}
                             </a>
                         </div>
@@ -554,10 +554,10 @@
                     <div class="section-header">
                         <h3>
                             {% trans "SSH Configuration" %}
-                            <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" style="display: none;" id="wpInstallLoading">
+                            <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" style="display: none;" id="wpInstallLoading" alt="">
                         </h3>
                         <a target="_blank" rel="noopener" href="https://cyberpanel.net/KnowledgeBase/home/ssh-manager-cyberpanel/" class="btn btn-link">
-                            <i class="fas fa-book"></i>
+                            <i class="fas fa-book" aria-hidden="true"></i>
                             {% trans "SFTP Docs" %}
                         </a>
                     </div>
@@ -576,12 +576,12 @@
                         </div>
                         
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-key"></i>
+                            <label for="cpa11y-password" class="col-sm-3 control-label">
+                                <i class="fas fa-key" aria-hidden="true"></i>
                                 {% trans "Password" %}
                             </label>
                             <div class="col-sm-6">
-                                <input type="password" class="form-control" ng-model="password" placeholder="{% trans 'Enter new password' %}" required>
+                                <input id="cpa11y-password" type="password" class="form-control" ng-model="password" placeholder="{% trans 'Enter new password' %}" required>
                             </div>
                         </div>
                         
@@ -589,7 +589,7 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-6">
                                 <button type="button" ng-click="setupSSHAccess()" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-save"></i>
+                                    <i class="fas fa-save" aria-hidden="true"></i>
                                     {% trans "Save Changes" %}
                                 </button>
                             </div>
@@ -618,7 +618,7 @@
                                     </td>
                                     <td>
                                         <div class="delete-key" ng-click="deleteKey(record.key)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="fas fa-times" aria-hidden="true"></i>
                                         </div>
                                     </td>
                                 </tr>
@@ -631,19 +631,19 @@
                                   ng-model="keyData" 
                                   rows="6" 
                                   class="form-control"
-                                  style="font-family: 'Courier New', monospace; font-size: 13px;">{{ logs }}</textarea>
+                                  style="font-family: 'Courier New', monospace; font-size: 13px;" aria-label="{% trans 'Paste your public key here...' %}">{{ logs }}</textarea>
                     </div>
                     
                     <div ng-hide="showKeyBox" style="margin-bottom: 20px;">
                         <button type="button" ng-click="addKey()" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>
+                            <i class="fas fa-plus" aria-hidden="true"></i>
                             {% trans "Add Key" %}
                         </button>
                     </div>
                     
                     <div ng-hide="saveKeyBtn">
                         <button type="button" ng-click="saveKey()" class="btn btn-success">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {% trans "Save Key" %}
                         </button>
                     </div>
@@ -658,7 +658,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h4 class="modal-title">
-                            <i class="fas fa-terminal" style="margin-right: 10px;"></i>
+                            <i class="fas fa-terminal" style="margin-right: 10px;" aria-hidden="true"></i>
                             {% trans "Web SSH Terminal" %}
                         </h4>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -667,8 +667,8 @@
                     </div>
                     <div class="modal-body">
                         {% if not has_addons %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-info-circle" style="font-size: 20px;"></i>
+                        <div class="alert alert-warning" role="status">
+                            <i class="fas fa-info-circle" style="font-size: 20px;" aria-hidden="true"></i>
                             <div>
                                 <strong>{% trans "This feature requires the CyberPanel Add-ons bundle." %}</strong><br>
                                 <a href="https://cyberpanel.net/cyberpanel-addons" target="_blank" rel="noopener" style="color: var(--primary-color); text-decoration: underline; font-weight: 600;">
@@ -680,7 +680,7 @@
                             <div id="xterm-container" style="width:100%;height:400px;background:#000;"></div>
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 10; border-radius: var(--radius-md); backdrop-filter: blur(5px);">
                                 <div style="text-align: center;">
-                                    <i class="fas fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 20px; display: block;"></i>
+                                    <i class="fas fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 20px; display: block;" aria-hidden="true"></i>
                                     <p style="font-size: 16px; color: var(--text-secondary); font-weight: 600;">
                                         {% trans "Web Terminal is disabled. Please upgrade to CyberPanel Add-ons to enable this feature." %}
                                     </p>

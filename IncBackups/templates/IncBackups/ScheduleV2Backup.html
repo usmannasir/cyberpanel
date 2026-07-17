@@ -25,7 +25,7 @@
                 <div class="panel-body">
                     <h3 class="title-hero">
                         {% trans "Schedule v2 Backup" %} <img ng-hide="backupLoading"
-                                                              src="{% static 'images/loading.gif' %}">
+                                                              src="{% static 'images/loading.gif' %}" alt="">
                     </h3>
                     <div class="example-box-wrapper">
 
@@ -33,7 +33,7 @@
 
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                                <label for="create-backup-select" class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                                 <div class="col-sm-6">
                                     <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite"
                                             class="form-control">
@@ -44,7 +44,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Backup Frequency" %} </label>
+                                <label for="create-backup-select" class="col-sm-3 control-label">{% trans "Backup Frequency" %} </label>
                                 <div class="col-sm-6">
                                     <select id="create-backup-select" ng-model="frequency"
                                             class="form-control">
@@ -59,7 +59,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
+                                <label for="reposelectbox" class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
                                 <div class="col-sm-6">
                                     <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi"
                                             class="form-control">
@@ -67,7 +67,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Backup Retention" %} </label>
+                                <label for="create-backup-select" class="col-sm-3 control-label">{% trans "Backup Retention" %} </label>
                                 <div class="col-sm-6">
                                     <select id="create-backup-select" ng-model="retention"
                                             class="form-control">
@@ -158,7 +158,7 @@
                                                 <td data-toggle="modal" data-target="#DeleteScheduleV2"
                                                     ng-click="deleteBackupInitialv2(record.repo, record.frequency, record.websiteData, record.websiteDatabases, record.websiteEmails)">
                                                     <img
-                                                            src="{% static 'images/delete.png' %}"></td>
+                                                            src="{% static 'images/delete.png' %}" alt=""></td>
                                             </a>
                                             <div id="DeleteScheduleV2" class="modal fade" role="dialog">
                                                 <div class="modal-dialog">
@@ -186,7 +186,7 @@
                                                             <button type="button" class="btn btn-primary"
                                                                     ng-click="DeleteScheduleV2()">Delete <img
                                                                     ng-hide="backupLoading"
-                                                                    src="{% static 'images/loading.gif' %}">
+                                                                    src="{% static 'images/loading.gif' %}" alt="">
                                                             </button>
                                                             <button type="button"
                                                                     class="btn btn-default" data-dismiss="modal">

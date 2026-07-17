@@ -366,7 +366,7 @@
         <div class="plugin-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-vial"></i>
+                    <i class="fas fa-vial" aria-hidden="true"></i>
                 </div>
                 {% trans "Test Plugin" %}
             </h1>
@@ -388,27 +388,27 @@
                 
                 <div class="control-group">
                     <button class="btn-test" id="test-button" {% if not plugin_enabled %}disabled{% endif %}>
-                        <i class="fas fa-play"></i>
+                        <i class="fas fa-play" aria-hidden="true"></i>
                         {% trans "Test Button" %}
                     </button>
                     
                     <a href="{% url 'testPlugin:plugin_settings' %}" class="btn-secondary">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                         {% trans "Settings" %}
                     </a>
                     
                     <a href="{% url 'testPlugin:plugin_logs' %}" class="btn-secondary">
-                        <i class="fas fa-list"></i>
+                        <i class="fas fa-list" aria-hidden="true"></i>
                         {% trans "Logs" %}
                     </a>
                     
         <a href="{% url 'testPlugin:plugin_docs' %}" class="btn-secondary">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-book" aria-hidden="true"></i>
             {% trans "Documentation" %}
         </a>
         
         <a href="{% url 'testPlugin:security_info' %}" class="btn-secondary">
-            <i class="fas fa-shield-alt"></i>
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>
             {% trans "Security Info" %}
         </a>
                 </div>
@@ -425,9 +425,9 @@
             <div class="stat-card">
                 <div class="stat-value">
                     {% if plugin_enabled %}
-                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <i class="fas fa-check-circle" style="color: #10b981;" aria-hidden="true"></i>
                     {% else %}
-                        <i class="fas fa-times-circle" style="color: #ef4444;"></i>
+                        <i class="fas fa-times-circle" style="color: #ef4444;" aria-hidden="true"></i>
                     {% endif %}
                 </div>
                 <div class="stat-label">{% trans "Plugin Status" %}</div>
@@ -442,7 +442,7 @@
         <!-- Recent Logs -->
         <div class="logs-section">
             <h3 style="margin-bottom: 20px; color: var(--text-primary, #2f3640);">
-                <i class="fas fa-history" style="margin-right: 8px; color: #5856d6;"></i>
+                <i class="fas fa-history" style="margin-right: 8px; color: #5856d6;" aria-hidden="true"></i>
                 {% trans "Recent Activity" %}
             </h3>
             
@@ -451,13 +451,13 @@
                 <div class="log-item">
                     <div class="log-icon {% if 'error' in log.action %}warning{% elif 'success' in log.action or 'click' in log.action %}success{% else %}info{% endif %}">
                         {% if 'click' in log.action %}
-                            <i class="fas fa-mouse-pointer"></i>
+                            <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
                         {% elif 'toggle' in log.action %}
-                            <i class="fas fa-toggle-on"></i>
+                            <i class="fas fa-toggle-on" aria-hidden="true"></i>
                         {% elif 'settings' in log.action %}
-                            <i class="fas fa-cog"></i>
+                            <i class="fas fa-cog" aria-hidden="true"></i>
                         {% else %}
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                         {% endif %}
                     </div>
                     <div class="log-content">
@@ -468,7 +468,7 @@
                 </div>
                 {% empty %}
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary, #64748b);">
-                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;" aria-hidden="true"></i>
                     <p>{% trans "No recent activity" %}</p>
                 </div>
                 {% endfor %}
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (testButton.disabled) return;
         
         testButton.disabled = true;
-        testButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+        testButton.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Testing...';
         
         fetch('{% url "testPlugin:test_button" %}', {
             method: 'POST',
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .finally(() => {
             testButton.disabled = false;
-            testButton.innerHTML = '<i class="fas fa-play"></i> Test Button';
+            testButton.innerHTML = '<i class="fas fa-play" aria-hidden="true"></i> Test Button';
         });
     });
     

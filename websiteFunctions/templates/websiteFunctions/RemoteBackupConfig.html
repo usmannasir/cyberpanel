@@ -338,7 +338,7 @@
         <div class="backup-section">
             <h2 class="section-title">REMOTE BACKUP CONFIGURATIONS</h2>
             <div class="info-alert">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 Configure remote backup destinations for your WordPress sites. Supports SFTP and S3-compatible storage providers.
             </div>
         </div>
@@ -347,14 +347,14 @@
         <div class="backup-section">
             <h3 class="section-title">
                 CONFIGURE REMOTE BACKUPS
-                <img ng-hide="RemoteBackupLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="RemoteBackupLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h3>
             
             <form name="websiteCreationForm">
                 <div ng-hide="installationDetailsForm" class="form-group">
                     <div class="form-row">
-                        <label class="form-label">{% trans "Backup Type" %}</label>
-                        <select ng-model="RemoteBackuptype" ng-change="SelectRemoteBackuptype()" class="form-control">
+                        <label for="cpa11y-backup-type" class="form-label">{% trans "Backup Type" %}</label>
+                        <select id="cpa11y-backup-type" ng-model="RemoteBackuptype" ng-change="SelectRemoteBackuptype()" class="form-control">
                             <option>SFTP</option>
                             <option>S3</option>
                         </select>
@@ -365,32 +365,32 @@
                 <div ng-hide="SFTPBackUpdiv">
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Hostname" %}</label>
-                            <input name="Hostname" type="text" class="form-control" ng-model="Hostname"
+                            <label for="cpa11y-hostname" class="form-label">{% trans "Hostname" %}</label>
+                            <input id="cpa11y-hostname" name="Hostname" type="text" class="form-control" ng-model="Hostname"
                                    placeholder="sftp.example.com" required>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Username" %}</label>
-                            <input name="Username" type="text" class="form-control" ng-model="Username"
+                            <label for="cpa11y-username" class="form-label">{% trans "Username" %}</label>
+                            <input id="cpa11y-username" name="Username" type="text" class="form-control" ng-model="Username"
                                    placeholder="SFTP username" required>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Password" %}</label>
-                            <input name="Password" type="password" class="form-control" ng-model="Password"
+                            <label for="cpa11y-password" class="form-label">{% trans "Password" %}</label>
+                            <input id="cpa11y-password" name="Password" type="password" class="form-control" ng-model="Password"
                                    placeholder="SFTP password" required>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Path" %}</label>
-                            <input name="path" type="text" class="form-control" ng-model="path"
+                            <label for="cpa11y-path" class="form-label">{% trans "Path" %}</label>
+                            <input id="cpa11y-path" name="path" type="text" class="form-control" ng-model="path"
                                    placeholder="/backups/wordpress" required>
                         </div>
                     </div>
@@ -399,8 +399,8 @@
                 <!-- S3 Configuration -->
                 <div ng-hide="Selectprovider" class="form-group">
                     <div class="form-row">
-                        <label class="form-label">{% trans "Provider" %}</label>
-                        <select ng-model="Providervalue" ng-change="SelectProvidertype()" class="form-control">
+                        <label for="cpa11y-provider" class="form-label">{% trans "Provider" %}</label>
+                        <select id="cpa11y-provider" ng-model="Providervalue" ng-change="SelectProvidertype()" class="form-control">
                             <option selected="selected">Amazon</option>
                             <option>Wasabi</option>
                             <option>Backblaze</option>
@@ -410,32 +410,32 @@
                 
                 <div ng-hide="S3keyNamediv" class="form-group">
                     <div class="form-row">
-                        <label class="form-label">{% trans "Bucket Name" %}</label>
-                        <input name="S3keyName" type="text" class="form-control" ng-model="S3keyName"
+                        <label for="cpa11y-bucket-name" class="form-label">{% trans "Bucket Name" %}</label>
+                        <input id="cpa11y-bucket-name" name="S3keyName" type="text" class="form-control" ng-model="S3keyName"
                                placeholder="my-backup-bucket" required>
                     </div>
                 </div>
                 
                 <div ng-hide="EndpointURLdiv" class="form-group">
                     <div class="form-row">
-                        <label class="form-label">{% trans "Endpoint URL" %}</label>
-                        <input name="EndpointURL" type="text" class="form-control" ng-model="EndpointURL"
+                        <label for="cpa11y-endpoint-url" class="form-label">{% trans "Endpoint URL" %}</label>
+                        <input id="cpa11y-endpoint-url" name="EndpointURL" type="text" class="form-control" ng-model="EndpointURL"
                                placeholder="https://s3.amazonaws.com" required>
                     </div>
                 </div>
                 
                 <div ng-hide="Accesskeydiv" class="form-group">
                     <div class="form-row">
-                        <label class="form-label">{% trans "Access Key" %}</label>
-                        <input name="Accesskey" type="text" class="form-control" ng-model="Accesskey"
+                        <label for="cpa11y-access-key" class="form-label">{% trans "Access Key" %}</label>
+                        <input id="cpa11y-access-key" name="Accesskey" type="text" class="form-control" ng-model="Accesskey"
                                placeholder="Your access key" required>
                     </div>
                 </div>
                 
                 <div ng-hide="SecretKeydiv" class="form-group">
                     <div class="form-row">
-                        <label class="form-label">{% trans "Secret Key" %}</label>
-                        <input name="SecretKey" type="password" class="form-control" ng-model="SecretKey"
+                        <label for="cpa11y-secret-key" class="form-label">{% trans "Secret Key" %}</label>
+                        <input id="cpa11y-secret-key" name="SecretKey" type="password" class="form-control" ng-model="SecretKey"
                                placeholder="Your secret key" required>
                     </div>
                 </div>
@@ -444,7 +444,7 @@
                     <div class="form-row">
                         <label class="form-label"></label>
                         <button type="button" ng-click="SaveBackupConfig()" class="btn-primary">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {% trans "Save Configuration" %}
                         </button>
                     </div>
@@ -483,12 +483,12 @@
                                         <div class="action-buttons">
                                             <a href="{% url 'BackupfileConfig' %}?ID={{ sub.id }}" 
                                                class="btn-action btn-schedule">
-                                                <i class="fas fa-clock"></i>
+                                                <i class="fas fa-clock" aria-hidden="true"></i>
                                                 Schedule Backups
                                             </a>
                                             <button onclick="DeleteBackupConfigNow('{% url 'RemoteBackupConfig' %}?DeleteID={{ sub.id }}')"
                                                     class="btn-action btn-delete">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
                                                 Delete
                                             </button>
                                         </div>

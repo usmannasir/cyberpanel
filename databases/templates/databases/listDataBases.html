@@ -494,7 +494,7 @@
                 <p class="page-subtitle">{% trans "Manage databases and their access credentials" %}</p>
             </div>
             <a href="{% url 'createDatabase' %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-plus" aria-hidden="true"></i>
                 {% trans "Create Database" %}
             </a>
         </div>
@@ -507,8 +507,8 @@
             
             <div class="website-selector-card">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select Domain" %}</label>
-                    <select ng-change="fetchDBs()" ng-model="selectedDomain" class="form-control">
+                    <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                    <select id="cpa11y-select-domain" ng-change="fetchDBs()" ng-model="selectedDomain" class="form-control">
                         <option value="">-- {% trans "Select a domain" %} --</option>
                         {% for items in AllWebsites %}
                             <option>{{ items }}</option>
@@ -519,23 +519,23 @@
 
             <!-- Notifications -->
             <div ng-show="!notificationsBox">
-                <div ng-hide="recordsFetched" class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
+                <div ng-hide="recordsFetched" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                     <span>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched $}</strong></span>
                 </div>
 
-                <div ng-hide="passwordChanged" class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
+                <div ng-hide="passwordChanged" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                     <span>{% trans "Password changed for:" %} <strong>{$ dbUsername $}</strong></span>
                 </div>
 
-                <div ng-hide="canNotChangePassword" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div ng-hide="canNotChangePassword" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     <span>{% trans "Cannot change password for" %} <strong>{$ dbUsername $}</strong>, {% trans "Error message:" %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-network-wired"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-network-wired" aria-hidden="true"></i>
                     <span>{% trans "Could not connect to server. Please refresh this page" %}</span>
                 </div>
             </div>
@@ -544,19 +544,19 @@
         <!-- Password Change Section -->
         <div class="password-change-section" ng-show="!changePasswordBox">
             <div class="password-change-title">
-                <i class="fas fa-key"></i>
+                <i class="fas fa-key" aria-hidden="true"></i>
                 {% trans "Change Password for" %} {$ dbUsername $}
             </div>
             
             <div class="password-group">
                 <div class="password-input-wrapper">
-                    <label class="form-label">{% trans "New Password" %}</label>
-                    <input type="password" class="form-control" ng-model="dbPassword" 
+                    <label for="cpa11y-new-password" class="form-label">{% trans "New Password" %}</label>
+                    <input id="cpa11y-new-password" type="password" class="form-control" ng-model="dbPassword" 
                            placeholder="{% trans 'Enter new password' %}" required>
                 </div>
                 <div class="password-btn-wrapper">
                     <button type="button" ng-click="generatePassword()" class="btn btn-secondary">
-                        <i class="fas fa-sync"></i>
+                        <i class="fas fa-sync" aria-hidden="true"></i>
                         {% trans "Generate" %}
                     </button>
                 </div>
@@ -566,13 +566,13 @@
                 <div class="generated-password-label">{% trans "Generated Password" %}</div>
                 <div class="generated-password-value">{$ dbPassword $}</div>
                 <button type="button" ng-click="usePassword()" class="btn btn-success btn-sm generated-password-btn">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" aria-hidden="true"></i>
                     {% trans "Use This Password" %}
                 </button>
             </div>
 
             <button type="button" ng-click="changePasswordBtn()" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i>
+                <i class="fas fa-save" aria-hidden="true"></i>
                 {% trans "Change Password" %}
             </button>
         </div>
@@ -600,7 +600,7 @@
                             <td>
                                 <button type="button" ng-click="changePassword(record.dbUser)" 
                                         class="btn btn-secondary btn-action">
-                                    <i class="fas fa-key"></i>
+                                    <i class="fas fa-key" aria-hidden="true"></i>
                                     {% trans "Change" %}
                                 </button>
                             </td>
@@ -610,14 +610,14 @@
                                         data-target="#remoteAccess{$ $index $}"
                                         type="button"
                                         class="btn btn-primary btn-action">
-                                    <i class="fas fa-network-wired"></i>
+                                    <i class="fas fa-network-wired" aria-hidden="true"></i>
                                     {% trans "Manage" %}
                                 </button>
                                 {% if admin or deleteDatabase %}
                                 <a href="{% url 'deleteDatabase' %}"
                                    class="btn btn-danger btn-action"
                                    title="{% trans 'Delete Database' %}">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                     {% trans "Delete" %}
                                 </a>
                                 {% endif %}
@@ -636,8 +636,8 @@
                                             <div class="modal-body">
                                                 <form name="remoteAccessForm" class="form-horizontal">
                                                     <div class="form-group">
-                                                        <label class="form-label">{% trans "Allow Remote Access from IP" %}</label>
-                                                        <input placeholder="{% trans 'Enter IP Address' %}" 
+                                                        <label for="cpa11y-allow-remote-access-from-ip" class="form-label">{% trans "Allow Remote Access from IP" %}</label>
+                                                        <input id="cpa11y-allow-remote-access-from-ip" placeholder="{% trans 'Enter IP Address' %}" 
                                                                name="remoteIP" 
                                                                type="text" 
                                                                class="form-control" 
@@ -649,7 +649,7 @@
                                                     </div>
                                                     
                                                     <button type="button" ng-click="allowRemoteIP()" class="btn btn-primary">
-                                                        <i class="fas fa-save"></i>
+                                                        <i class="fas fa-save" aria-hidden="true"></i>
                                                         {% trans "Save Changes" %}
                                                     </button>
                                                 </form>

@@ -255,7 +255,7 @@
         <!-- Docs Header -->
         <div class="docs-header">
             <h1>
-                <i class="fas fa-book" style="margin-right: 12px; color: #5856d6;"></i>
+                <i class="fas fa-book" style="margin-right: 12px; color: #5856d6;" aria-hidden="true"></i>
                 {% trans "Plugin Development Documentation" %}
             </h1>
             <p>{% trans "Complete guide for developing, installing, and managing CyberPanel plugins" %}</p>
@@ -264,23 +264,23 @@
         <!-- Navigation -->
         <div class="docs-nav">
             <a href="#" class="nav-button active" data-section="quick-guide">
-                <i class="fas fa-rocket"></i>
+                <i class="fas fa-rocket" aria-hidden="true"></i>
                 {% trans "Quick Start" %}
             </a>
             <a href="#" class="nav-button" data-section="official-guide">
-                <i class="fas fa-graduation-cap"></i>
+                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
                 {% trans "Official Guide" %}
             </a>
             <a href="#" class="nav-button" data-section="full-guide">
-                <i class="fas fa-book-open"></i>
+                <i class="fas fa-book-open" aria-hidden="true"></i>
                 {% trans "Advanced Guide" %}
             </a>
             <a href="#" class="nav-button" data-section="os-compatibility">
-                <i class="fas fa-desktop"></i>
+                <i class="fas fa-desktop" aria-hidden="true"></i>
                 {% trans "OS Compatibility" %}
             </a>
             <a href="{% url 'testPlugin:plugin_home' %}" class="nav-button">
-                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 {% trans "Back to Plugin" %}
             </a>
         </div>

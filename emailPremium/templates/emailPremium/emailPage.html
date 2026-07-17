@@ -40,7 +40,7 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
          <div style="border-radius: 25px;border-color:#3498db" class="content-box">
 
              <h3 class="content-box-header bg-blue">
-                 {% trans "Email Resource Usage" %} <img  ng-hide="emailLimitsLoading" src="/static/images/loading.gif">
+                 {% trans "Email Resource Usage" %} <img  ng-hide="emailLimitsLoading" src="/static/images/loading.gif" alt="">
              </h3>
 
 
@@ -69,15 +69,15 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
                                         <td><code>{$ hourlyLimit $}</code></td>
                                         <td><code>{$ hourlyUsed $}</code></td>
                                         <td>
-                                           <img style="margin-right: 4%;" ng-hide="limitsOn"  title="{% trans 'Limits are being Applied!' %}"  src="{% static 'mailServer/vpsON.png' %}">
+                                           <img style="margin-right: 4%;" ng-hide="limitsOn"  title="{% trans 'Limits are being Applied!' %}"  src="{% static 'mailServer/vpsON.png' %}" alt="">
                                            <button ng-click="enableDisableIndividualEmailLimits(0, '{{ emailAddress }}')" ng-hide="limitsOn" class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
-                                           <img style="margin-right: 4%;" ng-hide="limitsOff"  title="{% trans 'Limits are not being applied!' %}"  src="{% static 'mailServer/vpsOff.png' %}">
+                                           <img style="margin-right: 4%;" ng-hide="limitsOff"  title="{% trans 'Limits are not being applied!' %}"  src="{% static 'mailServer/vpsOff.png' %}" alt="">
                                            <button ng-click="enableDisableIndividualEmailLimits(1, '{{ emailAddress }}')" ng-hide="limitsOff" class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
                                         </td>
                                         <td>
-                                           <img style="margin-right: 4%;" ng-hide="loggingOn"  title="{% trans 'Logging in ON!' %}"  src="{% static 'mailServer/vpsON.png' %}">
+                                           <img style="margin-right: 4%;" ng-hide="loggingOn"  title="{% trans 'Logging in ON!' %}"  src="{% static 'mailServer/vpsON.png' %}" alt="">
                                            <button ng-click="enableDisableIndividualEmailLogs(0, '{{ emailAddress }}')" ng-hide="loggingOn"  class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
-                                           <img style="margin-right: 4%;" ng-hide="loggingOff"   title="{% trans 'Logging is Off' %}"  src="{% static 'mailServer/vpsOff.png' %}">
+                                           <img style="margin-right: 4%;" ng-hide="loggingOff"   title="{% trans 'Logging is Off' %}"  src="{% static 'mailServer/vpsOff.png' %}" alt="">
                                            <button ng-click="enableDisableIndividualEmailLogs(1, '{{ emailAddress }}')" ng-hide="loggingOff" class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
                                         </td>
                                         <td>
@@ -93,19 +93,19 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
                                 <form action="/" class="form-horizontal bordered-row">
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Monthly Limit" %}</label>
+                                        <label for="cpa11y-monthly-limit" class="col-sm-3 control-label">{% trans "Monthly Limit" %}</label>
                                         <div class="col-sm-6">
-                                            <input   name="dom"  type="number" class="form-control" ng-model="monthlyLimitForm" required>
+                                            <input id="cpa11y-monthly-limit"   name="dom"  type="number" class="form-control" ng-model="monthlyLimitForm" required>
                                         </div>
                                         <div style="margin-bottom: 1%;"  class=" col-sm-1">
-                                                <a title="{% trans 'Cancel' %}" ng-click="hideLimitsForm()" href=""><img src="/static/images/close-32.png"></a>
+                                                <a title="{% trans 'Cancel' %}" ng-click="hideLimitsForm()" href=""><img src="/static/images/close-32.png" alt=""></a>
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Hourly Limit" %}</label>
+                                        <label for="cpa11y-hourly-limit" class="col-sm-3 control-label">{% trans "Hourly Limit" %}</label>
                                         <div class="col-sm-6">
-                                            <input   name="dom"  type="number" class="form-control" ng-model="hourlyLimitForm" required>
+                                            <input id="cpa11y-hourly-limit"   name="dom"  type="number" class="form-control" ng-model="hourlyLimitForm" required>
                                         </div>
                                         <div style="margin-bottom: 1%;"  class=" col-sm-1">
                                                 <a title="{% trans 'Cancel' %}" ng-click="hideLimitsForm()" href=""></a>
@@ -125,15 +125,15 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
-                                                <div ng-hide="changeLimitsFail" class="alert alert-danger">
+                                                <div ng-hide="changeLimitsFail" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Can not change limits. Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                 <div ng-hide="changeLimitsSuccess" class="alert alert-success">
+                                                 <div ng-hide="changeLimitsSuccess" class="alert alert-success" role="status">
                                                     <p>{% trans "Limits successfully changed." %}</p>
                                                 </div>
 
-                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                                     <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                                 </div>
                                         </div>
@@ -159,14 +159,14 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
          <div style="border-radius: 25px;border-color:#3498db" class="content-box">
 
              <h3 class="content-box-header bg-blue">
-                 {% trans "Email Logs" %} <img  ng-hide="emailLimitsLoading" src="/static/images/loading.gif">
+                 {% trans "Email Logs" %} <img  ng-hide="emailLimitsLoading" src="/static/images/loading.gif" alt="">
              </h3>
 
 
              <div class="content-box-wrapper">
                  <div class="row">
                                 <div style="margin-bottom: 1%" class="col-md-10">
-                                    <input type="text" ng-model="logSearch" placeholder="{% trans 'Search Emails Logs..' %}" class="form-control autocomplete-input">
+                                    <input type="text" ng-model="logSearch" placeholder="{% trans 'Search Emails Logs..' %}" class="form-control autocomplete-input" aria-label="{% trans 'Search Emails Logs..' %}">
                                 </div>
 
                                 <div style="margin-bottom: 1%" class="col-md-2">
@@ -193,7 +193,7 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
                                     </tbody>
                                 </table>
 
-                                <div ng-hide="listFail" class="alert alert-danger">
+                                <div ng-hide="listFail" class="alert alert-danger" role="alert">
                                     <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
                                 </div>
 
@@ -229,7 +229,7 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
 
     {% else %}
 
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" role="alert">
             <p>{{ domain }}</p>
         </div>
 

@@ -468,7 +468,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="modsec-icon">
-                    <i class="fas fa-shield-alt fa-2x"></i>
+                    <i class="fas fa-shield-alt fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "ModSecurity WAF" %}
             </div>
@@ -476,7 +476,7 @@
                 {% trans "Configure ModSecurity Web Application Firewall to protect your websites from common attacks and vulnerabilities." %}
             </p>
             <a href="https://community.cyberpanel.net/t/2-mod-security-configurations/135" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "ModSecurity Documentation" %}
             </a>
         </div>
@@ -485,13 +485,13 @@
     {% if modSecInstalled == 0 %}
         <!-- Installation Panel -->
         <div class="install-panel">
-            <i class="fas fa-shield-alt install-icon"></i>
+            <i class="fas fa-shield-alt install-icon" aria-hidden="true"></i>
             <h2 class="install-title">{% trans "ModSecurity Not Installed" %}</h2>
             <p class="install-subtitle">
                 {% trans "Install ModSecurity to add an extra layer of protection to your web applications." %}
             </p>
             <button ng-click="installModSec()" class="btn-install">
-                <i class="fas fa-download"></i>
+                <i class="fas fa-download" aria-hidden="true"></i>
                 {% trans "Install ModSecurity" %}
             </button>
         </div>
@@ -499,7 +499,7 @@
         <!-- Installation Progress (Hidden by default) -->
         <div ng-hide="modeSecInstallBox" class="install-progress" style="margin-top: 2rem;">
             <div class="progress-header">
-                <i class="fas fa-cog progress-icon"></i>
+                <i class="fas fa-cog progress-icon" aria-hidden="true"></i>
                 <h3 class="progress-title">{% trans "Installing ModSecurity..." %}</h3>
             </div>
             <textarea ng-model="requestData" class="log-textarea" readonly></textarea>
@@ -507,23 +507,23 @@
         
         <!-- Status Messages -->
         <div ng-hide="modSecNotifyBox" style="margin-top: 2rem;">
-            <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Failed to start installation. Error message:" %} {$ errorMessage $}</span>
             </div>
             
-            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Could not connect. Please refresh this page." %}</span>
             </div>
             
-            <div ng-hide="installationFailed" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Installation failed." %} {$ errorMessage $}</span>
             </div>
             
-            <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "ModSecurity successfully installed, refreshing page in 3 seconds..." %}</span>
             </div>
         </div>
@@ -534,7 +534,7 @@
             <div class="panel-header">
                 <div class="panel-title">
                     <div class="panel-icon">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                     </div>
                     {% trans "ModSecurity Configuration" %}
                 </div>
@@ -543,7 +543,7 @@
             
             <div class="panel-content">
                 <div class="info-box">
-                    <i class="fas fa-info-circle info-icon"></i>
+                    <i class="fas fa-info-circle info-icon" aria-hidden="true"></i>
                     <span class="info-text">
                         {% trans "Configure ModSecurity settings below. Changes will be applied immediately after saving." %}
                     </span>
@@ -586,8 +586,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Debug Log Level" %}</label>
-                        <select ng-model="SecDebugLogLevel" class="form-control select-control">
+                        <label for="cpa11y-debug-log-level" class="form-label">{% trans "Debug Log Level" %}</label>
+                        <select id="cpa11y-debug-log-level" ng-model="SecDebugLogLevel" class="form-control select-control">
                             <option value="0">0 - {% trans "No logging" %}</option>
                             <option value="1">1 - {% trans "Errors only" %}</option>
                             <option value="2">2 - {% trans "Warnings" %}</option>
@@ -602,45 +602,45 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Audit Log Parts" %}</label>
-                        <input type="text" class="form-control" ng-model="SecAuditLogParts" 
+                        <label for="cpa11y-audit-log-parts" class="form-label">{% trans "Audit Log Parts" %}</label>
+                        <input id="cpa11y-audit-log-parts" type="text" class="form-control" ng-model="SecAuditLogParts" 
                                placeholder="ABIJDEFHZ" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Relevant Status" %}</label>
-                        <input type="text" class="form-control" ng-model="SecAuditLogRelevantStatus" 
+                        <label for="cpa11y-relevant-status" class="form-label">{% trans "Relevant Status" %}</label>
+                        <input id="cpa11y-relevant-status" type="text" class="form-control" ng-model="SecAuditLogRelevantStatus" 
                                placeholder="^(?:5|4\d[^4])" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Audit Log Type" %}</label>
-                        <input type="text" class="form-control" ng-model="SecAuditLogType" 
+                        <label for="cpa11y-audit-log-type" class="form-label">{% trans "Audit Log Type" %}</label>
+                        <input id="cpa11y-audit-log-type" type="text" class="form-control" ng-model="SecAuditLogType" 
                                placeholder="Serial" required>
                     </div>
                     
                     <div class="form-group" style="margin-top: 2rem;">
                         <label class="form-label"></label>
                         <button type="button" ng-click="saveModSecConfigurations()" class="btn-primary">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {% trans "Save Configuration" %}
                         </button>
                     </div>
                 </form>
                 
                 <!-- Status Messages -->
-                <div ng-hide="failedToSave" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="failedToSave" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Failed to save ModSecurity configurations. Error message:" %} {$ errorMessage $}</span>
                 </div>
                 
-                <div ng-hide="successfullySaved" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="successfullySaved" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "ModSecurity configurations successfully saved." %}</span>
                 </div>
                 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect. Please refresh this page." %}</span>
                 </div>
             </div>

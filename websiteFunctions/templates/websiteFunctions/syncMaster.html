@@ -18,7 +18,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Sync " %}<span id="childDomain">{{ childDomain }}</span>  {% trans "to " %} <span id="domainName">{{ domainName }}</span><img
-                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -68,7 +68,7 @@
                             <label class="col-sm-2 control-label"></label>
                             <div class="col-sm-7">
 
-                                <div class="alert alert-success text-center">
+                                <div class="alert alert-success text-center" role="status">
                                     <h2>{$ currentStatus $}</h2>
                                 </div>
 

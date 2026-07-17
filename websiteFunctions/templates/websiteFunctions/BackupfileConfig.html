@@ -19,14 +19,14 @@
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans " Schedule Backups" %} <img ng-hide="BackupScheduleLoading"
-                                                         src="{% static 'images/loading.gif' %}">
+                                                         src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <form name="websiteCreationForm" action="/" id="createPackages"
                       class="form-horizontal bordered-row panel-body">
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Schedule Name" %}</label>
+                        <label for="cpa11y-schedule-name" class="col-sm-3 control-label">{% trans "Schedule Name" %}</label>
                         <div class="col-sm-6">
-                            <input name="Hostname" type="text" class="form-control" ng-model="ScheduleName"
+                            <input id="cpa11y-schedule-name" name="Hostname" type="text" class="form-control" ng-model="ScheduleName"
                                    required>
                         </div>
 
@@ -34,9 +34,9 @@
                     <span style="display: none" id="RemoteConfigID"> {{ RemoteConfigID }}</span>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Backup Frequency" %}</label>
+                        <label for="cpa11y-backup-frequency" class="col-sm-3 control-label">{% trans "Backup Frequency" %}</label>
                         <div class="col-sm-6">
-                            <select ng-model="Bfrequency"
+                            <select id="cpa11y-backup-frequency" ng-model="Bfrequency"
                                     class="form-control">
                                 <option>30 Minutes</option>
                                 <option>1 Hour</option>
@@ -49,9 +49,9 @@
                         </div>
                     </div>
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
+                        <label for="cpa11y-backup-file-retention" class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
                         <div class="col-sm-6">
-                            <select ng-model="Fretention"
+                            <select id="cpa11y-backup-file-retention" ng-model="Fretention"
                                     class="form-control">
                                 <option>3 Days</option>
                                 <option>1 Week</option>
@@ -61,9 +61,9 @@
                         </div>
                     </div>
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
+                        <label for="cpa11y-backup-type" class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
                         <div class="col-sm-6">
-                            <select ng-model="BackupType"
+                            <select id="cpa11y-backup-type" ng-model="BackupType"
                                     class="form-control">
                                 <option>Only DataBase</option>
                                 <option>Only Website</option>
@@ -141,17 +141,17 @@
                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                                 <h4 class="modal-title">Update Remote Backup Schedules
                                     <img id="containerSettingLoading" src="/static/images/loading.gif"
-                                         style="display: none;">
+                                         style="display: none;" alt="">
                                 </h4>
                             </div>
                             <div class="modal-body">
 
                                 <form name="containerSettingsForm" action="/" class="form-horizontal">
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Backup Frequency" %}</label>
+                                        <label for="cpa11y-backup-frequency-2" class="col-sm-3 control-label">{% trans "Backup Frequency" %}</label>
                                         <div class="col-sm-6">
 
-                                            <select ng-model="RemoteFrequency"
+                                            <select id="cpa11y-backup-frequency-2" ng-model="RemoteFrequency"
                                                     class="form-control">
                                                 <option>30 Minutes</option>
                                                 <option>1 Hour</option>
@@ -165,9 +165,9 @@
 
                                     </div>
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
+                                        <label for="cpa11y-backup-file-retention-2" class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
                                         <div class="col-sm-6">
-                                            <select ng-model="RemoteFileretention"
+                                            <select id="cpa11y-backup-file-retention-2" ng-model="RemoteFileretention"
                                                     class="form-control">
                                                 <option>3 Days</option>
                                                 <option>1 Week</option>

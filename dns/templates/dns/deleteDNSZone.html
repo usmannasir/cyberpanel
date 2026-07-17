@@ -221,7 +221,7 @@
                 <h3>{% trans "PowerDNS is disabled." %}
                     <a href="{% url 'managePowerDNS' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
                         <span>{% trans "Enable Now" %}</span>
-                        <i class="glyph-icon icon-arrow-right"></i>
+                        <i class="glyph-icon icon-arrow-right" aria-hidden="true"></i>
                     </button></a></h3>
             </div>
 
@@ -230,9 +230,9 @@
             <form  action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select Zone" %}</label>
+                    <label for="cpa11y-select-zone" class="col-sm-3 control-label">{% trans "Select Zone" %}</label>
                     <div class="col-sm-6">
-                        <select ng-model="selectedZone" class="form-control">
+                        <select id="cpa11y-select-zone" ng-model="selectedZone" class="form-control">
                             {% for items in domainsList %}
                                 <option>{{ items }}</option>
                             {% endfor %}
@@ -261,15 +261,15 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-6">
-                            <div ng-hide="deleteFailure" class="alert alert-danger">
+                            <div ng-hide="deleteFailure" class="alert alert-danger" role="alert">
                                         <p>{% trans "Cannot delete zone. Error message: " %}{$ errorMessage $}</p>
                             </div>
 
-                            <div ng-hide="deleteSuccess" class="alert alert-success">
+                            <div ng-hide="deleteSuccess" class="alert alert-success" role="status">
                                 <p>{% trans "Zone for domain:" %} <strong>{$ deletedZone $}</strong> {% trans "is successfully erased." %}</p>
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                             </div>
                     </div>

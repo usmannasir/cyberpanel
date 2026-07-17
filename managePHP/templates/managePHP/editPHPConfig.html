@@ -536,7 +536,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="php-icon">
-                    <i class="fas fa-cog fa-2x"></i>
+                    <i class="fas fa-cog fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "Edit PHP Configurations" %}
             </div>
@@ -545,7 +545,7 @@
             </p>
             {% if apache %}
             <a href="{% url 'editPHPConfigs' %}?apache=apache" class="apache-link">
-                <i class="fas fa-feather"></i>
+                <i class="fas fa-feather" aria-hidden="true"></i>
                 {% trans "Edit Apache Configurations" %}
             </a>
             {% endif %}
@@ -557,11 +557,11 @@
         <!-- Tabs -->
         <div class="modern-tabs">
             <a href="#basic-tab" class="tab-item active" data-toggle="tab" ng-click="fetchPHPDetails()">
-                <i class="fas fa-sliders-h tab-icon"></i>
+                <i class="fas fa-sliders-h tab-icon" aria-hidden="true"></i>
                 <span>{% trans "Basic Settings" %}</span>
             </a>
             <a href="#advanced-tab" class="tab-item" data-toggle="tab" ng-click="fetchAdvancePHPDetails()">
-                <i class="fas fa-code tab-icon"></i>
+                <i class="fas fa-code tab-icon" aria-hidden="true"></i>
                 <span>{% trans "Advanced Editor" %}</span>
             </a>
         </div>
@@ -573,11 +573,11 @@
                 <!-- PHP Selector -->
                 <div class="php-selector">
                     <div class="selector-icon">
-                        <i class="fas fa-code"></i>
+                        <i class="fas fa-code" aria-hidden="true"></i>
                     </div>
                     <div class="selector-content">
-                        <label class="form-label">{% trans "Select PHP Version" %}</label>
-                        <select ng-change="fetchPHPDetails()" 
+                        <label for="cpa11y-select-php-version" class="form-label">{% trans "Select PHP Version" %}</label>
+                        <select id="cpa11y-select-php-version" ng-change="fetchPHPDetails()" 
                                 ng-model="phpSelection"
                                 class="form-control select-control">
                             {% for php in phps %}
@@ -667,7 +667,7 @@
                         </div>
                         <div class="setting-control">
                             <input ng-model="memory_limit" type="text" class="form-control" 
-                                   placeholder="128M" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);">
+                                   placeholder="128M" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);" aria-label="128M">
                         </div>
                     </div>
                     
@@ -678,7 +678,7 @@
                         </div>
                         <div class="setting-control">
                             <input ng-model="max_execution_time" type="text" class="form-control" 
-                                   placeholder="30" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);">
+                                   placeholder="30" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);" aria-label="30">
                         </div>
                     </div>
                     
@@ -689,7 +689,7 @@
                         </div>
                         <div class="setting-control">
                             <input ng-model="upload_max_filesize" type="text" class="form-control" 
-                                   placeholder="2M" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);">
+                                   placeholder="2M" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);" aria-label="2M">
                         </div>
                     </div>
                     
@@ -700,7 +700,7 @@
                         </div>
                         <div class="setting-control">
                             <input ng-model="post_max_size" type="text" class="form-control" 
-                                   placeholder="8M" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);">
+                                   placeholder="8M" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);" aria-label="8M">
                         </div>
                     </div>
                     
@@ -711,7 +711,7 @@
                         </div>
                         <div class="setting-control">
                             <input ng-model="max_input_time" type="text" class="form-control" 
-                                   placeholder="60" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);">
+                                   placeholder="60" style="max-width: 200px; background: var(--bg-secondary, #fff); color: var(--text-primary, inherit); border: 1px solid var(--border-color, #e8e9ff);" aria-label="60">
                         </div>
                     </div>
                 </div>
@@ -719,33 +719,33 @@
                 <!-- Action Buttons -->
                 <div ng-hide="savebtn" class="action-buttons">
                     <button type="button" ng-click="saveChanges()" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                     <button type="button" ng-click="restartPHP()" class="btn btn-restart">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         {% trans "Restart PHP" %}
                         <span ng-show="!cyberPanelLoading" class="loading-spinner"></span>
                     </button>
                 </div>
                 
                 <!-- Alerts -->
-                <div ng-hide="canNotFetch" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="canNotFetch" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Error" %}:</strong> {$ errorMessage $}
                     </div>
                 </div>
                 
-                <div ng-hide="detailsSaved" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="detailsSaved" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Success" %}:</strong> {% trans "PHP configurations saved successfully." %}
                     </div>
                 </div>
                 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Connection Error" %}:</strong> {% trans "Could not connect. Please refresh this page." %}
                     </div>
@@ -757,11 +757,11 @@
                 <!-- PHP Selector -->
                 <div class="php-selector">
                     <div class="selector-icon">
-                        <i class="fas fa-code"></i>
+                        <i class="fas fa-code" aria-hidden="true"></i>
                     </div>
                     <div class="selector-content">
-                        <label class="form-label">{% trans "Select PHP Version" %}</label>
-                        <select ng-change="fetchAdvancePHPDetails()" 
+                        <label for="cpa11y-select-php-version-2" class="form-label">{% trans "Select PHP Version" %}</label>
+                        <select id="cpa11y-select-php-version-2" ng-change="fetchAdvancePHPDetails()" 
                                 ng-model="phpSelection"
                                 class="form-control select-control">
                             {% for php in phps %}
@@ -776,12 +776,12 @@
                 <div ng-hide="configDataView" class="config-editor">
                     <div class="editor-header">
                         <div class="editor-title">
-                            <i class="fas fa-file-code"></i>
+                            <i class="fas fa-file-code" aria-hidden="true"></i>
                             php.ini
                         </div>
                         <div class="editor-actions">
                             <button class="editor-btn" onclick="document.getElementById('config-textarea').select()">
-                                <i class="fas fa-copy"></i> Select All
+                                <i class="fas fa-copy" aria-hidden="true"></i> Select All
                             </button>
                         </div>
                     </div>
@@ -794,33 +794,33 @@
                 <!-- Action Buttons -->
                 <div ng-hide="savebtnAdvance" class="action-buttons">
                     <button type="button" ng-click="saveChangesAdvance()" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                     <button type="button" ng-click="restartPHP()" class="btn btn-restart">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         {% trans "Restart PHP" %}
                         <span ng-show="!cyberPanelLoading" class="loading-spinner"></span>
                     </button>
                 </div>
                 
                 <!-- Alerts -->
-                <div ng-hide="canNotFetchAdvanced" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="canNotFetchAdvanced" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Error" %}:</strong> {$ errorMessage $}
                     </div>
                 </div>
                 
-                <div ng-hide="detailsSavedAdvanced" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="detailsSavedAdvanced" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Success" %}:</strong> {% trans "PHP configurations saved successfully." %}
                     </div>
                 </div>
                 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Connection Error" %}:</strong> {% trans "Could not connect. Please refresh this page." %}
                     </div>

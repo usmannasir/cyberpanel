@@ -20,7 +20,7 @@
         <div ng-controller="backupLogsScheduled" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Backup Logs" %} <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                    {% trans "Backup Logs" %} <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -28,9 +28,9 @@
 
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Log File" %}</label>
+                            <label for="cpa11y-select-log-file" class="col-sm-3 control-label">{% trans "Select Log File" %}</label>
                             <div class="col-sm-6">
-                                <select ng-change="fetchLogs()" ng-model="logFile" class="form-control">
+                                <select id="cpa11y-select-log-file" ng-change="fetchLogs()" ng-model="logFile" class="form-control">
                                     {% for items in backups %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
@@ -66,7 +66,7 @@
                          style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
                         <input placeholder="Search..."
                                ng-model="packSearch" name="packSearch" type="text"
-                               class="form-control" required>
+                               class="form-control" required aria-label="Search...">
                     </div>
                     <div ng-hide="logDetails" class="col-sm-2">
                         <div class="form-group">

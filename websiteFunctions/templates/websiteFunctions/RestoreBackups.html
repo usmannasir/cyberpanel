@@ -337,7 +337,7 @@
         <div class="restore-section">
             <h2 class="section-title">
                 RESTORE BACKUPS
-                <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h2>
             <p class="restore-description">{% trans "On this page you can restore, list, and delete backups of WordPress sites from your server." %}</p>
         </div>
@@ -374,7 +374,7 @@
                                     </td>
                                     <td>
                                         <span class="destination-badge">
-                                            <i class="fas fa-server"></i>
+                                            <i class="fas fa-server" aria-hidden="true"></i>
                                             {{ sub.BackupDestination }}
                                         </span>
                                     </td>
@@ -382,12 +382,12 @@
                                         <div class="action-buttons">
                                             <a href="{% url 'RestoreHome' %}?BackupID={{ sub.id }}" 
                                                class="btn-action btn-restore">
-                                                <i class="fas fa-undo"></i>
+                                                <i class="fas fa-undo" aria-hidden="true"></i>
                                                 Restore
                                             </a>
                                             <button onclick="DeleteWPNow('{% url 'RestoreBackups' %}?DeleteID={{ sub.id }}')"
                                                     class="btn-action btn-delete">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
                                                 Delete
                                             </button>
                                         </div>
@@ -426,7 +426,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" onclick="FinalDeleteWPNow()" class="btn btn-danger">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     Delete
                 </button>
             </div>

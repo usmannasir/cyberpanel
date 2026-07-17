@@ -110,7 +110,7 @@
 <body>
     <div class="wm-login-card" ng-controller="webmailLoginCtrl">
         <div class="wm-login-logo">
-            <i class="fa fa-envelope"></i>
+            <i class="fa fa-envelope" aria-hidden="true"></i>
             <h2>{% trans "CyberPanel Webmail" %}</h2>
             <p>{% trans "Sign in to access your email" %}</p>
         </div>
@@ -121,16 +121,16 @@
 
         <form ng-submit="login()">
             <div class="wm-login-field">
-                <label>{% trans "Email Address" %}</label>
-                <input type="email" ng-model="email" placeholder="user@example.com" required autofocus>
+                <label for="cpa11y-email-address">{% trans "Email Address" %}</label>
+                <input id="cpa11y-email-address" type="email" ng-model="email" placeholder="user@example.com" required autofocus>
             </div>
             <div class="wm-login-field">
-                <label>{% trans "Password" %}</label>
-                <input type="password" ng-model="password" placeholder="{% trans 'Your email password' %}" required>
+                <label for="cpa11y-password">{% trans "Password" %}</label>
+                <input id="cpa11y-password" type="password" ng-model="password" placeholder="{% trans 'Your email password' %}" required>
             </div>
             <button type="submit" class="wm-login-btn" ng-disabled="loggingIn">
                 <span ng-if="!loggingIn">{% trans "Sign In" %}</span>
-                <span ng-if="loggingIn"><i class="fa fa-spinner fa-spin"></i> {% trans "Signing in..." %}</span>
+                <span ng-if="loggingIn"><i class="fa fa-spinner fa-spin" aria-hidden="true"></i> {% trans "Signing in..." %}</span>
             </button>
         </form>
     </div>

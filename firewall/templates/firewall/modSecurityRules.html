@@ -353,7 +353,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="rules-icon">
-                    <i class="fas fa-file-code fa-2x"></i>
+                    <i class="fas fa-file-code fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "ModSecurity Rules" %}
             </div>
@@ -361,7 +361,7 @@
                 {% trans "Configure custom ModSecurity rules to protect your websites from specific threats and vulnerabilities." %}
             </p>
             <a href="https://community.cyberpanel.net/t/4-mod-security-rules-packages/133" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "ModSecurity Documentation" %}
             </a>
         </div>
@@ -373,7 +373,7 @@
             <div class="panel-header">
                 <div class="panel-title">
                     <div class="panel-icon">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-edit" aria-hidden="true"></i>
                     </div>
                     {% trans "Edit Rules" %}
                 </div>
@@ -382,7 +382,7 @@
             
             <div class="panel-content">
                 <div class="info-box">
-                    <i class="fas fa-info-circle info-icon"></i>
+                    <i class="fas fa-info-circle info-icon" aria-hidden="true"></i>
                     <span class="info-text">
                         {% trans "Add your custom ModSecurity rules below. Each rule should be on a new line. Changes are applied immediately after saving." %}
                     </span>
@@ -390,30 +390,30 @@
                 
                 <form>
                     <div class="form-group">
-                        <textarea ng-model="currentModSecRules" class="rules-textarea" placeholder="# Add your ModSecurity rules here..."></textarea>
+                        <textarea ng-model="currentModSecRules" class="rules-textarea" placeholder="# Add your ModSecurity rules here..." aria-label="# Add your ModSecurity rules here..."></textarea>
                     </div>
                     
                     <div class="button-group">
                         <button type="button" ng-click="saveModSecRules()" class="btn-primary">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {% trans "Save Rules" %}
                         </button>
                     </div>
                 </form>
                 
                 <!-- Status Messages -->
-                <div ng-hide="rulesSaved" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="rulesSaved" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "ModSecurity rules have been saved successfully." %}</span>
                 </div>
                 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect. Please refresh this page." %}</span>
                 </div>
                 
-                <div ng-hide="couldNotSave" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="couldNotSave" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not save rules. Error message:" %} {$ errorMessage $}</span>
                 </div>
             </div>
@@ -422,13 +422,13 @@
     {% else %}
         <!-- Installation Panel -->
         <div class="install-panel">
-            <i class="fas fa-shield-alt install-icon"></i>
+            <i class="fas fa-shield-alt install-icon" aria-hidden="true"></i>
             <h2 class="install-title">{% trans "ModSecurity Not Installed" %}</h2>
             <p class="install-subtitle">
                 {% trans "Install ModSecurity to start creating custom rules for enhanced web application protection." %}
             </p>
             <a href="{% url 'modSecurity' %}" class="btn-install">
-                <i class="fas fa-download"></i>
+                <i class="fas fa-download" aria-hidden="true"></i>
                 {% trans "Install ModSecurity" %}
             </a>
         </div>

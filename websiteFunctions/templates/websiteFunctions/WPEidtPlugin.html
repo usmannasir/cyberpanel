@@ -27,9 +27,9 @@
 
 
 
-                        <label style="margin-bottom: 10px; color: var(--text-primary, #2f3640); font-weight: 600;">{% trans "Search Plugin Name" %}</label>
+                        <label for="cpa11y-search-plugin-name" style="margin-bottom: 10px; color: var(--text-primary, #2f3640); font-weight: 600;">{% trans "Search Plugin Name" %}</label>
 
-                        <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
+                        <input id="cpa11y-search-plugin-name" name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
                                ng-keyup="SearchPluginName('eidt')"
                                placeholder="{% trans "Search Plugin...." %}" required
                                style="border: 1px solid var(--border-color, #e8e9ff); background: var(--bg-secondary, white); color: var(--text-primary, #2f3640); padding: 12px 16px; border-radius: 8px;">

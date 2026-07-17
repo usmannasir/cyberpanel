@@ -559,7 +559,7 @@
         <div class="header-content">
             <h1 class="page-title">
                 <div class="server-icon">
-                    <i class="fas fa-server" style="color: var(--accent-color); font-size: 1.75rem;"></i>
+                    <i class="fas fa-server" style="color: var(--accent-color); font-size: 1.75rem;" aria-hidden="true"></i>
                 </div>
                 {% trans "LiteSpeed Tuning" %}
             </h1>
@@ -598,7 +598,7 @@
     <div class="tuning-panel">
         <div class="panel-header">
             <h2 class="panel-title">
-                <i class="fas fa-sliders-h"></i>
+                <i class="fas fa-sliders-h" aria-hidden="true"></i>
                 {% trans "Server Configuration" %}
             </h2>
             <div class="status-indicator">
@@ -612,69 +612,69 @@
             <div class="form-section">
                 <h3 class="section-title">
                     <div class="section-icon">
-                        <i class="fas fa-network-wired"></i>
+                        <i class="fas fa-network-wired" aria-hidden="true"></i>
                     </div>
                     {% trans "Connection Settings" %}
                 </h3>
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">
+                        <label for="cpa11y-max-connections-maximum-number-o" class="form-label">
                             {% trans "Max Connections" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Maximum number of concurrent connections" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="number" class="form-control" ng-model="maxConnections" min="1" required>
+                        <input id="cpa11y-max-connections-maximum-number-o" type="number" class="form-control" ng-model="maxConnections" min="1" required>
                         <span class="current-value">{% trans "Recommended: 10000-20000 for most servers" %}</span>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label for="cpa11y-max-ssl-connections-maximum-numb" class="form-label">
                             {% trans "Max SSL Connections" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Maximum number of SSL connections" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="number" class="form-control" ng-model="maxSSLConnections" min="1" required>
+                        <input id="cpa11y-max-ssl-connections-maximum-numb" type="number" class="form-control" ng-model="maxSSLConnections" min="1" required>
                         <span class="current-value">{% trans "Usually 50% of max connections" %}</span>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label for="cpa11y-connection-timeout-time-in-secon" class="form-label">
                             {% trans "Connection Timeout" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Time in seconds before closing idle connections" %}
                                 </div>
                             </span>
                         </label>
                         <div class="input-group">
-                            <input type="number" class="form-control" ng-model="connectionTimeOut" min="1" required>
+                            <input id="cpa11y-connection-timeout-time-in-secon" type="number" class="form-control" ng-model="connectionTimeOut" min="1" required>
                             <span class="input-addon">{% trans "seconds" %}</span>
                         </div>
                         <span class="current-value">{% trans "Default: 300 seconds" %}</span>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label for="cpa11y-keep-alive-timeout-time-to-keep-" class="form-label">
                             {% trans "Keep-Alive Timeout" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Time to keep connections alive" %}
                                 </div>
                             </span>
                         </label>
                         <div class="input-group">
-                            <input type="number" class="form-control" ng-model="keepAliveTimeOut" min="1" required>
+                            <input id="cpa11y-keep-alive-timeout-time-to-keep-" type="number" class="form-control" ng-model="keepAliveTimeOut" min="1" required>
                             <span class="input-addon">{% trans "seconds" %}</span>
                         </div>
                         <span class="current-value">{% trans "Default: 5 seconds" %}</span>
@@ -686,40 +686,40 @@
             <div class="form-section">
                 <h3 class="section-title">
                     <div class="section-icon">
-                        <i class="fas fa-tachometer-alt"></i>
+                        <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                     </div>
                     {% trans "Performance Settings" %}
                 </h3>
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">
+                        <label for="cpa11y-cache-size-in-memory-amount-of-r" class="form-label">
                             {% trans "Cache Size in Memory" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Amount of RAM allocated for caching" %}
                                 </div>
                             </span>
                         </label>
                         <div class="input-group">
-                            <input type="number" class="form-control" ng-model="cacheSizeInMemory" min="0" required>
+                            <input id="cpa11y-cache-size-in-memory-amount-of-r" type="number" class="form-control" ng-model="cacheSizeInMemory" min="0" required>
                             <span class="input-addon">MB</span>
                         </div>
                         <span class="current-value">{% trans "0 = Auto (recommended)" %}</span>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label for="cpa11y-gzip-compression-compress-respon" class="form-label">
                             {% trans "GZIP Compression" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Compress responses to reduce bandwidth" %}
                                 </div>
                             </span>
                         </label>
-                        <select ng-model="gzipCompression" class="form-control select-control">
+                        <select id="cpa11y-gzip-compression-compress-respon" ng-model="gzipCompression" class="form-control select-control">
                             <option value="Enable">{% trans "Enable" %}</option>
                             <option value="Disable">{% trans "Disable" %}</option>
                         </select>
@@ -729,8 +729,8 @@
             </div>
 
             <!-- Alerts -->
-            <div id="canNotFetchTuning" class="alert alert-warning" style="display: none;">
-                <i class="fas fa-exclamation-triangle alert-icon"></i>
+            <div id="canNotFetchTuning" class="alert alert-warning" style="display: none;" role="status">
+                <i class="fas fa-exclamation-triangle alert-icon" aria-hidden="true"></i>
                 <div class="alert-content">
                     <div class="alert-title">{% trans "Cannot Fetch Current Values" %}</div>
                     <div class="alert-message">
@@ -741,15 +741,15 @@
             </div>
 
             <div id="notTuned" class="alert alert-error" style="display: none;">
-                <i class="fas fa-times-circle alert-icon"></i>
+                <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
                 <div class="alert-content">
                     <div class="alert-title">{% trans "Configuration Failed" %}</div>
                     <div class="alert-message">{$ errMessage $}</div>
                 </div>
             </div>
 
-            <div id="tuned" class="alert alert-success" style="display: none;">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div id="tuned" class="alert alert-success" style="display: none;" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <div class="alert-content">
                     <div class="alert-title">{% trans "Success!" %}</div>
                     <div class="alert-message">{% trans "LiteSpeed server has been successfully tuned with your new settings." %}</div>
@@ -759,12 +759,12 @@
             <!-- Action Buttons -->
             <div class="action-buttons">
                 <button type="button" ng-click="saveTuningSettings()" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <i class="fas fa-save" aria-hidden="true"></i>
                     {% trans "Apply Settings" %}
                     <span id="tuningLoading" class="loading-spinner" style="display: none;"></span>
                 </button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.reload()">
-                    <i class="fas fa-undo"></i>
+                    <i class="fas fa-undo" aria-hidden="true"></i>
                     {% trans "Reset Form" %}
                 </button>
             </div>

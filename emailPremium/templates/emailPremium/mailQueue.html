@@ -441,11 +441,11 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-inbox"></i>
+                    <i class="fas fa-inbox" aria-hidden="true"></i>
                 </div>
                 {% trans "Mail Queue" %}
                 <a href="https://cyberpanel.net/KnowledgeBase/home/email-queue-management-in-cyberpanel/" target="_blank" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Documentation" %}
                 </a>
             </h1>
@@ -461,19 +461,19 @@
             
             <div class="action-buttons">
                 <button ng-click="fetchMailQueue()" class="action-btn refresh">
-                    <i class="fas fa-sync-alt"></i>
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                     {% trans "Refresh" %}
                 </button>
                 <button ng-click="flushQueue()" class="action-btn warning">
-                    <i class="fas fa-broom"></i>
+                    <i class="fas fa-broom" aria-hidden="true"></i>
                     {% trans "Flush Queue" %}
                 </button>
                 <button ng-click="delete('all')" class="action-btn danger">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-trash-alt" aria-hidden="true"></i>
                     {% trans "Delete All" %}
                 </button>
                 <button ng-click="delete('deferred')" class="action-btn danger">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-clock" aria-hidden="true"></i>
                     {% trans "Delete Deferred" %}
                 </button>
             </div>
@@ -500,7 +500,7 @@
                             <td ng-bind="queue.recipients"></td>
                             <td>
                                 <a href="#" class="view-message-btn" data-toggle="modal" data-target="#viewMessage" ng-click="fetchMessage(queue.queue_id)">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                     {% trans "View Message" %}
                                 </a>
                             </td>
@@ -512,7 +512,7 @@
             <!-- Empty State -->
             <div ng-if="queues.length == 0" class="empty-state">
                 <div class="empty-state-icon">
-                    <i class="fas fa-inbox"></i>
+                    <i class="fas fa-inbox" aria-hidden="true"></i>
                 </div>
                 <div class="empty-state-text">{% trans "Mail queue is empty" %}</div>
                 <div class="empty-state-subtext">{% trans "All emails have been delivered successfully" %}</div>
@@ -534,7 +534,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="modal-btn secondary" data-dismiss="modal">
-                            <i class="fas fa-times"></i>
+                            <i class="fas fa-times" aria-hidden="true"></i>
                             {% trans "Close" %}
                         </button>
                     </div>

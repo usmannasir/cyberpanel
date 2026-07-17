@@ -183,7 +183,7 @@
             <div class="content-card">
                 <h2 class="card-title">
                     {% trans "Custom CSS" %}
-                    <img class="loading-icon" ng-hide="themeloading" src="{% static 'images/loading.gif' %}">
+                    <img class="loading-icon" ng-hide="themeloading" src="{% static 'images/loading.gif' %}" alt="">
                 </h2>
                 
                 <div class="info-box" style="margin-bottom: 2rem;">
@@ -194,13 +194,13 @@
                     {% csrf_token %}
 
                     {% if saved %}
-                        <div class="alert alert-success">
-                            <i class="fa fa-check-circle"></i> {% trans "Changes saved successfully." %}
+                        <div class="alert alert-success" role="status">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Changes saved successfully." %}
                         </div>
                     {% endif %}
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select Theme" %}</label>
+                        <label for="stheme" class="form-label">{% trans "Select Theme" %}</label>
                         <select ng-change="getthemedata()" ng-model="stheme" id="stheme" class="form-select">
                             {% for key in tree %}
                                 <option value="{{ key }}">{{ key }}</option>
@@ -209,13 +209,13 @@
                     </div>
 
                     <div ng-hide="keyBox" class="form-group">
-                        <label class="form-label">{% trans "Custom CSS" %}</label>
+                        <label for="appendthemedata" class="form-label">{% trans "Custom CSS" %}</label>
                         <textarea id="appendthemedata" name="MainDashboardCSS" rows="12" class="form-control">{{ cosmetic.MainDashboardCSS }}</textarea>
                     </div>
 
                     <div class="form-group" style="margin-top: 2rem;">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fa fa-save"></i> {% trans "Save Changes" %}
+                            <i class="fa fa-save" aria-hidden="true"></i> {% trans "Save Changes" %}
                         </button>
                     </div>
                 </form>

@@ -257,14 +257,14 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
                 <h2 class="section-title">SSL FOR HOSTNAME</h2>
                 <a href="https://cyberpanel.net/KnowledgeBase/home/cyberpanel-on-ssl/" target="_blank" class="ssl-docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "SSL Docs" %}
                 </a>
             </div>
             <p class="ssl-description">{% trans "Let's Encrypt SSL for hostname to access CyberPanel on verified SSL." %}</p>
             
             <div ng-hide="success" class="deprecation-notice">
-                <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                <i class="fas fa-info-circle" style="margin-right: 8px;" aria-hidden="true"></i>
                 Note: This feature is deprecated in favour of <a href="/base/onboarding">setup-wizard</a>.
             </div>
         </div>
@@ -273,13 +273,13 @@
         <div class="ssl-section">
             <h3 class="section-title">
                 ISSUE SSL CERTIFICATE
-                <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h3>
             
             <div class="form-container">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select Website" %}</label>
-                    <select ng-change="showbtn()" ng-model="virtualHost" class="form-control">
+                    <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                    <select id="cpa11y-select-website" ng-change="showbtn()" ng-model="virtualHost" class="form-control">
                         <option value="">-- Select a website --</option>
                         {% for items in websiteList %}
                             <option>{{ items }}</option>
@@ -289,32 +289,32 @@
 
                 <div ng-hide="issueSSLBtn" class="form-group">
                     <button type="button" ng-click="issueSSL()" ng-disabled="sslIssuing" class="btn-primary">
-                        <i class="fas fa-lock" ng-hide="sslIssuing"></i>
-                        <i class="fas fa-spinner fa-spin" ng-show="sslIssuing"></i>
+                        <i class="fas fa-lock" ng-hide="sslIssuing" aria-hidden="true"></i>
+                        <i class="fas fa-spinner fa-spin" ng-show="sslIssuing" aria-hidden="true"></i>
                         <span ng-hide="sslIssuing">{% trans "Issue SSL" %}</span>
                         <span ng-show="sslIssuing">{% trans "Issuing SSL..." %}</span>
                     </button>
                 </div>
 
                 <!-- Success/Error Messages -->
-                <div ng-show="sslIssuing" class="alert alert-info">
-                    <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>
+                <div ng-show="sslIssuing" class="alert alert-info" role="status">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "Issuing SSL..." %}</strong> {% trans "This can take a few minutes. Please keep this page open." %}
                 </div>
 
-                <div ng-hide="canNotIssue" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                <div ng-hide="canNotIssue" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "Cannot issue SSL." %}</strong> {% trans "Error message:" %} {$ errorMessage $}
                 </div>
 
-                <div ng-hide="sslIssued" class="alert alert-success">
-                    <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                <div ng-hide="sslIssued" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "SSL Issued Successfully!" %}</strong><br>
                     {% trans "You can now access CyberPanel at:" %} <strong>https://{$ sslDomain $}:8090</strong>
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "Connection Error" %}</strong><br>
                     {% trans "Could not connect to server. Please refresh this page." %}
                 </div>

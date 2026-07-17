@@ -1,5 +1,5 @@
 // Modern File Manager JavaScript
-angular.module('fileManagerApp', ['angularFileUpload'])
+angular.module('fileManagerApp', ['angularFileUpload', 'ngAria'])
     .config(['$interpolateProvider', function($interpolateProvider) {
         // Change Angular delimiters to avoid conflict with Django
         $interpolateProvider.startSymbol('[[');

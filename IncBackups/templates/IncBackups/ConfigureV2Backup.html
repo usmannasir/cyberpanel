@@ -15,7 +15,7 @@
                 <div class="panel-body">
                     <h3 class="title-hero">
                         {% trans "Configure v2 Backup Destinations" %} <img ng-hide="cyberpanelLoading"
-                                                                            src="{% static 'images/loading.gif' %}">
+                                                                            src="{% static 'images/loading.gif' %}" alt="">
                     </h3>
                     <div class="example-box-wrapper">
 
@@ -23,7 +23,7 @@
                         <form action="/" class="form-horizontal bordered-row">
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                                <label for="selwebsite" class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                                 <div class="col-sm-6">
                                     <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite"
                                             class="form-control">
@@ -36,9 +36,9 @@
 
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
+                                <label for="cpa11y-select-backup-type" class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
                                 <div class="col-sm-6">
-                                    <select ng-change="selectbackuptype()" ng-model="v2backuptype" class="form-control">
+                                    <select id="cpa11y-select-backup-type" ng-change="selectbackuptype()" ng-model="v2backuptype" class="form-control">
                                         <option>SFTP</option>
                                         <option>GDrive</option>
                                     </select>
@@ -62,9 +62,9 @@
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Account Name" %}</label>
+                                                <label for="cpa11y-account-name" class="col-sm-3 control-label">{% trans "Account Name" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="accountName" type="text" class="form-control"
+                                                    <input id="cpa11y-account-name" name="accountName" type="text" class="form-control"
                                                            ng-model="accountName">
                                                 </div>
                                             </div>
@@ -74,17 +74,17 @@
                                                         href="https://rclone.org/drive/#making-your-own-client-id">Learn
                                                     how to create this.</a>. These field can be left empty but backups
                                                     may not work then. </p>
-                                                <label class="col-sm-3 control-label">{% trans "client_id" %}</label>
+                                                <label for="cpa11y-client-id" class="col-sm-3 control-label">{% trans "client_id" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="client_id" type="text" class="form-control"
+                                                    <input id="cpa11y-client-id" name="client_id" type="text" class="form-control"
                                                            ng-model="client_id">
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "client_secret" %}</label>
+                                                <label for="cpa11y-client-secret" class="col-sm-3 control-label">{% trans "client_secret" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="client_secret" type="text" class="form-control"
+                                                    <input id="cpa11y-client-secret" name="client_secret" type="text" class="form-control"
                                                            ng-model="client_secret">
                                                 </div>
                                             </div>
@@ -96,7 +96,7 @@
                                         <button type="button" class="btn btn-primary"
                                                 ng-click="setupAccount()">Save <img
                                                 ng-hide="cyberpanelLoading"
-                                                src="{% static 'images/loading.gif' %}">
+                                                src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button" ng-disabled="savingSettings"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -123,41 +123,41 @@
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                                <label for="cpa11y-repo-name" class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="reponame" type="text" class="form-control"
+                                                    <input id="cpa11y-repo-name" name="reponame" type="text" class="form-control"
                                                            ng-model="reponame">
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Host Name" %}</label>
+                                                <label for="cpa11y-host-name" class="col-sm-3 control-label">{% trans "Host Name" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="accountName" type="text" class="form-control"
+                                                    <input id="cpa11y-host-name" name="accountName" type="text" class="form-control"
                                                            ng-model="hostName">
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                                <label for="cpa11y-username" class="col-sm-3 control-label">{% trans "Username" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="accountName" type="text" class="form-control"
+                                                    <input id="cpa11y-username" name="accountName" type="text" class="form-control"
                                                            ng-model="UserName">
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                                <label for="cpa11y-password" class="col-sm-3 control-label">{% trans "Password" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="accountName" type="text" class="form-control"
+                                                    <input id="cpa11y-password" name="accountName" type="text" class="form-control"
                                                            ng-model="sfptpasswd">
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "SSH Port" %}</label>
+                                                <label for="cpa11y-ssh-port" class="col-sm-3 control-label">{% trans "SSH Port" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="sshPort" type="text" class="form-control"
+                                                    <input id="cpa11y-ssh-port" name="sshPort" type="text" class="form-control"
                                                            ng-model="sshPort" value="Default SSH Port is 22">
                                                 </div>
                                             </div>
@@ -169,7 +169,7 @@
                                         <button type="button" class="btn btn-primary"
                                                 ng-click="ConfigerSFTP()">Save <img
                                                 ng-hide="cyberpanelLoading"
-                                                src="{% static 'images/loading.gif' %}">
+                                                src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button" ng-disabled="savingSettings"
                                                 class="btn btn-default" data-dismiss="modal">

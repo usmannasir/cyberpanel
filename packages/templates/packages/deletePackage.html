@@ -410,8 +410,8 @@
             
             <div class="package-selector-card">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select Package to Delete" %}</label>
-                    <select ng-change="fetchPackageDetails()" ng-model="packageToBeDeleted" class="form-control" aria-label="{% trans 'Select Package to Delete' %}">
+                    <label for="cpa11y-select-package-to-delete" class="form-label">{% trans "Select Package to Delete" %}</label>
+                    <select id="cpa11y-select-package-to-delete" ng-change="fetchPackageDetails()" ng-model="packageToBeDeleted" class="form-control" aria-label="{% trans 'Select Package to Delete' %}">
                         <option value="">-- {% trans "Select a package" %} --</option>
                         {% for items in packageList %}
                             <option>{{ items }}</option>
@@ -450,7 +450,7 @@
             </div>
 
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-content">
                     <div class="warning-title">{% trans "Warning: This action cannot be undone!" %}</div>
                     <div class="warning-text">
@@ -461,7 +461,7 @@
 
             <div class="button-container">
                 <button type="button" ng-click="deletePackage()" class="btn btn-danger" ng-disabled="!packageToBeDeleted">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Delete Package" %}
                 </button>
             </div>
@@ -469,7 +469,7 @@
 
         <!-- Confirmation Section -->
         <div class="content-card confirmation-section" id="deletePackageButton">
-            <i class="fas fa-exclamation-circle confirmation-icon"></i>
+            <i class="fas fa-exclamation-circle confirmation-icon" aria-hidden="true"></i>
             <h3 class="confirmation-title">{% trans "Are you absolutely sure?" %}</h3>
             <p class="confirmation-text">
                 {% trans "This action will permanently delete the package from your system." %}
@@ -478,24 +478,24 @@
             
             <div class="confirmation-buttons">
                 <button type="button" ng-click="cancelDelete()" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     {% trans "Cancel" %}
                 </button>
                 <button type="button" ng-click="deletePackageFinal()" class="btn btn-danger">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Yes, Delete Package" %}
                 </button>
             </div>
         </div>
 
         <!-- Alert Messages -->
-        <div id="deleteFailure" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+        <div id="deleteFailure" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <span>{% trans "Cannot delete package. Error message:" %} {$ errorMessage $}</span>
         </div>
 
-        <div id="deleteSuccess" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div id="deleteSuccess" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <span>{% trans "Package" %} <strong>{$ deletedPackage $}</strong> {% trans "successfully deleted." %}</span>
         </div>
     </div>

@@ -625,7 +625,7 @@
         <div class="header-content">
             <h1 class="page-title">
                 <div class="php-icon">
-                    <i class="fab fa-php" style="color: var(--accent-color); font-size: 1.75rem;"></i>
+                    <i class="fab fa-php" style="color: var(--accent-color); font-size: 1.75rem;" aria-hidden="true"></i>
                 </div>
                 {% trans "PHP Tuning" %}
             </h1>
@@ -639,7 +639,7 @@
     <div class="selector-panel">
         <div class="selector-header">
             <div class="selector-icon">
-                <i class="fas fa-code"></i>
+                <i class="fas fa-code" aria-hidden="true"></i>
             </div>
             <h2 class="selector-title">
                 {% if OLS %}
@@ -652,14 +652,14 @@
         
         <form class="selector-form">
             <div class="form-group">
-                <label class="form-label">
+                <label for="cpa11y-choose-a-domain-to-configure-its" class="form-label">
                     {% if OLS %}
                         {% trans "Choose a domain to configure its PHP settings" %}
                     {% else %}
                         {% trans "Choose PHP version to configure" %}
                     {% endif %}
                 </label>
-                <select ng-change="fetchPHPDetails()" ng-model="domainSelection" class="form-control select-control">
+                <select id="cpa11y-choose-a-domain-to-configure-its" ng-change="fetchPHPDetails()" ng-model="domainSelection" class="form-control select-control">
                     <option value="" disabled selected>
                         {% if OLS %}
                             {% trans "Select a domain..." %}
@@ -691,7 +691,7 @@
                 </select>
             </div>
             <button type="button" class="btn btn-primary" ng-click="fetchPHPDetails()" ng-show="domainSelection">
-                <i class="fas fa-sync-alt"></i>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 {% trans "Load Settings" %}
             </button>
         </form>
@@ -704,15 +704,15 @@
 
     <!-- Alerts -->
     <div id="canNotFetch" class="alert alert-error" style="display: none;">
-        <i class="fas fa-times-circle alert-icon"></i>
+        <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
         <div class="alert-content">
             <div class="alert-title">{% trans "Failed to Fetch Settings" %}</div>
             <div class="alert-message">{$ errorMessage $}</div>
         </div>
     </div>
 
-    <div id="successfullyFetched" class="alert alert-info" style="display: none;">
-        <i class="fas fa-info-circle alert-icon"></i>
+    <div id="successfullyFetched" class="alert alert-info" style="display: none;" role="status">
+        <i class="fas fa-info-circle alert-icon" aria-hidden="true"></i>
         <div class="alert-content">
             <div class="alert-title">{% trans "Settings Loaded" %}</div>
             <div class="alert-message">{% trans "PHP configuration has been loaded successfully" %}</div>
@@ -720,15 +720,15 @@
     </div>
 
     <div id="canNotTune" class="alert alert-error" style="display: none;">
-        <i class="fas fa-times-circle alert-icon"></i>
+        <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
         <div class="alert-content">
             <div class="alert-title">{% trans "Configuration Failed" %}</div>
             <div class="alert-message">{$ errorMessage $}</div>
         </div>
     </div>
 
-    <div id="successfullyTuned" class="alert alert-success" style="display: none;">
-        <i class="fas fa-check-circle alert-icon"></i>
+    <div id="successfullyTuned" class="alert alert-success" style="display: none;" role="status">
+        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
         <div class="alert-content">
             <div class="alert-title">{% trans "Success!" %}</div>
             <div class="alert-message">
@@ -741,7 +741,7 @@
     <div class="tuning-panel" ng-hide="hideDetails">
         <div class="panel-header">
             <h2 class="panel-title">
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-cog" aria-hidden="true"></i>
                 {% trans "PHP Configuration" %}
             </h2>
             <div class="php-version-badge" ng-show="domainSelection">
@@ -754,40 +754,40 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-clock" aria-hidden="true"></i>
                     </div>
                     <h3 class="section-title">{% trans "Connection & Timeout Settings" %}</h3>
                 </div>
                 
                 <div class="form-grid">
                     <div class="form-field">
-                        <label class="field-label">
+                        <label for="cpa11y-initial-request-timeout-maximum-" class="field-label">
                             {% trans "Initial Request Timeout" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Maximum time in seconds for the initial request" %}
                                 </div>
                             </span>
                         </label>
                         <div class="input-group">
-                            <input type="number" class="form-control" ng-model="initTimeout" min="1" required>
+                            <input id="cpa11y-initial-request-timeout-maximum-" type="number" class="form-control" ng-model="initTimeout" min="1" required>
                             <span class="input-addon">{% trans "seconds" %}</span>
                         </div>
                         <span class="current-value">{% trans "Default: 60 seconds" %}</span>
                     </div>
 
                     <div class="form-field">
-                        <label class="field-label">
+                        <label for="cpa11y-max-connections-maximum-number-o" class="field-label">
                             {% trans "Max Connections" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Maximum number of concurrent PHP connections" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="number" class="form-control" ng-model="maxConns" min="1" required>
+                        <input id="cpa11y-max-connections-maximum-number-o" type="number" class="form-control" ng-model="maxConns" min="1" required>
                         <span class="current-value">{% trans "Recommended: 35-50" %}</span>
                     </div>
                 </div>
@@ -797,37 +797,37 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-memory"></i>
+                        <i class="fas fa-memory" aria-hidden="true"></i>
                     </div>
                     <h3 class="section-title">{% trans "Memory Limits" %}</h3>
                 </div>
                 
                 <div class="form-grid">
                     <div class="form-field">
-                        <label class="field-label">
+                        <label for="cpa11y-memory-soft-limit-soft-memory-li" class="field-label">
                             {% trans "Memory Soft Limit" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Soft memory limit (can be exceeded temporarily)" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="text" class="form-control" ng-model="memSoftLimit" placeholder="e.g., 512M" required>
+                        <input id="cpa11y-memory-soft-limit-soft-memory-li" type="text" class="form-control" ng-model="memSoftLimit" placeholder="e.g., 512M" required>
                         <span class="current-value">{% trans "Format: 512M, 1G, etc." %}</span>
                     </div>
 
                     <div class="form-field">
-                        <label class="field-label">
+                        <label for="cpa11y-memory-hard-limit-hard-memory-li" class="field-label">
                             {% trans "Memory Hard Limit" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Hard memory limit (cannot be exceeded)" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="text" class="form-control" ng-model="memHardLimit" placeholder="e.g., 1G" required>
+                        <input id="cpa11y-memory-hard-limit-hard-memory-li" type="text" class="form-control" ng-model="memHardLimit" placeholder="e.g., 1G" required>
                         <span class="current-value">{% trans "Should be higher than soft limit" %}</span>
                     </div>
                 </div>
@@ -837,37 +837,37 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-microchip"></i>
+                        <i class="fas fa-microchip" aria-hidden="true"></i>
                     </div>
                     <h3 class="section-title">{% trans "Process Limits" %}</h3>
                 </div>
                 
                 <div class="form-grid">
                     <div class="form-field">
-                        <label class="field-label">
+                        <label for="cpa11y-process-soft-limit-soft-limit-fo" class="field-label">
                             {% trans "Process Soft Limit" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Soft limit for number of PHP processes" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="number" class="form-control" ng-model="procSoftLimit" min="1" required>
+                        <input id="cpa11y-process-soft-limit-soft-limit-fo" type="number" class="form-control" ng-model="procSoftLimit" min="1" required>
                         <span class="current-value">{% trans "Default: 400" %}</span>
                     </div>
 
                     <div class="form-field">
-                        <label class="field-label">
+                        <label for="cpa11y-process-hard-limit-hard-limit-fo" class="field-label">
                             {% trans "Process Hard Limit" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Hard limit for number of PHP processes" %}
                                 </div>
                             </span>
                         </label>
-                        <input type="number" class="form-control" ng-model="procHardLimit" min="1" required>
+                        <input id="cpa11y-process-hard-limit-hard-limit-fo" type="number" class="form-control" ng-model="procHardLimit" min="1" required>
                         <span class="current-value">{% trans "Default: 500" %}</span>
                     </div>
                 </div>
@@ -877,7 +877,7 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-sliders-h"></i>
+                        <i class="fas fa-sliders-h" aria-hidden="true"></i>
                     </div>
                     <h3 class="section-title">{% trans "Additional Settings" %}</h3>
                 </div>
@@ -887,7 +887,7 @@
                         <label class="field-label">
                             {% trans "Persistent Connections" %}
                             <span class="tooltip-icon">
-                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-question-circle" aria-hidden="true"></i>
                                 <div class="tooltip-content">
                                     {% trans "Keep database connections open between requests" %}
                                 </div>
@@ -909,11 +909,11 @@
             <!-- Action Buttons -->
             <div class="action-buttons">
                 <button type="button" ng-click="tunePHPFunc()" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <i class="fas fa-save" aria-hidden="true"></i>
                     {% trans "Apply PHP Settings" %}
                 </button>
                 <button type="button" class="btn btn-secondary" ng-click="fetchPHPDetails()">
-                    <i class="fas fa-undo"></i>
+                    <i class="fas fa-undo" aria-hidden="true"></i>
                     {% trans "Reset Form" %}
                 </button>
             </div>
@@ -924,7 +924,7 @@
     <div class="tuning-panel" ng-show="hideDetails">
         <div class="empty-state">
             <div class="empty-icon">
-                <i class="fas fa-code" style="font-size: 2rem; color: var(--accent-color);"></i>
+                <i class="fas fa-code" style="font-size: 2rem; color: var(--accent-color);" aria-hidden="true"></i>
             </div>
             <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">{% trans "No PHP Version Selected" %}</h3>
             <p>

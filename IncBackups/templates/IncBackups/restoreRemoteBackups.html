@@ -23,7 +23,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Backup Website" %} <img ng-hide="cyberpanelLoading"
-                                                       src="{% static 'images/loading.gif' %}">
+                                                       src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -32,9 +32,9 @@
 
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                            <label for="cpa11y-select-website" class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                             <div class="col-sm-6">
-                                <select ng-change="showThings()" ng-model="websiteToBeBacked" class="form-control">
+                                <select id="cpa11y-select-website" ng-change="showThings()" ng-model="websiteToBeBacked" class="form-control">
                                     {% for items in websiteList %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
@@ -43,9 +43,9 @@
                         </div>
 
                         <div ng-hide="destination" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Destination" %}</label>
+                            <label for="cpa11y-destination" class="col-sm-3 control-label">{% trans "Destination" %}</label>
                             <div class="col-sm-6">
-                                <select ng-model="backupDestinations"
+                                <select id="cpa11y-destination" ng-model="backupDestinations"
                                         class="form-control">
                                     {% for items in destinations %}
                                         <option>{{ items }}</option>
@@ -55,9 +55,9 @@
                         </div>
 
                         <div ng-hide="destination" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Encrypted Backup Password" %}</label>
+                            <label for="cpa11y-encrypted-backup-password" class="col-sm-3 control-label">{% trans "Encrypted Backup Password" %}</label>
                             <div class="col-sm-6">
-                                <input type="password" name="password" class="form-control" ng-model="password"
+                                <input id="cpa11y-encrypted-backup-password" type="password" name="password" class="form-control" ng-model="password"
                                        required>
                             </div>
                         </div>
@@ -68,7 +68,7 @@
                                 <button type="button" ng-click="fetchDetails()"
                                         class="btn btn-primary btn-lg btn-block">{% trans "Fetch Restore Points" %} <img
                                         ng-hide="cyberpanelLoading"
-                                        src="{% static 'images/loading.gif' %}"></button>
+                                        src="{% static 'images/loading.gif' %}" alt=""></button>
                             </div>
                         </div>
 

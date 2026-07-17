@@ -488,7 +488,7 @@
                             <td>{$ record.ftpAccounts $}</td>
                             <td>
                                 <span class="status-badge" ng-class="{'enabled': record.allowFullDomain, 'disabled': !record.allowFullDomain}">
-                                    <i class="fas fa-circle status-icon"></i>
+                                    <i class="fas fa-circle status-icon" aria-hidden="true"></i>
                                     <span ng-if="record.allowFullDomain">{% trans "Enabled" %}</span>
                                     <span ng-if="!record.allowFullDomain">{% trans "Disabled" %}</span>
                                 </span>
@@ -499,12 +499,12 @@
                                             ng-click="editInitial(record.package, record.diskSpace, record.bandwidth, record.emailAccounts, record.dataBases, record.ftpAccounts, record.allowedDomains, record.allowFullDomain, record.enforceDiskLimits)"
                                             data-toggle="modal" 
                                             data-target="#editPackageModal">
-                                        <i class="fas fa-edit"></i>
+                                        <i class="fas fa-edit" aria-hidden="true"></i>
                                         {% trans "Edit" %}
                                     </button>
                                     <button class="btn-action btn-delete" 
                                             ng-click="confirmDelete(record.package)">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                         {% trans "Delete" %}
                                     </button>
                                 </div>
@@ -530,35 +530,35 @@
                 <div class="modal-body">
                     <form name="editPackageForm">
                         <div class="form-group">
-                            <label class="form-label">{% trans "Package Name" %}</label>
-                            <input type="text" class="form-control" ng-model="name" readonly aria-label="{% trans 'Package Name' %}">
+                            <label for="cpa11y-package-name" class="form-label">{% trans "Package Name" %}</label>
+                            <input id="cpa11y-package-name" type="text" class="form-control" ng-model="name" readonly aria-label="{% trans 'Package Name' %}">
                         </div>
                         
                         <div class="form-section">
                             <div class="form-section-title">
-                                <i class="fas fa-globe"></i>
+                                <i class="fas fa-globe" aria-hidden="true"></i>
                                 {% trans "Web Resources" %}
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "Domains" %}</label>
-                                <input type="number" class="form-control" ng-model="allowedDomains" required aria-label="{% trans 'Number of domains allowed' %}">
+                                <label for="cpa11y-domains" class="form-label">{% trans "Domains" %}</label>
+                                <input id="cpa11y-domains" type="number" class="form-control" ng-model="allowedDomains" required aria-label="{% trans 'Number of domains allowed' %}">
                                 <div class="help-text">{% trans "Number of domains allowed (0 = Unlimited)" %}</div>
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "Disk Space" %}</label>
+                                <label for="cpa11y-disk-space" class="form-label">{% trans "Disk Space" %}</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" ng-model="diskSpace" required aria-label="{% trans 'Disk space in MB' %}">
+                                    <input id="cpa11y-disk-space" type="number" class="form-control" ng-model="diskSpace" required aria-label="{% trans 'Disk space in MB' %}">
                                     <span class="input-suffix">MB</span>
                                 </div>
                                 <div class="help-text">{% trans "Disk space in MB (0 = Unlimited)" %}</div>
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "Bandwidth" %}</label>
+                                <label for="cpa11y-bandwidth" class="form-label">{% trans "Bandwidth" %}</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" ng-model="bandwidth" required aria-label="{% trans 'Monthly bandwidth in MB' %}">
+                                    <input id="cpa11y-bandwidth" type="number" class="form-control" ng-model="bandwidth" required aria-label="{% trans 'Monthly bandwidth in MB' %}">
                                     <span class="input-suffix">MB</span>
                                 </div>
                                 <div class="help-text">{% trans "Monthly bandwidth in MB (0 = Unlimited)" %}</div>
@@ -567,29 +567,29 @@
                         
                         <div class="form-section">
                             <div class="form-section-title">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                                 {% trans "Services & Features" %}
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "Email Accounts" %}</label>
-                                <input type="number" class="form-control" ng-model="emails" required aria-label="{% trans 'Number of email accounts' %}">
+                                <label for="cpa11y-email-accounts" class="form-label">{% trans "Email Accounts" %}</label>
+                                <input id="cpa11y-email-accounts" type="number" class="form-control" ng-model="emails" required aria-label="{% trans 'Number of email accounts' %}">
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "Databases" %}</label>
-                                <input type="number" class="form-control" ng-model="dataBases" required aria-label="{% trans 'Number of databases' %}">
+                                <label for="cpa11y-databases" class="form-label">{% trans "Databases" %}</label>
+                                <input id="cpa11y-databases" type="number" class="form-control" ng-model="dataBases" required aria-label="{% trans 'Number of databases' %}">
                             </div>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "FTP Accounts" %}</label>
-                                <input type="number" class="form-control" ng-model="ftpAccounts" required aria-label="{% trans 'Number of FTP accounts' %}">
+                                <label for="cpa11y-ftp-accounts" class="form-label">{% trans "FTP Accounts" %}</label>
+                                <input id="cpa11y-ftp-accounts" type="number" class="form-control" ng-model="ftpAccounts" required aria-label="{% trans 'Number of FTP accounts' %}">
                             </div>
                         </div>
                         
                         <div class="form-section">
                             <div class="form-section-title">
-                                <i class="fas fa-cog"></i>
+                                <i class="fas fa-cog" aria-hidden="true"></i>
                                 {% trans "Additional Features" %}
                             </div>
                             
@@ -624,7 +624,7 @@
                         {% trans "Cancel" %}
                     </button>
                     <button type="button" class="btn btn-primary" ng-click="saveChanges()" data-dismiss="modal">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                 </div>
@@ -643,8 +643,8 @@
                     </h4>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                         <strong>{% trans "Warning!" %}</strong> {% trans "Are you sure you want to delete this package?" %}
                     </div>
                     <p>{% trans "Package to delete:" %} <strong>{$ packageToDelete $}</strong></p>
@@ -655,7 +655,7 @@
                         {% trans "Cancel" %}
                     </button>
                     <button type="button" class="btn btn-danger" ng-click="deletePackageFinal(packageToDelete)" data-dismiss="modal">
-                        <i class="fas fa-trash"></i>
+                        <i class="fas fa-trash" aria-hidden="true"></i>
                         {% trans "Delete Package" %}
                     </button>
                 </div>

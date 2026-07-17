@@ -341,7 +341,7 @@
         <div class="docker-section">
             <h3 class="section-title">
                 DOCKER APP DETAILS
-                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h3>
             
             <form name="websiteCreationForm" ng-hide="installationDetailsForm">
@@ -349,16 +349,16 @@
                     <!-- Basic Details -->
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Site Name" %}</label>
-                            <input type="text" class="form-control" ng-model="siteName" 
+                            <label for="cpa11y-site-name" class="form-label">{% trans "Site Name" %}</label>
+                            <input id="cpa11y-site-name" type="text" class="form-control" ng-model="siteName" 
                                    placeholder="My Docker App" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Select Owner" %}</label>
-                            <select ng-model="userSelection" class="form-control">
+                            <label for="cpa11y-select-owner" class="form-label">{% trans "Select Owner" %}</label>
+                            <select id="cpa11y-select-owner" ng-model="userSelection" class="form-control">
                                 {% for admin in adminNames %}
                                     <option>{{ admin }}</option>
                                 {% endfor %}
@@ -368,9 +368,9 @@
 
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Domain Name" %}</label>
+                            <label for="cpa11y-domain-name" class="form-label">{% trans "Domain Name" %}</label>
                             <div>
-                                <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"
+                                <input id="cpa11y-domain-name" name="dom" type="text" class="form-control" ng-model="domainNameCreate"
                                        placeholder="example.com (without www)" required>
                                 <div ng-show="websiteCreationForm.dom.$error.pattern" class="error-text">
                                     {% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}
@@ -384,19 +384,19 @@
                         <div class="resource-section">
                             <div class="resource-header">
                                 <div class="resource-icon">
-                                    <i class="fas fa-database"></i>
+                                    <i class="fas fa-database" aria-hidden="true"></i>
                                 </div>
                                 MySQL Resources
                             </div>
                             <div class="resource-grid">
                                 <div class="form-group">
-                                    <label class="form-label" style="text-align: left;">{% trans "CPU Cores" %}</label>
-                                    <input type="number" class="form-control" ng-model="CPUMysql" 
+                                    <label for="cpa11y-cpu-cores" class="form-label" style="text-align: left;">{% trans "CPU Cores" %}</label>
+                                    <input id="cpa11y-cpu-cores" type="number" class="form-control" ng-model="CPUMysql" 
                                            placeholder="1" value="1" min="1" required>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label" style="text-align: left;">{% trans "RAM (MB)" %}</label>
-                                    <input type="number" class="form-control" ng-model="rammysql" 
+                                    <label for="cpa11y-ram-mb" class="form-label" style="text-align: left;">{% trans "RAM (MB)" %}</label>
+                                    <input id="cpa11y-ram-mb" type="number" class="form-control" ng-model="rammysql" 
                                            placeholder="512" value="512" min="128" required>
                                 </div>
                             </div>
@@ -405,19 +405,19 @@
                         <div class="resource-section">
                             <div class="resource-header">
                                 <div class="resource-icon">
-                                    <i class="fas fa-server"></i>
+                                    <i class="fas fa-server" aria-hidden="true"></i>
                                 </div>
                                 Application Resources
                             </div>
                             <div class="resource-grid">
                                 <div class="form-group">
-                                    <label class="form-label" style="text-align: left;">{% trans "CPU Cores" %}</label>
-                                    <input type="number" class="form-control" ng-model="CPUSite" 
+                                    <label for="cpa11y-cpu-cores-2" class="form-label" style="text-align: left;">{% trans "CPU Cores" %}</label>
+                                    <input id="cpa11y-cpu-cores-2" type="number" class="form-control" ng-model="CPUSite" 
                                            placeholder="1" value="1" min="1" required>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label" style="text-align: left;">{% trans "RAM (MB)" %}</label>
-                                    <input type="number" class="form-control" ng-model="RamSite" 
+                                    <label for="cpa11y-ram-mb-2" class="form-label" style="text-align: left;">{% trans "RAM (MB)" %}</label>
+                                    <input id="cpa11y-ram-mb-2" type="number" class="form-control" ng-model="RamSite" 
                                            placeholder="512" value="512" min="128" required>
                                 </div>
                             </div>
@@ -427,8 +427,8 @@
                     <!-- Application Configuration -->
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Select App" %}</label>
-                            <select ng-model="App" class="form-control">
+                            <label for="cpa11y-select-app" class="form-label">{% trans "Select App" %}</label>
+                            <select id="cpa11y-select-app" ng-model="App" class="form-control">
                                 <option>n8n</option>
                             </select>
                         </div>
@@ -436,17 +436,17 @@
 
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Admin Username" %}</label>
-                            <input type="text" class="form-control" ng-model="WPUsername" 
+                            <label for="cpa11y-admin-username" class="form-label">{% trans "Admin Username" %}</label>
+                            <input id="cpa11y-admin-username" type="text" class="form-control" ng-model="WPUsername" 
                                    placeholder="cyberpanel" value="cyberpanel" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Admin Email" %}</label>
+                            <label for="cpa11y-admin-email" class="form-label">{% trans "Admin Email" %}</label>
                             <div>
-                                <input type="email" name="email" class="form-control" ng-model="wpEmail" 
+                                <input id="cpa11y-admin-email" type="email" name="email" class="form-control" ng-model="wpEmail" 
                                        placeholder="admin@example.com" value="example@example.org" required>
                                 <div ng-show="websiteCreationForm.email.$error.email" class="error-text">
                                     {% trans "Invalid Email" %}
@@ -457,8 +457,8 @@
 
                     <div class="form-group">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Admin Password" %}</label>
-                            <input type="password" class="form-control" ng-model="WPpassword" 
+                            <label for="cpa11y-admin-password" class="form-label">{% trans "Admin Password" %}</label>
+                            <input id="cpa11y-admin-password" type="password" class="form-control" ng-model="WPpassword" 
                                    placeholder="Strong password" required>
                         </div>
                     </div>
@@ -470,7 +470,7 @@
                             <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
                                     type="button" ng-click="createdockersite()"
                                     class="btn-primary">
-                                <i class="fas fa-rocket"></i>
+                                <i class="fas fa-rocket" aria-hidden="true"></i>
                                 {% trans "Create Docker Site" %}
                             </button>
                         </div>
@@ -491,24 +491,24 @@
                     </div>
                 </div>
 
-                <div ng-hide="errorMessageBox" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "Error:" %}</strong> {$ errorMessage $}
                 </div>
 
-                <div ng-hide="success" class="alert alert-success">
-                    <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                <div ng-hide="success" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "Success!" %}</strong> {% trans "Docker site successfully created." %}
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;" aria-hidden="true"></i>
                     <strong>{% trans "Connection Error" %}</strong> {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
 
                 <div style="margin-top: 30px;">
                     <button type="button" ng-disabled="goBackDisable" ng-click="goBack()" class="btn-secondary">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         {% trans "Go Back" %}
                     </button>
                 </div>
@@ -518,7 +518,7 @@
         <!-- Info Section -->
         <div class="docker-section">
             <div class="info-box">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <strong>Resource Allocation:</strong> The CPU and RAM values you specify will be allocated to your Docker containers. Ensure your server has sufficient resources available.
             </div>
         </div>
