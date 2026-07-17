@@ -451,7 +451,7 @@
                                 <div class="password-input">
                                     <input type="password" id="dbPassword" name="dbPassword" class="form-control" 
                                            ng-model="dbPassword" placeholder="{% trans 'Enter password' %}" required aria-label="{% trans 'Enter password' %}">
-                                    <div class="password-toggle" onclick="togglePasswordVisibility()">
+                                    <div class="password-toggle" onclick="togglePasswordVisibility()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePasswordVisibility();}" role="button" tabindex="0" aria-label="{% trans 'Toggle password visibility' %}">
                                         <i class="fas fa-eye" id="passwordToggleIcon" aria-hidden="true"></i>
                                     </div>
                                 </div>

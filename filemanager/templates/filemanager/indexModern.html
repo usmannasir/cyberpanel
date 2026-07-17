@@ -1080,8 +1080,8 @@
                 <li class="fm-tree-item" data-path="{$ startingPath $}">
                     <div class="fm-tree-link">
                         <i class="fas fa-folder fm-tree-icon" aria-hidden="true"></i>
-                        <span style="cursor: pointer;" onclick="expandDomainTree(this)" ng-click="navigateHome()">{$ startingPath || 'Home' $}</span>
-                        <i class="fas fa-chevron-right fm-tree-expand" onclick="toggleTreeNode(event)" aria-hidden="true"></i>
+                        <span style="cursor: pointer;" onclick="expandDomainTree(this)" onkeydown="if(event.key==='Enter'||event.key===' '){expandDomainTree(this);}" ng-click="navigateHome()">{$ startingPath || 'Home' $}</span>
+                        <i class="fas fa-chevron-right fm-tree-expand" onclick="toggleTreeNode(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTreeNode(event);}" role="button" tabindex="0" aria-label="{% trans 'Expand folder tree' %}"></i>
                     </div>
                     <ul class="fm-tree-children" id="treeRoot"></ul>
                 </li>
