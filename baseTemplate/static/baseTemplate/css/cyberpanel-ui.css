@@ -56,7 +56,7 @@
             --border-color: #2c2f39;
             --shadow-color: rgba(0,0,0,0.25);
             --accent-color: #7c7ff3;
-            --accent-hover: #6b6ee8;
+            --accent-hover: #8b8ef5;
             --danger-color: #f87171;
             --success-color: #34d399;
             --warning-bg: linear-gradient(135deg, #78350f 0%, #92400e 100%);
@@ -64,7 +64,7 @@
             /* Extended semantic tokens (dark) */
             --bg-muted: #1d1f26;
             --bg-code: #23252d;
-            --text-on-accent: #ffffff;
+            --text-on-accent: #15161b;
             --border-soft: #2c2f39;
             --table-head-bg: linear-gradient(135deg, #3b3f9e 0%, #2f3387 100%);
             --table-head-text: #f3f4f6;

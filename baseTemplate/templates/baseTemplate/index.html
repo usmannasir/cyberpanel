@@ -79,6 +79,17 @@
     <style>
         {{ cosmetic.MainDashboardCSS | safe }}
     </style>
+
+    <!-- Focus-visibility guard (WCAG 2.4.7): loads after all theme/custom CSS
+         so keyboard focus can never be suppressed by an outline reset. -->
+    <style>
+        a:focus-visible, button:focus-visible, input:focus-visible,
+        select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible,
+        .menu-item:focus-visible {
+            outline: 3px solid var(--focus-ring, #5856d6) !important;
+            outline-offset: 2px !important;
+        }
+    </style>
 </head>
 <body>
     <a href="#main-content" class="skip-link">{% trans "Skip to main content" %}</a>
