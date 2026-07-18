@@ -202,8 +202,8 @@
                     <div class="form-group">
                         <label class="form-label">{% trans "Select Theme" %}</label>
                         <select ng-change="getthemedata()" ng-model="stheme" id="stheme" class="form-select">
-                            {% for key in tree %}
-                                <option value="{{ key }}">{{ key }}</option>
+                            {% for t in tree %}
+                                <option value="{{ t.name }}">{{ t.label }}</option>
                             {% endfor %}
                         </select>
                     </div>

@@ -425,6 +425,17 @@ def design(request):
 
     l = "https://api.github.com/repos/%s/git/trees/%s" % (THEMES_REPO, sha)
     fres = requests.get(l)
+
+    # per-theme 2.4-UI compatibility (native/partial/legacy) for honest labels
+    try:
+        catalog = requests.get(
+            "https://raw.githubusercontent.com/%s/%s/catalog.json" % (THEMES_REPO, THEMES_BRANCH),
+            timeout=5).json()
+    except BaseException:
+        catalog = {}
+    COMPAT_LABEL = {'partial': ' — partial (colors only)', 'legacy': ' — legacy (no effect on this UI)'}
+    COMPAT_ORDER = {'native': 0, 'partial': 1, 'legacy': 2}
+
     tott = len(fres.json()['tree'])
     finalData['tree'] = []
     for i in range(tott):
@@ -432,7 +443,10 @@ def design(request):
             path = fres.json()['tree'][i]['path']
             if path.startswith('.') or path == 'tools':
                 continue
-            finalData['tree'].append(path)
+            compat = catalog.get(path, 'native')
+            finalData['tree'].append({'name': path, 'label': path + COMPAT_LABEL.get(compat, ''),
+                                      'order': COMPAT_ORDER.get(compat, 0)})
+    finalData['tree'].sort(key=lambda t: (t['order'], t['name'].lower()))
 
     template = 'baseTemplate/design.html'
     finalData['cosmetic'] = cosmetic

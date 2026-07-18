@@ -405,8 +405,8 @@
         }
         
         #sidebar .section-header {
-            background: var(--accent-color);
-            color: white;
+            background: var(--sidebar-section-bg, var(--accent-color));
+            color: var(--sidebar-section-text, white);
             padding: 8px 15px;
             margin: 15px;
             font-size: 11px;
@@ -422,7 +422,7 @@
             display: flex;
             align-items: center;
             padding: 12px 15px;
-            color: var(--text-secondary);
+            color: var(--sidebar-text, var(--text-secondary));
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
@@ -436,8 +436,8 @@
         }
         
         #sidebar .menu-item:hover {
-            background: var(--bg-hover);
-            color: var(--accent-color);
+            background: var(--sidebar-item-hover-bg, var(--bg-hover));
+            color: var(--sidebar-item-hover-text, var(--accent-color));
             box-shadow: 0 2px 8px var(--shadow-color);
         }
         
