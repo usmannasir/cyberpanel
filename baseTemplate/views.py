@@ -444,6 +444,9 @@ def design(request):
             if path.startswith('.') or path == 'tools':
                 continue
             compat = catalog.get(path, 'native')
+            if compat == 'legacy':
+                # archived pre-2.4 themes with no effect on this UI — don't offer them
+                continue
             finalData['tree'].append({'name': path, 'label': path + COMPAT_LABEL.get(compat, ''),
                                       'order': COMPAT_ORDER.get(compat, 0)})
     finalData['tree'].sort(key=lambda t: (t['order'], t['name'].lower()))
