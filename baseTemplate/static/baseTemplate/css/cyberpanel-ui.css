@@ -442,8 +442,8 @@
         }
         
         #sidebar .menu-item.active {
-            background: var(--accent-color);
-            color: white;
+            background: var(--sidebar-item-active-bg, var(--accent-color));
+            color: var(--sidebar-item-active-text, white);
             box-shadow: 0 3px 10px rgba(88,86,214,0.3);
         }
         
