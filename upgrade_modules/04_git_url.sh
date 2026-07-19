@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CyberPanel upgrade – set Git content and clone URLs (usmannasir or override).
+# CyberPanel upgrade - set Git content and clone URLs (usmannasir by default, or --repo override).
 # Sourced by cyberpanel_upgrade.sh.
 
 Pre_Upgrade_Setup_Git_URL() {
@@ -8,7 +8,7 @@ Pre_Upgrade_Setup_Git_URL() {
       Git_User="$Git_User_Override"
       echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel\n"
     else
-      Git_User="master3395"
+      Git_User="usmannasir"
     fi
     Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
     Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"

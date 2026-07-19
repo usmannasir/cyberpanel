@@ -841,7 +841,7 @@ class ApplicationInstaller(multi.Thread):
                 logging.writeToFile(str(result))
 
             if result.find('Success:') == -1:
-                raise BaseException(result)
+                logging.writeToFile('LSCache install soft-fail: %s' % str(result))
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Activating LSCache Plugin,90')
@@ -853,8 +853,9 @@ class ApplicationInstaller(multi.Thread):
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(str(result))
 
+            # Soft-fail: core WP is already installed; plugin issues must not leave an upgrade screen
             if result.find('Success:') == -1:
-                raise BaseException(result)
+                logging.writeToFile('LSCache activate soft-fail: %s' % str(result))
 
 
             ### install CyberSMTP
@@ -866,16 +867,16 @@ class ApplicationInstaller(multi.Thread):
                 logging.writeToFile(str(result))
             
             if result.find('Success:') == -1:
-                raise BaseException(result)
-            
-            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate CyberSMTP --allow-root --path=" + finalPath
-            result = ProcessUtilities.outputExecutioner(command, externalApp)
-            
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(str(result))
-            
-            if result.find('Success:') == -1:
-                raise BaseException(result)
+                logging.writeToFile('CyberSMTP install soft-fail: %s' % str(result))
+            else:
+                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate CyberSMTP --allow-root --path=" + finalPath
+                result = ProcessUtilities.outputExecutioner(command, externalApp)
+                
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(str(result))
+                
+                if result.find('Success:') == -1:
+                    logging.writeToFile('CyberSMTP activate soft-fail: %s' % str(result))
 
 
 
@@ -971,7 +972,7 @@ class ApplicationInstaller(multi.Thread):
 
 
         except BaseException as msg:
-            # remove the downloaded files
+            # remove the downloaded files and wp-config so the site does not show the WP upgrade page
 
             if not os.path.exists(ProcessUtilities.debugPath):
 
@@ -981,6 +982,34 @@ class ApplicationInstaller(multi.Thread):
                     db.delete()
                 except:
                     pass
+
+                try:
+                    # Prefer removing incomplete install tree / wp-config from this attempt
+                    cleanup_root = locals().get('finalPath') or ''
+                    if cleanup_root and os.path.isdir(cleanup_root):
+                        wp_config = os.path.join(cleanup_root.rstrip('/'), 'wp-config.php')
+                        if os.path.exists(wp_config):
+                            os.remove(wp_config)
+                        # If we installed into a subdirectory path, remove that dir; else clear WP core files
+                        marker = os.path.join(cleanup_root.rstrip('/'), 'wp-includes')
+                        if os.path.isdir(marker):
+                            import shutil
+                            for name in ('wp-admin', 'wp-includes', 'wp-content', 'index.php',
+                                         'wp-load.php', 'wp-settings.php', 'wp-blog-header.php',
+                                         'wp-cron.php', 'wp-login.php', 'xmlrpc.php', 'license.txt',
+                                         'readme.html', 'wp-activate.php', 'wp-comments-post.php',
+                                         'wp-config-sample.php', 'wp-links-opml.php', 'wp-mail.php',
+                                         'wp-signup.php', 'wp-trackback.php'):
+                                target = os.path.join(cleanup_root.rstrip('/'), name)
+                                try:
+                                    if os.path.isdir(target):
+                                        shutil.rmtree(target, ignore_errors=True)
+                                    elif os.path.isfile(target):
+                                        os.remove(target)
+                                except OSError:
+                                    pass
+                except Exception as cleanup_err:
+                    logging.writeToFile('WP install cleanup error: %s' % str(cleanup_err))
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
