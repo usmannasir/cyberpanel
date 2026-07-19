@@ -18,16 +18,38 @@ done
 
 # If no branch specified, get stable version
 if [ -z "$BRANCH_NAME" ]; then
-    BRANCH_NAME=v$(curl -s https://cyberpanel.net/version.txt | sed -e 's|{"version":"||g' -e 's|","build":|.|g'| sed 's:}*$::')
+    BRANCH_NAME=v$(curl -fsSL --retry 3 --retry-delay 2 https://cyberpanel.net/version.txt | sed -e 's|{"version":"||g' -e 's|","build":|.|g'| sed 's:}*$::')
 fi
 
 echo "Upgrading CyberPanel from branch: $BRANCH_NAME"
 
 rm -f /usr/local/cyberpanel_upgrade.sh
-# Use same repo as this script (master3395); fallback to usmannasir for compatibility. Prefer curl with no-cache so --mariadb-version is respected.
-curl -sL -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -o /usr/local/cyberpanel_upgrade.sh "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null || \
-wget -q -O /usr/local/cyberpanel_upgrade.sh "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null || \
-wget -q -O /usr/local/cyberpanel_upgrade.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null
+
+# Download upgrade script with HTTP status validation (avoid executing GitHub 429 HTML).
+# Prefer fork (master3395); fallback to upstream. Supports custom repos via --repo on the upgrade script.
+download_upgrade_script() {
+    _url="$1"
+    _out="/usr/local/cyberpanel_upgrade.sh"
+    _tmp="${_out}.tmp.$$"
+    _code=$(curl -fsSL --retry 3 --retry-delay 5 -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
+        -w '%{http_code}' -o "$_tmp" "$_url" 2>/dev/null || echo "000")
+    if [ "$_code" = "200" ] && [ -s "$_tmp" ] && head -1 "$_tmp" | grep -qE '^#!'; then
+        mv -f "$_tmp" "$_out"
+        return 0
+    fi
+    rm -f "$_tmp"
+    echo "Failed to download upgrade script from $_url (HTTP ${_code})."
+    return 1
+}
+
+if ! download_upgrade_script "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"; then
+    if ! download_upgrade_script "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"; then
+        echo "Please retry later (GitHub raw may be rate-limited with HTTP 429)."
+        echo "Or run with an explicit repo after cloning: bash cyberpanel_upgrade.sh -b $BRANCH_NAME --repo master3395"
+        exit 1
+    fi
+fi
+
 chmod 700 /usr/local/cyberpanel_upgrade.sh
-# Pass -b and all extra args (e.g. --mariadb-version 12.3, --backup-db, --no-backup-db) to upgrade script
+# Pass -b and all extra args (e.g. --mariadb-version, --repo, --backup-db) to upgrade script
 /usr/local/cyberpanel_upgrade.sh -b "$BRANCH_NAME" $EXTRA_ARGS

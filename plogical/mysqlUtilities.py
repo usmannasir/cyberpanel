@@ -302,20 +302,18 @@ class mysqlUtilities:
 
             cnfPath = '/home/cyberpanel/.my.cnf'
 
-            if not os.path.exists(cnfPath):
-                cnfContent = """[mysqldump]
-user=root
+            cnfContent = """[mysqldump]
+user=%s
 password=%s
 max_allowed_packet=1024M
 [mysql]
-user=root
+user=%s
 password=%s
-""" % (password, password)
-                writeToFile = open(cnfPath, 'w')
-                writeToFile.write(cnfContent)
-                writeToFile.close()
-
-                os.chmod(cnfPath, 0o600)
+""" % (mysqluser, password, mysqluser, password)
+            writeToFile = open(cnfPath, 'w')
+            writeToFile.write(cnfContent)
+            writeToFile.close()
+            os.chmod(cnfPath, 0o600)
 
             SHELL = False
 
@@ -343,11 +341,18 @@ password=%s
                     full_command = f"{dump_cmd} | gzip -c > {backup_file}"
                     result = ProcessUtilities.executioner(full_command, shell=True)
 
-                    # Verify backup file was created successfully
-                    if not os.path.exists(backup_file) or os.path.getsize(backup_file) == 0:
+                    # Verify backup file was created successfully.
+                    # Empty gzip streams are ~20 bytes; treat tiny files as failed dumps.
+                    min_ok = 64
+                    if not os.path.exists(backup_file) or os.path.getsize(backup_file) < min_ok:
                         logging.CyberCPLogFileWriter.writeToFile(
                             f"Database: {databaseName} could not be backed up (compressed)! [createDatabaseBackup]"
                         )
+                        try:
+                            if os.path.exists(backup_file):
+                                os.remove(backup_file)
+                        except OSError:
+                            pass
                         return 0
                 else:
                     # Legacy method: Direct dump to file (backward compatible)

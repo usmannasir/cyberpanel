@@ -43,11 +43,20 @@ else
   # Fetch modules from the fork (master3395) first so fork-only fixes apply; fall back to upstream.
   BASE_URL="https://raw.githubusercontent.com/master3395/cyberpanel/${BRANCH_FOR_MODULES}/upgrade_modules"
   BASE_URL_FALLBACK="https://raw.githubusercontent.com/usmannasir/cyberpanel/${BRANCH_FOR_MODULES}/upgrade_modules"
-  for name in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 10a_lscpd_sudo_hardening 11_display_final; do
-    curl -sL -H 'Cache-Control: no-cache' "$BASE_URL/${name}.sh" -o "$MOD_DIR/${name}.sh" 2>/dev/null || true
-    if [[ ! -s "$MOD_DIR/${name}.sh" ]]; then
-      curl -sL -H 'Cache-Control: no-cache' "$BASE_URL_FALLBACK/${name}.sh" -o "$MOD_DIR/${name}.sh" 2>/dev/null || true
+  fetch_module() {
+    local url="$1" dest="$2" code tmp
+    tmp="${dest}.tmp.$$"
+    code=$(curl -fsSL --retry 3 --retry-delay 5 -H 'Cache-Control: no-cache' -w '%{http_code}' -o "$tmp" "$url" 2>/dev/null || echo "000")
+    if [[ "$code" == "200" ]] && [[ -s "$tmp" ]] && head -1 "$tmp" | grep -qE '^#!'; then
+      mv -f "$tmp" "$dest"
+      return 0
     fi
+    rm -f "$tmp"
+    echo "WARNING: Failed to download $url (HTTP ${code})"
+    return 1
+  }
+  for name in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 10a_lscpd_sudo_hardening 11_display_final; do
+    fetch_module "$BASE_URL/${name}.sh" "$MOD_DIR/${name}.sh" ||       fetch_module "$BASE_URL_FALLBACK/${name}.sh" "$MOD_DIR/${name}.sh" || true
   done
 fi
 

@@ -216,7 +216,7 @@ if [[ ! -f /usr/local/lscp/bin/lscpd ]] || [[ ! -s /usr/local/lscp/bin/lscpd ]];
         # For x86_64 systems, check Ubuntu version
         if [[ "$Server_OS" = "Ubuntu" ]] && [[ -f /etc/lsb-release ]]; then
             ubuntu_version=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2 | cut -d'.' -f1)
-            if [[ "$ubuntu_version" = "22" ]] || [[ "$ubuntu_version" = "24" ]]; then
+            if [[ "$ubuntu_version" = "22" ]] || [[ "$ubuntu_version" = "24" ]] || [[ "$ubuntu_version" = "26" ]]; then
                 lscpd_selection='lscpd.0.4.0'
             fi
         fi
@@ -239,7 +239,7 @@ else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lscpd binary exists and is valid" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
-if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
+if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
     if declare -F CyberCP_Write_Lscp_Pythonenv_Conf >/dev/null 2>&1; then
       CyberCP_Write_Lscp_Pythonenv_Conf
     else
