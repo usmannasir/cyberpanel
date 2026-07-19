@@ -16,6 +16,7 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
   sites. Core 2.5.1 additionally hardens OLS itself
   (`HttpReq::getDocRoot` NULL-vhost check) so no module can trigger this
   crash class again.
+- AlmaLinux/RHEL 9: if the rhel9 OLS 2.5.1 core needs GLIBC 2.35, fall back to the rhel8 2.5.1 core and still install module 2.7.5.
 - All artifacts are verified against pinned SHA256 checksums before install;
   a mismatch aborts and keeps/restores the previous binaries via the
   timestamped backup + rollback path.
