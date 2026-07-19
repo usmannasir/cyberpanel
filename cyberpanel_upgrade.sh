@@ -40,9 +40,20 @@ elif [[ -d /usr/local/CyberCP/upgrade_modules ]]; then
 else
   MOD_DIR="/tmp/cyberpanel_upgrade_modules_$$"
   mkdir -p "$MOD_DIR"
-  # Fetch modules from the fork (master3395) first so fork-only fixes apply; fall back to upstream.
-  BASE_URL="https://raw.githubusercontent.com/master3395/cyberpanel/${BRANCH_FOR_MODULES}/upgrade_modules"
-  BASE_URL_FALLBACK="https://raw.githubusercontent.com/usmannasir/cyberpanel/${BRANCH_FOR_MODULES}/upgrade_modules"
+  # Fetch upgrade modules from usmannasir (official). Optional --repo <user> uses that GitHub user instead.
+  GIT_USER_FOR_MODULES="usmannasir"
+  next_repo=""
+  for arg in "$@"; do
+    if [[ "$arg" = "-r" ]] || [[ "$arg" = "--repo" ]]; then
+      next_repo="1"
+      continue
+    fi
+    if [[ "$next_repo" = "1" ]] && [[ -n "$arg" ]]; then
+      GIT_USER_FOR_MODULES="$arg"
+      break
+    fi
+  done
+  BASE_URL="https://raw.githubusercontent.com/${GIT_USER_FOR_MODULES}/cyberpanel/${BRANCH_FOR_MODULES}/upgrade_modules"
   fetch_module() {
     local url="$1" dest="$2" code tmp
     tmp="${dest}.tmp.$$"
@@ -56,7 +67,7 @@ else
     return 1
   }
   for name in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 10a_lscpd_sudo_hardening 11_display_final; do
-    fetch_module "$BASE_URL/${name}.sh" "$MOD_DIR/${name}.sh" ||       fetch_module "$BASE_URL_FALLBACK/${name}.sh" "$MOD_DIR/${name}.sh" || true
+    fetch_module "$BASE_URL/${name}.sh" "$MOD_DIR/${name}.sh" || true
   done
 fi
 

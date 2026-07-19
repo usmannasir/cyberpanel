@@ -35,7 +35,7 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Neutralize mod_ssl Listen 443 when LiteSpeed owns the port (Apache 503 after upgrade).
 
 ### Bug fixes
-- Upgrade scripts: validate HTTP status before executing downloaded content (#1835); keep `--repo` for custom GitHub users.
+- Upgrade scripts: validate HTTP status before executing downloaded content (#1835); default to `usmannasir/cyberpanel`, optional `--repo` for custom GitHub users.
 - ModSecurity rules pack: fix first-toggle no-op (#1824).
 - Website backups: treat empty/failed SQL dumps as failures (#1823).
 - WordPress install: soft-fail post-core plugins; clean up files on rollback (#1837).

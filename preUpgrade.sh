@@ -26,7 +26,7 @@ echo "Upgrading CyberPanel from branch: $BRANCH_NAME"
 rm -f /usr/local/cyberpanel_upgrade.sh
 
 # Download upgrade script with HTTP status validation (avoid executing GitHub 429 HTML).
-# Prefer fork (master3395); fallback to upstream. Supports custom repos via --repo on the upgrade script.
+# Custom GitHub forks: pass --repo <github-user> through to cyberpanel_upgrade.sh.
 download_upgrade_script() {
     _url="$1"
     _out="/usr/local/cyberpanel_upgrade.sh"
@@ -42,12 +42,11 @@ download_upgrade_script() {
     return 1
 }
 
-if ! download_upgrade_script "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"; then
-    if ! download_upgrade_script "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"; then
-        echo "Please retry later (GitHub raw may be rate-limited with HTTP 429)."
-        echo "Or run with an explicit repo after cloning: bash cyberpanel_upgrade.sh -b $BRANCH_NAME --repo master3395"
-        exit 1
-    fi
+if ! download_upgrade_script "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"; then
+    echo "Please retry later (GitHub raw may be rate-limited with HTTP 429)."
+    echo "Or clone the repo and run: bash cyberpanel_upgrade.sh -b $BRANCH_NAME"
+    echo "Custom fork: bash cyberpanel_upgrade.sh -b $BRANCH_NAME --repo <github-user>"
+    exit 1
 fi
 
 chmod 700 /usr/local/cyberpanel_upgrade.sh
