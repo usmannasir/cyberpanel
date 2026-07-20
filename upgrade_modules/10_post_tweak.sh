@@ -343,6 +343,25 @@ else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# Remove leftover RainLoop-era domain .ini when a matching .json exists.
+# Dual configs confuse operators; SnappyMail prefers .json (localhost:143 STARTTLS).
+DOMAINS_DIR="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains"
+DOMAINS_BAK="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains.bak"
+if [ -d "$DOMAINS_DIR" ]; then
+    mkdir -p "$DOMAINS_BAK"
+    ts="$(date +%Y%m%d-%H%M%S)"
+    for jsonf in "$DOMAINS_DIR"/*.json; do
+        [ -f "$jsonf" ] || continue
+        base="$(basename "$jsonf" .json)"
+        inif="$DOMAINS_DIR/${base}.ini"
+        if [ -f "$inif" ]; then
+            cp -a "$inif" "$DOMAINS_BAK/${base}.ini.$ts"
+            rm -f "$inif"
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removed conflicting SnappyMail domain .ini (backed up): ${base}.ini" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        fi
+    done
+fi
+
 # Ensure /rainloop→/snappymail redirect exists (even when no migration ran)
 HTACCESS="/usr/local/CyberCP/public/.htaccess"
 if [ -d "/usr/local/CyberCP/public" ] && { [ ! -f "$HTACCESS" ] || ! grep -q "Redirect old RainLoop URL to SnappyMail" "$HTACCESS" 2>/dev/null; }; then
