@@ -45,6 +45,27 @@ if [[ -f "$PUBLIC/snappymail/index.php" ]]; then
         chmod 755 "$PUBLIC/snappymail" 2>/dev/null || true
         systemctl restart lscpd 2>/dev/null || true
     fi
+
+    # Remove leftover RainLoop-era domain .ini when a matching .json exists
+    # (dual configs can confuse operators; SnappyMail prefers .json).
+    DOMAINS_DIR="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains"
+    DOMAINS_BAK="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains.bak"
+    if [[ -d "$DOMAINS_DIR" ]]; then
+        mkdir -p "$DOMAINS_BAK"
+        ts="$(date +%Y%m%d-%H%M%S)"
+        shopt -s nullglob
+        for jsonf in "$DOMAINS_DIR"/*.json; do
+            base="$(basename "$jsonf" .json)"
+            inif="$DOMAINS_DIR/${base}.ini"
+            if [[ -f "$inif" ]]; then
+                cp -a "$inif" "$DOMAINS_BAK/${base}.ini.$ts"
+                rm -f "$inif"
+                echo "Removed conflicting domain .ini (backed up): ${base}.ini"
+            fi
+        done
+        shopt -u nullglob
+    fi
+
     echo "Done. SnappyMail is at $PUBLIC/snappymail"
     echo "Test: https://YOUR_IP:2087/snappymail/index.php"
 else
