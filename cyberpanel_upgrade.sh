@@ -900,7 +900,22 @@ fi
 #virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 #  Check_Return
 
-wget "${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
+# raw.githubusercontent.com intermittently answers HTTP 429; running that error page
+# through python later fails in confusing ways, so validate the download before use.
+for i in {1..3}; do
+  rm -f upgrade.py
+  wget -q "${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
+  if grep -q "^import " upgrade.py 2>/dev/null ; then
+    break
+  fi
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] upgrade.py download failed or returned invalid content (attempt $i/3), GitHub may be rate limiting (HTTP 429). Retrying in 15 seconds..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  sleep 15
+done
+if ! grep -q "^import " upgrade.py 2>/dev/null ; then
+  echo -e "\nFailed to download upgrade.py from ${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
+  echo -e "This is usually a temporary GitHub rate limit (HTTP 429 Too Many Requests). Please retry the upgrade later.\n"
+  exit 1
+fi
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py

@@ -172,8 +172,15 @@ class sslUtilities:
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
         if os.path.exists(filePath):
             import OpenSSL
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            try:
+                ## Read as bytes: installed certs have been seen with binary garbage appended
+                ## after a valid PEM chain, and a text-mode read dies on UnicodeDecodeError.
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'rb').read())
+                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            except Exception as msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'[CheckIfSSLNeedsToBeIssued] Could not parse existing certificate for {virtualHostName} ({str(msg)}), will issue fresh SSL.')
+                return sslUtilities.ISSUE_SSL
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'SSL provider for {virtualHostName} is {SSLProvider}.')
@@ -940,7 +947,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             try:
                 import OpenSSL
                 from datetime import datetime
-                with open(existingCertPath, 'r') as cert_file:
+                with open(existingCertPath, 'rb') as cert_file:
                     x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
                 expire_data = x509.get_notAfter().decode('ascii')
                 final_date = datetime.strptime(expire_data, '%Y%m%d%H%M%SZ')
@@ -1007,9 +1014,16 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
             if os.path.exists(pathToStoreSSLFullChain):
                 import OpenSSL
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(pathToStoreSSLFullChain, 'r').read())
-                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                SSLProvider = 'Denial'
+                try:
+                    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                                           open(pathToStoreSSLFullChain, 'rb').read())
+                    SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                except Exception as msg:
+                    ## Unparseable existing cert must not abort here — fall through and
+                    ## replace it with a self-signed cert below.
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'Could not parse existing certificate for {domain}: {str(msg)}')
 
                 if SSLProvider != 'Denial':
                     if sslUtilities.installSSLForDomain(domain) == 1:

@@ -2618,7 +2618,7 @@ Require valid-user
                         try:
                             x509 = OpenSSL.crypto.load_certificate(
                                 OpenSSL.crypto.FILETYPE_PEM,
-                                open(wildcard_path, 'r').read()
+                                open(wildcard_path, 'rb').read()
                             )
                             cn = None
                             for component in x509.get_subject().get_components():
@@ -2640,10 +2640,12 @@ Require valid-user
             else:
                 is_wildcard = False
             
-            # Load and analyze certificate
+            # Load and analyze certificate. Read as bytes: installed certs have been seen
+            # with binary garbage appended after a valid PEM chain, and a text-mode read
+            # raises UnicodeDecodeError which reports a working SSL as "none".
             x509 = OpenSSL.crypto.load_certificate(
                 OpenSSL.crypto.FILETYPE_PEM,
-                open(filePath, 'r').read()
+                open(filePath, 'rb').read()
             )
             
             # Get expiration date
@@ -3550,7 +3552,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(filePath, 'r').read())
+                                                       open(filePath, 'rb').read())
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
@@ -3596,7 +3598,7 @@ context /cyberpanel_suspension_page.html {
             ssl_issue_link = '/manageSSL/sslForHostName'
             try:
                 import OpenSSL
-                with open(cert_path, 'r') as f:
+                with open(cert_path, 'rb') as f:
                     pem_data = f.read()
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, pem_data)
                 # Only check the first cert in the PEM
@@ -3815,7 +3817,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.childDomain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(filePath, 'r').read())
+                                                       open(filePath, 'rb').read())
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
