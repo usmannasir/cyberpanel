@@ -704,8 +704,15 @@ class CustomACME:
 
             if response.status_code == 200:
                 logging.CyberCPLogFileWriter.writeToFile('Successfully downloaded certificate')
-                # The response should be the PEM-encoded certificate chain
-                return response.text.encode('utf-8') if isinstance(response.text, str) else response.content
+                # The response should be the PEM-encoded certificate chain. Keep only the
+                # PEM blocks so nothing outside BEGIN/END markers can end up on disk.
+                certificate = response.content
+                end_marker = b'-----END CERTIFICATE-----'
+                if b'-----BEGIN CERTIFICATE-----' not in certificate or end_marker not in certificate:
+                    logging.CyberCPLogFileWriter.writeToFile('Downloaded certificate is not valid PEM, aborting')
+                    return None
+                certificate = certificate[:certificate.rindex(end_marker) + len(end_marker)] + b'\n'
+                return certificate
             else:
                 logging.CyberCPLogFileWriter.writeToFile(f'Certificate download failed: {response.text}')
             return None
@@ -1138,17 +1145,25 @@ class CustomACME:
             cert_file = os.path.join(self.cert_path, 'fullchain.pem')
             key_file = os.path.join(self.cert_path, 'privkey.pem')
 
+            # Write to a temp file and rename so an interrupted write can never leave a
+            # half-written or trailing-garbage fullchain.pem behind.
             logging.CyberCPLogFileWriter.writeToFile(f'Saving certificate to: {cert_file}')
-            with open(cert_file, 'wb') as f:
+            with open(cert_file + '.tmp', 'wb') as f:
                 f.write(certificate)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(cert_file + '.tmp', cert_file)
 
             logging.CyberCPLogFileWriter.writeToFile(f'Saving private key to: {key_file}')
-            with open(key_file, 'wb') as f:
+            with open(key_file + '.tmp', 'wb') as f:
                 f.write(key.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.PKCS8,
                     encryption_algorithm=serialization.NoEncryption()
                 ))
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(key_file + '.tmp', key_file)
 
             logging.CyberCPLogFileWriter.writeToFile('Successfully completed certificate issuance')
             return True

@@ -170,7 +170,7 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(message)
 
             try:
-                with open(filePath, 'r') as f:
+                with open(filePath, 'rb') as f:
                     x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
                 
                 # Safely extract SSL provider from issuer components
@@ -216,7 +216,7 @@ class virtualHostUtilities:
                 ### once SSL is issued, re-read the SSL file and check if valid ssl got issued.
 
                 try:
-                    with open(filePath, 'r') as f:
+                    with open(filePath, 'rb') as f:
                         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
                     
                     # Safely extract SSL provider from issuer components
@@ -393,7 +393,7 @@ class virtualHostUtilities:
             virtualHostUtilities.issueSSLForHostName(Domain, path, 1)
 
             try:
-                with open(filePath, 'r') as f:
+                with open(filePath, 'rb') as f:
                     x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
                 
                 # Safely extract SSL provider from issuer components
@@ -429,7 +429,7 @@ class virtualHostUtilities:
                 virtualHostUtilities.issueSSLForMailServer(Domain, path)
 
                 try:
-                    with open(filePath, 'r') as f:
+                    with open(filePath, 'rb') as f:
                         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
 
                     # Safely extract SSL provider from issuer components
