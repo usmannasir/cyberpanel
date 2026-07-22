@@ -623,12 +623,22 @@ class BackupManager:
             backupCancellationDomain = data['backupCancellationDomain']
             fileName = data['fileName']
 
+            ### Ownership check: the privileged worker below kills a PID, deletes the
+            ### backup archive and rewrites the status file purely from the supplied
+            ### domain/fileName, so a caller must own the domain being cancelled.
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(backupCancellationDomain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson('abortStatus', 0)
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
             subprocess.call(shlex.split(execPath))
 
             try:
-                backupOb = Backups.objects.get(fileName=fileName)
+                ### Scope the row deletion to the owned domain so a matching fileName
+                ### from another tenant's backup can never be removed.
+                backupOb = Backups.objects.get(fileName=fileName, website__domain=backupCancellationDomain)
                 backupOb.delete()
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
