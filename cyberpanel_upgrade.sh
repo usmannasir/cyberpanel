@@ -688,11 +688,15 @@ Pre_Upgrade_Required_Components() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP directory integrity..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Define essential CyberCP components
+# NOTE: only list directories that actually exist in the repo. There is no
+# top-level "manage" directory (the real ones are managePHP/manageSSL/
+# manageServices and the manage.py file), so listing it flagged every healthy
+# install as damaged and triggered an unnecessary — sometimes destructive —
+# recovery re-clone (#1720).
 CYBERCP_ESSENTIAL_DIRS=(
     "/usr/local/CyberCP/CyberCP"
     "/usr/local/CyberCP/plogical"
     "/usr/local/CyberCP/websiteFunctions"
-    "/usr/local/CyberCP/manage"
 )
 
 CYBERCP_MISSING=0

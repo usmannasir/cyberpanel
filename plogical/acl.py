@@ -577,6 +577,13 @@ class ACLManager:
             php = "83"
         elif phpVersion == "PHP 8.4":
             php = "84"
+        elif phpVersion == "PHP 8.5":
+            php = "85"
+        else:
+            # Future-proof: derive the string from the version so a newly
+            # released PHP (8.6, 9.0, ...) never raises UnboundLocalError on
+            # pages like the subdomain list. (#1726)
+            php = phpVersion.replace("PHP", "").replace(".", "").strip()
 
         return php
 
