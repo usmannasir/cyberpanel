@@ -73,7 +73,30 @@ class ACLManager:
 
     @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
-        aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        # Both callers (issueAliasSSL / delateAlias) verify checkOwnership(master)
+        # before calling this, so the master domain is already known to belong to
+        # the user. Handle the orphaned-alias case (present in the server config
+        # but missing its aliasDomains row) gracefully instead of raising an
+        # uncaught DoesNotExist that surfaces as a 500 and blocks self-repair. #1738
+        try:
+            # NOTE: look up unscoped so an alias that belongs to a DIFFERENT
+            # master is still found here and correctly rejected below (return 0)
+            # for non-admins — scoping this query to `master` would hide it and
+            # wrongly fall into the orphan branch.
+            aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        except aliasDomains.DoesNotExist:
+            # Truly orphaned: the alias exists in the server config but has no
+            # aliasDomains row at all. Ownership of the master is already enforced
+            # by the caller, so allow the operation to proceed and self-heal
+            # (delete / re-issue SSL) rather than raising a 500. #1738
+            return 1
+        except aliasDomains.MultipleObjectsReturned:
+            # Duplicate rows for the same alias name: keep the one under this
+            # master if present, otherwise it belongs only to other masters.
+            aliasOBJ = aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=master).first()
+            if aliasOBJ is None:
+                return 0
+
         masterOBJ = Websites.objects.get(domain=master)
         if currentACL['admin'] == 1:
             return 1
