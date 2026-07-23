@@ -30,9 +30,18 @@ class Renew:
                 return
 
             logging.writeToFile(f'SSL exists for {domain}. Checking if SSL will expire in 15 days..', 0)
-            
-            with open(file_path, 'r') as cert_file:
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
+
+            try:
+                x509 = ssl_utils_module._ssl_load_certificate(file_path)
+            except (OpenSSL.crypto.Error, OSError, ValueError, UnicodeError) as e:
+                logging.writeToFile(
+                    f'Invalid SSL certificate for {domain}: {str(e)}. Obtaining a new certificate..', 1)
+                result = virtualHostUtilities.issueSSL(domain, path, admin_email)
+                if result[0] == 0:
+                    logging.writeToFile(f'SSL replacement FAILED for {domain}: {result[1]}', 1)
+                else:
+                    logging.writeToFile(f'SSL replacement SUCCESSFUL for {domain}', 0)
+                return
             
             expire_data = x509.get_notAfter().decode('ascii')
             final_date = datetime.strptime(expire_data, '%Y%m%d%H%M%SZ')

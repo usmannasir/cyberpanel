@@ -17,12 +17,17 @@ from plogical.acl import ACLManager
 STAGING_LE_ISSUER_MARKER = "(STAGING)"
 
 
+def _ssl_load_certificate(cert_path):
+    """Load a PEM certificate as bytes so non-ASCII file data is not implicitly encoded."""
+    import OpenSSL
+    with open(cert_path, 'rb') as cert_file:
+        cert_data = cert_file.read()
+    return OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+
+
 def _ssl_get_certificate_issuer(cert_path):
     try:
-        import OpenSSL
-        with open(cert_path, 'r') as cert_file:
-            cert_data = cert_file.read()
-        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+        cert = _ssl_load_certificate(cert_path)
         components = cert.get_issuer().get_components()
 
         for key, value in components:
@@ -51,10 +56,7 @@ def _ssl_is_staging_provider(provider):
 def _ssl_certificate_is_staging(cert_path):
     """Detect staging certificates from any issuer component, not a pinned CA name."""
     try:
-        import OpenSSL
-        with open(cert_path, 'r') as cert_file:
-            cert_data = cert_file.read()
-        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+        cert = _ssl_load_certificate(cert_path)
         for _key, value in cert.get_issuer().get_components():
             try:
                 issuer_value = value.decode('utf-8')
@@ -233,8 +235,13 @@ class sslUtilities:
         #### if website already have an SSL, better not issue again - need to check for wild-card
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
         if os.path.exists(filePath):
-            import OpenSSL
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
+            try:
+                x509 = _ssl_load_certificate(filePath)
+            except Exception as exc:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'[CheckIfSSLNeedsToBeIssued] Invalid certificate for '
+                    f'{virtualHostName}: {str(exc)}. A new SSL will be issued.')
+                return sslUtilities.ISSUE_SSL
             SSLProvider = _ssl_get_certificate_issuer(filePath)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -1026,6 +1033,22 @@ def _ssl_resolve_acme_webroot(sslpath):
     return '/usr/local/lsws/Example/html'
 
 
+def _ssl_acme_domain_config(acme_path, domain, prefer_ecc):
+    """Return (config_path, use_ecc) for an existing acme.sh domain configuration."""
+    acme_home = os.path.dirname(acme_path)
+    ecc_config = os.path.join(acme_home, domain + '_ecc', domain + '.conf')
+    rsa_config = os.path.join(acme_home, domain, domain + '.conf')
+    candidates = (
+        ((ecc_config, True), (rsa_config, False))
+        if prefer_ecc
+        else ((rsa_config, False), (ecc_config, True))
+    )
+    for config_path, use_ecc in candidates:
+        if os.path.isfile(config_path):
+            return config_path, use_ecc
+    return None, prefer_ecc
+
+
 def _ssl_privkey_is_ecdsa(privkey_path):
     """True if privkey is ECDSA (CyberPanel acme.sh -k ec-256); False for legacy RSA."""
     if not os.path.exists(privkey_path):
@@ -1097,10 +1120,8 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             ssl_provider = None
             is_staging_cert = False
             try:
-                import OpenSSL
                 from datetime import datetime
-                with open(existingCertPath, 'r') as cert_file:
-                    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
+                x509 = _ssl_load_certificate(existingCertPath)
                 expire_data = x509.get_notAfter().decode('ascii')
                 final_date = datetime.strptime(expire_data, '%Y%m%d%H%M%SZ')
                 now = datetime.now()
@@ -1133,17 +1154,27 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
                 privkey_path = '/etc/letsencrypt/live/' + domain + '/privkey.pem'
                 use_ecc = _ssl_privkey_is_ecdsa(privkey_path)
+                acme_config, use_ecc = _ssl_acme_domain_config(
+                    acmePath, domain, use_ecc)
 
                 # Build domain list for renewal
                 renewal_domains = f'-d {domain}'
                 if not isHostname and sslUtilities.checkDNSRecords(f'www.{domain}'):
                     renewal_domains += f' -d www.{domain}'
 
-                # For expired certificates, use --issue --force instead of --renew
-                if is_expired:
+                # acme.sh can renew only domains that still have a domain.conf.
+                # Expired certificates are also issued afresh to avoid stale state.
+                acme_action = 'renew'
+                if is_expired or acme_config is None:
+                    acme_action = 'issue'
+                    issue_reason = (
+                        'certificate is expired'
+                        if is_expired
+                        else 'acme.sh domain configuration is missing'
+                    )
                     logging.CyberCPLogFileWriter.writeToFile(
-                        f"Certificate is expired, using --issue --force for {domain}")
-                    key_opt = ' -k ec-256' if use_ecc else ''
+                        f"{issue_reason.capitalize()}, using --issue --force for {domain}")
+                    key_opt = ' -k ec-256' if use_ecc else ' -k 2048'
                     command = (
                         f'{acmePath} --issue {renewal_domains} -w {shlex.quote(webroot)}'
                         f'{key_opt} --force --server letsencrypt'
@@ -1163,20 +1194,28 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                                             universal_newlines=True, shell=True)
 
                 if result.returncode == 0:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f"Successfully completed acme.sh --{acme_action} for {domain}")
                     if not _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
                         logging.CyberCPLogFileWriter.writeToFile(
-                            f'install-cert after renew failed for {domain}; will try full obtain path', 1)
+                            f'install-cert after {acme_action} failed for {domain}; will try full obtain path', 1)
                     elif _ssl_live_cert_is_staging(domain):
                         logging.CyberCPLogFileWriter.writeToFile(
-                            f"Renewed certificate for {domain} is staging; will try full production obtain path", 1)
+                            f"Certificate produced by {acme_action} for {domain} is staging; "
+                            f"will try full production obtain path", 1)
                     elif sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
-                        return [1, "SSL successfully renewed"]
+                        success_message = (
+                            "SSL successfully issued"
+                            if acme_action == 'issue'
+                            else "SSL successfully renewed"
+                        )
+                        return [1, success_message]
                 else:
                     # Parse ACME error details
                     error_output = result.stderr if hasattr(result, 'stderr') and result.stderr else result.stdout
                     error_details = sslUtilities.parseACMEError(error_output)
-                    logging.CyberCPLogFileWriter.writeToFile(f"Renewal failed for {domain}. Error: {error_details}")
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f"ACME {acme_action} failed for {domain}. Error: {error_details}")
                     logging.CyberCPLogFileWriter.writeToFile(f"Full error output: {error_output}")
 
         if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain, isHostname) == 1:
