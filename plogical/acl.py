@@ -73,7 +73,17 @@ class ACLManager:
 
     @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
-        aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        # Orphaned alias (config present, DB row missing): allow self-heal. #1738
+        try:
+            aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        except aliasDomains.DoesNotExist:
+            return 1
+        except aliasDomains.MultipleObjectsReturned:
+            aliasOBJ = aliasDomains.objects.filter(
+                aliasDomain=aliasDomain, master__domain=master).first()
+            if aliasOBJ is None:
+                return 0
+
         masterOBJ = Websites.objects.get(domain=master)
         if currentACL['admin'] == 1:
             return 1
@@ -646,6 +656,13 @@ class ACLManager:
             php = "83"
         elif phpVersion == "PHP 8.4":
             php = "84"
+        elif phpVersion == "PHP 8.5":
+            php = "85"
+        else:
+            # Future PHP versions: derive digits so UnboundLocalError cannot crash
+            # subdomain list and similar pages (#1726).
+            digits = ''.join(ch for ch in phpVersion if ch.isdigit())
+            php = digits[-2:] if len(digits) >= 2 else (digits or '84')
 
         return php
 

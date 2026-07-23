@@ -17,6 +17,9 @@ from plogical.acl import ACLManager
 class sslUtilities:
     Server_root = "/usr/local/lsws"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+    ## Graceful LiteSpeed/OLS reload used as acme.sh --reloadcmd so that every
+    ## auto-renewal re-applies the certificate and reloads the server. #1676
+    lswsReloadCmd = '/usr/local/lsws/bin/lswsctrl reload'
 
     @staticmethod
     def _ssl_live_cert_paths(domain):
@@ -952,7 +955,8 @@ context /.well-known/acme-challenge {
                                             + ' --ecc' \
                                             + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                             + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
+                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
+                                            + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
                             try:
                                 install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
@@ -1010,7 +1014,8 @@ context /.well-known/acme-challenge {
                                         + ' --ecc' \
                                         + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                         + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
+                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
+                                            + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
                         try:
                             install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
@@ -1078,6 +1083,7 @@ def _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
         ' --cert-file ' + live_dir + '/cert.pem'
         ' --key-file ' + live_dir + '/privkey.pem'
         ' --fullchain-file ' + live_dir + '/fullchain.pem'
+        ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
     )
     try:
         install_result = subprocess.run(

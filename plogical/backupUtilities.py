@@ -1916,7 +1916,23 @@ class backupUtilities:
 
                 databases.append({'databaseName': str(items.dbName), 'databaseUser': str(userToTry), 'password': str(dbuser.password)})
                 self.CheckIfSleepNeeded()
-                mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, self.BackupDataPath)
+                ### Fail the backup if a dump fails instead of silently producing an
+                ### SQL-less archive (#1823).
+                dumpResult = mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, self.BackupDataPath)
+                if isinstance(dumpResult, tuple):
+                    dumpOk = dumpResult[0]
+                else:
+                    dumpOk = dumpResult
+                if dumpOk == 0:
+                    errorMessage = (
+                        'Failed to back up database %s. The mysqldump command failed - check the CyberPanel '
+                        'log for the exact error. Common causes: a stale /home/cyberpanel/.my.cnf (delete it '
+                        'and retry) or an orphaned database record whose MySQL database no longer exists.'
+                        % (items.dbName)
+                    )
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'While creating backup for %s: %s' % (self.website.domain, errorMessage))
+                    return 0, errorMessage
 
             DataJson['databases'] = databases
             DataJsonPath = '%s/%s' % (self.BackupPath, 'databases.json')

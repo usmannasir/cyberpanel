@@ -1476,24 +1476,23 @@ local_name %s {
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            if ssl == 1:
-                retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
-                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                    if retValues[0] == 0:
-                        print("0," + str(retValues[1]))
-                        return
-                    else:
-                        vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
-                else:
-                    retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
-                    if retValues[0] == 0:
-                        print("0," + str(retValues[1]))
-                        return
-
             website = Websites.objects.get(domain=masterDomain)
 
-            newAlias = aliasDomains(master=website, aliasDomain=aliasDomain)
-            newAlias.save()
+            ## Persist the alias in the DB as soon as its vhost config exists.
+            ## Previously the save happened only AFTER SSL issuance, so a failed
+            ## SSL attempt returned early and left the alias present in the server
+            ## config but missing from the aliasDomains table (#1738).
+            if not aliasDomains.objects.filter(master=website, aliasDomain=aliasDomain).exists():
+                aliasDomains(master=website, aliasDomain=aliasDomain).save()
+
+            if ssl == 1:
+                retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
+                if retValues[0] == 0:
+                    print("0," + str(retValues[1]))
+                    return
+                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                    vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
 
             print("1,None")
 
@@ -1565,10 +1564,9 @@ local_name %s {
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
                 adminUserName = None
                 try:
-                    adminUserName = delAlias.master.admin.userName
+                    adminUserName = Websites.objects.get(domain=masterDomain).admin.userName
                 except:
                     pass
                 try:
@@ -1576,7 +1574,8 @@ local_name %s {
                 except Exception as cfError:
                     logging.CyberCPLogFileWriter.writeToFile(
                         'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
-                delAlias.delete()
+                ## Scope to the master; filter().delete() is orphan-safe. #1738
+                aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
 
                 print("1,None")
             except BaseException as msg:
@@ -1599,10 +1598,9 @@ local_name %s {
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
                 adminUserName = None
                 try:
-                    adminUserName = alias.master.admin.userName
+                    adminUserName = Websites.objects.get(domain=masterDomain).admin.userName
                 except:
                     pass
                 try:
@@ -1610,7 +1608,8 @@ local_name %s {
                 except Exception as cfError:
                     logging.CyberCPLogFileWriter.writeToFile(
                         'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
-                alias.delete()
+                ## Scope to the master; filter().delete() is orphan-safe. #1738
+                aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
 
                 print("1,None")
             except BaseException as msg:
