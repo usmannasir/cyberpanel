@@ -17,6 +17,9 @@ from plogical.acl import ACLManager
 class sslUtilities:
     Server_root = "/usr/local/lsws"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+    ## Graceful LiteSpeed/OLS reload used as acme.sh --reloadcmd so that every
+    ## auto-renewal re-applies the certificate and reloads the server. #1676
+    lswsReloadCmd = '/usr/local/lsws/bin/lswsctrl reload'
 
     @staticmethod
     def parseACMEError(error_output):
@@ -857,11 +860,15 @@ context /.well-known/acme-challenge {
                                                     universal_newlines=True, shell=True)
 
                         if result.returncode == 0:
-                            # Step 3: Install the certificate to the desired location
-                            install_command = acmePath + " --install-cert -d " + virtualHostName \
+                            # Step 3: Install the certificate to the desired location.
+                            # --ecc matches the ec-256 issuance above, and --reloadcmd is
+                            # persisted by acme.sh so every future auto-renewal re-copies
+                            # the cert into /etc/letsencrypt/live and reloads LiteSpeed. #1676
+                            install_command = acmePath + " --install-cert -d " + virtualHostName + " --ecc" \
                                             + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                             + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
+                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
+                                            + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
                             try:
                                 install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
@@ -913,11 +920,15 @@ context /.well-known/acme-challenge {
                                                 universal_newlines=True, shell=True)
 
                     if result.returncode == 0:
-                        # Step 2: Install the certificate to the desired location
-                        install_command = acmePath + " --install-cert -d " + virtualHostName \
+                        # Step 2: Install the certificate to the desired location.
+                        # --ecc matches the ec-256 issuance above, and --reloadcmd is
+                        # persisted by acme.sh so every future auto-renewal re-copies
+                        # the cert into /etc/letsencrypt/live and reloads LiteSpeed. #1676
+                        install_command = acmePath + " --install-cert -d " + virtualHostName + " --ecc" \
                                         + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                         + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
+                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
+                                        + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
                         try:
                             install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
@@ -972,14 +983,17 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 if not isHostname and sslUtilities.checkDNSRecords(f'www.{domain}'):
                     renewal_domains += f' -d www.{domain}'
 
-                # For expired certificates, use --issue --force instead of --renew
+                # For expired certificates, use --issue --force instead of --renew.
+                # CyberPanel issues ECC (ec-256) certificates, so both the issue and
+                # renew commands must target the ECC cert (-k ec-256 / --ecc); without
+                # it acme.sh looks for a non-existent RSA cert and the renewal fails.
                 if is_expired:
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"Certificate is expired, using --issue --force for {domain}")
-                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html -k ec-256 --force'
                 else:
                     # Try to renew with explicit webroot
-                    command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --ecc --force'
 
                 try:
                     result = subprocess.run(command, capture_output=True, text=True, shell=True)
@@ -990,6 +1004,21 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
+
+                    # acme.sh --renew only updates its own store (/root/.acme.sh); the
+                    # renewed cert must be copied into /etc/letsencrypt/live and LiteSpeed
+                    # reloaded or the site keeps serving the old certificate. Registering
+                    # --reloadcmd also makes acme.sh's own cron do this on future renewals. #1676
+                    certPath = '/etc/letsencrypt/live/' + domain
+                    if not os.path.exists(certPath):
+                        subprocess.call('mkdir -p ' + certPath, shell=True)
+                    install_command = f'{acmePath} --install-cert -d {domain} --ecc' \
+                                      f' --cert-file {certPath}/cert.pem' \
+                                      f' --key-file {certPath}/privkey.pem' \
+                                      f' --fullchain-file {certPath}/fullchain.pem' \
+                                      f' --reloadcmd "{sslUtilities.lswsReloadCmd}"'
+                    subprocess.call(install_command, shell=True)
+
                     if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                         return [1, "SSL successfully renewed"]
                 else:
