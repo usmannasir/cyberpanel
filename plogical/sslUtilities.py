@@ -14,7 +14,7 @@ except:
 from plogical.acl import ACLManager
 
 
-STAGING_LE_ISSUER = "(STAGING) Let's Encrypt"
+STAGING_LE_ISSUER_MARKER = "(STAGING)"
 
 
 def _ssl_get_certificate_issuer(cert_path):
@@ -43,12 +43,37 @@ def _ssl_get_certificate_issuer(cert_path):
 
 
 def _ssl_is_staging_provider(provider):
-    return provider == STAGING_LE_ISSUER
+    if not provider:
+        return False
+    return STAGING_LE_ISSUER_MARKER.lower() in str(provider).lower()
+
+
+def _ssl_certificate_is_staging(cert_path):
+    """Detect staging certificates from any issuer component, not a pinned CA name."""
+    try:
+        import OpenSSL
+        with open(cert_path, 'r') as cert_file:
+            cert_data = cert_file.read()
+        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+        for _key, value in cert.get_issuer().get_components():
+            try:
+                issuer_value = value.decode('utf-8')
+            except BaseException:
+                issuer_value = str(value)
+            if _ssl_is_staging_provider(issuer_value):
+                return True
+    except BaseException as exc:
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(
+                f'Failed to inspect SSL issuer components from {cert_path}: {str(exc)}')
+        except BaseException:
+            pass
+    return False
 
 
 def _ssl_live_cert_is_staging(domain):
     cert_path = '/etc/letsencrypt/live/%s/fullchain.pem' % (domain)
-    return _ssl_is_staging_provider(_ssl_get_certificate_issuer(cert_path))
+    return _ssl_certificate_is_staging(cert_path)
 
 
 class sslUtilities:
@@ -217,7 +242,7 @@ class sslUtilities:
 
             #### totally seprate check to see if both non-www and www are covered
 
-            if _ssl_is_staging_provider(SSLProvider):
+            if _ssl_certificate_is_staging(filePath):
                 return sslUtilities.ISSUE_SSL
 
             if SSLProvider == "Let's Encrypt":
@@ -750,23 +775,12 @@ context /.well-known/acme-challenge {
         sslUtilities.PatchVhostConf(virtualHostName)
 
         default_webroot = '/usr/local/lsws/Example/html'
-        # Child domains: use their docroot so HTTP-01 challenge is served from the correct vhost
-        if sslpath and str(sslpath).strip():
-            webroot = str(sslpath).strip().rstrip('/')
-            if webroot != default_webroot and os.path.isdir(webroot):
-                challenge_path = webroot + '/.well-known/acme-challenge'
-                if not os.path.exists(challenge_path):
-                    os.makedirs(challenge_path, exist_ok=True)
-                    command = f'chmod -R 755 {webroot}/.well-known'
-                    ProcessUtilities.executioner(command)
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f"Using domain webroot for ACME challenge: {webroot}")
-            else:
-                webroot = default_webroot
-                challenge_path = None
-        else:
-            webroot = default_webroot
-            challenge_path = None
+        # Existing CyberPanel vhosts map the ACME context to the shared Example webroot.
+        # Keep issuance and renewal on that same path so HTTP-01 tokens are publicly served.
+        webroot = default_webroot
+        challenge_path = default_webroot + '/.well-known/acme-challenge'
+        logging.CyberCPLogFileWriter.writeToFile(
+            f"Using shared ACME challenge webroot: {webroot}")
 
         if not os.path.exists(default_webroot + '/.well-known/acme-challenge'):
             command = f'mkdir -p {default_webroot}/.well-known/acme-challenge'
@@ -1008,13 +1022,8 @@ context /.well-known/acme-challenge {
 
 
 def _ssl_resolve_acme_webroot(sslpath):
-    """Match obtainSSLForADomain webroot selection for HTTP-01 (child domains / custom docroot)."""
-    default_webroot = '/usr/local/lsws/Example/html'
-    if sslpath and str(sslpath).strip():
-        webroot = str(sslpath).strip().rstrip('/')
-        if webroot != default_webroot and os.path.isdir(webroot):
-            return webroot
-    return default_webroot
+    """Use the shared HTTP-01 webroot configured in existing CyberPanel vhosts."""
+    return '/usr/local/lsws/Example/html'
 
 
 def _ssl_privkey_is_ecdsa(privkey_path):
@@ -1098,7 +1107,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 diff = final_date - now
                 is_expired = diff.days < 0
                 ssl_provider = _ssl_get_certificate_issuer(existingCertPath)
-                is_staging_cert = _ssl_is_staging_provider(ssl_provider)
+                is_staging_cert = _ssl_certificate_is_staging(existingCertPath)
                 logging.CyberCPLogFileWriter.writeToFile(
                     f"Certificate for {domain} expires in {diff.days} days. Provider: {ssl_provider}")
             except Exception as e:
@@ -1185,16 +1194,20 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
             if os.path.exists(pathToStoreSSLFullChain):
                 SSLProvider = _ssl_get_certificate_issuer(pathToStoreSSLFullChain)
+                is_staging_cert = _ssl_certificate_is_staging(pathToStoreSSLFullChain)
 
-                if SSLProvider != 'Denial' and not _ssl_is_staging_provider(SSLProvider):
+                if SSLProvider != 'Denial' and not is_staging_cert:
                     if sslUtilities.installSSLForDomain(domain) == 1:
                         logging.CyberCPLogFileWriter.writeToFile(
                             "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www).")
                         return [1,
                                 "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www)." + " [issueSSLForDomain]"]
-                elif _ssl_is_staging_provider(SSLProvider):
+                elif is_staging_cert:
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Existing SSL for " + domain + " is Let's Encrypt staging; not installing it as a valid certificate.")
+                    return [0,
+                            "Production SSL issuance failed for " + domain +
+                            "; the existing certificate is from a staging CA. [issueSSLForDomain]"]
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)

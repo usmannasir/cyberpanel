@@ -15,6 +15,7 @@ from websiteFunctions.models import Websites, ChildDomains
 import OpenSSL
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
+from plogical import sslUtilities as ssl_utils_module
 
 class Renew:
     def _check_and_renew_ssl(self, domain: str, path: str, admin_email: str, is_child: bool = False) -> None:
@@ -38,11 +39,11 @@ class Renew:
             now = datetime.now()
             diff = final_date - now
 
-            ssl_provider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            ssl_provider = ssl_utils_module._ssl_get_certificate_issuer(file_path)
             logging.writeToFile(f'Provider: {ssl_provider}, Days until expiration: {diff.days}', 0)
 
             # Check if certificate is expired or needs renewal
-            is_staging_cert = ssl_provider == "(STAGING) Let's Encrypt"
+            is_staging_cert = ssl_utils_module._ssl_certificate_is_staging(file_path)
             needs_renewal = diff.days < 15 or is_staging_cert
 
             if not needs_renewal and ssl_provider != 'Denial':
