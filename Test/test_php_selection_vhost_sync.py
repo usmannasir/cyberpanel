@@ -51,6 +51,29 @@ class PHPSelectionFromVhostTests(unittest.TestCase):
         label = phpUtilities.GetPHPSelectionFromVhostFile(vh)
         self.assertTrue(label.startswith('PHP '), label)
 
+    def test_full_version_from_live_lsphp(self):
+        vh = '/usr/local/lsws/conf/vhosts/newstargeted.com/vhost.conf'
+        phpBin = '/usr/local/lsws/lsphp85/bin/php'
+        if not os.path.exists(vh) or not os.path.exists(phpBin):
+            self.skipTest('lsphp85 or newstargeted.com vhost missing')
+        full = phpUtilities.GetFullPHPVersionFromVhostFile(vh)
+        self.assertRegex(full, r'^PHP \d+\.\d+\.\d+', full)
+        # Second call should hit cache and still return the same shape
+        full2 = phpUtilities.GetFullPHPVersionFromVhostFile(vh)
+        self.assertEqual(full, full2)
+
+    def test_full_version_falls_back_to_selection(self):
+        with tempfile.NamedTemporaryFile('w', suffix='.conf', delete=False) as fh:
+            fh.write('path /usr/local/lsws/lsphp99/bin/lsphp\n')
+            path = fh.name
+        try:
+            # lsphp99 binary unlikely; should fall back to selector label
+            self.assertEqual(
+                phpUtilities.GetFullPHPVersionFromVhostFile(path),
+                'PHP 9.9')
+        finally:
+            os.unlink(path)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2605,6 +2605,7 @@ Require valid-user
             # Keep List Websites PHP column in sync with the live OLS/LSWS vhost.
             # CLI changePHP previously updated only vhost.conf, so the panel could
             # show PHP 8.3 while lsphp85 was actually serving the site.
+            # Display the full runtime (PHP 8.5.7); keep phpSelection as the selector.
             phpVersion = website.phpSelection
             try:
                 from plogical.phpUtilities import phpUtilities
@@ -2615,10 +2616,14 @@ Require valid-user
                     oldPhp = website.phpSelection
                     website.phpSelection = actualPhp
                     website.save()
-                    phpVersion = actualPhp
                     logging.CyberCPLogFileWriter.writeToFile(
                         'Healed phpSelection drift for %s: DB was %s, OLS is %s' % (
                             website.domain, oldPhp, actualPhp))
+                fullPhp = phpUtilities.GetFullPHPVersionFromVhostFile(vhFile)
+                if fullPhp:
+                    phpVersion = fullPhp
+                elif actualPhp:
+                    phpVersion = actualPhp
             except BaseException as phpSyncMsg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     'phpSelection sync skipped for %s: %s' % (website.domain, str(phpSyncMsg)))
