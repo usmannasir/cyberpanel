@@ -5,6 +5,17 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Security / reliability (ported from v2.4.9)
+- Backup cancel and incremental backup handlers: ownership checks and domain-scoped
+  IncJob/JobSnapshots lookups (#1829, #1828).
+- File Manager Fix Permissions: recursive `chown` of the directory itself instead of
+  broken `path/*` globs under `shell=False` (#1735).
+- SSL renew/install: `acme.sh --install-cert --ecc` with `--reloadcmd` so renewed certs
+  land in `/etc/letsencrypt/live` and LiteSpeed reloads (#1676).
+- Domain aliases: persist DB row before SSL; orphan-safe ACL and delete (#1738).
+- Website backups: abort when `mysqldump` fails instead of shipping SQL-less archives (#1823).
+- PHP version map: PHP 8.5 plus generic fallback in `getPHPString` (#1726).
+
 
 ### CyberPanel-OLS stack update (core 2.5.1 / module 2.7.5 / mod_security 2.5.1)
 - Upgraded the custom OpenLiteSpeed stack shipped via `install/ols_binaries_config.py`:

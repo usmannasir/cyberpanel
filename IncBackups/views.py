@@ -20,7 +20,7 @@ from websiteFunctions.models import Websites
 from .IncBackupProvider import IncBackupProvider
 from .IncBackupPath import IncBackupPath
 from .IncBackupsControl import IncJobs
-from .models import IncJob, BackupJob, JobSites
+from .models import IncJob, BackupJob, JobSites, JobSnapshots
 
 
 
@@ -318,6 +318,12 @@ def submit_backup_creation(request):
         else:
             return ACLManager.loadErrorJson('metaStatus', 0)
 
+        ### For the local restore path jobid is a JobSnapshots primary key; ensure it
+        ### belongs to the owned domain so another tenant's snapshot cannot be targeted.
+        if data['reconstruct'] != 'remote':
+            if not JobSnapshots.objects.filter(id=job_id, job__website__domain=backup_domain).exists():
+                return ACLManager.loadErrorJson('metaStatus', 0)
+
         temp_path = Path("/home/cyberpanel/") / str(randint(1000, 9999))
 
         extra_args = {}
@@ -420,7 +426,15 @@ def delete_backup(request):
 
         backup_id = data['backupID']
 
-        inc_job = IncJob.objects.get(id=backup_id)
+        ### Scope the IncJob to the owned domain: the ownership check above only
+        ### covers backup_domain, while DeleteSnapShot derives its target repo and
+        ### system user from the IncJob itself. Without this, a caller could pass
+        ### their own domain but another tenant's backup_id and delete that tenant's
+        ### snapshots as root.
+        try:
+            inc_job = IncJob.objects.get(id=backup_id, website__domain=backup_domain)
+        except IncJob.DoesNotExist:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
         job = IncJobs(None, None)
         job.DeleteSnapShot(inc_job)
@@ -450,7 +464,12 @@ def fetch_restore_points(request):
         data = json.loads(request.body)
         job_id = data['id']
 
-        inc_job = IncJob.objects.get(id=job_id)
+        ### Scope the IncJob to the owned domain, otherwise another tenant's
+        ### restore points can be listed by supplying their job id.
+        try:
+            inc_job = IncJob.objects.get(id=job_id, website__domain=backup_domain)
+        except IncJob.DoesNotExist:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
         backups = inc_job.jobsnapshots_set.all()
 

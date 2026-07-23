@@ -1,6 +1,9 @@
 #!/bin/sh
 
 # Check for branch parameter
+# raw.githubusercontent.com intermittently answers HTTP 429 (rate limit). Executing
+# that error page as a shell script produces confusing failures, so every download
+# below is validated before use.
 BRANCH_NAME=""
 EXTRA_ARGS=""
 while [ $# -gt 0 ]; do
@@ -23,6 +26,19 @@ fi
 
 echo "Upgrading CyberPanel from branch: $BRANCH_NAME"
 
+case "$BRANCH_NAME" in
+  v[0-9]*.[0-9]*)
+    ;;
+  *)
+    echo ""
+    echo "Failed to determine the CyberPanel version from https://cyberpanel.net/version.txt (got: '$BRANCH_NAME')."
+    echo "Please check your network connection and retry later."
+    exit 1
+    ;;
+esac
+
+UPGRADE_URL="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"
+
 rm -f /usr/local/cyberpanel_upgrade.sh
 
 # Download upgrade script with HTTP status validation (avoid executing GitHub 429 HTML).
@@ -42,7 +58,7 @@ download_upgrade_script() {
     return 1
 }
 
-if ! download_upgrade_script "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"; then
+if ! download_upgrade_script "$UPGRADE_URL"; then
     echo "Please retry later (GitHub raw may be rate-limited with HTTP 429)."
     echo "Or clone the repo and run: bash cyberpanel_upgrade.sh -b $BRANCH_NAME"
     echo "Custom fork: bash cyberpanel_upgrade.sh -b $BRANCH_NAME --repo <github-user>"

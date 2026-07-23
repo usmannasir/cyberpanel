@@ -75,7 +75,7 @@ class Renew:
 
             logging.writeToFile(f'SSL exists for {domain}. Checking if SSL will expire in 15 days..', 0)
             
-            with open(file_path, 'r') as cert_file:
+            with open(file_path, 'rb') as cert_file:
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
             
             expire_data = x509.get_notAfter().decode('ascii')
