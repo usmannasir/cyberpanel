@@ -4,7 +4,70 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
-## Unreleased
+## v2.4.9 (build 9) — 2026-07-23
+
+A maintenance release: a broad batch of security, SSL, backup/restore and
+upgrade-reliability fixes, plus the updated CyberPanel-OLS stack. Most items
+below were already shipped to the `v2.4.8` branch and are consolidated here.
+
+### Security
+- **Backup IDOR:** `cancelBackupCreation` performed no ownership check, letting
+  any authenticated user kill, delete and corrupt another tenant's backups as
+  root; the incremental-backup endpoints (`deleteBackup` / `fetchRestorePoints`
+  / `restorePoint`) checked one field but acted on an unscoped id, allowing
+  cross-tenant read/delete/restore. Both are now ownership-scoped (#1829, #1828).
+- Hardened command/cron handling, confined `tuneSettings` `phpPath` to the
+  owned pool file, and rotate the 2FA secret on disable.
+- Fixed command injection, SQLi, path traversal, privilege-escalation and
+  crypto weaknesses across several endpoints.
+- Added authentication to previously-unauthenticated git-webhook, AWS-backup
+  and AI-Scanner file-access endpoints (#1806).
+- Generate a strong SnappyMail admin password on install.
+- Installed `fullchain.pem` files with trailing binary data no longer break
+  SSL status display or block self-repair (#1847).
+
+### SSL
+- **Renewals now actually apply:** the renewed certificate is copied into
+  `/etc/letsencrypt/live/<domain>` and LiteSpeed is reloaded, and acme.sh's own
+  cron is registered with `--ecc`/`--reloadcmd` so auto-renewals self-apply —
+  fixes sites silently stuck on the old (expiring) certificate (#1676).
+- Manual "Issue SSL" forces a reissue instead of silently no-opping (#1814).
+
+### Backups & restore
+- **Restore ownership:** restored/migrated files are reliably re-owned by the
+  domain user, fixing WordPress asking for FTP credentials after a restore
+  (a `chown` glob was passed literally under `shell=False` and never matched)
+  (#1735).
+- A website backup now fails loudly instead of silently producing an archive
+  with no SQL when a database dump fails (#1823).
+
+### Domain aliases
+- Alias creation, listing, SSL issuance and delete fixed end-to-end: the alias
+  DB row is persisted regardless of SSL outcome, the list renders and its
+  buttons call the right handlers, and orphaned aliases can be cleaned up
+  (#1738).
+
+### Upgrade & install
+- The upgrade script no longer false-flags healthy installs as corrupt (a
+  non-existent `manage` directory in the integrity check) and triggers a
+  destructive recovery re-clone (#1720).
+- Upgrade scripts validate downloads before executing them, with clear errors
+  and retries when GitHub returns HTTP 429 (#1835).
+- PHP 8.5 no longer raises `UnboundLocalError` on the subdomain list; version
+  mapping is future-proofed (#1726).
+- OWASP CRS install uses the canonical GitHub tag-archive URL (#1715).
+
+### Other fixes
+- Apache 503 after upgrade when mod_ssl re-added `Listen 443` while LiteSpeed
+  owns the port.
+- Remote transfer regression (status stuck on "Just started.."; silently
+  dropped sends).
+- `secMiddleware` no longer blocks valid webmail content (#1813).
+- Re-linked Modify Website and owner transfer in the new UI (#1816); restored
+  Delete/Suspend website and Delete database actions (#1800).
+- Repaired the dashboard for non-admin users (#1808) and dark mode across the
+  panel (#1804).
+- Blank password field no longer wipes a user's password on edit (#1811).
 
 ### CyberPanel-OLS stack update (core 2.5.1 / module 2.7.5 / mod_security 2.5.1)
 - Upgraded the custom OpenLiteSpeed stack shipped by `upgrade.py`:

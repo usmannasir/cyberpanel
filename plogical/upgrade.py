@@ -292,7 +292,7 @@ except ImportError:
     print("Recovery complete. Continuing with upgrade...")
 
 VERSION = '2.4'
-BUILD = 8
+BUILD = 9
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -5552,107 +5552,6 @@ pm.max_spare_servers = 3
                 os.remove(Upgrade.LogPathNew)
 
     @staticmethod
-    def fixApacheConfigurationOld():
-        """OLD VERSION - DO NOT USE - Fix Apache configuration issues after upgrade"""
-        try:
-            # Check if Apache is installed
-            if Upgrade.FindOperatingSytem() == CENTOS7 or Upgrade.FindOperatingSytem() == CENTOS8 \
-                    or Upgrade.FindOperatingSytem() == openEuler20 or Upgrade.FindOperatingSytem() == openEuler22:
-                apache_service = 'httpd'
-                apache_config_dir = '/etc/httpd'
-            else:
-                apache_service = 'apache2'
-                apache_config_dir = '/etc/apache2'
-            
-            # Check if Apache is installed
-            check_apache = f'systemctl is-enabled {apache_service} 2>/dev/null'
-            result = subprocess.run(check_apache, shell=True, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                Upgrade.stdOut("Fixing Apache configuration...")
-                
-                # 1. Ensure Apache ports are correctly configured
-                command = 'grep -q "Listen 8083" /usr/local/lsws/conf/httpd_config.xml || echo "Apache port configuration might need manual check"'
-                Upgrade.executioner(command, 'Check Apache ports', 1)
-                
-                # 2. Fix proxy rewrite rules for all vhosts
-                # The issue: Both rewrite rules execute, causing incorrect proxying
-                # Fix: Add proper HTTPS condition for SSL proxy rule
-                command = '''find /usr/local/lsws/conf/vhosts/ -name "vhost.conf" -exec sed -i '
-                    /^REWRITERULE.*proxyApacheBackendSSL/i\\
-RewriteCond %{HTTPS}  =on
-                ' {} \;'''
-                Upgrade.executioner(command, 'Fix Apache SSL proxy condition', 1)
-                
-                # Also ensure the proxy backends are properly configured
-                command = '''grep -q "extprocessor apachebackend" /usr/local/lsws/conf/httpd_config.conf || echo "
-extprocessor apachebackend {
-  type                    proxy
-  address                 http://127.0.0.1:8083
-  maxConns                100
-  initTimeout             60
-  retryTimeout            30
-  respBuffer              0
-}
-
-extprocessor proxyApacheBackendSSL {
-  type                    proxy
-  address                 https://127.0.0.1:8082
-  maxConns                100
-  initTimeout             60
-  retryTimeout            30
-  respBuffer              0
-}" >> /usr/local/lsws/conf/httpd_config.conf'''
-                Upgrade.executioner(command, 'Ensure Apache proxy backends exist', 1)
-                
-                # 3. Ensure Apache is configured to listen on correct ports
-                if Upgrade.FindOperatingSytem() in [CENTOS7, CENTOS8, openEuler20, openEuler22]:
-                    apache_port_conf = '/etc/httpd/conf.d/00-port.conf'
-                else:
-                    apache_port_conf = '/etc/apache2/ports.conf'
-                
-                command = f'''
-                grep -q "Listen 8082" {apache_port_conf} || echo "Listen 8082" >> {apache_port_conf}
-                grep -q "Listen 8083" {apache_port_conf} || echo "Listen 8083" >> {apache_port_conf}
-                '''
-                Upgrade.executioner(command, 'Ensure Apache listens on 8082/8083', 1)
-                
-                # 4. Restart Apache service
-                command = f'systemctl restart {apache_service}'
-                Upgrade.executioner(command, f'Restart {apache_service}', 1)
-                
-                # 5. Fix PHP-FPM socket permissions and restart services
-                for version in ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']:
-                    if Upgrade.FindOperatingSytem() in [CENTOS7, CENTOS8, openEuler20, openEuler22]:
-                        php_service = f'php{version.replace(".", "")}-php-fpm'
-                        socket_dir = '/var/run/php-fpm'
-                    else:
-                        php_service = f'php{version}-fpm'
-                        socket_dir = '/var/run/php'
-                    
-                    # Ensure socket directory exists with correct permissions
-                    command = f'''
-                    if systemctl is-active {php_service} >/dev/null 2>&1; then
-                        mkdir -p {socket_dir}
-                        chmod 755 {socket_dir}
-                        systemctl restart {php_service}
-                    fi
-                    '''
-                    Upgrade.executioner(command, f'Fix and restart {php_service}', 1)
-                
-                # 6. Reload LiteSpeed to apply proxy changes
-                command = '/usr/local/lsws/bin/lswsctrl reload'
-                Upgrade.executioner(command, 'Reload LiteSpeed', 1)
-                
-                Upgrade.stdOut("Apache configuration fixes completed.")
-            else:
-                Upgrade.stdOut("Apache not detected, skipping Apache fixes.")
-                
-        except Exception as e:
-            Upgrade.stdOut(f"Error fixing Apache configuration: {str(e)}")
-            pass
-
-    @staticmethod
     def installQuota():
         try:
 
@@ -6266,7 +6165,41 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                             f.write('\n'.join(new_lines))
                     
                     print("Fixed Apache listen ports")
-            
+
+            # Fix 4b: A mod_ssl package update recreates conf.d/ssl.conf with "Listen 443".
+            # LiteSpeed owns 80/443 and Apache only ever runs as a backend on 8082/8083 here,
+            # so that bind collides and httpd fails to start, 503ing every proxied vhost.
+            if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8] \
+                    and os.path.exists('/usr/local/lsws/bin/lswsctrl'):
+                ssl_conf = '/etc/httpd/conf.d/ssl.conf'
+
+                if os.path.exists(ssl_conf) and os.path.exists(apache_conf):
+                    with open(apache_conf, 'r') as f:
+                        backend_conf = f.read()
+
+                    # Only touch servers where Apache is actually a backend.
+                    if 'Listen 8082' in backend_conf or 'Listen 8083' in backend_conf:
+                        with open(ssl_conf, 'r') as f:
+                            ssl_lines = f.read().split('\n')
+
+                        listenSSL = re.compile(r'^(\s*)(Listen\s+443\b.*)$')
+                        new_ssl_lines = []
+                        disabled = False
+
+                        for line in ssl_lines:
+                            matched = listenSSL.match(line)
+                            if matched:
+                                new_ssl_lines.append('%s# %s  # disabled by CyberPanel: LiteSpeed owns 443'
+                                                     % (matched.group(1), matched.group(2)))
+                                disabled = True
+                            else:
+                                new_ssl_lines.append(line)
+
+                        if disabled:
+                            with open(ssl_conf, 'w') as f:
+                                f.write('\n'.join(new_ssl_lines))
+                            print("Disabled Apache 'Listen 443' in ssl.conf, LiteSpeed owns port 443.")
+
             # Fix 5: Fix PHP-FPM socket permissions
             print("Fixing PHP-FPM socket permissions...")
             if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:

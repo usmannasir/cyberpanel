@@ -422,11 +422,16 @@ class sslUtilities:
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
         if not forceIssue and os.path.exists(filePath):
             import OpenSSL
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            try:
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'rb').read())
+                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
-            if SSLProvider != 'Denial':
-                return 1, 'This domain already have a valid SSL.'
+                if SSLProvider != 'Denial':
+                    return 1, 'This domain already have a valid SSL.'
+            except Exception as msg:
+                ## An unreadable/corrupt existing cert should not block issuance.
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'Could not parse existing certificate for {virtualHostName} ({str(msg)}), issuing fresh SSL.')
 
         CF_Check, message = sslUtilities.FindIfDomainInCloudflare(virtualHostName)
 

@@ -188,24 +188,30 @@
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        <tr ng-repeat="record in childDomains | filter:logSearch">
-                                            <td ng-bind="record.childDomain"></td>
-                                            <td><a href="{$ record.childLunch $}"><img width="30px" height="30"
+                                        {% for alias in aliases %}
+                                        <tr>
+                                            <td>{{ alias }}</td>
+                                            <td><a href="//{{ alias }}" target="_blank"><img width="30px" height="30"
                                                                                        class="center-block"
                                                                                        src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
                                             </td>
-                                            <td ng-bind="record.path"></td>
+                                            <td>{{ path }}</td>
                                             <td>
                                                 <button type="button"
-                                                        ng-click="issueSSL(record.childDomain,record.path)"
+                                                        ng-click="issueSSL('{{ masterDomain }}','{{ alias }}')"
                                                         class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
                                             </td>
                                             <td>
                                                 <button type="button"
-                                                        ng-click="deleteChildDomain(record.childDomain)"
+                                                        ng-click="removeAlias('{{ masterDomain }}','{{ alias }}')"
                                                         class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
                                             </td>
                                         </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5">{% trans "No domain aliases have been added yet." %}</td>
+                                        </tr>
+                                        {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
