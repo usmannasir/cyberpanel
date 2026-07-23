@@ -5,6 +5,12 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: show full PHP patch on List Websites
+- List Websites now shows the live runtime version (e.g. `PHP 8.5.7`) from the
+  site's `lsphp` binary, not only the selector label (`PHP 8.5`).
+- Full version is cached per `lsphp` build (mtime) so listing many sites stays fast.
+- `phpSelection` in the DB remains the change-PHP selector (`PHP 8.5`).
+
 ### Fix: CyberPanel List Websites PHP vs live OLS handler
 - Persist `phpSelection` in the DB whenever `vhost.changePHP` succeeds (UI and CLI).
 - Heal drifted panel values when listing websites by reading the live `vhost.conf` lsphp path.

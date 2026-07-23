@@ -443,6 +443,67 @@ class phpUtilities:
         except BaseException:
             return ''
 
+    @staticmethod
+    def _lsphpDigitsFromVhostFile(vhFile):
+        try:
+            if not vhFile or not os.path.exists(vhFile):
+                return ''
+            import re
+            with open(vhFile, 'r', errors='ignore') as fh:
+                text = fh.read()
+            match = re.search(r'/usr/local/lsws/lsphp(\d{2,3})/bin/lsphp', text)
+            if not match:
+                match = re.search(r'x-httpd-php(\d{2,3})', text)
+            return match.group(1) if match else ''
+        except BaseException:
+            return ''
+
+    ## Full runtime version for List Websites (e.g. "PHP 8.5.7"). Cached per lsphp build.
+    @staticmethod
+    def GetFullPHPVersionFromVhostFile(vhFile):
+        selection = phpUtilities.GetPHPSelectionFromVhostFile(vhFile)
+        try:
+            import re
+            digits = phpUtilities._lsphpDigitsFromVhostFile(vhFile)
+            if not digits:
+                return selection or ''
+            phpBin = '/usr/local/lsws/lsphp%s/bin/php' % digits
+            if not os.path.exists(phpBin):
+                return selection or ''
+
+            cacheDir = '/usr/local/CyberCP/tmp'
+            try:
+                os.makedirs(cacheDir, exist_ok=True)
+            except BaseException:
+                pass
+            cacheFile = os.path.join(cacheDir, 'phpver_lsphp%s.cache' % digits)
+            try:
+                mtime = str(int(os.path.getmtime(phpBin)))
+            except BaseException:
+                mtime = '0'
+            if os.path.exists(cacheFile):
+                try:
+                    with open(cacheFile, 'r') as cf:
+                        cached = cf.read().strip().split('|', 1)
+                    if len(cached) == 2 and cached[0] == mtime and re.match(r'^\d+\.\d+', cached[1]):
+                        return 'PHP %s' % cached[1]
+                except BaseException:
+                    pass
+
+            command = '%s -r %s' % (shlex.quote(phpBin), shlex.quote('echo PHP_VERSION;'))
+            ver = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+            ver = (ver or '').strip().split()[0] if ver else ''
+            if re.match(r'^\d+\.\d+', ver):
+                try:
+                    with open(cacheFile, 'w') as cf:
+                        cf.write('%s|%s' % (mtime, ver))
+                except BaseException:
+                    pass
+                return 'PHP %s' % ver
+            return selection or ''
+        except BaseException:
+            return selection or ''
+
     ## returns something like PHP 8.2
     @staticmethod
     def WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile):
