@@ -29,7 +29,7 @@ import pwd
 # Create your views here.
 
 VERSION = '2.4'
-BUILD = 8
+BUILD = 9
 
 
 @ensure_csrf_cookie

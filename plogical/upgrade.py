@@ -292,7 +292,7 @@ except ImportError:
     print("Recovery complete. Continuing with upgrade...")
 
 VERSION = '2.4'
-BUILD = 8
+BUILD = 9
 
 CENTOS7 = 0
 CENTOS8 = 1
