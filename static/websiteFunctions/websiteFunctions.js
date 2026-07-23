@@ -2831,6 +2831,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -2856,6 +2863,57 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         
         return tooltip;
+    };
+
+    $scope.convertingToChild = {};
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
     };
 
     // Initial fetch of websites
@@ -6173,6 +6231,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -6198,6 +6263,57 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         
         return tooltip;
+    };
+
+    $scope.convertingToChild = {};
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
     };
 
     // Initial fetch of websites
@@ -9874,6 +9990,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -9899,6 +10022,57 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         
         return tooltip;
+    };
+
+    $scope.convertingToChild = {};
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
     };
 
     // Initial fetch of websites
@@ -11174,6 +11348,62 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.installMauticURL = $("#domainNamePage").text() + "/installMautic";
     $scope.domainAliasURL = "/websites/" + $("#domainNamePage").text() + "/domainAlias";
     $scope.previewUrl = "/preview/" + $("#domainNamePage").text() + "/";
+
+    $scope.convertCurrentSiteToChild = function () {
+        if (!$scope.canConvertToChild || !$scope.convertMaster) {
+            return;
+        }
+        var domain = $("#domainNamePage").text();
+        var web = {
+            domain: domain,
+            canConvertToChild: true,
+            convertMaster: $scope.convertMaster,
+            hasChildDuplicate: $scope.hasChildDuplicate
+        };
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function (response) {
+            $scope.convertingToChild = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion completed.',
+                    type: 'success'
+                });
+                $window.location.href = '/websites/' + master;
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.convertingToChild = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
 
     var logType = 0;
     $scope.pageNumber = 1;

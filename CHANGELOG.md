@@ -5,6 +5,12 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: CyberPanel List Websites PHP vs live OLS handler
+- Persist `phpSelection` in the DB whenever `vhost.changePHP` succeeds (UI and CLI).
+- Heal drifted panel values when listing websites by reading the live `vhost.conf` lsphp path.
+- CLI `cyberpanel changePHP` also updates `websiteFunctions_websites.phpSelection`.
+- Root cause: OLS could run `lsphp85` while List Websites still showed PHP 8.3.
+
 ### Security / reliability (ported from v2.4.9)
 - Backup cancel and incremental backup handlers: ownership checks and domain-scoped
   IncJob/JobSnapshots lookups (#1829, #1828).

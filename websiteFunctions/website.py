@@ -2602,10 +2602,31 @@ Require valid-user
                 else:
                     convert_help = 'no_parent'
 
+            # Keep List Websites PHP column in sync with the live OLS/LSWS vhost.
+            # CLI changePHP previously updated only vhost.conf, so the panel could
+            # show PHP 8.3 while lsphp85 was actually serving the site.
+            phpVersion = website.phpSelection
+            try:
+                from plogical.phpUtilities import phpUtilities
+                vhFile = '%s/conf/vhosts/%s/vhost.conf' % (
+                    virtualHostUtilities.Server_root, website.domain)
+                actualPhp = phpUtilities.GetPHPSelectionFromVhostFile(vhFile)
+                if actualPhp and actualPhp != website.phpSelection:
+                    oldPhp = website.phpSelection
+                    website.phpSelection = actualPhp
+                    website.save()
+                    phpVersion = actualPhp
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Healed phpSelection drift for %s: DB was %s, OLS is %s' % (
+                            website.domain, oldPhp, actualPhp))
+            except BaseException as phpSyncMsg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'phpSelection sync skipped for %s: %s' % (website.domain, str(phpSyncMsg)))
+
             json_data.append({
                 'domain': website.domain,
                 'adminEmail': website.adminEmail,
-                'phpVersion': website.phpSelection,
+                'phpVersion': phpVersion,
                 'state': state,
                 'ipAddress': ipAddress,
                 'package': website.package.packageName,

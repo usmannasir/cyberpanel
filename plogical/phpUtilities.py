@@ -417,6 +417,32 @@ class phpUtilities:
             result = result.rsplit("lsphp", 1)[0] + "php"
             return result
 
+    ## Map OLS/LSWS vhost handler path to panel label (e.g. lsphp85 -> "PHP 8.5").
+    ## Fast: reads the LiteSpeed/OLS vhost only; does not spawn php -v and does not
+    ## depend on GetPHPVersionFromFile (which prefers leftover Apache PHP-FPM confs).
+    @staticmethod
+    def GetPHPSelectionFromVhostFile(vhFile):
+        try:
+            if not vhFile or not os.path.exists(vhFile):
+                return ''
+            import re
+            with open(vhFile, 'r', errors='ignore') as fh:
+                text = fh.read()
+            match = re.search(r'/usr/local/lsws/lsphp(\d{2,3})/bin/lsphp', text)
+            if not match:
+                # Enterprise AddHandler style: application/x-httpd-php85
+                match = re.search(r'x-httpd-php(\d{2,3})', text)
+            if not match:
+                return ''
+            digits = match.group(1)
+            if len(digits) == 2:
+                return 'PHP %s.%s' % (digits[0], digits[1])
+            if len(digits) >= 3:
+                return 'PHP %s.%s' % (digits[0], digits[1:])
+            return ''
+        except BaseException:
+            return ''
+
     ## returns something like PHP 8.2
     @staticmethod
     def WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile):

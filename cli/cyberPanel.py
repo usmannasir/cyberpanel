@@ -217,6 +217,21 @@ class cyberPanel:
             result = vhost.changePHP(completePathToConfigFile, phpVersion)
 
             if result[0] == 1:
+                # vhost.changePHP persists phpSelection; keep CLI path explicit too.
+                try:
+                    if Websites.objects.filter(domain=virtualHostName).exists():
+                        website = Websites.objects.get(domain=virtualHostName)
+                        if website.phpSelection != phpVersion:
+                            website.phpSelection = phpVersion
+                            website.save()
+                    else:
+                        from websiteFunctions.models import ChildDomains
+                        child = ChildDomains.objects.filter(domain=virtualHostName).first()
+                        if child is not None and child.phpSelection != phpVersion:
+                            child.phpSelection = phpVersion
+                            child.save()
+                except BaseException as dbMsg:
+                    logger.writeforCLI(str(dbMsg), "Error", stack()[0][3])
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(0, result[1])
