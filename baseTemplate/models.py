@@ -12,3 +12,4 @@ class version(models.Model):
 
 class CyberPanelCosmetic(models.Model):
     MainDashboardCSS = models.TextField(default='')
+    HidePromotions = models.IntegerField(default=0)
