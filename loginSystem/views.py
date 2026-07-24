@@ -140,6 +140,12 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
+                # Rotate session key on privilege elevation (mitigate fixation before long-lived sessions).
+                try:
+                    request.session.cycle_key()
+                except Exception:
+                    pass
+
                 request.session['userID'] = admin.pk
 
                 ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
