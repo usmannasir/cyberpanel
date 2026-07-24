@@ -2378,6 +2378,51 @@ class MailServerManagerUtils(multi.Thread):
                 command = "sed -i 's|daemon_directory = /usr/libexec/postfix|daemon_directory = /usr/lib/postfix/sbin|g' /etc/postfix/main.cf"
                 ProcessUtilities.executioner(command)
 
+            ## The default dovecot.conf template enables the sieve (pigeonhole)
+            ## plugin in the `protocols` line and the `protocol lda` mail_plugins.
+            ## The base CyberPanel install does not ship pigeonhole, and on some
+            ## systems it cannot be installed (e.g. dovecot23 on AlmaLinux 9, where
+            ## pigeonhole conflicts). When the plugin is absent Dovecot refuses to
+            ## start ("unknown protocol sieve") and all mail is deferred. Strip
+            ## sieve from those two lines only when the plugin is not installed, so
+            ## servers that do have pigeonhole keep sieve filtering. #1733
+            dovecotConf = '/etc/dovecot/dovecot.conf'
+            sieveAvailable = False
+            for modDir in ('/usr/lib/dovecot/modules', '/usr/lib64/dovecot/modules',
+                           '/usr/lib/dovecot', '/usr/lib64/dovecot'):
+                try:
+                    if os.path.isdir(modDir) and any('sieve' in fn for fn in os.listdir(modDir)):
+                        sieveAvailable = True
+                        break
+                except Exception:
+                    pass
+
+            if not sieveAvailable and os.path.exists(dovecotConf):
+                try:
+                    with open(dovecotConf, 'r') as f:
+                        confLines = f.readlines()
+                    with open(dovecotConf, 'w') as f:
+                        for confLine in confLines:
+                            key = confLine.split('=', 1)[0].strip()
+                            if key in ('protocols', 'mail_plugins') and 'sieve' in confLine:
+                                prefix, _, rhs = confLine.partition('=')
+                                tokens = [t for t in rhs.split() if t != 'sieve']
+                                confLine = '%s= %s\n' % (prefix, ' '.join(tokens))
+                            f.write(confLine)
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Sieve plugin not installed; removed sieve from dovecot.conf so Dovecot can start. [setup_postfix_dovecot_config]')
+                except BaseException as sieveMsg:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Could not strip sieve from dovecot.conf: %s [setup_postfix_dovecot_config]' % str(sieveMsg))
+
+            ## Make sure the mail services are enabled so they survive a reboot;
+            ## previously the reset never enabled them and users had to do it by
+            ## hand. Restart dovecot now so the sieve fix above takes effect and a
+            ## bad config surfaces here; postfix is restarted at the end of the
+            ## reset, after its DKIM/milter config is written. #1733
+            for mailSvc in ('dovecot', 'postfix'):
+                ProcessUtilities.executioner('systemctl enable %s' % mailSvc)
+            ProcessUtilities.executioner('systemctl restart dovecot')
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -2717,11 +2762,15 @@ class MailServerManagerUtils(multi.Thread):
                 writeToFile.write('nameserver 8.8.8.8\n')
                 writeToFile.close()
 
-                command = 'systemctl restart postfix'
-                ProcessUtilities.executioner(command)
+            ## Always restart the mail services at the end of the reset so the new
+            ## postfix (incl. DKIM/milter) and dovecot config actually take effect.
+            ## This previously only ran when /etc/resolv.conf happened to be empty,
+            ## so most resets left the services running the old config. #1733
+            command = 'systemctl restart postfix'
+            ProcessUtilities.executioner(command)
 
-                command = 'doveadm reload'
-                ProcessUtilities.executioner(command)
+            command = 'systemctl restart dovecot'
+            ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
