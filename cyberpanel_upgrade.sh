@@ -1292,8 +1292,18 @@ fi
 sed -i 's|python2|python|g' /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
+# Point /usr/bin/php at an lsphp that is actually installed, preferring the
+# default CLI version (8.3, matching upgrade.py/install.py) and falling back to
+# whatever is present. This block runs after upgrade.py and previously hardcoded
+# lsphp74 unconditionally, so on servers without PHP 7.4 it replaced a working
+# symlink with a broken one and `php -v` failed with "command not found". (#1727)
 rm -f /usr/bin/php
-ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
+for _php_ver in 83 84 85 82 81 80 74; do
+  if [ -x "/usr/local/lsws/lsphp${_php_ver}/bin/php" ]; then
+    ln -s "/usr/local/lsws/lsphp${_php_ver}/bin/php" /usr/bin/php
+    break
+  fi
+done
 
 if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
   chmod 600 /etc/cyberpanel/webadmin_passwd
