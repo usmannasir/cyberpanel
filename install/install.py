@@ -2323,8 +2323,10 @@ milter_default_action = accept
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Remove existing PHP symlink if it exists
-            if os.path.exists('/usr/bin/php'):
+            # Remove existing PHP symlink if it exists (lexists also catches a
+            # broken symlink, which os.path.exists misses — otherwise the ln below
+            # would fail with "File exists" and leave /usr/bin/php broken). (#1727)
+            if os.path.lexists('/usr/bin/php'):
                 os.remove('/usr/bin/php')
 
             # Create symlink to PHP 8.3 (default)
