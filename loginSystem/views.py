@@ -152,7 +152,10 @@ def verifyLogin(request):
                 else:
                     request.session['ipAddr'] = ipAddr
 
-                request.session.set_expiry(43200)
+                # Remember me: longer session (30 days). Default remains 12 hours.
+                # Username-only client preference; password is never stored in the browser.
+                remember = bool(data.get('rememberMe'))
+                request.session.set_expiry(2592000 if remember else 43200)
                 try:
                     from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
                     SSHSecurityWhitelistUtilities.on_successful_panel_login(request, admin)
