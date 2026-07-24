@@ -55,7 +55,7 @@
     <script src="{% static 'baseTemplate/vendor/select2/select2.full.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}&ui=2">
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-tokens.css' %}?v={{ CP_VERSION }}">
 
     {% block header_scripts %}{% endblock %}
@@ -868,7 +868,7 @@
             }
         };
     </script>
-<script src="{% static 'baseTemplate/custom-js/cyberpanel-theme.js' %}?v={{ CP_VERSION }}"></script>
+<script src="{% static 'baseTemplate/custom-js/cyberpanel-theme.js' %}?v={{ CP_VERSION }}&theme=2" data-cfasync="false"></script>
 
     {% block footer_scripts %}{% endblock %}
 </body>
