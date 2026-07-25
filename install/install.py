@@ -1381,6 +1381,41 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            ## The dovecot.conf template enables the sieve (pigeonhole) plugin in the
+            ## `protocols` line and the `protocol lda` mail_plugins, but no distro
+            ## branch above installs pigeonhole. Where it is absent (and on AlmaLinux 9
+            ## /dovecot23 it cannot be installed — the package conflicts) Dovecot
+            ## refuses to start with "unknown protocol sieve" and all mail defers.
+            ## Strip sieve from those two lines only when the plugin is not installed,
+            ## so servers that do have pigeonhole keep sieve filtering. #1733
+            sieveAvailable = False
+            for modDir in ('/usr/lib/dovecot/modules', '/usr/lib64/dovecot/modules',
+                           '/usr/lib/dovecot', '/usr/lib64/dovecot'):
+                try:
+                    if os.path.isdir(modDir) and any('sieve' in fn for fn in os.listdir(modDir)):
+                        sieveAvailable = True
+                        break
+                except Exception:
+                    pass
+
+            if not sieveAvailable and os.path.exists(dovecot):
+                try:
+                    with open(dovecot, 'r') as f:
+                        confLines = f.readlines()
+                    with open(dovecot, 'w') as f:
+                        for confLine in confLines:
+                            key = confLine.split('=', 1)[0].strip()
+                            if key in ('protocols', 'mail_plugins') and 'sieve' in confLine:
+                                prefix, _, rhs = confLine.partition('=')
+                                tokens = [t for t in rhs.split() if t not in ('sieve', 'managesieve')]
+                                confLine = '%s= %s\n' % (prefix, ' '.join(tokens))
+                            f.write(confLine)
+                    logging.InstallLog.writeToFile(
+                        "Sieve plugin not installed; removed sieve from dovecot.conf so Dovecot can start.")
+                except BaseException as sieveMsg:
+                    logging.InstallLog.writeToFile(
+                        '[ERROR] Could not strip sieve from dovecot.conf: ' + str(sieveMsg))
+
             ################################### Restart dovecot
 
             self.manage_service('dovecot', 'enable')

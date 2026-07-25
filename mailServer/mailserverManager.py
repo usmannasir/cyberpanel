@@ -1404,6 +1404,46 @@ class MailServerManager(multi.Thread):
 
                 command = "systemctl restart dovecot"
                 ProcessUtilities.executioner(command)
+
+            ## The dovecot.conf template enables the sieve (pigeonhole) plugin in the
+            ## `protocols` line and the `protocol lda` mail_plugins, but pigeonhole is
+            ## not installed by default (and on AlmaLinux 9/dovecot23 it cannot be —
+            ## the package conflicts). With the plugin absent Dovecot refuses to start
+            ## ("unknown protocol sieve") and all mail defers. Strip sieve from those
+            ## two lines only when the plugin is not installed, so servers that do
+            ## have pigeonhole keep sieve filtering. #1733
+            sieveAvailable = False
+            for modDir in ('/usr/lib/dovecot/modules', '/usr/lib64/dovecot/modules',
+                           '/usr/lib/dovecot', '/usr/lib64/dovecot'):
+                try:
+                    if os.path.isdir(modDir) and any('sieve' in fn for fn in os.listdir(modDir)):
+                        sieveAvailable = True
+                        break
+                except Exception:
+                    pass
+
+            if not sieveAvailable and os.path.exists(dovecot):
+                try:
+                    with open(dovecot, 'r') as f:
+                        confLines = f.readlines()
+                    with open(dovecot, 'w') as f:
+                        for confLine in confLines:
+                            key = confLine.split('=', 1)[0].strip()
+                            if key in ('protocols', 'mail_plugins') and 'sieve' in confLine:
+                                prefix, _, rhs = confLine.partition('=')
+                                tokens = [t for t in rhs.split() if t not in ('sieve', 'managesieve')]
+                                confLine = '%s= %s\n' % (prefix, ' '.join(tokens))
+                            f.write(confLine)
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Sieve plugin not installed; removed sieve from dovecot.conf so Dovecot can start. [setup_postfix_dovecot_config]')
+                except BaseException as sieveMsg:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Could not strip sieve from dovecot.conf: %s [setup_postfix_dovecot_config]' % str(sieveMsg))
+
+            for mailSvc in ('dovecot', 'postfix'):
+                ProcessUtilities.executioner('systemctl enable %s' % mailSvc)
+            ProcessUtilities.executioner('systemctl restart dovecot')
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       '%s [setup_postfix_dovecot_config][404]' % (
