@@ -2406,7 +2406,7 @@ class MailServerManagerUtils(multi.Thread):
                             key = confLine.split('=', 1)[0].strip()
                             if key in ('protocols', 'mail_plugins') and 'sieve' in confLine:
                                 prefix, _, rhs = confLine.partition('=')
-                                tokens = [t for t in rhs.split() if t != 'sieve']
+                                tokens = [t for t in rhs.split() if t not in ('sieve', 'managesieve')]
                                 confLine = '%s= %s\n' % (prefix, ' '.join(tokens))
                             f.write(confLine)
                     logging.CyberCPLogFileWriter.writeToFile(
