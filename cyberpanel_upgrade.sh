@@ -16,6 +16,10 @@ Sudo_Test=$(set)
 
 Set_Default_Variables() {
 
+# Set to 1 when upgrade.py fails, so the final banner reports the failure instead
+# of claiming success just because the panel still answers on its port.
+UPGRADE_FAILED=0
+
 # Clear old log files
 echo -e "Clearing old log files..."
 rm -f /var/log/cyberpanel_upgrade_debug.log
@@ -1034,9 +1038,14 @@ fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-FALLBACK_CODE=$?
+# upgrade.py is piped into tee, so $? is tee's status (always 0) — read the real
+# exit code of upgrade.py from PIPESTATUS or a failed upgrade looks like a success.
+FALLBACK_CODE=${PIPESTATUS[0]}
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-Check_Return
+if [ "$FALLBACK_CODE" -ne 0 ]; then
+  UPGRADE_FAILED=1
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback upgrade.py also failed with code $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -rf /usr/local/CyberPanelTemp
@@ -1537,6 +1546,20 @@ if [[ $Panel_Port = "" ]] ; then
 fi
 
 Panel_HTTP_Code=$(curl -k -L -s -o /dev/null -w "%{http_code}" "https://127.0.0.1:${Panel_Port#*:}/")
+
+# A responding panel only proves the old build is still up — it says nothing about
+# whether the new code was applied. Never claim success when upgrade.py failed.
+if [[ "${UPGRADE_FAILED:-0}" -ne 0 ]] ; then
+  echo "###################################################################"
+  echo "                CyberPanel UPGRADE FAILED                          "
+  echo "###################################################################"
+  echo -e "\nupgrade.py did not complete, so this server is STILL RUNNING THE OLD BUILD."
+  echo -e "If you were applying a security release, you are NOT patched yet."
+  echo -e "Check /var/log/cyberpanel_upgrade_debug.log for the failure, then re-run the upgrade.\n"
+  rm -rf /root/cyberpanel_upgrade_tmp
+  exit 1
+fi
+
 if [[ "$Panel_HTTP_Code" =~ ^(200|302|401|403)$ ]] ; then
   echo "###################################################################"
   echo "                CyberPanel Upgraded                                "
