@@ -260,7 +260,7 @@ class ProcessUtilities(multi.Thread):
                         if attempt == 2:
                             logging.writeToFile("[sendCommand] Attempting to restart lscpd service...")
                             try:
-                                subprocess.run(['systemctl', 'restart', 'lscpd'], capture_output=True, text=True)
+                                subprocess.run(['systemctl', 'restart', 'lscpd'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
                                 time.sleep(3)  # Give lscpd time to start
                             except Exception as e:
                                 logging.writeToFile(f"[sendCommand] Failed to restart lscpd: {str(e)}")

@@ -338,18 +338,18 @@ def _restart_pdns():
     for unit in ('pdns', 'powerdns'):
         try:
             r = subprocess.run(['systemctl', 'is-enabled', unit],
-                               capture_output=True, text=True)
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             if r.returncode != 0 and 'masked' not in (r.stdout + r.stderr):
                 # Not installed under this name.
                 continue
             r = subprocess.run(['systemctl', 'restart', unit],
-                               capture_output=True, text=True, timeout=30)
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
             if r.returncode == 0:
                 _log('Restarted %s' % unit)
                 # Reset systemd's failed/restart counter so a subsequent
                 # health check doesn't see stale 26830-restart noise.
                 subprocess.run(['systemctl', 'reset-failed', unit],
-                               capture_output=True, text=True)
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
                 return
             _log('systemctl restart %s failed: %s' %
                  (unit, (r.stderr or r.stdout).strip()))

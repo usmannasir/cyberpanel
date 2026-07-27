@@ -119,7 +119,7 @@ class preFlightsChecks:
 
                 command = 'mount -o remount /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True,universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -154,7 +154,7 @@ class preFlightsChecks:
 
                 command = 'mount -o remount /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -176,7 +176,7 @@ class preFlightsChecks:
 
                 command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
                 try:
-                    iResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    iResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     iResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -188,7 +188,7 @@ class preFlightsChecks:
                 if iResult.returncode == 0:
                     command = "echo '{}' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u".format(iResult.stdout)
                     try:
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     fResult = result.stdout.rstrip('\n')
@@ -196,7 +196,7 @@ class preFlightsChecks:
 
                     command  = 'uname -r'
                     try:
-                        ffResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        ffResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         ffResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -291,7 +291,7 @@ class preFlightsChecks:
         try:
 
             try:
-                result = subprocess.run('systemd-detect-virt', capture_output=True, universal_newlines=True, shell=True)
+                result = subprocess.run('systemd-detect-virt', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
             except:
                 result = subprocess.run('systemd-detect-virt', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -1805,7 +1805,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             try:
                 try:
-                    result = subprocess.run('uname -a', capture_output=True, universal_newlines=True, shell=True)
+                    result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 

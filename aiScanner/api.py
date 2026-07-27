@@ -288,7 +288,7 @@ def authenticate_worker(request):
             # Try to detect PHP version (basic detection)
             try:
                 import subprocess
-                result = subprocess.run(['php', '-v'], capture_output=True, text=True, timeout=5)
+                result = subprocess.run(['php', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
                 if result.returncode == 0:
                     import re
                     match = re.search(r'PHP (\d+\.\d+)', result.stdout)

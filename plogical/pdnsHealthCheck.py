@@ -85,7 +85,7 @@ def _systemctl_show(unit):
             ['systemctl', 'show', unit,
              '-p', 'LoadState', '-p', 'ActiveState', '-p', 'SubState',
              '-p', 'NRestarts', '-p', 'Result', '-p', 'ExecMainStatus'],
-            capture_output=True, text=True, timeout=10)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
     except Exception:
         return None
     if r.returncode != 0:
@@ -110,7 +110,7 @@ def _journal_indicates_schema_bug(unit):
         r = subprocess.run(
             ['journalctl', '-u', unit, '--since', '-10 minutes',
              '--no-pager', '-q'],
-            capture_output=True, text=True, timeout=10)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
     except Exception:
         return False
     log = (r.stdout or '') + (r.stderr or '')

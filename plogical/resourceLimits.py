@@ -79,8 +79,8 @@ class ResourceLimitsManager:
             try:
                 result = subprocess.run(
                     ['mount'],
-                    capture_output=True,
-                    text=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    universal_newlines=True,
                     timeout=5
                 )
 
@@ -154,8 +154,8 @@ class ResourceLimitsManager:
                 try:
                     test_result = subprocess.run(
                         [self.LSCGCTL_PATH, 'version'],
-                        capture_output=True,
-                        text=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        universal_newlines=True,
                         timeout=10
                     )
 
@@ -173,8 +173,8 @@ class ResourceLimitsManager:
                     logging.writeToFile("Running lssetup to configure LiteSpeed Containers...")
                     result = subprocess.run(
                         [self.LSSETUP_PATH, '-c', '2', '-n', '0', '-s', '/usr/local/lsws'],
-                        capture_output=True,
-                        text=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        universal_newlines=True,
                         timeout=30
                     )
 
@@ -185,8 +185,8 @@ class ResourceLimitsManager:
                         time.sleep(2)  # Give it a moment to initialize
                         verify_result = subprocess.run(
                             [self.LSCGCTL_PATH, 'version'],
-                            capture_output=True,
-                            text=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             timeout=10
                         )
 
@@ -198,8 +198,8 @@ class ResourceLimitsManager:
                             # Try again with more slices
                             result2 = subprocess.run(
                                 [self.LSSETUP_PATH, '-c', '10', '-n', '0', '-s', '/usr/local/lsws'],
-                                capture_output=True,
-                                text=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True,
                                 timeout=30
                             )
                             logging.writeToFile(f"Second lssetup attempt: {result2.stdout if result2.returncode == 0 else result2.stderr}")
@@ -208,8 +208,8 @@ class ResourceLimitsManager:
                             time.sleep(2)
                             verify_result2 = subprocess.run(
                                 [self.LSCGCTL_PATH, 'version'],
-                                capture_output=True,
-                                text=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True,
                                 timeout=10
                             )
 
@@ -338,8 +338,8 @@ class ResourceLimitsManager:
             # Graceful restart of OLS
             result = subprocess.run(
                 ['/usr/local/lsws/bin/lswsctrl', 'restart'],
-                capture_output=True,
-                text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True,
                 timeout=30
             )
 
@@ -408,8 +408,8 @@ class ResourceLimitsManager:
 
             result = subprocess.run(
                 cmd,
-                capture_output=True,
-                text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True,
                 timeout=10
             )
 
@@ -451,8 +451,8 @@ class ResourceLimitsManager:
 
             result = subprocess.run(
                 cmd,
-                capture_output=True,
-                text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True,
                 timeout=10
             )
 
@@ -492,8 +492,8 @@ class ResourceLimitsManager:
 
             result = subprocess.run(
                 cmd,
-                capture_output=True,
-                text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True,
                 timeout=10
             )
 
@@ -523,7 +523,7 @@ class ResourceLimitsManager:
             # Check if quota tools are available
             result = subprocess.run(
                 ['which', 'setquota'],
-                capture_output=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 timeout=5
             )
             if result.returncode != 0:
@@ -536,7 +536,7 @@ class ResourceLimitsManager:
                 ['setquota', '-u', username, '0', '0',
                  str(inode_limit), str(inode_limit), '/'],
                 check=True,
-                capture_output=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 timeout=10
             )
             logging.writeToFile(f"Set inode limit for {domain} ({username}): {inode_limit}")
@@ -589,8 +589,8 @@ class ResourceLimitsManager:
                                     support['rhel8_family'] = True
 
                                     # Check if cgroups v2 is actually mounted
-                                    result = subprocess.run(['mount'], capture_output=True,
-                                                          text=True, timeout=5)
+                                    result = subprocess.run(['mount'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                          universal_newlines=True, timeout=5)
                                     if 'cgroup2' not in result.stdout:
                                         support['rhel8_needs_enablement'] = True
                                     break
@@ -612,7 +612,7 @@ class ResourceLimitsManager:
             support['lscgctl_available'] = os.path.exists(self.LSCGCTL_PATH)
 
             # Check quota tools
-            result = subprocess.run(['which', 'setquota'], capture_output=True, timeout=5)
+            result = subprocess.run(['which', 'setquota'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5)
             support['quota_tools'] = result.returncode == 0
 
         except Exception as e:

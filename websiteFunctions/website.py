@@ -3725,8 +3725,8 @@ context /cyberpanel_suspension_page.html {
                     # Run lscgctl list-user command
                     result = subprocess.run(
                         [lscgctl_path, 'list-user', username],
-                        capture_output=True,
-                        text=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        universal_newlines=True,
                         timeout=5
                     )
 

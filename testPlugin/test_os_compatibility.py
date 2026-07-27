@@ -96,7 +96,7 @@ class OSCompatibilityTester:
             
             # Test Python version
             result = subprocess.run([python_path, '--version'], 
-                                  capture_output=True, text=True, timeout=10)
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
             
             if result.returncode == 0:
                 version = result.stdout.strip()
@@ -149,7 +149,7 @@ class OSCompatibilityTester:
             is_available = True
             if test_cmd:
                 try:
-                    result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=5)
+                    result = subprocess.run(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
                     is_available = result.returncode == 0
                 except:
                     is_available = False
@@ -190,7 +190,7 @@ class OSCompatibilityTester:
             is_available = True
             if test_cmd:
                 try:
-                    result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=5)
+                    result = subprocess.run(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
                     is_available = result.returncode == 0
                 except:
                     is_available = False
@@ -294,13 +294,13 @@ class OSCompatibilityTester:
             # Test GitHub connectivity
             github_result = subprocess.run(['curl', '-s', '--connect-timeout', '10', 
                                          'https://github.com'], 
-                                        capture_output=True, text=True, timeout=15)
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
             github_available = github_result.returncode == 0
             
             # Test general internet connectivity
             internet_result = subprocess.run(['curl', '-s', '--connect-timeout', '10', 
                                            'https://www.google.com'], 
-                                          capture_output=True, text=True, timeout=15)
+                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
             internet_available = internet_result.returncode == 0
             
             self.test_results['network_connectivity'] = {

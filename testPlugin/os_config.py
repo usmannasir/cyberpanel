@@ -73,7 +73,7 @@ class OSConfig:
         for cmd in python_commands:
             try:
                 result = subprocess.run([cmd, '--version'], 
-                                      capture_output=True, text=True, timeout=5)
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
                 if result.returncode == 0:
                     # Check if it's Python 3.6+
                     version = result.stdout.strip()
@@ -96,7 +96,7 @@ class OSConfig:
         for cmd in pip_commands:
             try:
                 result = subprocess.run([cmd, '--version'], 
-                                      capture_output=True, text=True, timeout=5)
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
                 if result.returncode == 0:
                     return cmd
             except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -298,7 +298,7 @@ class OSConfig:
         # Check Python version
         try:
             result = subprocess.run([self.python_path, '--version'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
             if result.returncode == 0:
                 version = result.stdout.strip()
                 if 'Python 3' in version:
@@ -316,7 +316,7 @@ class OSConfig:
         # Check pip
         try:
             result = subprocess.run([self.pip_path, '--version'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=5)
             if result.returncode != 0:
                 issues.append("pip not found or not working")
         except Exception as e:

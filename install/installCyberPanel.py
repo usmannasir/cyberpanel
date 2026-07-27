@@ -141,7 +141,7 @@ class InstallCyberPanel:
         try:
             command = 'uname -a'
             try:
-                result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
             except:
                 result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -339,7 +339,7 @@ class InstallCyberPanel:
         'not found') and passes. ldd being unavailable is non-blocking.
         """
         try:
-            result = subprocess.run(['ldd', binary_path], capture_output=True, text=True, timeout=15)
+            result = subprocess.run(['ldd', binary_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
             output = (result.stdout or '') + (result.stderr or '')
             if 'not found' in output:
                 InstallCyberPanel.stdOut("ERROR: Downloaded binary has unresolved libraries (incompatible with this OS):", 1)
@@ -533,8 +533,8 @@ class InstallCyberPanel:
                     try:
                         result = subprocess.run(
                             [OLS_BINARY_PATH, '-v'],
-                            capture_output=True,
-                            text=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             timeout=10
                         )
                         if result.returncode != 0:
@@ -911,7 +911,7 @@ protocol sieve {
             # Hash the password using doveadm
             result = subprocess.run(
                 ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
-                capture_output=True, text=True
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
             )
             if result.returncode != 0:
                 logging.InstallLog.writeToFile('[ERROR] doveadm pw failed: ' + result.stderr + " [setupWebmail]")
