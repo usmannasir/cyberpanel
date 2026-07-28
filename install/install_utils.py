@@ -78,6 +78,35 @@ def get_Ubuntu_release(use_print=False, exit_on_error=True):
     return release
 
 
+def get_Ubuntu_code_name(release=None):
+    """
+    Map an Ubuntu release number to its apt codename.
+
+    Newest first: each branch is a >= test, so a newer release must be matched
+    before the older ones or it silently falls into the wrong codename.
+
+    Args:
+        release: float release number; read from the system when omitted.
+
+    Returns: codename string
+    """
+    if release is None:
+        release = get_Ubuntu_release(use_print=False, exit_on_error=False)
+
+    if release >= 26.04:
+        return "resolute"
+    elif release >= 24.04:
+        return "noble"
+    elif release >= 22.04:
+        return "jammy"
+    elif release >= 20.04:
+        return "focal"
+    elif release >= 18.04:
+        return "bionic"
+    else:
+        return "xenial"
+
+
 # ANSI color codes
 class Colors:
     HEADER = '\033[95m'      # Purple

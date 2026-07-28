@@ -470,6 +470,26 @@ class preFlightsChecks:
 
                 command = "./" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                # LiteSpeed's helper only knows Ubuntu 16/18/20/22/24. On a newer release
+                # every branch falls through, so it writes no sources file, prints no
+                # warning and still exits 0 - the first sign is "Unable to locate package
+                # openlitespeed" much later. The repo itself does publish newer suites, so
+                # write the list ourselves whenever the helper left it missing or empty.
+                # It still runs first because it registers the LiteSpeed GPG keys.
+                repoFile = '/etc/apt/sources.list.d/lst_debian_repo.list'
+                if not os.path.exists(repoFile) or os.path.getsize(repoFile) == 0:
+                    codename = install_utils.get_Ubuntu_code_name()
+                    self.stdOut(f"LiteSpeed repo not configured by their helper; writing it for '{codename}'")
+                    logging.InstallLog.writeToFile(
+                        f"enable_lst_debain_repo.sh did not configure a repo; falling back to codename {codename}")
+
+                    with open(repoFile, 'w') as f:
+                        f.write(f"deb http://rpms.litespeedtech.com/debian/ {codename} main\n")
+                        f.write(f"#deb http://rpms.litespeedtech.com/edge/debian/ {codename} main\n")
+
+                    command = 'apt-get update -y'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             except:
                 logging.InstallLog.writeToFile("[ERROR] Exception during CyberPanel install")
                 preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install")

@@ -25,21 +25,9 @@ def get_Ubuntu_release():
 
 def get_Ubuntu_code_name():
     """Get Ubuntu codename based on version"""
-    release = get_Ubuntu_release()
-    # Newest first: each branch is a >= test, so a newer release must be matched
-    # before the older ones or it falls into the wrong codename silently.
-    if release >= 26.04:
-        return "resolute"
-    elif release >= 24.04:
-        return "noble"
-    elif release >= 22.04:
-        return "jammy"
-    elif release >= 20.04:
-        return "focal"
-    elif release >= 18.04:
-        return "bionic"
-    else:
-        return "xenial"
+    # Single source of truth in install_utils so install.py's LiteSpeed repo
+    # fallback and this MariaDB repo setup can never disagree on a codename.
+    return install_utils.get_Ubuntu_code_name(get_Ubuntu_release())
 
 
 # Using shared function from install_utils
