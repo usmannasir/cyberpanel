@@ -304,6 +304,7 @@ openEuler20 = 6
 openEuler22 = 7
 Ubuntu22 = 8
 Ubuntu24 = 9
+Ubuntu26 = 10
 
 
 class Upgrade:
@@ -406,6 +407,8 @@ class Upgrade:
                 return Ubuntu22
             elif result.find('24.04') > -1:
                 return Ubuntu24
+            elif result.find('26.04') > -1:
+                return Ubuntu26
             else:
                 return Ubuntu18
 
@@ -2266,7 +2269,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-            if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24:
+            if Upgrade.FindOperatingSytem() in (Ubuntu22, Ubuntu24, Ubuntu26):
                 ### If ftp not installed then upgrade will fail so this command should not do exit
 
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
@@ -3823,7 +3826,7 @@ passdb {
                         lscpdSelection = 'lscpd-0.3.1'
                         if os.path.exists(Upgrade.UbuntuPath):
                             result = open(Upgrade.UbuntuPath, 'r').read()
-                            if result.find('22.04') > -1 or result.find('24.04') > -1:
+                            if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                                 lscpdSelection = 'lscpd.0.4.0'
                     else:
                         lscpdSelection = 'lscpd.aarch64'
@@ -3833,7 +3836,7 @@ passdb {
                     lscpdSelection = 'lscpd-0.3.1'
                     if os.path.exists(Upgrade.UbuntuPath):
                         result = open(Upgrade.UbuntuPath, 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1:
+                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
 
                 command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'

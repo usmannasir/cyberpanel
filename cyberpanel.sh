@@ -88,7 +88,7 @@ log_info "CyberPanel installation started"
 log_info "Log file: $LOG_FILE"
 log_info "Debug log file: $DEBUG_LOG_FILE"
 
-#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, openEuler 20.03 and openEuler 22.03
+#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, openEuler 20.03 and openEuler 22.03
 #For whoever may edit this script, please follow:
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
@@ -150,6 +150,9 @@ Server_Country="Unknow"
 Server_OS=""
 Server_OS_Version=""
 Server_Provider='Undefined'
+# Interpreter the CyberPanel/CyberCP virtualenvs are built on. Setup_Python_Runtime
+# overrides this to python3.12 on Ubuntu 26.04; every other OS keeps the default.
+CyberPanel_Python="/usr/bin/python3"
 
 Watchdog="On"
 Redis_Hosting="No"
@@ -228,7 +231,10 @@ install_dev_tools() {
             yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
             ;;
         "Ubuntu")
-            DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
+            # Ubuntu 26.04 dropped PCRE1; fall back to the pcre2 dev package there.
+            PCRE_DEV="libpcre3-dev"
+            apt-cache show libpcre3-dev >/dev/null 2>&1 || PCRE_DEV="libpcre2-dev"
+            DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev "$PCRE_DEV" git -y
             ;;
     esac
 }
@@ -524,7 +530,7 @@ if [ -z "$XDG_CURRENT_DESKTOP" ]; then
     echo -e "Desktop OS not detected. Proceeding\n"
 else
     echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
-    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, Ubuntu 24.04 x86_64, Ubuntu 24.04.3 x86_64, CentOS 8.x, AlmaLinux 8.x, AlmaLinux 9.x, AlmaLinux 10.x and CloudLinux 7.x...\n"
+    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, Ubuntu 24.04 x86_64, Ubuntu 24.04.3 x86_64, Ubuntu 26.04 x86_64, CentOS 8.x, AlmaLinux 8.x, AlmaLinux 9.x, AlmaLinux 10.x and CloudLinux 7.x...\n"
     exit
 fi
 
@@ -547,14 +553,14 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 26.04" /etc/os-release ; then
   Server_OS="Ubuntu"
 elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
-  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
@@ -1297,7 +1303,7 @@ Debug_Log2 "Setting up repositories for CN server...,1"
 Download_Requirement() {
 for i in {1..50} ;
   do
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
   else
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
@@ -1312,6 +1318,34 @@ for i in {1..50} ;
   fi
 done
 #special made function for Gitee.com , for whatever reason , sometimes it fails to download this file
+}
+
+# Resolve the interpreter the CyberPanel/CyberCP virtualenvs are built on.
+#
+# Ubuntu 26.04 ships Python 3.14, which Django 4.2.14 does not support (4.2 tops out
+# at 3.12). Install 3.12 from the deadsnakes PPA and build the venvs on that instead.
+# The system python3.14 is deliberately left alone - it stays the OS default for
+# Ubuntu's own tooling, and only CyberPanel's venvs point at 3.12.
+Setup_Python_Runtime() {
+  CyberPanel_Python="/usr/bin/python3"
+
+  if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    echo -e "Ubuntu 26.04 detected - installing Python 3.12 for the CyberPanel virtualenv..."
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common"
+    Retry_Command "add-apt-repository -y ppa:deadsnakes/ppa"
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update"
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3.12 python3.12-venv python3.12-dev"
+
+    if [[ -x /usr/bin/python3.12 ]] ; then
+      CyberPanel_Python="/usr/bin/python3.12"
+      echo -e "Using $CyberPanel_Python for the CyberPanel virtualenv"
+    else
+      echo -e "\nERROR: Python 3.12 is required on Ubuntu 26.04 but could not be installed."
+      echo -e "CyberPanel cannot run on the system Python 3.14 with Django 4.2.\n"
+      Debug_Log2 "Python 3.12 install failed on Ubuntu 26.04 [404]"
+      exit 1
+    fi
+  fi
 }
 
 Pre_Install_Required_Components() {
@@ -1353,7 +1387,7 @@ else
     apt install -y --allow-downgrades libgnutls30=3.6.13-2ubuntu1.3
   fi
 
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] ; then
     DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
      Check_Return
   else
@@ -1379,11 +1413,13 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
+Setup_Python_Runtime
+
 # Install virtualenv - handle Ubuntu 24.04's externally-managed-environment policy
 if [[ "$Server_OS" = "Ubuntu" ]]; then
-  if [[ "$Server_OS_Version" = "24" ]]; then
-    # Ubuntu 24.04 has python3-venv by default, no need to install virtualenv
-    echo -e "Ubuntu 24.04 detected - using built-in python3-venv"
+  if [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
+    # Ubuntu 24.04/26.04 have python3-venv available, no need to install virtualenv
+    echo -e "Ubuntu 24.04/26.04 detected - using built-in python3-venv"
   else
     # For older Ubuntu versions, install virtualenv via apt
     Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update"
@@ -1401,20 +1437,20 @@ echo -e "Creating CyberPanel virtual environment..."
 # First ensure the directory exists
 mkdir -p /usr/local/CyberPanel
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
-  echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
-  if python3 -m venv /usr/local/CyberPanel 2>&1; then
+if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]) ; then
+  echo -e "Ubuntu 22.04/24.04/26.04 detected, using $CyberPanel_Python -m venv..."
+  if "$CyberPanel_Python" -m venv /usr/local/CyberPanel 2>&1; then
     echo -e "Virtual environment created successfully"
   else
-    echo -e "python3 -m venv failed, trying virtualenv..."
-    # For Ubuntu 24.04, python3-venv should work, but if not, try apt install
-    if [[ "$Server_OS_Version" = "24" ]]; then
+    echo -e "$CyberPanel_Python -m venv failed, trying virtualenv..."
+    # For Ubuntu 24.04/26.04, python3-venv should work, but if not, try apt install
+    if [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv"
     else
       # For Ubuntu 22.04, install virtualenv via apt
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-virtualenv"
     fi
-    virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+    virtualenv -p "$CyberPanel_Python" /usr/local/CyberPanel
   fi
 else
   virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
@@ -2230,15 +2266,15 @@ echo -e "Creating CyberCP virtual environment..."
 # First ensure the directory exists
 mkdir -p /usr/local/CyberCP
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
-  echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
-  if python3 -m venv /usr/local/CyberCP 2>&1; then
+if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]) ; then
+  echo -e "Ubuntu 22.04/24.04/26.04 detected, using $CyberPanel_Python -m venv..."
+  if "$CyberPanel_Python" -m venv /usr/local/CyberCP 2>&1; then
     echo -e "Virtual environment created successfully"
   else
-    echo -e "python3 -m venv failed, trying virtualenv..."
+    echo -e "$CyberPanel_Python -m venv failed, trying virtualenv..."
     # Ensure virtualenv is properly installed
     pip3 install --upgrade virtualenv
-    virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+    virtualenv -p "$CyberPanel_Python" /usr/local/CyberCP
   fi
 elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]) ; then
   echo -e "AlmaLinux/Rocky Linux 9/10 detected, using python3 -m venv..."
@@ -2291,7 +2327,12 @@ if [[ -f /usr/local/requirments.txt ]]; then
   cp -f /usr/local/requirments.txt /etc/cyberpanel/cyberpanel-requirments-runtime.txt
 fi
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+  # 26.04's system Python is 3.14, which Django 4.2 does not support. The venv was
+  # built on the deadsnakes 3.12 (see Setup_Python_Runtime); copy that same
+  # interpreter in so lscpd execs 3.12 rather than the system 3.14.
+  cp "$CyberPanel_Python" /usr/local/CyberCP/bin/python3
+elif [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
   # Ubuntu 24.04 ships with Python 3.12, but using 3.10 for compatibility with CyberPanel
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
 else

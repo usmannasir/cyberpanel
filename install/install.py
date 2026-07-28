@@ -1781,7 +1781,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 self.install_package("gcc gcc-c++ make autoconf glibc")
 
             if self.distro == ubuntu:
-                self.install_package("libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev zlib1g zlib1g-dev libudns-dev whichman curl")
+                # libpcre3/libpcre3-dev (PCRE1) were dropped from Ubuntu 26.04; only
+                # pcre2 remains. Older releases keep PCRE1 - lscpd links against
+                # libpcre.so.1 there (see the symlink in installLSCPD).
+                release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
+                if release and release >= 26.04:
+                    pcre_packages = "libpcre2-8-0 libpcre2-dev"
+                else:
+                    pcre_packages = "libpcre3 libpcre3-dev"
+                self.install_package(f"{pcre_packages} openssl libexpat1 libexpat1-dev libgeoip-dev zlib1g zlib1g-dev libudns-dev whichman curl")
             else:
                 self.install_package("pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel")
 
@@ -1798,7 +1806,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #     lscpdSelection = 'lscpd-0.3.1'
             #     if os.path.exists('/etc/lsb-release'):
             #         result = open('/etc/lsb-release', 'r').read()
-            #         if result.find('22.04') > -1 or result.find('24.04') > -1:
+            #         if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
             #             lscpdSelection = 'lscpd.0.4.0'
             # else:
             #     lscpdSelection = 'lscpd.aarch64'
@@ -1813,7 +1821,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     lscpdSelection = 'lscpd-0.3.1'
                     if os.path.exists('/etc/lsb-release'):
                         result = open('/etc/lsb-release', 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1:
+                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
                 else:
                     lscpdSelection = 'lscpd.aarch64'
@@ -1823,7 +1831,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 lscpdSelection = 'lscpd-0.3.1'
                 if os.path.exists('/etc/lsb-release'):
                     result = open('/etc/lsb-release', 'r').read()
-                    if result.find('22.04') > -1 or result.find('24.04') > -1:
+                    if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                         lscpdSelection = 'lscpd.0.4.0'
 
 
@@ -2050,9 +2058,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 0
 
             # In Ubuntu, the library that lscpd looks for is libpcre.so.1, but the one it installs is libpcre.so.3...
+            # Ubuntu 26.04 dropped PCRE1 entirely, so libpcre.so.3 no longer exists there and
+            # this symlink has nothing to point at. Only create it when the source is present;
+            # on 26.04 lscpd is expected to be linked against pcre2 by LiteSpeed's resolute build.
             if self.distro == ubuntu:
-                command = 'ln -s /lib/x86_64-linux-gnu/libpcre.so.3 /lib/x86_64-linux-gnu/libpcre.so.1'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                pcre_source = '/lib/x86_64-linux-gnu/libpcre.so.3'
+                pcre_target = '/lib/x86_64-linux-gnu/libpcre.so.1'
+                if os.path.exists(pcre_source) and not os.path.exists(pcre_target):
+                    command = f'ln -s {pcre_source} {pcre_target}'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                elif not os.path.exists(pcre_source):
+                    logging.InstallLog.writeToFile(
+                        'libpcre.so.3 not present (expected on Ubuntu 26.04+); skipping libpcre.so.1 symlink')
 
             ##
 

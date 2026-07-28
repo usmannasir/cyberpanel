@@ -26,7 +26,11 @@ def get_Ubuntu_release():
 def get_Ubuntu_code_name():
     """Get Ubuntu codename based on version"""
     release = get_Ubuntu_release()
-    if release >= 24.04:
+    # Newest first: each branch is a >= test, so a newer release must be matched
+    # before the older ones or it falls into the wrong codename silently.
+    if release >= 26.04:
+        return "resolute"
+    elif release >= 24.04:
         return "noble"
     elif release >= 22.04:
         return "jammy"
@@ -1001,8 +1005,13 @@ Components: main main/debug
 Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 """
 
+            # MariaDB 10.11's Ubuntu repository stops at noble - it publishes nothing for
+            # 26.04 (resolute). 11.8 is the oldest LTS series that does, so 26.04 gets 11.8
+            # while every existing release stays on 10.11 untouched.
+            mariadb_version = '11.8' if get_Ubuntu_release() >= 26.04 else '10.11'
+
             if get_Ubuntu_release() > 21.00:
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version={mariadb_version}'
                 result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 
                 # If the download fails, use manual repo configuration as fallback
@@ -1020,13 +1029,13 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
                     # Use multiple mirror options for better reliability
                     RepoPath = '/etc/apt/sources.list.d/mariadb.list'
                     codename = get_Ubuntu_code_name()
-                    RepoContent = f"""# MariaDB 10.11 repository list - manual fallback
+                    RepoContent = f"""# MariaDB {mariadb_version} repository list - manual fallback
 # Primary mirror
-deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/10.11/ubuntu {codename} main
+deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/{mariadb_version}/ubuntu {codename} main
 
 # Alternative mirrors (uncomment if primary fails)
-# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirrors.gigenet.com/mariadb/repo/10.11/ubuntu {codename} main
-# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://ftp.osuosl.org/pub/mariadb/repo/10.11/ubuntu {codename} main
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirrors.gigenet.com/mariadb/repo/{mariadb_version}/ubuntu {codename} main
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://ftp.osuosl.org/pub/mariadb/repo/{mariadb_version}/ubuntu {codename} main
 """
                     
                     WriteToFile = open(RepoPath, 'w')
