@@ -998,8 +998,15 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
             # while every existing release stays on 10.11 untouched.
             mariadb_version = '11.8' if get_Ubuntu_release() >= 26.04 else '10.11'
 
+            # mariadb_repo_setup adds the MaxScale repository alongside the server one.
+            # MaxScale publishes nothing for resolute (404), and a repo with no Release
+            # file makes every later apt-get update exit non-zero, which is fatal here.
+            # CyberPanel never installs MaxScale - the RHEL path below already disables
+            # it for the same 404 reason - so opt out instead of adding a repo we do not
+            # use. Tools is skipped by default in the script; passed explicitly so a
+            # change to that default cannot reintroduce the same failure (it 404s too).
             if get_Ubuntu_release() > 21.00:
-                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version={mariadb_version}'
+                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version={mariadb_version} --skip-maxscale --skip-tools'
                 result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 
                 # If the download fails, use manual repo configuration as fallback
