@@ -135,7 +135,11 @@ elif [[ $Server_OS = "Ubuntu" ]]; then
 
   apt-get install -y libmysqlclient-dev
 
-  apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip mlocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar9
+  # mlocate and libclamunrar9 were dropped after 22.04 - neither exists in 24.04 or
+  # 26.04, and apt fails the whole command on one missing name. plocate replaces
+  # mlocate, and the unversioned libclamunrar tracks whichever soname is current.
+  # Both are present on 22.04 too, so this stays correct on older releases.
+  apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip plocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar
 
   cpanm Encoding::FixLatin
   cpanm Digest::SHA1
