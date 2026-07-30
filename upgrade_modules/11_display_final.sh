@@ -41,6 +41,20 @@ if [[ $Panel_Port = "" ]] ; then
   Panel_Port="8090"
 fi
 
+# A responding panel only proves the old build is still up; it says nothing about
+# whether the new code was applied. Never claim success when upgrade.py failed. (#1853)
+if [[ "${UPGRADE_FAILED:-0}" -ne 0 ]] ; then
+  echo "###################################################################"
+  echo "                CyberPanel UPGRADE FAILED                          "
+  echo "###################################################################"
+  echo -e "\nupgrade.py did not complete, so this server is STILL RUNNING THE OLD BUILD."
+  echo -e "If you were applying a security release, you are NOT patched yet."
+  echo -e "Check /var/log/cyberpanel_upgrade_debug.log for the failure, then re-run the upgrade.\n"
+  rm -rf /root/cyberpanel_upgrade_tmp
+  exit 1
+fi
+
+
 # Resolve server IP for remote access URL (avoid empty Remote: https://:2087)
 if [[ -z "$SERVER_IP" ]]; then
   SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
