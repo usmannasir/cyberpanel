@@ -5,6 +5,12 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Security: default deny for sensitive web files (#1859)
+- New OpenLiteSpeed and LiteSpeed Enterprise / Apache vhost templates block direct
+  HTTP access to `.env`, `.git`, `.htpasswd`, `.user.ini`, and `.htaccess` (403).
+- Existing sites: run `CPScripts/retrofit-sensitive-file-denials.sh` (restarts LSWS).
+- Helper: `vhost.ensureSensitiveFileDenials()` for idempotent injection into OLS configs.
+
 ### Build metadata
 - `version.txt` and panel `BUILD` advanced to **2.5.5 build 1** (still the 2.5.5-dev line; not a 2.4.9 backport of release notes).
 
