@@ -1,0 +1,15 @@
+.pm-wrap { color: #1a1a2e; }
+#pm-ports-table tbody tr,
+#pm-ports-table tbody tr:nth-child(odd),
+#pm-ports-table tbody tr:nth-child(even) {
+  background: #ffffff !important;
+  color: #1a1a2e !important;
+}
+#pm-ports-table tbody tr:hover {
+  background: #edf2ff !important;
+  color: #1a1a2e !important;
+}
+#pm-ports-table tbody tr td {
+  color: #1a1a2e !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
