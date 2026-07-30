@@ -2273,6 +2273,12 @@ $cfg['Servers'][$i]['port'] = '3306';
             except:
                 pass
 
+            try:
+                cursor.execute(
+                    'ALTER TABLE baseTemplate_cyberpanelcosmetic ADD HidePromotions integer NOT NULL DEFAULT 0')
+            except:
+                pass
+
             # AI Scanner Tables
             try:
                 cursor.execute('''

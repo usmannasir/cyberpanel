@@ -20,7 +20,7 @@ from subprocess import call, CalledProcessError
 from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
-from re import compile
+from re import compile, search
 
 class ACLManager:
 
@@ -627,7 +627,6 @@ class ACLManager:
 
     @staticmethod
     def getPHPString(phpVersion):
-
         if phpVersion == "PHP 5.3":
             php = "53"
         elif phpVersion == "PHP 5.4":
@@ -660,10 +659,14 @@ class ACLManager:
             php = "85"
         else:
             # Future PHP versions: derive digits so UnboundLocalError cannot crash
-            # subdomain list and similar pages (#1726).
-            digits = ''.join(ch for ch in phpVersion if ch.isdigit())
-            php = digits[-2:] if len(digits) >= 2 else (digits or '84')
-
+            # subdomain list and similar pages (#1726)
+            result = search("\\d+\\.\\d+", phpVersion)
+            if result:
+                php = result.group(0).replace(".", "")
+                return php
+            else:
+                php = "85" # Fall back to latest supported version if no valid matches can be found
+                # Maybe raise an error to the user/admin here?
         return php
 
     @staticmethod

@@ -13,6 +13,7 @@ class version(models.Model):
 
 class CyberPanelCosmetic(models.Model):
     MainDashboardCSS = models.TextField(default='')
+    HidePromotions = models.IntegerField(default=0)
 
 class UserNotificationPreferences(models.Model):
     """Model to store user notification dismissal preferences"""
