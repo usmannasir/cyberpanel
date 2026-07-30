@@ -1,0 +1,30 @@
+/* Legacy-theme bridge
+ *
+ * The themes on usmannasir/CyberPanel-Themes (except the *-v2 family) were
+ * written for the pre-2.4 UI and define its variables (--background-color-*,
+ * --link-color-first, --sidebar-*), none of which the redesigned shell reads.
+ * This sheet maps those variables onto the current design tokens so a legacy
+ * theme's palette still applies. It is only linked when the stored custom CSS
+ * contains a legacy variable (see baseTemplate/index.html), and every mapping
+ * falls back to the stock light value when a theme omits that variable.
+ *
+ * Cascade position: after the design-system sheets, before the injected
+ * custom CSS — so v2 themes that set the new tokens directly still win.
+ */
+:root {
+    --bg-primary: var(--background-color-second, var(--content-background, #f6f7f9));
+    --bg-secondary: var(--background-color-third, var(--resources-background, #ffffff));
+    --bg-sidebar: var(--sidebar-background, var(--background-color-first, #fbfbfc));
+    --bg-sidebar-item: var(--sidebar-overview-background, transparent);
+    --bg-hover: var(--hover-background-color, var(--sidebar-hover-background, #eef0f4));
+    --text-primary: var(--content-text-color, var(--link-color-first, #2f3640));
+    --text-secondary: var(--content-text-color, var(--link-color-first, #6b7280));
+    --text-heading: var(--text-color-first, var(--content-text-color, var(--link-color-first, #1e293b)));
+    --border-color: var(--border-color-first, var(--sidebar-border-color, #e7e9ee));
+    --border-soft: var(--border-color-second, #edeef2);
+    --shadow-color: var(--shadow-color-first, var(--resources-shadow, rgba(17,24,39,0.05)));
+    --bg-muted: var(--background-color-second, #f6f7f9);
+    --bg-code: var(--background-color-third, #f3f4f6);
+    --skeleton-base: var(--background-color-third, #e9ebef);
+    --skeleton-shine: var(--background-color-second, #f4f5f7);
+}

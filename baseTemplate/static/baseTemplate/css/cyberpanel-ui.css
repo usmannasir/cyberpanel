@@ -1,16 +1,16 @@
         /* CSS Variables for Theme */
         :root {
             /* Light Theme Colors */
-            --bg-primary: #f6f7f9;
+            --bg-primary: #f4f5fa;
             --bg-secondary: #ffffff;
-            --bg-sidebar: #fbfbfc;
+            --bg-sidebar: #f6f7fc;
             --bg-sidebar-item: transparent;
-            --bg-hover: #eef0f4;
+            --bg-hover: #eceefb;
             --text-primary: #2f3640;
-            --text-secondary: #6b7280;
+            --text-secondary: #66707e;
             --text-heading: #1e293b;
-            --border-color: #e7e9ee;
-            --shadow-color: rgba(17,24,39,0.05);
+            --border-color: #e9ebf4;
+            --shadow-color: rgba(17, 24, 39, 0.06);
             --accent-color: #5856d6;
             --accent-hover: #4644c0;
             --danger-color: #ef4444;
@@ -56,7 +56,7 @@
             --border-color: #2c2f39;
             --shadow-color: rgba(0,0,0,0.25);
             --accent-color: #7c7ff3;
-            --accent-hover: #6b6ee8;
+            --accent-hover: #8b8ef5;
             --danger-color: #f87171;
             --success-color: #34d399;
             --warning-bg: linear-gradient(135deg, #78350f 0%, #92400e 100%);
@@ -64,7 +64,7 @@
             /* Extended semantic tokens (dark) */
             --bg-muted: #1d1f26;
             --bg-code: #23252d;
-            --text-on-accent: #ffffff;
+            --text-on-accent: #15161b;
             --border-soft: #2c2f39;
             --table-head-bg: linear-gradient(135deg, #3b3f9e 0%, #2f3387 100%);
             --table-head-text: #f3f4f6;
@@ -405,8 +405,8 @@
         }
         
         #sidebar .section-header {
-            background: var(--accent-color);
-            color: white;
+            background: var(--sidebar-section-bg, var(--accent-color));
+            color: var(--sidebar-section-text, white);
             padding: 8px 15px;
             margin: 15px;
             font-size: 11px;
@@ -422,7 +422,7 @@
             display: flex;
             align-items: center;
             padding: 12px 15px;
-            color: var(--text-secondary);
+            color: var(--sidebar-text, var(--text-secondary));
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
@@ -436,14 +436,14 @@
         }
         
         #sidebar .menu-item:hover {
-            background: var(--bg-hover);
-            color: var(--accent-color);
+            background: var(--sidebar-item-hover-bg, var(--bg-hover));
+            color: var(--sidebar-item-hover-text, var(--accent-color));
             box-shadow: 0 2px 8px var(--shadow-color);
         }
         
         #sidebar .menu-item.active {
-            background: var(--accent-color);
-            color: white;
+            background: var(--sidebar-item-active-bg, var(--accent-color));
+            color: var(--sidebar-item-active-text, white);
             box-shadow: 0 3px 10px rgba(88,86,214,0.3);
         }
         
@@ -1194,6 +1194,11 @@
 /* ============================================================
    Accessibility, motion, and shared UI primitives
    (appended — CyberPanel UI hardening)
+   ============================================================
+   NOTE: the light refinement values now live in the base :root
+   block above — a :root:not([data-theme=dark]) block here had
+   higher specificity than any theme's plain :root palette and
+   clobbered themed light modes (sidebar identity, page tint).
    ============================================================ */
 
 /* Visible keyboard focus for all interactive elements */
@@ -1703,14 +1708,6 @@ button[aria-busy="true"] { opacity: 0.75; cursor: progress; }
    so it would otherwise win and force the page background, sidebar
    and borders light even in dark mode (issue #1804).
    ============================================================ */
-:root:not([data-theme="dark"]) {
-    --bg-primary: #f4f5fa;
-    --bg-sidebar: #f6f7fc;
-    --bg-hover: #eceefb;
-    --border-color: #e9ebf4;
-    --shadow-color: rgba(17, 24, 39, 0.06);
-}
-
 /* Header: a clean hairline instead of a heavy drop shadow */
 #header {
     box-shadow: 0 1px 0 var(--border-color);

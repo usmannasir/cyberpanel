@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+# Theme catalog source (single place to change repo/branch)
+THEMES_REPO = "usmannasir/CyberPanel-Themes"
+THEMES_BRANCH = "main"
 from random import randint
 
 from django.shortcuts import render, redirect
@@ -413,19 +417,39 @@ def design(request):
 
     ####### Fetch sha...
 
-    sha_url = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/commits"
+    sha_url = "https://api.github.com/repos/%s/commits?sha=%s" % (THEMES_REPO, THEMES_BRANCH)
 
     sha_res = requests.get(sha_url)
 
     sha = sha_res.json()[0]['sha']
 
-    l = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/git/trees/%s" % sha
+    l = "https://api.github.com/repos/%s/git/trees/%s" % (THEMES_REPO, sha)
     fres = requests.get(l)
+
+    # per-theme 2.4-UI compatibility (native/partial/legacy) for honest labels
+    try:
+        catalog = requests.get(
+            "https://raw.githubusercontent.com/%s/%s/catalog.json" % (THEMES_REPO, THEMES_BRANCH),
+            timeout=5).json()
+    except BaseException:
+        catalog = {}
+    COMPAT_LABEL = {'partial': ' — partial (colors only)', 'legacy': ' — legacy (no effect on this UI)'}
+    COMPAT_ORDER = {'native': 0, 'partial': 1, 'legacy': 2}
+
     tott = len(fres.json()['tree'])
     finalData['tree'] = []
     for i in range(tott):
         if (fres.json()['tree'][i]['type'] == "tree"):
-            finalData['tree'].append(fres.json()['tree'][i]['path'])
+            path = fres.json()['tree'][i]['path']
+            if path.startswith('.') or path == 'tools':
+                continue
+            compat = catalog.get(path, 'native')
+            if compat == 'legacy':
+                # archived pre-2.4 themes with no effect on this UI — don't offer them
+                continue
+            finalData['tree'].append({'name': path, 'label': path + COMPAT_LABEL.get(compat, ''),
+                                      'order': COMPAT_ORDER.get(compat, 0)})
+    finalData['tree'].sort(key=lambda t: (t['order'], t['name'].lower()))
 
     template = 'baseTemplate/design.html'
     finalData['cosmetic'] = cosmetic
@@ -447,7 +471,7 @@ def getthemedata(request):
 
         # logging.CyberCPLogFileWriter.writeToFile(str(data) + "  [themedata]")
 
-        url = "https://raw.githubusercontent.com/usmannasir/CyberPanel-Themes/main/%s/design.css" % data['Themename']
+        url = "https://raw.githubusercontent.com/%s/%s/%s/design.css" % (THEMES_REPO, THEMES_BRANCH, data['Themename'])
 
         res = requests.get(url)
 
