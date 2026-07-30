@@ -11,6 +11,14 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Existing sites: run `CPScripts/retrofit-sensitive-file-denials.sh` (restarts LSWS).
 - Helper: `vhost.ensureSensitiveFileDenials()` for idempotent injection into OLS configs.
 
+### Settings: option to hide promotional content (port of #1841)
+- New **Hide promotional content** checkbox under Settings → Design (`HidePromotions`
+  on `CyberPanelCosmetic`, default off).
+- When enabled, hides Build Services / HIRE US sidebar entry, Build Services command
+  palette group, and Email Delivery / AI Scanner / .htaccess promo notifications.
+- Backup-not-configured notification stays visible (status warning, not a promo).
+- Upgrade path: `ALTER TABLE ... ADD HidePromotions` in `plogical/upgrade.py`.
+
 ### Build metadata
 - `version.txt` and panel `BUILD` advanced to **2.5.5 build 1** (still the 2.5.5-dev line; not a 2.4.9 backport of release notes).
 
