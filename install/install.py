@@ -27,7 +27,7 @@ import secrets
 import install_utils
 
 VERSION = '2.5.5'
-BUILD = 'dev'
+BUILD = 1
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -4775,6 +4775,22 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            ## Keep sieve when possible: try installing pigeonhole first; strip
+            ## only if still missing so Dovecot can start. (#1733)
+            try:
+                _cp_root = getattr(self, 'cyberPanelPath', None) or '/usr/local/CyberCP'
+                if _cp_root not in sys.path:
+                    sys.path.insert(0, _cp_root)
+                from plogical.sieveGuard import ensure_sieve_or_strip
+                ensure_sieve_or_strip(
+                    conf_path=dovecot,
+                    writer=logging.InstallLog.writeToFile,
+                    verify=True,
+                )
+            except BaseException as sieveMsg:
+                logging.InstallLog.writeToFile(
+                    '[ERROR] sieveGuard failed: ' + str(sieveMsg))
+
             ################################### Restart dovecot
 
             self.manage_service('dovecot', 'enable')
@@ -6114,8 +6130,10 @@ milter_default_action = accept
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Remove existing PHP symlink if it exists
-            if os.path.exists('/usr/bin/php'):
+            # Remove existing PHP symlink if it exists (lexists also catches a
+            # broken symlink, which os.path.exists misses; otherwise the ln below
+            # would fail with "File exists" and leave /usr/bin/php broken). (#1727)
+            if os.path.lexists('/usr/bin/php'):
                 os.remove('/usr/bin/php')
 
             # Create symlink to the best available PHP version

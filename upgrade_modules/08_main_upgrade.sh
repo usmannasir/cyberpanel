@@ -183,6 +183,7 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Python upgrade.py returned code: $RETURN
 if [ $RETURN_CODE -eq 0 ]; then
     echo "Upgrade successful."
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt successful" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    UPGRADE_FAILED=0
 else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt failed with code $RETURN_CODE, starting fallback..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
@@ -234,9 +235,16 @@ fi
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
 /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-FALLBACK_CODE=$?
+# upgrade.py is piped into tee, so $? is tee's status (always 0) - read the real
+# exit code of upgrade.py from PIPESTATUS or a failed upgrade looks like a success. (#1853)
+FALLBACK_CODE=${PIPESTATUS[0]}
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-Check_Return
+if [ "$FALLBACK_CODE" -ne 0 ]; then
+  UPGRADE_FAILED=1
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback upgrade.py also failed with code $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  UPGRADE_FAILED=0
+fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -rf /usr/local/CyberPanelTemp
