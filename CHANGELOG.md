@@ -5,6 +5,20 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Build metadata
+- `version.txt` and panel `BUILD` advanced to **2.5.5 build 1** (still the 2.5.5-dev line; not a 2.4.9 backport of release notes).
+
+### Mail: sieve install-first guard (#1733)
+- Keep sieve when pigeonhole is present; try installing OS packages when missing;
+  strip `sieve`/`managesieve` from `dovecot.conf` only if install fails; always
+  verify Dovecot/Postfix afterward (`plogical/sieveGuard.py`).
+
+### Upgrade reliability (#1727, #1853)
+- Modular upgrade no longer hardcodes `/usr/bin/php` to lsphp74; picks an installed
+  lsphp (prefer 8.3+). `install.py` uses `os.path.lexists` so broken symlinks are replaced.
+- Modular upgrade records `UPGRADE_FAILED` from real `upgrade.py`/`PIPESTATUS` and
+  refuses to print a success banner when the Python upgrade failed.
+
 ### Fix: show full PHP patch on List Websites
 - List Websites now shows the live runtime version (e.g. `PHP 8.5.7`) from the
   site's `lsphp` binary, not only the selector label (`PHP 8.5`).

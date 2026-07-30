@@ -2455,6 +2455,20 @@ class MailServerManagerUtils(multi.Thread):
             command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             ProcessUtilities.executioner(command)
 
+            ## Keep sieve when possible: try installing pigeonhole first; strip
+            ## sieve/managesieve from dovecot.conf only if the module is still
+            ## missing so Dovecot can start. Always verify mail afterward. (#1733)
+            try:
+                from plogical.sieveGuard import ensure_sieve_or_strip
+                ensure_sieve_or_strip(
+                    conf_path=dovecot,
+                    writer=logging.CyberCPLogFileWriter.writeToFile,
+                    verify=True,
+                )
+            except BaseException as sieveMsg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "sieveGuard failed: %s [setup_postfix_dovecot_config]" % str(sieveMsg))
+
             ################################### Restart dovecot
 
             command = 'systemctl enable dovecot.service'
@@ -2852,11 +2866,12 @@ class MailServerManagerUtils(multi.Thread):
                 writeToFile.write('nameserver 8.8.8.8\n')
                 writeToFile.close()
 
-                command = 'systemctl restart postfix'
-                ProcessUtilities.executioner(command)
+            ## Always restart mail services at end of reset so new config takes effect. (#1733)
+            command = 'systemctl restart postfix'
+            ProcessUtilities.executioner(command)
 
-                command = 'doveadm reload'
-                ProcessUtilities.executioner(command)
+            command = 'systemctl restart dovecot'
+            ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
