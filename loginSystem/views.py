@@ -140,6 +140,12 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
+                # Rotate session key on privilege elevation (mitigate fixation before long-lived sessions).
+                try:
+                    request.session.cycle_key()
+                except Exception:
+                    pass
+
                 request.session['userID'] = admin.pk
 
                 ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
@@ -152,7 +158,10 @@ def verifyLogin(request):
                 else:
                     request.session['ipAddr'] = ipAddr
 
-                request.session.set_expiry(43200)
+                # Remember me: longer session (30 days). Default remains 12 hours.
+                # Username-only client preference; password is never stored in the browser.
+                remember = bool(data.get('rememberMe'))
+                request.session.set_expiry(2592000 if remember else 43200)
                 try:
                     from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
                     SSHSecurityWhitelistUtilities.on_successful_panel_login(request, admin)

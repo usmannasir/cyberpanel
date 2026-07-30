@@ -82,9 +82,11 @@
     .progress-bar-container {
         width: 100%;
         height: 8px;
-        background: var(--border-color, #e8e9ff);
+        background: var(--bg-muted, #f6f7f9);
+        border: 1px solid var(--border-color, #e7e9ee);
         border-radius: 4px;
         overflow: hidden;
+        box-sizing: border-box;
     }
     
     .progress-bar {
@@ -800,7 +802,13 @@ a.insight-card:hover {
 .stat-card-title { letter-spacing: 0.6px; }
 .stat-card-value { font-weight: 700; }
 
-.progress-bar-container { height: 7px; border-radius: 6px; }
+.progress-bar-container {
+    height: 8px;
+    border-radius: 6px;
+    background: var(--bg-muted, #f6f7f9);
+    border: 1px solid var(--border-color, #e7e9ee);
+    box-sizing: border-box;
+}
 .progress-bar { border-radius: 6px; }
 
 /* Insight cards: smaller, cleaner hierarchy */
