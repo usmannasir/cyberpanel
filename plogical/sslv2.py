@@ -330,8 +330,21 @@ class sslUtilities:
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
                     return 0
             else:
-                cert = open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem').read().rstrip('\n')
-                key = open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'r').read().rstrip('\n')
+                # Binary read (#1847): trailing garbage after PEM must not break Redis install.
+                _fc = open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem', 'rb').read()
+                _pk = open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'rb').read()
+                _end = b'-----END CERTIFICATE-----'
+                if _end in _fc:
+                    _fc = _fc[:_fc.rindex(_end) + len(_end)] + b'\n'
+                _pend = b'-----END PRIVATE KEY-----'
+                _pend2 = b'-----END EC PRIVATE KEY-----'
+                _pend3 = b'-----END RSA PRIVATE KEY-----'
+                for _m in (_pend, _pend2, _pend3):
+                    if _m in _pk:
+                        _pk = _pk[:_pk.rindex(_m) + len(_m)] + b'\n'
+                        break
+                cert = _fc.decode('ascii', errors='ignore').rstrip('\n')
+                key = _pk.decode('ascii', errors='ignore').rstrip('\n')
                 command = 'redis-cli hmset "ssl:%s" crt "%s" key "%s"' % (virtualHostName, cert, key)
                 logging.CyberCPLogFileWriter.writeToFile('hello world aaa')
                 logging.CyberCPLogFileWriter.writeToFile(command)
@@ -428,11 +441,16 @@ class sslUtilities:
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
         if not forceIssue and os.path.exists(filePath):
             import OpenSSL
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            try:
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'rb').read())
+                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
-            if SSLProvider != 'Denial':
-                return 1, 'This domain already have a valid SSL.'
+                if SSLProvider != 'Denial':
+                    return 1, 'This domain already have a valid SSL.'
+            except Exception as msg:
+                ## An unreadable/corrupt existing cert should not block issuance.
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'Could not parse existing certificate for {virtualHostName} ({str(msg)}), issuing fresh SSL.')
 
         CF_Check, message = sslUtilities.FindIfDomainInCloudflare(virtualHostName)
 

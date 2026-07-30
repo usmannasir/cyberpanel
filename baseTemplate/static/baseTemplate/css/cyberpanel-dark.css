@@ -650,9 +650,30 @@
 [data-theme="dark"] #main-content .pricing-section { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .process-icon { background: var(--bg-secondary) !important; }
 [data-theme="dark"] #main-content .progress { background: var(--bg-muted) !important; }
-[data-theme="dark"] #main-content .progress-bar { background: var(--bg-muted) !important; }
-[data-theme="dark"] #main-content .progress-bar-container { background: var(--bg-muted) !important; }
-[data-theme="dark"] #main-content .progress-bar-wrapper { background: var(--bg-muted) !important; }
+/* Track stays muted; fill keeps status colors */
+[data-theme="dark"] #main-content .progress-bar {
+  background: var(--accent-color, #5b5fcf) !important;
+}
+[data-theme="dark"] #main-content .progress-bar.bar-ok {
+  background: var(--bar-ok) !important;
+}
+[data-theme="dark"] #main-content .progress-bar.bar-warn {
+  background: var(--bar-warn) !important;
+}
+[data-theme="dark"] #main-content .progress-bar.bar-crit {
+  background: var(--bar-crit) !important;
+}
+/* Track must contrast with card bg (--bg-muted matches cards in dark) */
+[data-theme="dark"] #main-content .progress-bar-container {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--border-color, #2c2f39) !important;
+  box-sizing: border-box;
+}
+[data-theme="dark"] #main-content .progress-bar-wrapper {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--border-color, #2c2f39) !important;
+  box-sizing: border-box;
+}
 [data-theme="dark"] #main-content .progress-info { background: var(--warn-soft-bg) !important; border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .progress-info p { color: var(--warn-soft-text) !important; }
 [data-theme="dark"] #main-content .progress-section { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; }

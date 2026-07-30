@@ -73,7 +73,17 @@ class ACLManager:
 
     @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
-        aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        # Orphaned alias (config present, DB row missing): allow self-heal. #1738
+        try:
+            aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        except aliasDomains.DoesNotExist:
+            return 1
+        except aliasDomains.MultipleObjectsReturned:
+            aliasOBJ = aliasDomains.objects.filter(
+                aliasDomain=aliasDomain, master__domain=master).first()
+            if aliasOBJ is None:
+                return 0
+
         masterOBJ = Websites.objects.get(domain=master)
         if currentACL['admin'] == 1:
             return 1

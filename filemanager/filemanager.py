@@ -1325,11 +1325,14 @@ class FileManager:
         command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.executioner(command)
 
-        # Set ownership for all files inside public_html to user:user
-        command = 'chown -R -P %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
-        ProcessUtilities.executioner(command)
-
-        command = 'chown -R -P %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
+        # Set ownership for all files inside public_html to user:user.
+        # Recurse the directory itself instead of a "path/*" shell glob: commands that
+        # run as root go through subprocess with shell=False (shlex.split), so the glob
+        # was handed to chown literally, matched nothing, and left restored files owned
+        # by root/the source UID - the cause of WordPress asking for FTP credentials
+        # after a restore (#1735). -R also covers dotfiles, so the separate hidden-file
+        # pass is no longer needed; the directory's own group is reset to nogroup below.
+        command = 'chown -R -P %s:%s /home/%s/public_html' % (externalApp, externalApp, domainName)
         ProcessUtilities.executioner(command)
 
         # Process child domains first
@@ -1350,11 +1353,11 @@ class FileManager:
             command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
             ProcessUtilities.executioner(command)
 
-            # Set ownership for all files inside child domain to user:user
-            command = 'chown -R -P %s:%s %s/*' % (externalApp, externalApp, childs.path)
-            ProcessUtilities.executioner(command)
-
-            command = 'chown -R -P %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
+            # Set ownership for all files inside the child domain to user:user.
+            # Recurse the directory itself (no "path/*" glob) - see #1735 above: the glob
+            # is passed literally under shell=False and never matches. The child domain
+            # directory's own group is reset to nogroup below.
+            command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, childs.path)
             ProcessUtilities.executioner(command)
 
             # Set child domain directory itself to 755 with user:nogroup

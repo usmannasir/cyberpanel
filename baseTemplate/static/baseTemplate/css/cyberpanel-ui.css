@@ -96,7 +96,16 @@
             color: var(--text-primary);
             overflow-x: hidden;
             min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.12s ease, color 0.12s ease;
+        }
+
+        /* Instant theme flips: skip animating shell colors while data-theme changes */
+        html.cp-theme-switching,
+        html.cp-theme-switching *,
+        html.cp-theme-switching *::before,
+        html.cp-theme-switching *::after {
+            transition: none !important;
+            animation: none !important;
         }
         
         /* Header */
@@ -112,7 +121,7 @@
             left: 260px;
             right: 0;
             z-index: 1000;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.12s ease;
         }
         
         #header .logo {
@@ -257,7 +266,7 @@
             top: 0;
             overflow-y: auto;
             z-index: 1001;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.12s ease;
         }
         
         .sidebar-logo {

@@ -298,7 +298,7 @@ except ImportError:
     print("Recovery complete. Continuing with upgrade...")
 
 VERSION = '2.5.5'
-BUILD = 'dev'
+BUILD = 1
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -1110,24 +1110,44 @@ class Upgrade:
                 Upgrade.stdOut("Continuing with standard OLS", 0)
                 return True  # Not fatal, continue with standard OLS
 
-            # CRITICAL: Verify GLIBC compatibility before installation
+            # CRITICAL: Verify GLIBC compatibility before installation.
+            # rhel9 OLS 2.5.1 needs GLIBC 2.35 (Alma/RHEL 10); AlmaLinux 9 is 2.34.
+            # Fall back to the rhel8 core artifact (same feature set, older GLIBC) so
+            # EL9 still gets core 2.5.1 + module 2.7.5 instead of skipping the whole overlay.
             Upgrade.stdOut("Verifying GLIBC compatibility...", 0)
+            skip_core_binary = False
             if not Upgrade.verifyBinaryCompatibility(tmp_binary):
                 Upgrade.stdOut("=" * 50, 0)
-                Upgrade.stdOut("ERROR: Binary GLIBC requirements incompatible with system", 0)
-                Upgrade.stdOut("This binary would cause OpenLiteSpeed to fail to start", 0)
-                Upgrade.stdOut("Skipping custom binary installation to preserve system stability", 0)
-                Upgrade.stdOut("Standard OLS binary from package manager will be used", 0)
-                Upgrade.stdOut("=" * 50, 0)
-                # Clean up downloaded binary
-                try:
-                    if os.path.exists(tmp_binary):
-                        os.remove(tmp_binary)
-                except:
-                    pass
-                return True  # Not fatal, continue with standard OLS
+                Upgrade.stdOut("WARNING: Primary OLS binary GLIBC incompatible with this system", 0)
+                fallback_ok = False
+                if platform == 'rhel9':
+                    fb = ols_binaries_config.BINARY_CONFIGS.get('rhel8')
+                    if fb:
+                        Upgrade.stdOut("Trying rhel8 OpenLiteSpeed 2.5.1 artifact as EL9-compatible fallback...", 0)
+                        try:
+                            if os.path.exists(tmp_binary):
+                                os.remove(tmp_binary)
+                        except Exception:
+                            pass
+                        if Upgrade.downloadCustomBinary(fb['url'], tmp_binary, fb['sha256'])                                 and Upgrade.verifyBinaryCompatibility(tmp_binary):
+                            OLS_BINARY_URL = fb['url']
+                            OLS_BINARY_SHA256 = fb['sha256']
+                            # Keep rhel9 module/modsec URLs (module only needs GLIBC <= 2.33).
+                            fallback_ok = True
+                            Upgrade.stdOut("rhel8 OLS core is GLIBC-compatible; continuing with rhel9 module", 0)
+                if not fallback_ok:
+                    Upgrade.stdOut("Skipping custom OLS *core* binary; will still try to install cyberpanel_ols module", 0)
+                    Upgrade.stdOut("=" * 50, 0)
+                    try:
+                        if os.path.exists(tmp_binary):
+                            os.remove(tmp_binary)
+                    except Exception:
+                        pass
+                    skip_core_binary = True
+                else:
+                    Upgrade.stdOut("=" * 50, 0)
 
-            # Download cyberpanel_ols module (checksum optional — v2.7.x may ship without published hash)
+            # Download cyberpanel_ols module (checksum optional - v2.7.x may ship without published hash)
             module_downloaded = False
             if MODULE_URL:
                 if not Upgrade.downloadCustomBinary(MODULE_URL, tmp_module, MODULE_SHA256):
@@ -1150,36 +1170,41 @@ class Upgrade:
                     Upgrade.stdOut("ModSecurity may crash due to ABI incompatibility", 0)
                     Upgrade.stdOut("Consider manually updating ModSecurity after upgrade", 0)
 
-            # Install OpenLiteSpeed binary
+            # Install OpenLiteSpeed binary (unless GLIBC forced a core skip)
             Upgrade.stdOut("Installing custom binaries...", 0)
 
-            try:
-                # Make binary executable before moving
-                os.chmod(tmp_binary, 0o755)
-
-                # Final compatibility test before installation
-                if not Upgrade.testBinaryExecution(tmp_binary):
-                    Upgrade.stdOut("ERROR: Final binary compatibility test failed", 0)
-                    Upgrade.stdOut("Skipping installation to prevent OpenLiteSpeed failure", 0)
-                    try:
-                        if os.path.exists(tmp_binary):
-                            os.remove(tmp_binary)
-                    except Exception:
-                        pass
-                    return True  # Not fatal, continue with standard OLS
-
-                shutil.move(tmp_binary, OLS_BINARY_PATH)
-                os.chmod(OLS_BINARY_PATH, 0o755)
-                Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
-            except Exception as e:
-                Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
+            if not skip_core_binary:
                 try:
-                    if os.path.exists(f"{backup_dir}/openlitespeed.backup"):
-                        shutil.copy2(f"{backup_dir}/openlitespeed.backup", OLS_BINARY_PATH)
-                        Upgrade.stdOut("Restored original binary from backup", 0)
-                except Exception:
-                    pass
-                return False
+                    # Make binary executable before moving
+                    os.chmod(tmp_binary, 0o755)
+
+                    # Final compatibility test before installation
+                    if not Upgrade.testBinaryExecution(tmp_binary):
+                        Upgrade.stdOut("ERROR: Final binary compatibility test failed", 0)
+                        Upgrade.stdOut("Skipping installation to prevent OpenLiteSpeed failure", 0)
+                        try:
+                            if os.path.exists(tmp_binary):
+                                os.remove(tmp_binary)
+                        except Exception:
+                            pass
+                        # Still allow module install below
+                        skip_core_binary = True
+                    else:
+                        shutil.move(tmp_binary, OLS_BINARY_PATH)
+                        os.chmod(OLS_BINARY_PATH, 0o755)
+                        Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
+                except Exception as e:
+                    if not skip_core_binary:
+                        Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
+                        try:
+                            if os.path.exists(f"{backup_dir}/openlitespeed.backup"):
+                                shutil.copy2(f"{backup_dir}/openlitespeed.backup", OLS_BINARY_PATH)
+                                Upgrade.stdOut("Restored original binary from backup", 0)
+                        except Exception:
+                            pass
+                        return False
+            else:
+                Upgrade.stdOut("Skipping OLS core binary install (GLIBC); installing module only if available", 0)
 
             # Install module (if downloaded)
             if module_downloaded:
@@ -7570,106 +7595,6 @@ slowlog = /var/log/php{version}-fpm-slow.log
             except OSError:
                 pass
 
-    @staticmethod
-    def fixApacheConfigurationOld():
-        """OLD VERSION - DO NOT USE - Fix Apache configuration issues after upgrade"""
-        try:
-            # Check if Apache is installed
-            if Upgrade.FindOperatingSytem() == CENTOS8 \
-                    or Upgrade.FindOperatingSytem() == openEuler20 or Upgrade.FindOperatingSytem() == openEuler22:
-                apache_service = 'httpd'
-                apache_config_dir = '/etc/httpd'
-            else:
-                apache_service = 'apache2'
-                apache_config_dir = '/etc/apache2'
-            
-            # Check if Apache is installed
-            check_apache = f'systemctl is-enabled {apache_service} 2>/dev/null'
-            result = subprocess.run(check_apache, shell=True, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                Upgrade.stdOut("Fixing Apache configuration...")
-                
-                # 1. Ensure Apache ports are correctly configured
-                command = 'grep -q "Listen 8083" /usr/local/lsws/conf/httpd_config.xml || echo "Apache port configuration might need manual check"'
-                Upgrade.executioner(command, 'Check Apache ports', 1)
-                
-                # 2. Fix proxy rewrite rules for all vhosts
-                # The issue: Both rewrite rules execute, causing incorrect proxying
-                # Fix: Add proper HTTPS condition for SSL proxy rule
-                command = '''find /usr/local/lsws/conf/vhosts/ -name "vhost.conf" -exec sed -i '
-                    /^REWRITERULE.*proxyApacheBackendSSL/i\\
-RewriteCond %{HTTPS}  =on
-                ' {} \;'''
-                Upgrade.executioner(command, 'Fix Apache SSL proxy condition', 1)
-                
-                # Also ensure the proxy backends are properly configured
-                command = '''grep -q "extprocessor apachebackend" /usr/local/lsws/conf/httpd_config.conf || echo "
-extprocessor apachebackend {
-  type                    proxy
-  address                 http://127.0.0.1:8083
-  maxConns                100
-  initTimeout             60
-  retryTimeout            30
-  respBuffer              0
-}
-
-extprocessor proxyApacheBackendSSL {
-  type                    proxy
-  address                 https://127.0.0.1:8082
-  maxConns                100
-  initTimeout             60
-  retryTimeout            30
-  respBuffer              0
-}" >> /usr/local/lsws/conf/httpd_config.conf'''
-                Upgrade.executioner(command, 'Ensure Apache proxy backends exist', 1)
-                
-                # 3. Ensure Apache is configured to listen on correct ports
-                if Upgrade.FindOperatingSytem() in [CENTOS8, openEuler20, openEuler22]:
-                    apache_port_conf = '/etc/httpd/conf.d/00-port.conf'
-                else:
-                    apache_port_conf = '/etc/apache2/ports.conf'
-                
-                command = f'''
-                grep -q "Listen 8082" {apache_port_conf} || echo "Listen 8082" >> {apache_port_conf}
-                grep -q "Listen 8083" {apache_port_conf} || echo "Listen 8083" >> {apache_port_conf}
-                '''
-                Upgrade.executioner(command, 'Ensure Apache listens on 8082/8083', 1)
-                
-                # 4. Restart Apache service
-                command = f'systemctl restart {apache_service}'
-                Upgrade.executioner(command, f'Restart {apache_service}', 1)
-                
-                # 5. Fix PHP-FPM socket permissions and restart services
-                for version in ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']:
-                    if Upgrade.FindOperatingSytem() in [CENTOS8, openEuler20, openEuler22]:
-                        php_service = f'php{version.replace(".", "")}-php-fpm'
-                        socket_dir = '/var/run/php-fpm'
-                    else:
-                        php_service = f'php{version}-fpm'
-                        socket_dir = '/var/run/php'
-                    
-                    # Ensure socket directory exists with correct permissions
-                    command = f'''
-                    if systemctl is-active {php_service} >/dev/null 2>&1; then
-                        mkdir -p {socket_dir}
-                        chmod 755 {socket_dir}
-                        systemctl restart {php_service}
-                    fi
-                    '''
-                    Upgrade.executioner(command, f'Fix and restart {php_service}', 1)
-                
-                # 6. Reload LiteSpeed to apply proxy changes
-                command = '/usr/local/lsws/bin/lswsctrl reload'
-                Upgrade.executioner(command, 'Reload LiteSpeed', 1)
-                
-                Upgrade.stdOut("Apache configuration fixes completed.")
-            else:
-                Upgrade.stdOut("Apache not detected, skipping Apache fixes.")
-                
-        except Exception as e:
-            Upgrade.stdOut(f"Error fixing Apache configuration: {str(e)}")
-            pass
 
     @staticmethod
     def installQuota():
@@ -8293,7 +8218,42 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                             f.write('\n'.join(new_lines))
                     
                     print("Fixed Apache listen ports")
-            
+
+            # Fix 4b: A mod_ssl package update recreates conf.d/ssl.conf with "Listen 443".
+            # LiteSpeed owns 80/443 and Apache only ever runs as a backend on 8082/8083 here,
+            # so that bind collides and httpd fails to start, 503ing every proxied vhost.
+            if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8] \
+                    and os.path.exists('/usr/local/lsws/bin/lswsctrl'):
+                ssl_conf = '/etc/httpd/conf.d/ssl.conf'
+                apache_conf = '/etc/httpd/conf/httpd.conf'
+
+                if os.path.exists(ssl_conf) and os.path.exists(apache_conf):
+                    with open(apache_conf, 'r') as f:
+                        backend_conf = f.read()
+
+                    # Only touch servers where Apache is actually a backend.
+                    if 'Listen 8082' in backend_conf or 'Listen 8083' in backend_conf:
+                        with open(ssl_conf, 'r') as f:
+                            ssl_lines = f.read().split('\n')
+
+                        listenSSL = re.compile(r'^(\s*)(Listen\s+443\b.*)$')
+                        new_ssl_lines = []
+                        disabled = False
+
+                        for line in ssl_lines:
+                            matched = listenSSL.match(line)
+                            if matched:
+                                new_ssl_lines.append('%s# %s  # disabled by CyberPanel: LiteSpeed owns 443'
+                                                     % (matched.group(1), matched.group(2)))
+                                disabled = True
+                            else:
+                                new_ssl_lines.append(line)
+
+                        if disabled:
+                            with open(ssl_conf, 'w') as f:
+                                f.write('\n'.join(new_ssl_lines))
+                            print("Disabled Apache 'Listen 443' in ssl.conf, LiteSpeed owns port 443.")
+
             # Fix 5: Fix PHP-FPM socket permissions
             print("Fixing PHP-FPM socket permissions...")
             if osType in [CENTOS8, CloudLinux8]:

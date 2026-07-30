@@ -3,6 +3,10 @@
 # Sourced by cyberpanel_upgrade.sh.
 
 Set_Default_Variables() {
+  # Set to 1 when upgrade.py fails, so the final banner reports the failure instead
+  # of claiming success just because the panel still answers on its port. (#1853)
+  UPGRADE_FAILED=0
+
   echo -e "Clearing old log files..."
   rm -f /var/log/cyberpanel_upgrade_debug.log
   rm -f /var/log/installLogs.txt

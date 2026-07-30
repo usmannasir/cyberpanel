@@ -1916,7 +1916,23 @@ class backupUtilities:
 
                 databases.append({'databaseName': str(items.dbName), 'databaseUser': str(userToTry), 'password': str(dbuser.password)})
                 self.CheckIfSleepNeeded()
-                mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, self.BackupDataPath)
+                ### Fail the backup if a dump fails instead of silently producing an
+                ### SQL-less archive (#1823).
+                dumpResult = mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, self.BackupDataPath)
+                if isinstance(dumpResult, tuple):
+                    dumpOk = dumpResult[0]
+                else:
+                    dumpOk = dumpResult
+                if dumpOk == 0:
+                    errorMessage = (
+                        'Failed to back up database %s. The mysqldump command failed - check the CyberPanel '
+                        'log for the exact error. Common causes: a stale /home/cyberpanel/.my.cnf (delete it '
+                        'and retry) or an orphaned database record whose MySQL database no longer exists.'
+                        % (items.dbName)
+                    )
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'While creating backup for %s: %s' % (self.website.domain, errorMessage))
+                    return 0, errorMessage
 
             DataJson['databases'] = databases
             DataJsonPath = '%s/%s' % (self.BackupPath, 'databases.json')
@@ -2461,20 +2477,27 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
             dbName = database.find('dbName').text
             res = mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel')
-            if res == 0:
-                ## This login can be further improved later.
-                logging.CyberCPLogFileWriter.writeToFile('Failed to create database backup for %s. This could be false positive, moving on.' % (dbName))
+            sql_gz = f'/home/cyberpanel/{dbName}.sql.gz'
+            sql_plain = f'/home/cyberpanel/{dbName}.sql'
+            dump_ok = res != 0 and (
+                (os.path.exists(sql_gz) and os.path.getsize(sql_gz) >= 64) or
+                (os.path.exists(sql_plain) and os.path.getsize(sql_plain) >= 64)
+            )
+            if not dump_ok:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Failed to create database backup for %s (empty or missing SQL dump). Aborting website backup.' % (dbName))
+                raise BaseException('Database backup failed for %s: dump missing or empty' % dbName)
 
             # Move database backup (check for both .sql.gz and .sql)
-            if os.path.exists(f'/home/cyberpanel/{dbName}.sql.gz'):
-                command = f'mv /home/cyberpanel/{dbName}.sql.gz {CPHomeStorage}/{dbName}.sql.gz'
+            if os.path.exists(sql_gz):
+                command = f'mv {sql_gz} {CPHomeStorage}/{dbName}.sql.gz'
                 ProcessUtilities.executioner(command)
                 # Also move metadata file if it exists
                 if os.path.exists(f'/home/cyberpanel/{dbName}.backup.json'):
                     command = f'mv /home/cyberpanel/{dbName}.backup.json {CPHomeStorage}/{dbName}.backup.json'
                     ProcessUtilities.executioner(command)
-            elif os.path.exists(f'/home/cyberpanel/{dbName}.sql'):
-                command = f'mv /home/cyberpanel/{dbName}.sql {CPHomeStorage}/{dbName}.sql'
+            elif os.path.exists(sql_plain):
+                command = f'mv {sql_plain} {CPHomeStorage}/{dbName}.sql'
                 ProcessUtilities.executioner(command)
 
 

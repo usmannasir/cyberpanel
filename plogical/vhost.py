@@ -842,6 +842,24 @@ class vhost:
         return 0
 
     @staticmethod
+    def _persistPHPSelection(domain, phpVersion):
+        """Keep CyberPanel DB phpSelection in sync with the OLS/LSWS vhost handler."""
+        try:
+            if Websites.objects.filter(domain=domain).exists():
+                website = Websites.objects.get(domain=domain)
+                if website.phpSelection != phpVersion:
+                    website.phpSelection = phpVersion
+                    website.save()
+                return
+            child = ChildDomains.objects.filter(domain=domain).first()
+            if child is not None and child.phpSelection != phpVersion:
+                child.phpSelection = phpVersion
+                child.save()
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Failed to persist phpSelection for %s: %s' % (domain, str(msg)))
+
+    @staticmethod
     def changePHP(vhFile, phpVersion):
 
         from pathlib import Path
@@ -907,6 +925,7 @@ class vhost:
                     command = f"systemctl restart {phpService}"
                     ProcessUtilities.normalExecutioner(command)
 
+                vhost._persistPHPSelection(domain, phpVersion)
                 print("1,None")
                 return 1,'None'
             except BaseException as msg:
@@ -956,6 +975,7 @@ class vhost:
                     ProcessUtilities.executioner(command)
 
 
+                vhost._persistPHPSelection(domain, phpVersion)
                 print("1,None")
                 return 1, 'None'
             except BaseException as msg:

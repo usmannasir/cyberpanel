@@ -17,6 +17,9 @@ from plogical.acl import ACLManager
 class sslUtilities:
     Server_root = "/usr/local/lsws"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+    ## Graceful LiteSpeed/OLS reload used as acme.sh --reloadcmd so that every
+    ## auto-renewal re-applies the certificate and reloads the server. #1676
+    lswsReloadCmd = '/usr/local/lsws/bin/lswsctrl reload'
 
     @staticmethod
     def _ssl_live_cert_paths(domain):
@@ -227,8 +230,15 @@ class sslUtilities:
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
         if os.path.exists(filePath):
             import OpenSSL
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            try:
+                ## Read as bytes: installed certs have been seen with binary garbage appended
+                ## after a valid PEM chain, and a text-mode read dies on UnicodeDecodeError.
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'rb').read())
+                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+            except Exception as msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'[CheckIfSSLNeedsToBeIssued] Could not parse existing certificate for {virtualHostName} ({str(msg)}), will issue fresh SSL.')
+                return sslUtilities.ISSUE_SSL
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'SSL provider for {virtualHostName} is {SSLProvider}.')
@@ -700,8 +710,21 @@ context /.well-known/acme-challenge {
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
                     return 0
             else:
-                cert = open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem').read().rstrip('\n')
-                key = open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'r').read().rstrip('\n')
+                # Binary read (#1847): trailing garbage after PEM must not break Redis install.
+                _fc = open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem', 'rb').read()
+                _pk = open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'rb').read()
+                _end = b'-----END CERTIFICATE-----'
+                if _end in _fc:
+                    _fc = _fc[:_fc.rindex(_end) + len(_end)] + b'\n'
+                _pend = b'-----END PRIVATE KEY-----'
+                _pend2 = b'-----END EC PRIVATE KEY-----'
+                _pend3 = b'-----END RSA PRIVATE KEY-----'
+                for _m in (_pend, _pend2, _pend3):
+                    if _m in _pk:
+                        _pk = _pk[:_pk.rindex(_m) + len(_m)] + b'\n'
+                        break
+                cert = _fc.decode('ascii', errors='ignore').rstrip('\n')
+                key = _pk.decode('ascii', errors='ignore').rstrip('\n')
                 command = 'redis-cli hmset "ssl:%s" crt "%s" key "%s"' % (virtualHostName, cert, key)
                 logging.CyberCPLogFileWriter.writeToFile('hello world aaa')
                 logging.CyberCPLogFileWriter.writeToFile(command)
@@ -932,7 +955,8 @@ context /.well-known/acme-challenge {
                                             + ' --ecc' \
                                             + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                             + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
+                                            + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
+                                            + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
                             try:
                                 install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
@@ -990,7 +1014,8 @@ context /.well-known/acme-challenge {
                                         + ' --ecc' \
                                         + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                         + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
+                                        + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
+                                            + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
                         try:
                             install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
@@ -1058,6 +1083,7 @@ def _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
         ' --cert-file ' + live_dir + '/cert.pem'
         ' --key-file ' + live_dir + '/privkey.pem'
         ' --fullchain-file ' + live_dir + '/fullchain.pem'
+        ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
     )
     try:
         install_result = subprocess.run(
@@ -1091,7 +1117,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             try:
                 import OpenSSL
                 from datetime import datetime
-                with open(existingCertPath, 'r') as cert_file:
+                with open(existingCertPath, 'rb') as cert_file:
                     x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
                 expire_data = x509.get_notAfter().decode('ascii')
                 final_date = datetime.strptime(expire_data, '%Y%m%d%H%M%SZ')
@@ -1185,10 +1211,18 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             if os.path.exists(pathToStoreSSLFullChain):
                 import OpenSSL
                 from datetime import datetime
-                with open(pathToStoreSSLFullChain, 'r') as _cf:
-                    _pem = _cf.read()
-                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, _pem)
-                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                SSLProvider = 'Denial'
+                try:
+                    # Read as bytes: installed certs have been seen with binary garbage
+                    # appended after a valid PEM chain (GitHub #1847).
+                    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                                           open(pathToStoreSSLFullChain, 'rb').read())
+                    SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                except Exception as msg:
+                    # Unparseable existing cert must not abort here; fall through and
+                    # replace it with a self-signed cert below.
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'Could not parse existing certificate for {domain}: {str(msg)}')
 
                 if SSLProvider != 'Denial':
                     expireData = x509.get_notAfter().decode('ascii')

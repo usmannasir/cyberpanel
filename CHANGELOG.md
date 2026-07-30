@@ -4,6 +4,81 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## Unreleased
+### Build metadata
+- `version.txt` and panel `BUILD` advanced to **2.5.5 build 1** (still the 2.5.5-dev line; not a 2.4.9 backport of release notes).
+
+### Mail: sieve install-first guard (#1733)
+- Keep sieve when pigeonhole is present; try installing OS packages when missing;
+  strip `sieve`/`managesieve` from `dovecot.conf` only if install fails; always
+  verify Dovecot/Postfix afterward (`plogical/sieveGuard.py`).
+
+### Upgrade reliability (#1727, #1853)
+- Modular upgrade no longer hardcodes `/usr/bin/php` to lsphp74; picks an installed
+  lsphp (prefer 8.3+). `install.py` uses `os.path.lexists` so broken symlinks are replaced.
+- Modular upgrade records `UPGRADE_FAILED` from real `upgrade.py`/`PIPESTATUS` and
+  refuses to print a success banner when the Python upgrade failed.
+
+### Fix: show full PHP patch on List Websites
+- List Websites now shows the live runtime version (e.g. `PHP 8.5.7`) from the
+  site's `lsphp` binary, not only the selector label (`PHP 8.5`).
+- Full version is cached per `lsphp` build (mtime) so listing many sites stays fast.
+- `phpSelection` in the DB remains the change-PHP selector (`PHP 8.5`).
+
+### Fix: CyberPanel List Websites PHP vs live OLS handler
+- Persist `phpSelection` in the DB whenever `vhost.changePHP` succeeds (UI and CLI).
+- Heal drifted panel values when listing websites by reading the live `vhost.conf` lsphp path.
+- CLI `cyberpanel changePHP` also updates `websiteFunctions_websites.phpSelection`.
+- Root cause: OLS could run `lsphp85` while List Websites still showed PHP 8.3.
+
+### Security / reliability (ported from v2.4.9)
+- Backup cancel and incremental backup handlers: ownership checks and domain-scoped
+  IncJob/JobSnapshots lookups (#1829, #1828).
+- File Manager Fix Permissions: recursive `chown` of the directory itself instead of
+  broken `path/*` globs under `shell=False` (#1735).
+- SSL renew/install: `acme.sh --install-cert --ecc` with `--reloadcmd` so renewed certs
+  land in `/etc/letsencrypt/live` and LiteSpeed reloads (#1676).
+- Domain aliases: persist DB row before SSL; orphan-safe ACL and delete (#1738).
+- Website backups: abort when `mysqldump` fails instead of shipping SQL-less archives (#1823).
+- PHP version map: PHP 8.5 plus generic fallback in `getPHPString` (#1726).
+
+
+### CyberPanel-OLS stack update (core 2.5.1 / module 2.7.5 / mod_security 2.5.1)
+- Upgraded the custom OpenLiteSpeed stack shipped via `install/ols_binaries_config.py`:
+  OpenLiteSpeed core **2.5.1**, `cyberpanel_ols.so` **2.7.5**,
+  `mod_security.so` **2.5.1**.
+- **Fixes the 4xx segfault / Cloudflare 520 storm**: module versions
+  2.7.0–2.7.3 crashed the OLS worker on every 4xx generated for a request
+  whose `Host` matched no vhost (bot probes), causing random 520s across all
+  sites. Core 2.5.1 additionally hardens OLS itself
+  (`HttpReq::getDocRoot` NULL-vhost check) so no module can trigger this
+  crash class again.
+- AlmaLinux/RHEL 9: if the rhel9 OLS 2.5.1 core needs GLIBC 2.35, fall back to the rhel8 2.5.1 core and still install module 2.7.5.
+- All artifacts are verified against pinned SHA256 checksums before install;
+  a mismatch aborts and keeps/restores the previous binaries via the
+  timestamped backup + rollback path.
+- `ls_enabled 0` + a FULL restart is a safe kill-switch only with module ≥ 2.7.5.
+  Never reinstall module 2.7.0–2.7.3.
+- Servers where support disabled the module block: restore `ls_enabled 1` after upgrade.
+
+### Security (ported from v2.4.8)
+- Harden cron command handling with `shlex.quote`.
+- Confine `tuneSettings` phpPath to the domain's own PHP-FPM pool file.
+- Stop returning `secretKey` in `fetchUserDetails`; rotate secret on 2FA disable.
+
+### Stability / UX (ported from v2.4.8 / stable)
+- Fix remote transfer status stuck on "Just started..." and silent send failures.
+- Re-surface SSL on the site management page as its own tab.
+- Neutralize mod_ssl Listen 443 when LiteSpeed owns the port (Apache 503 after upgrade).
+
+### Bug fixes
+- Upgrade scripts: validate HTTP status before executing downloaded content (#1835); default to `usmannasir/cyberpanel`, optional `--repo` for custom GitHub users.
+- ModSecurity rules pack: fix first-toggle no-op (#1824).
+- Website backups: treat empty/failed SQL dumps as failures (#1823).
+- WordPress install: soft-fail post-core plugins; clean up files on rollback (#1837).
+- Add `CPScripts/rebuild-lscp.sh` for LSCP/WebAdmin recovery without full reinstall (#1839).
+- Allowlist Ubuntu 26.04 for install/upgrade (#1832).
+
 ## v2.4.8 (build 8) — 2026-05-30
 
 A panel-wide UI/UX overhaul focused on making CyberPanel easier to use, calmer
