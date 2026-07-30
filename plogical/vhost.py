@@ -995,6 +995,89 @@ class vhost:
         return 1
 
     @staticmethod
+    def ensureSensitiveFileDenials(vhFile):
+        """
+        Inject CyberPanel default sensitive-file deny rules into an existing
+        OpenLiteSpeed vhost.conf (issue #1859). Idempotent via BEGIN/END markers.
+
+        Returns:
+            1 if the file was modified, 0 if unchanged or not applicable, -1 on error.
+        """
+        begin_marker = '# BEGIN CyberPanel sensitive-file denials (#1859)'
+        deny_block = vhostConfs.olsSensitiveFileDenyRules.rstrip('\n')
+
+        try:
+            if not vhFile or not os.path.exists(vhFile):
+                return 0
+
+            with open(vhFile, 'r') as fh:
+                content = fh.read()
+
+            if begin_marker in content:
+                return 0
+
+            # Prefer inserting at the start of an existing OLS rules heredoc so
+            # denials run before site-specific rewrites (front controllers, etc.).
+            rules_token = 'rules                   <<<END_rules'
+            if rules_token in content:
+                content = content.replace(
+                    rules_token,
+                    rules_token + '\n' + deny_block,
+                    1
+                )
+            else:
+                # Replace a bare rewrite { enable / autoLoadHtaccess } block.
+                bare = (
+                    'rewrite  {\n'
+                    ' enable                  1\n'
+                    '  autoLoadHtaccess        1\n'
+                    '}'
+                )
+                bare_alt = (
+                    'rewrite  {\n'
+                    '  enable                  1\n'
+                    '  autoLoadHtaccess        1\n'
+                    '}'
+                )
+                replacement = (
+                    'rewrite  {\n'
+                    '  enable                  1\n'
+                    '  autoLoadHtaccess        1\n'
+                    '  rules                   <<<END_rules\n'
+                    + deny_block + '\n'
+                    '  END_rules\n'
+                    '}'
+                )
+                if bare in content:
+                    content = content.replace(bare, replacement, 1)
+                elif bare_alt in content:
+                    content = content.replace(bare_alt, replacement, 1)
+                else:
+                    # Append a dedicated rewrite block before vhssl if present.
+                    append_block = (
+                        '\nrewrite  {\n'
+                        '  enable                  1\n'
+                        '  autoLoadHtaccess        1\n'
+                        '  rules                   <<<END_rules\n'
+                        + deny_block + '\n'
+                        '  END_rules\n'
+                        '}\n'
+                    )
+                    if 'vhssl' in content:
+                        content = content.replace('vhssl', append_block + 'vhssl', 1)
+                    else:
+                        content = content.rstrip() + append_block
+
+            with open(vhFile, 'w') as fh:
+                fh.write(content)
+
+            return 1
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + ' [ensureSensitiveFileDenials]')
+            return -1
+
+    @staticmethod
     def checkIfRewriteEnabled(data):
         try:
             for items in data:
