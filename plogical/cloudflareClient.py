@@ -15,6 +15,7 @@ Global API Keys from Cloudflare are 37 hexadecimal characters.
 """
 import re
 import socket
+import warnings
 
 import CloudFlare
 
@@ -37,6 +38,31 @@ def _is_global_api_key(secret):
     return bool(re.fullmatch(r"[a-f0-9]{37}", (secret or "").strip(), flags=re.I))
 
 
+def _make_cloudflare_client(**kwargs):
+    """
+    Instantiate CloudFlare client without letting python-cloudflare 2.20.*
+    PendingDeprecationWarning leak into CLI stdout/stderr (CyberPanel merges
+    stderr into Issue SSL output and shows it as Operation Failed).
+    """
+    # 2.20.* forces simplefilter('always') then warns. Neutralize both the
+    # warning module and the name imported into CloudFlare.cloudflare.
+    try:
+        import CloudFlare.warning_2_20 as _cf_warn_mod
+        import CloudFlare.cloudflare as _cf_mod
+
+        def _noop_warn(warning=None):
+            return None
+
+        _cf_warn_mod.warn_warning_2_20 = _noop_warn
+        if getattr(_cf_mod, 'warn_warning_2_20', None):
+            _cf_mod.warn_warning_2_20 = _noop_warn
+    except Exception:
+        pass
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', PendingDeprecationWarning)
+        return CloudFlare.CloudFlare(**kwargs)
+
+
 def get_cloudflare_client(email, secret):
     """Build a client from panel-stored email and key/token lines."""
     email = (email or "").strip()
@@ -47,12 +73,12 @@ def get_cloudflare_client(email, secret):
     # Application Tokens (cfat_...) and normal API tokens: Bearer only.
     # UI may still store account email; Cloudflare ignores it for Bearer auth.
     if secret.startswith("cfat_"):
-        return CloudFlare.CloudFlare(token=secret)
+        return _make_cloudflare_client(token=secret)
 
     if email and _is_global_api_key(secret):
-        return CloudFlare.CloudFlare(email=email, key=secret)
+        return _make_cloudflare_client(email=email, key=secret)
 
     if email:
-        return CloudFlare.CloudFlare(token=secret)
+        return _make_cloudflare_client(token=secret)
 
-    return CloudFlare.CloudFlare(token=secret)
+    return _make_cloudflare_client(token=secret)
