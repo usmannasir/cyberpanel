@@ -25,6 +25,12 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
   preloaded package before `__import__`.
 
+### Fix: File Manager header logo color + dark theme toggle
+- Header `.logo-icon` no longer renders purple-on-purple: a global
+  `i.fa.fa-folder-open { color: #5856d6 !important }` rule was overriding the brand tile.
+- File Manager header now uses the CyberPanel logo SVG (same as the main shell).
+- Added a dark/light theme toggle that shares `cyberPanelTheme` with the main panel.
+
 ### Fix: Recreate DNS API JSON encoding crash
 - `recreateWebsiteDNS` used PHP-style `json.JSON_PRETTY_PRINT` flags in Python, which
   raised `module 'json' has no attribute 'JSON_PRETTY_PRINT'` and aborted the request.
