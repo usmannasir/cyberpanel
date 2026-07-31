@@ -5,6 +5,15 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: website/subdomain DNS and Cloudflare lifecycle
+- `cfTemplate` resolves Cloudflare zones by walking parents (child hosts sync into the apex zone),
+  honors `cfSync=Disable`, and no longer tries to create CF zones named like `blog.example.com`.
+- DKIM and per-record CF sync use the same parent-walk zone resolver.
+- LiteSpeed Enterprise website delete now cleans Cloudflare/local host DNS like the OLS path.
+- Apex Cloudflare delete is host-scoped (no longer wipes every record in the CF zone blindly).
+- Alias/child delete removes orphan PowerDNS apex zones when nothing else uses them.
+- SOA serial bumps for **NATIVE** as well as MASTER zones (#1785).
+
 ### Fix: backup tar failures and premature remote transfer (#1855, #1856)
 - `BackupRoot()` checks `tar` exit status and refuses `Completed` for empty/missing archives.
 - `createLocalBackup()` waits until the `.tar.gz` exists with a stable non-zero size before

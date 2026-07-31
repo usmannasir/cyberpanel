@@ -46,74 +46,69 @@ class DNS:
             #logging.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
             return 0
 
-    def cfTemplate(self, zoneDomain, admin, enableCheck=None):
+    def cfTemplate(self, zoneDomain, admin, enableCheck=True):
+        """
+        Sync local PowerDNS zone records to Cloudflare.
+
+        enableCheck defaults to True so cfSync=Disable is honored (same as delete path).
+        Resolves the Cloudflare zone by walking parents (blog.example.com -> example.com).
+        PowerDNS records are always loaded from the apex Domains row.
+        """
         try:
+            import tldextract
             from plogical.cloudflare_dns_sync import CloudflareDnsSync
             self.admin = admin
-            ## Get zone
 
-            if self.loadCFKeys():
+            if not self.loadCFKeys():
+                return 0, 'Cloudflare keys not configured.'
 
-                if enableCheck == None:
-                    pass
-                else:
-                    if self.status == 'Enable':
-                        pass
-                    else:
-                        return 0, 'Sync not enabled.'
+            if enableCheck and self.status != 'Enable':
+                return 0, 'Sync not enabled.'
 
-                cf = get_cloudflare_client(self.email, self.key)
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+            extracted = no_cache_extract(zoneDomain)
+            apex = extracted.domain + '.' + extracted.suffix
+            if not extracted.domain or not extracted.suffix:
+                return 0, 'Could not resolve apex for %s' % zoneDomain
 
+            try:
+                domain = Domains.objects.get(name=apex)
+            except Domains.DoesNotExist:
+                return 0, 'No local PowerDNS zone for %s' % apex
+
+            cf = get_cloudflare_client(self.email, self.key)
+            zone_id, zone_name = CloudflareDnsSync.resolve_zone(cf, zoneDomain)
+
+            # Only create a Cloudflare zone for a true apex hostname. Never create
+            # zones named like blog.example.com when the parent zone is missing.
+            if not zone_id:
+                if zoneDomain.rstrip('.').lower() != apex.lower():
+                    return 0, 'Cloudflare zone not found for apex %s' % apex
                 try:
-                    params = {'name': zoneDomain, 'per_page': 50}
-                    zones = cf.zones.get(params=params)
-
-                    for zone_obj in sorted(zones, key=lambda v: v['name']):
-                        zone_id = zone_obj['id']
-                        zone_name = zone_obj['name']
-
-                        domain = Domains.objects.get(name=zoneDomain)
-                        records = Records.objects.filter(domain_id=domain.id)
-                        existing_cf = CloudflareDnsSync.list_zone_records(cf, zone_id)
-
-                        for record in records:
-                            DNS.createDNSRecordCloudFlare(
-                                cf, zone_id, zone_name, record.name, record.type, record.content,
-                                record.prio, record.ttl, existing_records=existing_cf)
-
-                        return 1, None
-
-
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.writeToFile(str(e))
-                except Exception as e:
-                    logging.writeToFile(str(e))
-
-                try:
-                    zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
-
+                    zone_info = cf.zones.post(data={'jump_start': False, 'name': apex})
                     zone_id = zone_info['id']
                     zone_name = zone_info['name']
-
-                    domain = Domains.objects.get(name=zoneDomain)
-                    records = Records.objects.filter(domain_id=domain.id)
-                    existing_cf = CloudflareDnsSync.list_zone_records(cf, zone_id)
-
-                    for record in records:
-                        DNS.createDNSRecordCloudFlare(
-                            cf, zone_id, zone_name, record.name, record.type, record.content,
-                            record.prio, record.ttl, existing_records=existing_cf)
-
-                    return 1, None
-
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     return 0, str(e)
                 except Exception as e:
                     return 0, str(e)
 
-        except BaseException as msg:
-            return 0, str(e)
+            records = Records.objects.filter(domain_id=domain.id)
+            existing_cf = CloudflareDnsSync.list_zone_records(cf, zone_id)
 
+            for record in records:
+                # Skip SOA/NS for Cloudflare (managed at registrar / CF defaults)
+                if (record.type or '').upper() in ('SOA', 'NS'):
+                    continue
+                DNS.createDNSRecordCloudFlare(
+                    cf, zone_id, zone_name, record.name, record.type, record.content,
+                    record.prio, record.ttl, existing_records=existing_cf)
+
+            return 1, None
+
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [cfTemplate]')
+            return 0, str(msg)
     @staticmethod
     def dnsTemplate(domain, admin):
         try:
@@ -696,17 +691,19 @@ class DNS:
 
                 if dns.status == 'Enable':
                     try:
-                        params = {'name': domain, 'per_page': 50}
-                        zones = cf.zones.get(params=params)
-
-                        for zone_obj in sorted(zones, key=lambda v: v['name']):
-                            zone_id = zone_obj['id']
-                            zone_name = zone_obj['name']
-
+                        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+                        zone_id, zone_name = CloudflareDnsSync.resolve_zone(cf, domain)
+                        if not zone_id:
+                            logging.writeToFile(
+                                'Cloudflare zone not found for DKIM on %s (apex %s)' % (domain, topLevelDomain))
+                        else:
                             DNS.createDNSRecordCloudFlare(
                                 cf, zone_id, zone_name, "default._domainkey." + topLevelDomain, 'TXT',
                                 output[leftIndex:rightIndex], 0, 3600)
-
+                            if len(subDomain) > 0:
+                                DNS.createDNSRecordCloudFlare(
+                                    cf, zone_id, zone_name, "default._domainkey." + domain, 'TXT',
+                                    output[leftIndex:rightIndex], 0, 3600)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
                         logging.writeToFile(str(e))
@@ -740,9 +737,9 @@ class DNS:
 
     @staticmethod
     def bumpSOASerial(zone):
-        """Increment SOA serial for a MASTER zone (PowerDNS zone transfer signaling)."""
+        """Increment SOA serial for MASTER and NATIVE zones (PowerDNS notify / local serial)."""
         try:
-            if zone is None or getattr(zone, 'type', None) != 'MASTER':
+            if zone is None:
                 return False
             updated = False
             for getSOA in Records.objects.filter(domainOwner=zone, type='SOA'):
@@ -895,13 +892,9 @@ class DNS:
 
                 if dns.status == 'Enable':
                     try:
-                        params = {'name': zone.name, 'per_page': 50}
-                        zones = cf.zones.get(params=params)
-
-                        for zone_obj in sorted(zones, key=lambda v: v['name']):
-                            zone_id = zone_obj['id']
-                            zone_name = zone_obj['name']
-
+                        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+                        zone_id, zone_name = CloudflareDnsSync.resolve_zone(cf, name or zone.name)
+                        if zone_id:
                             DNS.createDNSRecordCloudFlare(cf, zone_id, zone_name, name, type, value, priority, ttl)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
@@ -922,6 +915,52 @@ class DNS:
         except:
             ## There does not exist a zone for this domain.
             pass
+
+    @staticmethod
+    def maybeDeleteOrphanDNSZone(domainName):
+        """
+        Delete a PowerDNS Domains row for domainName when nothing in the panel still uses it.
+
+        Used after alias/child delete when dnsTemplate created a dedicated apex zone
+        (for example an alias that is its own registrable domain).
+        """
+        try:
+            import tldextract
+            from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+
+            fqdn = (domainName or '').rstrip('.').lower()
+            if not fqdn:
+                return 0, 'Empty domain'
+
+            if Domains.objects.filter(name=fqdn).count() == 0:
+                return 1, 'No dedicated zone'
+
+            if Websites.objects.filter(domain=fqdn).exists():
+                return 1, 'Website still uses zone'
+            if ChildDomains.objects.filter(domain=fqdn).exists():
+                return 1, 'Child domain still uses zone'
+            if aliasDomains.objects.filter(aliasDomain=fqdn).exists():
+                return 1, 'Alias still uses zone'
+
+            extract = tldextract.TLDExtract(cache_dir=None)
+            parsed = extract(fqdn)
+            apex = ('%s.%s' % (parsed.domain, parsed.suffix)).lower() if parsed.domain and parsed.suffix else fqdn
+
+            # If this Domains row is an apex that still backs other hosts, keep it.
+            if fqdn == apex:
+                if Websites.objects.filter(domain__iendswith='.' + apex).exists():
+                    return 1, 'Apex still used by websites'
+                if ChildDomains.objects.filter(domain__iendswith='.' + apex).exists():
+                    return 1, 'Apex still used by child domains'
+                if aliasDomains.objects.filter(aliasDomain__iendswith='.' + apex).exists():
+                    return 1, 'Apex still used by aliases'
+
+            DNS.deleteDNSZone(fqdn)
+            logging.writeToFile('Deleted orphan PowerDNS zone for %s' % fqdn, 0)
+            return 1, 'Deleted orphan zone'
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [maybeDeleteOrphanDNSZone]')
+            return 0, str(msg)
 
     @staticmethod
     def cleanupHostDNSRecords(domainName, adminUserName=None):

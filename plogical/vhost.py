@@ -569,6 +569,13 @@ class vhost:
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
 
+                # Get admin user name for CloudFlare / DNS cleanup (parity with OLS path)
+                adminUserName = None
+                try:
+                    adminUserName = delWebsite.admin.userName
+                except:
+                    pass
+
                 ## Cagefs
 
                 command = '/usr/sbin/cagefsctl --disable %s' % (delWebsite.externalApp)
@@ -582,6 +589,14 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
+
+                    # Delete CloudFlare and local DNS records for child domain
+                    try:
+                        DNS.cleanupHostDNSRecords(items.domain, adminUserName)
+                    except Exception as cfError:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'CloudFlare DNS deletion failed for child domain %s: %s' % (items.domain, str(cfError)))
+
                     vhost.deleteCoreConf(
                         items.domain, numberOfSites, docRoot=items.path, removeDocRoot=True)
 
@@ -606,6 +621,13 @@ class vhost:
 
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+
+                    # Delete CloudFlare and local DNS records for main domain before deletion
+                    try:
+                        DNS.cleanupHostDNSRecords(virtualHostName, adminUserName)
+                    except Exception as cfError:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'CloudFlare DNS deletion failed for %s: %s' % (virtualHostName, str(cfError)))
 
                     delWebsite.delete()
 

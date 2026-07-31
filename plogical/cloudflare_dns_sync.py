@@ -39,19 +39,18 @@ class CloudflareDnsSync:
 
     @staticmethod
     def resolve_zone(cf, domain_name):
+        """Resolve Cloudflare zone by exact name, then walk parents (child.example.com -> example.com)."""
         domain_name = (domain_name or '').rstrip('.').lower()
-        params = {'name': domain_name, 'per_page': 50}
-        zones = cf.zones.get(params=params)
-        for z in sorted(zones, key=lambda v: v['name']):
-            if z['name'].rstrip('.').lower() == domain_name:
-                return z['id'], z['name']
-        if '.' in domain_name:
-            parent = domain_name.split('.', 1)[1]
-            params = {'name': parent, 'per_page': 50}
+        candidate = domain_name
+        while candidate:
+            params = {'name': candidate, 'per_page': 50}
             zones = cf.zones.get(params=params)
             for z in sorted(zones, key=lambda v: v['name']):
-                if z['name'].rstrip('.').lower() == parent:
+                if z['name'].rstrip('.').lower() == candidate:
                     return z['id'], z['name']
+            if '.' not in candidate:
+                break
+            candidate = candidate.split('.', 1)[1]
         return None, None
 
     @staticmethod
@@ -181,19 +180,16 @@ class CloudflareDnsSync:
                 return 1, 'Domain not found in Cloudflare'
 
             base_fqdn = domain_name.rstrip('.').lower()
-            zone_fqdn = zone_name.rstrip('.').lower()
-            is_subdomain = base_fqdn != zone_fqdn
 
+            # Always host-scoped: apex or child. Never wipe unrelated CF zone records
+            # that do not belong under this hostname (custom glue outside the host tree
+            # is preserved when names do not match base_fqdn / *.<base_fqdn>).
             dns_records = CloudflareDnsSync.list_zone_records(cf, zone_id)
-            if is_subdomain:
-                to_delete = []
-                for record in dns_records:
-                    fqdn = CloudflareDnsSync.record_to_fqdn(record.get('name'), zone_name)
-                    if fqdn == base_fqdn or fqdn.endswith('.' + base_fqdn):
-                        to_delete.append(record)
-            else:
-                to_delete = list(dns_records)
-
+            to_delete = []
+            for record in dns_records:
+                fqdn = CloudflareDnsSync.record_to_fqdn(record.get('name'), zone_name)
+                if fqdn == base_fqdn or fqdn.endswith('.' + base_fqdn):
+                    to_delete.append(record)
             deleted_count = 0
             for record in to_delete:
                 try:
