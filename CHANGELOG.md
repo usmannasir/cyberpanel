@@ -5,6 +5,11 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Feature: Log source dropdown on every Server Log viewer
+- Main Log, Access, Error, Email, FTP, and ModSec Audit viewers include a
+  **Log source** dropdown (same pattern as other required panel selects) so
+  operators can jump between log types without returning to the Logs hub.
+
 ### Fix: quieter Server Error Logs (hide cyberpanel_ols gzip WARN noise)
 - `/serverlogs/errorLogs` filters `[CyberPanel-OLS] Restored Content-Encoding: ...`
   WARN lines. Those are gzip header-restore notices from `cyberpanel_ols.so`, not

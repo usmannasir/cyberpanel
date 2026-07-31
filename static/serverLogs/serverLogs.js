@@ -2,6 +2,32 @@
  * Created by usman on 7/31/17.
  */
 
+/** Navigate between Main / Access / Error / Email / FTP / ModSec log viewers. */
+window.CyberPanelLogSources = {
+    routes: {
+        cyberpanel: '/serverstatus/cyberCPMainLogFile',
+        access: '/serverlogs/accessLogs',
+        error: '/serverlogs/errorLogs',
+        email: '/serverlogs/emaillogs',
+        ftp: '/serverlogs/ftplogs',
+        modSec: '/serverlogs/modSecAuditLogs'
+    },
+    bindScope: function ($scope, currentType) {
+        $scope.selectedLogSource = currentType || '';
+        $scope.changeLogSource = function () {
+            var key = $scope.selectedLogSource;
+            var dest = window.CyberPanelLogSources.routes[key];
+            if (!key || !dest) {
+                return;
+            }
+            if (window.location.pathname.replace(/\/$/, '') === dest.replace(/\/$/, '')) {
+                return;
+            }
+            window.location.href = dest;
+        };
+    }
+};
+
 
 /* Java script code to read access log file */
 
@@ -10,6 +36,7 @@ app.controller('readAccessLogs', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'access');
 
 
     var url = "/serverlogs/getLogsFromFile";
@@ -185,6 +212,7 @@ app.controller('readErrorLogs', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'error');
 
 
     var url = "/serverlogs/getLogsFromFile";
@@ -360,6 +388,7 @@ app.controller('readFTPLogs', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'ftp');
 
 
     var url = "/serverlogs/getLogsFromFile";
@@ -535,6 +564,7 @@ app.controller('readEmailLogs', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'email');
 
 
     var url = "/serverlogs/getLogsFromFile";
@@ -710,6 +740,7 @@ app.controller('modSecAuditLogs', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'modSec');
 
 
     var url = "/serverlogs/getLogsFromFile";
