@@ -25,6 +25,11 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
   preloaded package before `__import__`.
 
+### Fix: File Manager dark theme modal text contrast
+- Modal bodies were hard-coded white while dark theme set light label text, so
+  Copy/Move/Upload dialog labels were nearly invisible. Dark theme now forces
+  `.modal-body` and form labels to the dark palette.
+
 ### Fix: File Manager header logo color + dark theme toggle
 - Header `.logo-icon` no longer renders purple-on-purple: a global
   `i.fa.fa-folder-open { color: #5856d6 !important }` rule was overriding the brand tile.
