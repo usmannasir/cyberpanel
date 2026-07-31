@@ -241,60 +241,18 @@ class DNS:
     @staticmethod
     def RecreateDNSForDomain(domainName, admin, includeChildren=True):
         """
-        Re-apply dnsTemplate for a website/child host (missing records + CF sync)
-        and upsert SPF to the current deployment-type value.
+        Full recreate for existing sites: repair PowerDNS template records (including
+        wrong A -> machine IP), upsert SPF, force Cloudflare sync, and report CF
+        zone status / required nameservers when the zone is not active yet.
 
-        Use for domains created before SPF/DNS template fixes.
-        Returns (status_1_or_0, message).
+        Returns (status_1_or_0, message). For structured Cloudflare details use
+        plogical.dns_recreate.recreate_dns_for_domain().
         """
         try:
-            from websiteFunctions.models import Websites, ChildDomains
-
-            domain = (domainName or '').strip().lower().rstrip('.')
-            if not domain:
-                return 0, 'Missing domain name'
-
-            # dnsTemplate/createDNSRecord use module-level Domains/Records.
-            # Bind CyberPanel PowerDNS models so CLI (dnspython shadow) still works.
-            Domains, Records = DNS._powerdns_models()
-            import sys as _sys
-            _mod = _sys.modules[DNS.__module__]
-            _mod.Domains = Domains
-            _mod.Records = Records
-
-            hosts = [domain]
-            website = Websites.objects.filter(domain=domain).first()
-            if includeChildren and website is not None:
-                for child in ChildDomains.objects.filter(master=website):
-                    child_name = (child.domain or '').strip().lower().rstrip('.')
-                    if child_name and child_name not in hosts:
-                        hosts.append(child_name)
-
-            applied = []
-            errors = []
-            for host in hosts:
-                try:
-                    DNS.dnsTemplate(host, admin)
-                    DNS.UpsertSpfForName(host)
-                    # Apex SPF when host is a subdomain under an existing apex zone
-                    import tldextract
-                    extract = tldextract.TLDExtract(cache_dir=None)
-                    ex = extract(host)
-                    apex = (ex.domain + '.' + ex.suffix).lower()
-                    if apex and apex != host:
-                        DNS.UpsertSpfForName(apex)
-                    applied.append(host)
-                except BaseException as host_err:
-                    errors.append('%s: %s' % (host, str(host_err)))
-                    logging.writeToFile(
-                        'RecreateDNSForDomain %s: %s' % (host, str(host_err)))
-
-            if not applied and errors:
-                return 0, '; '.join(errors)
-            msg = 'DNS recreated for: %s' % ', '.join(applied)
-            if errors:
-                msg += '. Issues: %s' % '; '.join(errors)
-            return 1, msg
+            from plogical.dns_recreate import recreate_dns_for_domain
+            result = recreate_dns_for_domain(
+                domainName, admin, includeChildren=includeChildren)
+            return int(result.get('status') or 0), result.get('message') or ''
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [RecreateDNSForDomain]')
             return 0, str(msg)
