@@ -993,19 +993,43 @@ Components: main main/debug
 Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 """
 
-            # MariaDB 10.11's Ubuntu repository stops at noble - it publishes nothing for
-            # 26.04 (resolute). 11.8 is the oldest LTS series that does, so 26.04 gets 11.8
-            # while every existing release stays on 10.11 untouched.
+            # MariaDB 10.11's Ubuntu repository stops at noble, so 26.04 cannot use it.
             mariadb_version = '11.8' if get_Ubuntu_release() >= 26.04 else '10.11'
 
-            # mariadb_repo_setup adds the MaxScale repository alongside the server one.
-            # MaxScale publishes nothing for resolute (404), and a repo with no Release
-            # file makes every later apt-get update exit non-zero, which is fatal here.
-            # CyberPanel never installs MaxScale - the RHEL path below already disables
-            # it for the same 404 reason - so opt out instead of adding a repo we do not
-            # use. Tools is skipped by default in the script; passed explicitly so a
-            # change to that default cannot reintroduce the same failure (it 404s too).
-            if get_Ubuntu_release() > 21.00:
+            # Ubuntu 26.04 ships MariaDB 11.8 in its own archive, so use the distro
+            # packages there and skip mariadb.org entirely. This is not just convenience:
+            # PowerDNS 5.0's pdns-backend-mysql links against libmysqlclient24, and
+            # mariadb.org's libmariadb3-compat only Provides libmysqlclient up to 21, so
+            # that dependency is unsatisfiable against their packages. Ubuntu's own
+            # mariadb-common Depends on mysql-common and is built to coexist with the
+            # MySQL client libraries, so PowerDNS installs cleanly beside it. It also
+            # sidesteps the MaxScale repository, which 404s for resolute.
+            #
+            # 24.04 and earlier keep mariadb.org exactly as before - there
+            # pdns-backend-mysql wants libmysqlclient21, which their compat package does
+            # provide, so nothing needs to change.
+            #
+            # For those releases, mariadb_repo_setup also adds MaxScale and Tools, which
+            # CyberPanel never installs (the RHEL path below disables MaxScale for the
+            # same reason), so both are skipped.
+            if get_Ubuntu_release() >= 26.04:
+                install_utils.writeToFile(
+                    f"Ubuntu {get_Ubuntu_release()}: using the distro's own MariaDB {mariadb_version} "
+                    "instead of the mariadb.org repository (PowerDNS needs libmysqlclient24).")
+
+                # A previous run of this installer may have configured mariadb.org.
+                # Leaving it in place would keep apt preferring those packages and
+                # reintroduce the libmysqlclient24 conflict, so drop the sources files.
+                for staleRepo in ('/etc/apt/sources.list.d/mariadb.sources',
+                                  '/etc/apt/sources.list.d/mariadb.list'):
+                    if os.path.exists(staleRepo):
+                        install_utils.writeToFile(f"Removing stale MariaDB repository {staleRepo}")
+                        try:
+                            os.remove(staleRepo)
+                        except OSError as e:
+                            logging.InstallLog.writeToFile(
+                                f"[ERROR] Unable to remove {staleRepo}: {e}")
+            elif get_Ubuntu_release() > 21.00:
                 command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version={mariadb_version} --skip-maxscale --skip-tools'
                 result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 
