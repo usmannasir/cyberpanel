@@ -81,6 +81,41 @@ class DNS:
         return 'v=spf1 a mx ~all'
 
     @staticmethod
+    def _powerdns_models():
+        """
+        Return (Domains, Records) from CyberPanel's dns app.
+        dnspython also ships a top-level `dns` package; ensure /usr/local/CyberCP
+        is preferred so CLI RepairSpfRecords works when run as a script.
+        """
+        import importlib
+        import sys
+
+        root = '/usr/local/CyberCP'
+        if root in sys.path:
+            try:
+                sys.path.remove(root)
+            except ValueError:
+                pass
+        sys.path.insert(0, root)
+
+        dns_mod = sys.modules.get('dns')
+        dns_file = getattr(dns_mod, '__file__', '') or ''
+        if dns_mod is not None and 'site-packages' in dns_file.replace('\\', '/'):
+            for key in list(sys.modules):
+                if key == 'dns' or key.startswith('dns.'):
+                    del sys.modules[key]
+
+        existing = globals().get('Domains')
+        existing_rec = globals().get('Records')
+        if existing is not None and existing_rec is not None:
+            mod_name = getattr(existing, '__module__', '') or ''
+            if mod_name == 'dns.models':
+                return existing, existing_rec
+
+        models = importlib.import_module('dns.models')
+        return models.Domains, models.Records
+
+    @staticmethod
     def RepairSpfRecords(domainName=None):
         """
         Replace apex TXT SPF that does not match the current deployment type.
@@ -89,9 +124,7 @@ class DNS:
         """
         try:
             from websiteFunctions.models import Websites
-            from django.apps import apps as django_apps
-            Domains = django_apps.get_model('dns', 'Domains')
-            Records = django_apps.get_model('dns', 'Records')
+            Domains, Records = DNS._powerdns_models()
 
             target = DNS.buildSpfRecord()
             wrong_cp = 'include:spf.cyberpersons.com'
