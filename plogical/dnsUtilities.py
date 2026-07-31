@@ -89,6 +89,7 @@ class DNS:
         """
         try:
             from websiteFunctions.models import Websites
+            from dns.models import Domains, Records
 
             target = DNS.buildSpfRecord()
             wrong_cp = 'include:spf.cyberpersons.com'

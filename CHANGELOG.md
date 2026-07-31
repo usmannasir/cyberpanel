@@ -31,7 +31,7 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
   `v=spf1 a mx ip4:<machineIP> ~all`.
 - Detection: `/etc/cyberpanel/deployment_type`, then admin `config.deploymentType`, else `selfhosted`.
 - Onboarding sets `deploymentType=selfhosted` when unset and runs `RepairSpfRecords` for the hostname apex.
-- CLI: `virtualHostUtilities.py --function RepairSpfRecords [--virtualHostName domain]`.
+- CLI: `virtualHostUtilities.py RepairSpfRecords [--virtualHostName domain]`.
 
 ### Fix: website/subdomain DNS and Cloudflare lifecycle
 - `cfTemplate` resolves Cloudflare zones by walking parents (child hosts sync into the apex zone),
