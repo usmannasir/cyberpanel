@@ -89,7 +89,9 @@ class DNS:
         """
         try:
             from websiteFunctions.models import Websites
-            from dns.models import Domains, Records
+            from django.apps import apps as django_apps
+            Domains = django_apps.get_model('dns', 'Domains')
+            Records = django_apps.get_model('dns', 'Records')
 
             target = DNS.buildSpfRecord()
             wrong_cp = 'include:spf.cyberpersons.com'
