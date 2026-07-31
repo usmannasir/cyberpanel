@@ -584,7 +584,37 @@ class backupUtilities:
             #rmtree(tempStoragePath)
 
             command = f'tar -czf {backupPath}/{backupName}.tar.gz -C {tempStoragePath} .'
-            ProcessUtilities.executioner(command, externalApp, True)
+            tarOk = ProcessUtilities.executioner(command, externalApp, True)
+
+            filePath = f'{backupPath}/{backupName}.tar.gz'
+            archiveBytes = 0
+            try:
+                if os.path.exists(filePath):
+                    archiveBytes = os.path.getsize(filePath)
+            except OSError:
+                archiveBytes = 0
+
+            # #1855: never mark Completed when tar failed or the archive is empty.
+            if tarOk != 1 or archiveBytes <= 0:
+                err = (
+                    'Backup archive creation failed (tar exit check=%s, size=%s bytes). '
+                    '[BackupRoot][[5009]]\n' % (str(tarOk), str(archiveBytes))
+                )
+                logging.CyberCPLogFileWriter.statusWriter(status, err)
+                command = f'rm -rf {tempStoragePath}'
+                ProcessUtilities.executioner(command, externalApp)
+                command = f'rm -rf {CPHomeStorage}'
+                ProcessUtilities.executioner(command)
+                try:
+                    if os.path.exists(filePath) and archiveBytes <= 0:
+                        os.remove(filePath)
+                except Exception:
+                    pass
+                try:
+                    os.remove(pidFile)
+                except Exception:
+                    pass
+                return
 
             ### remove leftover storages
 
@@ -598,8 +628,7 @@ class backupUtilities:
 
             backupObs = Backups.objects.filter(fileName=backupName)
 
-            filePath = f'{backupPath}/{backupName}.tar.gz'
-            totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
+            totalSize = '%sMB' % (str(int(archiveBytes / 1048576)))
 
             try:
                 for items in backupObs:
