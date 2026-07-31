@@ -2704,13 +2704,14 @@ Require valid-user
                 domain_name, admin, includeChildren=include_children)
             status = int(result.get('status') or 0)
             message = result.get('message') or ''
+            # Use Python json kwargs (not PHP JSON_* bitflags).
             return HttpResponse(json.dumps({
                 'status': status,
                 'error_message': message if status == 0 else 'None',
                 'success_message': message if status == 1 else None,
                 'applied': result.get('applied') or [],
                 'cloudflare': result.get('cloudflare'),
-            }, json.JSON_PRETTY_PRINT | json.JSON_UNESCAPED_SLASHES | json.JSON_UNESCAPED_UNICODE))
+            }, indent=2, ensure_ascii=False))
         except BaseException as msg:
             return HttpResponse(json.dumps({
                 'status': 0,

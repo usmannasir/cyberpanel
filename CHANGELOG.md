@@ -25,6 +25,11 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
   preloaded package before `__import__`.
 
+### Fix: Recreate DNS API JSON encoding crash
+- `recreateWebsiteDNS` used PHP-style `json.JSON_PRETTY_PRINT` flags in Python, which
+  raised `module 'json' has no attribute 'JSON_PRETTY_PRINT'` and aborted the request.
+- Now encodes with `json.dumps(..., indent=2, ensure_ascii=False)`.
+
 ### Feature: Recreate DNS button on websites
 - Website detail, List Websites, and child domain pages include **Recreate DNS**.
 - Full recreate now repairs **existing** PowerDNS zones (missing template records and
