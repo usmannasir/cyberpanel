@@ -44,16 +44,22 @@ def _make_cloudflare_client(**kwargs):
     PendingDeprecationWarning leak into CLI stdout/stderr (CyberPanel merges
     stderr into Issue SSL output and shows it as Operation Failed).
     """
+    # 2.20.* forces simplefilter('always') then warns. Neutralize both the
+    # warning module and the name imported into CloudFlare.cloudflare.
+    try:
+        import CloudFlare.warning_2_20 as _cf_warn_mod
+        import CloudFlare.cloudflare as _cf_mod
+
+        def _noop_warn(warning=None):
+            return None
+
+        _cf_warn_mod.warn_warning_2_20 = _noop_warn
+        if getattr(_cf_mod, 'warn_warning_2_20', None):
+            _cf_mod.warn_warning_2_20 = _noop_warn
+    except Exception:
+        pass
     with warnings.catch_warnings():
-        warnings.filterwarnings(
-            'ignore',
-            category=PendingDeprecationWarning,
-            module=r'^CloudFlare(\.|$)',
-        )
-        warnings.filterwarnings(
-            'ignore',
-            message=r'.*upgraded the Python package .cloudflare.*',
-        )
+        warnings.simplefilter('ignore', PendingDeprecationWarning)
         return CloudFlare.CloudFlare(**kwargs)
 
 
