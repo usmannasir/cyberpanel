@@ -9,14 +9,62 @@ from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 
 
+def _ensure_acme_sh(admin_email=None):
+    """Install acme.sh when missing so Cloudflare DNS-01 SSL can run."""
+    acme_path = '/root/.acme.sh/acme.sh'
+    if os.path.isfile(acme_path):
+        return True
+    email = (admin_email or 'root@localhost').strip() or 'root@localhost'
+    logging.writeToFile('acme.sh missing; attempting install for dns_cf SSL')
+    install_cmd = (
+        'curl -sL https://get.acme.sh | sh -s email=%s' % shlex.quote(email)
+    )
+    result = None
+    try:
+        result = subprocess.run(
+            install_cmd, capture_output=True, text=True, shell=True, timeout=180)
+    except TypeError:
+        result = subprocess.run(
+            install_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, shell=True)
+    except BaseException as exc:
+        logging.writeToFile('acme.sh install failed: %s' % str(exc))
+        return False
+    if not os.path.isfile(acme_path):
+        err = ''
+        if result is not None:
+            err = ((result.stderr or result.stdout or '')[:800]).strip()
+        logging.writeToFile('acme.sh still missing after install: %s' % err)
+        return False
+    logging.writeToFile('acme.sh installed for dns_cf SSL', 0)
+    return True
+
+
 def _sync_panel_cf_keys_to_acme():
     """Copy CyberPanel DNS API settings into acme.sh account.conf when present."""
     try:
         from plogical.dnsUtilities import DNS
         from loginSystem.models import Administrator
 
+        candidates = []
+        # Prefer on-disk CloudFlare* files (Admin vs admin casing differs).
+        try:
+            cf_dir = os.path.dirname(DNS.CFPath.rstrip('/')) or '/home/cyberpanel'
+            if os.path.isdir(cf_dir):
+                for name in sorted(os.listdir(cf_dir)):
+                    if name.startswith('CloudFlare') and len(name) > len('CloudFlare'):
+                        candidates.append(os.path.join(cf_dir, name))
+        except BaseException:
+            pass
+
         for admin in Administrator.objects.filter(pk__gte=1)[:20]:
             cf_file = '%s%s' % (DNS.CFPath, admin.userName)
+            if cf_file not in candidates:
+                candidates.append(cf_file)
+
+        # Prefer longer tokens (API tokens) over truncated/legacy keys.
+        best = None
+        for cf_file in candidates:
             if not os.path.isfile(cf_file):
                 continue
             with open(cf_file, 'r') as handle:
@@ -24,9 +72,13 @@ def _sync_panel_cf_keys_to_acme():
             if len(lines) < 2:
                 continue
             email, token = lines[0], lines[1]
-            if len(token) > 3:
-                DNS.ConfigureCloudflareInAcme(token, email)
-                return True
+            if len(token) <= 3:
+                continue
+            if best is None or len(token) > len(best[1]):
+                best = (email, token, cf_file)
+        if best:
+            DNS.ConfigureCloudflareInAcme(best[1], best[0])
+            return True
     except BaseException as exc:
         logging.writeToFile('sync_panel_cf_keys_to_acme: %s' % str(exc))
     return False
@@ -90,8 +142,9 @@ def issue_le_via_cloudflare_dns(virtual_host_name, admin_email, is_hostname=Fals
 
     acme_path = '/root/.acme.sh/acme.sh'
     if not os.path.isfile(acme_path):
-        logging.writeToFile('acme.sh not found for dns_cf issuance')
-        return False
+        if not _ensure_acme_sh(admin_email):
+            logging.writeToFile('acme.sh not found for dns_cf issuance')
+            return False
 
     _sync_panel_cf_keys_to_acme()
     cf_ok, cf_msg = find_domain_in_cloudflare(virtual_host_name)
