@@ -5,6 +5,14 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: backup tar failures and premature remote transfer (#1855, #1856)
+- `BackupRoot()` checks `tar` exit status and refuses `Completed` for empty/missing archives.
+- `createLocalBackup()` waits until the `.tar.gz` exists with a stable non-zero size before
+  reporting success to remote/SFTP/GDrive jobs.
+
+### Fix: PHP Basic UI no longer corrupts `max_memory_limit` (#1784)
+- `managePHP/phpManager.py` matches `memory_limit` without rewriting PHP 8.5 `max_memory_limit`.
+
 ### Security: default deny for sensitive web files (#1859)
 - New OpenLiteSpeed and LiteSpeed Enterprise / Apache vhost templates block direct
   HTTP access to `.env`, `.git`, `.htpasswd`, `.user.ini`, and `.htaccess` (403).

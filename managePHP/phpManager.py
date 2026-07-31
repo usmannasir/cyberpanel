@@ -402,7 +402,7 @@ class PHPManager:
             if items.find("allow_url_include") > -1 and items.find("=") > -1:
                 if items.find("On") > -1:
                     allow_url_include = "1"
-            if items.find("memory_limit") > -1 and items.find("=") > -1:
+            if items.find("memory_limit") > -1 and items.find("=") > -1 and items.find("max_memory_limit") == -1:
                 memory_limit = re.findall(r"[A-Za-z0-9_]+", items)[1]
             if items.find("max_execution_time") > -1 and items.find("=") > -1:
                 max_execution_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
@@ -497,7 +497,7 @@ class PHPManager:
             elif items.find("allow_url_include") > -1 and items.find("=") > -1:
                 writeToFile.writelines(allow_url_include + "\n")
                 found_directives['allow_url_include'] = True
-            elif items.find("memory_limit") > -1 and items.find("=") > -1:
+            elif items.find("memory_limit") > -1 and items.find("=") > -1 and items.find("max_memory_limit") == -1:
                 writeToFile.writelines("memory_limit = " + memory_limit + "\n")
                 found_directives['memory_limit'] = True
             elif items.find("max_execution_time") > -1 and items.find("=") > -1:
