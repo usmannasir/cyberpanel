@@ -775,24 +775,24 @@ context /.well-known/acme-challenge {
             logging.CyberCPLogFileWriter.writeToFile(
                 'Cloudflare DNS SSL path skipped for %s: %s' % (virtualHostName, str(cf_exc)))
 
+        # HTTP-01 tokens must be written where PatchVhostConf serves them:
+        # /.well-known/acme-challenge -> /usr/local/lsws/Example/html/...
+        # Writing into site public_html causes LE/ZeroSSL 404 and self-signed fallback.
         default_webroot = '/usr/local/lsws/Example/html'
-        # Child domains: use their docroot so HTTP-01 challenge is served from the correct vhost
-        if sslpath and str(sslpath).strip():
-            webroot = str(sslpath).strip().rstrip('/')
-            if webroot != default_webroot and os.path.isdir(webroot):
-                challenge_path = webroot + '/.well-known/acme-challenge'
-                if not os.path.exists(challenge_path):
-                    ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(challenge_path), None, True)
-                    ProcessUtilities.executioner(
-                        'chmod -R 755 %s' % shlex.quote(webroot + '/.well-known'), None, True)
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f"Using domain webroot for ACME challenge: {webroot}")
-            else:
-                webroot = default_webroot
-                challenge_path = None
+        webroot = _ssl_resolve_acme_webroot(sslpath)
+        challenge_path = None
+        if webroot != default_webroot:
+            # Non-OLS / custom layouts only: CustomACME writes into this path.
+            challenge_path = webroot + '/.well-known/acme-challenge'
+            if not os.path.exists(challenge_path):
+                ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(challenge_path), None, True)
+                ProcessUtilities.executioner(
+                    'chmod -R 755 %s' % shlex.quote(webroot + '/.well-known'), None, True)
+            logging.CyberCPLogFileWriter.writeToFile(
+                f"Using custom ACME challenge webroot: {webroot}")
         else:
-            webroot = default_webroot
-            challenge_path = None
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Using shared OLS/Apache ACME challenge webroot: %s' % default_webroot)
 
         if not os.path.exists(default_webroot + '/.well-known/acme-challenge'):
             command = 'mkdir -p %s' % shlex.quote(default_webroot + '/.well-known/acme-challenge')
@@ -800,6 +800,13 @@ context /.well-known/acme-challenge {
 
         command = f'chmod -R 755 {default_webroot}'
         ProcessUtilities.executioner(command)
+
+        # Keep site docroot challenge path aligned with the shared OLS map when possible.
+        try:
+            _ssl_align_site_acme_challenge_dir(sslpath, default_webroot)
+        except BaseException as align_exc:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'ACME challenge path align skipped: %s' % str(align_exc))
 
         # Try Let's Encrypt first
         try:
@@ -1036,13 +1043,69 @@ context /.well-known/acme-challenge {
 
 
 def _ssl_resolve_acme_webroot(sslpath):
-    """Match obtainSSLForADomain webroot selection for HTTP-01 (child domains / custom docroot)."""
+    """Resolve HTTP-01 webroot so tokens match the vhost ACME map.
+
+    CyberPanel OLS (and Apache Alias from PatchVhostConf) serve
+    /.well-known/acme-challenge from /usr/local/lsws/Example/html.
+    Site public_html is the wrong write target on those stacks and causes
+    unauthorized/404 challenge failures behind Cloudflare Full (strict).
+    """
     default_webroot = '/usr/local/lsws/Example/html'
+    try:
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            return default_webroot
+    except BaseException:
+        pass
+    # Enterprise / atypical layouts: only use sslpath when the vhost does not
+    # already map ACME to the shared Example path.
     if sslpath and str(sslpath).strip():
         webroot = str(sslpath).strip().rstrip('/')
         if webroot != default_webroot and os.path.isdir(webroot):
+            # Heuristic: CyberPanel site docroots must use the shared Example map.
+            if webroot.endswith('/public_html') or '/public_html/' in webroot:
+                return default_webroot
             return webroot
     return default_webroot
+
+
+def _ssl_align_site_acme_challenge_dir(sslpath, shared_webroot):
+    """Symlink site public_html ACME dir to the shared OLS challenge dir when safe."""
+    if not sslpath or not str(sslpath).strip():
+        return False
+    site_root = str(sslpath).strip().rstrip('/')
+    if site_root == shared_webroot or not os.path.isdir(site_root):
+        return False
+    shared_challenge = shared_webroot.rstrip('/') + '/.well-known/acme-challenge'
+    site_well_known = site_root + '/.well-known'
+    site_challenge = site_well_known + '/acme-challenge'
+    if not os.path.isdir(shared_challenge):
+        ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(shared_challenge), None, True)
+    if os.path.islink(site_challenge):
+        try:
+            if os.path.realpath(site_challenge) == os.path.realpath(shared_challenge):
+                return True
+        except BaseException:
+            pass
+    if os.path.isdir(site_challenge) and not os.path.islink(site_challenge):
+        # Copy any existing tokens into shared dir, then replace with symlink.
+        try:
+            for name in os.listdir(site_challenge):
+                src = os.path.join(site_challenge, name)
+                dst = os.path.join(shared_challenge, name)
+                if os.path.isfile(src) and not os.path.exists(dst):
+                    import shutil
+                    shutil.copy2(src, dst)
+        except BaseException:
+            pass
+        ProcessUtilities.executioner('rm -rf %s' % shlex.quote(site_challenge), None, True)
+    if not os.path.isdir(site_well_known):
+        ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(site_well_known), None, True)
+    if not os.path.exists(site_challenge):
+        ProcessUtilities.executioner(
+            'ln -sfn %s %s' % (shlex.quote(shared_challenge), shlex.quote(site_challenge)),
+            None, True)
+        return True
+    return False
 
 
 def _ssl_privkey_is_ecdsa(privkey_path):
