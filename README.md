@@ -5,27 +5,29 @@
 # CyberPanel
 
 **Web Hosting Control Panel powered by OpenLiteSpeed**
-Fast • Secure • Scalable — Simplify hosting management with style.
+Fast • Secure • Scalable. Simplify hosting management with style.
 
-**Version**: 2.5.5-dev • **Updated**: 28.03.2026
+**Version**: 2.5.5-dev • **Updated**: 31.07.2026
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/usmannasir/cyberpanel)
+[![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/master3395/cyberpanel/tree/v2.5.5-dev)
 [![Docs](https://img.shields.io/badge/Docs-Read-green?style=flat-square\&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
 [![Forum](https://img.shields.io/badge/Forum-Join-FF6F00?style=flat-square\&logo=discourse\&logoColor=white)](https://community.cyberpanel.net)
 [![Discord](https://img.shields.io/badge/Discord-Chat-5865F2?style=flat-square\&logo=discord\&logoColor=white)](https://discord.gg/g8k8Db3)
 [![YouTube](https://img.shields.io/badge/YouTube-Learn-FF0000?style=flat-square\&logo=youtube)](https://www.youtube.com/@Cyber-Panel)
 
----
-
 </div>
+
+> **Branch note:** `v2.5.5-dev` is a **development** line (this fork: [master3395/cyberpanel](https://github.com/master3395/cyberpanel/tree/v2.5.5-dev)). For production, use the latest public release **2.4.9** / `stable` from [usmannasir/cyberpanel](https://github.com/usmannasir/cyberpanel).
+
+---
 
 ## Key highlights
 
-* ⚡ **Performance first** — OpenLiteSpeed + HTTP/3 + LSCache
-* 🔒 **Security by default** — Auto SSL, FirewallD integration, 2FA, brute-force protection
-* 📧 **Integrated mail** — Postfix, Dovecot, panel webmail (SSO/Sieve), SnappyMail
-* 🗂 **Backups & restore** — One-click snapshots and rollbacks
-* 👨‍💻 **Developer friendly** — Git manager, REST API, staging, PHP version switcher
+* ⚡ **Performance first**: OpenLiteSpeed + HTTP/3 + LSCache
+* 🔒 **Security by default**: Auto SSL, FirewallD integration, 2FA, brute-force protection
+* 📧 **Integrated mail**: Postfix, Dovecot, panel webmail (SSO/Sieve), SnappyMail
+* 🗂 **Backups & restore**: One-click snapshots and rollbacks
+* 👨‍💻 **Developer friendly**: Git manager, REST API, staging, PHP version switcher
 
 ---
 
@@ -64,8 +66,6 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 ---
 
----
-
 ## Supported platforms (condensed)
 
 | OS family                  | Recommended / Supported |
@@ -98,7 +98,7 @@ Third-party repositories may provide older or niche versions; verify compatibili
 sh <(curl -s https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
 ```
 
-➡️ See `guides/INSTALLATION.md` (or `docs/` on this repo) for platform-specific options and non-interactive installs.
+See `guides/INSTALLATION.md` (or `docs/` on this repo) for platform-specific options and non-interactive installs.
 
 ---
 
@@ -118,13 +118,13 @@ PreUpgrade downloads the loader from `stable` and runs it with `-b stable`, so m
 
 ### Upgrade to v2.5.5-dev
 
-Use `-b v2.5.5-dev` so the loader fetches modules from the dev branch.
+Use `-b v2.5.5-dev` so the loader fetches modules from the dev branch. Prefer a lab/VPS first; this is not a production release.
 
 ```bash
 # Interactive (branch + MariaDB prompts)
 sh <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
 
-# Non-interactive: v2.5.5-dev + MariaDB 11.8 (LTS) — recommended
+# Non-interactive: v2.5.5-dev + MariaDB 11.8 (LTS): recommended for labs
 sh <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -qO - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
 ```
 
@@ -140,7 +140,7 @@ sh <(curl -sL .../preUpgrade.sh) -b v2.5.5-dev --mariadb-version 12.1
 
 ### Direct loader (advanced)
 
-If you prefer to run the upgrade script without preUpgrade (e.g. already have the branch in mind):
+If you prefer to run the upgrade script without preUpgrade (for example you already chose the branch):
 
 ```bash
 # Stable (default; modules fetched from stable)
@@ -156,7 +156,7 @@ Optional flags (same as with preUpgrade): `--mariadb-version 11.8`, `--debug`, `
 
 ## Troubleshooting (common)
 
-**Command not found** — install curl/wget/git/python3
+**Command not found**: install curl/wget/git/python3
 
 ```bash
 # Ubuntu/Debian
@@ -166,7 +166,7 @@ sudo apt update && sudo apt install -y curl wget git python3
 sudo yum install -y curl wget git python3
 ```
 
-**Port 8090 in use** — find and stop conflicting process:
+**Port 8090 in use**: find and stop conflicting process:
 
 ```bash
 sudo ss -tlnp | grep :8090
@@ -186,8 +186,8 @@ journalctl -u lscpd -f
 
 ## Recent fixes
 
-* **02.02.2026** — Plugin updates: premiumPlugin & paypalPremiumPlugin unified verification (Plugin Grants, activation key, Patreon, PayPal, AES-256-CBC encryption). Installed Plugins UI: bulk activate/deactivate, freshness badges, removed Patreon messaging from front.
-* **15.11.2025** — Hardened MySQL password rotation: `mysqlUtilities.changePassword` now auto-resolves the backing MySQL account (user + host) even when `DBUsers` metadata is missing, preventing the historical `[mysqlUtilities.changePassword] can only concatenate str (not "int")` error. Regression tests live under `Test/mysqlUtilities/`, and you should restart `lscpd` after deploying the patch so the helper reloads.
+* **02.02.2026**: Plugin updates: premiumPlugin & paypalPremiumPlugin unified verification (Plugin Grants, activation key, Patreon, PayPal, AES-256-CBC encryption). Installed Plugins UI: bulk activate/deactivate, freshness badges, removed Patreon messaging from front.
+* **15.11.2025**: Hardened MySQL password rotation: `mysqlUtilities.changePassword` now auto-resolves the backing MySQL account (user + host) even when `DBUsers` metadata is missing, preventing the historical `[mysqlUtilities.changePassword] can only concatenate str (not "int")` error. Regression tests live under `Test/mysqlUtilities/`, and you should restart `lscpd` after deploying the patch so the helper reloads.
 
 ---
 
@@ -201,8 +201,9 @@ Bundled components that use licenses other than CyberPanel's GPL-3.0 are listed 
 * Official site: [https://cyberpanel.net](https://cyberpanel.net)
 * Docs (KnowledgeBase): [https://cyberpanel.net/KnowledgeBase/](https://cyberpanel.net/KnowledgeBase/)
 * Community forum: [https://community.cyberpanel.net](https://community.cyberpanel.net)
-* GitHub: [https://github.com/usmannasir/cyberpanel](https://github.com/usmannasir/cyberpanel)
-* Guides folder:  [guides](https://github.com/usmannasir/cyberpanel/blob/stable/guides/INDEX.md) (API, INSTALLATION, UPGRADE, TROUBLESHOOTING)
+* Upstream GitHub: [https://github.com/usmannasir/cyberpanel](https://github.com/usmannasir/cyberpanel)
+* This fork (`v2.5.5-dev`): [https://github.com/master3395/cyberpanel/tree/v2.5.5-dev](https://github.com/master3395/cyberpanel/tree/v2.5.5-dev)
+* Guides folder: [guides](https://github.com/usmannasir/cyberpanel/blob/stable/guides/INDEX.md) (API, INSTALLATION, UPGRADE, TROUBLESHOOTING)
 
 ---
 
