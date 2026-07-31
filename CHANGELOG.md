@@ -5,6 +5,14 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: quieter Server Error Logs (hide cyberpanel_ols gzip WARN noise)
+- `/serverlogs/errorLogs` filters `[CyberPanel-OLS] Restored Content-Encoding: ...`
+  WARN lines. Those are gzip header-restore notices from `cyberpanel_ols.so`, not
+  PHP/site bugs. Real ERROR/NOTICE lines still show.
+- Reads a wider tail window before filtering so the UI still gets ~50 useful lines.
+- Note: the module may still write those WARNs to disk until a future
+  `cyberpanel_ols.so` build logs them at DEBUG; the panel view no longer surfaces them.
+
 ### Fix: pluginHolder no longer traceback-spams on Fail2ban name collision
 - Plugins whose `AppConfig.name` differs from the directory (e.g. `fail2ban/` with
   `name = 'fail2ban_plugin'`) are skipped once without a full traceback. That collision
