@@ -180,6 +180,125 @@ class DNS:
             logging.writeToFile(str(msg) + ' [RepairSpfRecords]')
             return 0, str(msg)
 
+    @staticmethod
+    def UpsertSpfForName(hostName):
+        """
+        Ensure a single SPF TXT for hostName matches buildSpfRecord().
+        Creates missing SPF, updates wrong SPF, removes duplicate SPF TXT rows.
+        Returns (changed_count, error_or_None).
+        """
+        try:
+            Domains, Records = DNS._powerdns_models()
+            import tldextract
+
+            host = (hostName or '').strip().lower().rstrip('.')
+            if not host:
+                return 0, 'Empty hostname'
+
+            extract = tldextract.TLDExtract(cache_dir=None)
+            ex = extract(host)
+            if not ex.domain or not ex.suffix:
+                return 0, 'Invalid hostname'
+            apex = (ex.domain + '.' + ex.suffix).lower()
+            zone = Domains.objects.filter(name=apex).first()
+            if not zone:
+                return 0, 'No DNS zone for %s' % apex
+
+            target = DNS.buildSpfRecord()
+            txts = list(Records.objects.filter(domainOwner=zone, type='TXT', name=host))
+            spf_recs = []
+            for rec in txts:
+                content = (rec.content or '').strip().strip('"')
+                if content.lower().startswith('v=spf1'):
+                    spf_recs.append(rec)
+
+            changed = 0
+            if not spf_recs:
+                DNS.createDNSRecord(zone, host, 'TXT', target, 0, 3600)
+                changed = 1
+            else:
+                first = spf_recs[0]
+                content = (first.content or '').strip().strip('"')
+                if content != target:
+                    first.content = target
+                    first.save()
+                    changed = 1
+                    try:
+                        DNS.bumpSOASerial(zone)
+                    except Exception:
+                        pass
+                for extra in spf_recs[1:]:
+                    try:
+                        extra.delete()
+                        changed += 1
+                    except Exception:
+                        pass
+            return changed, None
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [UpsertSpfForName]')
+            return 0, str(msg)
+
+    @staticmethod
+    def RecreateDNSForDomain(domainName, admin, includeChildren=True):
+        """
+        Re-apply dnsTemplate for a website/child host (missing records + CF sync)
+        and upsert SPF to the current deployment-type value.
+
+        Use for domains created before SPF/DNS template fixes.
+        Returns (status_1_or_0, message).
+        """
+        try:
+            from websiteFunctions.models import Websites, ChildDomains
+
+            domain = (domainName or '').strip().lower().rstrip('.')
+            if not domain:
+                return 0, 'Missing domain name'
+
+            # dnsTemplate/createDNSRecord use module-level Domains/Records.
+            # Bind CyberPanel PowerDNS models so CLI (dnspython shadow) still works.
+            Domains, Records = DNS._powerdns_models()
+            import sys as _sys
+            _mod = _sys.modules[DNS.__module__]
+            _mod.Domains = Domains
+            _mod.Records = Records
+
+            hosts = [domain]
+            website = Websites.objects.filter(domain=domain).first()
+            if includeChildren and website is not None:
+                for child in ChildDomains.objects.filter(master=website):
+                    child_name = (child.domain or '').strip().lower().rstrip('.')
+                    if child_name and child_name not in hosts:
+                        hosts.append(child_name)
+
+            applied = []
+            errors = []
+            for host in hosts:
+                try:
+                    DNS.dnsTemplate(host, admin)
+                    DNS.UpsertSpfForName(host)
+                    # Apex SPF when host is a subdomain under an existing apex zone
+                    import tldextract
+                    extract = tldextract.TLDExtract(cache_dir=None)
+                    ex = extract(host)
+                    apex = (ex.domain + '.' + ex.suffix).lower()
+                    if apex and apex != host:
+                        DNS.UpsertSpfForName(apex)
+                    applied.append(host)
+                except BaseException as host_err:
+                    errors.append('%s: %s' % (host, str(host_err)))
+                    logging.writeToFile(
+                        'RecreateDNSForDomain %s: %s' % (host, str(host_err)))
+
+            if not applied and errors:
+                return 0, '; '.join(errors)
+            msg = 'DNS recreated for: %s' % ', '.join(applied)
+            if errors:
+                msg += '. Issues: %s' % '; '.join(errors)
+            return 1, msg
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [RecreateDNSForDomain]')
+            return 0, str(msg)
+
     def loadCFKeys(self):
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
 

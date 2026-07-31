@@ -25,6 +25,14 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
   preloaded package before `__import__`.
 
+### Feature: Recreate DNS button on websites
+- Website detail, List Websites, and child domain pages include **Recreate DNS**.
+- Re-applies the current DNS template (missing A/MX/TXT/CNAME and Cloudflare sync when configured)
+  and upserts SPF to the deployment-type value (`buildSpfRecord`), including child domains of a site.
+- API: `POST /websites/recreateWebsiteDNS` with `domainName` and optional `includeChildren`.
+- CLI: `virtualHostUtilities.py RecreateDNSForDomain --virtualHostName example.com`.
+- Intended for domains/subdomains created before SPF and related DNS template fixes.
+
 ### Feature: SPF record follows deployment type (CyberPersons vs self-hosted)
 - `DNS.getDeploymentType()` / `DNS.buildSpfRecord()`: CyberPersons rental publishes
   `v=spf1 include:spf.cyberpersons.com ~all`; self-hosted (default) keeps

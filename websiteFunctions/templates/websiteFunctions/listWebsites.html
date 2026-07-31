@@ -786,6 +786,13 @@
                                 <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
                                     Manage
                                 </a>
+                                <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
+                                        ng-disabled="recreatingDNS[web.domain]"
+                                        class="btn btn-outline btn-sm"
+                                        title="{% trans 'Re-apply DNS template and fix SPF for this domain and its subdomains' %}">
+                                    <span ng-hide="recreatingDNS[web.domain]"><i class="fas fa-sync-alt"></i> {% trans "Recreate DNS" %}</span>
+                                    <span ng-show="recreatingDNS[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
+                                </button>
                                 <button ng-if="web.canConvertToChild"
                                         ng-click="convertToChildDomain(web); $event.stopPropagation();"
                                         ng-disabled="convertingToChild[web.domain]"
@@ -823,6 +830,13 @@
                                             <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
                                             <span ng-show="issuingSSL[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> Issuing SSL...</span>
                                         </a>
+                                        <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
+                                                ng-disabled="recreatingDNS[web.domain]"
+                                                class="btn btn-outline btn-sm"
+                                                title="{% trans 'Re-apply DNS template and fix SPF' %}">
+                                            <span ng-hide="recreatingDNS[web.domain]"><i class="fas fa-sync-alt"></i> {% trans "Recreate DNS" %}</span>
+                                            <span ng-show="recreatingDNS[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
+                                        </button>
                                         <button ng-if="web.canConvertToChild"
                                                 ng-click="convertToChildDomain(web); $event.stopPropagation();"
                                                 ng-disabled="convertingToChild[web.domain]"
