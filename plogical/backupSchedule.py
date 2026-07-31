@@ -46,6 +46,47 @@ class backupSchedule:
             return "Can not write to error file."
 
     @staticmethod
+    def backupArchiveIsReady(archivePath, settle_seconds=2, max_rounds=30):
+        """
+        Ensure the .tar.gz exists, is non-empty, and size is stable (#1856).
+        Status 'Completed' alone is not enough on large/slow sites.
+        """
+        if not archivePath:
+            return False
+        for _ in range(max_rounds):
+            if not os.path.exists(archivePath):
+                time.sleep(settle_seconds)
+                continue
+            try:
+                size1 = os.path.getsize(archivePath)
+            except OSError:
+                size1 = 0
+            if size1 <= 0:
+                time.sleep(settle_seconds)
+                continue
+            time.sleep(settle_seconds)
+            try:
+                size2 = os.path.getsize(archivePath)
+            except OSError:
+                size2 = 0
+            if size2 > 0 and size2 == size1:
+                return True
+        return False
+
+    @staticmethod
+    def resolveBackupArchivePath(virtualHost, tempStoragePath, fileName):
+        candidates = []
+        if tempStoragePath:
+            candidates.append(tempStoragePath + '.tar.gz')
+        if fileName and fileName != 'Fetching..':
+            name = fileName if str(fileName).endswith('.tar.gz') else (str(fileName) + '.tar.gz')
+            candidates.append(os.path.join('/home', virtualHost, 'backup', name))
+        for path in candidates:
+            if path and os.path.exists(path):
+                return path
+        return candidates[0] if candidates else None
+
+    @staticmethod
     def createLocalBackup(virtualHost, backupLogPath):
         try:
 
@@ -108,6 +149,27 @@ class backupSchedule:
                         time.sleep(2)
 
                         if status.find("Completed") > -1:
+                            archivePath = backupSchedule.resolveBackupArchivePath(
+                                backupDomain, tempStoragePath, fileName)
+                            if not backupSchedule.backupArchiveIsReady(archivePath):
+                                backupSchedule.remoteBackupLogging(
+                                    backupLogPath,
+                                    "Local backup failed for %s: status Completed but archive not ready (%s)"
+                                    % (virtualHost, archivePath),
+                                    backupSchedule.ERROR)
+                                try:
+                                    command = 'sudo rm -f ' + status
+                                    ProcessUtilities.normalExecutioner(command)
+                                    command = 'sudo rm -f ' + backupFileNamePath
+                                    ProcessUtilities.normalExecutioner(command)
+                                    command = 'sudo rm -f ' + pid
+                                    ProcessUtilities.normalExecutioner(command)
+                                    command = 'rm -rf %s' % (tempStoragePath)
+                                    ProcessUtilities.normalExecutioner(command)
+                                    os.remove(pathToFile)
+                                except:
+                                    pass
+                                return 0, tempStoragePath
 
                             ### Removing Files
 
@@ -189,6 +251,27 @@ class backupSchedule:
                         time.sleep(2)
 
                         if status.find("Completed") > -1:
+                            archivePath = backupSchedule.resolveBackupArchivePath(
+                                backupDomain, tempStoragePath, fileName)
+                            if not backupSchedule.backupArchiveIsReady(archivePath):
+                                backupSchedule.remoteBackupLogging(
+                                    backupLogPath,
+                                    "Local backup failed for %s: status Completed but archive not ready (%s)"
+                                    % (virtualHost, archivePath),
+                                    backupSchedule.ERROR)
+                                try:
+                                    command = 'sudo rm -f ' + status
+                                    ProcessUtilities.normalExecutioner(command)
+                                    command = 'sudo rm -f ' + backupFileNamePath
+                                    ProcessUtilities.normalExecutioner(command)
+                                    command = 'sudo rm -f ' + pid
+                                    ProcessUtilities.normalExecutioner(command)
+                                    command = 'rm -rf %s' % (tempStoragePath)
+                                    ProcessUtilities.normalExecutioner(command)
+                                    os.remove(pathToFile)
+                                except:
+                                    pass
+                                return 0, tempStoragePath
 
                             ### Removing Files
 
