@@ -2867,6 +2867,51 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.convertingToChild = {};
 
+    $scope.recreatingDNS = {};
+    $scope.recreateWebsiteDNS = function (domain) {
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS[domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS[domain] = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS[domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
     $scope.convertToChildDomain = function(web) {
         if (!web || !web.canConvertToChild) {
             return;
@@ -6266,6 +6311,51 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     };
 
     $scope.convertingToChild = {};
+
+    $scope.recreatingDNS = {};
+    $scope.recreateWebsiteDNS = function (domain) {
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS[domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS[domain] = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS[domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
 
     $scope.convertToChildDomain = function(web) {
         if (!web || !web.canConvertToChild) {
@@ -10026,6 +10116,51 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.convertingToChild = {};
 
+    $scope.recreatingDNS = {};
+    $scope.recreateWebsiteDNS = function (domain) {
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS[domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS[domain] = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS[domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
     $scope.convertToChildDomain = function(web) {
         if (!web || !web.canConvertToChild) {
             return;
@@ -11397,6 +11532,52 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
             }
         }, function () {
             $scope.convertingToChild = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
+    $scope.recreatingDNS = false;
+    $scope.recreateWebsiteDNS = function () {
+        var domain = $("#domainNamePage").text();
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS = false;
             new PNotify({
                 title: 'Error',
                 text: 'Could not connect to server.',
@@ -18418,6 +18599,55 @@ app.controller('launchChild', function ($scope, $http) {
             $scope.installMagentoURL = "/websites/" + $scope.childDomainName + "/installMagento";
         }
     });
+
+    $scope.recreatingDNS = false;
+    $scope.recreateWebsiteDNS = function () {
+        var domain = $scope.childDomainName || '';
+        if (!domain && document.getElementById('childDomain')) {
+            domain = document.getElementById('childDomain').textContent.trim();
+        }
+        if (!domain) {
+            return;
+        }
+        if (!window.confirm(
+            'Recreate DNS for ' + domain + '?\n\n' +
+            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: false
+        }, config).then(function (response) {
+            $scope.recreatingDNS = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
 
     var logType = 0;
     $scope.pageNumber = 1;

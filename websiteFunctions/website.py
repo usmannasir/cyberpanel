@@ -2675,6 +2675,45 @@ Require valid-user
                 'error_message': str(msg),
             }))
 
+    def recreateWebsiteDNS(self, userID=None, data=None):
+        """
+        Re-apply DNS template + SPF for a website or child domain.
+        Useful when the site was created before SPF/DNS template fixes.
+        """
+        try:
+            from plogical.dnsUtilities import DNS
+
+            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
+            domain_name = (
+                (data or {}).get('domainName')
+                or (data or {}).get('websiteName')
+                or ''
+            ).strip()
+            include_children = bool((data or {}).get('includeChildren', True))
+
+            if not domain_name:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': 'Missing domainName',
+                }))
+
+            if ACLManager.checkOwnership(domain_name, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+
+            status, message = DNS.RecreateDNSForDomain(
+                domain_name, admin, includeChildren=include_children)
+            return HttpResponse(json.dumps({
+                'status': status,
+                'error_message': message if status == 0 else 'None',
+                'success_message': message if status == 1 else None,
+            }))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error_message': str(msg),
+            }))
+
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
         try:

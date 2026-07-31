@@ -855,6 +855,15 @@
                     <i class="fas fa-tachometer-alt"></i>
                     {% trans "Stress Test" %}
                 </a>
+                <button type="button"
+                        class="action-btn"
+                        ng-click="recreateWebsiteDNS()"
+                        ng-disabled="recreatingDNS"
+                        title="{% trans 'Re-apply DNS template and fix SPF for this subdomain' %}">
+                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': recreatingDNS}"></i>
+                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                    <span ng-show="recreatingDNS">{% trans "Recreating DNS..." %}</span>
+                </button>
             </div>
         </div>
 
@@ -1097,6 +1106,18 @@
                             <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
                                 <i class="fab fa-php" style="font-size: 45px; color: var(--info-color, #3b82f6);"></i>
                                 <span class="h4">{% trans "Change PHP" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="" ng-click="recreateWebsiteDNS(); $event.preventDefault()"
+                               title="{% trans 'Re-apply DNS template and fix SPF for this subdomain' %}">
+                                <i class="fas fa-sync-alt" style="font-size: 45px; color: var(--primary-color, #6366f1);"
+                                   ng-class="{'fa-spin': recreatingDNS}"></i>
+                                <span class="h4">
+                                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                                    <span ng-show="recreatingDNS">{% trans "Recreating..." %}</span>
+                                </span>
                             </a>
                         </div>
                     </div>
