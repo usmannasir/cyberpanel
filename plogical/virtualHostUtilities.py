@@ -1576,6 +1576,11 @@ local_name %s {
                         'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
                 ## Scope to the master; filter().delete() is orphan-safe. #1738
                 aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
+                try:
+                    DNS.maybeDeleteOrphanDNSZone(aliasDomain)
+                except Exception as zoneError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Orphan DNS zone cleanup failed for alias %s: %s' % (aliasDomain, str(zoneError)))
 
                 print("1,None")
             except BaseException as msg:
@@ -1610,6 +1615,11 @@ local_name %s {
                         'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
                 ## Scope to the master; filter().delete() is orphan-safe. #1738
                 aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
+                try:
+                    DNS.maybeDeleteOrphanDNSZone(aliasDomain)
+                except Exception as zoneError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Orphan DNS zone cleanup failed for alias %s: %s' % (aliasDomain, str(zoneError)))
 
                 print("1,None")
             except BaseException as msg:
@@ -1973,6 +1983,11 @@ local_name %s {
             )
 
             delWebsite.delete()
+            try:
+                DNS.maybeDeleteOrphanDNSZone(virtualHostName)
+            except Exception as zoneError:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Orphan DNS zone cleanup failed for %s: %s' % (virtualHostName, str(zoneError)))
             installUtilities.installUtilities.reStartLiteSpeed()
 
             print("1,None")
