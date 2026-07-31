@@ -114,27 +114,85 @@ urlpatterns = [
     path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'),
 ]
 
+def _ensure_path_first(path):
+    """Put path at sys.path[0] so plugin packages win over site-packages."""
+    try:
+        if path in sys.path:
+            sys.path.remove(path)
+        sys.path.insert(0, path)
+    except (ValueError, OSError):
+        pass
+
+
+def _evict_module_tree(name):
+    for key in list(sys.modules):
+        if key == name or key.startswith(name + '.'):
+            try:
+                del sys.modules[key]
+            except KeyError:
+                pass
+
+
+def _plugin_appconfig_name_ok(plugin_dir, plugin_name):
+    """
+    Match CyberCP.settings: skip plugins whose AppConfig.name differs from the
+    directory name (e.g. fail2ban/ with name='fail2ban_plugin'). Those collide
+    with system packages like site-packages/fail2ban and are not in INSTALLED_APPS.
+    """
+    import re
+    apps_py = os.path.join(plugin_dir, 'apps.py')
+    if not os.path.isfile(apps_py):
+        return True
+    try:
+        with open(apps_py, 'r', encoding='utf-8', errors='replace') as fh:
+            text = fh.read()
+    except (OSError, IOError):
+        return False
+    match = re.search(r"""^\s*name\s*=\s*['"]([^'"]+)['"]""", text, re.M)
+    if not match:
+        return True
+    return match.group(1) == plugin_name
+
+
 # Include each installed plugin's URLs *before* the catch-all so /plugins/<name>/... (other than settings/help) match
 _loaded_plugins = []
 _failed_plugins = {}
+_skip_logged = set()
 for _plugin_name, _path_parent in _get_installed_plugin_list():
+    _plugin_dir = os.path.join(_path_parent, _plugin_name)
     try:
-        if _path_parent not in sys.path:
-            sys.path.insert(0, _path_parent)
+        if not _plugin_appconfig_name_ok(_plugin_dir, _plugin_name):
+            _failed_plugins[_plugin_name] = (
+                'AppConfig.name does not match directory; not registered in INSTALLED_APPS'
+            )
+            # Expected for plugins like fail2ban/ (AppConfig name fail2ban_plugin) that
+            # collide with a system package. Do not write to the main log every worker boot.
+            continue
+
+        _ensure_path_first(_path_parent)
+        _existing = sys.modules.get(_plugin_name)
+        if _existing is not None:
+            _origin = getattr(_existing, '__file__', '') or ''
+            if not (
+                _origin.startswith(_plugin_dir + os.sep)
+                or _origin.startswith(_plugin_dir + '/')
+            ):
+                _evict_module_tree(_plugin_name)
+
         __import__(_plugin_name + '.urls')
         urlpatterns.append(path(_plugin_name + '/', include(_plugin_name + '.urls')))
         _loaded_plugins.append(_plugin_name)
     except Exception as e:
-        import traceback
         _failed_plugins[_plugin_name] = str(e)
-        try:
-            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _logging
-            _logging.writeToFile(
-                'pluginHolder.urls: Skipping plugin "%s" (urls not loadable): %s'
-                % (_plugin_name, e)
-            )
-            _logging.writeToFile(traceback.format_exc())
-        except Exception:
-            pass
+        if _plugin_name not in _skip_logged:
+            _skip_logged.add(_plugin_name)
+            try:
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _logging
+                _logging.writeToFile(
+                    'pluginHolder.urls: Skipping plugin "%s" (urls not loadable): %s'
+                    % (_plugin_name, e)
+                )
+            except Exception:
+                pass
 
 urlpatterns.append(path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'))

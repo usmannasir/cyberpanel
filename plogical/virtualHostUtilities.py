@@ -85,6 +85,10 @@ class virtualHostUtilities:
         except:
             config = {}
 
+        # Self-hosted Contabo-style installs: default SPF to machine IP (not CyberPersons include).
+        if not config.get('deploymentType'):
+            config['deploymentType'] = 'selfhosted'
+
         ### probably need to add temporary dns resolver nameserver here - pending
 
         try:
@@ -252,6 +256,12 @@ class virtualHostUtilities:
                 config['skipRDNSCheck'] = skipRDNSCheck
                 admin.config = json.dumps(config)
                 admin.save()
+                try:
+                    from plogical.dnsUtilities import DNS as _DNS
+                    _DNS.RepairSpfRecords(Domain)
+                except Exception as _spf_e:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'OnBoardingHostName RepairSpfRecords: %s' % str(_spf_e))
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
 
@@ -463,6 +473,12 @@ class virtualHostUtilities:
                     config['skipRDNSCheck'] = skipRDNSCheck
                     admin.config = json.dumps(config)
                     admin.save()
+                    try:
+                        from plogical.dnsUtilities import DNS as _DNS
+                        _DNS.RepairSpfRecords(Domain)
+                    except Exception as _spf_e:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'OnBoardingHostName RepairSpfRecords: %s' % str(_spf_e))
                     # First update the postfix hash database, then restart services
                     command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && doveadm reload'
                     ProcessUtilities.executioner(command, 'root', True)
@@ -475,6 +491,12 @@ class virtualHostUtilities:
                 config['skipRDNSCheck'] = skipRDNSCheck
                 admin.config = json.dumps(config)
                 admin.save()
+                try:
+                    from plogical.dnsUtilities import DNS as _DNS
+                    _DNS.RepairSpfRecords(Domain)
+                except Exception as _spf_e:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'OnBoardingHostName RepairSpfRecords: %s' % str(_spf_e))
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname setup completed (without email configuration). [200]')
 
     @staticmethod
@@ -2538,6 +2560,14 @@ def main():
         # in virtualHostName pass domain for which hostname should be set up
         # in path pass temporary path where status of the function will be stored
         virtualHostUtilities.OnBoardingHostName(args.virtualHostName, args.path, int(args.rdns))
+    elif args.function == 'RepairSpfRecords':
+        from plogical.dnsUtilities import DNS
+        domain = args.virtualHostName if getattr(args, 'virtualHostName', None) else None
+        ok, err = DNS.RepairSpfRecords(domain)
+        if err:
+            print('0,' + str(err))
+        else:
+            print('1,repaired=%s' % ok)
 
 
 if __name__ == "__main__":
