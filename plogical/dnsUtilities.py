@@ -43,7 +43,8 @@ class DNS:
         """
         try:
             if os.path.exists(DNS.DEPLOYMENT_TYPE_FILE):
-                raw = open(DNS.DEPLOYMENT_TYPE_FILE, 'r').read().strip().lower()
+                with open(DNS.DEPLOYMENT_TYPE_FILE, 'r') as _df:
+                    raw = _df.read().strip().lower()
                 if raw in ('cyberpersons', 'selfhosted'):
                     return raw
         except Exception:
@@ -71,7 +72,8 @@ class DNS:
             return DNS.SPF_CYBERPERSONS
         if not ipAddress:
             try:
-                ipAddress = open('/etc/cyberpanel/machineIP', 'r').read().split('\n', 1)[0].strip()
+                with open('/etc/cyberpanel/machineIP', 'r') as _ipf:
+                    ipAddress = _ipf.read().split('\n', 1)[0].strip()
             except Exception:
                 ipAddress = ''
         if ipAddress:
@@ -87,7 +89,6 @@ class DNS:
         """
         try:
             from websiteFunctions.models import Websites
-            import json as _json
 
             target = DNS.buildSpfRecord()
             wrong_cp = 'include:spf.cyberpersons.com'
