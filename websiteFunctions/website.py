@@ -2677,11 +2677,10 @@ Require valid-user
 
     def recreateWebsiteDNS(self, userID=None, data=None):
         """
-        Re-apply DNS template + SPF for a website or child domain.
-        Useful when the site was created before SPF/DNS template fixes.
+        Full Recreate DNS: repair PowerDNS, force Cloudflare sync, report NS status.
         """
         try:
-            from plogical.dnsUtilities import DNS
+            from plogical.dns_recreate import recreate_dns_for_domain
 
             admin = Administrator.objects.get(pk=userID)
             currentACL = ACLManager.loadedACL(userID)
@@ -2701,13 +2700,17 @@ Require valid-user
             if ACLManager.checkOwnership(domain_name, admin, currentACL) != 1:
                 return ACLManager.loadErrorJson()
 
-            status, message = DNS.RecreateDNSForDomain(
+            result = recreate_dns_for_domain(
                 domain_name, admin, includeChildren=include_children)
+            status = int(result.get('status') or 0)
+            message = result.get('message') or ''
             return HttpResponse(json.dumps({
                 'status': status,
                 'error_message': message if status == 0 else 'None',
                 'success_message': message if status == 1 else None,
-            }))
+                'applied': result.get('applied') or [],
+                'cloudflare': result.get('cloudflare'),
+            }, json.JSON_PRETTY_PRINT | json.JSON_UNESCAPED_SLASHES | json.JSON_UNESCAPED_UNICODE))
         except BaseException as msg:
             return HttpResponse(json.dumps({
                 'status': 0,

@@ -2874,7 +2874,8 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         if (!$window.confirm(
             'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
-            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
         )) {
             return;
         }
@@ -2890,10 +2891,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }, config).then(function (response) {
             $scope.recreatingDNS[domain] = false;
             if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
                 new PNotify({
-                    title: 'Success',
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
                     text: response.data.success_message || 'DNS recreated.',
-                    type: 'success'
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
                 });
             } else {
                 new PNotify({
@@ -6319,7 +6323,8 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         if (!$window.confirm(
             'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
-            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
         )) {
             return;
         }
@@ -6335,10 +6340,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }, config).then(function (response) {
             $scope.recreatingDNS[domain] = false;
             if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
                 new PNotify({
-                    title: 'Success',
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
                     text: response.data.success_message || 'DNS recreated.',
-                    type: 'success'
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
                 });
             } else {
                 new PNotify({
@@ -10123,7 +10131,8 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         if (!$window.confirm(
             'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
-            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
         )) {
             return;
         }
@@ -10139,10 +10148,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }, config).then(function (response) {
             $scope.recreatingDNS[domain] = false;
             if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
                 new PNotify({
-                    title: 'Success',
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
                     text: response.data.success_message || 'DNS recreated.',
-                    type: 'success'
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
                 });
             } else {
                 new PNotify({
@@ -11548,7 +11560,8 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         }
         if (!$window.confirm(
             'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
-            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
         )) {
             return;
         }
@@ -11564,10 +11577,13 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         }, config).then(function (response) {
             $scope.recreatingDNS = false;
             if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
                 new PNotify({
-                    title: 'Success',
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
                     text: response.data.success_message || 'DNS recreated.',
-                    type: 'success'
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
                 });
             } else {
                 new PNotify({
@@ -18611,7 +18627,8 @@ app.controller('launchChild', function ($scope, $http) {
         }
         if (!window.confirm(
             'Recreate DNS for ' + domain + '?\n\n' +
-            'This adds missing template records and fixes SPF to match the current deployment type. Custom DNS records are kept.'
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
         )) {
             return;
         }
@@ -18627,10 +18644,13 @@ app.controller('launchChild', function ($scope, $http) {
         }, config).then(function (response) {
             $scope.recreatingDNS = false;
             if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
                 new PNotify({
-                    title: 'Success',
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
                     text: response.data.success_message || 'DNS recreated.',
-                    type: 'success'
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
                 });
             } else {
                 new PNotify({
