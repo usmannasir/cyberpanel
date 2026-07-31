@@ -5,6 +5,14 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: List Websites page/size dropdowns show selected values
+- `recordsToShow` and `currentPage` used numeric `ng-model` with string `<option>`
+  values, so AngularJS inserted a blank selected option (empty box until clicked).
+- Options now use `ng-value` (and the same fix on List Child Domains), plus dark-theme
+  select text/background so "10" and "Page 1" stay visible when collapsed.
+- Also override Bootstrap `form-control` height/padding on those selects so the label
+  is not vertically clipped inside a 34px box.
+
 ### Feature: Log source dropdown on every Server Log viewer
 - Main Log, Access, Error, Email, FTP, and ModSec Audit viewers include a
   **Log source** dropdown (same pattern as other required panel selects) so
