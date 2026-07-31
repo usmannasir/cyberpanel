@@ -25,6 +25,13 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
   preloaded package before `__import__`.
 
+### Fix: Issue SSL no longer fails on cloudflare 2.20 deprecation warning
+- `python-cloudflare` 2.20.* prints a noisy `PendingDeprecationWarning` when the
+  client is created. CyberPanel merges stderr into Issue SSL output, so the
+  warning was shown as **Operation Failed** even when SSL logic ran.
+- `get_cloudflare_client()` now suppresses that warning; Issue SSL error text
+  also strips the banner if it still appears.
+
 ### Fix: File Manager dark theme modal text contrast
 - Modal bodies were hard-coded white while dark theme set light label text, so
   Copy/Move/Upload dialog labels were nearly invisible. Dark theme now forces
