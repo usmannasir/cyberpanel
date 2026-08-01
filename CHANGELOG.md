@@ -5,6 +5,17 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: native select labels on List Websites / WP / Docker pages
+- `recordsToShow` / `currentPage` used numeric `ng-model` with string `<option>`
+  values on several list pages, so AngularJS selected a blank option until opened.
+- Options now use `ng-value` (List Websites, Child Domains, Docker, Manage GIT).
+- Global `cyberpanel-harmonize.css` rule for `#main-content select.form-control`:
+  horizontal padding only + `line-height` equal to height, so Bootstrap
+  `height:34px` no longer clips "10" / "50 items" / "Page 1" in half.
+- ListWPSites: do not apply text-input padding to selects; fix `range` filter for
+  empty lists; hide page picker when there are no pages.
+
+
 ### Feature: Log source dropdown on every Server Log viewer
 - Main Log, Access, Error, Email, FTP, and ModSec Audit viewers include a
   **Log source** dropdown (same pattern as other required panel selects) so

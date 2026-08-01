@@ -75,7 +75,9 @@
             flex: 1;
         }
         
-        .form-control {
+        /* Padding is for text inputs only. Native <select> + Bootstrap
+           height:34px + padding:10px clips the label (half-visible 10 / Page 1). */
+        .search-section input.form-control {
             width: 100%;
             padding: 10px 14px;
             border: 1px solid var(--border-color, #e8e9ff);
@@ -86,18 +88,60 @@
             transition: all 0.2s ease;
         }
         
-        .form-control:hover {
+        .search-section input.form-control:hover {
             border-color: var(--accent-color, #5b5fcf);
         }
         
-        .form-control:focus {
+        .search-section input.form-control:focus {
             outline: none;
             border-color: var(--accent-color, #5b5fcf);
             box-shadow: 0 0 0 3px rgba(91,95,207,0.1);
         }
         
+        /* Native select: match height to line-height and use horizontal padding only.
+           Vertical padding + Bootstrap height:34px is what cuts "10" / "Page 1" in half. */
+        #main-content select.form-control.form-select,
+        #main-content select.form-control.pagination-select,
+        .form-select,
+        .pagination-select {
+            color: var(--text-primary, #2f3640) !important;
+            background-color: var(--bg-secondary, var(--bg-primary, #fff)) !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            max-height: none !important;
+            padding: 0 28px 0 12px !important;
+            line-height: 38px !important;
+            font-size: 14px !important;
+            box-sizing: border-box !important;
+            vertical-align: middle;
+            appearance: auto;
+            -webkit-appearance: menulist;
+        }
+
         .form-select {
             width: 120px;
+        }
+
+        .form-select option,
+        .pagination-select option {
+            color: var(--text-primary, #2f3640);
+            background-color: var(--bg-secondary, var(--bg-primary, #fff));
+        }
+
+        html[data-theme="dark"] .form-select,
+        html[data-theme="dark"] .pagination-select,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] .pagination-select {
+            color: var(--text-primary, #e4e4e7) !important;
+            background-color: var(--bg-secondary, #1d1f26) !important;
+        }
+
+        html[data-theme="dark"] .form-select option,
+        html[data-theme="dark"] .pagination-select option,
+        [data-theme="dark"] .form-select option,
+        [data-theme="dark"] .pagination-select option {
+            color: var(--text-primary, #e4e4e7) !important;
+            background-color: var(--bg-secondary, #1d1f26) !important;
         }
         
         /* Button Styles */
@@ -737,10 +781,11 @@
                         </div>
                         <select ng-model="recordsToShow" 
                                 ng-change="getFurtherWebsitesFromDB()" 
-                                class="form-control form-select">
-                            <option>10</option>
-                            <option>50</option>
-                            <option>100</option>
+                                class="form-control form-select"
+                                aria-label="Records to show">
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
                         </select>
                     </div>
                 </div>
@@ -990,8 +1035,9 @@
                 <div class="pagination-section">
                     <select ng-model="currentPage" 
                             class="form-control pagination-select" 
-                            ng-change="getFurtherWebsitesFromDB()">
-                        <option ng-repeat="page in pagination" value="{$ $index + 1 $}">Page {$ $index + 1 $}</option>
+                            ng-change="getFurtherWebsitesFromDB()"
+                            aria-label="Current page">
+                        <option ng-repeat="page in pagination track by $index" ng-value="$index + 1">Page {$ $index + 1 $}</option>
                     </select>
                 </div>
             </div>
