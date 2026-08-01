@@ -148,6 +148,19 @@
         color: var(--badge-error-text, #991b1b);
     }
 
+
+    /* Firewall service status (JS sets status to ON/OFF). Distinct from banned-IP .status-active (red). */
+    .status-badge.fw-status-on {
+        background: var(--badge-success-bg, #d1fae5);
+        color: var(--badge-success-text, #065f46);
+    }
+
+    .status-badge.fw-status-off {
+        background: var(--badge-error-bg, #fee2e2);
+        color: var(--badge-error-text, #991b1b);
+    }
+
+
     .status-content {
         padding: 2rem;
         display: flex;
@@ -1222,7 +1235,7 @@
                 <i class="fas fa-info-circle"></i>
                 {% trans "Firewall Status" %}
             </h3>
-            <div class="status-badge" ng-class="{'status-active': status == 'Active', 'status-inactive': status != 'Active'}">
+            <div class="status-badge" ng-class="{'fw-status-on': status == 'ON', 'fw-status-off': status != 'ON'}">
                 <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
                 {$ status $}
             </div>

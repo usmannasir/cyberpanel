@@ -885,6 +885,9 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.ruleAdded = true;
                 $scope.couldNotConnect = true;
 
+                $scope.rulesDetails = false;
+                populateCurrentRecords();
+
 
             }
             else {
@@ -963,6 +966,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.rulesDetails = false;
 
                 firewallStatus();
+                /* Reload rules after Start so the table stays visible and populated. */
+                populateCurrentRecords();
 
 
             }
@@ -1044,6 +1049,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.rulesDetails = false;
 
                 firewallStatus();
+                populateCurrentRecords();
 
 
             }
