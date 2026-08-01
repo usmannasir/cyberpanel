@@ -5,13 +5,16 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
-### Fix: List Websites page/size dropdowns show selected values
-- `recordsToShow` and `currentPage` used numeric `ng-model` with string `<option>`
-  values, so AngularJS inserted a blank selected option (empty box until clicked).
-- Options now use `ng-value` (and the same fix on List Child Domains), plus dark-theme
-  select text/background so "10" and "Page 1" stay visible when collapsed.
-- Also override Bootstrap `form-control` height/padding on those selects so the label
-  is not vertically clipped inside a 34px box.
+### Fix: native select labels on List Websites / WP / Docker pages
+- `recordsToShow` / `currentPage` used numeric `ng-model` with string `<option>`
+  values on several list pages, so AngularJS selected a blank option until opened.
+- Options now use `ng-value` (List Websites, Child Domains, Docker, Manage GIT).
+- Global `cyberpanel-harmonize.css` rule for `#main-content select.form-control`:
+  horizontal padding only + `line-height` equal to height, so Bootstrap
+  `height:34px` no longer clips "10" / "50 items" / "Page 1" in half.
+- ListWPSites: do not apply text-input padding to selects; fix `range` filter for
+  empty lists; hide page picker when there are no pages.
+
 
 ### Feature: Log source dropdown on every Server Log viewer
 - Main Log, Access, Error, Email, FTP, and ModSec Audit viewers include a

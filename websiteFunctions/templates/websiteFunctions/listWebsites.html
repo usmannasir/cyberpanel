@@ -75,7 +75,9 @@
             flex: 1;
         }
         
-        .form-control {
+        /* Padding is for text inputs only. Native <select> + Bootstrap
+           height:34px + padding:10px clips the label (half-visible 10 / Page 1). */
+        .search-section input.form-control {
             width: 100%;
             padding: 10px 14px;
             border: 1px solid var(--border-color, #e8e9ff);
@@ -86,27 +88,34 @@
             transition: all 0.2s ease;
         }
         
-        .form-control:hover {
+        .search-section input.form-control:hover {
             border-color: var(--accent-color, #5b5fcf);
         }
         
-        .form-control:focus {
+        .search-section input.form-control:focus {
             outline: none;
             border-color: var(--accent-color, #5b5fcf);
             box-shadow: 0 0 0 3px rgba(91,95,207,0.1);
         }
         
-        /* Bootstrap .form-control is height:34px; page .form-control padding:10px
-           clips native <select> text. Override for these two dropdowns only. */
+        /* Native select: match height to line-height and use horizontal padding only.
+           Vertical padding + Bootstrap height:34px is what cuts "10" / "Page 1" in half. */
+        #main-content select.form-control.form-select,
+        #main-content select.form-control.pagination-select,
         .form-select,
         .pagination-select {
-            color: var(--text-primary, #2f3640);
-            background-color: var(--bg-secondary, var(--bg-primary, #fff));
-            height: 42px !important;
-            min-height: 42px !important;
-            padding: 8px 12px !important;
-            line-height: 1.4 !important;
-            box-sizing: border-box;
+            color: var(--text-primary, #2f3640) !important;
+            background-color: var(--bg-secondary, var(--bg-primary, #fff)) !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            max-height: none !important;
+            padding: 0 28px 0 12px !important;
+            line-height: 38px !important;
+            font-size: 14px !important;
+            box-sizing: border-box !important;
+            vertical-align: middle;
+            appearance: auto;
+            -webkit-appearance: menulist;
         }
 
         .form-select {
