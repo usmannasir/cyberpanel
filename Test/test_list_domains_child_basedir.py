@@ -39,6 +39,12 @@ def main():
         # Global 600px table min-width regresses narrow viewports
         if re.search(r'\.table\s*\{[^}]*min-width:\s*600px', website_html):
             failures.append('website.html: global table min-width 600px still present')
+    if not re.search(r'#listDomains[\s\S]{0,1200}?padding:\s*0\s+36px\s+0\s+12px\s*!important', website_html):
+        failures.append('website.html: List Domains selects need horizontal-only padding (no vertical clip)')
+    if not re.search(r'#listDomains[\s\S]{0,1200}?line-height:\s*44px\s*!important', website_html):
+        failures.append('website.html: List Domains selects need line-height matching height')
+    if re.search(r'#listDomains \.ld-field select\.form-control\s*\{[^}]*padding:\s*6px', website_html):
+        failures.append('website.html: vertical padding on List Domains selects clips labels')
 
     acl_py = open(os.path.join(ROOT, 'plogical/acl.py'), encoding='utf-8').read()
     if 'def CachedAddonPermission' not in acl_py:

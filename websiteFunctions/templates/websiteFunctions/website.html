@@ -1554,14 +1554,27 @@
         gap: 10px 12px;
         align-items: end;
     }
-    #listDomains .ld-field select.form-control {
+    /* Closed <select> labels clip if height + vertical padding fight (see harmonize.css). */
+    #listDomains .ld-field select.form-control,
+    #listDomains.form-horizontal select.form-control,
+    #listDomains .form-horizontal select.form-control,
+    #listDomains form.form-horizontal.bordered-row select.form-control {
         width: 100% !important;
         min-width: 0 !important;
-        min-height: 38px;
-        padding: 6px 28px 6px 10px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: none !important;
+        padding: 0 36px 0 12px !important;
+        line-height: 44px !important;
+        font-size: 14px !important;
+        box-sizing: border-box !important;
+        vertical-align: middle;
+        overflow: visible !important;
         color: var(--text-primary, #2f3640) !important;
-        background-color: var(--bg-primary, #fff) !important;
-        white-space: normal;
+        background-color: var(--bg-secondary, #fff) !important;
+        background-position: right 12px center !important;
+        background-size: 18px !important;
+        white-space: nowrap;
     }
     #listDomains .ld-actions {
         display: flex;
