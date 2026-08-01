@@ -1536,7 +1536,7 @@
                                 {% trans "Modify" %}
                             </button>
                             <button type="button"
-                                    ng-click="deleteRule(rule.id, rule.proto, rule.port, rule.ipAddress)"
+                                    ng-click="$parent.deleteRule(rule.id, rule.proto, rule.port, rule.ipAddress, rule.name); $event.stopPropagation()"
                                     class="btn-delete"
                                     title="{% trans 'Delete Rule' %}">
                                 <i class="fas fa-times"></i>

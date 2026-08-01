@@ -18,6 +18,44 @@ function getCookie(name) {
     return cookieValue;
 }
 
+/**
+ * Confirm destructive firewall actions.
+ * Prefers PNotify confirm (Docker Manager pattern); falls back to window.confirm.
+ */
+function firewallConfirmDelete(title, text, onConfirm) {
+    var msg = text || 'Are you sure?';
+    if (typeof PNotify !== 'undefined') {
+        try {
+            (new PNotify({
+                title: title || 'Confirmation Needed',
+                text: msg,
+                icon: 'fa fa-question-circle',
+                hide: false,
+                confirm: {
+                    confirm: true
+                },
+                buttons: {
+                    closer: false,
+                    sticker: false
+                },
+                history: {
+                    history: false
+                }
+            })).get().on('pnotify.confirm', function () {
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            });
+            return;
+        } catch (e) {
+            /* fall through to window.confirm */
+        }
+    }
+    if (window.confirm(msg) && typeof onConfirm === 'function') {
+        onConfirm();
+    }
+}
+
 /* Java script code to ADD Firewall Rules */
 
 app.controller('firewallController', function ($scope, $http, $timeout) {
@@ -376,30 +414,36 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
     $scope.removeTrustedSSHWhitelist = function(ip) {
         if (!ip) return;
-        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') || '' } };
-        $http.post('/base/sshSecurityWhitelistRemove', { ip: ip }, config).then(
-            function(response) {
-                var res = response.data;
-                if (typeof res === 'string') {
-                    try { res = JSON.parse(res); } catch (e) { res = {}; }
-                }
-                if (res && res.status === 1) {
-                    populateTrustedSSHWhitelist();
-                    if (typeof PNotify !== 'undefined') {
-                        new PNotify({ title: 'Trusted IPs', text: 'IP removed', type: 'success', delay: 4000 });
+        firewallConfirmDelete(
+            'Remove Trusted IP',
+            'Are you sure you want to remove trusted SSH IP "' + ip + '" from the whitelist?',
+            function () {
+                var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') || '' } };
+                $http.post('/base/sshSecurityWhitelistRemove', { ip: ip }, config).then(
+                    function(response) {
+                        var res = response.data;
+                        if (typeof res === 'string') {
+                            try { res = JSON.parse(res); } catch (e) { res = {}; }
+                        }
+                        if (res && res.status === 1) {
+                            populateTrustedSSHWhitelist();
+                            if (typeof PNotify !== 'undefined') {
+                                new PNotify({ title: 'Trusted IPs', text: 'IP removed', type: 'success', delay: 4000 });
+                            }
+                        } else {
+                            var errRm = (res && res.error) ? res.error : 'Failed to remove';
+                            if (typeof PNotify !== 'undefined') {
+                                new PNotify({ title: 'Trusted IPs', text: errRm, type: 'error', delay: 6000 });
+                            }
+                        }
+                    },
+                    function(err) {
+                        var em2 = (err.data && err.data.error) ? err.data.error : 'Request failed';
+                        if (typeof PNotify !== 'undefined') {
+                            new PNotify({ title: 'Trusted IPs', text: em2, type: 'error', delay: 6000 });
+                        }
                     }
-                } else {
-                    var errRm = (res && res.error) ? res.error : 'Failed to remove';
-                    if (typeof PNotify !== 'undefined') {
-                        new PNotify({ title: 'Trusted IPs', text: errRm, type: 'error', delay: 6000 });
-                    }
-                }
-            },
-            function(err) {
-                var em2 = (err.data && err.data.error) ? err.data.error : 'Request failed';
-                if (typeof PNotify !== 'undefined') {
-                    new PNotify({ title: 'Trusted IPs', text: em2, type: 'error', delay: 6000 });
-                }
+                );
             }
         );
     };
@@ -963,74 +1007,81 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         });
     };
 
-    $scope.deleteRule = function (id, proto, port, ruleIP) {
+    $scope.deleteRule = function (id, proto, port, ruleIP, ruleName) {
+        var nameLabel = (ruleName && String(ruleName).trim()) ? String(ruleName).trim() : ('#' + id);
+        var detail = nameLabel + ' (' + (proto || '') + '/' + (port || '') + ', ' + (ruleIP || '') + ')';
+        firewallConfirmDelete(
+            'Delete Firewall Rule',
+            'Are you sure you want to delete firewall rule "' + detail + '"? This cannot be undone.',
+            function () {
+                $scope.rulesLoading = true;
 
-        $scope.rulesLoading = true;
+                url = "/firewall/deleteRule";
 
-        url = "/firewall/deleteRule";
+                var data = {
+                    id: id,
+                    proto: proto,
+                    port: port,
+                    ruleIP: ruleIP
+                };
 
-        var data = {
-            id: id,
-            proto: proto,
-            port: port,
-            ruleIP: ruleIP
-        };
+                var config = {
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
 
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+
+                $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if (response.data.delete_status === 1) {
+
+
+                        populateCurrentRecords();
+                        $scope.actionFailed = true;
+                        $scope.actionSuccess = true;
+
+                        $scope.canNotAddRule = true;
+                        $scope.ruleAdded = true;
+                        $scope.couldNotConnect = true;
+
+
+                    }
+                    else {
+
+                        $scope.rulesLoading = false;
+                        $scope.actionFailed = true;
+                        $scope.actionSuccess = true;
+
+                        $scope.canNotAddRule = false;
+                        $scope.ruleAdded = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+
+                    }
+
+                }
+
+                function cantLoadInitialDatas(response) {
+
+                    $scope.rulesLoading = false;
+                    $scope.actionFailed = true;
+                    $scope.actionSuccess = true;
+
+                    $scope.canNotAddRule = true;
+                    $scope.ruleAdded = true;
+                    $scope.couldNotConnect = false;
+
+
+                }
             }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-
-            if (response.data.delete_status === 1) {
-
-
-                populateCurrentRecords();
-                $scope.actionFailed = true;
-                $scope.actionSuccess = true;
-
-                $scope.canNotAddRule = true;
-                $scope.ruleAdded = true;
-                $scope.couldNotConnect = true;
-
-
-            }
-            else {
-
-                $scope.rulesLoading = false;
-                $scope.actionFailed = true;
-                $scope.actionSuccess = true;
-
-                $scope.canNotAddRule = false;
-                $scope.ruleAdded = true;
-                $scope.couldNotConnect = true;
-
-                $scope.errorMessage = response.data.error_message;
-
-
-            }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-
-            $scope.rulesLoading = false;
-            $scope.actionFailed = true;
-            $scope.actionSuccess = true;
-
-            $scope.canNotAddRule = true;
-            $scope.ruleAdded = true;
-            $scope.couldNotConnect = false;
-
-
-        }
+        );
 
 
     };
@@ -1380,71 +1431,77 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     };
 
     $scope.removeBannedIP = function(id, ip) {
-        if (!confirm('Are you sure you want to unban IP address ' + ip + '?')) {
-            return;
-        }
+        var ipLabel = ip || ('#' + id);
+        firewallConfirmDelete(
+            'Unban IP Address',
+            'Are you sure you want to unban IP address "' + ipLabel + '"?',
+            function () {
+                $scope.bannedIPsLoading = true;
+                $scope.bannedIPActionFailed = true;
+                $scope.bannedIPActionSuccess = true;
+                $scope.bannedIPCouldNotConnect = true;
 
-        $scope.bannedIPsLoading = true;
-        $scope.bannedIPActionFailed = true;
-        $scope.bannedIPActionSuccess = true;
-        $scope.bannedIPCouldNotConnect = true;
+                var data = { id: id };
 
-        var data = { id: id };
+                var url = "/firewall/removeBannedIP";
+                var config = {
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
 
-        var url = "/firewall/removeBannedIP";
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                $http.post(url, data, config).then(function(response) {
+                    $scope.bannedIPsLoading = false;
+                    if (response.data.status === 1) {
+                        $scope.bannedIPActionSuccess = false;
+                        populateBannedIPs(); // Refresh the list
+                    } else {
+                        $scope.bannedIPActionFailed = false;
+                        $scope.bannedIPErrorMessage = response.data.error_message;
+                    }
+                }, function(error) {
+                    $scope.bannedIPsLoading = false;
+                    $scope.bannedIPCouldNotConnect = false;
+                });
             }
-        };
-
-        $http.post(url, data, config).then(function(response) {
-            $scope.bannedIPsLoading = false;
-            if (response.data.status === 1) {
-                $scope.bannedIPActionSuccess = false;
-                populateBannedIPs(); // Refresh the list
-            } else {
-                $scope.bannedIPActionFailed = false;
-                $scope.bannedIPErrorMessage = response.data.error_message;
-            }
-        }, function(error) {
-            $scope.bannedIPsLoading = false;
-            $scope.bannedIPCouldNotConnect = false;
-        });
+        );
     };
 
     $scope.deleteBannedIP = function(id, ip) {
-        if (!confirm('Are you sure you want to permanently delete the record for IP address ' + ip + '? This action cannot be undone.')) {
-            return;
-        }
+        var ipLabel = ip || ('#' + id);
+        firewallConfirmDelete(
+            'Delete Banned IP Record',
+            'Are you sure you want to permanently delete the record for IP address "' + ipLabel + '"? This action cannot be undone.',
+            function () {
+                $scope.bannedIPsLoading = true;
+                $scope.bannedIPActionFailed = true;
+                $scope.bannedIPActionSuccess = true;
+                $scope.bannedIPCouldNotConnect = true;
 
-        $scope.bannedIPsLoading = true;
-        $scope.bannedIPActionFailed = true;
-        $scope.bannedIPActionSuccess = true;
-        $scope.bannedIPCouldNotConnect = true;
+                var data = { id: id };
 
-        var data = { id: id };
+                var url = "/firewall/deleteBannedIP";
+                var config = {
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
 
-        var url = "/firewall/deleteBannedIP";
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                $http.post(url, data, config).then(function(response) {
+                    $scope.bannedIPsLoading = false;
+                    if (response.data.status === 1) {
+                        $scope.bannedIPActionSuccess = false;
+                        populateBannedIPs(); // Refresh the list
+                    } else {
+                        $scope.bannedIPActionFailed = false;
+                        $scope.bannedIPErrorMessage = response.data.error_message;
+                    }
+                }, function(error) {
+                    $scope.bannedIPsLoading = false;
+                    $scope.bannedIPCouldNotConnect = false;
+                });
             }
-        };
-
-        $http.post(url, data, config).then(function(response) {
-            $scope.bannedIPsLoading = false;
-            if (response.data.status === 1) {
-                $scope.bannedIPActionSuccess = false;
-                populateBannedIPs(); // Refresh the list
-            } else {
-                $scope.bannedIPActionFailed = false;
-                $scope.bannedIPErrorMessage = response.data.error_message;
-            }
-        }, function(error) {
-            $scope.bannedIPsLoading = false;
-            $scope.bannedIPCouldNotConnect = false;
-        });
+        );
     };
 
     $scope.openModifyModal = function(bannedIP) {
