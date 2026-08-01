@@ -3506,7 +3506,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         e.preventDefault();
     });
 
-    var masterDomain = "";
+    var masterDomain = ($("#domainNamePage").text() || "").trim();
 
     $scope.aliasTable = false;
     $scope.addAliasButton = false;
@@ -3516,6 +3516,10 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.aliasCreated = true;
     $scope.manageAliasLoading = true;
     $scope.operationSuccess = true;
+
+    if (masterDomain) {
+        $scope.masterDomain = masterDomain;
+    }
 
     $scope.createAliasEnter = function ($event) {
         var keyCode = $event.which || $event.keyCode;

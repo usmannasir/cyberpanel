@@ -48,16 +48,16 @@
                                 <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                                 <div class="col-sm-6">
                                     <input name="dom" type="text" class="form-control"
-                                           ng-model="domainNameCreate" required>
+                                           ng-model="aliasDomain" required>
                                 </div>
                                 <div style="margin-bottom: 1%;" class=" col-sm-1">
                                     <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                        <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                     </a>
                                 </div>
                             </div>
 
-                            <div ng-hide="installationDetailsForm" ng-hide="installationDetailsForm"
+                            <div ng-hide="installationDetailsForm"
                                  class="form-group">
                                 <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
                                 <div class="col-sm-9">
@@ -74,7 +74,7 @@
                             <div ng-hide="installationDetailsForm" class="form-group">
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-4">
-                                    <button type="button" ng-click="createDomain()"
+                                    <button type="button" ng-click="addAliasFunc()"
                                             class="btn btn-primary btn-lg">{% trans "Create Alias" %}</button>
 
                                 </div>
@@ -101,7 +101,7 @@
                                     </div>
 
                                     <div ng-hide="success" class="alert alert-success">
-                                        <p>{% trans "Website succesfully created." %}</p>
+                                        <p>{% trans "Alias succesfully created." %}</p>
                                     </div>
 
 
@@ -165,55 +165,64 @@
 
                                 <div class="col-sm-11">
                                     <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
-                                           type="text" class="form-control" ng-model="domainNameCreate"
+                                           type="text" class="form-control"
                                            required>
                                 </div>
 
                                 <div style="margin-bottom: 1%;" class=" col-sm-1">
                                     <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                        <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                     </a>
                                 </div>
 
 
                                 <div class="col-sm-12">
-                                    <table class="table">
-                                        <thead>
-                                        <tr>
-                                            <th>Domain</th>
-                                            <th>Launch</th>
-                                            <th>Path</th>
-                                            <th>SSL</th>
-                                            <th>Delete</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for alias in aliases %}
-                                        <tr>
-                                            <td>{{ alias }}</td>
-                                            <td><a href="//{{ alias }}" target="_blank"><img width="30px" height="30"
-                                                                                       class="center-block"
-                                                                                       src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
-                                            </td>
-                                            <td>{{ path }}</td>
-                                            <td>
-                                                <button type="button"
-                                                        ng-click="issueSSL('{{ masterDomain }}','{{ alias }}')"
-                                                        class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
-                                            </td>
-                                            <td>
-                                                <button type="button"
-                                                        ng-click="removeAlias('{{ masterDomain }}','{{ alias }}')"
-                                                        class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="5">{% trans "No domain aliases have been added yet." %}</td>
-                                        </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
+                                    <!-- Show message when no aliases exist -->
+                                    <div ng-hide="{{ noAlias }}" class="alert alert-info">
+                                        <p>{% trans "No domain aliases found for this domain." %}</p>
+                                    </div>
+                                    
+                                    <!-- Show aliases table when aliases exist -->
+                                    <div ng-show="{{ noAlias }}">
+                                        <table class="table">
+                                            <thead>
+                                            <tr>
+                                                <th>{% trans "Alias Domain" %}</th>
+                                                <th>{% trans "Master Domain" %}</th>
+                                                <th>{% trans "Launch" %}</th>
+                                                <th>{% trans "SSL" %}</th>
+                                                <th>{% trans "Delete" %}</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for alias in aliases %}
+                                            <tr>
+                                                <td>{{ alias }}</td>
+                                                <td>{{ masterDomain }}</td>
+                                                <td>
+                                                    <a href="http://{{ alias }}" target="_blank">
+                                                        <img width="30px" height="30" class="center-block"
+                                                             src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}">
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <button type="button"
+                                                            ng-click="issueSSL('{{ masterDomain }}', '{{ alias }}')"
+                                                            class="btn ra-50 btn-primary">{% trans "Issue SSL" %}</button>
+                                                </td>
+                                                <td>
+                                                    <button type="button"
+                                                            ng-click="removeAlias('{{ masterDomain }}', '{{ alias }}')"
+                                                            class="btn ra-50 btn-danger"
+                                                            onclick="return confirm('{% trans "Are you sure you want to delete this alias?" %}')">
+                                                        {% trans "Delete" %}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
 
