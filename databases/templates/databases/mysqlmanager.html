@@ -510,13 +510,44 @@
         .page-title {
             font-size: 2rem;
         }
+
+        .page-header {
+            text-align: left;
+        }
+
+        .header-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .header-actions a {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            width: 100%;
+        }
         
         .stat-value {
             font-size: 2rem;
         }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -0.5rem;
+            padding: 0 0.5rem;
+        }
         
         .processes-table {
-            font-size: 1rem;
+            font-size: 0.875rem;
+            min-width: 720px;
         }
         
         .processes-table th,
@@ -526,6 +557,55 @@
         
         .info-text {
             max-width: 150px;
+        }
+
+        /* Card-style process rows when very narrow */
+        .processes-table thead {
+            display: none;
+        }
+
+        .processes-table,
+        .processes-table tbody,
+        .processes-table tr,
+        .processes-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .processes-table {
+            min-width: 0;
+        }
+
+        .processes-table tr {
+            background: var(--bg-secondary, #f8f9ff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+        }
+
+        .processes-table td {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.35rem 0;
+            border: none;
+        }
+
+        .processes-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-secondary, #64748b);
+            flex-shrink: 0;
+        }
+
+        .processes-table tr.empty-row td {
+            display: block;
+            text-align: center;
+        }
+
+        .processes-table tr.empty-row td::before {
+            content: none;
         }
     }
 </style>
@@ -616,10 +696,10 @@
                     </thead>
                     <tbody>
                         <tr ng-repeat="process in processes">
-                            <td>
+                            <td data-label="{% trans 'ID' %}">
                                 <span class="process-id" ng-bind="process.id"></span>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'User' %}">
                                 <div class="process-user">
                                     <div class="user-icon">
                                         <i class="fas fa-user"></i>
@@ -627,34 +707,34 @@
                                     <span ng-bind="process.user"></span>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'Database' %}">
                                 <i class="fas fa-database" style="color: var(--text-muted); margin-right: 0.5rem;"></i>
                                 <span ng-bind="process.database || 'None'"></span>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'Command' %}">
                                 <span class="command-badge" ng-bind="process.command"></span>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'Time' %}">
                                 <span class="time-badge" ng-bind="process.time + 's'"></span>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'State' %}">
                                 <span class="state-badge" 
                                       ng-class="{'state-active': process.state === 'executing', 'state-idle': process.state !== 'executing'}"
                                       ng-bind="process.state || 'Idle'"></span>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'Query Info' %}">
                                 <span class="info-text" 
                                       ng-bind="(process.info && process.info !== 'NULL') ? process.info : 'No query'"
                                       ng-attr-title="{$ (process.info && process.info !== 'NULL') ? process.info : 'No query' $}"></span>
                             </td>
-                            <td>
+                            <td data-label="{% trans 'Progress' %}">
                                 <div class="progress-bar">
                                     <div class="progress-fill" 
                                          ng-style="{'width': (process.progress || 0) + '%'}"></div>
                                 </div>
                             </td>
                         </tr>
-                        <tr ng-if="processes.length === 0">
+                        <tr ng-if="processes.length === 0" class="empty-row">
                             <td colspan="8" class="empty-state">
                                 <i class="fas fa-check-circle"></i>
                                 <p>{% trans "No active processes found" %}</p>

@@ -1,0 +1,31 @@
+from django.urls import path, re_path
+from . import views
+
+urlpatterns = [
+    path('', views.emailMarketing, name='emailMarketing'),
+    path('fetchUsers', views.fetchUsers, name='fetchUsers'),
+    path('enableDisableMarketing', views.enableDisableMarketing, name='enableDisableMarketing'),
+    path('saveConfigureVerify', views.saveConfigureVerify, name='saveConfigureVerify'),
+    path('fetchVerifyLogs', views.fetchVerifyLogs, name='fetchVerifyLogs'),
+    re_path(r'^(?P<domain>.+)/emailLists$', views.createEmailList, name='createEmailList'),
+    path('submitEmailList', views.submitEmailList, name='submitEmailList'),
+    re_path(r'^(?P<domain>.+)/manageLists$', views.manageLists, name='manageLists'),
+    re_path(r'^(?P<domain>.+)/manageSMTP$', views.manageSMTP, name='manageSMTP'),
+    re_path(r'^(?P<domain>.+)/configureVerify$', views.configureVerify, name='configureVerify'),
+    path('fetchEmails', views.fetchEmails, name='fetchEmails'),
+    path('deleteList', views.deleteList, name='deleteList'),
+    path('emailVerificationJob', views.emailVerificationJob, name='emailVerificationJob'),
+    path('deleteEmail', views.deleteEmail, name='deleteEmail'),
+    path('saveSMTPHost', views.saveSMTPHost, name='saveSMTPHost'),
+    path('fetchSMTPHosts', views.fetchSMTPHosts, name='fetchSMTPHosts'),
+    path('smtpHostOperations', views.smtpHostOperations, name='smtpHostOperations'),
+    path('composeEmailMessage', views.composeEmailMessage, name='composeEmailMessage'),
+    path('saveEmailTemplate', views.saveEmailTemplate, name='saveEmailTemplate'),
+    path('sendEmails', views.sendEmails, name='sendEmails'),
+    re_path(r'^preview/(?P<templateName>[-\w]+)/$', views.templatePreview, name='templatePreview'),
+    path('fetchJobs', views.fetchJobs, name='fetchJobs'),
+    path('startEmailJob', views.startEmailJob, name='startEmailJob'),
+    path('deleteTemplate', views.deleteTemplate, name='deleteTemplate'),
+    path('deleteJob', views.deleteJob, name='deleteJob'),
+    re_path(r'^remove/(?P<listName>[-\w]+)/(?P<emailAddress>\w+@.+)$', views.remove, name='remove'),
+]

@@ -75,7 +75,9 @@ def litespeedStatus(request):
                     counter = counter + 1
                     continue
                 else:
-                    loadedModules.append(items)
+                    # Skip blank/whitespace lines from lshttpd -v trailing output
+                    if items and str(items).strip():
+                        loadedModules.append(items.strip())
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")

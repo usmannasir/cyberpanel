@@ -41,6 +41,26 @@
             --skeleton-base: #e9ebef;
             --skeleton-shine: #f4f5f7;
             --focus-ring: #5856d6;
+            /* Fluid UI scale (viewport-aware; no transform zoom) */
+            --cp-root-font: clamp(15px, 0.28vw + 14.1px, 17.5px);
+            --cp-sidebar-width: clamp(272px, 17vw, 300px);
+            --cp-content-max: min(1680px, 100%);
+            --cp-pad-main-x: clamp(1rem, 2.2vw, 2rem);
+            --cp-pad-main-y: clamp(1.25rem, 2vw, 2rem);
+            --cp-header-height: clamp(4.25rem, 5.5vw, 5rem);
+            --cp-font-xs: 0.75rem;
+            --cp-font-sm: 0.875rem;
+            --cp-font-md: 1rem;
+            --cp-font-lg: 1.125rem;
+            --cp-space-xs: 0.25rem;
+            --cp-space-sm: 0.5rem;
+            --cp-space-md: 1rem;
+            --cp-space-lg: 1.5rem;
+            --cp-space-xl: 2rem;
+        }
+
+        html {
+            font-size: var(--cp-root-font);
         }
         
         /* Dark Theme Colors */
@@ -92,6 +112,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: var(--cp-font-md);
             background: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
@@ -111,14 +132,14 @@
         /* Header */
         #header {
             background: var(--bg-secondary);
-            height: 80px;
+            height: var(--cp-header-height);
             display: flex;
             align-items: center;
-            padding: 0 30px;
+            padding: 0 var(--cp-pad-main-x);
             box-shadow: 0 2px 12px var(--shadow-color);
             position: fixed;
             top: 0;
-            left: 260px;
+            left: var(--cp-sidebar-width);
             right: 0;
             z-index: 1000;
             transition: background-color 0.12s ease;
@@ -258,7 +279,7 @@
         
         /* Sidebar */
         #sidebar {
-            width: 260px;
+            width: var(--cp-sidebar-width);
             background: var(--bg-sidebar);
             height: 100vh;
             position: fixed;
@@ -595,8 +616,8 @@
         
         /* Main Content */
         #main-content {
-            margin-left: 260px;
-            padding: 110px 30px 30px;
+            margin-left: var(--cp-sidebar-width);
+            padding: calc(var(--cp-header-height) + 1.75rem) var(--cp-pad-main-x) var(--cp-pad-main-y);
             min-height: 100vh;
             background: var(--bg-primary);
             transition: background-color 0.3s ease;
@@ -605,8 +626,8 @@
         /* Notification Banner */
         .notification-banner {
             position: fixed;
-            top: 80px;
-            left: 260px;
+            top: var(--cp-header-height);
+            left: var(--cp-sidebar-width);
             right: 0;
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             border-bottom: 1px solid #f59e0b;
@@ -689,8 +710,8 @@
         /* AI Scanner Security Banner */
         .ai-scanner-banner {
             position: fixed;
-            top: 80px;
-            left: 260px;
+            top: var(--cp-header-height);
+            left: var(--cp-sidebar-width);
             right: 0;
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
             border-bottom: 2px solid #4f46e5;
@@ -832,8 +853,8 @@
         /* .htaccess Feature Banner */
         .htaccess-feature-banner {
             position: fixed;
-            top: 80px;
-            left: 260px;
+            top: var(--cp-header-height);
+            left: var(--cp-sidebar-width);
             right: 0;
             background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
             border-bottom: 2px solid #065f46;
@@ -1519,7 +1540,7 @@ textarea:focus-visible,
 }
 
 /* ============================================================
-   Sidebar quick-filter / jump-to search
+   Sidebar feature/site search (near server-info / uptime)
    ============================================================ */
 .sidebar-search {
     position: relative;
@@ -1527,21 +1548,31 @@ textarea:focus-visible,
     display: flex;
     align-items: center;
 }
+#sidebar .server-info .sidebar-search--server {
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 8px 0 0;
+    order: 3;
+}
+#sidebar .server-info {
+    flex-wrap: wrap;
+}
 .sidebar-search > i {
     position: absolute;
     left: 12px;
     color: var(--text-secondary);
     font-size: 13px;
     pointer-events: none;
+    z-index: 1;
 }
 .sidebar-search input {
     width: 100%;
-    padding: 10px 32px 10px 32px;
+    padding: 9px 32px 9px 32px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--bg-secondary);
+    background: var(--bg-primary, var(--bg-secondary));
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 12.5px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -1553,6 +1584,8 @@ textarea:focus-visible,
 #sidebar-search-clear {
     position: absolute;
     right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -1560,13 +1593,62 @@ textarea:focus-visible,
     padding: 4px;
     border-radius: 5px;
     line-height: 1;
+    z-index: 2;
 }
 #sidebar-search-clear:hover { color: var(--danger-color); background: var(--bg-hover); }
 #sidebar-search-clear[hidden] { display: none; }
 
+.sidebar-search-results {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 40;
+    max-height: min(50vh, 320px);
+    overflow-y: auto;
+    background: var(--bg-secondary, #1e1e2e);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    padding: 4px;
+}
+.sidebar-search-results[hidden] { display: none; }
+.sidebar-search-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.sidebar-search-item:hover,
+.sidebar-search-item.active {
+    background: var(--bg-hover, rgba(88,86,214,0.18));
+}
+.sidebar-search-ic {
+    width: 22px;
+    flex: 0 0 22px;
+    color: var(--accent-color, #7c7cff);
+    margin-top: 2px;
+}
+.sidebar-search-label {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+.sidebar-search-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
 .sidebar-search-empty {
-    margin: 6px 15px;
-    padding: 10px 12px;
+    margin-top: 6px;
+    padding: 8px 10px;
     font-size: 12px;
     color: var(--text-secondary);
     text-align: center;
@@ -1575,6 +1657,11 @@ textarea:focus-visible,
     border-radius: 8px;
 }
 .sidebar-search-empty[hidden] { display: none; }
+@media (max-width: 768px) {
+    .sidebar-search-results {
+        max-height: min(40vh, 260px);
+    }
+}
 
 /* ============================================================
    Breadcrumb / page context strip
@@ -2057,9 +2144,9 @@ button[aria-busy="true"] { opacity: 0.75; cursor: progress; }
 :root { --accent-soft-bg: rgba(88,86,214,0.10); }
 [data-theme="dark"] { --accent-soft-bg: rgba(124,127,243,0.16); }
 
-/* Comfortable base typography */
+/* Comfortable base typography (tracks fluid html root) */
 body {
-    font-size: 14px;
+    font-size: var(--cp-font-md);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -2111,7 +2198,7 @@ body {
     color: var(--text-secondary);
     margin: 16px 18px 6px;
     padding: 0;
-    font-size: 10.5px;
+    font-size: clamp(0.7rem, 0.15vw + 0.65rem, 0.78rem);
     letter-spacing: 0.7px;
     font-weight: 700;
     text-align: left;
@@ -2124,10 +2211,10 @@ body {
     background: transparent;
     box-shadow: none;
     margin: 1px 10px;
-    padding: 9px 12px;
+    padding: 0.65rem 0.85rem;
     border-radius: 8px;
-    gap: 11px;
-    font-size: 13.5px;
+    gap: 0.7rem;
+    font-size: clamp(0.9rem, 0.12vw + 0.86rem, 1rem);
     font-weight: 500;
     color: var(--text-secondary);
 }
@@ -2153,7 +2240,7 @@ body {
     height: 22px;
     border-radius: 6px;
 }
-#sidebar .menu-item i { font-size: 15px; color: var(--text-secondary); }
+#sidebar .menu-item i { font-size: 1.05rem; color: var(--text-secondary); }
 #sidebar .menu-item:hover i { color: var(--accent-color); }
 
 /* Keep the promo entry distinctive but a touch softer */
@@ -2193,7 +2280,7 @@ body {
 }
 
 /* Breadcrumb: quieter */
-.cp-breadcrumb { font-size: 12.5px; }
+.cp-breadcrumb { font-size: var(--cp-font-sm); }
 
 /* =================================================================
    v2.4.8 — Service promo banner (e.g. managed Email Delivery)
@@ -2388,4 +2475,92 @@ html[data-theme="light"] #sidebar .menu-item.active,
 html.cp-theme-light #sidebar .menu-item.active {
     background-color: var(--accent-soft-bg);
     color: var(--accent-color);
+}
+
+/* =================================================================
+   Fluid UI scale — readable desktop chrome, adaptive hubs
+   (rem + clamp; no page transform zoom)
+   ================================================================= */
+#main-content .modern-container,
+#main-content .page-container {
+    max-width: var(--cp-content-max);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--cp-pad-main-x);
+    padding-right: var(--cp-pad-main-x);
+    box-sizing: border-box;
+}
+
+#main-content .form-label,
+#main-content label.form-label {
+    font-size: var(--cp-font-sm);
+}
+
+#main-content .form-control,
+#main-content select.form-control,
+#main-content textarea.form-control,
+#main-content .select-control {
+    font-size: var(--cp-font-md);
+    min-height: 2.65rem;
+}
+
+#main-content .btn,
+#main-content .control-btn,
+#main-content .btn-add,
+#main-content .tab-button {
+    font-size: var(--cp-font-sm);
+}
+
+#main-content table th,
+#main-content .rules-table th {
+    font-size: var(--cp-font-xs);
+}
+
+#main-content table td,
+#main-content .rules-table td {
+    font-size: var(--cp-font-sm);
+}
+
+#main-content .rules-table-section {
+    display: block;
+    visibility: visible;
+    overflow-x: auto;
+}
+
+#sidebar .server-info .info-line {
+    font-size: var(--cp-font-sm);
+}
+
+#sidebar .logo-text .brand {
+    font-size: var(--cp-font-lg);
+}
+
+#sidebar .logo-text .tagline {
+    font-size: var(--cp-font-xs);
+}
+
+.sidebar-search input,
+#sidebar .sidebar-search input {
+    font-size: var(--cp-font-sm);
+}
+
+@media (max-width: 768px) {
+    :root {
+        --cp-sidebar-width: 280px;
+        --cp-root-font: 15.5px;
+        --cp-pad-main-x: 0.9rem;
+    }
+
+    #main-content .modern-container,
+    #main-content .page-container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+@media (min-width: 1400px) {
+    :root {
+        --cp-content-max: min(1760px, 100%);
+    }
 }

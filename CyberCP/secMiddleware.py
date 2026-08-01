@@ -57,7 +57,7 @@ class secMiddleware:
                         'error_message': "This request need session.",
                         "errorMessage": "This request need session."}
                     final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                    return HttpResponse(final_json, content_type='application/json')
                 else:
                     from django.shortcuts import redirect
                     from loginSystem.views import loadLoginPage
@@ -73,31 +73,39 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = secMiddleware.get_client_ip(request)
-
-            if ipAddr.find('.') > -1:
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
-                else:
-                    del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
-                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                                 "errorMessage": "Session reuse detected, IPAddress logged."}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+            raw_ip = secMiddleware.get_client_ip(request) or ''
+            # Normalize the same way loginSystem stores ipAddr (IPv6: first 3 hextets)
+            if raw_ip.find(':') > -1:
+                session_ip = ':'.join(raw_ip.split(':')[:3])
             else:
-                ipAddr = ':'.join(secMiddleware.get_client_ip(request).split(':')[:3])
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
+                session_ip = raw_ip
+
+            stored_ip = request.session.get('ipAddr')
+            # Missing/empty bind: seed from current client (avoids false need-session after IP key loss)
+            if not stored_ip and session_ip:
+                request.session['ipAddr'] = session_ip
+                stored_ip = session_ip
+
+            if admin.securityLevel == secMiddleware.LOW or stored_ip == session_ip:
+                pass
+            else:
+                # Also accept REMOTE_ADDR if CF header/proxy briefly disagrees with login-time IP
+                alt_ip = request.META.get('REMOTE_ADDR') or ''
+                if alt_ip.find(':') > -1:
+                    alt_norm = ':'.join(alt_ip.split(':')[:3])
+                else:
+                    alt_norm = alt_ip
+                if stored_ip == alt_norm:
+                    request.session['ipAddr'] = session_ip or alt_norm
                 else:
                     del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
+                    if 'ipAddr' in request.session:
+                        del request.session['ipAddr']
+                    logging.writeToFile(raw_ip)
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                    return HttpResponse(final_json, content_type='application/json')
         except:
             pass
 
