@@ -57,7 +57,7 @@
     <script src="{% static 'baseTemplate/vendor/select2/select2.full.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}&ui=2">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-ui.css' %}?v={{ CP_VERSION }}&ui=3">
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-tokens.css' %}?v={{ CP_VERSION }}">
 
     {% block header_scripts %}{% endblock %}
@@ -180,16 +180,6 @@
             </div>
         </div>
 
-        <div class="sidebar-search">
-            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
-            <input type="text" id="sidebar-search-input" autocomplete="off"
-                   placeholder="{% trans 'Search menu…' %}" aria-label="{% trans 'Search navigation menu' %}">
-            <button type="button" id="sidebar-search-clear" aria-label="{% trans 'Clear search' %}" hidden>
-                <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-        </div>
-        <div class="sidebar-search-empty" id="sidebar-search-empty" hidden>{% trans "No matching menu items" %}</div>
-
         <div class="server-info" ng-controller="systemStatusInfo" ng-init="getSystemStatus()">
             <div class="server-icon">
                 <i class="fas fa-desktop"></i>
@@ -209,6 +199,18 @@
                         <span ng-show="uptimeLoaded">{$ uptime $}</span>
                     </span>
                 </div>
+            </div>
+            <div class="sidebar-search sidebar-search--server" id="sidebar-feature-search">
+                <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="text" id="sidebar-search-input" autocomplete="off" spellcheck="false"
+                       placeholder="{% trans 'Search features & sites…' %}"
+                       aria-label="{% trans 'Search panel features and websites' %}"
+                       aria-autocomplete="list" aria-controls="sidebar-search-results" aria-expanded="false">
+                <button type="button" id="sidebar-search-clear" aria-label="{% trans 'Clear search' %}" hidden>
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+                <div class="sidebar-search-results" id="sidebar-search-results" role="listbox" hidden></div>
+                <div class="sidebar-search-empty" id="sidebar-search-empty" hidden>{% trans "No matching results" %}</div>
             </div>
         </div>
 
@@ -323,7 +325,7 @@
 
         // Comprehensive page index — the palette is the universal fast path now
         // that the sidebar is intentionally shallow. ACL-gated server-side.
-        var CP_PAGES = [
+        window.CP_PAGES = [
             // Quick actions
             {% if admin or createWebsite %}{l:'{% trans "Create Website" %}', h:'{% url "createWebsite" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},{% endif %}
             {l:'{% trans "Deploy WordPress" %}', h:'{% url "createWordpress" %}', i:'fa-circle-plus', g:'{% trans "Quick actions" %}'},
@@ -418,11 +420,28 @@
             {% endif %}
         ];
 
+        var sitesLoaded = false;
+        var sitesLoading = false;
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = (cookies[i] || '').trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         function buildIndex() {
-            items = CP_PAGES.map(function (p) {
+            items = (window.CP_PAGES || []).map(function (p) {
                 return {label: p.l, href: p.h, icon: (p.i.indexOf('fa-') === 0 ? 'fas ' + p.i : p.i), group: p.g, target: p.t || ''};
             });
-            // Normalize icon prefix (CP_PAGES uses bare fa-* or full "fab fa-*")
             // Supplement with any sidebar links not already indexed (e.g. plugin items)
             var sidebar = document.getElementById('sidebar');
             if (!sidebar) { return; }
@@ -436,6 +455,51 @@
                 var label = (lbl ? lbl.textContent : a.textContent).trim();
                 if (!label) { return; }
                 items.push({label: label, href: href, icon: 'fas fa-arrow-right', group: '{% trans "Pages" %}', target: a.getAttribute('target') || ''});
+            });
+        }
+
+        function mergeSiteItems(list, groupLabel, iconClass) {
+            if (!Array.isArray(list)) { return; }
+            var seen = {};
+            items.forEach(function (it) { seen[it.href] = 1; });
+            list.forEach(function (row) {
+                var domain = (row && row.domain) ? String(row.domain) : '';
+                if (!domain) { return; }
+                var href = '/websites/' + encodeURIComponent(domain) + '/settings';
+                if (seen[href]) { return; }
+                seen[href] = 1;
+                var label = domain;
+                if (row.masterDomain) { label = domain + ' (' + row.masterDomain + ')'; }
+                items.push({label: label, href: href, icon: iconClass, group: groupLabel, target: ''});
+            });
+        }
+
+        function ensureSites(done) {
+            if (sitesLoaded || sitesLoading) { if (done) done(); return; }
+            sitesLoading = true;
+            var csrf = getCookie('csrftoken') || '';
+            var headers = {'Content-Type': 'application/json', 'X-CSRFToken': csrf};
+            var bodySites = JSON.stringify({page: 1, recordsToShow: 100});
+            var bodyChild = JSON.stringify({page: 1, recordsToShow: 100});
+            function parseList(resp) {
+                return resp.json().then(function (data) {
+                    if (!data || data.listWebSiteStatus !== 1) { return []; }
+                    try {
+                        return (typeof data.data === 'string') ? JSON.parse(data.data) : (data.data || []);
+                    } catch (e) { return []; }
+                }).catch(function () { return []; });
+            }
+            Promise.all([
+                fetch('/websites/fetchWebsitesList', {method: 'POST', credentials: 'same-origin', headers: headers, body: bodySites}).then(parseList),
+                fetch('/websites/fetchChildDomainsMain', {method: 'POST', credentials: 'same-origin', headers: headers, body: bodyChild}).then(parseList)
+            ]).then(function (pair) {
+                if (!items.length) { buildIndex(); }
+                mergeSiteItems(pair[0], '{% trans "Websites" %}', 'fas fa-globe');
+                mergeSiteItems(pair[1], '{% trans "Subdomains" %}', 'fas fa-diagram-project');
+                sitesLoaded = true;
+            }).catch(function () { /* ACL / network: keep static index */ }).then(function () {
+                sitesLoading = false;
+                if (done) done();
             });
         }
 
@@ -473,10 +537,12 @@
             else { filtered = items.filter(function (it) { return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1; }); }
             activeIdx = 0; render();
         }
-        function open() {
+        function open(initialTerm) {
             if (!items.length) { buildIndex(); }
             overlay.hidden = false;
-            input.value = ''; search('');
+            input.value = initialTerm || '';
+            ensureSites(function () { search(input.value); });
+            search(input.value);
             setTimeout(function () { input.focus(); }, 10);
             document.addEventListener('keydown', onKey, true);
         }
@@ -484,6 +550,31 @@
             overlay.hidden = true;
             document.removeEventListener('keydown', onKey, true);
         }
+        function queryItems(term, limit) {
+            if (!items.length) { buildIndex(); }
+            term = (term || '').trim().toLowerCase();
+            var out;
+            if (!term) { out = items.slice(0, limit || 8); }
+            else {
+                out = items.filter(function (it) {
+                    return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1;
+                });
+                if (limit) { out = out.slice(0, limit); }
+            }
+            return out;
+        }
+        window.CPSearch = {
+            open: open,
+            close: close,
+            ensureIndex: function () { if (!items.length) buildIndex(); },
+            ensureSites: ensureSites,
+            query: queryItems,
+            go: function (it) {
+                if (!it) { return; }
+                if (it.target === '_blank') { window.open(it.href, '_blank'); }
+                else { window.location.href = it.href; }
+            }
+        };
         function go() {
             var it = filtered[activeIdx];
             if (!it) { return; }
@@ -681,82 +772,109 @@
             initSidebarSearch();
         });
 
-        // Sidebar quick-filter / jump-to
+        // Sidebar typeahead: same index as Ctrl/Cmd-K (pages + websites/subdomains).
         function initSidebarSearch() {
             var input = document.getElementById('sidebar-search-input');
             if (!input) { return; }
             var clearBtn = document.getElementById('sidebar-search-clear');
             var emptyMsg = document.getElementById('sidebar-search-empty');
-            var sidebar  = document.getElementById('sidebar');
-            var sectionHeaders = Array.prototype.slice.call(sidebar.querySelectorAll('.section-header'));
-            var serverInfo = sidebar.querySelector('.server-info');
+            var resultsEl = document.getElementById('sidebar-search-results');
+            var activeIdx = 0;
+            var current = [];
+            var debounceTimer = null;
 
-            function inSubmenu(el) {
-                var p = el.parentElement;
-                while (p && p !== sidebar) {
-                    if (p.classList && p.classList.contains('submenu')) { return true; }
-                    p = p.parentElement;
+            function hideDropdown() {
+                if (resultsEl) { resultsEl.hidden = true; resultsEl.innerHTML = ''; }
+                if (emptyMsg) { emptyMsg.hidden = true; }
+                input.setAttribute('aria-expanded', 'false');
+                activeIdx = 0;
+                current = [];
+            }
+            function paintActive() {
+                if (!resultsEl) { return; }
+                var rows = resultsEl.querySelectorAll('.sidebar-search-item');
+                rows.forEach(function (r, i) { r.classList.toggle('active', i === activeIdx); });
+            }
+            function render(list) {
+                current = list || [];
+                if (!resultsEl) { return; }
+                resultsEl.innerHTML = '';
+                if (!current.length) {
+                    resultsEl.hidden = true;
+                    if (emptyMsg) { emptyMsg.hidden = false; }
+                    input.setAttribute('aria-expanded', 'false');
+                    return;
                 }
-                return false;
-            }
-            function topItems() {
-                return Array.prototype.slice.call(sidebar.querySelectorAll('.menu-item')).filter(function (el) {
-                    return !inSubmenu(el);
+                if (emptyMsg) { emptyMsg.hidden = true; }
+                resultsEl.hidden = false;
+                input.setAttribute('aria-expanded', 'true');
+                current.forEach(function (it, i) {
+                    var row = document.createElement('button');
+                    row.type = 'button';
+                    row.className = 'sidebar-search-item' + (i === activeIdx ? ' active' : '');
+                    row.setAttribute('role', 'option');
+                    row.innerHTML = '<span class="sidebar-search-ic"><i class="' + (it.icon || 'fas fa-arrow-right') + '"></i></span>' +
+                        '<span><div class="sidebar-search-label"></div><div class="sidebar-search-sub"></div></span>';
+                    row.querySelector('.sidebar-search-label').textContent = it.label;
+                    row.querySelector('.sidebar-search-sub').textContent = it.group || '';
+                    row.addEventListener('mouseenter', function () { activeIdx = i; paintActive(); });
+                    row.addEventListener('click', function () {
+                        if (window.CPSearch) { window.CPSearch.go(it); }
+                        else { window.location.href = it.href; }
+                    });
+                    resultsEl.appendChild(row);
                 });
             }
-            function reset() {
-                sidebar.querySelectorAll('.menu-item').forEach(function (el) { el.style.display = ''; el.classList.remove('expanded'); });
-                sidebar.querySelectorAll('.submenu').forEach(function (s) { s.style.display = ''; s.classList.remove('show'); });
-                sectionHeaders.forEach(function (h) { h.style.display = ''; });
-                if (serverInfo) { serverInfo.style.display = ''; }
-                emptyMsg.hidden = true;
-                clearBtn.hidden = true;
-                if (typeof setActiveMenuState === 'function') { setActiveMenuState(); }
-            }
-            function filter(term) {
-                clearBtn.hidden = false;
-                sectionHeaders.forEach(function (h) { h.style.display = 'none'; });
-                if (serverInfo) { serverInfo.style.display = 'none'; }
-                var anyVisible = false;
-                topItems().forEach(function (item) {
-                    var sib = item.nextElementSibling;
-                    var submenu = (sib && sib.classList && sib.classList.contains('submenu')) ? sib : null;
-                    var label = (item.textContent || '').toLowerCase();
-                    if (submenu) {
-                        var groupMatch = label.indexOf(term) !== -1;
-                        var childVisible = false;
-                        Array.prototype.slice.call(submenu.querySelectorAll('.menu-item')).forEach(function (c) {
-                            var m = groupMatch || (c.textContent || '').toLowerCase().indexOf(term) !== -1;
-                            c.style.display = m ? '' : 'none';
-                            if (m) { childVisible = true; }
-                        });
-                        if (groupMatch || childVisible) {
-                            item.style.display = '';
-                            submenu.style.display = '';
-                            submenu.classList.add('show');
-                            item.classList.add('expanded');
-                            anyVisible = true;
-                        } else {
-                            item.style.display = 'none';
-                            submenu.style.display = 'none';
-                            submenu.classList.remove('show');
-                            item.classList.remove('expanded');
-                        }
-                    } else {
-                        var match = label.indexOf(term) !== -1;
-                        item.style.display = match ? '' : 'none';
-                        if (match) { anyVisible = true; }
-                    }
+            function runSearch() {
+                var term = input.value.trim();
+                clearBtn.hidden = !term;
+                if (!term) { hideDropdown(); return; }
+                if (!window.CPSearch) { return; }
+                window.CPSearch.ensureIndex();
+                window.CPSearch.ensureSites(function () {
+                    render(window.CPSearch.query(term, 12));
                 });
-                emptyMsg.hidden = anyVisible;
+                render(window.CPSearch.query(term, 12));
             }
             input.addEventListener('input', function () {
-                var t = input.value.trim().toLowerCase();
-                if (!t) { reset(); } else { filter(t); }
+                if (debounceTimer) { clearTimeout(debounceTimer); }
+                debounceTimer = setTimeout(runSearch, 120);
             });
-            clearBtn.addEventListener('click', function () { input.value = ''; reset(); input.focus(); });
+            input.addEventListener('focus', function () {
+                if (input.value.trim()) { runSearch(); }
+            });
+            clearBtn.addEventListener('click', function () {
+                input.value = '';
+                hideDropdown();
+                clearBtn.hidden = true;
+                input.focus();
+            });
             input.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') { input.value = ''; reset(); }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!current.length) { runSearch(); return; }
+                    activeIdx = Math.min(activeIdx + 1, current.length - 1);
+                    paintActive();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIdx = Math.max(activeIdx - 1, 0);
+                    paintActive();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (current[activeIdx] && window.CPSearch) { window.CPSearch.go(current[activeIdx]); }
+                    else if (window.CPSearch) { window.CPSearch.open(input.value); }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (input.value) { input.value = ''; hideDropdown(); clearBtn.hidden = true; }
+                    else { hideDropdown(); input.blur(); }
+                } else if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    if (window.CPSearch) { window.CPSearch.open(input.value); }
+                }
+            });
+            document.addEventListener('click', function (e) {
+                var wrap = document.getElementById('sidebar-feature-search');
+                if (wrap && !wrap.contains(e.target)) { hideDropdown(); }
             });
         }
 

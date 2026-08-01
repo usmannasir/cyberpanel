@@ -13,132 +13,62 @@ class PHPManager:
     @staticmethod
     def findPHPVersions():
         """
-        Comprehensive PHP version detection that checks multiple locations and methods
+        Detect installed LiteSpeed PHP versions via filesystem only.
+        Avoids `yum/dnf list available` (multi-second) on every page render.
         """
         try:
             finalPHPVersions = []
-            
-            # Method 1: Check /usr/local/lsws directory (LiteSpeed PHP)
-            try:
-                result = ProcessUtilities.outputExecutioner('ls -la /usr/local/lsws')
-                lsphp_lines = [line for line in result.split('\n') if 'lsphp' in line]
+            lsws_root = '/usr/local/lsws'
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                    logging.writeToFile(f'Found PHP lines in findPHPVersions: {lsphp_lines}')
-
-                # Parse lsphp directories
-                for line in lsphp_lines:
-                    try:
-                        parts = line.split()
-                        if len(parts) >= 9:
-                            for part in parts:
-                                if part.startswith('lsphp') and part != 'lsphp':
-                                    version_part = part[5:]  # Remove 'lsphp' prefix
-                                    if len(version_part) >= 2:
-                                        major = version_part[0]
-                                        minor = version_part[1:]
-                                        formatted_version = f'PHP {major}.{minor}'
-                                        
-                                        # Validate the PHP installation
-                                        phpString = PHPManager.getPHPString(formatted_version)
-                                        php_path = f"/usr/local/lsws/lsphp{phpString}/bin/php"
-                                        lsphp_path = f"/usr/local/lsws/lsphp{phpString}/bin/lsphp"
-                                        
-                                        if os.path.exists(php_path) or os.path.exists(lsphp_path):
-                                            if formatted_version not in finalPHPVersions:
-                                                finalPHPVersions.append(formatted_version)
-                    except (IndexError, ValueError):
-                        continue
-            except Exception as e:
-                if os.path.exists(ProcessUtilities.debugPath):
-                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                    logging.writeToFile(f'Error checking /usr/local/lsws: {str(e)}')
-
-            # Method 2: Check system-wide PHP installations
-            try:
-                # Check for system PHP versions
-                system_php_versions = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
-                for version in system_php_versions:
-                    formatted_version = f'PHP {version}'
+            def _add_from_dirname(name):
+                if not name or not name.startswith('lsphp') or name == 'lsphp':
+                    return
+                version_part = name[5:]
+                if len(version_part) < 2 or not version_part.isdigit():
+                    return
+                major = version_part[0]
+                minor = version_part[1:]
+                formatted_version = f'PHP {major}.{minor}'
+                php_path = f"{lsws_root}/{name}/bin/php"
+                lsphp_path = f"{lsws_root}/{name}/bin/lsphp"
+                if os.path.exists(php_path) or os.path.exists(lsphp_path):
                     if formatted_version not in finalPHPVersions:
-                        # Check if this version exists in system
-                        try:
-                            phpString = PHPManager.getPHPString(formatted_version)
-                            php_path = f"/usr/local/lsws/lsphp{phpString}/bin/php"
-                            lsphp_path = f"/usr/local/lsws/lsphp{phpString}/bin/lsphp"
-                            
-                            if os.path.exists(php_path) or os.path.exists(lsphp_path):
-                                finalPHPVersions.append(formatted_version)
-                        except:
-                            continue
-            except Exception as e:
-                if os.path.exists(ProcessUtilities.debugPath):
-                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                    logging.writeToFile(f'Error checking system PHP: {str(e)}')
+                        finalPHPVersions.append(formatted_version)
 
-            # Method 3: Check package manager for available PHP versions
+            # Primary: scan /usr/local/lsws/lsphp* directories (no shell).
             try:
-                # Try to detect available PHP packages
-                if ProcessUtilities.decideDistro() in [ProcessUtilities.centos, ProcessUtilities.cent8]:
-                    # For CentOS/RHEL/AlmaLinux
-                    command = "yum list available | grep lsphp | grep -E 'lsphp[0-9]+' | head -20"
-                else:
-                    # For Ubuntu/Debian
-                    command = "apt list --installed | grep lsphp | grep -E 'lsphp[0-9]+' | head -20"
-                
-                result = ProcessUtilities.outputExecutioner(command)
-                if result and result.strip():
-                    for line in result.split('\n'):
-                        if 'lsphp' in line:
-                            # Extract version from package name
-                            import re
-                            match = re.search(r'lsphp(\d+)(\d+)', line)
-                            if match:
-                                major = match.group(1)
-                                minor = match.group(2)
-                                formatted_version = f'PHP {major}.{minor}'
-                                
-                                if formatted_version not in finalPHPVersions:
-                                    # Validate installation
-                                    try:
-                                        phpString = PHPManager.getPHPString(formatted_version)
-                                        php_path = f"/usr/local/lsws/lsphp{phpString}/bin/php"
-                                        lsphp_path = f"/usr/local/lsws/lsphp{phpString}/bin/lsphp"
-                                        
-                                        if os.path.exists(php_path) or os.path.exists(lsphp_path):
-                                            finalPHPVersions.append(formatted_version)
-                                    except:
-                                        continue
+                if os.path.isdir(lsws_root):
+                    for entry in os.listdir(lsws_root):
+                        full = os.path.join(lsws_root, entry)
+                        if os.path.isdir(full):
+                            _add_from_dirname(entry)
             except Exception as e:
                 if os.path.exists(ProcessUtilities.debugPath):
                     from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                    logging.writeToFile(f'Error checking package manager: {str(e)}')
+                    logging.writeToFile(f'Error scanning /usr/local/lsws: {str(e)}')
 
-            # Method 4: Fallback to checking common PHP versions
+            # Fallback probe for common versions if scan returned nothing.
             if not finalPHPVersions:
-                fallback_versions = ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
-                for version in fallback_versions:
+                for version in ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']:
+                    formatted_version = f'PHP {version}'
                     try:
-                        phpString = PHPManager.getPHPString(version)
-                        php_path = f"/usr/local/lsws/lsphp{phpString}/bin/php"
-                        lsphp_path = f"/usr/local/lsws/lsphp{phpString}/bin/lsphp"
+                        phpString = PHPManager.getPHPString(formatted_version)
+                        php_path = f"{lsws_root}/lsphp{phpString}/bin/php"
+                        lsphp_path = f"{lsws_root}/lsphp{phpString}/bin/lsphp"
                         if os.path.exists(php_path) or os.path.exists(lsphp_path):
-                            finalPHPVersions.append(version)
-                    except:
+                            finalPHPVersions.append(formatted_version)
+                    except Exception:
                         continue
 
-            # Sort versions (newest first)
             def version_sort_key(version):
                 try:
-                    # Extract version number for sorting
                     version_num = version.replace('PHP ', '').split('.')
                     major = int(version_num[0])
                     minor = int(version_num[1]) if len(version_num) > 1 else 0
                     return (major, minor)
-                except:
+                except Exception:
                     return (0, 0)
-            
+
             finalPHPVersions.sort(key=version_sort_key, reverse=True)
 
             if os.path.exists(ProcessUtilities.debugPath):

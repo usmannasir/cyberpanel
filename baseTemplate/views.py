@@ -31,7 +31,7 @@ import re
 # Create your views here.
 
 VERSION = '2.5.5'
-BUILD = 1
+BUILD = 2
 
 
 def _version_compare(a, b):

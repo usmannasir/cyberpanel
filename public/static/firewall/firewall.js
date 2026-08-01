@@ -171,9 +171,14 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
     firewallStatus();
 
-    // Load both tabs on init; also load on tab change (watch) so content always shows
-    populateCurrentRecords();
-    populateBannedIPs();
+    // Load active tab data on init (avoid flipping UX by always prefetching banned).
+    if ($scope.activeTab === 'banned') {
+        populateBannedIPs();
+    } else if ($scope.activeTab === 'trusted') {
+        populateTrustedSSHWhitelist();
+    } else {
+        populateCurrentRecords();
+    }
 
     $scope.$watch('activeTab', function(newVal, oldVal) {
         if (newVal === oldVal || !newVal) return;
@@ -497,19 +502,24 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         };
     }
     
-    // Load banned IPs on page load - use $timeout for Angular compatibility
-    // Wrap in try-catch to ensure it executes even if there are other errors
+    // Prefetch banned IPs shortly after load only when that tab is active (avoids tab race noise).
     try {
         $timeout(function() {
             try {
-                console.log('=== Calling populateBannedIPs from $timeout on page load ===');
-                populateBannedIPs();
+                if ($scope.activeTab === 'banned') {
+                    console.log('=== Calling populateBannedIPs from $timeout on page load ===');
+                    populateBannedIPs();
+                } else if ($scope.activeTab === 'rules') {
+                    populateCurrentRecords();
+                } else if ($scope.activeTab === 'trusted') {
+                    populateTrustedSSHWhitelist();
+                }
             } catch(e) {
-                console.error('Error in populateBannedIPs from timeout:', e);
+                console.error('Error in firewall tab prefetch from timeout:', e);
             }
         }, 500);
     } catch(e) {
-        console.error('Error setting up timeout for populateBannedIPs:', e);
+        console.error('Error setting up timeout for firewall tab prefetch:', e);
     }
     
     $scope.addRule = function () {
@@ -1030,7 +1040,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.ruleAdded = true;
                 $scope.couldNotConnect = true;
 
-                $scope.rulesDetails = true;
+                /* Keep rules UI visible while firewall is stopped so operators can still edit stored rules. */
+                $scope.rulesDetails = false;
 
                 firewallStatus();
 
@@ -1093,19 +1104,17 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.status == 1) {
 
                 if (response.data.firewallStatus == 1) {
-                    $scope.rulesDetails = false;
                     $scope.status = "ON";
                 }
                 else {
-                    $scope.rulesDetails = true;
                     $scope.status = "OFF";
                 }
             }
             else {
-
-                $scope.rulesDetails = true;
                 $scope.status = "OFF";
             }
+            /* Never hide the rules table/form when firewall is OFF (was rulesDetails=true). */
+            $scope.rulesDetails = false;
 
 
         }

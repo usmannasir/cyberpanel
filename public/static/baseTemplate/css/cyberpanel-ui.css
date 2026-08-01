@@ -1519,7 +1519,7 @@ textarea:focus-visible,
 }
 
 /* ============================================================
-   Sidebar quick-filter / jump-to search
+   Sidebar feature/site search (near server-info / uptime)
    ============================================================ */
 .sidebar-search {
     position: relative;
@@ -1527,21 +1527,31 @@ textarea:focus-visible,
     display: flex;
     align-items: center;
 }
+#sidebar .server-info .sidebar-search--server {
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 8px 0 0;
+    order: 3;
+}
+#sidebar .server-info {
+    flex-wrap: wrap;
+}
 .sidebar-search > i {
     position: absolute;
     left: 12px;
     color: var(--text-secondary);
     font-size: 13px;
     pointer-events: none;
+    z-index: 1;
 }
 .sidebar-search input {
     width: 100%;
-    padding: 10px 32px 10px 32px;
+    padding: 9px 32px 9px 32px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--bg-secondary);
+    background: var(--bg-primary, var(--bg-secondary));
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 12.5px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -1553,6 +1563,8 @@ textarea:focus-visible,
 #sidebar-search-clear {
     position: absolute;
     right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -1560,13 +1572,62 @@ textarea:focus-visible,
     padding: 4px;
     border-radius: 5px;
     line-height: 1;
+    z-index: 2;
 }
 #sidebar-search-clear:hover { color: var(--danger-color); background: var(--bg-hover); }
 #sidebar-search-clear[hidden] { display: none; }
 
+.sidebar-search-results {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 40;
+    max-height: min(50vh, 320px);
+    overflow-y: auto;
+    background: var(--bg-secondary, #1e1e2e);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    padding: 4px;
+}
+.sidebar-search-results[hidden] { display: none; }
+.sidebar-search-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.sidebar-search-item:hover,
+.sidebar-search-item.active {
+    background: var(--bg-hover, rgba(88,86,214,0.18));
+}
+.sidebar-search-ic {
+    width: 22px;
+    flex: 0 0 22px;
+    color: var(--accent-color, #7c7cff);
+    margin-top: 2px;
+}
+.sidebar-search-label {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+.sidebar-search-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
 .sidebar-search-empty {
-    margin: 6px 15px;
-    padding: 10px 12px;
+    margin-top: 6px;
+    padding: 8px 10px;
     font-size: 12px;
     color: var(--text-secondary);
     text-align: center;
@@ -1575,6 +1636,11 @@ textarea:focus-visible,
     border-radius: 8px;
 }
 .sidebar-search-empty[hidden] { display: none; }
+@media (max-width: 768px) {
+    .sidebar-search-results {
+        max-height: min(40vh, 260px);
+    }
+}
 
 /* ============================================================
    Breadcrumb / page context strip

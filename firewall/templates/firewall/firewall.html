@@ -1274,6 +1274,10 @@
 
     <!-- Rules Panel (ng-show so panel is always in DOM; visibility toggled by tab) -->
     <div class="rules-panel" ng-show="activeTab === 'rules'">
+        <div ng-show="status === 'OFF'" class="alert alert-warning" style="margin: 1rem 1.5rem 0;">
+            <i class="fas fa-exclamation-triangle alert-icon"></i>
+            <span>{% trans "Firewall is stopped. Rules below are still stored and will apply when you start the firewall." %}</span>
+        </div>
         <div class="panel-header">
             <div class="panel-title">
                 <div class="panel-icon">
@@ -1346,8 +1350,8 @@
             </div>
         </div>
         
-        <!-- Add Rule Section -->
-        <div ng-hide="rulesDetails" class="add-rule-section">
+        <!-- Add Rule Section (always visible on Rules tab; do not gate on firewall ON/OFF) -->
+        <div class="add-rule-section">
             <form class="rule-form">
                 <div class="form-group">
                     <label class="form-label">{% trans "Rule Name" %}</label>
@@ -1393,8 +1397,8 @@
             </form>
         </div>
         
-        <!-- Rules Table -->
-        <div ng-hide="rulesDetails" class="rules-table-section">
+        <!-- Rules Table (always visible on Rules tab; do not gate on firewall ON/OFF) -->
+        <div class="rules-table-section">
             <div class="table-responsive">
                 <table class="rules-table" ng-if="rules && rules.length > 0">
                 <thead>
