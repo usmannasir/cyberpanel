@@ -124,7 +124,6 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
-                        {% endif %}
                         <div class="cp-notif-item" data-key="backup" data-storekey="backupNotificationDismissed" data-store="session">
                             <div class="cp-notif-ic ic-warn"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
@@ -134,7 +133,6 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
-                        {% if not cosmetic.HidePromotions %}
                         <div class="cp-notif-item" data-key="ai" data-storekey="aiScannerNotificationDismissed" data-store="session">
                             <div class="cp-notif-ic ic-accent"><i class="fas fa-brain" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
