@@ -635,21 +635,25 @@
             padding: 10px;
         }
         
-        /* Improve table responsiveness */
+        /* Improve table responsiveness (skip List Domains cards) */
         .table-responsive {
             border: none;
             margin-bottom: 20px;
         }
         
-        .table {
+        .cyberpanel-website-page .table:not(.ld-exempt) {
             font-size: 14px !important;
-            min-width: 600px;
         }
         
-        .table th, .table td {
+        .cyberpanel-website-page .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .cyberpanel-website-page .table th,
+        .cyberpanel-website-page .table td {
             padding: 8px 6px !important;
             font-size: 13px !important;
-            white-space: nowrap;
         }
         
         /* Hide less important columns on mobile */
@@ -1428,61 +1432,153 @@
         }
     }
 
-    /* List Domains: readable selects + mobile card rows */
-    #listDomains .table-responsive {
+    /* List Domains: card layout (full path + works in narrow content with sidebar) */
+    #listDomains {
         width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        float: none !important;
     }
-    #listDomains .cyber-table select.form-control {
+    #listDomains .ld-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        width: 100%;
+    }
+    #listDomains .ld-toolbar .form-control {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto !important;
+    }
+    #listDomains .ld-close {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e5e7eb);
+        color: var(--danger-color, #ef4444);
+        font-size: 22px;
+        line-height: 1;
+        text-decoration: none !important;
+        background: var(--bg-secondary, transparent);
+    }
+    #listDomains .ld-close:hover {
+        background: var(--bg-hover, rgba(239, 68, 68, 0.08));
+    }
+    #listDomains .ld-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    #listDomains .ld-card {
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 12px;
+        background: var(--bg-primary, #fff);
+        padding: 14px 16px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #listDomains .ld-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    #listDomains .ld-domain {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    #listDomains .ld-launch {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e5e7eb);
+        color: var(--text-primary, #2f3640);
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    #listDomains .ld-launch img {
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
+    #listDomains .ld-path-block {
+        margin-bottom: 12px;
+    }
+    #listDomains .ld-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary, #8893a7);
+        margin-bottom: 4px;
+    }
+    #listDomains .ld-path {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal !important;
+        line-height: 1.45;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        background: var(--bg-muted, rgba(0,0,0,0.04));
+        border-radius: 8px;
+        padding: 8px 10px;
+        user-select: all;
+    }
+    #listDomains .ld-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px 12px;
+        align-items: end;
+    }
+    #listDomains .ld-field select.form-control {
+        width: 100% !important;
+        min-width: 0 !important;
         min-height: 38px;
-        min-width: 7.5rem;
         padding: 6px 28px 6px 10px !important;
         color: var(--text-primary, #2f3640) !important;
         background-color: var(--bg-primary, #fff) !important;
+        white-space: normal;
     }
-    #listDomains .cyber-table td[data-label="Path"] {
-        word-break: break-all;
-        max-width: 28rem;
+    #listDomains .ld-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        grid-column: 1 / -1;
     }
-    @media (max-width: 900px) {
-        #listDomains .cyber-table thead {
-            display: none;
+    #listDomains .ld-actions .btn {
+        flex: 1 1 auto;
+        min-width: 7rem;
+    }
+    @media (max-width: 560px) {
+        #listDomains .ld-controls {
+            grid-template-columns: 1fr;
         }
-        #listDomains .cyber-table,
-        #listDomains .cyber-table tbody,
-        #listDomains .cyber-table tr,
-        #listDomains .cyber-table td {
-            display: block;
-            width: 100%;
-        }
-        #listDomains .cyber-table tr {
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color, #e5e7eb);
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
-            background: var(--bg-primary, #fff);
-        }
-        #listDomains .cyber-table td {
-            border: none !important;
-            padding: 0.4rem 0 !important;
-        }
-        #listDomains .cyber-table td::before {
-            content: attr(data-label);
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: var(--text-secondary, #8893a7);
-            margin-bottom: 0.15rem;
-        }
-        #listDomains .cyber-table td[data-label="Path"] {
-            max-width: none;
-        }
-        #listDomains .cyber-table select.form-control {
-            width: 100%;
-            min-width: 0;
+        #listDomains .ld-actions .btn {
+            flex: 1 1 100%;
         }
     }
     
@@ -2129,73 +2225,57 @@
                                 </div>
 
 
-                                <div ng-hide="" class="form-group">
+                                <div class="ld-toolbar">
+                                    <input placeholder="{% trans 'Search Domain...' %}" ng-model="logSearch"
+                                           name="dom" type="search" class="form-control"
+                                           aria-label="{% trans 'Search Domain...' %}">
+                                    <a class="ld-close" title="{% trans 'Close' %}" ng-click="hideListDomains()" href=""
+                                       aria-label="{% trans 'Close' %}">&times;</a>
+                                </div>
 
-                                    <div class="col-sm-11">
-                                        <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
-                                               type="text" class="form-control" ng-model="domainNameCreate"
-                                               required>
-                                    </div>
-
-                                    <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                        <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
-                                                <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
+                                <div class="ld-list">
+                                    <div class="ld-card" ng-repeat="record in childDomains | filter:logSearch">
+                                        <div class="ld-card-top">
+                                            <div class="ld-domain" ng-bind="record.childDomain"></div>
+                                            <a class="ld-launch" href="{$ record.childLunch $}">
+                                                <img src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"
+                                                     alt="">
+                                                {% trans "Launch" %}
                                             </a>
                                         </div>
-
-
-                                    <div class="col-sm-12 table-responsive">
-                                        <table class="table cyber-table">
-                                            <thead>
-                                            <tr>
-                                                <th>Domain</th>
-                                                <th>Launch</th>
-                                                <th>Path</th>
-                                                <th>open_basedir</th>
-                                                <th>PHP</th>
-                                                <th>SSL</th>
-                                                <th>Delete</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr ng-repeat="record in childDomains | filter:logSearch">
-                                                <td data-label="Domain" ng-bind="record.childDomain"></td>
-                                                <td data-label="Launch"><a href="{$ record.childLunch $}"><img width="30px" height="30"
-                                                                                               class="center-block"
-                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"
-                                                                                               alt="{% trans 'Launch' %}"></a>
-                                                    </td>
-                                                    <td data-label="Path" ng-bind="record.path"></td>
-                                                    <td data-label="open_basedir">
-                                                        <select ng-change="changeChildBaseDir(record.childDomain,record.childBaseDir)"
-                                                                ng-model="record.childBaseDir" class="form-control"
-                                                                aria-label="open_basedir">
-                                                            <option value="Enable" ng-value="'Enable'">Enable</option>
-                                                            <option value="Disable" ng-value="'Disable'">Disable</option>
-                                                        </select>
-                                                    </td>
-                                                    <td data-label="PHP">
-                                                        <select ng-change="changePHP(record.childDomain,record.phpSelection)"
-                                                                ng-model="record.phpSelection" class="form-control"
-                                                                aria-label="PHP">
-                                                            {% for php in phps %}
-                                                                <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </td>
-                                                    <td data-label="SSL">
-                                                        <button type="button"
-                                                                ng-click="issueSSL(record.childDomain,record.path)"
-                                                                class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
-                                                    </td>
-                                                    <td data-label="Delete">
-                                                        <button type="button"
-                                                                ng-click="deleteChildDomain(record.childDomain)"
-                                                                class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <div class="ld-path-block">
+                                            <span class="ld-label">{% trans "Path" %}</span>
+                                            <code class="ld-path" title="{$ record.path $}" ng-bind="record.path"></code>
+                                        </div>
+                                        <div class="ld-controls">
+                                            <div class="ld-field">
+                                                <span class="ld-label">open_basedir</span>
+                                                <select ng-change="changeChildBaseDir(record.childDomain,record.childBaseDir)"
+                                                        ng-model="record.childBaseDir" class="form-control"
+                                                        aria-label="open_basedir">
+                                                    <option value="Enable" ng-value="'Enable'">Enable</option>
+                                                    <option value="Disable" ng-value="'Disable'">Disable</option>
+                                                </select>
+                                            </div>
+                                            <div class="ld-field">
+                                                <span class="ld-label">{% trans "PHP" %}</span>
+                                                <select ng-change="changePHP(record.childDomain,record.phpSelection)"
+                                                        ng-model="record.phpSelection" class="form-control"
+                                                        aria-label="PHP">
+                                                    {% for php in phps %}
+                                                        <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="ld-actions">
+                                                <button type="button"
+                                                        ng-click="issueSSL(record.childDomain,record.path)"
+                                                        class="btn ra-50 btn-primary">{% trans "Issue SSL" %}</button>
+                                                <button type="button"
+                                                        ng-click="deleteChildDomain(record.childDomain)"
+                                                        class="btn ra-50 btn-danger">{% trans "Delete" %}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

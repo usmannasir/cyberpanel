@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""List Domains (Full Settings): childBaseDir/phpSelection in JSON + select ng-value + mobile CSS."""
+"""List Domains (Full Settings): child JSON + card layout with full path text."""
 from __future__ import print_function
 
 import json
@@ -23,17 +23,22 @@ def main():
         os.path.join(ROOT, 'websiteFunctions/templates/websiteFunctions/website.html'),
         encoding='utf-8'
     ).read()
-    list_block = website_html
-    if 'id="listDomains"' in website_html:
-        list_block = website_html.split('id="listDomains"', 1)[1][:8000]
+    list_block = website_html.split('id="listDomains"', 1)[1][:12000] if 'id="listDomains"' in website_html else ''
+
     if "ng-value=\"'Enable'\"" not in list_block:
         failures.append('website.html List Domains: open_basedir needs ng-value Enable')
     if re.search(r'ng-model="record\.childBaseDir"[\s\S]{0,300}?<option>Enable</option>', list_block):
         failures.append('website.html: bare <option>Enable</option> still present')
-    if "data-label=\"Path\"" not in list_block:
-        failures.append('website.html List Domains: missing data-label for mobile cards')
-    if '#listDomains .cyber-table thead' not in website_html:
-        failures.append('website.html: missing List Domains mobile CSS')
+    if 'ld-card' not in list_block or 'ld-path' not in list_block:
+        failures.append('website.html List Domains: must use card layout with ld-path')
+    if 'class="table cyber-table"' in list_block:
+        failures.append('website.html List Domains: wide cyber-table must be replaced by cards')
+    if 'overflow-wrap: anywhere' not in website_html or '#listDomains .ld-path' not in website_html:
+        failures.append('website.html: missing List Domains full-path CSS')
+    if 'min-width: 600px' in website_html and '#listDomains' in website_html:
+        # Global 600px table min-width regresses narrow viewports
+        if re.search(r'\.table\s*\{[^}]*min-width:\s*600px', website_html):
+            failures.append('website.html: global table min-width 600px still present')
 
     acl_py = open(os.path.join(ROOT, 'plogical/acl.py'), encoding='utf-8').read()
     if 'def CachedAddonPermission' not in acl_py:
@@ -42,7 +47,7 @@ def main():
     website_py = open(os.path.join(ROOT, 'websiteFunctions/website.py'), encoding='utf-8').read()
     if 'CachedAddonPermission' not in website_py:
         failures.append('website.py loadDomainHome: should use CachedAddonPermission')
-    if "phpSelection': phpSelection" not in website_py and "'phpSelection': phpSelection" not in website_py:
+    if "'phpSelection': phpSelection" not in website_py:
         failures.append('website.py findChildsListJson: missing phpSelection')
 
     list_child = open(
@@ -52,7 +57,6 @@ def main():
     if 'web.path' not in list_child or 'web.phpSelection' not in list_child:
         failures.append('listChildDomains.html: cards should show path and PHP')
 
-    # Runtime: JSON shape for a known master if present
     try:
         sys.path.insert(0, ROOT)
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CyberCP.settings')
@@ -80,7 +84,7 @@ def main():
         for item in failures:
             print(' -', item)
         return 1
-    print('OK: List Domains childBaseDir / mobile / Full Settings cache contract holds')
+    print('OK: List Domains card layout / full path / childBaseDir contract holds')
     return 0
 
 
