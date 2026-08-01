@@ -266,3 +266,21 @@
 [data-theme="dark"] #main-content .dashboard-greeting p {
     color: var(--text-secondary) !important;
 }
+
+
+/* ---- Native <select> label visibility (List Websites / WP / Docker / etc.) ----
+   Bootstrap .form-control sets height:34px. Page styles often add padding:10-16px,
+   which clips the closed-select label ("10", "50 items", "Page 1") in half.
+   Use horizontal padding only and match line-height to height. */
+#main-content select.form-control,
+#main-content select.form-select,
+#main-content select.pagination-select {
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: none !important;
+    padding: 0 28px 0 12px !important;
+    line-height: 38px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+    vertical-align: middle;
+}

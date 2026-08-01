@@ -15,6 +15,7 @@
             $scope.wpSitesCount = $scope.debug.wp_sites_count;
             $scope.currentPage = 1;
             $scope.recordsToShow = 50; // Default to 50 items
+            $scope.totalPages = 0;
             $scope.expandedSites = {}; // Track which sites are expanded
             $scope.currentWP = null; // Store current WordPress site for password protection
 
@@ -358,14 +359,14 @@
         // Add a range filter for pagination
         cyberCPModule.filter('range', function() {
             return function(input, start, end) {
-                start = parseInt(start);
-                end = parseInt(end);
-                var direction = (start <= end) ? 1 : -1;
-                while (start != end) {
-                    input.push(start);
-                    start += direction;
+                start = parseInt(start, 10);
+                end = parseInt(end, 10);
+                if (isNaN(start) || isNaN(end) || end < start || end < 1) {
+                    return input;
                 }
-                input.push(end);
+                for (var i = start; i <= end; i++) {
+                    input.push(i);
+                }
                 return input;
             };
         });
@@ -436,7 +437,10 @@
             flex-wrap: wrap;
         }
         
-        .form-control {
+        /* Inputs only — native selects use global harmonize select rules. */
+        .search-bar input.form-control,
+        .modal-body input.form-control,
+        .modal-body textarea.form-control {
             padding: 12px 16px;
             border: 1px solid var(--border-color, #e8e9ff);
             border-radius: 8px;
@@ -446,10 +450,17 @@
             transition: all 0.2s ease;
         }
         
-        .form-control:focus {
+        .search-bar input.form-control:focus,
+        .modal-body input.form-control:focus,
+        .modal-body textarea.form-control:focus {
             outline: none;
             border-color: var(--accent-color, #5b5fcf);
             box-shadow: 0 0 0 3px rgba(91,95,207,0.1);
+        }
+
+        .search-bar select.form-control,
+        .pagination-info select.form-control {
+            width: 100%;
         }
         
         .btn {
@@ -786,6 +797,7 @@
                     </div>
                     <div style="width: 150px;">
                         <select ng-model="recordsToShow" class="form-control" ng-change="updatePagination()"
+                                aria-label="Records to show"
                                 ng-options="option.value as option.label for option in [{value: 10, label: '10 items'}, {value: 50, label: '50 items'}, {value: 100, label: '100 items'}]">
                         </select>
                     </div>
@@ -913,9 +925,11 @@
                     <span style="color: #64748b;">
                         Showing {$ ((currentPage-1)*recordsToShow) + 1 $} to {$ ((currentPage-1)*recordsToShow) + filteredSites.length $} of {$ (wpSites | filter:searchText).length $} sites
                     </span>
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;" ng-show="totalPages > 0">
                         <label style="margin: 0; color: #64748b;">Page:</label>
-                        <select ng-model="currentPage" class="form-control" style="width: 100px;" ng-options="page for page in [] | range:1:totalPages">
+                        <select ng-model="currentPage" class="form-control" style="width: 100px;"
+                                aria-label="Current page"
+                                ng-options="page for page in [] | range:1:totalPages">
                         </select>
                     </div>
                 </div>
