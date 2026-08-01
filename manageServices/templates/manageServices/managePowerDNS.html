@@ -146,12 +146,20 @@
         transition: all 0.3s ease;
         cursor: pointer;
     }
+
+    .form-select option {
+        color: var(--text-primary, #2f3640);
+        background: var(--bg-primary, white);
+    }
     
     .form-select:focus {
         outline: none;
         border-color: #5856d6;
         box-shadow: 0 0 0 3px rgba(88,86,214,0.1);
     }
+
+    .pdns-state-label.is-on { color: var(--success-color, #10b981); }
+    .pdns-state-label.is-off { color: var(--danger-color, #ef4444); }
     
     /* Toggle Switch */
     .toggle-switch {
@@ -422,10 +430,17 @@
                         <div class="status-label">{% trans "Service Status" %}</div>
                         <div class="status-toggle">
                             <label class="toggle-switch">
-                                <input type="checkbox" id="pdnsStatus">
+                                <input type="checkbox" id="pdnsStatus" ng-model="pdnsEnabled" ng-change="pdnsToggleChanged()">
                                 <span class="toggle-slider"></span>
                             </label>
+                            <span class="pdns-state-label" ng-class="{'is-on': pdnsEnabled, 'is-off': !pdnsEnabled}" style="font-weight: 700; min-width: 2.5rem;">
+                                <span ng-show="pdnsEnabled">{% trans "ON" %}</span>
+                                <span ng-hide="pdnsEnabled">{% trans "OFF" %}</span>
+                            </span>
                             <span style="font-weight: 600; color: var(--text-primary, #2f3640);">{% trans "Enable/Disable PowerDNS" %}</span>
+                        </div>
+                        <div class="help-text" style="margin-top: 8px;">
+                            {% trans "Current mode" %}: <strong ng-bind="dnsMode || 'Default'"></strong>
                         </div>
                     </div>
                 </div>
@@ -439,10 +454,10 @@
 
                     <div class="form-group">
                         <label class="form-label">{% trans "Select Function Mode" %}</label>
-                        <select ng-change="modeChange()" ng-model="dnsMode" class="form-select">
-                            <option>Default</option>
-                            <option>MASTER</option>
-                            <option>SLAVE</option>
+                        <select ng-change="modeChange()" ng-model="dnsMode" class="form-select" ng-init="dnsMode='{{ dnsMode|default:'Default'|escapejs }}'">
+                            <option value="Default">Default</option>
+                            <option value="MASTER">MASTER</option>
+                            <option value="SLAVE">SLAVE</option>
                         </select>
                         <div class="help-text">{% trans "Choose how PowerDNS should operate - Default, Master, or Slave mode" %}</div>
                     </div>
@@ -553,21 +568,5 @@
         {% endif %}
     </div>
 </div>
-
-<script>
-$(document).ready(function() {
-    // Initialize toggle switch
-    setTimeout(function() {
-        $('#pdnsStatus').bootstrapToggle({
-            on: 'Enabled',
-            off: 'Disabled',
-            onstyle: 'success',
-            offstyle: 'secondary',
-            size: 'normal'
-        });
-    }, 100);
-});
-</script>
-
 
 {% endblock %}

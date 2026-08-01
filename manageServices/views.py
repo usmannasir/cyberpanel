@@ -47,6 +47,13 @@ def managePowerDNS(request):
         data['slaveServerNS'] = pdnsStatus.masterServer
         data['masterServerIP'] = pdnsStatus.masterIP
 
+    # UI shows Default/MASTER/SLAVE; DB may store NATIVE for default mode
+    if pdnsStatus.type in ('MASTER', 'SLAVE'):
+        data['dnsMode'] = pdnsStatus.type
+    else:
+        data['dnsMode'] = 'Default'
+    data['pdnsEnabled'] = 1 if int(pdnsStatus.serverStatus or 0) == 1 else 0
+
     proc = httpProc(request, 'manageServices/managePowerDNS.html',
                     data, 'admin')
     return proc.render()
@@ -85,10 +92,15 @@ def fetchStatus(request):
                     try:
                         pdns = PDNSStatus.objects.get(pk=1)
                         data_ret['installCheck'] = pdns.serverStatus
+                        if pdns.type in ('MASTER', 'SLAVE'):
+                            data_ret['dnsMode'] = pdns.type
+                        else:
+                            data_ret['dnsMode'] = 'Default'
                         #data_ret['slaveIPData'] = pdns.also_notify
                     except:
                         PDNSStatus(serverStatus=1).save()
                         data_ret['installCheck'] = 1
+                        data_ret['dnsMode'] = 'Default'
                         #data_ret['slaveIPData'] = ''
 
                     json_data = json.dumps(data_ret)

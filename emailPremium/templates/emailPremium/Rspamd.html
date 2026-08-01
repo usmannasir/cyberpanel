@@ -11,8 +11,9 @@
     }
     
     .rspamd-container {
-        max-width: 1200px;
+        max-width: 920px;
         margin: 0 auto;
+        width: 100%;
     }
     
     /* Page Header */
@@ -218,6 +219,11 @@
         background: var(--bg-primary, white);
         transition: all 0.3s ease;
         cursor: pointer;
+    }
+
+    .form-select option {
+        color: var(--text-primary, #2f3640);
+        background: var(--bg-primary, white);
     }
     
     .form-select:focus {
@@ -545,7 +551,14 @@
     .help-text {
         font-size: 13px;
         color: var(--text-muted, #94a3b8);
-        margin-top: 5px;
+        margin: 0 0 8px 0;
+        display: block;
+        font-weight: 400;
+        text-transform: none;
+    }
+
+    .form-label + .help-text {
+        margin-top: -4px;
     }
     
     /* Responsive */
@@ -697,20 +710,16 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label">
-                        {% trans "Antivirus Status" %}
-                        <span class="help-text">{% trans "Enable or disable antivirus scanning" %}</span>
-                    </label>
+                    <label class="form-label">{% trans "Antivirus Status" %}</label>
+                    <div class="help-text">{% trans "Enable or disable antivirus scanning" %}</div>
                     <div class="toggle-container">
                         <input type="checkbox" id="antivirus_status" data-toggle="toggle">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="action_rspamd">
-                        {% trans "Action" %}
-                        <span class="help-text">{% trans "Action to take when virus is detected" %}</span>
-                    </label>
+                    <label class="form-label" for="action_rspamd">{% trans "Action" %}</label>
+                    <div class="help-text">{% trans "Action to take when virus is detected" %}</div>
                     <select class="form-select" id="action_rspamd" ng-model="action_rspamd">
                         <option selected="selected">Reject</option>
                         <option>Unset</option>
@@ -718,46 +727,36 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        {% trans "Scan MIME Parts" %}
-                        <span class="help-text">{% trans "Enable scanning of MIME parts" %}</span>
-                    </label>
+                    <label class="form-label">{% trans "Scan MIME Parts" %}</label>
+                    <div class="help-text">{% trans "Enable scanning of MIME parts" %}</div>
                     <div class="toggle-container">
                         <input type="checkbox" id="scan_mime_parts" data-toggle="toggle">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        {% trans "Log Clean" %}
-                        <span class="help-text">{% trans "Log clean messages" %}</span>
-                    </label>
+                    <label class="form-label">{% trans "Log Clean" %}</label>
+                    <div class="help-text">{% trans "Log clean messages" %}</div>
                     <div class="toggle-container">
                         <input type="checkbox" id="log_clean" data-toggle="toggle">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="max_size">
-                        {% trans "Max Size" %}
-                        <span class="help-text">{% trans "Maximum file size to scan (in bytes)" %}</span>
-                    </label>
+                    <label class="form-label" for="max_size">{% trans "Max Size" %}</label>
+                    <div class="help-text">{% trans "Maximum file size to scan (in bytes)" %}</div>
                     <input type="text" class="form-control" id="max_size" ng-model="max_size" placeholder="26214400" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="CLAMAV_VIRUS">
-                        {% trans "ClamAV Virus Symbol" %}
-                        <span class="help-text">{% trans "Symbol name for virus detection" %}</span>
-                    </label>
+                    <label class="form-label" for="CLAMAV_VIRUS">{% trans "ClamAV Virus Symbol" %}</label>
+                    <div class="help-text">{% trans "Symbol name for virus detection" %}</div>
                     <input type="text" class="form-control" id="CLAMAV_VIRUS" ng-model="CLAMAV_VIRUS" placeholder="CLAMAV_VIRUS" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="server">
-                        {% trans "Servers" %}
-                        <span class="help-text">{% trans "ClamAV server address" %}</span>
-                    </label>
+                    <label class="form-label" for="server">{% trans "Servers" %}</label>
+                    <div class="help-text">{% trans "ClamAV server address" %}</div>
                     <input type="text" class="form-control" id="server" ng-model="server" placeholder="127.0.0.1:3310" required>
                 </div>
 
@@ -804,36 +803,28 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label" for="TCPSocket">
-                        {% trans "TCP Socket" %}
-                        <span class="help-text">{% trans "ClamAV TCP socket port" %}</span>
-                    </label>
+                    <label class="form-label" for="TCPSocket">{% trans "TCP Socket" %}</label>
+                    <div class="help-text">{% trans "ClamAV TCP socket port" %}</div>
                     <input type="text" class="form-control" id="TCPSocket" ng-model="TCPSocket" placeholder="3310" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="TCPAddr">
-                        {% trans "TCP Address" %}
-                        <span class="help-text">{% trans "ClamAV TCP address" %}</span>
-                    </label>
+                    <label class="form-label" for="TCPAddr">{% trans "TCP Address" %}</label>
+                    <div class="help-text">{% trans "ClamAV TCP address" %}</div>
                     <input type="text" class="form-control" id="TCPAddr" ng-model="TCPAddr" placeholder="127.0.0.1" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        {% trans "Debug" %}
-                        <span class="help-text">{% trans "Enable debug logging" %}</span>
-                    </label>
+                    <label class="form-label">{% trans "Debug" %}</label>
+                    <div class="help-text">{% trans "Enable debug logging" %}</div>
                     <div class="toggle-container">
                         <input type="checkbox" id="clamav_Debug" data-toggle="toggle">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="LogFile">
-                        {% trans "Log Path" %}
-                        <span class="help-text">{% trans "Path to ClamAV log file" %}</span>
-                    </label>
+                    <label class="form-label" for="LogFile">{% trans "Log Path" %}</label>
+                    <div class="help-text">{% trans "Path to ClamAV log file" %}</div>
                     <input type="text" class="form-control" id="LogFile" ng-model="LogFile" placeholder="/var/log/clamav/clamav.log" required>
                 </div>
 
@@ -880,18 +871,14 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label" for="smtpd_milters">
-                        {% trans "SMTPD Milters" %}
-                        <span class="help-text">{% trans "Mail filter configuration for SMTP daemon" %}</span>
-                    </label>
+                    <label class="form-label" for="smtpd_milters">{% trans "SMTPD Milters" %}</label>
+                    <div class="help-text">{% trans "Mail filter configuration for SMTP daemon" %}</div>
                     <input type="text" class="form-control" id="smtpd_milters" ng-model="smtpd_milters" placeholder="inet:127.0.0.1:11332" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="non_smtpd_milters">
-                        {% trans "Non-SMTPD Milters" %}
-                        <span class="help-text">{% trans "Mail filter configuration for non-SMTP mail" %}</span>
-                    </label>
+                    <label class="form-label" for="non_smtpd_milters">{% trans "Non-SMTPD Milters" %}</label>
+                    <div class="help-text">{% trans "Mail filter configuration for non-SMTP mail" %}</div>
                     <input type="text" class="form-control" id="non_smtpd_milters" ng-model="non_smtpd_milters" placeholder="inet:127.0.0.1:11332" required>
                 </div>
 
@@ -938,18 +925,14 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label" for="write_servers">
-                        {% trans "Write Servers" %}
-                        <span class="help-text">{% trans "Redis write servers configuration" %}</span>
-                    </label>
+                    <label class="form-label" for="write_servers">{% trans "Write Servers" %}</label>
+                    <div class="help-text">{% trans "Redis write servers configuration" %}</div>
                     <input type="text" class="form-control" id="write_servers" ng-model="write_servers" placeholder="127.0.0.1:6379" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="read_servers">
-                        {% trans "Read Servers" %}
-                        <span class="help-text">{% trans "Redis read servers configuration" %}</span>
-                    </label>
+                    <label class="form-label" for="read_servers">{% trans "Read Servers" %}</label>
+                    <div class="help-text">{% trans "Redis read servers configuration" %}</div>
                     <input type="text" class="form-control" id="read_servers" ng-model="read_servers" placeholder="127.0.0.1:6379" required>
                 </div>
 

@@ -7,7 +7,8 @@
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-    <div id="cybermailBanner" style="display:none; margin-bottom:20px;">
+    {% if not cosmetic.HidePromotions %}
+<div id="cybermailBanner" style="display:none; margin-bottom:20px;">
       <div style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:18px;box-shadow:0 4px 15px rgba(79,70,229,0.3);">
         <div style="flex-shrink:0;font-size:32px;">&#9993;</div>
         <div style="flex:1;min-width:0;">
@@ -22,8 +23,8 @@
     (function(){if(!document.cookie.includes('cybermail_dismiss=1')){document.getElementById('cybermailBanner').style.display='';}})();
     function dismissCyberMailBanner(){document.getElementById('cybermailBanner').style.display='none';document.cookie='cybermail_dismiss=1; path=/; max-age='+7*86400;}
     </script>
-
-    <div class="container">
+{% endif %}
+<div class="container">
         <div id="page-title">
             <h2>{% trans "Mail Functions" %}</h2>
             <p>{% trans "Manage email accounts on this page." %}</p>

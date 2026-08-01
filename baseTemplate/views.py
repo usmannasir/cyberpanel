@@ -1878,3 +1878,176 @@ def get_notification_preferences(request):
         
     except Exception as e:
         return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+
+def _ssh_whitelist_admin_gate(request):
+    """Return (user_id, error_response). error_response is HttpResponse or None."""
+    user_id = request.session.get('userID')
+    if not user_id:
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Not logged in'}),
+            content_type='application/json',
+            status=403,
+        )
+    currentACL = ACLManager.loadedACL(user_id)
+    if not currentACL.get('admin', 0):
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Admin only'}),
+            content_type='application/json',
+            status=403,
+        )
+    return user_id, None
+
+
+def _ssh_whitelist_parse_body(request):
+    try:
+        if not request.body:
+            return {}, None
+        body_str = request.body.decode('utf-8')
+        if not body_str or not body_str.strip():
+            return {}, None
+        data = json.loads(body_str)
+        if not isinstance(data, dict):
+            return None, HttpResponse(
+                json.dumps({'status': 0, 'error': 'Invalid request format'}),
+                content_type='application/json',
+                status=400,
+            )
+        return data, None
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Invalid request format: %s' % str(e)}),
+            content_type='application/json',
+            status=400,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistList(request):
+    """List Trusted IPs (SSH security whitelist)."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        entries = SSHSecurityWhitelistUtilities.load_entries()
+        return HttpResponse(
+            json.dumps({'status': 1, 'entries': entries}, ensure_ascii=False),
+            content_type='application/json',
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistList: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not load trusted IPs'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistAdd(request):
+    """Add IP to Trusted IPs whitelist."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        label = (data.get('label') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result = SSHSecurityWhitelistUtilities.add_entry(ip, label)
+        if ok:
+            return HttpResponse(
+                json.dumps({'status': 1, 'ip': result}),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistAdd: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not add trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistRemove(request):
+    """Remove IP from Trusted IPs whitelist."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result = SSHSecurityWhitelistUtilities.remove_entry(ip)
+        if ok:
+            return HttpResponse(
+                json.dumps({'status': 1, 'ip': result}),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistRemove: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not remove trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistUpdate(request):
+    """Update Trusted IP row (IP and/or label)."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        new_ip = data.get('new_ip')
+        label = data.get('label')
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result, unchanged = SSHSecurityWhitelistUtilities.update_entry(
+            ip,
+            new_ip=new_ip,
+            label=label,
+        )
+        if ok:
+            msg = 'No changes to save.' if unchanged else 'Entry updated'
+            return HttpResponse(
+                json.dumps({
+                    'status': 1,
+                    'ip': result,
+                    'unchanged': bool(unchanged),
+                    'message': msg,
+                }),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistUpdate: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not update trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )

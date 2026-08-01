@@ -650,10 +650,19 @@ button.wm-nav-link.wm-nav-btn:focus {
 }
 
 .wm-msg-row.unread {
-    font-weight: 600;
+    font-weight: 700;
+    border-left: 3px solid var(--primary-color, #6c5ce7);
+    background: rgba(108, 92, 231, 0.06);
+    padding-left: 9px;
 }
 
 .wm-msg-row.unread .wm-msg-subject {
+    color: var(--primary-color, #6c5ce7);
+    font-weight: 700;
+}
+
+.wm-msg-row.unread .wm-msg-from {
+    font-weight: 700;
     color: var(--text-primary);
 }
 

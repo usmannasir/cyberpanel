@@ -31,4 +31,8 @@ urlpatterns = [
     re_path(r'^dismiss_backup_notification$', views.dismiss_backup_notification, name='dismiss_backup_notification'),
     re_path(r'^dismiss_ai_scanner_notification$', views.dismiss_ai_scanner_notification, name='dismiss_ai_scanner_notification'),
     re_path(r'^get_notification_preferences$', views.get_notification_preferences, name='get_notification_preferences'),
+    re_path(r'^sshSecurityWhitelistList$', views.sshSecurityWhitelistList, name='sshSecurityWhitelistList'),
+    re_path(r'^sshSecurityWhitelistAdd$', views.sshSecurityWhitelistAdd, name='sshSecurityWhitelistAdd'),
+    re_path(r'^sshSecurityWhitelistRemove$', views.sshSecurityWhitelistRemove, name='sshSecurityWhitelistRemove'),
+    re_path(r'^sshSecurityWhitelistUpdate$', views.sshSecurityWhitelistUpdate, name='sshSecurityWhitelistUpdate'),
 ]
