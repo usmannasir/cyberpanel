@@ -1427,6 +1427,64 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* List Domains: readable selects + mobile card rows */
+    #listDomains .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    #listDomains .cyber-table select.form-control {
+        min-height: 38px;
+        min-width: 7.5rem;
+        padding: 6px 28px 6px 10px !important;
+        color: var(--text-primary, #2f3640) !important;
+        background-color: var(--bg-primary, #fff) !important;
+    }
+    #listDomains .cyber-table td[data-label="Path"] {
+        word-break: break-all;
+        max-width: 28rem;
+    }
+    @media (max-width: 900px) {
+        #listDomains .cyber-table thead {
+            display: none;
+        }
+        #listDomains .cyber-table,
+        #listDomains .cyber-table tbody,
+        #listDomains .cyber-table tr,
+        #listDomains .cyber-table td {
+            display: block;
+            width: 100%;
+        }
+        #listDomains .cyber-table tr {
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            background: var(--bg-primary, #fff);
+        }
+        #listDomains .cyber-table td {
+            border: none !important;
+            padding: 0.4rem 0 !important;
+        }
+        #listDomains .cyber-table td::before {
+            content: attr(data-label);
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--text-secondary, #8893a7);
+            margin-bottom: 0.15rem;
+        }
+        #listDomains .cyber-table td[data-label="Path"] {
+            max-width: none;
+        }
+        #listDomains .cyber-table select.form-control {
+            width: 100%;
+            min-width: 0;
+        }
+    }
     
     </style>
 
@@ -2086,7 +2144,7 @@
                                         </div>
 
 
-                                    <div class="col-sm-12">
+                                    <div class="col-sm-12 table-responsive">
                                         <table class="table cyber-table">
                                             <thead>
                                             <tr>
@@ -2101,33 +2159,36 @@
                                             </thead>
                                             <tbody>
                                             <tr ng-repeat="record in childDomains | filter:logSearch">
-                                                <td ng-bind="record.childDomain"></td>
-                                                <td><a href="{$ record.childLunch $}"><img width="30px" height="30"
+                                                <td data-label="Domain" ng-bind="record.childDomain"></td>
+                                                <td data-label="Launch"><a href="{$ record.childLunch $}"><img width="30px" height="30"
                                                                                                class="center-block"
-                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
+                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"
+                                                                                               alt="{% trans 'Launch' %}"></a>
                                                     </td>
-                                                    <td ng-bind="record.path"></td>
-                                                    <td>
+                                                    <td data-label="Path" ng-bind="record.path"></td>
+                                                    <td data-label="open_basedir">
                                                         <select ng-change="changeChildBaseDir(record.childDomain,record.childBaseDir)"
-                                                                ng-model="record.childBaseDir" class="form-control">
-                                                            <option>Enable</option>
-                                                            <option>Disable</option>
+                                                                ng-model="record.childBaseDir" class="form-control"
+                                                                aria-label="open_basedir">
+                                                            <option value="Enable" ng-value="'Enable'">Enable</option>
+                                                            <option value="Disable" ng-value="'Disable'">Disable</option>
                                                         </select>
                                                     </td>
-                                                    <td>
+                                                    <td data-label="PHP">
                                                         <select ng-change="changePHP(record.childDomain,record.phpSelection)"
-                                                                ng-model="record.phpSelection" class="form-control">
+                                                                ng-model="record.phpSelection" class="form-control"
+                                                                aria-label="PHP">
                                                             {% for php in phps %}
-                                                                <option>{{ php }}</option>
+                                                                <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
                                                             {% endfor %}
                                                         </select>
                                                     </td>
-                                                    <td>
+                                                    <td data-label="SSL">
                                                         <button type="button"
                                                                 ng-click="issueSSL(record.childDomain,record.path)"
                                                                 class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
                                                     </td>
-                                                    <td>
+                                                    <td data-label="Delete">
                                                         <button type="button"
                                                                 ng-click="deleteChildDomain(record.childDomain)"
                                                                 class="btn ra-50 btn-primary">{% trans "Delete" %}</button>

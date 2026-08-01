@@ -568,6 +568,28 @@
         .form-select {
             width: 100%;
         }
+
+        .page-wrapper {
+            padding: 12px;
+        }
+
+        .domain-card {
+            padding: 14px;
+        }
+
+        .manage-btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .action-btn {
+            flex: 1 1 100%;
+        }
+
+        .detail-value {
+            word-break: break-word;
+        }
     }
 </style>
 
@@ -677,6 +699,26 @@
                                     <span ng-show="issuingSSL[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Issuing SSL..." %}</span>
                                 </a>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div class="detail-content">
+                            <div class="detail-label">{% trans "Path" %}</div>
+                            <div class="detail-value" style="word-break:break-all;font-weight:500;">{$ web.path $}</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="detail-content">
+                            <div class="detail-label">{% trans "PHP" %}</div>
+                            <div class="detail-value">{$ web.phpSelection $}</div>
                         </div>
                     </div>
                 </div>

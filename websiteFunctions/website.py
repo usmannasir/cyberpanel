@@ -2925,10 +2925,11 @@ Require valid-user
 
         for items in childs:
 
+            phpSelection = items.phpSelection or items.master.phpSelection or ''
             dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail,
                    'ipAddress': ipAddress,
                    'admin': items.master.admin.userName, 'package': items.master.package.packageName,
-                   'path': items.path}
+                   'path': items.path, 'phpSelection': phpSelection}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -3718,19 +3719,8 @@ context /cyberpanel_suspension_page.html {
             else:
                 Data['ftp'] = 0
 
-            # Add-on check logic (copied from sshAccess)
-            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-            addon_data = {
-                "name": "all",
-                "IP": ACLManager.GetServerIP()
-            }
-            import requests
-            import json
-            try:
-                response = requests.post(url, data=json.dumps(addon_data), timeout=5)
-                Status = response.json().get('status', 0)
-            except Exception:
-                Status = 0
+            # Cached add-on check (avoid blocking Full Settings on remote API every load)
+            Status = ACLManager.CachedAddonPermission('all', cacheSeconds=3600, requestTimeout=1.5)
             Data['has_addons'] = bool((Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent)
 
             # SSL check (self-signed logic)
