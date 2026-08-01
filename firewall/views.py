@@ -113,6 +113,22 @@ def deleteRule(request):
         return redirect(loadLoginPage)
 
 
+def reorderRules(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            data = json.loads(body) if body and body.strip() else {}
+        except (json.JSONDecodeError, Exception):
+            data = {}
+        return fm.reorderRules(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def reloadFirewall(request):
     try:
         userID = request.session['userID']

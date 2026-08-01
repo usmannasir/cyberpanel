@@ -25,6 +25,7 @@ from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
+from firewall import ruleOrder as FirewallRuleOrder
 from plogical.modSec import modSec
 from plogical.csf import CSF
 from plogical.processUtilities import ProcessUtilities
@@ -266,7 +267,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            rules_qs = FirewallRules.objects.all().order_by('id')
+            rules_qs = FirewallRuleOrder.ordered_queryset()
 
             # Ensure CyberPanel port 7080 rule exists in database for visibility
             cyberpanel_rule_exists = rules_qs.filter(port='7080').exists()
@@ -276,12 +277,13 @@ class FirewallManager:
                         name="CyberPanel Admin",
                         proto="tcp",
                         port="7080",
-                        ipAddress="0.0.0.0/0"
+                        ipAddress="0.0.0.0/0",
+                        sortOrder=FirewallRuleOrder.next_sort_order()
                     ).save()
                     logging.CyberCPLogFileWriter.writeToFile("Added CyberPanel port 7080 to firewall database for UI visibility")
                 except Exception as e:
                     logging.CyberCPLogFileWriter.writeToFile(f"Failed to add CyberPanel port 7080 to database: {str(e)}")
-                rules_qs = FirewallRules.objects.all().order_by('id')
+                rules_qs = FirewallRuleOrder.ordered_queryset()
 
             total_count = rules_qs.count()
             page = 1
@@ -302,8 +304,12 @@ class FirewallManager:
 
             json_data = "["
             for i, items in enumerate(rules):
+                # displayId is 1-based position in the full ordered list (top row = 1)
+                display_id = start + i + 1
                 dic = {
                     'id': items.id,
+                    'displayId': display_id,
+                    'sortOrder': items.sortOrder or display_id,
                     'name': items.name,
                     'proto': items.proto,
                     'port': items.port,
@@ -346,7 +352,13 @@ class FirewallManager:
 
             FirewallUtilities.addRule(ruleProtocol, rulePort, ruleIP)
 
-            newFWRule = FirewallRules(name=ruleName, proto=ruleProtocol, port=rulePort, ipAddress=ruleIP)
+            newFWRule = FirewallRules(
+                name=ruleName,
+                proto=ruleProtocol,
+                port=rulePort,
+                ipAddress=ruleIP,
+                sortOrder=FirewallRuleOrder.next_sort_order()
+            )
             newFWRule.save()
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
@@ -357,6 +369,75 @@ class FirewallManager:
             final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def reorderRules(self, userID=None, data=None):
+        """
+        Persist Firewall Rules table order in MariaDB (sortOrder).
+        Payload options:
+          - direction + id: move one step up/down
+          - page_ordered_ids + page + page_size: reorder within a page
+          - ordered_ids: full global order
+        Works whether firewalld is running or stopped (DB-only).
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] != 1:
+                return ACLManager.loadErrorJson('reorder_status', 0)
+
+            data = data or {}
+            direction = (data.get('direction') or '').strip().lower()
+            rule_id = data.get('id')
+            page_ordered_ids = data.get('page_ordered_ids')
+            ordered_ids = data.get('ordered_ids')
+
+            if direction in ('up', 'down') and rule_id is not None:
+                new_order = FirewallRuleOrder.move_rule(rule_id, direction)
+            elif page_ordered_ids is not None:
+                page = data.get('page', 1)
+                page_size = data.get('page_size', 10)
+                new_order = FirewallRuleOrder.apply_page_order(
+                    page_ordered_ids, page, page_size
+                )
+            elif ordered_ids is not None:
+                new_order = FirewallRuleOrder.apply_ordered_ids(ordered_ids)
+            else:
+                final_dic = {
+                    'status': 0,
+                    'reorder_status': 0,
+                    'error_message': 'Provide direction+id, page_ordered_ids, or ordered_ids'
+                }
+                return HttpResponse(
+                    json.dumps(final_dic), content_type='application/json'
+                )
+
+            final_dic = {
+                'status': 1,
+                'reorder_status': 1,
+                'error_message': 'None',
+                'ordered_ids': new_order,
+            }
+            return HttpResponse(
+                json.dumps(final_dic), content_type='application/json'
+            )
+
+        except ValueError as msg:
+            final_dic = {
+                'status': 0,
+                'reorder_status': 0,
+                'error_message': str(msg)
+            }
+            return HttpResponse(
+                json.dumps(final_dic), content_type='application/json'
+            )
+        except BaseException as msg:
+            final_dic = {
+                'status': 0,
+                'reorder_status': 0,
+                'error_message': str(msg)
+            }
+            return HttpResponse(
+                json.dumps(final_dic), content_type='application/json'
+            )
 
     def deleteRule(self, userID = None, data = None):
         try:
@@ -377,6 +458,7 @@ class FirewallManager:
 
             delRule = FirewallRules.objects.get(id=ruleID)
             delRule.delete()
+            FirewallRuleOrder.renumber_all()
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -482,6 +564,14 @@ class FirewallManager:
             res = ProcessUtilities.executioner(command)
 
             if res == 1:
+                # UI order lives in MariaDB sortOrder; getCurrentRules / start both read that order.
+                # firewalld rich-rules are a set of accepts (port opens); order is persisted for the panel.
+                try:
+                    FirewallRuleOrder.ensure_sort_orders()
+                except BaseException as order_msg:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Firewall start: ensure sortOrder warning: %s" % str(order_msg)
+                    )
                 final_dic = {'start_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
@@ -2816,8 +2906,8 @@ class FirewallManager:
                 except Exception:
                     pass
 
-            # Get all firewall rules
-            rules = FirewallRules.objects.all()
+            # Get all firewall rules (stable UI order)
+            rules = FirewallRuleOrder.ordered_queryset()
             default_rules = ['CyberPanel Admin', 'SSHCustom']
             custom_rules = []
             for rule in rules:
@@ -2826,7 +2916,8 @@ class FirewallManager:
                         'name': rule.name,
                         'proto': rule.proto,
                         'port': rule.port,
-                        'ipAddress': rule.ipAddress
+                        'ipAddress': rule.ipAddress,
+                        'sortOrder': rule.sortOrder
                     })
 
             logging.CyberCPLogFileWriter.writeToFile(f"Firewall rules exported successfully. Total rules: {len(custom_rules)}")
@@ -2950,7 +3041,8 @@ class FirewallManager:
                         name=rule_data['name'],
                         proto=rule_data['proto'],
                         port=rule_data['port'],
-                        ipAddress=rule_data['ipAddress']
+                        ipAddress=rule_data['ipAddress'],
+                        sortOrder=FirewallRuleOrder.next_sort_order()
                     )
                     new_rule.save()
                     

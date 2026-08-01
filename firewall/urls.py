@@ -12,6 +12,7 @@ urlpatterns = [
     path('addRule', views.addRule, name='addRule'),
     path('modifyRule', views.modifyRule, name='modifyRule'),
     path('deleteRule', views.deleteRule, name='deleteRule'),
+    path('reorderRules', views.reorderRules, name='reorderRules'),
 
     path('reloadFirewall', views.reloadFirewall, name='reloadFirewall'),
     path('stopFirewall', views.stopFirewall, name='stopFirewall'),

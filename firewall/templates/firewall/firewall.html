@@ -148,7 +148,6 @@
         color: var(--badge-error-text, #991b1b);
     }
 
-
     /* Firewall service status (JS sets status to ON/OFF). Distinct from banned-IP .status-active (red). */
     .status-badge.fw-status-on {
         background: var(--badge-success-bg, #d1fae5);
@@ -159,7 +158,6 @@
         background: var(--badge-error-bg, #fee2e2);
         color: var(--badge-error-text, #991b1b);
     }
-
 
     .status-content {
         padding: 2rem;
@@ -438,6 +436,72 @@
     .rule-id {
         font-weight: 600;
         color: var(--text-muted, #64748b);
+    }
+
+    .rules-table tbody tr.rule-row-draggable {
+        cursor: grab;
+    }
+
+    .rules-table tbody tr.rule-row-dragging {
+        opacity: 0.55;
+        background: var(--bg-hover, #f8f9ff);
+    }
+
+    .rule-drag-handle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        margin-right: 0.35rem;
+        color: var(--text-muted, #64748b);
+        border-radius: 4px;
+        cursor: grab;
+        user-select: none;
+    }
+
+    .rule-drag-handle:active {
+        cursor: grabbing;
+    }
+
+    .rule-order-controls {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-left: 0.25rem;
+        vertical-align: middle;
+    }
+
+    .btn-rule-order {
+        background: var(--bg-code, #f3f4f6);
+        color: var(--text-primary, #334155);
+        border: 1px solid var(--border-light, #e2e8f0);
+        width: 26px;
+        height: 22px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.65rem;
+        transition: all 0.15s ease;
+    }
+
+    .btn-rule-order:hover:not(:disabled) {
+        background: var(--accent-color, #5b5fcf);
+        color: var(--bg-secondary, #fff);
+        border-color: var(--accent-color, #5b5fcf);
+    }
+
+    .btn-rule-order:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    .rule-id-cell {
+        white-space: nowrap;
+        min-width: 5.5rem;
     }
 
     .rule-name {
@@ -1424,9 +1488,32 @@
                         <th>{% trans "Action" %}</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr ng-repeat="rule in rules track by $index">
-                        <td class="rule-id">#{$ rule.id $}</td>
+                <tbody id="firewall-rules-tbody">
+                    <tr ng-repeat="rule in rules track by rule.id"
+                        class="rule-row-draggable"
+                        draggable="true"
+                        data-rule-id="{$ rule.id $}"
+                        data-rule-index="{$ $index $}">
+                        <td class="rule-id rule-id-cell">
+                            <span class="rule-drag-handle" title="{% trans 'Drag to reorder' %}">
+                                <i class="fas fa-grip-vertical"></i>
+                            </span>
+                            <span>#{$ rule.displayId || (rulesRangeStart() + $index) $}</span>
+                            <span class="rule-order-controls">
+                                <button type="button" class="btn-rule-order"
+                                        ng-click="$parent.moveRuleUp(rule); $event.stopPropagation()"
+                                        ng-disabled="!$parent.canMoveRuleUp($index)"
+                                        title="{% trans 'Move up' %}">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <button type="button" class="btn-rule-order"
+                                        ng-click="$parent.moveRuleDown(rule); $event.stopPropagation()"
+                                        ng-disabled="!$parent.canMoveRuleDown($index)"
+                                        title="{% trans 'Move down' %}">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </span>
+                        </td>
                         <td class="rule-name">{$ rule.name $}</td>
                         <td>
                             <span class="protocol-badge" 

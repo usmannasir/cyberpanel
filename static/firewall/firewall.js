@@ -711,6 +711,197 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         populateCurrentRecords();
     };
 
+    function renumberDisplayedRuleIds() {
+        var start = $scope.rulesRangeStart() || 1;
+        ($scope.rules || []).forEach(function(rule, idx) {
+            rule.displayId = start + idx;
+            rule.sortOrder = rule.displayId;
+        });
+    }
+
+    function persistPageRuleOrder() {
+        var pageIds = ($scope.rules || []).map(function(r) { return r.id; });
+        if (!pageIds.length) {
+            return;
+        }
+        $scope.rulesLoading = true;
+        var url = '/firewall/reorderRules';
+        var data = {
+            page_ordered_ids: pageIds,
+            page: Math.max(1, parseInt($scope.rulesPage, 10) || 1),
+            page_size: Math.max(5, Math.min(100, parseInt($scope.rulesPageSize, 10) || 10))
+        };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function(response) {
+            var res = response.data || {};
+            if (res.reorder_status === 1 || res.status === 1) {
+                renumberDisplayedRuleIds();
+                $scope.actionFailed = true;
+                $scope.actionSuccess = false;
+                $scope.rulesLoading = false;
+            } else {
+                $scope.actionFailed = false;
+                $scope.actionSuccess = true;
+                $scope.errorMessage = res.error_message || 'Could not save rule order';
+                populateCurrentRecords();
+            }
+        }, function() {
+            $scope.actionFailed = false;
+            $scope.actionSuccess = true;
+            $scope.errorMessage = 'Could not connect to server. Please refresh this page.';
+            populateCurrentRecords();
+        });
+    }
+
+    $scope.canMoveRuleUp = function(index) {
+        var page = Math.max(1, parseInt($scope.rulesPage, 10) || 1);
+        return !(page === 1 && index === 0);
+    };
+
+    $scope.canMoveRuleDown = function(index) {
+        var page = Math.max(1, parseInt($scope.rulesPage, 10) || 1);
+        var size = Math.max(5, Math.min(100, parseInt($scope.rulesPageSize, 10) || 10));
+        var total = $scope.rulesTotalCount || ($scope.rules ? $scope.rules.length : 0) || 0;
+        var globalIndex = (page - 1) * size + index;
+        return globalIndex < (total - 1);
+    };
+
+    $scope.moveRuleUp = function(rule) {
+        if (!rule || !rule.id) {
+            return;
+        }
+        $scope.rulesLoading = true;
+        var url = '/firewall/reorderRules';
+        var data = { id: rule.id, direction: 'up' };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function(response) {
+            var res = response.data || {};
+            if (res.reorder_status === 1 || res.status === 1) {
+                $scope.actionFailed = true;
+                $scope.actionSuccess = false;
+                populateCurrentRecords();
+            } else {
+                $scope.rulesLoading = false;
+                $scope.actionFailed = false;
+                $scope.actionSuccess = true;
+                $scope.errorMessage = res.error_message || 'Could not move rule';
+            }
+        }, function() {
+            $scope.rulesLoading = false;
+            $scope.actionFailed = false;
+            $scope.actionSuccess = true;
+            $scope.errorMessage = 'Could not connect to server. Please refresh this page.';
+        });
+    };
+
+    $scope.moveRuleDown = function(rule) {
+        if (!rule || !rule.id) {
+            return;
+        }
+        $scope.rulesLoading = true;
+        var url = '/firewall/reorderRules';
+        var data = { id: rule.id, direction: 'down' };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function(response) {
+            var res = response.data || {};
+            if (res.reorder_status === 1 || res.status === 1) {
+                $scope.actionFailed = true;
+                $scope.actionSuccess = false;
+                populateCurrentRecords();
+            } else {
+                $scope.rulesLoading = false;
+                $scope.actionFailed = false;
+                $scope.actionSuccess = true;
+                $scope.errorMessage = res.error_message || 'Could not move rule';
+            }
+        }, function() {
+            $scope.rulesLoading = false;
+            $scope.actionFailed = false;
+            $scope.actionSuccess = true;
+            $scope.errorMessage = 'Could not connect to server. Please refresh this page.';
+        });
+    };
+
+    var rulesDragFromIndex = null;
+
+    function bindRulesDragDrop() {
+        var tbody = document.getElementById('firewall-rules-tbody');
+        if (!tbody || tbody.getAttribute('data-dnd-bound') === '1') {
+            return;
+        }
+        tbody.setAttribute('data-dnd-bound', '1');
+
+        tbody.addEventListener('dragstart', function(ev) {
+            var row = ev.target && ev.target.closest ? ev.target.closest('tr[data-rule-id]') : null;
+            if (!row || !tbody.contains(row)) {
+                return;
+            }
+            // Allow drag from row/handle; block from action buttons/inputs
+            if (ev.target.closest && ev.target.closest('button, a, input, select, textarea')) {
+                ev.preventDefault();
+                return;
+            }
+            rulesDragFromIndex = parseInt(row.getAttribute('data-rule-index'), 10);
+            if (isNaN(rulesDragFromIndex)) {
+                rulesDragFromIndex = null;
+                return;
+            }
+            row.classList.add('rule-row-dragging');
+            try {
+                ev.dataTransfer.effectAllowed = 'move';
+                ev.dataTransfer.setData('text/plain', String(rulesDragFromIndex));
+            } catch (ignoreSet) {}
+        });
+
+        tbody.addEventListener('dragover', function(ev) {
+            var row = ev.target && ev.target.closest ? ev.target.closest('tr[data-rule-id]') : null;
+            if (!row || !tbody.contains(row)) {
+                return;
+            }
+            ev.preventDefault();
+            try {
+                ev.dataTransfer.dropEffect = 'move';
+            } catch (ignoreDrop) {}
+        });
+
+        tbody.addEventListener('drop', function(ev) {
+            var row = ev.target && ev.target.closest ? ev.target.closest('tr[data-rule-id]') : null;
+            if (!row || !tbody.contains(row)) {
+                return;
+            }
+            ev.preventDefault();
+            var toIndex = parseInt(row.getAttribute('data-rule-index'), 10);
+            var fromIndex = rulesDragFromIndex;
+            if (fromIndex === null || isNaN(toIndex) || fromIndex === toIndex) {
+                return;
+            }
+            $scope.$applyAsync(function() {
+                var list = $scope.rules || [];
+                if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) {
+                    return;
+                }
+                var moved = list.splice(fromIndex, 1)[0];
+                list.splice(toIndex, 0, moved);
+                $scope.rules = list;
+                renumberDisplayedRuleIds();
+                persistPageRuleOrder();
+            });
+        });
+
+        tbody.addEventListener('dragend', function(ev) {
+            rulesDragFromIndex = null;
+            var dragging = tbody.querySelectorAll('.rule-row-dragging');
+            for (var i = 0; i < dragging.length; i++) {
+                dragging[i].classList.remove('rule-row-dragging');
+            }
+        });
+    }
+
+    // Bind after Angular paints the rules table (tbody is destroyed when rules empty)
+    $scope.$watchCollection('rules', function() {
+        $timeout(bindRulesDragDrop, 0);
+    });
+
     $scope.openModifyRuleModal = function(rule) {
         if (!rule) return;
         $scope.modifyRuleData = {
