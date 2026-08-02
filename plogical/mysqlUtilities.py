@@ -1011,7 +1011,7 @@ password=%s
 
             cursor.execute(query)
 
-            if mysqlUtilities.LOCALHOST != '127.0.0.1':
+            if LOCALHOST != '127.0.0.1' and mysqlUtilities.REMOTEHOST in ('', 'localhost', '127.0.0.1'):
                 try:
                     if encrypt == None:
                         query = "SET PASSWORD FOR '" + userName + "'@'127.0.0.1' = PASSWORD('" + dbPassword + "')"
