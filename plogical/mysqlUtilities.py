@@ -148,27 +148,36 @@ class mysqlUtilities:
 
             ## create user
 
-            if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
-                query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
-                dbuser, HostToUse, dbpassword)
-            else:
-                query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
-                    HostToUse) + dbpassword + "'"
+            def createUserForHost(hostToUse):
+                if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
+                    query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
+                    dbuser, hostToUse, dbpassword)
+                else:
+                    query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
+                        hostToUse) + dbpassword + "'"
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile(query)
-
-            cursor.execute(query)
-
-            if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
-            else:
-                cursor.execute(
-                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    logging.CyberCPLogFileWriter.writeToFile(query)
+
+                cursor.execute(query)
+
+                if mysqlUtilities.RDS == 0:
+                    cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (hostToUse))
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (hostToUse))
+                else:
+                    cursor.execute(
+                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (hostToUse))
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (hostToUse))
+
+            createUserForHost(HostToUse)
+
+            if dbcreate == 1 and HostToUse != '127.0.0.1' and mysqlUtilities.REMOTEHOST in ('', 'localhost', '127.0.0.1'):
+                try:
+                    createUserForHost('127.0.0.1')
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase:127.0.0.1]")
 
             connection.close()
 
@@ -1001,6 +1010,20 @@ password=%s
                 logging.CyberCPLogFileWriter.writeToFile(query)
 
             cursor.execute(query)
+
+            if mysqlUtilities.LOCALHOST != '127.0.0.1':
+                try:
+                    if encrypt == None:
+                        query = "SET PASSWORD FOR '" + userName + "'@'127.0.0.1' = PASSWORD('" + dbPassword + "')"
+                    else:
+                        query = "SET PASSWORD FOR '" + userName + "'@'127.0.0.1' = '" + dbPassword + "'"
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile(query)
+
+                    cursor.execute(query)
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword:127.0.0.1]")
 
             connection.close()
 
