@@ -951,6 +951,158 @@
         letter-spacing: 0.5px;
         border-bottom: 2px solid #1a1d2e;
     }
+
+    .store-table th.store-sortable {
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+    .store-table th.store-sortable:hover {
+        background: #3d4654;
+    }
+
+    .store-table th.store-sortable .sort-indicator {
+        display: inline-block;
+        margin-left: 6px;
+        opacity: 0.45;
+        font-size: 11px;
+    }
+
+    .store-table th.store-sortable[aria-sort="ascending"] .sort-indicator,
+    .store-table th.store-sortable[aria-sort="descending"] .sort-indicator {
+        opacity: 1;
+    }
+
+    .store-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 12px 4px;
+    }
+
+    .store-pagination-info {
+        font-size: 13px;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .store-pagination-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .store-page-btn {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-radius: 6px;
+        background: var(--bg-primary, #fff);
+        color: var(--text-primary, #2f3640);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .store-page-btn:hover:not(:disabled) {
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+
+    .store-page-btn.active {
+        background: #5856d6;
+        border-color: #5856d6;
+        color: #fff;
+    }
+
+    .store-page-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .store-goto-page {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .store-goto-page input {
+        width: 64px;
+        min-height: 40px;
+        padding: 6px 8px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-radius: 6px;
+        background: var(--bg-primary, #fff);
+        color: var(--text-primary, #2f3640);
+        text-align: center;
+    }
+
+    .store-page-size {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .store-page-size select {
+        min-height: 40px;
+        padding: 6px 8px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-radius: 6px;
+        background: var(--bg-primary, #fff);
+        color: var(--text-primary, #2f3640);
+    }
+
+    #storeCardsMobile {
+        display: none;
+    }
+
+    .store-mobile-card {
+        background: var(--bg-primary, #fff);
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
+    .store-mobile-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .store-mobile-card-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+        font-size: 13px;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 12px;
+    }
+
+    .store-mobile-card-meta strong {
+        display: block;
+        color: var(--text-primary, #2f3640);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 2px;
+    }
+
+    .store-mobile-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
     
     .store-table td {
         padding: 18px 15px;
@@ -1267,6 +1419,56 @@
             padding: 5px 10px;
             font-size: 12px;
             min-width: 32px;
+        }
+
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .category-btn {
+            flex: 1 1 calc(50% - 8px);
+            min-height: 44px;
+            justify-content: center;
+        }
+
+        .store-search-bar {
+            width: 100%;
+        }
+
+        .store-table-wrapper {
+            display: none;
+        }
+
+        #storeCardsMobile {
+            display: block;
+        }
+
+        .store-pagination {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .store-pagination-controls {
+            justify-content: center;
+        }
+
+        .store-goto-page,
+        .store-page-size {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .store-page-btn {
+            min-width: 44px;
+            min-height: 44px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .store-mobile-card-meta {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -1846,24 +2048,43 @@
                 <!-- Store Content (table area) -->
                 <div id="storeContent" style="display: block;">
                     <div class="store-table-wrapper">
-                        <table class="store-table">
+                        <table class="store-table" id="storePluginsTable">
                             <thead>
                                 <tr>
-                                    <th>{% trans "Icon" %}</th>
-                                    <th>{% trans "Plugin Name" %}</th>
-                                    <th>{% trans "Category" %}</th>
-                                    <th>{% trans "Version" %}</th>
-                                    <th>{% trans "Pricing" %}</th>
-                                    <th>{% trans "Modify Date" %}</th>
-                                    <th>{% trans "Action" %}</th>
-                                    <th>{% trans "Help" %}</th>
-                                    <th>{% trans "About" %}</th>
+                                    <th data-sort="icon" class="store-sortable" onclick="toggleStoreSort('icon')" aria-sort="none">{% trans "Icon" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="name" class="store-sortable" onclick="toggleStoreSort('name')" aria-sort="none">{% trans "Plugin Name" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="category" class="store-sortable" onclick="toggleStoreSort('category')" aria-sort="none">{% trans "Category" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="version" class="store-sortable" onclick="toggleStoreSort('version')" aria-sort="none">{% trans "Version" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="pricing" class="store-sortable" onclick="toggleStoreSort('pricing')" aria-sort="none">{% trans "Pricing" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="date" class="store-sortable" onclick="toggleStoreSort('date')" aria-sort="none">{% trans "Modify Date" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="action" class="store-sortable" onclick="toggleStoreSort('action')" aria-sort="none">{% trans "Action" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="help" class="store-sortable" onclick="toggleStoreSort('help')" aria-sort="none">{% trans "Help" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
+                                    <th data-sort="about" class="store-sortable" onclick="toggleStoreSort('about')" aria-sort="none">{% trans "About" %}<span class="sort-indicator" aria-hidden="true">↕</span></th>
                                 </tr>
                             </thead>
                             <tbody id="storeTableBody">
                                 <!-- Plugin rows will be populated by JavaScript -->
                             </tbody>
                         </table>
+                    </div>
+                    <div id="storeCardsMobile" aria-live="polite"></div>
+                    <div class="store-pagination" id="storePagination" style="display: none;">
+                        <div class="store-pagination-info" id="storePaginationInfo"></div>
+                        <div class="store-pagination-controls" id="storePaginationControls"></div>
+                        <div class="store-goto-page">
+                            <label for="storeGotoPageInput">{% trans "Go to page" %}</label>
+                            <input type="number" id="storeGotoPageInput" min="1" step="1" inputmode="numeric" aria-label="{% trans 'Go to page' %}">
+                            <button type="button" class="store-page-btn" onclick="goToStorePageFromInput()">{% trans "Go" %}</button>
+                        </div>
+                        <div class="store-page-size">
+                            <label for="storePageSizeSelect">{% trans "Rows" %}</label>
+                            <select id="storePageSizeSelect" onchange="changeStorePageSize(this.value)" aria-label="{% trans 'Rows per page' %}">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="all">{% trans "All" %}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1879,6 +2100,11 @@ let storePlugins = [];
 let currentFilter = 'all';
 let currentCategory = 'all';
 let currentSearchQuery = '';
+let currentStoreSortField = 'name';
+let currentStoreSortDir = 'asc';
+let currentStorePage = 1;
+let storePageSize = 10;
+let filteredStorePluginsCache = [];
 let isSettingHash = false; // Flag to prevent infinite loops
 let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
 let currentInstalledFilter = 'all';    // all, installed, active, premium
@@ -2324,24 +2550,288 @@ function getFreshnessBadgeHtml(freshnessFromApi, modifyDate, modifyTimestamp) {
     return '';
 }
 
+function storePluginIsPaid(plugin) {
+    if (plugin.is_paid === undefined || plugin.is_paid === null) return false;
+    const isPaidValue = plugin.is_paid;
+    return isPaidValue === true || isPaidValue === 'true' || isPaidValue === 'True' || isPaidValue === 1 || isPaidValue === '1' || String(isPaidValue).toLowerCase() === 'true';
+}
+
+function storePluginActionRank(plugin) {
+    if (plugin.installed && plugin.update_available) return 0;
+    if (!plugin.installed) return 1;
+    return 2;
+}
+
+function storePluginSortValue(plugin, field) {
+    switch (field) {
+        case 'icon':
+        case 'category':
+            return ((plugin.type || '') + '').trim().toLowerCase();
+        case 'name':
+            return ((plugin.name || '') + '').trim().toLowerCase();
+        case 'version':
+            return ((plugin.version || '0') + '').trim();
+        case 'pricing':
+            return storePluginIsPaid(plugin) ? 1 : 0;
+        case 'date':
+            if (plugin.modify_timestamp != null && plugin.modify_timestamp !== '') {
+                const n = Number(plugin.modify_timestamp);
+                return isNaN(n) ? 0 : n;
+            }
+            return ((plugin.modify_date || '') + '').trim();
+        case 'action':
+            return storePluginActionRank(plugin);
+        case 'help':
+            return ((plugin.plugin_dir || '') + '').trim().toLowerCase();
+        case 'about':
+            return ((plugin.about_url || plugin.github_url || plugin.name || '') + '').trim().toLowerCase();
+        default:
+            return ((plugin.name || '') + '').trim().toLowerCase();
+    }
+}
+
+function compareStoreVersions(a, b) {
+    const pa = String(a || '0').split('.').map(function(x) { var n = parseInt(x, 10); return isNaN(n) ? 0 : n; });
+    const pb = String(b || '0').split('.').map(function(x) { var n = parseInt(x, 10); return isNaN(n) ? 0 : n; });
+    const len = Math.max(pa.length, pb.length);
+    for (var i = 0; i < len; i++) {
+        var av = pa[i] || 0;
+        var bv = pb[i] || 0;
+        if (av > bv) return 1;
+        if (av < bv) return -1;
+    }
+    return 0;
+}
+
+function sortStorePlugins(list) {
+    const field = currentStoreSortField || 'name';
+    const dir = currentStoreSortDir === 'desc' ? -1 : 1;
+    return list.slice().sort(function(a, b) {
+        var va = storePluginSortValue(a, field);
+        var vb = storePluginSortValue(b, field);
+        var cmp = 0;
+        if (field === 'version') {
+            cmp = compareStoreVersions(va, vb);
+        } else if (typeof va === 'number' && typeof vb === 'number') {
+            cmp = va === vb ? 0 : (va > vb ? 1 : -1);
+        } else {
+            va = String(va);
+            vb = String(vb);
+            cmp = va.localeCompare(vb, undefined, { sensitivity: 'base', numeric: true });
+        }
+        if (cmp === 0) {
+            return ((a.name || '') + '').localeCompare((b.name || '') + '', undefined, { sensitivity: 'base' });
+        }
+        return cmp * dir;
+    });
+}
+
+function updateStoreSortHeaders() {
+    const headers = document.querySelectorAll('#storePluginsTable th.store-sortable');
+    headers.forEach(function(th) {
+        const field = th.getAttribute('data-sort');
+        const indicator = th.querySelector('.sort-indicator');
+        if (field === currentStoreSortField) {
+            th.setAttribute('aria-sort', currentStoreSortDir === 'asc' ? 'ascending' : 'descending');
+            if (indicator) indicator.textContent = currentStoreSortDir === 'asc' ? '▲' : '▼';
+        } else {
+            th.setAttribute('aria-sort', 'none');
+            if (indicator) indicator.textContent = '↕';
+        }
+    });
+}
+
+function toggleStoreSort(field) {
+    if (!field) return;
+    if (currentStoreSortField === field) {
+        currentStoreSortDir = currentStoreSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentStoreSortField = field;
+        currentStoreSortDir = (field === 'date' || field === 'action' || field === 'pricing') ? 'desc' : 'asc';
+    }
+    currentStorePage = 1;
+    displayStorePlugins();
+}
+
+function changeStorePageSize(value) {
+    if (value === 'all') {
+        storePageSize = 'all';
+    } else {
+        var n = parseInt(value, 10);
+        storePageSize = (!isNaN(n) && n > 0) ? n : 10;
+    }
+    currentStorePage = 1;
+    displayStorePlugins();
+}
+
+function goToStorePage(page) {
+    var total = filteredStorePluginsCache.length || 0;
+    var size = storePageSize === 'all' ? Math.max(total, 1) : storePageSize;
+    var totalPages = Math.max(1, Math.ceil(total / size) || 1);
+    var p = parseInt(page, 10);
+    if (isNaN(p)) return;
+    if (p < 1) p = 1;
+    if (p > totalPages) p = totalPages;
+    currentStorePage = p;
+    displayStorePlugins();
+}
+
+function goToStorePageFromInput() {
+    var input = document.getElementById('storeGotoPageInput');
+    if (!input) return;
+    goToStorePage(input.value);
+}
+
+function renderStorePagination(total) {
+    var wrap = document.getElementById('storePagination');
+    var info = document.getElementById('storePaginationInfo');
+    var controls = document.getElementById('storePaginationControls');
+    var gotoInput = document.getElementById('storeGotoPageInput');
+    if (!wrap || !info || !controls) return;
+
+    if (!total) {
+        wrap.style.display = 'none';
+        controls.innerHTML = '';
+        info.textContent = '';
+        return;
+    }
+
+    wrap.style.display = 'flex';
+    var size = storePageSize === 'all' ? total : storePageSize;
+    var totalPages = Math.max(1, Math.ceil(total / size) || 1);
+    if (currentStorePage > totalPages) currentStorePage = totalPages;
+    if (currentStorePage < 1) currentStorePage = 1;
+    var start = storePageSize === 'all' ? 1 : ((currentStorePage - 1) * size) + 1;
+    var end = storePageSize === 'all' ? total : Math.min(total, currentStorePage * size);
+    info.textContent = 'Showing ' + start + '–' + end + ' of ' + total;
+
+    if (gotoInput) {
+        gotoInput.max = String(totalPages);
+        gotoInput.value = String(currentStorePage);
+    }
+
+    var html = '';
+    html += '<button type="button" class="store-page-btn" ' + (currentStorePage <= 1 ? 'disabled' : '') + ' onclick="goToStorePage(' + (currentStorePage - 1) + ')">Prev</button>';
+
+    var windowSize = 5;
+    var startPage = Math.max(1, currentStorePage - Math.floor(windowSize / 2));
+    var endPage = Math.min(totalPages, startPage + windowSize - 1);
+    startPage = Math.max(1, endPage - windowSize + 1);
+    if (startPage > 1) {
+        html += '<button type="button" class="store-page-btn" onclick="goToStorePage(1)">1</button>';
+        if (startPage > 2) html += '<span style="padding:0 4px;color:var(--text-secondary,#64748b);">…</span>';
+    }
+    for (var p = startPage; p <= endPage; p++) {
+        html += '<button type="button" class="store-page-btn' + (p === currentStorePage ? ' active' : '') + '" onclick="goToStorePage(' + p + ')">' + p + '</button>';
+    }
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += '<span style="padding:0 4px;color:var(--text-secondary,#64748b);">…</span>';
+        html += '<button type="button" class="store-page-btn" onclick="goToStorePage(' + totalPages + ')">' + totalPages + '</button>';
+    }
+    html += '<button type="button" class="store-page-btn" ' + (currentStorePage >= totalPages ? 'disabled' : '') + ' onclick="goToStorePage(' + (currentStorePage + 1) + ')">Next</button>';
+    controls.innerHTML = html;
+}
+
+function buildStorePluginRowParts(plugin) {
+    const pluginType = ((plugin.type || '') + '').trim().toLowerCase() || 'utility';
+    let iconClass = 'fas fa-puzzle-piece';
+    if (pluginType.includes('security')) {
+        iconClass = 'fas fa-shield-alt';
+    } else if (pluginType.includes('performance')) {
+        iconClass = 'fas fa-rocket';
+    } else if (pluginType.includes('utility')) {
+        iconClass = 'fas fa-tools';
+    } else if (pluginType.includes('backup')) {
+        iconClass = 'fas fa-save';
+    } else if (pluginType.includes('monitoring')) {
+        iconClass = 'fas fa-heartbeat';
+    } else if (pluginType.includes('integration')) {
+        iconClass = 'fas fa-plug';
+    } else if (pluginType.includes('email')) {
+        iconClass = 'fas fa-envelope';
+    } else if (pluginType.includes('development')) {
+        iconClass = 'fas fa-code';
+    } else if (pluginType.includes('analytics')) {
+        iconClass = 'fas fa-chart-bar';
+    }
+    const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
+        <i class="${iconClass}"></i>
+    </div>`;
+
+    let actionHtml = '';
+    if (plugin.installed) {
+        if (plugin.update_available) {
+            actionHtml = `<button class="btn-action btn-upgrade" onclick="upgradePlugin('${plugin.plugin_dir}', '${plugin.installed_version || 'Unknown'}', '${plugin.version || 'Unknown'}')">
+                <i class="fas fa-arrow-up"></i> Upgrade
+            </button>`;
+        } else {
+            actionHtml = '<span class="status-installed">Installed</span>';
+        }
+    } else {
+        actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${escapeHtml(plugin.plugin_dir)}')">
+            <i class="fas fa-download"></i> Install
+        </button>`;
+        if (plugin.has_local_source && !plugin.builtin) {
+            actionHtml += ` <button type="button" class="btn-action btn-delete-source" onclick="deletePluginLocalSource('${escapeHtml(plugin.plugin_dir)}')">
+                <i class="fas fa-folder-minus"></i> Delete local copy
+            </button>`;
+        }
+    }
+
+    const helpUrl = `/plugins/${plugin.plugin_dir}/help/`;
+    const helpHtml = `<a href="${helpUrl}" class="btn-link" title="Plugin Help">
+        <i class="fas fa-question-circle"></i> Help
+    </a>`;
+    const aboutUrl = plugin.about_url || plugin.github_url || '#';
+    const aboutHtml = `<a href="${aboutUrl}" target="_blank" class="btn-link" title="About Plugin">
+        <i class="fas fa-info-circle"></i> About
+    </a>`;
+    const modifyDateHtml = (plugin.modify_timestamp != null || (plugin.modify_date && plugin.modify_date !== 'N/A'))
+        ? `<small style="color: var(--text-secondary, #64748b);">${formatPluginModifyDateDisplay(plugin)}</small>`
+        : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
+    const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date, plugin.modify_timestamp);
+    const isPaid = storePluginIsPaid(plugin);
+    const pricingBadge = isPaid
+        ? '<span class="plugin-pricing-badge paid">Paid</span>'
+        : '<span class="plugin-pricing-badge free">Free</span>';
+    const pluginCategory = ((plugin.type || '') + '').trim() || '—';
+    const categoryBadge = `<span class="plugin-type">${escapeHtml(pluginCategory.toUpperCase())}</span>`;
+
+    return {
+        iconHtml: iconHtml,
+        nameHtml: `<strong>${escapeHtml(plugin.name)}</strong>${freshnessBadgeHtml}`,
+        categoryBadge: categoryBadge,
+        versionHtml: `<span class="plugin-version-number">${escapeHtml(plugin.version)}</span>`,
+        pricingBadge: pricingBadge,
+        modifyDateHtml: modifyDateHtml,
+        actionHtml: actionHtml,
+        helpHtml: helpHtml,
+        aboutHtml: aboutHtml,
+        pluginCategory: pluginCategory
+    };
+}
+
 function displayStorePlugins() {
-    // Version: 2026-01-27-v1 - Added category filtering support
-    // CRITICAL: This function MUST create exactly 8 columns (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+    // Version: 2026-08-04 - sort, pagination, mobile cards
     const tbody = document.getElementById('storeTableBody');
+    const cards = document.getElementById('storeCardsMobile');
     if (!tbody) {
         console.error('storeTableBody not found!');
         return;
     }
     tbody.innerHTML = '';
-    
+    if (cards) cards.innerHTML = '';
+
     if (!storePlugins || storePlugins.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
+        if (cards) cards.innerHTML = '<div class="store-mobile-card" style="text-align:center;">No plugins available in store</div>';
+        renderStorePagination(0);
+        updateStoreSortHeaders();
         return;
     }
-    
+
     let filteredPlugins = storePlugins;
-    
-    // Apply category filter (case-insensitive); plugins without category are excluded
+
     if (currentCategory !== 'all') {
         const categoryLower = currentCategory.toLowerCase();
         filteredPlugins = filteredPlugins.filter(plugin => {
@@ -2349,8 +2839,7 @@ function displayStorePlugins() {
             return pluginType && pluginType === categoryLower;
         });
     }
-    
-    // Apply search filter (name + description)
+
     if ((currentSearchQuery || '').trim()) {
         const searchLower = (currentSearchQuery || '').trim().toLowerCase();
         const searchTerms = searchLower.split(/\s+/).filter(t => t.length > 0);
@@ -2361,132 +2850,79 @@ function displayStorePlugins() {
             return searchTerms.every(term => combined.includes(term));
         });
     }
-    
-    // Apply alphabetical filter
+
     if (currentFilter !== 'all') {
-        filteredPlugins = filteredPlugins.filter(plugin => 
+        filteredPlugins = filteredPlugins.filter(plugin =>
             (plugin.name || '').charAt(0).toUpperCase() === currentFilter
         );
     }
-    
+
     if (filteredPlugins.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins match your filters. Try adjusting the category, search, or letter filter.</td></tr>';
+        if (cards) cards.innerHTML = '<div class="store-mobile-card" style="text-align:center;">No plugins match your filters.</div>';
+        filteredStorePluginsCache = [];
+        renderStorePagination(0);
+        updateStoreSortHeaders();
         return;
     }
-    
-    filteredPlugins.forEach(plugin => {
+
+    filteredPlugins = sortStorePlugins(filteredPlugins);
+    filteredStorePluginsCache = filteredPlugins;
+
+    var size = storePageSize === 'all' ? filteredPlugins.length : storePageSize;
+    var totalPages = Math.max(1, Math.ceil(filteredPlugins.length / size) || 1);
+    if (currentStorePage > totalPages) currentStorePage = totalPages;
+    if (currentStorePage < 1) currentStorePage = 1;
+    var startIdx = storePageSize === 'all' ? 0 : (currentStorePage - 1) * size;
+    var pagePlugins = filteredPlugins.slice(startIdx, startIdx + size);
+
+    pagePlugins.forEach(function(plugin) {
+        const parts = buildStorePluginRowParts(plugin);
         const row = document.createElement('tr');
-        
-        // Plugin icon - based on plugin type (same logic as Grid/Table views)
-        const pluginType = ((plugin.type || '') + '').trim().toLowerCase() || 'utility';
-        let iconClass = 'fas fa-puzzle-piece'; // Default icon
-        if (pluginType.includes('security')) {
-            iconClass = 'fas fa-shield-alt';
-        } else if (pluginType.includes('performance')) {
-            iconClass = 'fas fa-rocket';
-        } else if (pluginType.includes('utility')) {
-            iconClass = 'fas fa-tools';
-        } else if (pluginType.includes('backup')) {
-            iconClass = 'fas fa-save';
-        } else if (pluginType.includes('monitoring')) {
-            iconClass = 'fas fa-heartbeat';
-        } else if (pluginType.includes('integration')) {
-            iconClass = 'fas fa-plug';
-        } else if (pluginType.includes('email')) {
-            iconClass = 'fas fa-envelope';
-        } else if (pluginType.includes('development')) {
-            iconClass = 'fas fa-code';
-        } else if (pluginType.includes('analytics')) {
-            iconClass = 'fas fa-chart-bar';
-        }
-        const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
-            <i class="${iconClass}"></i>
-        </div>`;
-        
-        // Action column - Store view only shows Install/Installed/Upgrade (no Deactivate/Uninstall)
-        // NOTE: Store view should NOT show Deactivate/Uninstall buttons - users manage from Grid/Table views
-        let actionHtml = '';
-        if (plugin.installed) {
-            // Check if update is available
-            if (plugin.update_available) {
-                // Show Upgrade button
-                actionHtml = `<button class="btn-action btn-upgrade" onclick="upgradePlugin('${plugin.plugin_dir}', '${plugin.installed_version || 'Unknown'}', '${plugin.version || 'Unknown'}')">
-                    <i class="fas fa-arrow-up"></i> Upgrade
-                </button>`;
-            } else {
-                // Show "Installed" text
-                actionHtml = '<span class="status-installed">Installed</span>';
-            }
-        } else {
-            // Show Install button
-            actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${escapeHtml(plugin.plugin_dir)}')">
-                <i class="fas fa-download"></i> Install
-            </button>`;
-            if (plugin.has_local_source && !plugin.builtin) {
-                actionHtml += ` <button type="button" class="btn-action btn-delete-source" onclick="deletePluginLocalSource('${escapeHtml(plugin.plugin_dir)}')">
-                    <i class="fas fa-folder-minus"></i> Delete local copy
-                </button>`;
-            }
-        }
-        
-        // Help column - always use consistent help URL
-        const helpUrl = `/plugins/${plugin.plugin_dir}/help/`;
-        const helpHtml = `<a href="${helpUrl}" class="btn-link" title="Plugin Help">
-            <i class="fas fa-question-circle"></i> Help
-        </a>`;
-        
-        // About column
-        const aboutUrl = plugin.about_url || plugin.github_url || '#';
-        const aboutHtml = `<a href="${aboutUrl}" target="_blank" class="btn-link" title="About Plugin">
-            <i class="fas fa-info-circle"></i> About
-        </a>`;
-        
-        // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
-        const modifyDateHtml = (plugin.modify_timestamp != null || (plugin.modify_date && plugin.modify_date !== 'N/A'))
-            ? `<small style="color: var(--text-secondary, #64748b);">${formatPluginModifyDateDisplay(plugin)}</small>`
-            : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
-        
-        // Freshness badge (NEW/Stable/STALE) - use API data or compute from modify_date
-        const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date, plugin.modify_timestamp);
-        
-        // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
-        // Version: 2026-01-25-v4 - Normalize is_paid to handle all possible values
-        let isPaid = false;
-        if (plugin.is_paid !== undefined && plugin.is_paid !== null) {
-            const isPaidValue = plugin.is_paid;
-            if (isPaidValue === true || isPaidValue === 'true' || isPaidValue === 'True' || isPaidValue === 1 || isPaidValue === '1' || String(isPaidValue).toLowerCase() === 'true') {
-                isPaid = true;
-            }
-        }
-        const pricingBadge = isPaid 
-            ? '<span class="plugin-pricing-badge paid">Paid</span>'
-            : '<span class="plugin-pricing-badge free">Free</span>';
-        
-        // Version: 2026-01-27-v1 - Added Category column; category is required, no default
-        const pluginCategory = ((plugin.type || '') + '').trim() || '—';
-        const categoryBadge = `<span class="plugin-type">${escapeHtml(pluginCategory.toUpperCase())}</span>`;
-        
         row.innerHTML = `
-            <td style="text-align: center;">${iconHtml}</td>
-            <td>
-                <strong>${escapeHtml(plugin.name)}</strong>
-                ${freshnessBadgeHtml}
-            </td>
-            <td>${categoryBadge}</td>
-            <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
-            <td>${pricingBadge}</td>
-            <td>${modifyDateHtml}</td>
-            <td>${actionHtml}</td>
-            <td>${helpHtml}</td>
-            <td>${aboutHtml}</td>
+            <td style="text-align: center;">${parts.iconHtml}</td>
+            <td>${parts.nameHtml}</td>
+            <td>${parts.categoryBadge}</td>
+            <td>${parts.versionHtml}</td>
+            <td>${parts.pricingBadge}</td>
+            <td>${parts.modifyDateHtml}</td>
+            <td>${parts.actionHtml}</td>
+            <td>${parts.helpHtml}</td>
+            <td>${parts.aboutHtml}</td>
         `;
-        
         tbody.appendChild(row);
+
+        if (cards) {
+            const card = document.createElement('div');
+            card.className = 'store-mobile-card';
+            card.innerHTML = `
+                <div class="store-mobile-card-header">
+                    ${parts.iconHtml}
+                    <div>${parts.nameHtml}</div>
+                </div>
+                <div class="store-mobile-card-meta">
+                    <div><strong>Category</strong>${parts.categoryBadge}</div>
+                    <div><strong>Version</strong>${parts.versionHtml}</div>
+                    <div><strong>Pricing</strong>${parts.pricingBadge}</div>
+                    <div><strong>Modified</strong>${parts.modifyDateHtml}</div>
+                </div>
+                <div class="store-mobile-card-actions">
+                    ${parts.actionHtml}
+                    ${parts.helpHtml}
+                    ${parts.aboutHtml}
+                </div>
+            `;
+            cards.appendChild(card);
+        }
     });
+
+    renderStorePagination(filteredPlugins.length);
+    updateStoreSortHeaders();
 }
 
 function filterByCategory(category, evt) {
     currentCategory = category;
+    currentStorePage = 1;
     const categoryBtns = document.querySelectorAll('.category-btn');
     categoryBtns.forEach(btn => btn.classList.remove('active'));
     const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.category-btn')));
@@ -2504,6 +2940,7 @@ function filterByCategory(category, evt) {
 
 function filterByLetter(letter, evt) {
     currentFilter = letter;
+    currentStorePage = 1;
     const alphaBtns = document.querySelectorAll('.alpha-btn');
     alphaBtns.forEach(btn => btn.classList.remove('active'));
     const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.alpha-btn')));
@@ -2526,6 +2963,7 @@ function clearPluginSearch() {
     if (input) {
         input.value = '';
         currentSearchQuery = '';
+        currentStorePage = 1;
         if (clearBtn) clearBtn.style.display = 'none';
         displayStorePlugins();
         input.focus();
@@ -3577,47 +4015,60 @@ document.addEventListener('DOMContentLoaded', function() {
     // Respect ?view=store in URL (e.g. from sidebar "Plugin Store" link)
     const urlParams = new URLSearchParams(window.location.search);
     const requestedView = urlParams.get('view');
+
+    // Search / pagination listeners always attach (needed for ?view=store and #store)
+    const searchInput = document.getElementById('pluginSearchInput');
+    const searchClearBtn = document.getElementById('pluginSearchClear');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            currentSearchQuery = this.value;
+            currentStorePage = 1;
+            if (searchClearBtn) {
+                searchClearBtn.style.display = currentSearchQuery.trim() ? 'block' : 'none';
+            }
+            displayStorePlugins();
+        });
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearPluginSearch();
+                e.preventDefault();
+            }
+        });
+    }
+    var storeGotoInput = document.getElementById('storeGotoPageInput');
+    if (storeGotoInput) {
+        storeGotoInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                goToStorePageFromInput();
+                e.preventDefault();
+            }
+        });
+    }
+
     if (requestedView === 'store') {
         toggleView('store');
-    } else {
-        // Search input listener (debounced)
-        const searchInput = document.getElementById('pluginSearchInput');
-        const searchClearBtn = document.getElementById('pluginSearchClear');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                currentSearchQuery = this.value;
-                if (searchClearBtn) {
-                    searchClearBtn.style.display = currentSearchQuery.trim() ? 'block' : 'none';
-                }
-                displayStorePlugins();
-            });
-            searchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    clearPluginSearch();
-                    e.preventDefault();
-                }
-            });
-        }
-        
-        // Installed plugins search (Grid View and Table View)
-        const installedSearchInput = document.getElementById('installedPluginSearchInput');
-        const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
-        if (installedSearchInput) {
-            installedSearchInput.addEventListener('input', function() {
-                if (installedSearchClearBtn) {
-                    installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
-                }
-                filterInstalledPlugins();
-                scheduleInstalledSearchHashUpdate();
-            });
-            installedSearchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    clearInstalledPluginSearch();
-                    e.preventDefault();
-                }
-            });
-        }
-        
+    }
+
+    // Installed plugins search (Grid View and Table View) - always attach
+    const installedSearchInput = document.getElementById('installedPluginSearchInput');
+    const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
+    if (installedSearchInput) {
+        installedSearchInput.addEventListener('input', function() {
+            if (installedSearchClearBtn) {
+                installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
+            }
+            filterInstalledPlugins();
+            scheduleInstalledSearchHashUpdate();
+        });
+        installedSearchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearInstalledPluginSearch();
+                e.preventDefault();
+            }
+        });
+    }
+
+    if (requestedView !== 'store') {
         // URL hash: #grid | #table | #store | #upgrades, optional ?show=&sort=&cat=&q= for grid/table
         const hashRaw = window.location.hash.substring(1);
         const parsedHash = parsePluginsHashFragment(hashRaw);
