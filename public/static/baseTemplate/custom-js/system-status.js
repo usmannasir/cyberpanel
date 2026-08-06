@@ -316,6 +316,11 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
                 $scope.ramTotalMB = response.data.ramTotalMB;
                 $scope.diskTotalGB = response.data.diskTotalGB;
                 $scope.diskFreeGB = response.data.diskFreeGB;
+                $scope.ramTotalLabel = response.data.ramTotalLabel;
+                $scope.diskTotalLabel = response.data.diskTotalLabel;
+                $scope.diskFreeLabel = response.data.diskFreeLabel;
+                $scope.sizeDisplayUnit = response.data.sizeDisplayUnit || 'auto';
+                try { window.CPSizeDisplayUnit = $scope.sizeDisplayUnit; } catch (e) {}
                 $scope.uptime = response.data.uptime || 'N/A';
                 $scope.uptimeLoaded = true;
             } else {

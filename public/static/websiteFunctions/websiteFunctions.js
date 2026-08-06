@@ -2755,21 +2755,57 @@ $("#listFail").hide();
 
 app.controller('listWebsites', function ($scope, $http, $window) {
 
+    function groupInt(n) {
+        n = Math.round(Number(n) || 0);
+        var sign = n < 0 ? '-' : '';
+        var s = String(Math.abs(n));
+        var parts = [];
+        while (s.length > 3) {
+            parts.unshift(s.slice(-3));
+            s = s.slice(0, -3);
+        }
+        if (s) { parts.unshift(s); }
+        return sign + parts.join(' ');
+    }
+
     function formatDiskLabel(val) {
         if (val === null || val === undefined || val === '') {
             return '0 MB';
         }
+        var mode = (window.CPSizeDisplayUnit || 'auto');
         var s = String(val).trim();
+        if (/unlimited/i.test(s)) {
+            return 'Unlimited';
+        }
         if (/^\d+(\.\d+)?\s*(B|KB|MB|GB|TB)$/i.test(s)) {
+            // Already labeled; still apply space + optional regroup for MB mode
+            var pre = s.match(/^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB|TB)$/i);
+            if (pre && mode === 'MB' && /MB/i.test(pre[2])) {
+                return groupInt(parseFloat(pre[1])) + ' MB';
+            }
             return s.replace(/(\d)([A-Za-z])/g, '$1 $2');
         }
         var m = s.match(/^(\d+(?:\.\d+)?)\s*MB$/i);
-        if (!m) {
+        var mb;
+        if (m) {
+            mb = parseFloat(m[1]);
+        } else if (/^\d+(\.\d+)?$/.test(s)) {
+            mb = parseFloat(s);
+        } else {
             return s;
         }
-        var mb = parseFloat(m[1]);
         if (!isFinite(mb) || mb < 0) {
             return '0 MB';
+        }
+        if (mode === 'MB') {
+            return groupInt(mb) + ' MB';
+        }
+        if (mode === 'GB') {
+            var gbFixed = mb / 1024;
+            if (Math.abs(gbFixed - Math.round(gbFixed)) < 0.005 && Math.abs(gbFixed) >= 10) {
+                return groupInt(Math.round(gbFixed)) + ' GB';
+            }
+            return gbFixed.toFixed(2) + ' GB';
         }
         var bytes = mb * 1024 * 1024;
         if (bytes >= 1024 * 1024 * 1024 * 1024) {
@@ -2779,12 +2815,15 @@ app.controller('listWebsites', function ($scope, $http, $window) {
             return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
         }
         if (bytes >= 1024 * 1024) {
-            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            if (mb >= 1000) {
+                return groupInt(mb) + ' MB';
+            }
+            return (Math.abs(mb - Math.round(mb)) < 0.005 ? groupInt(Math.round(mb)) : mb.toFixed(2)) + ' MB';
         }
         if (bytes >= 1024) {
             return (bytes / 1024).toFixed(1) + ' KB';
         }
-        return Math.round(bytes) + ' B';
+        return groupInt(bytes) + ' B';
     }
 
     function normalizeWebsiteRow(web) {

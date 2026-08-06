@@ -828,7 +828,7 @@
                                 </span>
                             </div>
                             <div class="row-actions">
-                                <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
+                                <a ng-href="{$ web.manageUrl || ('/websites/' + web.domain) $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
                                     Manage
                                 </a>
                                 <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
