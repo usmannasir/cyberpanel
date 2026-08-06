@@ -156,8 +156,28 @@ def getSystemStatus(request):
     default_fallback = {
         'cpuUsage': 0, 'ramUsage': 0, 'diskUsage': 0,
         'cpuCores': 2, 'ramTotalMB': 4096, 'diskTotalGB': 100,
-        'diskFreeGB': 100, 'uptime': 'N/A'
+        'diskFreeGB': 100, 'uptime': 'N/A',
+        'sizeDisplayUnit': 'auto', 'ramTotalLabel': '4 096 MB',
+        'diskTotalLabel': '100 GB', 'diskFreeLabel': '100 GB',
     }
+
+    def _annotate_size_labels(payload, admin_obj):
+        from plogical.humanSize import format_mb, get_admin_size_mode
+        mode = get_admin_size_mode(admin_obj)
+        out = dict(payload) if isinstance(payload, dict) else {}
+        out['sizeDisplayUnit'] = mode
+        ram_mb = out.get('ramTotalMB', 0)
+        out['ramTotalLabel'] = format_mb(ram_mb, mode)
+        try:
+            disk_total_gb = float(out.get('diskTotalGB') or 0)
+            disk_free_gb = float(out.get('diskFreeGB') or 0)
+        except (TypeError, ValueError):
+            disk_total_gb = 0
+            disk_free_gb = 0
+        out['diskTotalLabel'] = format_mb(disk_total_gb * 1024.0, mode)
+        out['diskFreeLabel'] = format_mb(disk_free_gb * 1024.0, mode)
+        return out
+
     try:
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
@@ -169,13 +189,13 @@ def getSystemStatus(request):
             cache_key = 'cp_admin_sysstatus'
             cached = cache.get(cache_key)
             if cached is not None:
-                return HttpResponse(json.dumps(cached))
+                return HttpResponse(json.dumps(_annotate_size_labels(cached, admin)))
             HTTPData = SystemInformation.getSystemInformation()
             try:
                 cache.set(cache_key, HTTPData, 45)
             except Exception:
                 pass
-            json_data = json.dumps(HTTPData)
+            json_data = json.dumps(_annotate_size_labels(HTTPData, admin))
             return HttpResponse(json_data)
         else:
             # Non-admin users get user-specific resource information.
@@ -184,7 +204,7 @@ def getSystemStatus(request):
             cache_key = 'cp_user_sysstatus_%s' % val
             cached = cache.get(cache_key)
             if cached is not None:
-                return HttpResponse(json.dumps(cached))
+                return HttpResponse(json.dumps(_annotate_size_labels(cached, admin)))
 
             import subprocess
             import os
@@ -260,7 +280,7 @@ def getSystemStatus(request):
             except Exception:
                 pass
 
-            json_data = json.dumps(user_data)
+            json_data = json.dumps(_annotate_size_labels(user_data, admin))
             return HttpResponse(json_data)
             
     except KeyError as e:
@@ -586,6 +606,14 @@ def design(request):
         cosmetic.MainDashboardCSS = MainDashboardCSS
         cosmetic.HidePromotions = 1 if request.POST.get('HidePromotions') else 0
         cosmetic.save()
+        size_unit = request.POST.get('sizeDisplayUnit', 'auto')
+        try:
+            from loginSystem.models import Administrator
+            from plogical.humanSize import set_admin_size_mode
+            self_admin = Administrator.objects.get(pk=val)
+            set_admin_size_mode(self_admin, size_unit, save=True)
+        except Exception:
+            pass
         finalData['saved'] = 1
 
     ####### Fetch sha...
@@ -606,6 +634,12 @@ def design(request):
 
     template = 'baseTemplate/design.html'
     finalData['cosmetic'] = cosmetic
+    try:
+        from loginSystem.models import Administrator
+        from plogical.humanSize import get_admin_size_mode
+        finalData['sizeDisplayUnit'] = get_admin_size_mode(Administrator.objects.get(pk=val))
+    except Exception:
+        finalData['sizeDisplayUnit'] = 'auto'
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()

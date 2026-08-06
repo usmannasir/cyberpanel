@@ -31,6 +31,7 @@
     </style>
     
     <!-- Core Scripts -->
+    <script>try { window.CPSizeDisplayUnit = "{{ sizeDisplayUnit|default:'auto'|escapejs }}"; } catch (e) {}</script>
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <!-- Bootstrap JavaScript -->
@@ -465,22 +466,49 @@
             list.forEach(function (row) {
                 var domain = (row && row.domain) ? String(row.domain) : '';
                 if (!domain) { return; }
-                var href = '/websites/' + encodeURIComponent(domain) + '/settings';
+                var master = (row && row.masterDomain) ? String(row.masterDomain) : '';
+                var href;
+                if (master) {
+                    href = '/websites/' + encodeURIComponent(master) + '/' + encodeURIComponent(domain);
+                } else {
+                    href = '/websites/' + encodeURIComponent(domain);
+                }
                 if (seen[href]) { return; }
                 seen[href] = 1;
                 var label = domain;
-                if (row.masterDomain) { label = domain + ' (' + row.masterDomain + ')'; }
-                items.push({label: label, href: href, icon: iconClass, group: groupLabel, target: ''});
+                if (master) { label = domain + ' (' + master + ')'; }
+                var hay = (domain + ' ' + master).toLowerCase();
+                items.push({label: label, href: href, icon: iconClass, group: groupLabel, target: '', hay: hay});
             });
         }
 
-        function ensureSites(done) {
-            if (sitesLoaded || sitesLoading) { if (done) done(); return; }
-            sitesLoading = true;
+        function fetchPagedList(url, page, recordsToShow, headers, acc) {
+            acc = acc || [];
+            var body = JSON.stringify({page: page, recordsToShow: recordsToShow});
+            return fetch(url, {method: 'POST', credentials: 'same-origin', headers: headers, body: body})
+                .then(function (resp) { return resp.json(); })
+                .then(function (data) {
+                    if (!data || data.listWebSiteStatus !== 1) { return acc; }
+                    var rows = [];
+                    try {
+                        rows = (typeof data.data === 'string') ? JSON.parse(data.data) : (data.data || []);
+                    } catch (e) { rows = []; }
+                    if (!Array.isArray(rows)) { rows = []; }
+                    acc = acc.concat(rows);
+                    var pages = data.pagination;
+                    if (Array.isArray(pages) && page < pages.length) {
+                        return fetchPagedList(url, page + 1, recordsToShow, headers, acc);
+                    }
+                    return acc;
+                }).catch(function () { return acc; });
+        }
+
+        function searchRemoteSites(term, done) {
+            term = (term || '').trim();
+            if (!term || term.length < 2) { if (done) done(); return; }
             var csrf = getCookie('csrftoken') || '';
             var headers = {'Content-Type': 'application/json', 'X-CSRFToken': csrf};
-            var bodySites = JSON.stringify({page: 1, recordsToShow: 100});
-            var bodyChild = JSON.stringify({page: 1, recordsToShow: 100});
+            var body = JSON.stringify({patternAdded: term});
             function parseList(resp) {
                 return resp.json().then(function (data) {
                     if (!data || data.listWebSiteStatus !== 1) { return []; }
@@ -490,8 +518,22 @@
                 }).catch(function () { return []; });
             }
             Promise.all([
-                fetch('/websites/fetchWebsitesList', {method: 'POST', credentials: 'same-origin', headers: headers, body: bodySites}).then(parseList),
-                fetch('/websites/fetchChildDomainsMain', {method: 'POST', credentials: 'same-origin', headers: headers, body: bodyChild}).then(parseList)
+                fetch('/websites/searchWebsites', {method: 'POST', credentials: 'same-origin', headers: headers, body: body}).then(parseList),
+                fetch('/websites/searchChilds', {method: 'POST', credentials: 'same-origin', headers: headers, body: body}).then(parseList)
+            ]).then(function (pair) {
+                mergeSiteItems(pair[0], '{% trans "Websites" %}', 'fas fa-globe');
+                mergeSiteItems(pair[1], '{% trans "Subdomains" %}', 'fas fa-diagram-project');
+            }).catch(function () {}).then(function () { if (done) done(); });
+        }
+
+        function ensureSites(done) {
+            if (sitesLoaded || sitesLoading) { if (done) done(); return; }
+            sitesLoading = true;
+            var csrf = getCookie('csrftoken') || '';
+            var headers = {'Content-Type': 'application/json', 'X-CSRFToken': csrf};
+            Promise.all([
+                fetchPagedList('/websites/fetchWebsitesList', 1, 100, headers, []),
+                fetchPagedList('/websites/fetchChildDomainsMain', 1, 100, headers, [])
             ]).then(function (pair) {
                 if (!items.length) { buildIndex(); }
                 mergeSiteItems(pair[0], '{% trans "Websites" %}', 'fas fa-globe');
@@ -534,14 +576,22 @@
         function search(term) {
             term = term.trim().toLowerCase();
             if (!term) { filtered = items.slice(0, 8); }
-            else { filtered = items.filter(function (it) { return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1; }); }
+            else {
+                filtered = items.filter(function (it) {
+                    var hay = (it.hay || it.label || '').toLowerCase();
+                    return hay.indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1;
+                });
+            }
             activeIdx = 0; render();
         }
         function open(initialTerm) {
             if (!items.length) { buildIndex(); }
             overlay.hidden = false;
             input.value = initialTerm || '';
-            ensureSites(function () { search(input.value); });
+            ensureSites(function () {
+                searchRemoteSites(input.value, function () { search(input.value); });
+                search(input.value);
+            });
             search(input.value);
             setTimeout(function () { input.focus(); }, 10);
             document.addEventListener('keydown', onKey, true);
@@ -557,7 +607,8 @@
             if (!term) { out = items.slice(0, limit || 8); }
             else {
                 out = items.filter(function (it) {
-                    return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1;
+                    var hay = (it.hay || it.label || '').toLowerCase();
+                    return hay.indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1;
                 });
                 if (limit) { out = out.slice(0, limit); }
             }
@@ -568,6 +619,7 @@
             close: close,
             ensureIndex: function () { if (!items.length) buildIndex(); },
             ensureSites: ensureSites,
+            searchRemoteSites: searchRemoteSites,
             query: queryItems,
             go: function (it) {
                 if (!it) { return; }
@@ -598,7 +650,11 @@
             results = document.getElementById('cp-cmdk-results');
             emptyEl = document.getElementById('cp-cmdk-empty');
             if (!overlay) { return; }
-            input.addEventListener('input', function () { search(input.value); });
+            input.addEventListener('input', function () {
+                var t = input.value;
+                search(t);
+                searchRemoteSites(t, function () { search(input.value); });
+            });
             overlay.addEventListener('click', function (e) { if (e.target === overlay) { close(); } });
             var trigger = document.getElementById('cp-cmdk-trigger');
             if (trigger) { trigger.addEventListener('click', open); }
@@ -832,6 +888,11 @@
                 if (!window.CPSearch) { return; }
                 window.CPSearch.ensureIndex();
                 window.CPSearch.ensureSites(function () {
+                    if (window.CPSearch.searchRemoteSites) {
+                        window.CPSearch.searchRemoteSites(term, function () {
+                            render(window.CPSearch.query(term, 12));
+                        });
+                    }
                     render(window.CPSearch.query(term, 12));
                 });
                 render(window.CPSearch.query(term, 12));

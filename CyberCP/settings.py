@@ -138,6 +138,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'baseTemplate.context_processors.version_context',
                 'baseTemplate.context_processors.cosmetic_context',
+                'baseTemplate.context_processors.size_display_unit_context',
             ],
         },
     },

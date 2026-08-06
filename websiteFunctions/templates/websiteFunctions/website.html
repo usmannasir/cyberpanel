@@ -1861,11 +1861,11 @@
                     <i class="fas fa-hdd"></i>
                 </div>
                 <div class="resource-title">{% trans "Disk Usage" %}</div>
-                <div class="resource-value">{{ diskInMB }} MB</div>
-                {% if diskInMBTotal == 0 %}
+                <div class="resource-value">{{ diskUsedLabel|default:diskInMB }}{% if not diskUsedLabel %} MB{% endif %}</div>
+                {% if diskUnlimited or diskInMBTotal == 0 %}
                 <div class="resource-limit">{% trans "Unlimited" %}</div>
                 {% else %}
-                <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
+                <div class="resource-limit">{% trans "of" %} {{ diskTotalLabel|default:diskInMBTotal }}{% if not diskTotalLabel %} MB{% endif %}</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
@@ -1878,11 +1878,15 @@
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="resource-title">{% trans "Bandwidth" %}</div>
-                <div class="resource-value">{{ bwInMB }} MB</div>
-                <div class="resource-limit">{% trans "of" %} {{ bwInMBTotal }} MB</div>
+                <div class="resource-value">{{ bwUsedLabel|default:bwInMB }}{% if not bwUsedLabel %} MB{% endif %}</div>
+                {% if bwUnlimited or bwInMBTotal == 0 %}
+                <div class="resource-limit">{% trans "Unlimited" %}</div>
+                {% else %}
+                <div class="resource-limit">{% trans "of" %} {{ bwTotalLabel|default:bwInMBTotal }}{% if not bwTotalLabel %} MB{% endif %}</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ bwUsage }}%;"></div>
                 </div>
+                {% endif %}
             </div>
             
             <!-- Database Card -->
