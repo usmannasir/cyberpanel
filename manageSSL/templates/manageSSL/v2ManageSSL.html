@@ -349,7 +349,7 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
                     <h2 class="section-title">SSL V2</h2>
                     <a href="https://youtu.be/kDUANNvtOwE" target="_blank" class="ssl-docs-link">
-                        <i class="fas fa-play-circle"></i>
+                        <i class="fas fa-play-circle" aria-hidden="true"></i>
                         {% trans "DNS Docs" %}
                     </a>
                 </div>
@@ -368,8 +368,8 @@
                 <h3 class="section-title">SSL MANAGEMENT</h3>
                 
                 {% if SaveSuccess %}
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                    <div class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle" style="margin-right: 8px;" aria-hidden="true"></i>
                         {% trans "Changes saved successfully." %}
                     </div>
                 {% endif %}
@@ -377,13 +377,13 @@
                 <ul class="nav nav-tabs">
                     <li class="active">
                         <a href="#tab-example-1" data-toggle="tab">
-                            <i class="fas fa-certificate"></i>
+                            <i class="fas fa-certificate" aria-hidden="true"></i>
                             <span>{% trans "Issue SSL" %}</span>
                         </a>
                     </li>
                     <li>
                         <a href="#tab-example-3" data-toggle="tab">
-                            <i class="fas fa-cogs"></i>
+                            <i class="fas fa-cogs" aria-hidden="true"></i>
                             <span>{% trans "API Settings" %}</span>
                         </a>
                     </li>
@@ -393,9 +393,9 @@
                     <div class="tab-pane fade active in" id="tab-example-1">
                         <form action="/">
                             <div class="form-group">
-                                <label class="form-label">{% trans "Select Domain" %}</label>
+                                <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
                                 <div style="display: flex; gap: 15px; align-items: stretch;">
-                                    <select ng-model="virtualHost" class="form-control" ng-change="showbtn()" style="flex: 1;">
+                                    <select id="cpa11y-select-domain" ng-model="virtualHost" class="form-control" ng-change="showbtn()" style="flex: 1;">
                                         <option value="">-- Select a domain --</option>
                                         {% for items in websiteList %}
                                             <option>{{ items }}</option>
@@ -404,13 +404,13 @@
                                     <button type="button" ng-click="issueSSL()" ng-disabled="sslIssuing || !virtualHost" class="btn-primary">
                                         <span ng-hide="sslIssuing">{% trans "Issue SSL" %}</span>
                                         <span ng-show="sslIssuing">{% trans "Issuing SSL..." %}</span>
-                                        <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                                        <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
                                     </button>
                                 </div>
                             </div>
 
-                            <div ng-show="sslIssuing" class="alert alert-info">
-                                <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>
+                            <div ng-show="sslIssuing" class="alert alert-info" role="status">
+                                <i class="fas fa-spinner fa-spin" style="margin-right: 8px;" aria-hidden="true"></i>
                                 <strong>{% trans "Issuing SSL..." %}</strong> {% trans "This can take a few minutes. Please keep this page open." %}
                             </div>
 
@@ -429,8 +429,8 @@
                             </div>
 
                             <div class="form-group" style="margin-top: 25px;">
-                                <label class="form-label">{% trans "SSL Status:" %} {$ sslStatus $}</label>
-                                <textarea ng-model="sslLogs" class="form-control" rows="15" readonly></textarea>
+                                <label for="cpa11y-ssl-status-sslstatus" class="form-label">{% trans "SSL Status:" %} {$ sslStatus $}</label>
+                                <textarea id="cpa11y-ssl-status-sslstatus" ng-model="sslLogs" class="form-control" rows="15" readonly></textarea>
                             </div>
                         </form>
                     </div>
@@ -442,20 +442,20 @@
                             <h4 class="section-title" style="font-size: 14px;">CLOUDFLARE SETTINGS</h4>
                             
                             <div class="form-group">
-                                <label class="form-label">{% trans "CloudFlare Email" %}</label>
-                                <input name="SAVED_CF_Email" type="text" class="form-control"
+                                <label for="cpa11y-cloudflare-email" class="form-label">{% trans "CloudFlare Email" %}</label>
+                                <input id="cpa11y-cloudflare-email" name="SAVED_CF_Email" type="text" class="form-control"
                                        value="{{ SAVED_CF_Email }}" placeholder="your-email@example.com" required>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">{% trans "API Token" %}</label>
-                                <input name="SAVED_CF_Key" type="text" class="form-control"
+                                <label for="cpa11y-api-token" class="form-label">{% trans "API Token" %}</label>
+                                <input id="cpa11y-api-token" name="SAVED_CF_Key" type="text" class="form-control"
                                        value="{{ SAVED_CF_Key }}" placeholder="Your CloudFlare API Token" required>
                             </div>
 
                             <div class="form-group">
                                 <button type="submit" class="btn-primary">
-                                    <i class="fas fa-save"></i>
+                                    <i class="fas fa-save" aria-hidden="true"></i>
                                     {% trans "Save Settings" %}
                                 </button>
                             </div>

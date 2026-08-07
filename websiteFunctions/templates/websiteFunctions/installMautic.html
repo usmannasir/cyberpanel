@@ -443,7 +443,7 @@
     <div id="page-title">
         <h2>
             <span class="mautic-logo">
-                <i class="fas fa-envelope-open-text" style="color: var(--primary-color); font-size: 24px;"></i>
+                <i class="fas fa-envelope-open-text" style="color: var(--primary-color); font-size: 24px;" aria-hidden="true"></i>
             </span>
             {% trans "Install Mautic" %}
         </h2>
@@ -453,14 +453,14 @@
     <div ng-controller="installMauticCTRL" class="panel">
         <div class="panel-body">
             <h3 class="title-hero">
-                <i class="fas fa-chart-line" style="color: var(--primary-color);"></i>
+                <i class="fas fa-chart-line" style="color: var(--primary-color);" aria-hidden="true"></i>
                 <span id="domainNamePage">{{ domainName }}</span> - {% trans "Installation Details" %}
-                <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" id="wpInstallLoading">
+                <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" id="wpInstallLoading" alt="">
             </h3>
             <div class="example-box-wrapper">
 
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Mautic Marketing Automation" %}</strong><br>
                         {% trans "Mautic provides marketing automation, email marketing, and lead management tools to help you connect with your contacts and customers." %}
@@ -469,25 +469,25 @@
 
                 <div class="feature-list">
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Email Marketing" %}</span>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Lead Scoring" %}</span>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Campaign Builder" %}</span>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <span>{% trans "Marketing Analytics" %}</span>
                     </div>
                 </div>
 
                 <div class="warning-box">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "Important:" %}</strong> {% trans "Before installing Mautic, we will change the PHP version of the website to PHP 8.1, which is supported by Mautic." %}
                     </div>
@@ -496,38 +496,38 @@
                 <form name="websiteCreationForm" action="/" id="createPackages" class="form-horizontal bordered-row">
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-user"></i>
+                        <label for="cpa11y-administrator-username" class="col-sm-3 control-label">
+                            <i class="fas fa-user" aria-hidden="true"></i>
                             {% trans "Administrator Username" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="adminUserName" placeholder="admin" required>
+                            <input id="cpa11y-administrator-username" type="text" class="form-control" ng-model="adminUserName" placeholder="admin" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-envelope"></i>
+                        <label for="cpa11y-email" class="col-sm-3 control-label">
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
                             {% trans "Email" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="email" class="form-control" ng-model="email" placeholder="admin@example.com" required>
+                            <input id="cpa11y-email" type="email" class="form-control" ng-model="email" placeholder="admin@example.com" required>
                             <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "This will be your Mautic administrator email" %}
                             </small>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-lock"></i>
+                        <label for="cpa11y-password" class="col-sm-3 control-label">
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                             {% trans "Password" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="password" class="form-control" ng-model="password" placeholder="Strong password required" required>
+                            <input id="cpa11y-password" type="password" class="form-control" ng-model="password" placeholder="Strong password required" required>
                             <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "Use a strong password to secure your Mautic admin panel" %}
                             </small>
                         </div>
@@ -537,7 +537,7 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-6">
                             <button type="button" ng-click="installMautic()" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-download"></i>
+                                <i class="fas fa-download" aria-hidden="true"></i>
                                 {% trans "Install Now" %}
                             </button>
                         </div>
@@ -547,7 +547,7 @@
                         <label class="col-sm-2 control-label"></label>
                         <div class="col-sm-8">
 
-                            <div class="alert alert-success text-center">
+                            <div class="alert alert-success text-center" role="status">
                                 <h2>{$ currentStatus $}</h2>
                             </div>
 
@@ -558,13 +558,13 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="installationFailed" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
-                            <div ng-hide="installationSuccessfull" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="installationSuccessfull" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 <p>
                                     {% trans "Installation successful. Visit:" %} 
                                     <a href="{$ installationURL $}" target="_blank" style="font-weight: 600;">
@@ -572,13 +572,13 @@
                                     </a>
                                 </p>
                                 <small style="display: block; margin-top: 10px;">
-                                    <i class="fas fa-lightbulb"></i>
+                                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
                                     {% trans "Tip: Complete the Mautic setup wizard to configure your marketing automation platform" %}
                                 </small>
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-wifi"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-wifi" aria-hidden="true"></i>
                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                             </div>
 
@@ -589,7 +589,7 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-6">
                             <button type="button" ng-disabled="goBackDisable" ng-click="goBack()" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-arrow-left"></i>
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                 {% trans "Go Back" %}
                             </button>
                         </div>

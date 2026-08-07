@@ -558,10 +558,10 @@
     <div class="container">
         <div id="page-title">
             <h2>
-                <i class="fab fa-git-alt" style="margin-right: 10px;"></i>
+                <i class="fab fa-git-alt" style="margin-right: 10px;" aria-hidden="true"></i>
                 {% trans "Manage GIT" %}
                 <a target="_blank" rel="noopener" href="https://cyberpanel.net/KnowledgeBase/home/website-management/" class="btn btn-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Git Docs" %}
                 </a>
             </h2>
@@ -571,19 +571,19 @@
         <div ng-controller="manageGIT" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    <i class="fab fa-git-square" style="color: var(--primary-color);"></i>
+                    <i class="fab fa-git-square" style="color: var(--primary-color);" aria-hidden="true"></i>
                     {% trans "Git Repository Management for" %} <span id="domain">{{ domainName }}</span>
-                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
                     <form action="/" class="form-horizontal bordered-row">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-folder"></i>
+                            <label for="cpa11y-select-folder-to-track" class="col-sm-3 control-label">
+                                <i class="fas fa-folder" aria-hidden="true"></i>
                                 {% trans "Select Folder to Track" %}
                             </label>
                             <div class="col-sm-6">
-                                <select ng-change="fetchFolderDetails()" ng-model="folder" class="form-control">
+                                <select id="cpa11y-select-folder-to-track" ng-change="fetchFolderDetails()" ng-model="folder" class="form-control">
                                     {% for item in folders %}
                                         <option>{{ item }}</option>
                                     {% endfor %}
@@ -593,21 +593,21 @@
                     </form>
                     
                     <div ng-hide="gitTracking" class="info-message">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         <p>{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
                     </div>
                     
                     <div ng-hide="gitTracking" style="display: flex; gap: 15px; margin-top: 20px;">
                         <button type="button" class="btn btn-primary" ng-click="initRepo()">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             Init Repo
                         </button>
 
                         <button data-toggle="modal" data-target="#attachExistingRepo" ng-disabled="home==0"
                                 type="button" class="btn btn-primary">
-                            <i class="fas fa-link"></i>
+                            <i class="fas fa-link" aria-hidden="true"></i>
                             Attach Existing Repo
-                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                         </button>
                     </div>
 
@@ -618,7 +618,7 @@
                                 <div class="modal-header">
                                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                                     <h4 class="modal-title">
-                                        <i class="fas fa-link"></i>
+                                        <i class="fas fa-link" aria-hidden="true"></i>
                                         {% trans "Attach Existing Repo" %}
                                     </h4>
                                 </div>
@@ -626,26 +626,26 @@
 
                                     <form name="containerSettingsForm" action="/" class="form-horizontal">
                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Git Host" %}</label>
+                                            <label for="cpa11y-git-host" class="col-sm-3 control-label">{% trans "Git Host" %}</label>
                                             <div class="col-sm-6">
-                                                <input placeholder="Ex. github.com or gitlab.com"
+                                                <input id="cpa11y-git-host" placeholder="Ex. github.com or gitlab.com"
                                                        name="gitHost" type="text" class="form-control"
                                                        ng-model="$parent.gitHost" required>
                                             </div>
                                         </div>
 
                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                            <label for="cpa11y-username" class="col-sm-3 control-label">{% trans "Username" %}</label>
                                             <div class="col-sm-6">
-                                                <input name="gitUsername" type="text" class="form-control"
+                                                <input id="cpa11y-username" name="gitUsername" type="text" class="form-control"
                                                        ng-model="$parent.gitUsername" required>
                                             </div>
                                         </div>
 
                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                            <label for="cpa11y-repo-name" class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
                                             <div class="col-sm-6">
-                                                <input name="gitReponame" type="text" class="form-control"
+                                                <input id="cpa11y-repo-name" name="gitReponame" type="text" class="form-control"
                                                        ng-model="$parent.gitReponame" required>
                                             </div>
                                         </div>
@@ -703,9 +703,9 @@
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-primary"
                                             ng-click="attachRepoGIT()">
-                                        <i class="fas fa-link"></i>
+                                        <i class="fas fa-link" aria-hidden="true"></i>
                                         Attach
-                                        <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                        <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                     </button>
                                     <button type="button" ng-disabled="savingSettings"
                                             class="btn btn-default" data-dismiss="modal">
@@ -721,13 +721,13 @@
                         <a ng-disabled="home==0" data-toggle="modal" data-target="#attachExistingRepo" href="#"
                            class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-link"></i>
+                            <i class="fas fa-link" aria-hidden="true"></i>
                             Attach Existing Repo
                         </a>
 
                         <a data-toggle="modal" data-target="#configureModal" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-cog"></i>
+                            <i class="fas fa-cog" aria-hidden="true"></i>
                             Configure
                         </a>
 
@@ -738,7 +738,7 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-cog"></i>
+                                            <i class="fas fa-cog" aria-hidden="true"></i>
                                             {% trans "Repo Settings" %}
                                         </h4>
                                     </div>
@@ -746,9 +746,9 @@
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
                                             <div class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Auto Commit" %}</label>
+                                                <label for="cpa11y-auto-commit" class="col-sm-3 control-label">{% trans "Auto Commit" %}</label>
                                                 <div class="col-sm-6">
-                                                    <select ng-model="$parent.autoCommit" class="form-control">
+                                                    <select id="cpa11y-auto-commit" ng-model="$parent.autoCommit" class="form-control">
                                                         <option>Never</option>
                                                         <option>Daily</option>
                                                         <option>Weekly</option>
@@ -758,9 +758,9 @@
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Auto Push" %}</label>
+                                                <label for="cpa11y-auto-push" class="col-sm-3 control-label">{% trans "Auto Push" %}</label>
                                                 <div class="col-sm-6">
-                                                    <select ng-disabled="remote==0" ng-model="$parent.autoPush"
+                                                    <select id="cpa11y-auto-push" ng-disabled="remote==0" ng-model="$parent.autoPush"
                                                             class="form-control">
                                                         <option>Never</option>
                                                         <option>Daily</option>
@@ -785,15 +785,15 @@
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Webhook URL" %}</label>
+                                                <label for="cpa11y-webhook-url" class="col-sm-3 control-label">{% trans "Webhook URL" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="webHookURL" type="text" class="form-control"
+                                                    <input id="cpa11y-webhook-url" name="webHookURL" type="text" class="form-control"
                                                            ng-model="webHookURL" readonly>
                                                 </div>
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Commands" %}</label>
+                                                <label for="currentCommands" class="col-sm-3 control-label">{% trans "Commands" %}</label>
                                                 <div class="col-sm-9">
                                                     <textarea id="currentCommands"
                                                               rows="4"
@@ -822,9 +822,9 @@
                                         <button type="button" ng-disabled="savingSettings"
                                                 class="btn btn-primary"
                                                 ng-click="saveGitConfigurations()">
-                                            <i class="fas fa-save"></i>
+                                            <i class="fas fa-save" aria-hidden="true"></i>
                                             Save
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button" ng-disabled="savingSettings"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -842,7 +842,7 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-link"></i>
+                                            <i class="fas fa-link" aria-hidden="true"></i>
                                             {% trans "Attach Existing Repo" %}
                                         </h4>
                                     </div>
@@ -850,26 +850,26 @@
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Git Host" %}</label>
+                                                <label for="cpa11y-git-host-2" class="col-sm-3 control-label">{% trans "Git Host" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input placeholder="Ex. github.com or gitlab.com"
+                                                    <input id="cpa11y-git-host-2" placeholder="Ex. github.com or gitlab.com"
                                                            name="gitHost" type="text" class="form-control"
                                                            ng-model="$parent.gitHost" required>
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                                <label for="cpa11y-username-2" class="col-sm-3 control-label">{% trans "Username" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="gitUsername" type="text" class="form-control"
+                                                    <input id="cpa11y-username-2" name="gitUsername" type="text" class="form-control"
                                                            ng-model="$parent.gitUsername" required>
                                                 </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                                <label for="cpa11y-repo-name-2" class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="gitReponame" type="text" class="form-control"
+                                                    <input id="cpa11y-repo-name-2" name="gitReponame" type="text" class="form-control"
                                                            ng-model="$parent.gitReponame" required>
                                                 </div>
                                             </div>
@@ -928,9 +928,9 @@
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-primary"
                                                 ng-click="attachRepoGIT()">
-                                            <i class="fas fa-link"></i>
+                                            <i class="fas fa-link" aria-hidden="true"></i>
                                             Attach
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button" ng-disabled="savingSettings"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -943,7 +943,7 @@
 
                         <a data-toggle="modal" data-target="#createNewBranch" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-code-branch"></i>
+                            <i class="fas fa-code-branch" aria-hidden="true"></i>
                             Create New Branch
                         </a>
 
@@ -954,7 +954,7 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-code-branch"></i>
+                                            <i class="fas fa-code-branch" aria-hidden="true"></i>
                                             {% trans "Create New Branch" %}
                                         </h4>
                                     </div>
@@ -962,9 +962,9 @@
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Branch Name" %}</label>
+                                                <label for="cpa11y-branch-name" class="col-sm-3 control-label">{% trans "Branch Name" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input placeholder="Ex. newbranch (without spaces)"
+                                                    <input id="cpa11y-branch-name" placeholder="Ex. newbranch (without spaces)"
                                                            name="newBranchName" type="text" class="form-control"
                                                            ng-model="$parent.newBranchName" required>
                                                 </div>
@@ -986,9 +986,9 @@
                                         <button type="button"
                                                 class="btn btn-primary"
                                                 ng-click="createNewBranch()">
-                                            <i class="fas fa-code-branch"></i>
+                                            <i class="fas fa-code-branch" aria-hidden="true"></i>
                                             Create New Branch
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -1001,7 +1001,7 @@
 
                         <a data-toggle="modal" data-target="#commitChanges" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             Commit
                         </a>
 
@@ -1012,7 +1012,7 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-check-circle"></i>
+                                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                                             {% trans "Commit Changes" %}
                                         </h4>
                                     </div>
@@ -1020,9 +1020,9 @@
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
                                             <div ng-hide="installationDetailsForm" class="form-group">
-                                                <label class="col-sm-3 control-label">{% trans "Commit Message" %}</label>
+                                                <label for="cpa11y-commit-message" class="col-sm-3 control-label">{% trans "Commit Message" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input placeholder="Ex. Initial commit"
+                                                    <input id="cpa11y-commit-message" placeholder="Ex. Initial commit"
                                                            name="newBranchName" type="text" class="form-control"
                                                            ng-model="$parent.commitMessage" required>
                                                 </div>
@@ -1044,9 +1044,9 @@
                                         <button type="button"
                                                 class="btn btn-primary"
                                                 ng-click="commitChanges()">
-                                            <i class="fas fa-check-circle"></i>
+                                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                                             Commit
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -1059,19 +1059,19 @@
 
                         <a ng-click="gitPull()" ng-disabled="remote==0" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-download"></i>
+                            <i class="fas fa-download" aria-hidden="true"></i>
                             Pull
                         </a>
                         <a ng-click="gitPush()" ng-disabled="remote==0" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-upload"></i>
+                            <i class="fas fa-upload" aria-hidden="true"></i>
                             Push
                         </a>
 
                         <a ng-click="fetchGitignore()" data-toggle="modal" data-target="#gitignore" href="#"
                            class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-file-alt"></i>
+                            <i class="fas fa-file-alt" aria-hidden="true"></i>
                             Edit .gitignore
                         </a>
 
@@ -1082,7 +1082,7 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-file-alt"></i>
+                                            <i class="fas fa-file-alt" aria-hidden="true"></i>
                                             {% trans "Edit .gitignore" %}
                                         </h4>
                                     </div>
@@ -1111,9 +1111,9 @@
                                         <button type="button"
                                                 class="btn btn-primary"
                                                 ng-click="saveGitIgnore()">
-                                            <i class="fas fa-save"></i>
+                                            <i class="fas fa-save" aria-hidden="true"></i>
                                             Save
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -1127,7 +1127,7 @@
                         <a ng-click="fetchGitLogs()" data-toggle="modal" data-target="#gitLogs" href="#"
                            class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-history"></i>
+                            <i class="fas fa-history" aria-hidden="true"></i>
                             Git Logs
                         </a>
 
@@ -1138,9 +1138,9 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-history"></i>
+                                            <i class="fas fa-history" aria-hidden="true"></i>
                                             {% trans "Git Logs" %}
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </h4>
                                     </div>
                                     <div class="modal-body">
@@ -1152,7 +1152,8 @@
                                                 <div class="form-group">
                                                     <select ng-model="recordsToShow"
                                                             ng-change="fetchGitLogs()"
-                                                            class="form-control" id="example-select">
+                                                            class="form-control" id="example-select"
+                                                            aria-label="{% trans 'Records per page' %}">
                                                         <option>10</option>
                                                         <option>50</option>
                                                         <option>100</option>
@@ -1186,7 +1187,8 @@
                                                     <div class="col-md-3">
                                                         <div class="form-group">
                                                             <select ng-model="currentPage" class="form-control"
-                                                                    ng-change="fetchGitLogs()">
+                                                                    ng-change="fetchGitLogs()"
+                                                                    aria-label="{% trans 'Page number' %}">
                                                                 <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
                                                             </select>
                                                         </div>
@@ -1202,7 +1204,7 @@
 
                         <a data-toggle="modal" data-target="#removeGit" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                             Remove
                         </a>
 
@@ -1213,7 +1215,7 @@
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h4 class="modal-title">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                             {% trans "Remove Git Tracking?" %}
                                         </h4>
                                     </div>
@@ -1231,9 +1233,9 @@
                                         <button type="button"
                                                 class="btn btn-primary"
                                                 ng-click="removeTracking()">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                             Remove
-                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -1260,7 +1262,7 @@
                                 <span class="bs-label label-success"><strong>{$ totalCommits $}</strong></span>
                             </td>
                             <td>
-                                <select ng-change="changeBranch()" ng-model="branchName" class="form-control">
+                                <select ng-change="changeBranch()" ng-model="branchName" class="form-control" aria-label="{% trans 'Git branch' %}">
                                     <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
                                 </select>
                             </td>
@@ -1268,7 +1270,7 @@
 
                                 <button data-toggle="modal" data-target="#settings" style="margin-left: 2%"
                                         type="button" class="btn btn-primary">
-                                    <i class="fas fa-cloud"></i>
+                                    <i class="fas fa-cloud" aria-hidden="true"></i>
                                     {% trans "View/Setup Remote" %}
                                 </button>
 
@@ -1279,7 +1281,7 @@
                                             <div class="modal-header">
                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                                                 <h4 class="modal-title">
-                                                    <i class="fas fa-cloud"></i>
+                                                    <i class="fas fa-cloud" aria-hidden="true"></i>
                                                     {% trans "Setup Remote" %}
                                                 </h4>
                                             </div>
@@ -1287,26 +1289,26 @@
 
                                                 <form name="containerSettingsForm" action="/" class="form-horizontal">
                                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                                        <label class="col-sm-3 control-label">{% trans "Git Host" %}</label>
+                                                        <label for="cpa11y-git-host-3" class="col-sm-3 control-label">{% trans "Git Host" %}</label>
                                                         <div class="col-sm-6">
-                                                            <input placeholder="Ex. github.com or gitlab.com"
+                                                            <input id="cpa11y-git-host-3" placeholder="Ex. github.com or gitlab.com"
                                                                    name="gitHost" type="text" class="form-control"
                                                                    ng-model="$parent.gitHost" required>
                                                         </div>
                                                     </div>
 
                                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                                        <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                                        <label for="cpa11y-username-3" class="col-sm-3 control-label">{% trans "Username" %}</label>
                                                         <div class="col-sm-6">
-                                                            <input name="gitUsername" type="text" class="form-control"
+                                                            <input id="cpa11y-username-3" name="gitUsername" type="text" class="form-control"
                                                                    ng-model="$parent.gitUsername" required>
                                                         </div>
                                                     </div>
 
                                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                                        <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                                        <label for="cpa11y-repo-name-3" class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
                                                         <div class="col-sm-6">
-                                                            <input name="gitReponame" type="text" class="form-control"
+                                                            <input id="cpa11y-repo-name-3" name="gitReponame" type="text" class="form-control"
                                                                    ng-model="$parent.gitReponame" required>
                                                         </div>
                                                     </div>
@@ -1370,9 +1372,9 @@
                                                 <button type="button" ng-disabled="savingSettings"
                                                         class="btn btn-primary"
                                                         ng-click="setupRemote()">
-                                                    <i class="fas fa-save"></i>
+                                                    <i class="fas fa-save" aria-hidden="true"></i>
                                                     Save
-                                                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                                 </button>
                                                 <button type="button" ng-disabled="savingSettings"
                                                         class="btn btn-default" data-dismiss="modal">
@@ -1387,7 +1389,7 @@
                             <td>
                                 <button ng-click="fetchCommits()" style="margin-left: 2%"
                                         type="button" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                     {% trans "View Commits" %}
                                 </button>
                             </td>
@@ -1420,7 +1422,7 @@
                                 <button ng-click="fetchFiles(commit.commit)" data-toggle="modal"
                                         data-target="#viewChanges" style="margin-left: 2%"
                                         type="button" class="btn btn-primary">
-                                    <i class="fas fa-code"></i>
+                                    <i class="fas fa-code" aria-hidden="true"></i>
                                     {% trans "View Changes" %}
                                 </button>
 
@@ -1431,20 +1433,20 @@
                                             <div class="modal-header">
                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                                                 <h4 class="modal-title">
-                                                    <i class="fas fa-code"></i>
+                                                    <i class="fas fa-code" aria-hidden="true"></i>
                                                     {% trans "View Changes" %}
                                                 </h4>
-                                                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                                             </div>
                                             <div class="modal-body">
 
                                                 <form name="containerSettingsForm" action="/" class="form-horizontal">
 
                                                     <div class="form-group">
-                                                        <label class="col-sm-2 control-label">{% trans "Select File" %}</label>
+                                                        <label for="cpa11y-select-file" class="col-sm-2 control-label">{% trans "Select File" %}</label>
 
                                                         <div class="col-sm-10" style="margin-bottom: 2%;">
-                                                            <select ng-change="fetchChangesInFile()"
+                                                            <select id="cpa11y-select-file" ng-change="fetchChangesInFile()"
                                                                     ng-model="$parent.changeFile" class="form-control">
                                                                 <option ng-repeat="file in files">{$ file $}</option>
                                                             </select>
@@ -1478,7 +1480,7 @@
                                 </div>
 
                                 <!--<img title="Delete this commit." ng-click="deleteRecord(record.id)"
-                                     src="{% static 'images/delete.png' %}"> -->
+                                     src="{% static 'images/delete.png' %}" alt=""> -->
 
                             </td>
                         </tr>

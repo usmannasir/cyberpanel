@@ -397,7 +397,7 @@
 <div class="modern-container" ng-controller="scheduleBackup">
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-clock"></i>
+            <i class="fas fa-clock" aria-hidden="true"></i>
             {% trans "Schedule Backup" %}
         </h1>
         <p class="page-subtitle">{% trans "Schedule automatic backups to localhost or remote servers" %}</p>
@@ -406,7 +406,7 @@
                target="_blank" 
                rel="noopener"
                class="btn-secondary">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "Remote Backups Guide" %}
             </a>
         </div>
@@ -416,7 +416,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-plus-circle"></i>
+                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                 {% trans "Create New Backup Schedule" %}
                 <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
             </h2>
@@ -426,11 +426,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-server" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-select-destination" class="form-label">
+                                <i class="fas fa-server" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Select Destination" %}
                             </label>
-                            <select ng-model="selectedAccountAdd" class="form-control">
+                            <select id="cpa11y-select-destination" ng-model="selectedAccountAdd" class="form-control">
                                 <option value="">{% trans "Choose a destination..." %}</option>
                                 {% for items in destinations %}
                                     <option>{{ items }}</option>
@@ -440,11 +440,11 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-tag" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-schedule-name" class="form-label">
+                                <i class="fas fa-tag" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Schedule Name" %}
                             </label>
-                            <input type="text" class="form-control" ng-model="name" 
+                            <input id="cpa11y-schedule-name" type="text" class="form-control" ng-model="name" 
                                    placeholder="{% trans 'e.g., Daily Website Backup' %}" required>
                         </div>
                     </div>
@@ -453,11 +453,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-backup-frequency" class="form-label">
+                                <i class="fas fa-sync-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Backup Frequency" %}
                             </label>
-                            <select ng-model="backupFrequency" class="form-control">
+                            <select id="cpa11y-backup-frequency" ng-model="backupFrequency" class="form-control">
                                 <option>Never</option>
                                 <option>Daily</option>
                                 <option>Weekly</option>
@@ -466,11 +466,11 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-history" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-backup-retention-0-unlimited" class="form-label">
+                                <i class="fas fa-history" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Backup Retention (0 = unlimited)" %}
                             </label>
-                            <input ng-model="backupRetention" type="number" value="0" 
+                            <input id="cpa11y-backup-retention-0-unlimited" ng-model="backupRetention" type="number" value="0" 
                                    class="form-control" min="0">
                         </div>
                     </div>
@@ -478,7 +478,7 @@
                 
                 <div style="text-align: center; margin-top: 2rem;">
                     <button type="button" ng-click="addSchedule()" class="btn-primary">
-                        <i class="fas fa-calendar-plus"></i>
+                        <i class="fas fa-calendar-plus" aria-hidden="true"></i>
                         {% trans "Add Schedule" %}
                     </button>
                 </div>
@@ -490,7 +490,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-tasks"></i>
+                <i class="fas fa-tasks" aria-hidden="true"></i>
                 {% trans "Manage Existing Backup Schedules" %}
                 <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
             </h2>
@@ -501,11 +501,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-server" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-select-destination-2" class="form-label">
+                                <i class="fas fa-server" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Select Destination" %}
                             </label>
-                            <select ng-change="fetchJobs()" ng-model="selectedAccount" class="form-control">
+                            <select id="cpa11y-select-destination-2" ng-change="fetchJobs()" ng-model="selectedAccount" class="form-control">
                                 <option value="">{% trans "Choose a destination..." %}</option>
                                 {% for items in destinations %}
                                     <option>{{ items }}</option>
@@ -515,17 +515,17 @@
                     </div>
                     <div class="col-md-6" ng-hide="jobsHidden">
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-briefcase" style="margin-right: 0.5rem;"></i>
+                            <label for="cpa11y-select-job" class="form-label">
+                                <i class="fas fa-briefcase" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Select Job" %}
                             </label>
                             <div style="display: flex; gap: 1rem;">
-                                <select ng-change="fetchWebsites()" ng-model="selectedJob" class="form-control">
+                                <select id="cpa11y-select-job" ng-change="fetchWebsites()" ng-model="selectedJob" class="form-control">
                                     <option value="">{% trans "Choose a job..." %}</option>
                                     <option ng-repeat="job in jobs track by $index">{$ job $}</option>
                                 </select>
                                 <button ng-hide="driveHidden" type="button" ng-click="deleteAccount()" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                     {% trans "Delete" %}
                                 </button>
                             </div>
@@ -548,19 +548,19 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><i class="fas fa-calendar-check" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>{$ lastRun $}</td>
+                            <td><i class="fas fa-calendar-check" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>{$ lastRun $}</td>
                             <td><span class="frequency-badge">{$ allSites $}</span></td>
                             <td>
-                                <select ng-change="changeFrequency()" ng-model="backupFrequency" 
-                                        class="form-control" style="width: auto; min-width: 120px;">
+                                <select ng-change="changeFrequency()" ng-model="backupFrequency"
+                                        class="form-control" aria-label="{% trans 'Backup frequency' %}" style="width: auto; min-width: 120px;">
                                     <option>Never</option>
                                     <option>Daily</option>
                                     <option>Weekly</option>
                                 </select>
                             </td>
                             <td>
-                                <input ng-model="backupRetention" ng-change="changeFrequency()" 
-                                       type="number" min="0" 
+                                <input ng-model="backupRetention" ng-change="changeFrequency()"
+                                       type="number" min="0" aria-label="{% trans 'Backup retention days' %}"
                                        class="form-control" style="width: 100px;">
                             </td>
                             <td><span class="status-badge">{$ currentStatus $}</span></td>
@@ -571,7 +571,7 @@
                 <div style="margin-top: 1.5rem;">
                     <button data-toggle="modal" data-target="#backupLogs" 
                             type="button" ng-click="fetchLogs()" class="btn-gray">
-                        <i class="fas fa-file-alt"></i>
+                        <i class="fas fa-file-alt" aria-hidden="true"></i>
                         {% trans "View Logs" %}
                     </button>
                 </div>
@@ -581,12 +581,12 @@
             <div ng-hide="driveHidden">
                 <div class="form-section">
                     <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-globe" style="margin-right: 0.5rem;"></i>
+                        <label for="cpa11y-add-sites-for-backup" class="form-label">
+                            <i class="fas fa-globe" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Add Sites for Backup" %}
                         </label>
                         <div style="display: flex; gap: 1rem; align-items: center;">
-                            <select ng-model="selectedWebsite" class="form-control" style="flex: 1;">
+                            <select id="cpa11y-add-sites-for-backup" ng-model="selectedWebsite" class="form-control" style="flex: 1;">
                                 <option value="">{% trans "Choose a website..." %}</option>
                                 {% for items in websites %}
                                     <option>{{ items }}</option>
@@ -594,11 +594,11 @@
                             </select>
                             <div class="action-buttons" style="flex: 0;">
                                 <button type="button" ng-click="addSite('one')" class="btn-primary">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
                                     {% trans "Add Site" %}
                                 </button>
                                 <button type="button" ng-click="addSite('all')" class="btn-primary">
-                                    <i class="fas fa-plus-circle"></i>
+                                    <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                     {% trans "Add All" %}
                                 </button>
                             </div>
@@ -608,8 +608,8 @@
 
                 <!-- Sites Table -->
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                    <select ng-model="recordsToShow" ng-change="fetchWebsites()" 
-                            class="form-control" style="width: auto;">
+                    <select ng-model="recordsToShow" ng-change="fetchWebsites()"
+                            class="form-control" aria-label="{% trans 'Records per page' %}" style="width: auto;">
                         <option>10</option>
                         <option>50</option>
                         <option>100</option>
@@ -626,12 +626,12 @@
                     <tbody>
                         <tr ng-repeat="website in websites track by $index">
                             <td>
-                                <i class="fas fa-globe" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                                <i class="fas fa-globe" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                                 <strong ng-bind="website.name"></strong>
                             </td>
                             <td style="text-align: center;">
                                 <button type="button" ng-click="deleteSite(website.name)" class="btn-danger">
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-times" aria-hidden="true"></i>
                                     {% trans "Remove" %}
                                 </button>
                             </td>
@@ -641,8 +641,8 @@
 
                 <!-- Pagination -->
                 <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                    <select ng-model="currentPage" class="form-control" 
-                            ng-change="fetchWebsites()" style="width: auto;">
+                    <select ng-model="currentPage" class="form-control"
+                            ng-change="fetchWebsites()" aria-label="{% trans 'Page number' %}" style="width: auto;">
                         <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
                     </select>
                 </div>
@@ -656,7 +656,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-file-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Backup Logs" %}
                         <span ng-hide="cyberPanelLoading" class="loading-spinner" style="width: 16px; height: 16px;"></span>
                     </h4>
@@ -664,8 +664,8 @@
                 </div>
                 <div class="modal-body">
                     <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                        <select ng-model="recordsToShowLogs" ng-change="fetchLogs()" 
-                                class="form-control" style="width: auto;">
+                        <select ng-model="recordsToShowLogs" ng-change="fetchLogs()"
+                                class="form-control" aria-label="{% trans 'Log records per page' %}" style="width: auto;">
                             <option>10</option>
                             <option>50</option>
                             <option>100</option>
@@ -688,8 +688,8 @@
                     </table>
 
                     <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                        <select ng-model="currentPageLogs" class="form-control" 
-                                ng-change="fetchLogs()" style="width: auto;">
+                        <select ng-model="currentPageLogs" class="form-control"
+                                ng-change="fetchLogs()" aria-label="{% trans 'Log page number' %}" style="width: auto;">
                             <option ng-repeat="page in paginationLogs">{$ $index + 1 $}</option>
                         </select>
                     </div>

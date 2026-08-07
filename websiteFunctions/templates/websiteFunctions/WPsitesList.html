@@ -769,11 +769,11 @@
                     <h2 class="section-title">WORDPRESS SITES</h2>
                     <div class="header-actions">
                         <button ng-click="ScanWordpressSite()" class="btn btn-info btn-sm">
-                            <i class="fas fa-sync-alt"></i>
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             Scan WordPress Sites
                         </button>
                         <a href="{% url 'createWordpress' %}" class="btn btn-success btn-sm">
-                            <i class="fab fa-wordpress"></i>
+                            <i class="fab fa-wordpress" aria-hidden="true"></i>
                             Install WordPress
                         </a>
                     </div>
@@ -782,18 +782,19 @@
                 <!-- Search Bar -->
                 <div class="search-bar">
                     <div style="flex: 1;">
-                        <input ng-model="searchText" placeholder="Search by title or URL..." class="form-control">
+                        <input ng-model="searchText" placeholder="Search by title or URL..." class="form-control" aria-label="Search by title or URL...">
                     </div>
                     <div style="width: 150px;">
                         <select ng-model="recordsToShow" class="form-control" ng-change="updatePagination()"
+                                aria-label="{% trans 'Records per page' %}"
                                 ng-options="option.value as option.label for option in [{value: 10, label: '10 items'}, {value: 50, label: '50 items'}, {value: 100, label: '100 items'}]">
                         </select>
                     </div>
                 </div>
 
                 <!-- No Sites Alert -->
-                <div ng-if="wpSites && wpSites.length === 0" class="alert-info">
-                    <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                <div ng-if="wpSites && wpSites.length === 0" class="alert-info" role="status">
+                    <i class="fas fa-info-circle" style="margin-right: 8px;" aria-hidden="true"></i>
                     No WordPress sites found. Click "Install WordPress" to create your first site.
                 </div>
 
@@ -805,19 +806,19 @@
                                 <i class="fas" 
                                    ng-class="{'fa-chevron-down': isExpanded(site.id), 'fa-chevron-right': !isExpanded(site.id)}"
                                    ng-click="toggleSite(site)"
-                                   style="cursor: pointer; margin-right: 10px; color: #5b5fcf;"></i>
+                                   style="cursor: pointer; margin-right: 10px; color: #5b5fcf;" aria-hidden="true"></i>
                                 {$ site.title $}
                                 <span ng-if="site.loading || site.loadingPlugins || site.loadingTheme" class="loading-indicator">
-                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
                                 </span>
                             </h4>
                             <div class="header-actions">
                                 <a ng-href="{% url 'WPHome' %}?ID={$ site.id $}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-cog"></i>
+                                    <i class="fas fa-cog" aria-hidden="true"></i>
                                     Manage
                                 </a>
                                 <button class="btn btn-danger btn-sm" ng-click="deleteWPSite(site)">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                     Delete
                                 </button>
                             </div>
@@ -833,11 +834,11 @@
                                      onerror="this.onerror=null; this.src='https://s.wordpress.org/style/images/about/WordPress-logotype-standard.png';">
                                 <div style="display: flex; gap: 10px; justify-content: center;">
                                     <a ng-href="{$ getFullUrl(site.url) $}" target="_blank" class="btn btn-default btn-sm">
-                                        <i class="fas fa-external-link-alt"></i>
+                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                                         Visit Site
                                     </a>
                                     <a href="{% url 'AutoLogin' %}?id={$ site.id $}" target="_blank" class="btn btn-primary btn-sm">
-                                        <i class="fab fa-wordpress"></i>
+                                        <i class="fab fa-wordpress" aria-hidden="true"></i>
                                         WP Login
                                     </a>
                                 </div>
@@ -850,23 +851,23 @@
                                     <div class="info-box">
                                         <label>WordPress</label>
                                         <span>{$ site.version || 'Loading...' $}</span>
-                                        <i ng-if="site.loading" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;"></i>
+                                        <i ng-if="site.loading" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;" aria-hidden="true"></i>
                                     </div>
                                     <div class="info-box">
                                         <label>PHP Version</label>
                                         <span>{$ site.phpVersion || 'Loading...' $}</span>
-                                        <i ng-if="site.loading" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;"></i>
+                                        <i ng-if="site.loading" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;" aria-hidden="true"></i>
                                     </div>
                                     <div class="info-box">
                                         <label>Theme</label>
                                         <span>{$ site.activeTheme || 'Loading...' $}</span>
-                                        <i ng-if="site.loadingTheme" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;"></i>
+                                        <i ng-if="site.loadingTheme" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;" aria-hidden="true"></i>
                                     </div>
                                     <div class="info-box">
                                         <label>Plugins</label>
                                         <span ng-if="site.activePlugins !== undefined">{$ site.activePlugins $} active of {$ site.totalPlugins $}</span>
                                         <span ng-if="site.activePlugins === undefined">Loading...</span>
-                                        <i ng-if="site.loadingPlugins" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;"></i>
+                                        <i ng-if="site.loadingPlugins" class="fa fa-spinner fa-spin" style="margin-left: 5px; font-size: 12px;" aria-hidden="true"></i>
                                     </div>
                                 </div>
                                 
@@ -914,8 +915,8 @@
                         Showing {$ ((currentPage-1)*recordsToShow) + 1 $} to {$ ((currentPage-1)*recordsToShow) + filteredSites.length $} of {$ (wpSites | filter:searchText).length $} sites
                     </span>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <label style="margin: 0; color: #64748b;">Page:</label>
-                        <select ng-model="currentPage" class="form-control" style="width: 100px;" ng-options="page for page in [] | range:1:totalPages">
+                        <label for="cpa11y-page" style="margin: 0; color: #64748b;">Page:</label>
+                        <select id="cpa11y-page" ng-model="currentPage" class="form-control" style="width: 100px;" ng-options="page for page in [] | range:1:totalPages">
                         </select>
                     </div>
                 </div>
@@ -935,12 +936,12 @@
                     <div class="modal-body">
                         <form>
                             <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-control" ng-model="currentWP.PPUsername" required>
+                                <label for="cpa11y-username" class="form-label">Username</label>
+                                <input id="cpa11y-username" type="text" class="form-control" ng-model="currentWP.PPUsername" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <input type="password" class="form-control" ng-model="currentWP.PPPassword" required>
+                                <label for="cpa11y-password" class="form-label">Password</label>
+                                <input id="cpa11y-password" type="password" class="form-control" ng-model="currentWP.PPPassword" required>
                             </div>
                         </form>
                     </div>

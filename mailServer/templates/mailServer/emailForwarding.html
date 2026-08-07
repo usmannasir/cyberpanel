@@ -363,10 +363,10 @@
     <div class="modern-container" ng-controller="emailForwarding">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-share-square"></i>
+                <i class="fas fa-share-square" aria-hidden="true"></i>
                 {% trans "Setup Email Forwarding" %}
                 <a target="_blank" rel="noopener" href="https://cyberpanel.net/KnowledgeBase/home/email-forwarding/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Forwarding Docs" %}
                 </a>
             </h1>
@@ -376,7 +376,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-forward"></i>
+                    <i class="fas fa-forward" aria-hidden="true"></i>
                     {% trans "Email Forwarding Configuration" %}
                     <span ng-show="forwardLoading" class="loading-spinner"></span>
                 </h2>
@@ -384,11 +384,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon" aria-hidden="true"></i>
                         <h3>{% trans "Postfix is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable Postfix to setup email forwarding" %}</p>
                         <a href="{% url 'managePostfix' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable Postfix Now" %}
                         </a>
                     </div>
@@ -398,8 +398,8 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Website" %}</label>
-                                        <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control" aria-label="{% trans 'Select Website' %}">
+                                        <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                                        <select id="cpa11y-select-website" ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control" aria-label="{% trans 'Select Website' %}">
                                             <option value="">{% trans "Choose a website..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -414,16 +414,16 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Email Account" %}</label>
-                                        <select ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control" aria-label="{% trans 'Select Email Account' %}">
+                                        <label for="cpa11y-select-email-account" class="form-label">{% trans "Select Email Account" %}</label>
+                                        <select id="cpa11y-select-email-account" ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control" aria-label="{% trans 'Select Email Account' %}">
                                             <option value="">{% trans "Choose an email account..." %}</option>
                                             <option ng-repeat="email in emails track by $index" value="{$ email.email $}">{$ email.email $}</option>
                                         </select>
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Forwarding Options" %}</label>
-                                        <select ng-change="selectForwardingEmail()" ng-model="forwardingOption" class="form-control" aria-label="{% trans 'Forwarding Options' %}">
+                                        <label for="cpa11y-forwarding-options" class="form-label">{% trans "Forwarding Options" %}</label>
+                                        <select id="cpa11y-forwarding-options" ng-change="selectForwardingEmail()" ng-model="forwardingOption" class="form-control" aria-label="{% trans 'Forwarding Options' %}">
                                             <option value="Forward to email">{% trans "Forward to email" %}</option>
                                             <option value="Pipe to program">{% trans "Pipe to program" %}</option>
                                         </select>
@@ -433,19 +433,19 @@
                         </div>
 
                         <div ng-hide="creationBox" class="forwarding-setup">
-                            <h3><i class="fas fa-cog"></i> {% trans "Configure Forwarding" %}</h3>
+                            <h3><i class="fas fa-cog" aria-hidden="true"></i> {% trans "Configure Forwarding" %}</h3>
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group mb-3">
-                                        <label class="form-label">{% trans "Source Email" %}</label>
-                                        <input placeholder="{% trans 'Source' %}" type="email" class="form-control" ng-model="selectedEmail" readonly aria-label="{% trans 'Source Email' %}">
+                                        <label for="cpa11y-source-email" class="form-label">{% trans "Source Email" %}</label>
+                                        <input id="cpa11y-source-email" placeholder="{% trans 'Source' %}" type="email" class="form-control" ng-model="selectedEmail" readonly aria-label="{% trans 'Source Email' %}">
                                     </div>
                                 </div>
 
                                 <div class="col-md-4">
                                     <div class="form-group mb-3">
-                                        <label class="form-label">{% trans "Destination" %} <span ng-show="forwardingOption == 'Pipe to program'">{% trans "(Path to program)" %}</span></label>
-                                        <input placeholder="{% trans 'Enter destination email or program path' %}" type="text" class="form-control" ng-model="destinationEmail" required aria-label="{% trans 'Destination' %}">
+                                        <label for="cpa11y-destination-path-to-program" class="form-label">{% trans "Destination" %} <span ng-show="forwardingOption == 'Pipe to program'">{% trans "(Path to program)" %}</span></label>
+                                        <input id="cpa11y-destination-path-to-program" placeholder="{% trans 'Enter destination email or program path' %}" type="text" class="form-control" ng-model="destinationEmail" required aria-label="{% trans 'Destination' %}">
                                     </div>
                                 </div>
 
@@ -453,7 +453,7 @@
                                     <div class="form-group mb-3">
                                         <label class="form-label">&nbsp;</label>
                                         <button type="button" ng-click="forwardEmail()" class="btn-primary full-width-btn">
-                                            <i class="fas fa-plus-circle"></i>
+                                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                             {% trans "Add Forwarding" %}
                                         </button>
                                     </div>
@@ -473,21 +473,21 @@
                                 <tr ng-repeat="record in records track by $index">
                                     <td><strong ng-bind="record.id"></strong></td>
                                     <td>
-                                        <i class="fas fa-envelope email-icon"></i>
+                                        <i class="fas fa-envelope email-icon" aria-hidden="true"></i>
                                         <span ng-bind="record.source"></span>
                                     </td>
                                     <td>
                                         <span class="option-badge" ng-show="record.destination.indexOf('@') > -1">
-                                            <i class="fas fa-at"></i> Email
+                                            <i class="fas fa-at" aria-hidden="true"></i> Email
                                         </span>
                                         <span class="option-badge" ng-hide="record.destination.indexOf('@') > -1">
-                                            <i class="fas fa-terminal"></i> Program
+                                            <i class="fas fa-terminal" aria-hidden="true"></i> Program
                                         </span>
                                         <span class="destination-text" ng-bind="record.destination"></span>
                                     </td>
                                     <td class="table-actions">
                                         <button type="button" ng-click="deleteForwarding(record.source, record.destination)" class="btn-danger">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                             {% trans "Delete" %}
                                         </button>
                                     </td>
@@ -498,18 +498,18 @@
 
                         <!-- Alert Messages -->
                         <div ng-hide="notifyBox" class="form-section">
-                            <div ng-hide="forwardError" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="forwardError" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="forwardSuccess" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="forwardSuccess" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {$ successMessage $}
                             </div>
                             
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>

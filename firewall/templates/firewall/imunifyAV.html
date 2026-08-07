@@ -42,16 +42,16 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "ImunifyAV Not Working?" %} <img ng-hide="installDockerStatus"
-                                                    src="{% static 'images/loading.gif' %}">
+                                                    src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
                     <p>{% trans "If for some reason ImunifyAV is not working, you can re-install it using the form below." %}</p><br>
                     <!------ LSWS Switch box ----------------->
 
-                    <div class="alert alert-info">
+                    <div class="alert alert-info" role="status">
                         <div class="bg-black alert-icon">
-                            <i class="glyph-icon icon-comment"></i>
+                            <i class="glyph-icon icon-comment" aria-hidden="true"></i>
                         </div>
                         <div class="alert-content">
                             <h4 class="alert-title">We will run following commands again:</h4>

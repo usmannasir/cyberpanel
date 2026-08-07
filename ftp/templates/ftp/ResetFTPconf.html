@@ -276,7 +276,7 @@
     <div class="modern-container" ng-controller="Resetftpconf">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-sync-alt"></i>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 {% trans "Reset FTP Configurations" %}
             </h1>
             <p class="page-subtitle">{% trans "Reset your FTP configuration files to their default state" %}</p>
@@ -285,7 +285,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-cogs"></i>
+                    <i class="fas fa-cogs" aria-hidden="true"></i>
                     {% trans "Configuration Reset Tool" %}
                 </h2>
             </div>
@@ -293,42 +293,42 @@
                 <div ng-hide="installationDetailsForm" class="reset-button-section">
                     <div class="warning-box">
                         <h4>
-                            <i class="fas fa-exclamation-triangle"></i>
+                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                             {% trans "Warning" %}
                         </h4>
                         <p>{% trans "This will reset all FTP configurations to default. Custom settings will be lost." %}</p>
                     </div>
                     
                     <div class="reset-info">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         {% trans "This process will restore Pure-FTPd configuration files to their original state" %}
                     </div>
                     
                     <button type="button" ng-click="resetftp()" class="btn-danger">
-                        <i class="fas fa-undo"></i>
+                        <i class="fas fa-undo" aria-hidden="true"></i>
                         {% trans "Reset Configuration" %}
                     </button>
                 </div>
 
                 <!-- Alert Messages -->
                 <div ng-hide="NotifyBox">
-                    <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle"></i>
+                    <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         {% trans "Failed to start reset process. Error message:" %} {$ errorMessage $}
                     </div>
 
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-times-circle"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-times-circle" aria-hidden="true"></i>
                         {% trans "Could not connect. Please refresh this page." %}
                     </div>
 
-                    <div ng-hide="installationFailed" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle"></i>
+                    <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         {% trans "Reset process failed." %} {$ errorMessage $}
                     </div>
 
-                    <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                    <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         {% trans "Successfully completed reset process." %}
                     </div>
                 </div>
@@ -337,7 +337,7 @@
                 <div ng-hide="InstallBox" class="terminal-section">
                     <div class="terminal-header">
                         <div class="terminal-title">
-                            <i class="fas fa-terminal"></i>
+                            <i class="fas fa-terminal" aria-hidden="true"></i>
                             {% trans "Reset Progress" %}
                             <span ng-hide="Loading" class="loading-spinner"></span>
                         </div>

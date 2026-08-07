@@ -540,7 +540,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="firewall-icon">
-                    <i class="fas fa-shield-alt fa-2x"></i>
+                    <i class="fas fa-shield-alt fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "Firewall Management" %}
             </div>
@@ -554,38 +554,38 @@
     <div class="status-panel">
         <div class="status-header">
             <h3 class="status-title">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 {% trans "Firewall Status" %}
             </h3>
             <div class="status-badge" ng-class="{'status-active': status == 'Active', 'status-inactive': status != 'Active'}">
-                <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                <i class="fas fa-circle" style="font-size: 0.5rem;" aria-hidden="true"></i>
                 {$ status $}
             </div>
         </div>
         <div class="status-content">
             <button type="button" ng-click="startFirewall()" class="control-btn btn-start">
-                <i class="fas fa-play"></i>
+                <i class="fas fa-play" aria-hidden="true"></i>
                 {% trans "Start" %}
             </button>
             <button type="button" ng-click="stopFirewall()" class="control-btn btn-stop">
-                <i class="fas fa-pause"></i>
+                <i class="fas fa-pause" aria-hidden="true"></i>
                 {% trans "Stop" %}
             </button>
             <button type="button" ng-click="reloadFireWall()" class="control-btn btn-reload">
-                <i class="fas fa-sync-alt"></i>
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 {% trans "Reload" %}
             </button>
         </div>
 
         <!-- Status Messages -->
         <div style="padding: 0 2rem 1rem;">
-            <div ng-hide="actionFailed" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="actionFailed" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Action failed. Error message:" %} {$ errorMessage $}</span>
             </div>
 
-            <div ng-hide="actionSuccess" class="alert alert-success">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div ng-hide="actionSuccess" class="alert alert-success" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Action completed successfully." %}</span>
             </div>
         </div>
@@ -596,7 +596,7 @@
         <div class="panel-header">
             <div class="panel-title">
                 <div class="panel-icon">
-                    <i class="fas fa-list-alt"></i>
+                    <i class="fas fa-list-alt" aria-hidden="true"></i>
                 </div>
                 {% trans "Firewall Rules" %}
             </div>
@@ -607,8 +607,8 @@
         <div ng-hide="rulesDetails" class="add-rule-section">
             <form class="rule-form">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Rule Name" %}</label>
-                    <input type="text" 
+                    <label for="cpa11y-rule-name" class="form-label">{% trans "Rule Name" %}</label>
+                    <input id="cpa11y-rule-name" type="text" 
                            class="form-control" 
                            ng-model="ruleName"
                            placeholder="{% trans 'e.g., Allow SSH' %}"
@@ -616,16 +616,16 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Protocol" %}</label>
-                    <select ng-model="ruleProtocol" class="form-control select-control">
+                    <label for="cpa11y-protocol" class="form-label">{% trans "Protocol" %}</label>
+                    <select id="cpa11y-protocol" ng-model="ruleProtocol" class="form-control select-control">
                         <option value="tcp">TCP</option>
                         <option value="udp">UDP</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "IP Address" %}</label>
-                    <input type="text" 
+                    <label for="cpa11y-ip-address" class="form-label">{% trans "IP Address" %}</label>
+                    <input id="cpa11y-ip-address" type="text" 
                            class="form-control"
                            ng-model="ruleIP" 
                            placeholder="{% trans '0.0.0.0/0 for all IPs' %}"
@@ -633,8 +633,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Port" %}</label>
-                    <input type="text" 
+                    <label for="cpa11y-port" class="form-label">{% trans "Port" %}</label>
+                    <input id="cpa11y-port" type="text" 
                            class="form-control" 
                            ng-model="rulePort" 
                            placeholder="{% trans 'e.g., 80' %}"
@@ -644,7 +644,7 @@
                 <button type="button" 
                         ng-click="addRule()"
                         class="btn-add">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-plus" aria-hidden="true"></i>
                     {% trans "Add Rule" %}
                 </button>
             </form>
@@ -683,8 +683,8 @@
                             <button type="button"
                                     ng-click="deleteRule(rule.id, rule.proto, rule.port, rule.ipAddress)"
                                     class="btn-delete"
-                                    title="{% trans 'Delete Rule' %}">
-                                <i class="fas fa-times"></i>
+                                    title="{% trans 'Delete Rule' %}" aria-label="{% trans 'Delete Rule' %}">
+                                <i class="fas fa-times" aria-hidden="true"></i>
                             </button>
                         </td>
                     </tr>
@@ -693,7 +693,7 @@
             
             <!-- Empty State -->
             <div ng-if="rules.length == 0" class="empty-state">
-                <i class="fas fa-shield-alt empty-icon"></i>
+                <i class="fas fa-shield-alt empty-icon" aria-hidden="true"></i>
                 <h3 class="empty-title">{% trans "No Firewall Rules" %}</h3>
                 <p class="empty-text">{% trans "Add your first firewall rule to control network access to your server." %}</p>
             </div>
@@ -701,18 +701,18 @@
         
         <!-- Messages -->
         <div style="padding: 0 2rem 2rem;">
-            <div ng-hide="canNotAddRule" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="canNotAddRule" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Error message:" %} {$ errorMessage $}</span>
             </div>
             
-            <div ng-hide="ruleAdded" class="alert alert-success">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div ng-hide="ruleAdded" class="alert alert-success" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Rule successfully added." %}</span>
             </div>
             
-            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
             </div>
         </div>

@@ -345,7 +345,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-envelope-open-text"></i>
+                    <i class="fas fa-envelope-open-text" aria-hidden="true"></i>
                 </div>
                 {% trans "Email Debugger" %}
             </h1>
@@ -361,11 +361,11 @@
             
             <div class="action-buttons">
                 <button type="button" ng-click="RunServerLevelEmailChecks()" class="primary-btn">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-search" aria-hidden="true"></i>
                     {% trans "Run Server Level Checks" %}
                 </button>
                 <button type="button" ng-click="ResetEmailConfigurations()" class="danger-btn">
-                    <i class="fas fa-undo"></i>
+                    <i class="fas fa-undo" aria-hidden="true"></i>
                     {% trans "Reset Server wide Email Configurations" %}
                 </button>
             </div>
@@ -373,7 +373,7 @@
             <!-- Progress Section -->
             <div ng-hide="ExecutionStatus" class="progress-section">
                 <div class="progress-status">
-                    <i class="fas fa-spinner fa-spin"></i>
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
                     {$ functionStatus $}
                 </div>
                 <div class="progress-bar-container">
@@ -398,14 +398,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': MailSSL == 'Active', 'error': MailSSL != 'Active'}">
-                                    <i ng-if="MailSSL == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="MailSSL != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="MailSSL == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="MailSSL != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ MailSSL $}
                                 </span>
                             </td>
                             <td>
                                 <a id="MailSSLURL" target="_blank" href="#" class="action-link">
-                                    <i class="fas fa-certificate"></i>
+                                    <i class="fas fa-certificate" aria-hidden="true"></i>
                                     {% trans "Issue Now" %}
                                 </a>
                             </td>
@@ -416,14 +416,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port25 == 'Active', 'error': Port25 != 'Active'}">
-                                    <i ng-if="Port25 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port25 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port25 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port25 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port25 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -434,14 +434,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port587 == 'Active', 'error': Port587 != 'Active'}">
-                                    <i ng-if="Port587 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port587 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port587 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port587 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port587 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -452,14 +452,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port465 == 'Active', 'error': Port465 != 'Active'}">
-                                    <i ng-if="Port465 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port465 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port465 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port465 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port465 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -470,14 +470,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port110 == 'Active', 'error': Port110 != 'Active'}">
-                                    <i ng-if="Port110 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port110 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port110 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port110 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port110 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -488,14 +488,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port143 == 'Active', 'error': Port143 != 'Active'}">
-                                    <i ng-if="Port143 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port143 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port143 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port143 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port143 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -506,14 +506,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port995 == 'Active', 'error': Port995 != 'Active'}">
-                                    <i ng-if="Port995 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port995 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port995 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port995 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port995 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -524,14 +524,14 @@
                             </td>
                             <td>
                                 <span class="status-badge" ng-class="{'success': Port993 == 'Active', 'error': Port993 != 'Active'}">
-                                    <i ng-if="Port993 == 'Active'" class="fas fa-check-circle"></i>
-                                    <i ng-if="Port993 != 'Active'" class="fas fa-times-circle"></i>
+                                    <i ng-if="Port993 == 'Active'" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="Port993 != 'Active'" class="fas fa-times-circle" aria-hidden="true"></i>
                                     {$ Port993 $}
                                 </span>
                             </td>
                             <td>
                                 <a target="_blank" href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel" class="action-link">
-                                    <i class="fas fa-book"></i>
+                                    <i class="fas fa-book" aria-hidden="true"></i>
                                     {% trans "Learn More" %}
                                 </a>
                             </td>
@@ -570,18 +570,18 @@
                         <tr>
                             <td>
                                 <span class="status-badge" ng-class="{'success': status == 1, 'warning': status != 1}">
-                                    <i ng-if="status == 1" class="fas fa-check-circle"></i>
-                                    <i ng-if="status != 1" class="fas fa-exclamation-triangle"></i>
+                                    <i ng-if="status == 1" class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <i ng-if="status != 1" class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                                     {$ message $}
                                 </span>
                             </td>
                             <td>
                                 <button ng-click="fixMailSSL()" ng-disabled='status==1' class="action-link" style="margin-right: 10px;">
-                                    <i class="fas fa-wrench"></i>
+                                    <i class="fas fa-wrench" aria-hidden="true"></i>
                                     {% trans "Fix Now" %}
                                 </button>
                                 <button ng-click="fixMailSSL()" class="action-link">
-                                    <i class="fas fa-hammer"></i>
+                                    <i class="fas fa-hammer" aria-hidden="true"></i>
                                     {% trans "Force Fix" %}
                                 </button>
                             </td>

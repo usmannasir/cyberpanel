@@ -812,7 +812,7 @@
                 <span>{{ wpsite.path }}</span>
                 <span class="status-badge">Active</span>
                 <img style="display: none" id="wordpresshomeloading" ng-hide="wordpresshomeloading"
-                     src="{% static 'images/loading.gif' %}">
+                     src="{% static 'images/loading.gif' %}" alt="">
             </p>
         </div>
 
@@ -824,32 +824,32 @@
             <ul class="wp-nav-tabs nav nav-tabs">
                 <li class="active">
                     <a href="#tab1" data-toggle="tab" aria-selected="true">
-                        <i class="fas fa-cog"></i> General
+                        <i class="fas fa-cog" aria-hidden="true"></i> General
                     </a>
                 </li>
                 <li>
                     <a href="#tab2" ng-click="GetCurrentPlugins()" data-toggle="tab">
-                        <i class="fas fa-plug"></i> Plugins
+                        <i class="fas fa-plug" aria-hidden="true"></i> Plugins
                     </a>
                 </li>
                 <li>
                     <a href="#tab3" ng-click="GetCurrentThemes()" data-toggle="tab">
-                        <i class="fas fa-palette"></i> Themes
+                        <i class="fas fa-palette" aria-hidden="true"></i> Themes
                     </a>
                 </li>
                 <li>
                     <a href="#tab4" data-toggle="tab" ng-click="fetchstaging()">
-                        <i class="fas fa-clone"></i> Staging
+                        <i class="fas fa-clone" aria-hidden="true"></i> Staging
                     </a>
                 </li>
                 <li>
                     <a href="#tab5" data-toggle="tab">
-                        <i class="fas fa-download"></i> Backups
+                        <i class="fas fa-download" aria-hidden="true"></i> Backups
                     </a>
                 </li>
                 <li>
                     <a ng-click="fetchDatabase()" href="#tab6" data-toggle="tab">
-                        <i class="fas fa-database"></i> Database
+                        <i class="fas fa-database" aria-hidden="true"></i> Database
                     </a>
                 </li>
             </ul>
@@ -861,28 +861,28 @@
                     <div class="wp-stats-grid">
                         <div class="wp-stat-card">
                             <div class="stat-icon">
-                                <i class="fas fa-globe"></i>
+                                <i class="fas fa-globe" aria-hidden="true"></i>
                             </div>
                             <p class="stat-value">Active</p>
                             <p class="stat-label">Site Status</p>
                         </div>
                         <div class="wp-stat-card">
                             <div class="stat-icon">
-                                <i class="fab fa-wordpress"></i>
+                                <i class="fab fa-wordpress" aria-hidden="true"></i>
                             </div>
                             <p class="stat-value" id="WPVersion">Loading...</p>
                             <p class="stat-label">WordPress Version</p>
                         </div>
                         <div class="wp-stat-card">
                             <div class="stat-icon">
-                                <i class="fab fa-php"></i>
+                                <i class="fab fa-php" aria-hidden="true"></i>
                             </div>
                             <p class="stat-value">{{ wpsite.owner.phpSelection }}</p>
                             <p class="stat-label">PHP Version</p>
                         </div>
                         <div class="wp-stat-card">
                             <div class="stat-icon">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                             </div>
                             <p class="stat-value">LiteSpeed</p>
                             <p class="stat-label">Web Server</p>
@@ -898,8 +898,8 @@
                         <div class="site-preview-card">
                             <div class="preview-header">
                                 <h6>Live Preview</h6>
-                                <button class="btn-refresh" onclick="refreshSitePreview()" title="Refresh preview">
-                                    <i class="fas fa-sync-alt"></i>
+                                <button class="btn-refresh" onclick="refreshSitePreview()" title="Refresh preview" aria-label="Refresh preview">
+                                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                                 </button>
                             </div>
                             <div class="preview-container">
@@ -909,7 +909,7 @@
                                      onerror="this.onerror=null; this.src='https://s.wordpress.org/style/images/about/WordPress-logotype-standard.png';">
                                 <div class="preview-overlay">
                                     <a href="http://{{ wpsite.FinalURL }}" target="_blank" class="preview-link">
-                                        <i class="fas fa-external-link-alt"></i>
+                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                                         Visit Live Site
                                     </a>
                                 </div>
@@ -921,27 +921,27 @@
                             <h5>Quick Actions</h5>
                             <div class="action-links-grid">
                                 <a target="_blank" href="/filemanager/{{ wpsite.owner.domain }}?path={{ wpsite.path }}">
-                                    <i class="fas fa-folder-open"></i>
+                                    <i class="fas fa-folder-open" aria-hidden="true"></i>
                                     File Manager
                                 </a>
                                 <a target="_blank" href="/websites/{{ wpsite.owner.domain }}/manageGIT">
-                                    <i class="fab fa-git-alt"></i>
+                                    <i class="fab fa-git-alt" aria-hidden="true"></i>
                                     Git Manager
                                 </a>
                                 <a href="/dataBases/phpMyAdmin" target="_blank">
-                                    <i class="fas fa-database"></i>
+                                    <i class="fas fa-database" aria-hidden="true"></i>
                                     phpMyAdmin
                                 </a>
                                 <a href="/websites/{{ wpsite.owner.domain }}">
-                                    <i class="fas fa-globe"></i>
+                                    <i class="fas fa-globe" aria-hidden="true"></i>
                                     Domain Settings
                                 </a>
                                 <a target="_blank" href="http://{{ wpsite.FinalURL }}">
-                                    <i class="fas fa-external-link-alt"></i>
+                                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                                     Open Site
                                 </a>
                                 <a target="_blank" href="{% url 'AutoLogin' %}?id={{ wpsite.id }}">
-                                    <i class="fas fa-sign-in-alt"></i>
+                                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
                                     WP Admin
                                 </a>
                             </div>
@@ -955,7 +955,7 @@
                     <div class="settings-grid">
                         <div class="setting-item">
                             <div class="setting-icon">
-                                <i class="fas fa-rocket"></i>
+                                <i class="fas fa-rocket" aria-hidden="true"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
@@ -971,7 +971,7 @@
                         </div>
                         <div class="setting-item">
                             <div class="setting-icon">
-                                <i class="fas fa-lock"></i>
+                                <i class="fas fa-lock" aria-hidden="true"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
@@ -983,7 +983,7 @@
                         </div>
                         <div class="setting-item">
                             <div class="setting-icon">
-                                <i class="fas fa-bug"></i>
+                                <i class="fas fa-bug" aria-hidden="true"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
@@ -999,7 +999,7 @@
                         </div>
                         <div class="setting-item">
                             <div class="setting-icon">
-                                <i class="fas fa-search"></i>
+                                <i class="fas fa-search" aria-hidden="true"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
@@ -1016,7 +1016,7 @@
                         </div>
                         <div class="setting-item">
                             <div class="setting-icon">
-                                <i class="fas fa-tools"></i>
+                                <i class="fas fa-tools" aria-hidden="true"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
@@ -1032,7 +1032,7 @@
                         </div>
                         <div class="setting-item">
                             <div class="setting-icon">
-                                <i class="fas fa-clock"></i>
+                                <i class="fas fa-clock" aria-hidden="true"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
@@ -1061,13 +1061,13 @@
                             <a ng-click="UpdatePlugins('all')"
                                href="javascript:void(0);"
                                class="btn btn-primary">
-                                <i class="fas fa-sync-alt"></i>
+                                <i class="fas fa-sync-alt" aria-hidden="true"></i>
                                 Update All
                             </a>
                             <a ng-click="UpdatePlugins('selected')"
                                href="javascript:void(0);"
                                class="btn btn-default">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 Update Selected
                             </a>
                             <button data-toggle="modal" data-target="#DeleteWebsite"
@@ -1075,7 +1075,7 @@
                                     aria-label=""
                                     class="btn btn-danger"
                                     type="button">
-                                <i class="fas fa-trash"></i>
+                                <i class="fas fa-trash" aria-hidden="true"></i>
                                 Delete Selected
                             </button>
                         </div>
@@ -1106,13 +1106,13 @@
                         <div class="action-buttons">
                             <a ng-click="UpdateThemes('all')" href="javascript:void(0);"
                                class="btn btn-primary">
-                                <i class="fas fa-sync-alt"></i>
+                                <i class="fas fa-sync-alt" aria-hidden="true"></i>
                                 Update All
                             </a>
                             <a ng-click="UpdateThemes('selected')"
                                href="javascript:void(0);"
                                class="btn btn-default">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 Update Selected
                             </a>
                             <button data-toggle="modal" data-target="#DeleteWebsite"
@@ -1120,7 +1120,7 @@
                                     aria-label=""
                                     class="btn btn-danger"
                                     type="button">
-                                <i class="fas fa-trash"></i>
+                                <i class="fas fa-trash" aria-hidden="true"></i>
                                 Delete Selected
                             </button>
                         </div>
@@ -1152,14 +1152,14 @@
                         <div ng-hide="stagingDetailsForm" class="create-staging-form">
                             <div class="form-card">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 control-label">Staging Name</label>
+                                    <label for="stagingName" class="col-sm-3 control-label">Staging Name</label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" id="stagingName" placeholder="Enter staging site name (e.g., staging, dev, test)">
                                     </div>
                                 </div>
 
                                 <div class="form-group row">
-                                    <label class="col-sm-3 control-label">Staging Domain</label>
+                                    <label for="stagingDomainName" class="col-sm-3 control-label">Staging Domain</label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" id="stagingDomainName"
                                                ng-model="stagingDomainName"
@@ -1172,7 +1172,7 @@
                                 <div class="form-group row">
                                     <div class="col-sm-12 text-center">
                                         <button ng-click="CreateStagingNow()" class="btn btn-primary btn-lg">
-                                            <i class="fas fa-clone"></i>
+                                            <i class="fas fa-clone" aria-hidden="true"></i>
                                             Create Staging Site
                                         </button>
                                         <div id="stagingStatus" style="margin-top: 15px; font-weight: 500;"></div>
@@ -1184,7 +1184,7 @@
                         <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <div class="alert alert-success text-center">
+                                    <div class="alert alert-success text-center" role="status">
                                         <h2>{$ currentStatus $}</h2>
                                     </div>
 
@@ -1197,15 +1197,15 @@
                                         </div>
                                     </div>
 
-                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                    <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
                                         <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                     </div>
 
-                                    <div ng-hide="success" class="alert alert-success">
+                                    <div ng-hide="success" class="alert alert-success" role="status">
                                         <p>{% trans "Website successfully created." %}</p>
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
@@ -1213,7 +1213,7 @@
                                         <button type="button" ng-disabled="goBackDisable"
                                                 ng-click="goBack()"
                                                 class="btn btn-default">
-                                            <i class="fas fa-arrow-left"></i>
+                                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                             {% trans "Go Back" %}
                                         </button>
                                     </div>
@@ -1253,12 +1253,12 @@
                         <div class="section-header">
                             <h4>{% trans "Create Backup" %}</h4>
                             <a href="{% url 'RestoreBackups' %}" class="restore-link">
-                                <i class="fas fa-undo"></i> {% trans "Restore Backups" %}
+                                <i class="fas fa-undo" aria-hidden="true"></i> {% trans "Restore Backups" %}
                             </a>
                         </div>
 
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
+                        <div class="alert alert-info" role="status">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                             <div>
                                 <p>This feature will create a backup of your WordPress website.</p>
                                 <p>For scheduled remote backups of your entire site, including email accounts and DNS records, <a href="/backup/OneClickBackups">click here</a>.</p>
@@ -1268,7 +1268,7 @@
                         <div ng-hide="installationDetailsForm" class="backup-form">
                             <div class="form-card">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
+                                    <label for="backuptype" class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
                                     <div class="col-sm-9">
                                         <select id="backuptype" class="form-control">
                                             <option value="1">Website and Database Both</option>
@@ -1282,7 +1282,7 @@
                                         <button type="button" id="createbackupbutton"
                                                 ng-click="CreateBackup()"
                                                 class="btn btn-primary btn-lg">
-                                            <i class="fas fa-download"></i>
+                                            <i class="fas fa-download" aria-hidden="true"></i>
                                             {% trans "Create Backup" %}
                                         </button>
                                         <div id="backupStatus" style="margin-top: 15px; font-weight: 500;"></div>
@@ -1294,7 +1294,7 @@
                         <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <div class="alert alert-success text-center">
+                                    <div class="alert alert-success text-center" role="status">
                                         <h2>{$ currentStatus $}</h2>
                                     </div>
 
@@ -1307,15 +1307,15 @@
                                         </div>
                                     </div>
 
-                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                    <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
                                         <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                     </div>
 
-                                    <div ng-hide="success" class="alert alert-success">
+                                    <div ng-hide="success" class="alert alert-success" role="status">
                                         <p>{% trans "Backup successfully created." %}</p>
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
@@ -1323,7 +1323,7 @@
                                         <button type="button" ng-disabled="goBackDisable"
                                                 ng-click="goBack()"
                                                 class="btn btn-default">
-                                            <i class="fas fa-arrow-left"></i>
+                                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                             {% trans "Go Back" %}
                                         </button>
                                     </div>
@@ -1341,7 +1341,7 @@
 
                     <div class="wp-action-card">
                         <div class="action-card-title">
-                            <i class="fas fa-database"></i>
+                            <i class="fas fa-database" aria-hidden="true"></i>
                             Database Information
                         </div>
                         <div id="databaseDetails">
@@ -1368,7 +1368,7 @@
 
                     <div class="wp-action-card">
                         <div class="action-card-title">
-                            <i class="fas fa-tools"></i>
+                            <i class="fas fa-tools" aria-hidden="true"></i>
                             {% trans "Database Actions" %}
                         </div>
                         <p style="color: var(--text-secondary); margin-bottom: 12px;">
@@ -1376,7 +1376,7 @@
                         </p>
                         <div class="action-links-grid" style="max-width: 500px;">
                             <a href="/dataBases/phpMyAdmin" target="_blank">
-                                <i class="fas fa-external-link-alt"></i>
+                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                                 {% trans "Open phpMyAdmin" %}
                             </a>
                         </div>

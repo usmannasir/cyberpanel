@@ -428,11 +428,11 @@
         <div class="container">
             <div id="page-title">
                 <h2>
-                    <i class="fas fa-server" style="margin-right: 10px;"></i>
+                    <i class="fas fa-server" style="margin-right: 10px;" aria-hidden="true"></i>
                     {% trans "Apache Manager" %}
                     <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/cyberpanel-apache-manager/" 
                        class="btn btn-link" title="Documentation" style="margin-left: auto;">
-                        <i class="fas fa-book"></i>
+                        <i class="fas fa-book" aria-hidden="true"></i>
                         {% trans "Docs" %}
                     </a>
                 </h2>
@@ -443,9 +443,9 @@
             <div ng-controller="ApacheManager" class="panel">
                 <div class="panel-body">
                     <h3 class="title-hero">
-                        <i class="fas fa-globe" style="color: var(--accent-color, #5b5fcf);"></i>
+                        <i class="fas fa-globe" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                         <span id="domainNamePage">{{ domainName }}</span>
-                        <img ng-hide="cyberpanelloading" src="{% static 'images/loading.gif' %}">
+                        <img ng-hide="cyberpanelloading" src="{% static 'images/loading.gif' %}" alt="">
                     </h3>
 
                     <div class="card card-body">
@@ -454,12 +454,12 @@
                             Proxy to
                             OpenLiteSpeed. <img
                                     style="height: 25px" ng-hide="cyberpanelloading"
-                                    src="{% static 'images/loading.gif' %}"></h5>
+                                    src="{% static 'images/loading.gif' %}" alt=""></h5>
                         <!-- Using Apache -->
                         <div ng-show="!apacheOLS" class="row">
                             <div class="col-md-12">
                                 <div class="form-group mb-3">
-                                    <label for="example-select">PHP</label>
+                                    <label for="phpApacheSelect">PHP</label>
                                     <select ng-model="phpSelection" class="form-control" id="phpApacheSelect">
                                         {% for php in phps %}
                                             <option value="{{ php }}">{{ php }}</option>
@@ -476,18 +476,18 @@
                         <div ng-show="!apacheOLS" class="col-md-12" style="margin-top: 30px;">
                             <form class="form-horizontal">
                                 <h3 style="margin-bottom: 20px; color: var(--text-primary, #2f3640); font-weight: 600; display: flex; align-items: center; gap: 10px;" ng-show="!apacheOLS">
-                                    <i class="fas fa-code" style="color: var(--accent-color, #5b5fcf);"></i>
+                                    <i class="fas fa-code" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                                     Apache Configurations
                                 </h3>
                                 <div class="form-group">
                                     <div class="col-sm-12">
-                                        <textarea ng-model="configData" rows="20" class="form-control" placeholder="Apache configuration will be loaded here..."></textarea>
+                                        <textarea ng-model="configData" rows="20" class="form-control" placeholder="Apache configuration will be loaded here..." aria-label="Apache configuration will be loaded here..."></textarea>
                                     </div>
                                 </div>
                                 <div ng-hide="saveConfigBtn" class="form-group">
                                     <div class="col-sm-12">
                                         <button type="button" ng-click="saveApacheConfig()" class="btn btn-primary btn-lg">
-                                            <i class="fas fa-save"></i>
+                                            <i class="fas fa-save" aria-hidden="true"></i>
                                             {% trans "Save Apache Configurations" %}
                                         </button>
                                     </div>
@@ -501,21 +501,21 @@
                             <div class="card card-body">
                                 <h3 style="margin-bottom: 2%" ng-show="!apacheOLS">PHP-FPM Configurations <img
                                         style="height: 25px" ng-hide="cyberpanelloading"
-                                        src="{% static 'images/loading.gif' %}"></h3>
+                                        src="{% static 'images/loading.gif' %}" alt=""></h3>
                                 <!-- Using Apache -->
                                 <form ng-show="!apacheOLS">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.max_children</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-max-children">pm.max_children</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-max-children"
                                                        ng-model="pmMaxChildren"/>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.start_servers</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-start-servers">pm.start_servers</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-start-servers"
                                                        ng-model="pmStartServers"/>
                                             </div>
                                         </div>
@@ -524,15 +524,15 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.min_spare_servers</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-min-spare-servers">pm.min_spare_servers</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-min-spare-servers"
                                                        ng-model="pmMinSpareServers"/>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="billing-town-city">pm.max_spare_servers</label>
-                                                <input class="form-control" type="text"
+                                                <label for="cpa11y-pm-max-spare-servers">pm.max_spare_servers</label>
+                                                <input class="form-control" type="text" id="cpa11y-pm-max-spare-servers"
                                                        ng-model="pmMaxSpareServers"/>
                                             </div>
                                         </div>
@@ -562,7 +562,7 @@
                                             <h4 class="modal-title" id="myLargeModalLabel">{$ functionStatus $} <img
                                                     style="height: 25px"
                                                     ng-hide="cyberpanelloading"
-                                                    src="{% static 'images/loading.gif' %}">
+                                                    src="{% static 'images/loading.gif' %}" alt="">
                                             </h4>
                                             <button type="button" class="close" data-dismiss="modal"
                                                     aria-hidden="true">×
@@ -590,7 +590,7 @@
                         <div ng-show="!pureOLS" class="row">
                             <div class="col-md-12">
                                 <div class="form-group mb-3">
-                                    <label for="example-select">PHP</label>
+                                    <label for="phpOLSSelect">PHP</label>
                                     <select ng-model="phpSelection" class="form-control" id="phpOLSSelect">
                                         {% for php in apachePHPs %}
                                             <option value="{{ php }}">{{ php }}</option>
@@ -618,7 +618,7 @@
                                     <h4 class="modal-title" id="myLargeModalLabel">{$ functionStatus $} <img
                                             style="height: 25px"
                                             ng-hide="cyberpanelloading"
-                                            src="{% static 'images/loading.gif' %}">
+                                            src="{% static 'images/loading.gif' %}" alt="">
                                     </h4>
                                     <button type="button" class="close" data-dismiss="modal"
                                             aria-hidden="true">×
@@ -838,7 +838,7 @@
             
             <div class="feature-section">
                 <h2>
-                    <i class="fas fa-rocket" style="color: var(--accent-color, #5b5fcf);"></i>
+                    <i class="fas fa-rocket" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                     Unmatched Speed with OpenLiteSpeed
                 </h2>
                 <p>
@@ -851,7 +851,7 @@
             
             <div class="feature-section">
                 <h2>
-                    <i class="fas fa-cogs" style="color: var(--accent-color, #5b5fcf);"></i>
+                    <i class="fas fa-cogs" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                     Unrivaled Features with Apache
                 </h2>
                 <p>
@@ -863,7 +863,7 @@
             
             <div class="feature-section">
                 <h2>
-                    <i class="fas fa-merge" style="color: var(--accent-color, #5b5fcf);"></i>
+                    <i class="fas fa-merge" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                     The Perfect Fusion
                 </h2>
                 <p>
@@ -903,7 +903,7 @@
             
             <div class="video-container">
                 <h3 style="color: var(--text-primary, #2f3640); font-size: 24px; font-weight: 600; margin-bottom: 20px;">
-                    <i class="fas fa-play-circle" style="color: var(--accent-color, #5b5fcf);"></i>
+                    <i class="fas fa-play-circle" style="color: var(--accent-color, #5b5fcf);" aria-hidden="true"></i>
                     Watch Our Demo
                 </h3>
                 <iframe width="788" height="443" src="https://www.youtube.com/embed/ts5wR9G2FsE"

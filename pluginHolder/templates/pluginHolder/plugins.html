@@ -362,7 +362,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-plug"></i>
+                    <i class="fas fa-plug" aria-hidden="true"></i>
                 </div>
                 {% trans "Installed Plugins" %}
             </h1>
@@ -377,11 +377,11 @@
             <!-- View Toggle -->
             <div class="view-toggle">
                 <button class="view-btn active" onclick="toggleView('grid')">
-                    <i class="fas fa-th-large"></i>
+                    <i class="fas fa-th-large" aria-hidden="true"></i>
                     {% trans "Grid View" %}
                 </button>
                 <button class="view-btn" onclick="toggleView('table')">
-                    <i class="fas fa-list"></i>
+                    <i class="fas fa-list" aria-hidden="true"></i>
                     {% trans "Table View" %}
                 </button>
             </div>
@@ -393,15 +393,15 @@
                     <div class="plugin-header">
                         <div class="plugin-icon">
                             {% if plugin.type == "Security" %}
-                                <i class="fas fa-shield-alt"></i>
+                                <i class="fas fa-shield-alt" aria-hidden="true"></i>
                             {% elif plugin.type == "Performance" %}
-                                <i class="fas fa-rocket"></i>
+                                <i class="fas fa-rocket" aria-hidden="true"></i>
                             {% elif plugin.type == "Utility" %}
-                                <i class="fas fa-tools"></i>
+                                <i class="fas fa-tools" aria-hidden="true"></i>
                             {% elif plugin.type == "Backup" %}
-                                <i class="fas fa-save"></i>
+                                <i class="fas fa-save" aria-hidden="true"></i>
                             {% else %}
-                                <i class="fas fa-puzzle-piece"></i>
+                                <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
                             {% endif %}
                         </div>
                         <div class="plugin-info">
@@ -459,15 +459,15 @@
             <!-- Empty State -->
             <div class="empty-state">
                 <div class="empty-icon">
-                    <i class="fas fa-plug"></i>
+                    <i class="fas fa-plug" aria-hidden="true"></i>
                 </div>
                 <h3 class="empty-title">{% trans "No Plugins Installed" %}</h3>
                 <p class="empty-description">{% trans "You haven't installed any plugins yet. Plugins extend CyberPanel's functionality with additional features." %}</p>
             </div>
             {% endif %}
             
-            <div ng-controller="listWebsites" id="listFail" class="alert alert-danger" style="display: none;">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-controller="listWebsites" id="listFail" class="alert alert-danger" style="display: none;" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Cannot list plugins. Error message:" %} {$ errorMessage $}</span>
             </div>
         </div>

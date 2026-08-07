@@ -524,13 +524,13 @@
         <!-- Page header -->
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-cloud-upload-alt"></i>
+                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
                 {% trans "One-click Backups" %}
             </h1>
             <p class="page-subtitle">{% trans "Secure, automated backup solutions to protect your valuable data" %}</p>
             <div class="header-actions">
                 <a href="https://youtu.be/mLjMg8Anq70" target="_blank" class="btn-secondary">
-                    <i class="fas fa-play-circle"></i>
+                    <i class="fas fa-play-circle" aria-hidden="true"></i>
                     {% trans "Watch Tutorial" %}
                 </a>
             </div>
@@ -540,7 +540,7 @@
             <!-- Fetch Plans Button -->
             <div class="fetch-plans-section" ng-hide="showVerification || showSubscriptionsTable">
                 <button type="button" class="fetch-plans-btn" ng-click="showEmailVerification()">
-                    <i class="fas fa-sync-alt"></i>
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                     {% trans "Fetch existing backup plans if any" %}
                 </button>
             </div>
@@ -549,22 +549,22 @@
             <div class="main-card verification-card" ng-show="showVerification">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-envelope-open-text"></i>
+                        <i class="fas fa-envelope-open-text" aria-hidden="true"></i>
                         {% trans "Verify Your Email" %}
                     </h2>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Email Address" %}</label>
-                        <input type="email" 
+                        <label for="cpa11y-email-address" class="form-label">{% trans "Email Address" %}</label>
+                        <input id="cpa11y-email-address" type="email" 
                                class="form-control" 
                                ng-model="verificationEmail" 
                                placeholder="{% trans 'Enter your email address' %}">
                     </div>
 
                     <div class="form-group" ng-show="verificationCodeSent">
-                        <label class="form-label">{% trans "Verification Code" %}</label>
-                        <input type="text" 
+                        <label for="cpa11y-verification-code" class="form-label">{% trans "Verification Code" %}</label>
+                        <input id="cpa11y-verification-code" type="text" 
                                class="form-control" 
                                ng-model="verificationCode" 
                                placeholder="{% trans 'Enter verification code' %}">
@@ -575,20 +575,20 @@
                                 ng-click="sendVerificationCode()" 
                                 ng-hide="verificationCodeSent" 
                                 class="btn-primary">
-                            <i class="fas fa-paper-plane"></i>
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i>
                             {% trans "Send Verification Code" %}
                         </button>
                         <button type="button" 
                                 ng-click="verifyCode()" 
                                 ng-show="verificationCodeSent" 
                                 class="btn-primary">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             {% trans "Verify Code" %}
                         </button>
                         <button type="button" 
                                 ng-click="cancelVerification()" 
                                 class="btn-secondary" style="margin-left: 1rem;">
-                            <i class="fas fa-times"></i>
+                            <i class="fas fa-times" aria-hidden="true"></i>
                             {% trans "Cancel" %}
                         </button>
                     </div>
@@ -599,7 +599,7 @@
             <div class="main-card" ng-show="showSubscriptionsTable">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-credit-card"></i>
+                        <i class="fas fa-credit-card" aria-hidden="true"></i>
                         {% trans "Your Active Subscriptions" %}
                     </h2>
                 </div>
@@ -621,7 +621,7 @@
                                 <td>
                                     <span class="status-badge" 
                                           ng-class="{'active': sub.status === 'active', 'inactive': sub.status !== 'active'}">
-                                        <i class="fas fa-circle" style="font-size: 0.625rem;"></i>
+                                        <i class="fas fa-circle" style="font-size: 0.625rem;" aria-hidden="true"></i>
                                         {$ sub.status $}
                                     </span>
                                 </td>
@@ -631,7 +631,7 @@
                                 <td>
                                     <button class="btn-primary" style="padding: 0.625rem 1.25rem; font-size: 1rem;"
                                             ng-click="ReconfigureSubscription(sub)">
-                                        <i class="fas fa-cog"></i>
+                                        <i class="fas fa-cog" aria-hidden="true"></i>
                                         {% trans "Configure Server" %}
                                     </button>
                                 </td>
@@ -643,18 +643,18 @@
 
             <!-- Status Messages -->
             {% if status == 1 %}
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
+                <div class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                     <strong>{% trans "Success!" %}</strong> {% trans "You have successfully purchased a backup plan." %}
                 </div>
             {% elif status == 0 %}
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     <strong>{% trans "Error!" %}</strong> {% trans "Your purchase was not successful." %} {{ message }}
                 </div>
             {% elif status == 4 %}
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     {{ message }}
                 </div>
             {% endif %}
@@ -664,7 +664,7 @@
             <div class="main-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-database" aria-hidden="true"></i>
                         {% trans "Your Backup Plans" %}
                     </h2>
                 </div>
@@ -684,7 +684,7 @@
                             {% for plan in bPlans %}
                                 <tr>
                                     <td>
-                                        <i class="fas fa-user-circle" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                                        <i class="fas fa-user-circle" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                                         {{ plan.sftpUser }}
                                     </td>
                                     <td><strong>{{ plan.planName }}</strong></td>
@@ -704,19 +704,19 @@
                                             {% if plan.state == 1 %}
                                                 <a href="{% url 'ManageOCBackups' %}?id={{ plan.id }}" 
                                                    class="btn-primary">
-                                                    <i class="fas fa-clock"></i>
+                                                    <i class="fas fa-clock" aria-hidden="true"></i>
                                                     {% trans "Schedule Backups" %}
                                                 </a>
                                                 <a href="{% url 'RestoreOCBackups' %}?id={{ plan.id }}" 
                                                    class="btn-secondary">
-                                                    <i class="fas fa-undo"></i>
+                                                    <i class="fas fa-undo" aria-hidden="true"></i>
                                                     {% trans "Restore Backups" %}
                                                 </a>
                                             {% else %}
                                                 <button type="button"
                                                         ng-click="DeployAccount('{{ plan.id }}')"
                                                         class="btn-primary">
-                                                    <i class="fas fa-rocket"></i>
+                                                    <i class="fas fa-rocket" aria-hidden="true"></i>
                                                     {% trans "Deploy Account" %}
                                                 </button>
                                             {% endif %}
@@ -755,7 +755,7 @@
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.0.name }}', '{{ plans.0.monthlyPrice }}', '{{ plans.0.yearlyPrice }}', 12)" 
                                 class="btn-outline btn-block">
-                            <i class="fas fa-shopping-cart"></i>
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             {% trans "Yearly via Card" %}
                         </button>
                     </div>
@@ -780,13 +780,13 @@
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.1.name }}', '{{ plans.1.monthlyPrice }}', '{{ plans.1.yearlyPrice }}', 1)" 
                                 class="btn-outline btn-block">
-                            <i class="fas fa-calendar-alt"></i>
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                             {% trans "Monthly via Card" %}
                         </button>
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.1.name }}', '{{ plans.1.monthlyPrice }}', '{{ plans.1.yearlyPrice }}', 12)" 
                                 class="btn-primary btn-block">
-                            <i class="fas fa-shopping-cart"></i>
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             {% trans "Yearly via Card" %}
                         </button>
                     </div>
@@ -811,13 +811,13 @@
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.2.name }}', '{{ plans.2.monthlyPrice }}', '{{ plans.2.yearlyPrice }}', 1)" 
                                 class="btn-outline btn-block">
-                            <i class="fas fa-calendar-alt"></i>
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                             {% trans "Monthly via Card" %}
                         </button>
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.2.name }}', '{{ plans.2.monthlyPrice }}', '{{ plans.2.yearlyPrice }}', 12)" 
                                 class="btn-primary btn-block">
-                            <i class="fas fa-shopping-cart"></i>
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             {% trans "Yearly via Card" %}
                         </button>
                     </div>
@@ -842,13 +842,13 @@
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.3.name }}', '{{ plans.3.monthlyPrice }}', '{{ plans.3.yearlyPrice }}', 1)" 
                                 class="btn-outline btn-block">
-                            <i class="fas fa-calendar-alt"></i>
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                             {% trans "Monthly via Card" %}
                         </button>
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.3.name }}', '{{ plans.3.monthlyPrice }}', '{{ plans.3.yearlyPrice }}', 12)" 
                                 class="btn-primary btn-block">
-                            <i class="fas fa-shopping-cart"></i>
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             {% trans "Yearly via Card" %}
                         </button>
                     </div>
@@ -873,13 +873,13 @@
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.4.name }}', '{{ plans.4.monthlyPrice }}', '{{ plans.4.yearlyPrice }}', 1)" 
                                 class="btn-outline btn-block">
-                            <i class="fas fa-calendar-alt"></i>
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                             {% trans "Monthly via Card" %}
                         </button>
                         <button type="button"
                                 ng-click="BuyNowBackupP('{{ plans.4.name }}', '{{ plans.4.monthlyPrice }}', '{{ plans.4.yearlyPrice }}', 12)" 
                                 class="btn-primary btn-block">
-                            <i class="fas fa-shopping-cart"></i>
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             {% trans "Yearly via Card" %}
                         </button>
                     </div>

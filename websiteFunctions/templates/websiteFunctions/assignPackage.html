@@ -332,8 +332,8 @@ function deleteAssignment(url) {
             <form name="assignmentForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "User" %}</label>
-                        <select ng-model="userSelection" class="form-control">
+                        <label for="cpa11y-user" class="form-label">{% trans "User" %}</label>
+                        <select id="cpa11y-user" ng-model="userSelection" class="form-control">
                             <option value="">-- {% trans "Select a user" %} --</option>
                             {% for admin in adminNames %}
                                 <option>{{ admin }}</option>
@@ -342,7 +342,7 @@ function deleteAssignment(url) {
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Docker Package" %}</label>
+                        <label for="packageSelection" class="form-label">{% trans "Docker Package" %}</label>
                         <select ng-model="packageSelection" id="packageSelection" class="form-control">
                             <option value="">-- {% trans "Select a package" %} --</option>
                             {% for package in DockerPackages %}
@@ -353,7 +353,7 @@ function deleteAssignment(url) {
                 </div>
                 
                 <button type="button" ng-click="AddAssignment()" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-plus" aria-hidden="true"></i>
                     {% trans "Assign Package" %}
                 </button>
             </form>
@@ -401,7 +401,7 @@ function deleteAssignment(url) {
                         <td>
                             <button type="button" class="btn btn-danger" 
                                     onclick="deleteAssignment('{% url 'AssignPackage' %}?DeleteID={{ pack.id }}')">
-                                <i class="fas fa-trash"></i> {% trans "Delete" %}
+                                <i class="fas fa-trash" aria-hidden="true"></i> {% trans "Delete" %}
                             </button>
                         </td>
                     </tr>
@@ -409,8 +409,8 @@ function deleteAssignment(url) {
                 </tbody>
             </table>
             {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
+            <div class="alert alert-info" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <span>{% trans "No package assignments have been created yet. Assign a package to a user above." %}</span>
             </div>
             {% endif %}
@@ -431,7 +431,7 @@ function deleteAssignment(url) {
             </div>
             <div class="modal-body">
                 <p style="font-size: 14px; color: var(--text-primary, #2f3640);">
-                    <i class="fas fa-exclamation-triangle" style="color: var(--warning-color, #ff9800); margin-right: 8px;"></i>
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning-color, #ff9800); margin-right: 8px;" aria-hidden="true"></i>
                     {% trans "Are you sure you want to delete this package assignment?" %}
                 </p>
                 <p style="font-size: 13px; color: var(--text-secondary, #8893a7); margin-top: 10px;">
@@ -443,7 +443,7 @@ function deleteAssignment(url) {
                     {% trans "Cancel" %}
                 </button>
                 <button type="button" class="btn btn-danger" ng-click="ConfirmDelete()">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Delete" %}
                 </button>
             </div>

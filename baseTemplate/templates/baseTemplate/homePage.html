@@ -22,28 +22,28 @@
     <div class="cp-quick-actions">
         {% if admin or createWebsite %}
         <a class="cp-qa-card" href="{% url 'createWebsite' %}">
-            <span class="cp-qa-ic"><i class="fas fa-globe"></i></span>
+            <span class="cp-qa-ic"><i class="fas fa-globe" aria-hidden="true"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Create Website" %}</span><span class="cp-qa-sub">{% trans "Launch a new site" %}</span></span>
         </a>
         {% endif %}
         <a class="cp-qa-card" href="{% url 'createWordpress' %}">
-            <span class="cp-qa-ic" style="background:#5b87da;color:#fff;"><i class="fab fa-wordpress"></i></span>
+            <span class="cp-qa-ic" style="background:#5b87da;color:#fff;"><i class="fab fa-wordpress" aria-hidden="true"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Deploy WordPress" %}</span><span class="cp-qa-sub">{% trans "One-click install" %}</span></span>
         </a>
         {% if admin or createEmail %}
         <a class="cp-qa-card" href="{% url 'createEmailAccount' %}">
-            <span class="cp-qa-ic"><i class="fas fa-envelope"></i></span>
+            <span class="cp-qa-ic"><i class="fas fa-envelope" aria-hidden="true"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Add Email" %}</span><span class="cp-qa-sub">{% trans "New mailbox" %}</span></span>
         </a>
         {% endif %}
         {% if admin or createBackup %}
         <a class="cp-qa-card" href="{% url 'OneClickBackups' %}">
-            <span class="cp-qa-ic"><i class="fas fa-shield-halved"></i></span>
+            <span class="cp-qa-ic"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Back Up" %}</span><span class="cp-qa-sub">{% trans "Protect your data" %}</span></span>
         </a>
         {% endif %}
         <a class="cp-qa-card" href="{% url 'buildServices' %}">
-            <span class="cp-qa-ic" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;"><i class="fas fa-rocket"></i></span>
+            <span class="cp-qa-ic" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;"><i class="fas fa-rocket" aria-hidden="true"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Build Services" %}</span><span class="cp-qa-sub">{% trans "Let us build it" %}</span></span>
         </a>
     </div>
@@ -57,31 +57,31 @@
             <a class="cp-ob-step" href="{% url 'createWebsite' %}">
                 <span class="cp-ob-num">1</span>
                 <span class="cp-ob-body"><span class="cp-ob-title">{% trans "Create your first website" %}</span><span class="cp-ob-sub">{% trans "Add a domain and pick a PHP version" %}</span></span>
-                <span class="cp-ob-go"><i class="fas fa-arrow-right"></i></span>
+                <span class="cp-ob-go"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </a>
             {% endif %}
             <a class="cp-ob-step" href="{% url 'addDeleteDNSRecords' %}">
                 <span class="cp-ob-num">2</span>
                 <span class="cp-ob-body"><span class="cp-ob-title">{% trans "Point your domain" %}</span><span class="cp-ob-sub">{% trans "Set up DNS records for your domain" %}</span></span>
-                <span class="cp-ob-go"><i class="fas fa-arrow-right"></i></span>
+                <span class="cp-ob-go"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </a>
             <a class="cp-ob-step" href="{% url 'v2ManageSSL' %}">
                 <span class="cp-ob-num">3</span>
                 <span class="cp-ob-body"><span class="cp-ob-title">{% trans "Issue an SSL certificate" %}</span><span class="cp-ob-sub">{% trans "Secure your site with free HTTPS" %}</span></span>
-                <span class="cp-ob-go"><i class="fas fa-arrow-right"></i></span>
+                <span class="cp-ob-go"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </a>
             {% if admin or createEmail %}
             <a class="cp-ob-step" href="{% url 'createEmailAccount' %}">
                 <span class="cp-ob-num">4</span>
                 <span class="cp-ob-body"><span class="cp-ob-title">{% trans "Set up email" %}</span><span class="cp-ob-sub">{% trans "Create a mailbox for your domain" %}</span></span>
-                <span class="cp-ob-go"><i class="fas fa-arrow-right"></i></span>
+                <span class="cp-ob-go"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </a>
             {% endif %}
             {% if admin or createBackup %}
             <a class="cp-ob-step" href="{% url 'OneClickBackups' %}">
                 <span class="cp-ob-num">5</span>
                 <span class="cp-ob-body"><span class="cp-ob-title">{% trans "Configure backups" %}</span><span class="cp-ob-sub">{% trans "Schedule automatic backups" %}</span></span>
-                <span class="cp-ob-go"><i class="fas fa-arrow-right"></i></span>
+                <span class="cp-ob-go"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </a>
             {% endif %}
         </div>
@@ -89,12 +89,12 @@
 
     <!-- Dismissible Build Services promo card -->
     <div class="cp-build-card" id="cp-build-card" hidden>
-        <button class="cp-build-x" type="button" id="cp-build-card-x" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times"></i></button>
+        <button class="cp-build-x" type="button" id="cp-build-card-x" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
         <i class="fas fa-rocket cp-build-bg" aria-hidden="true"></i>
         <h3>{% trans "Need an app or custom website built?" %}</h3>
         <p>{% trans "CyberPanel offers professional development services — websites, web apps, Android & iOS apps, and custom software, delivered and deployed for you." %}</p>
         <div class="cp-build-actions">
-            <a class="cp-build-btn primary" href="{% url 'buildServices' %}"><i class="fas fa-arrow-right"></i> {% trans "Explore Build Services" %}</a>
+            <a class="cp-build-btn primary" href="{% url 'buildServices' %}"><i class="fas fa-arrow-right" aria-hidden="true"></i> {% trans "Explore Build Services" %}</a>
             <a class="cp-build-btn ghost" href="https://cyberpanel.net/custom-development?utm_source=cyberpanel&utm_medium=panel&utm_campaign=dashboard_card" target="_blank" rel="noopener">{% trans "Get a quote" %}</a>
         </div>
     </div>
@@ -319,7 +319,7 @@
                         <td><strong>{$ login.user $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">{$ login.ip $}</code></td>
                         <td>
-                            <span ng-if="login.flag"><img ng-src="{$ login.flag $}" style="width: 16px; height: 12px; vertical-align: middle; margin-right: 4px;" /></span>
+                            <span ng-if="login.flag"><img ng-src="{$ login.flag $}" style="width: 16px; height: 12px; vertical-align: middle; margin-right: 4px;" alt=""/></span>
                             <span>{$ login.country || 'N/A' $}</span>
                         </td>
                         <td>{$ login.date $}</td>
@@ -364,7 +364,7 @@
                     {% trans "SSH Security Analysis" %}
                 </h3>
                 <button ng-click="analyzeSSHSecurity()" class="btn-primary" style="padding: 6px 16px; font-size: 12px;">
-                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': loadingSecurityAnalysis}"></i>
+                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': loadingSecurityAnalysis}" aria-hidden="true"></i>
                     {% trans "Refresh Analysis" %}
                 </button>
             </div>
@@ -374,26 +374,26 @@
                 <div style="background: linear-gradient(135deg, #f0f1ff 0%, #e8e9ff 100%); border: 1px solid #c7d2fe; border-radius: 16px; padding: 30px; text-align: center;">
                     <div style="max-width: 600px; margin: 0 auto;">
                         <div style="width: 80px; height: 80px; background: var(--accent-color); border-radius: 16px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-shield-alt" style="color: white; font-size: 36px;"></i>
+                            <i class="fas fa-shield-alt" style="color: white; font-size: 36px;" aria-hidden="true"></i>
                         </div>
                         <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 24px; font-weight: 700;">{$ addonInfo.feature_title $}</h3>
                         <p style="margin: 0 0 25px 0; color: #64748b; font-size: 15px; line-height: 1.6;">{$ addonInfo.feature_description $}</p>
                         
                         <div style="background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; text-align: left;">
                             <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; font-weight: 600;">
-                                <i class="fas fa-star" style="color: #f59e0b; margin-right: 8px;"></i>
+                                <i class="fas fa-star" style="color: #f59e0b; margin-right: 8px;" aria-hidden="true"></i>
                                 {% trans "Premium Features Include:" %}
                             </h4>
                             <ul style="list-style: none; margin: 0; padding: 0;">
                                 <li ng-repeat="feature in addonInfo.features" style="padding: 8px 0; color: #475569; font-size: 14px; display: flex; align-items: flex-start;">
-                                    <i class="fas fa-check-circle" style="color: #10b981; margin-right: 10px; margin-top: 2px; flex-shrink: 0;"></i>
+                                    <i class="fas fa-check-circle" style="color: #10b981; margin-right: 10px; margin-top: 2px; flex-shrink: 0;" aria-hidden="true"></i>
                                     <span>{$ feature $}</span>
                                 </li>
                             </ul>
                         </div>
                         
                         <a href="{$ addonInfo.addon_url $}" target="_blank" rel="noopener" class="btn-primary" style="padding: 12px 30px; font-size: 16px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
-                            <i class="fas fa-unlock"></i>
+                            <i class="fas fa-unlock" aria-hidden="true"></i>
                             {% trans "Unlock SSH Security Analysis" %}
                         </a>
                         <p style="margin: 15px 0 0 0; color: #94a3b8; font-size: 13px;">
@@ -406,7 +406,7 @@
             <!-- Security Alerts Section -->
             <div ng-if="!showAddonRequired && !loadingSecurityAnalysis && securityAlerts.length === 0" style="margin-bottom: 20px;">
                 <div style="background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px;">
-                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 24px;"></i>
+                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 24px;" aria-hidden="true"></i>
                     <div>
                         <h4 style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">{% trans "No Security Threats Detected" %}</h4>
                         <p style="margin: 4px 0 0 0; color: #047857; font-size: 13px;">{% trans "Your SSH logs show no signs of malicious activity. Continue monitoring regularly." %}</p>
@@ -417,12 +417,12 @@
             <div ng-if="securityAlerts.length > 0" style="margin-bottom: 20px;">
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 12px; padding: 20px;">
                     <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i>
+                        <i class="fas fa-exclamation-triangle" style="color: #f39c12;" aria-hidden="true"></i>
                         {% trans "Security Alerts Detected" %} ({$ securityAlerts.length $})
                     </h3>
                     <div ng-repeat="alert in securityAlerts" style="margin-bottom: 15px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ffeaa7;">
                         <div style="display: flex; align-items: flex-start; gap: 12px;">
-                            <i class="fas fa-shield-alt" style="color: {$ alert.severity === 'high' ? '#e74c3c' : (alert.severity === 'medium' ? '#f39c12' : (alert.severity === 'low' ? '#3498db' : '#10b981')) $}; font-size: 20px; margin-top: 2px;"></i>
+                            <i class="fas fa-shield-alt" style="color: {$ alert.severity === 'high' ? '#e74c3c' : (alert.severity === 'medium' ? '#f39c12' : (alert.severity === 'low' ? '#3498db' : '#10b981')) $}; font-size: 20px; margin-top: 2px;" aria-hidden="true"></i>
                             <div style="flex: 1;">
                                 <h4 style="margin: 0 0 8px 0; color: #2f3640; font-size: 14px; font-weight: 600;">{$ alert.title $}</h4>
                                 <p style="margin: 0 0 8px 0; color: #5f6368; font-size: 13px; line-height: 1.6;">{$ alert.description $}</p>
@@ -535,16 +535,16 @@
                 <button id="ssh-modal-close" class="btn btn-sm" style="border: none; background: none; font-size: 1.5rem; cursor: pointer;" aria-label="{% trans 'Close dialog' %}" ng-click="closeSSHActivityModal()">&times;</button>
             </div>
             <div ng-if="loadingSSHActivity" style="text-align: center; color: #8893a7; padding: 20px 0;">
-                <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>{% trans "Loading activity..." %}
+                <i class="fas fa-spinner fa-spin" style="margin-right: 8px;" aria-hidden="true"></i>{% trans "Loading activity..." %}
             </div>
             <div ng-if="errorSSHActivity" style="color: #e53935; padding: 15px; background: #fee2e2; border-radius: 8px; margin-bottom: 15px;">
-                <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>{$ errorSSHActivity $}
+                <i class="fas fa-exclamation-circle" style="margin-right: 8px;" aria-hidden="true"></i>{$ errorSSHActivity $}
             </div>
             <div ng-if="!loadingSSHActivity && !errorSSHActivity && sshActivity">
                 <!-- Processes Section -->
                 <div ng-if="sshActivity.processes && sshActivity.processes.length > 0" style="margin-bottom: 20px;">
                     <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-microchip" style="margin-right: 8px; color: var(--accent-color);"></i>{% trans "Running Processes" %} ({$ sshActivity.processes.length $})
+                        <i class="fas fa-microchip" style="margin-right: 8px; color: var(--accent-color);" aria-hidden="true"></i>{% trans "Running Processes" %} ({$ sshActivity.processes.length $})
                     </h4>
                     <div style="overflow-x: auto; max-height: 300px; overflow-y: auto; border: 1px solid #e8e9ff; border-radius: 8px;">
                         <table class="activity-table process-table" style="margin-top: 0;">
@@ -567,7 +567,7 @@
                                     <td style="font-family: monospace; font-size: 11px; word-break: break-word; overflow-wrap: break-word;">{$ proc.cwd || 'N/A' $}</td>
                                     <td style="text-align: center;">
                                         <button ng-click="killProcess(proc.pid, sshActivityUser)" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                                            <i class="fas fa-times-circle" style="margin-right: 4px;"></i>{% trans "Kill" %}
+                                            <i class="fas fa-times-circle" style="margin-right: 4px;" aria-hidden="true"></i>{% trans "Kill" %}
                                         </button>
                                     </td>
                                 </tr>
@@ -579,7 +579,7 @@
                 <!-- Shell History Section -->
                 <div ng-if="sshActivity.shell_history && sshActivity.shell_history.length > 0" style="margin-bottom: 20px;">
                     <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-history" style="margin-right: 8px; color: var(--accent-color);"></i>{% trans "Recent Shell History (Last 10 commands)" %}
+                        <i class="fas fa-history" style="margin-right: 8px; color: var(--accent-color);" aria-hidden="true"></i>{% trans "Recent Shell History (Last 10 commands)" %}
                     </h4>
                     <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px; max-height: 200px; overflow-y: auto;">
                         <div ng-repeat="cmd in sshActivity.shell_history" style="padding: 8px 0; border-bottom: 1px solid #e8e9ff; font-family: monospace; font-size: 12px; color: #2f3640;">
@@ -591,7 +591,7 @@
                 <!-- Disk Usage Section -->
                 <div ng-if="sshActivity.disk_usage" style="margin-bottom: 20px;">
                     <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-hdd" style="margin-right: 8px; color: var(--accent-color);"></i>{% trans "Disk Usage" %}
+                        <i class="fas fa-hdd" style="margin-right: 8px; color: var(--accent-color);" aria-hidden="true"></i>{% trans "Disk Usage" %}
                     </h4>
                     <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px; color: #2f3640; font-size: 14px;">
                         {$ sshActivity.disk_usage $}
@@ -601,7 +601,7 @@
                 <!-- GeoIP Section -->
                 <div ng-if="sshActivity.geoip && Object.keys(sshActivity.geoip).length > 0" style="margin-bottom: 20px;">
                     <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-globe" style="margin-right: 8px; color: var(--accent-color);"></i>{% trans "Location Information" %}
+                        <i class="fas fa-globe" style="margin-right: 8px; color: var(--accent-color);" aria-hidden="true"></i>{% trans "Location Information" %}
                     </h4>
                     <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px;">
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
@@ -637,10 +637,10 @@
                 <div ng-if="sshActivity.w && sshActivity.w.length > 0" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fas fa-terminal" style="margin-right: 8px; color: var(--accent-color);"></i>{% trans "User Session Information" %}
+                            <i class="fas fa-terminal" style="margin-right: 8px; color: var(--accent-color);" aria-hidden="true"></i>{% trans "User Session Information" %}
                         </h4>
                         <button ng-click="killSession(sshActivityUser, sshActivity.w && sshActivity.w.length > 0 ? (sshActivity.w[0].split(/\\s+/)[1] || '') : '')" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                            <i class="fas fa-power-off"></i>{% trans "Force Close Session" %}
+                            <i class="fas fa-power-off" aria-hidden="true"></i>{% trans "Force Close Session" %}
                         </button>
                     </div>
                     <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px; max-height: 200px; overflow-y: auto;">
@@ -658,14 +658,14 @@
                             <p style="margin: 4px 0 0 0; color: #856404; font-size: 12px;">Force close all sessions for user: <strong>{$ sshActivityUser $}</strong></p>
                         </div>
                         <button ng-click="killSession(sshActivityUser)" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                            <i class="fas fa-power-off"></i>{% trans "Force Close Session" %}
+                            <i class="fas fa-power-off" aria-hidden="true"></i>{% trans "Force Close Session" %}
                         </button>
                     </div>
                 </div>
                 
                 <!-- No Data Message -->
                 <div ng-if="(!sshActivity.processes || sshActivity.processes.length === 0) && (!sshActivity.shell_history || sshActivity.shell_history.length === 0) && !sshActivity.disk_usage && (!sshActivity.geoip || Object.keys(sshActivity.geoip).length === 0) && (!sshActivity.w || sshActivity.w.length === 0)" style="text-align: center; padding: 40px 20px; color: #8893a7;">
-                    <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;" aria-hidden="true"></i>
                     <p style="margin: 0; font-size: 14px;">{% trans "No activity data available for this user." %}</p>
                 </div>
             </div>

@@ -417,13 +417,13 @@
 <div ng-controller="emailDomainPage" class="modern-container">
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-tachometer-alt"></i>
+            <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
             {% trans "Email Limits" %}
             <span class="domain-badge" id="domainNamePage">{{ domain }}</span>
         </h1>
         <p class="page-subtitle">{% trans "View and manage email sending limits for your domain" %}</p>
         <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/email-limits/" class="docs-link">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-book" aria-hidden="true"></i>
             {% trans "Email Limits Documentation" %}
         </a>
     </div>
@@ -433,7 +433,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
                     {% trans "Domain Resource Usage" %}
                     <span ng-show="emailLimitsLoading" class="loading-spinner"></span>
                 </h2>
@@ -459,24 +459,24 @@
                             <td>
                                 <div class="status-toggle">
                                     <span ng-show="{{ limitsOn }}" class="status-indicator status-on" title="{% trans 'Limits are being Applied!' %}">
-                                        <i class="fas fa-check"></i>
+                                        <i class="fas fa-check" aria-hidden="true"></i>
                                     </span>
                                     <button ng-click="enableDisableEmailLimits(0, '{{ domain }}')" ng-show="{{ limitsOn }}" class="btn-danger">
-                                        <i class="fas fa-power-off"></i>
+                                        <i class="fas fa-power-off" aria-hidden="true"></i>
                                         {% trans 'Disable' %}
                                     </button>
                                     <span ng-show="{{ limitsOff }}" class="status-indicator status-off" title="{% trans 'Limits are not being applied!' %}">
-                                        <i class="fas fa-times"></i>
+                                        <i class="fas fa-times" aria-hidden="true"></i>
                                     </span>
                                     <button ng-click="enableDisableEmailLimits(1, '{{ domain }}')" ng-show="{{ limitsOff }}" class="btn-success">
-                                        <i class="fas fa-power-off"></i>
+                                        <i class="fas fa-power-off" aria-hidden="true"></i>
                                         {% trans 'Enable' %}
                                     </button>
                                 </div>
                             </td>
                             <td>
                                 <button ng-click="showLimitsForm()" class="btn-edit">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
                                     {% trans 'Edit' %}
                                 </button>
                             </td>
@@ -489,35 +489,35 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Monthly Limit" %}</label>
-                                    <input name="dom" type="number" class="form-control" ng-model="monthlyLimit" placeholder="Enter monthly email limit" required>
+                                    <label for="cpa11y-monthly-limit" class="form-label">{% trans "Monthly Limit" %}</label>
+                                    <input id="cpa11y-monthly-limit" name="dom" type="number" class="form-control" ng-model="monthlyLimit" placeholder="Enter monthly email limit" required>
                                 </div>
                                 
                                 <div style="display: flex; gap: 1rem; align-items: center;">
                                     <button type="button" ng-click="changeDomainEmailLimits('{{ domain }}')" class="btn-primary">
-                                        <i class="fas fa-save"></i>
+                                        <i class="fas fa-save" aria-hidden="true"></i>
                                         {% trans "Change Limits" %}
                                     </button>
-                                    <button type="button" ng-click="hideLimitsForm()" class="close-btn" title="{% trans 'Cancel' %}">
-                                        <i class="fas fa-times" style="color: #ef4444;"></i>
+                                    <button type="button" ng-click="hideLimitsForm()" class="close-btn" title="{% trans 'Cancel' %}" aria-label="{% trans 'Cancel' %}">
+                                        <i class="fas fa-times" style="color: #ef4444;" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
                         
                         <div style="margin-top: 1.5rem;">
-                            <div ng-hide="changeLimitsFail" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="changeLimitsFail" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {% trans "Can not change limits. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="changeLimitsSuccess" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="changeLimitsSuccess" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Limits successfully changed, refreshing in 3 seconds." %}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>
@@ -530,15 +530,15 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-envelope"></i>
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
                     {% trans "Email Account Resource Usage" %}
                     <span ng-show="emailLimitsLoading" class="loading-spinner"></span>
                 </h2>
             </div>
             <div class="card-body">
                 <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" ng-model="emailSearch" placeholder="{% trans 'Search email accounts...' %}" class="form-control">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="text" ng-model="emailSearch" placeholder="{% trans 'Search email accounts...' %}" class="form-control" aria-label="{% trans 'Search email accounts...' %}">
                 </div>
 
                 <table class="stats-table">
@@ -563,13 +563,13 @@
                             <td>
                                 <div class="status-toggle">
                                     <span ng-show="email.status==1" class="status-indicator status-on" title="{% trans 'Limits are being Applied!' %}">
-                                        <i class="fas fa-check"></i>
+                                        <i class="fas fa-check" aria-hidden="true"></i>
                                     </span>
                                     <button ng-click="enableDisableIndividualEmailLimits(0, email.email)" ng-show="email.status==1" class="btn-danger">
                                         {% trans 'Disable' %}
                                     </button>
                                     <span ng-show="email.status==0" class="status-indicator status-off" title="{% trans 'Limits are not being applied!' %}">
-                                        <i class="fas fa-times"></i>
+                                        <i class="fas fa-times" aria-hidden="true"></i>
                                     </span>
                                     <button ng-click="enableDisableIndividualEmailLimits(1, email.email)" ng-show="email.status==0" class="btn-success">
                                         {% trans 'Enable' %}
@@ -578,7 +578,7 @@
                             </td>
                             <td>
                                 <a href="/emailPremium/{$ email.email $}" class="btn-edit">
-                                    <i class="fas fa-cog"></i>
+                                    <i class="fas fa-cog" aria-hidden="true"></i>
                                     {% trans 'Manage' %}
                                 </a>
                             </td>
@@ -586,8 +586,8 @@
                     </tbody>
                 </table>
 
-                <div ng-hide="listFail" class="alert alert-danger" style="margin-top: 1rem;">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div ng-hide="listFail" class="alert alert-danger" style="margin-top: 1rem;" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     {% trans "Cannot list emails. Error message:" %} {$ errorMessage $}
                 </div>
 
@@ -607,8 +607,8 @@
     {% else %}
         <div class="main-card">
             <div class="card-body">
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     {{ domain }}
                 </div>
             </div>

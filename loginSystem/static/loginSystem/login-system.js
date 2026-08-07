@@ -29,7 +29,7 @@ $("#verifyingLogin").hide();
 $("#loginFailed").hide();
 
 
-var application = angular.module('loginSystem', []);
+var application = angular.module('loginSystem', ['ngAria']);
 
 application.config(['$interpolateProvider',
 

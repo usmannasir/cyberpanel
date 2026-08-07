@@ -43,7 +43,7 @@
                             <td ng-bind="web.domain"></td>
                             <td><a href="/container/manage/{$ web.domain $}"><img width="30px" height="30"
                                                                                   class="center-block"
-                                                                                  src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
+                                                                                  src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}" alt=""></a>
                             </td>
                             <td ng-bind="web.ipAddress"></td>
                             <td ng-bind="web.package"></td>
@@ -55,7 +55,7 @@
                         </tbody>
                     </table>
 
-                    <div id="listFail" class="alert alert-danger">
+                    <div id="listFail" class="alert alert-danger" role="alert">
                         <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
                     </div>
 

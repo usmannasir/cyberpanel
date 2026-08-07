@@ -19,7 +19,7 @@
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans " Add WordPress Sites for Remote Backup" %} <img ng-hide="BackupScheduleLoading"
-                                                         src="{% static 'images/loading.gif' %}">
+                                                         src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <form name="websiteCreationForm" action="/" id="createPackages"
                       class="form-horizontal bordered-row panel-body">
@@ -28,7 +28,7 @@
 
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Selecte WordPress Site" %}</label>
+                        <label for="Wpsite" class="col-sm-3 control-label">{% trans "Selecte WordPress Site" %}</label>
                         <div class="col-sm-6">
                             <select ng-model="Wpsite" id="Wpsite"
                                     class="form-control">

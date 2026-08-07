@@ -251,8 +251,8 @@
             <div class="form-row">
                 <div class="form-col-6">
                     <div class="form-group">
-                        <label class="form-label">{% trans "First Name" %}</label>
-                        <input name="firstName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
+                        <label for="cpa11y-first-name" class="form-label">{% trans "First Name" %}</label>
+                        <input id="cpa11y-first-name" name="firstName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
                                ng-model="firstName" required>
                         <div ng-show="createUser.firstName.$error.pattern" class="error-text">
                             {% trans "First Name should contain only alphabetic characters." %}
@@ -261,8 +261,8 @@
                 </div>
                 <div class="form-col-6">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Last Name" %}</label>
-                        <input name="lastName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
+                        <label for="cpa11y-last-name" class="form-label">{% trans "Last Name" %}</label>
+                        <input id="cpa11y-last-name" name="lastName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
                                ng-model="lastName" required>
                         <div ng-show="createUser.lastName.$error.pattern" class="error-text">
                             {% trans "Last Name should contain only alphabetic characters." %}
@@ -272,8 +272,8 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">{% trans "Email Address" %}</label>
-                <input name="email" type="email" class="form-control" ng-model="email" required>
+                <label for="cpa11y-email-address" class="form-label">{% trans "Email Address" %}</label>
+                <input id="cpa11y-email-address" name="email" type="email" class="form-control" ng-model="email" required>
                 <div ng-show="createUser.email.$error.email" class="error-text">
                     {% trans "Please enter a valid email address" %}
                 </div>
@@ -282,8 +282,8 @@
             <div class="form-row">
                 <div class="form-col-6">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Access Control List (ACL)" %}</label>
-                        <select ng-model="selectedACL" class="form-control">
+                        <label for="cpa11y-access-control-list-acl" class="form-label">{% trans "Access Control List (ACL)" %}</label>
+                        <select id="cpa11y-access-control-list-acl" ng-model="selectedACL" class="form-control">
                             {% for items in aclNames %}
                                 <option>{{ items }}</option>
                             {% endfor %}
@@ -293,8 +293,8 @@
                 </div>
                 <div class="form-col-6">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Websites Limit" %}</label>
-                        <input name="websitesLimits" placeholder="0 = Unlimited" type="number" class="form-control"
+                        <label for="cpa11y-websites-limit" class="form-label">{% trans "Websites Limit" %}</label>
+                        <input id="cpa11y-websites-limit" name="websitesLimits" placeholder="0 = Unlimited" type="number" class="form-control"
                                ng-model="websitesLimits" required>
                         <p class="help-text">{% trans "Maximum number of websites this user can create" %}</p>
                     </div>
@@ -302,42 +302,42 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">{% trans "Username" %}</label>
-                <input type="text" class="form-control" ng-model="userName" required>
+                <label for="cpa11y-username" class="form-label">{% trans "Username" %}</label>
+                <input id="cpa11y-username" type="text" class="form-control" ng-model="userName" required>
                 <p class="help-text">{% trans "Choose a unique username for login" %}</p>
             </div>
 
             <div class="form-group">
-                <label class="form-label">{% trans "Password" %}</label>
+                <label for="cpa11y-password" class="form-label">{% trans "Password" %}</label>
                 <div class="btn-row">
                     <div class="btn-col-8">
-                        <input name="password" type="password" class="form-control" ng-model="password" required>
+                        <input id="cpa11y-password" name="password" type="password" class="form-control" ng-model="password" required>
                     </div>
                     <div class="btn-col-4">
                         <button type="button" ng-click="generatePassword()" class="btn-generate" style="width: 100%;">
-                            <i class="fa fa-magic"></i> {% trans "Generate" %}
+                            <i class="fa fa-magic" aria-hidden="true"></i> {% trans "Generate" %}
                         </button>
                     </div>
                 </div>
             </div>
 
             <div ng-hide="generatedPasswordView" class="form-group">
-                <label class="form-label">{% trans "Generated Password" %}</label>
+                <label for="cpa11y-generated-password" class="form-label">{% trans "Generated Password" %}</label>
                 <div class="btn-row">
                     <div class="btn-col-8">
-                        <input type="text" class="form-control" ng-model="password" readonly>
+                        <input id="cpa11y-generated-password" type="text" class="form-control" ng-model="password" readonly>
                     </div>
                     <div class="btn-col-4">
                         <button type="button" ng-click="usePassword()" class="btn-primary" style="width: 100%;">
-                            <i class="fa fa-check"></i> {% trans "Use" %}
+                            <i class="fa fa-check" aria-hidden="true"></i> {% trans "Use" %}
                         </button>
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">{% trans "Security Level" %}</label>
-                <select ng-init="securityLevels={{ securityLevels }};securityLevel='HIGH'"
+                <label for="cpa11y-security-level" class="form-label">{% trans "Security Level" %}</label>
+                <select id="cpa11y-security-level" ng-init="securityLevels={{ securityLevels }};securityLevel='HIGH'"
                         ng-model="securityLevel" ng-options="s for s in securityLevels track by s"
                         class="form-control">
                 </select>
@@ -346,24 +346,24 @@
 
             <div class="form-group" style="margin-top: 2rem;">
                 <button type="button" ng-click="createUserFunc()" class="btn-primary">
-                    <i class="fa fa-user-plus"></i> {% trans "Create User" %}
+                    <i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Create User" %}
                 </button>
             </div>
 
-            <div ng-hide="userCreated" class="alert alert-success">
-                <i class="fa fa-check-circle"></i> {% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully created." %}
+            <div ng-hide="userCreated" class="alert alert-success" role="status">
+                <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully created." %}
             </div>
 
-            <div ng-hide="userCreationFailed" class="alert alert-danger">
-                <i class="fa fa-exclamation-circle"></i> {% trans "Cannot create user. Error message:" %} {$ errorMessage $}
+            <div ng-hide="userCreationFailed" class="alert alert-danger" role="alert">
+                <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {% trans "Cannot create user. Error message:" %} {$ errorMessage $}
             </div>
 
-            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
+            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                <i class="fa fa-times-circle" aria-hidden="true"></i> {% trans "Could not connect to server. Please refresh this page." %}
             </div>
 
-            <div ng-hide="combinedLength" class="alert alert-danger">
-                <i class="fa fa-exclamation-triangle"></i> {% trans "Length of first and last name combined should be less than or equal to 20 characters" %}
+            <div ng-hide="combinedLength" class="alert alert-danger" role="alert">
+                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> {% trans "Length of first and last name combined should be less than or equal to 20 characters" %}
             </div>
           </form>
         </div>

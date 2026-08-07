@@ -646,14 +646,14 @@
         <div class="header-content">
             <h1 class="page-title">
                 <div class="docker-icon">
-                    <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;"></i>
+                    <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;" aria-hidden="true"></i>
                 </div>
                 {% trans "Create New Container" %}
             </h1>
             <div class="image-info">
                 <span>{% trans "From image:" %}</span>
                 <span class="image-badge">
-                    <i class="fas fa-cube"></i>
+                    <i class="fas fa-cube" aria-hidden="true"></i>
                     {{ image }}:{{ tag }}
                 </span>
             </div>
@@ -664,19 +664,19 @@
     <div class="progress-indicator" ng-hide="installationProgress">
         <div class="progress-step active">
             <div class="step-icon">
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-cog" aria-hidden="true"></i>
             </div>
             <span class="step-label">{% trans "Configure" %}</span>
         </div>
         <div class="progress-step">
             <div class="step-icon">
-                <i class="fas fa-rocket"></i>
+                <i class="fas fa-rocket" aria-hidden="true"></i>
             </div>
             <span class="step-label">{% trans "Deploy" %}</span>
         </div>
         <div class="progress-step">
             <div class="step-icon">
-                <i class="fas fa-check"></i>
+                <i class="fas fa-check" aria-hidden="true"></i>
             </div>
             <span class="step-label">{% trans "Complete" %}</span>
         </div>
@@ -690,7 +690,7 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                     </div>
                     <div>
                         <h2 class="section-title">{% trans "Basic Configuration" %}</h2>
@@ -699,26 +699,26 @@
                 </div>
 
                 <div class="form-row">
-                    <label class="form-label">
+                    <label for="cpa11y-container-name-a-unique-name-for" class="form-label">
                         {% trans "Container Name" %}
                         <span class="required-star">*</span>
                         <div class="tooltip">
-                            <i class="fas fa-question-circle tooltip-icon"></i>
+                            <i class="fas fa-question-circle tooltip-icon" aria-hidden="true"></i>
                             <div class="tooltip-content">
                                 {% trans "A unique name for your container" %}
                             </div>
                         </div>
                     </label>
-                    <input type="text" class="form-control" ng-model="name" ng-init="name='{{ name }}'" 
+                    <input id="cpa11y-container-name-a-unique-name-for" type="text" class="form-control" ng-model="name" ng-init="name='{{ name }}'" 
                            placeholder="{% trans 'e.g., my-nginx-server' %}" name="containerName" required>
                 </div>
 
                 <div class="form-row">
-                    <label class="form-label">
+                    <label for="cpa11y-owner" class="form-label">
                         {% trans "Owner" %}
                         <span class="required-star">*</span>
                     </label>
-                    <select class="form-control" ng-model="dockerOwner" name="dockerOwner" required>
+                    <select id="cpa11y-owner" class="form-control" ng-model="dockerOwner" name="dockerOwner" required>
                         <option value="" disabled>{% trans "Select owner..." %}</option>
                         {% for owner in ownerList %}
                         <option value="{{ owner }}">{{ owner }}</option>
@@ -727,31 +727,31 @@
                 </div>
 
                 <div class="form-row">
-                    <label class="form-label">
+                    <label for="cpa11y-memory-limit-maximum-memory-this" class="form-label">
                         {% trans "Memory Limit" %}
                         <span class="required-star">*</span>
                         <div class="tooltip">
-                            <i class="fas fa-question-circle tooltip-icon"></i>
+                            <i class="fas fa-question-circle tooltip-icon" aria-hidden="true"></i>
                             <div class="tooltip-content">
                                 {% trans "Maximum memory this container can use" %}
                             </div>
                         </div>
                     </label>
                     <div class="input-group">
-                        <input type="number" class="form-control" ng-model="memory" 
+                        <input id="cpa11y-memory-limit-maximum-memory-this" type="number" class="form-control" ng-model="memory" 
                                placeholder="512" min="128" name="memory" required>
                         <span class="input-addon">MB</span>
                     </div>
                 </div>
 
                 <div class="form-row">
-                    <label class="form-label">{% trans "Image" %}</label>
-                    <input type="text" class="form-control" ng-model="image" ng-init="image='{{ image }}'" disabled>
+                    <label for="cpa11y-image" class="form-label">{% trans "Image" %}</label>
+                    <input id="cpa11y-image" type="text" class="form-control" ng-model="image" ng-init="image='{{ image }}'" disabled>
                 </div>
 
                 <div class="form-row">
-                    <label class="form-label">{% trans "Tag" %}</label>
-                    <input type="text" class="form-control" ng-model="tag" ng-init="tag='{{ tag }}'" disabled>
+                    <label for="cpa11y-tag" class="form-label">{% trans "Tag" %}</label>
+                    <input id="cpa11y-tag" type="text" class="form-control" ng-model="tag" ng-init="tag='{{ tag }}'" disabled>
                 </div>
             </div>
 
@@ -760,7 +760,7 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-network-wired"></i>
+                        <i class="fas fa-network-wired" aria-hidden="true"></i>
                     </div>
                     <div>
                         <h2 class="section-title">{% trans "Port Mapping" %}</h2>
@@ -773,17 +773,17 @@
                     <div>
                         <div class="port-label">{% trans "Container Port" %}</div>
                         <div class="input-group">
-                            <input type="text" class="form-control" value="{{ port }}" disabled>
+                            <input type="text" class="form-control" value="{{ port }}" disabled aria-label="{% trans 'Container Port' %}">
                             <span class="input-addon">{{ protocol|upper }}</span>
                         </div>
                     </div>
                     <div class="port-arrow">
-                        <i class="fas fa-arrow-right"></i>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
                     </div>
                     <div>
                         <div class="port-label">{% trans "Host Port" %}</div>
                         <input type="number" class="form-control" ng-model="eport['{{ port }}']" 
-                               placeholder="{% trans 'e.g., 8080' %}" name="port_{{ port }}" required>
+                               placeholder="{% trans 'e.g., 8080' %}" name="port_{{ port }}" required aria-label="{% trans 'e.g., 8080' %}">
                     </div>
                 </div>
                 <span ng-init="iport[{{ port }}]={{ port }}; portType['{{ port }}']='{{ protocol }}'"></span>
@@ -795,7 +795,7 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                     </div>
                     <div>
                         <h2 class="section-title">{% trans "Docker Compose Benefits" %}</h2>
@@ -805,7 +805,7 @@
 
                 <div class="compose-info-card">
                     <div class="compose-benefits">
-                        <h4><i class="fas fa-rocket"></i> {% trans "With Docker Compose, you can:" %}</h4>
+                        <h4><i class="fas fa-rocket" aria-hidden="true"></i> {% trans "With Docker Compose, you can:" %}</h4>
                         <ul>
                             <li>{% trans "Keep your environment variables in a separate .env file" %}</li>
                             <li>{% trans "When you change the .env, you don't need to rebuild the entire container image" %}</li>
@@ -813,13 +813,13 @@
                         </ul>
                         <div class="compose-actions">
                             <button type="button" class="btn btn-primary" ng-click="generateDockerCompose()">
-                                <i class="fas fa-file-code"></i> {% trans "Generate docker-compose.yml" %}
+                                <i class="fas fa-file-code" aria-hidden="true"></i> {% trans "Generate docker-compose.yml" %}
                             </button>
                             <button type="button" class="btn btn-success" ng-click="generateEnvFile()">
-                                <i class="fas fa-file-alt"></i> {% trans "Generate .env file" %}
+                                <i class="fas fa-file-alt" aria-hidden="true"></i> {% trans "Generate .env file" %}
                             </button>
                             <button type="button" class="btn btn-info" ng-click="showComposeHelp()">
-                                <i class="fas fa-question-circle"></i> {% trans "How to use" %}
+                                <i class="fas fa-question-circle" aria-hidden="true"></i> {% trans "How to use" %}
                             </button>
                         </div>
                     </div>
@@ -830,7 +830,7 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-list"></i>
+                        <i class="fas fa-list" aria-hidden="true"></i>
                     </div>
                     <div>
                         <h2 class="section-title">{% trans "Environment Variables" %}</h2>
@@ -873,11 +873,11 @@
                             <span class="dynamic-title">{% trans "Environment Variables" %}</span>
                             <div style="display: flex; gap: 0.5rem;">
                                 <button type="button" class="btn btn-secondary" ng-click="loadEnvTemplate()">
-                                    <i class="fas fa-file-import"></i>
+                                    <i class="fas fa-file-import" aria-hidden="true"></i>
                                     {% trans "Load Template" %}
                                 </button>
                                 <button type="button" class="btn btn-secondary" ng-click="addEnvField()">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
                                     {% trans "Add Variable" %}
                                 </button>
                             </div>
@@ -890,17 +890,17 @@
 
                         <div ng-repeat="env in envList track by $index" class="dynamic-item">
                             <input type="text" class="form-control" ng-model="envList[$index].name" 
-                                   placeholder="{% trans 'Variable name' %}">
+                                   placeholder="{% trans 'Variable name' %}" aria-label="{% trans 'Variable name' %}">
                             <input type="text" class="form-control" ng-model="envList[$index].value" 
-                                   placeholder="{% trans 'Value' %}">
+                                   placeholder="{% trans 'Value' %}" aria-label="{% trans 'Value' %}">
                             <button type="button" class="btn btn-danger" ng-click="removeEnvField($index)" 
                                     ng-show="Object.keys(envList).length > 0">
-                                <i class="fas fa-trash"></i>
+                                <i class="fas fa-trash" aria-hidden="true"></i>
                             </button>
                         </div>
 
                         <div ng-show="Object.keys(envList).length === 0" style="text-align: center; padding: 2rem; color: #64748b;">
-                            <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                            <i class="fas fa-info-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "No environment variables configured. Click 'Add Variable' to add one." %}
                         </div>
                     </div>
@@ -920,11 +920,11 @@
                             </div>
                             <div style="display: flex; gap: 0.5rem;">
                                 <button type="button" class="btn btn-secondary" ng-click="loadEnvFromFile()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                                    <i class="fas fa-upload"></i>
+                                    <i class="fas fa-upload" aria-hidden="true"></i>
                                     {% trans "Load from .env" %}
                                 </button>
                                 <button type="button" class="btn btn-secondary" ng-click="copyEnvToClipboard()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                                    <i class="fas fa-copy"></i>
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
                                     {% trans "Copy" %}
                                 </button>
                             </div>
@@ -950,21 +950,21 @@
                                       ng-change="parseAdvancedEnv()"
                                       placeholder="DATABASE_URL=postgresql://user:pass@localhost/db&#10;API_KEY=your-secret-key&#10;DEBUG=true&#10;PORT=3000"
                                       style="width: 100%; height: 200px; padding: 1rem; border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.875rem; resize: vertical; background: var(--bg-secondary, white);"
-                                      ng-init="advancedEnvText = ''"></textarea>
+                                      ng-init="advancedEnvText = ''" aria-label="DATABASE_URL=postgresql://user:pass@localhost/db&#10;API_KEY=your-secret-key&#10;DEBUG=true&#10;PORT=3000"></textarea>
                             
                             <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
                                 <div style="font-size: 0.875rem; color: var(--text-secondary, #64748b);">
-                                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                     <span ng-show="advancedEnvCount > 0">{% trans "Parsed" %} {{ advancedEnvCount }} {% trans "environment variables" %}</span>
                                     <span ng-show="advancedEnvCount === 0">{% trans "No environment variables detected" %}</span>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem;">
                                     <button type="button" class="btn btn-secondary" ng-click="clearAdvancedEnv()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                         {% trans "Clear" %}
                                     </button>
                                     <button type="button" class="btn btn-primary" ng-click="loadEnvTemplate()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                                        <i class="fas fa-magic"></i>
+                                        <i class="fas fa-magic" aria-hidden="true"></i>
                                         {% trans "Load Template" %}
                                     </button>
                                 </div>
@@ -978,7 +978,7 @@
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-hdd"></i>
+                        <i class="fas fa-hdd" aria-hidden="true"></i>
                     </div>
                     <div>
                         <h2 class="section-title">{% trans "Volume Mapping" %}</h2>
@@ -990,24 +990,24 @@
                     <div class="dynamic-header">
                         <span class="dynamic-title">{% trans "Volume Mappings" %}</span>
                         <button type="button" class="btn btn-secondary" ng-click="addVolField()">
-                            <i class="fas fa-plus"></i>
+                            <i class="fas fa-plus" aria-hidden="true"></i>
                             {% trans "Add Volume" %}
                         </button>
                     </div>
 
                     <div ng-repeat="volume in volList track by $index" class="dynamic-item">
                         <input type="text" class="form-control" ng-model="volList[$index].src" 
-                               placeholder="{% trans 'Host path (e.g., /var/data)' %}">
+                               placeholder="{% trans 'Host path (e.g., /var/data)' %}" aria-label="{% trans 'Host path (e.g., /var/data)' %}">
                         <input type="text" class="form-control" ng-model="volList[$index].dest" 
-                               placeholder="{% trans 'Container path (e.g., /data)' %}">
+                               placeholder="{% trans 'Container path (e.g., /data)' %}" aria-label="{% trans 'Container path (e.g., /data)' %}">
                         <button type="button" class="btn btn-danger" ng-click="removeVolField()" 
                                 ng-show="$last && volListNumber > 0">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                     </div>
 
                     <div ng-show="volListNumber === 0" style="text-align: center; padding: 2rem; color: #64748b;">
-                        <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-info-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "No volumes configured. Click 'Add Volume' to mount directories." %}
                     </div>
                 </div>
@@ -1018,14 +1018,14 @@
                 {% verbatim %}
                 <button type="button" class="btn btn-primary btn-lg" ng-click="createContainer()" 
                         ng-disabled="!formIsValid || containerCreationLoading">
-                    <i class="fas fa-rocket"></i>
+                    <i class="fas fa-rocket" aria-hidden="true"></i>
                 {% endverbatim %}
                     {% trans "Create Container" %}
                 {% verbatim %}
                 </button>
                 {% endverbatim %}
                 <a href="{% url 'containerImage' %}" class="btn btn-secondary btn-lg">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     {% trans "Cancel" %}
                 </a>
             </div>
@@ -1045,12 +1045,12 @@
             <!-- Success State -->
             <div ng-hide="success">
                 <div class="status-icon status-success">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" aria-hidden="true"></i>
                 </div>
                 <h2 class="status-title">{% trans "Container Created Successfully!" %}</h2>
                 <p class="status-text">{% trans "Your container has been created and is ready to use." %}</p>
                 <p class="status-text" style="margin-top: 1rem;">
-                    <i class="fas fa-spinner fa-spin"></i>
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
                     {% trans "Redirecting to container management..." %}
                 </p>
             </div>
@@ -1058,7 +1058,7 @@
             <!-- Error State -->
             <div ng-hide="errorMessageBox">
                 <div class="status-icon status-error">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 </div>
                 <h2 class="status-title">{% trans "Creation Failed" %}</h2>
                 <p class="status-text" style="color: #991b1b; margin-top: 1rem;">
@@ -1066,7 +1066,7 @@
                 </p>
                 <button type="button" class="btn btn-primary" ng-click="goBack()" 
                         ng-disabled="goBackDisable" style="margin-top: 1.5rem;">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     {% trans "Go Back" %}
                 </button>
             </div>
@@ -1074,12 +1074,12 @@
             <!-- Connection Error -->
             <div ng-hide="couldNotConnect">
                 <div class="status-icon status-error">
-                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-wifi" aria-hidden="true"></i>
                 </div>
                 <h2 class="status-title">{% trans "Connection Error" %}</h2>
                 <p class="status-text">{% trans "Could not connect to server. Please refresh this page and try again." %}</p>
                 <button type="button" class="btn btn-primary" onclick="location.reload()" style="margin-top: 1.5rem;">
-                    <i class="fas fa-sync"></i>
+                    <i class="fas fa-sync" aria-hidden="true"></i>
                     {% trans "Refresh Page" %}
                 </button>
             </div>

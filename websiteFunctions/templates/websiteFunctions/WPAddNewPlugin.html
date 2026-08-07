@@ -329,7 +329,7 @@
         <div class="plugin-section">
             <h2 class="section-title">
                 ADD NEW PLUGIN BUCKET
-                <img ng-hide="webSiteCreationLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                <img ng-hide="webSiteCreationLoading" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
             </h2>
             <p class="plugin-description">{% trans "Create a plugin bucket to automatically install selected plugins when deploying new WordPress sites." %}</p>
         </div>
@@ -339,15 +339,15 @@
             <form name="websiteCreationForm">
                 <!-- Bucket Name -->
                 <div class="form-group">
-                    <label class="form-label">{% trans "Plugin Bucket Name" %}</label>
-                    <input name="PluginbucketName" type="text" class="form-control" ng-model="PluginbucketName"
+                    <label for="cpa11y-plugin-bucket-name" class="form-label">{% trans "Plugin Bucket Name" %}</label>
+                    <input id="cpa11y-plugin-bucket-name" name="PluginbucketName" type="text" class="form-control" ng-model="PluginbucketName"
                            placeholder="e.g., Essential Plugins, Security Bundle, etc." required>
                 </div>
 
                 <!-- Plugin Search -->
                 <div class="form-group">
-                    <label class="form-label">{% trans "Search and Add Plugins" %}</label>
-                    <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
+                    <label for="cpa11y-search-and-add-plugins" class="form-label">{% trans "Search and Add Plugins" %}</label>
+                    <input id="cpa11y-search-and-add-plugins" name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
                            ng-keyup="$event.keyCode == 13 ? SearchPluginName('add') : null"
                            placeholder="{% trans "Type to search for plugins..." %}" required>
                     
@@ -372,7 +372,7 @@
                         <!-- Selected plugins will be displayed here -->
                     </div>
                     <div class="empty-selected" id="emptySelected">
-                        <i class="fas fa-plug"></i>
+                        <i class="fas fa-plug" aria-hidden="true"></i>
                         <p>No plugins selected yet. Search for plugins above to add them to this bucket.</p>
                     </div>
                 </div>
@@ -382,11 +382,11 @@
                     <button ng-disabled="websiteCreationForm.PluginbucketName.$error.required"
                             type="button" ng-click="AddNewplugin()"
                             class="btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Create Plugin Bucket" %}
                     </button>
                     <a href="{% url 'ConfigurePlugins' %}" class="btn-secondary">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         {% trans "Back to Plugin Buckets" %}
                     </a>
                 </div>
@@ -396,7 +396,7 @@
         <!-- Info Section -->
         <div class="plugin-section">
             <div class="info-alert">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <div>
                     <strong>How it works:</strong> When you create a new WordPress site and select this plugin bucket, all the plugins in this bucket will be automatically installed and activated.
                 </div>

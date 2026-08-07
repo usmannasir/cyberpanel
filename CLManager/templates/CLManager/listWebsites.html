@@ -38,15 +38,15 @@
 
                                 <a href="#" ng-click="enableOrDisable(0, 1, 1, 0)" class="btn btn-success" title="Enable All">
 
-                                    <i class="fa fa-play btn-icon"></i>
+                                    <i class="fa fa-play btn-icon" aria-hidden="true"></i>
                                 </a>
                                 <a href="#" ng-click="enableOrDisable(0, 1, 0, 0)" class="btn btn-warning" title="Disable All">
 
-                                    <i class="fa fa-pause btn-icon"></i>
+                                    <i class="fa fa-pause btn-icon" aria-hidden="true"></i>
                                 </a>
 
                                 <a href="#" ng-click="refreshStatus()" class="btn btn-info" title="Refresh Status">
-                                    <i class="fa fa-refresh btn-icon"></i>
+                                    <i class="fa fa-refresh btn-icon" aria-hidden="true"></i>
                                 </a>
 
 
@@ -61,7 +61,7 @@
                            id="datatable-example">
                         <thead>
                         <tr>
-                            <th>Domain <img ng-hide="cyberPanelLoading" src="/static/images/loading.gif"></th>
+                            <th>Domain <img ng-hide="cyberPanelLoading" src="/static/images/loading.gif" alt=""></th>
                             <th>User</th>
                             <th>Actions</th>
                         </tr>
@@ -84,7 +84,7 @@
                         </tbody>
                     </table>
 
-                    <div id="listFail" class="alert alert-danger">
+                    <div id="listFail" class="alert alert-danger" role="alert">
                         <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
                     </div>
 

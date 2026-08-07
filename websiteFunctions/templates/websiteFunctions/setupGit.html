@@ -20,21 +20,21 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    <span id="domainNamePage">{{ domainName }}</span> - {% trans "Attach Git" %} <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}">
+                    <span id="domainNamePage">{{ domainName }}</span> - {% trans "Attach Git" %} <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
                     <ul class="list-group list-group-separator row list-group-icons">
 
                         <li class="col-md-3 active">
                             <a href="#tab-example-1" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon icon-dashboard"></i>
+                                <i class="glyph-icon icon-dashboard" aria-hidden="true"></i>
                                 {% trans "Providers" %}
                             </a>
                         </li>
 
                         <li class="col-md-3">
                             <a href="#tab-example-3" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon font-blue-alt icon-globe"></i>
+                                <i class="glyph-icon font-blue-alt icon-globe" aria-hidden="true"></i>
                                 {% trans "Deployment Key" %}
                             </a>
                         </li>
@@ -50,13 +50,13 @@
                                     <li class="col-md-3">
                                         <a href="" ng-click="setProvider('github')" class="list-group-item">
                                              Github
-                                            <i class="glyph-icon icon-chevron-right"></i>
+                                            <i class="glyph-icon icon-chevron-right" aria-hidden="true"></i>
                                         </a>
                                     </li>
                                     <li class="col-md-3">
                                         <a href="" ng-click="setProvider('gitlab')" class="list-group-item">
                                              GitLab
-                                            <i class="glyph-icon font-green icon-chevron-right"></i>
+                                            <i class="glyph-icon font-green icon-chevron-right" aria-hidden="true"></i>
                                         </a>
                                     </li>
                                 </ul>
@@ -68,26 +68,26 @@
                                      </div>
 
                                      <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                        <label for="cpa11y-username" class="col-sm-3 control-label">{% trans "Username" %}</label>
                                         <div class="col-sm-6">
-                                            <input type="text" class="form-control" ng-model="githubUserName" required>
+                                            <input id="cpa11y-username" type="text" class="form-control" ng-model="githubUserName" required>
                                         </div>
 
                                      </div>
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Repository Name" %}</label>
+                                        <label for="cpa11y-repository-name" class="col-sm-3 control-label">{% trans "Repository Name" %}</label>
                                         <div class="col-sm-6">
-                                            <input type="text" class="form-control" ng-model="githubRepo" required>
+                                            <input id="cpa11y-repository-name" type="text" class="form-control" ng-model="githubRepo" required>
                                         </div>
 
                                     </div>
 
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Branch" %}</label>
+                                        <label for="cpa11y-branch" class="col-sm-3 control-label">{% trans "Branch" %}</label>
                                         <div class="col-sm-6">
-                                            <input type="text" class="form-control" ng-model="githubBranch" required>
+                                            <input id="cpa11y-branch" type="text" class="form-control" ng-model="githubBranch" required>
                                         </div>
 
                                     </div>
@@ -105,7 +105,7 @@
                                         <label class="col-sm-2 control-label"></label>
                                         <div class="col-sm-7">
 
-                                                <div ng-hide="installProg" class="alert alert-success text-center">
+                                                <div ng-hide="installProg" class="alert alert-success text-center" role="status">
                                                             <h2>{$ currentStatus $}</h2>
                                                 </div>
 
@@ -115,17 +115,17 @@
                                               </div>
                                             </div>
 
-                                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                <div ng-hide="installationSuccessfull" class="alert alert-success">
+                                                <div ng-hide="installationSuccessfull" class="alert alert-success" role="status">
                                                     <p>{% trans "GIT Successfully attached, refreshing page in 3 seconds... Visit:" %} {$ installationURL $}</p>
                                                 </div>
 
 
 
-                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                                 </div>
 
@@ -197,7 +197,7 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    <span id="domainNamePage">{{ domainName }}</span> <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}">
+                    <span id="domainNamePage">{{ domainName }}</span> <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
 
                 <div class="example-box-wrapper">
@@ -222,11 +222,11 @@
                                     <li class="col-md-3">
                                         <a href="" ng-click="detachRepo()" class="list-group-item">
                                              {% trans 'Detach Repo' %}
-                                            <i class="glyph-icon icon-chevron-right"></i>
+                                            <i class="glyph-icon icon-chevron-right" aria-hidden="true"></i>
                                         </a>
                                     </li>
                             </ul>
-                            <div class="alert alert-info">
+                            <div class="alert alert-info" role="status">
                                 <h4 class="alert-title">{% trans 'Webhook URL'  %}</h4>
                                 <p>{% trans "Add this URL to Webhooks section of your Git respository, if you've used hostname SSL then replace IP with your hostname. Otherwise use IP and disable SSL check while configuring webhook. This will initiate a pull from your resposity as soon as you commit some changes."%} <code>{{ webhookURL }}</code></p>
                             </div>
@@ -235,17 +235,17 @@
                                         <label class="col-sm-2 control-label"></label>
                                         <div class="col-sm-7">
 
-                                                <div ng-hide="failedMesg" class="alert alert-danger">
+                                                <div ng-hide="failedMesg" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                <div ng-hide="successMessage" class="alert alert-success">
+                                                <div ng-hide="successMessage" class="alert alert-success" role="status">
                                                     <p>{% trans "Repo successfully detached, refreshing in 3 seconds.." %}</p>
                                                 </div>
 
 
 
-                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                                 </div>
 
@@ -261,9 +261,9 @@
                             <form  action="/" class="form-horizontal bordered-row">
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Branch" %}</label>
+                                        <label for="cpa11y-branch-2" class="col-sm-3 control-label">{% trans "Branch" %}</label>
                                         <div class="col-sm-6">
-                                            <input type="text" class="form-control" ng-model="githubBranch" required>
+                                            <input id="cpa11y-branch-2" type="text" class="form-control" ng-model="githubBranch" required>
                                         </div>
 
                                     </div>
@@ -281,17 +281,17 @@
                                         <label class="col-sm-2 control-label"></label>
                                         <div class="col-sm-7">
 
-                                                <div ng-hide="failedMesg" class="alert alert-danger">
+                                                <div ng-hide="failedMesg" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                <div ng-hide="successMessageBranch" class="alert alert-success">
+                                                <div ng-hide="successMessageBranch" class="alert alert-success" role="status">
                                                     <p>{% trans "Branch successfully changed." %}</p>
                                                 </div>
 
 
 
-                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                                             <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                                 </div>
 

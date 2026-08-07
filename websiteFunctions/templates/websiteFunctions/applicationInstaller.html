@@ -19,7 +19,7 @@
 
        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
            <h3 class="content-box-header bg-blue">
-               {% trans "Application Installer" %} <img  ng-hide="applicationInstallerLoading" src="/static/images/loading.gif">
+               {% trans "Application Installer" %} <img  ng-hide="applicationInstallerLoading" src="/static/images/loading.gif" alt="">
            </h3>
 
            <div class="content-box-wrapper">
@@ -29,7 +29,7 @@
                        <div class="col-md-4" style="margin-bottom: 2%;">
 
                                     <a  ng-click="installationDetails()" href="" title="{% trans 'Install wordpress with LSCache' %}">
-                                        <img  src="{% static 'images/icons/wordpress.png'  %}">
+                                        <img  src="{% static 'images/icons/wordpress.png'  %}" alt="">
                                     </a>
                                     <a ng-click="installationDetails()" href="" title="{% trans 'Install wordpress with LSCache' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Wordpress with LSCache" %}</span>
@@ -42,7 +42,7 @@
                        <div class="col-md-4" style="margin-bottom: 2%;">
 
                                     <a  ng-click="installationDetailsJoomla()" href="" title="{% trans 'Install Joomla with LSCache' %}">
-                                        <img  src="{% static 'images/icons/joomla-logo.png'  %}">
+                                        <img  src="{% static 'images/icons/joomla-logo.png'  %}" alt="">
                                     </a>
                                     <a ng-click="installationDetailsJoomla()" href="" title="{% trans 'Install Joomla with LSCache' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Joomla" %}</span>

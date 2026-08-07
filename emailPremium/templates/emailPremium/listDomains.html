@@ -21,7 +21,7 @@
     <div class="panel-body">
 
     <h3 class="content-box-header">
-            {% trans "Domains" %} <img ng-hide="emailLimitsLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Domains" %} <img ng-hide="emailLimitsLoading" src="{% static 'images/loading.gif' %}" alt="">
         </h3>
 
     {% if installCheck == 0 %}
@@ -33,7 +33,7 @@
                     <a href="{% url 'emailPolicyServer' %}">
                         <button class="btn btn-alt btn-hover btn-blue-alt">
                             <span>{% trans "Enable Now." %}</span>
-                            <i class="glyph-icon icon-arrow-right"></i>
+                            <i class="glyph-icon icon-arrow-right" aria-hidden="true"></i>
                         </button>
                     </a>
             </div>
@@ -60,9 +60,9 @@
                     <td><code ng-bind="web.monthlyLimit"></code></td>
                     <td><code ng-bind="web.monthlyUsed"></code></td>
                     <td>
-                       <img style="margin-right: 4%;" ng-show="web.status==1"  title="{% trans 'Limits are being Applied!' %}"  src="{% static 'mailServer/vpsON.png' %}">
+                       <img style="margin-right: 4%;" ng-show="web.status==1"  title="{% trans 'Limits are being Applied!' %}"  src="{% static 'mailServer/vpsON.png' %}" alt="">
                        <button ng-click="enableDisableEmailLimits(0, web.domain)" ng-show="web.status==1" class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
-                       <img style="margin-right: 4%;" ng-show="web.status==0"  title="{% trans 'Limits are not being applied!' %}"  src="{% static 'mailServer/vpsOff.png' %}">
+                       <img style="margin-right: 4%;" ng-show="web.status==0"  title="{% trans 'Limits are not being applied!' %}"  src="{% static 'mailServer/vpsOff.png' %}" alt="">
                        <button ng-click="enableDisableEmailLimits(1, web.domain)" ng-show="web.status==0" class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
                     </td>
                     <td>
@@ -73,7 +73,7 @@
                 </tbody>
                 </table>
 
-        <div ng-hide="listFail" class="alert alert-danger">
+        <div ng-hide="listFail" class="alert alert-danger" role="alert">
             <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
         </div>
 

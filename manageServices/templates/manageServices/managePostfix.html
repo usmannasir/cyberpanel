@@ -314,14 +314,14 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-envelope"></i>
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
                 </div>
                 {% trans "Manage Email Server (Postfix)" %}
             </h1>
             <p>{% trans "Enable or disable Email services for your server" %}</p>
             <div style="margin-top: 20px;">
                 <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/email-in-cyberpanel/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Services Docs" %}
                 </a>
             </div>
@@ -338,7 +338,7 @@
                 
                 <div class="status-box">
                     <div class="status-icon">
-                        <i class="fas fa-mail-bulk"></i>
+                        <i class="fas fa-mail-bulk" aria-hidden="true"></i>
                     </div>
                     <h3 class="status-title">{% trans "Email Service Status" %}</h3>
                     <p class="status-description">{% trans "Control your email server service with a single click" %}</p>
@@ -351,25 +351,25 @@
                 
                 <div style="text-align: center;">
                     <button type="button" ng-click="saveStatus('postfix')" class="save-btn">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save changes" %}
                     </button>
                 </div>
                 
                 <!-- Alert Messages -->
                 <div style="margin-top: 30px;">
-                    <div ng-hide="failedToFetch" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="failedToFetch" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Error message: " %} {$ errorMessage $}</span>
                     </div>
 
-                    <div ng-hide="changesApplied" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="changesApplied" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Changes successfully applied." %}</span>
                     </div>
 
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi alert-icon"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -382,7 +382,7 @@
                 <div class="info-grid">
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-paper-plane"></i>
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "SMTP Service" %}</h3>
                         <p class="info-card-description">{% trans "Handles outgoing email delivery" %}</p>
@@ -390,7 +390,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-inbox"></i>
+                            <i class="fas fa-inbox" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Mail Queue" %}</h3>
                         <p class="info-card-description">{% trans "Manages email queue processing" %}</p>
@@ -398,7 +398,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-shield-alt"></i>
+                            <i class="fas fa-shield-alt" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Security" %}</h3>
                         <p class="info-card-description">{% trans "TLS/SSL encryption support" %}</p>
@@ -406,7 +406,7 @@
                     
                     <div class="info-card">
                         <div class="info-card-icon">
-                            <i class="fas fa-filter"></i>
+                            <i class="fas fa-filter" aria-hidden="true"></i>
                         </div>
                         <h3 class="info-card-title">{% trans "Filtering" %}</h3>
                         <p class="info-card-description">{% trans "Spam and virus filtering integration" %}</p>
@@ -416,8 +416,8 @@
         </div>
         {% else %}
         <div class="content-section">
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Only administrator can manage services." %}</span>
             </div>
         </div>

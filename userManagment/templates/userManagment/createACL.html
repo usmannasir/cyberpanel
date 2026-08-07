@@ -152,8 +152,8 @@
             <h3 class="section-title">{% trans "Create New ACL" %}</h3>
             <form name="createACLForm" action="/">
                 <div class="form-group">
-                    <label class="form-label">{% trans "ACL Name" %}</label>
-                    <input placeholder="E.g support" type="text" class="form-control" ng-model="aclName" required>
+                    <label for="cpa11y-acl-name" class="form-label">{% trans "ACL Name" %}</label>
+                    <input id="cpa11y-acl-name" placeholder="E.g support" type="text" class="form-control" ng-model="aclName" required>
                 </div>
                 <div class="checkbox-wrapper">
                     <label><input ng-change="adminHook()" ng-model="makeAdmin" type="checkbox" value=""> {% trans "Make Admin" %}</label>
@@ -213,17 +213,17 @@
                 </div>
                 <div class="form-group" style="margin-top: 2rem;">
                     <button type="button" ng-click="createACLFunc()" class="btn-primary">
-                        <i class="fa fa-plus"></i> {% trans "Create ACL" %}
+                        <i class="fa fa-plus" aria-hidden="true"></i> {% trans "Create ACL" %}
                     </button>
                 </div>
-                <div ng-hide="aclCreated" class="alert alert-success">
-                    <i class="fa fa-check-circle"></i> {% trans "ACL with name:" %} <strong>{$ aclName $}</strong> {% trans "is successfully created." %}
+                <div ng-hide="aclCreated" class="alert alert-success" role="status">
+                    <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "ACL with name:" %} <strong>{$ aclName $}</strong> {% trans "is successfully created." %}
                 </div>
-                <div ng-hide="aclCreationFailed" class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot create ACL. Error message:" %} {$ errorMessage $}
+                <div ng-hide="aclCreationFailed" class="alert alert-danger" role="alert">
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {% trans "Cannot create ACL. Error message:" %} {$ errorMessage $}
                 </div>
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fa fa-times-circle" aria-hidden="true"></i> {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
             </form>
         </div>

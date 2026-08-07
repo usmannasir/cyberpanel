@@ -576,7 +576,7 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                 </div>
                 {% trans "Rspamd" %}
             </h1>
@@ -588,35 +588,35 @@
         <div class="content-section">
             <div class="install-section">
                 <div class="install-icon">
-                    <i class="fas fa-download"></i>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                 </div>
                 <h2 class="install-title">{% trans "Rspamd is not installed" %}</h2>
                 <p class="install-description">{% trans "Install Rspamd to protect your email server with advanced spam filtering and antivirus capabilities" %}</p>
                 <button ng-click="installRspamd()" class="action-btn">
-                    <i class="fas fa-download"></i>
+                    <i class="fas fa-download" aria-hidden="true"></i>
                     {% trans "Install Now" %}
                 </button>
             </div>
 
             <!-- Installation Notifications -->
             <div ng-hide="RspamdNotifyBox">
-                <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Failed to start installation. Error message:" %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-wifi alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect. Please refresh this page." %}</span>
                 </div>
 
-                <div ng-hide="installationFailed" class="alert alert-danger">
-                    <i class="fas fa-times-circle alert-icon"></i>
+                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                    <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Installation failed." %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "RSPAMD successfully installed, refreshing page in 3 seconds..." %}</span>
                 </div>
             </div>
@@ -624,7 +624,7 @@
             <!-- Installation Log -->
             <div ng-hide="RspamdInstallBox" class="install-log">
                 <div class="install-log-header">
-                    <i class="fas fa-terminal"></i>
+                    <i class="fas fa-terminal" aria-hidden="true"></i>
                     <h3 class="install-log-title">{% trans "Installation Progress" %}</h3>
                     <span ng-hide="RspamdLoading" class="loading-spinner"></span>
                 </div>
@@ -637,15 +637,15 @@
             <h2 class="section-title">{% trans "Rspamd Management" %}</h2>
             <div class="action-buttons">
                 <button type="button" data-toggle="modal" data-target="#ViewRspamdlog" ng-click="FetchRspamdLog()" class="action-btn primary">
-                    <i class="fas fa-file-alt"></i>
+                    <i class="fas fa-file-alt" aria-hidden="true"></i>
                     {% trans "View Rspamd Logs" %}
                 </button>
                 <button type="button" ng-click="RestartRspamd()" class="action-btn secondary">
-                    <i class="fas fa-sync-alt"></i>
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                     {% trans "Restart Rspamd and ClamAV" %}
                 </button>
                 <button type="button" data-toggle="modal" data-target="#UninstallRspamdmodal" class="action-btn danger">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-trash-alt" aria-hidden="true"></i>
                     {% trans "Uninstall Rspamd" %}
                 </button>
             </div>
@@ -659,7 +659,7 @@
             </h2>
             
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-text">
                     <strong>{% trans "Warning:" %}</strong> {% trans "These are advanced settings. Do not change if you don't know what you are doing." %}
                 </div>
@@ -667,7 +667,7 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label for="antivirus_status" class="form-label">
                         {% trans "Antivirus Status" %}
                         <span class="help-text">{% trans "Enable or disable antivirus scanning" %}</span>
                     </label>
@@ -688,7 +688,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
+                    <label for="scan_mime_parts" class="form-label">
                         {% trans "Scan MIME Parts" %}
                         <span class="help-text">{% trans "Enable scanning of MIME parts" %}</span>
                     </label>
@@ -698,7 +698,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
+                    <label for="log_clean" class="form-label">
                         {% trans "Log Clean" %}
                         <span class="help-text">{% trans "Log clean messages" %}</span>
                     </label>
@@ -733,25 +733,25 @@
 
                 <div style="margin-top: 30px;">
                     <button type="button" ng-click="saveRspamdConfigurations()" class="save-btn">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                 </div>
 
                 <!-- Save Notifications -->
                 <div style="margin-top: 20px;">
-                    <div ng-hide="failedToSave" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="failedToSave" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Failed to save RSPAMD configurations. Error message:" %} {$ errorMessage $}</span>
                     </div>
 
-                    <div ng-hide="successfullySaved" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="successfullySaved" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "RSPAMD configurations successfully saved." %}</span>
                     </div>
 
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi alert-icon"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -766,7 +766,7 @@
             </h2>
             
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-text">
                     <strong>{% trans "Warning:" %}</strong> {% trans "These are advanced settings. Do not change if you don't know what you are doing." %}
                 </div>
@@ -790,7 +790,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
+                    <label for="clamav_Debug" class="form-label">
                         {% trans "Debug" %}
                         <span class="help-text">{% trans "Enable debug logging" %}</span>
                     </label>
@@ -809,25 +809,25 @@
 
                 <div style="margin-top: 30px;">
                     <button type="button" ng-click="saveclamavConfigurations()" class="save-btn">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                 </div>
 
                 <!-- Save Notifications -->
                 <div style="margin-top: 20px;">
-                    <div ng-hide="ClamAVfailedToSave" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="ClamAVfailedToSave" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Failed to save ClamAV configurations. Error message:" %} {$ errorMessage $}</span>
                     </div>
 
-                    <div ng-hide="ClamAVsuccessfullySaved" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="ClamAVsuccessfullySaved" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "ClamAV configurations successfully saved." %}</span>
                     </div>
 
-                    <div ng-hide="ClamAVcouldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi alert-icon"></i>
+                    <div ng-hide="ClamAVcouldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -842,7 +842,7 @@
             </h2>
             
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-text">
                     <strong>{% trans "Warning:" %}</strong> {% trans "These are advanced settings. Do not change if you don't know what you are doing." %}
                 </div>
@@ -867,25 +867,25 @@
 
                 <div style="margin-top: 30px;">
                     <button type="button" ng-click="savepostfixConfigurations()" class="save-btn">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                 </div>
 
                 <!-- Save Notifications -->
                 <div style="margin-top: 20px;">
-                    <div ng-hide="postfixfailedToSave" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="postfixfailedToSave" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Failed to save Postfix configurations. Error message:" %} {$ errorMessage $}</span>
                     </div>
 
-                    <div ng-hide="postfixsuccessfullySaved" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="postfixsuccessfullySaved" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Postfix configurations successfully saved." %}</span>
                     </div>
 
-                    <div ng-hide="postfixcouldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi alert-icon"></i>
+                    <div ng-hide="postfixcouldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -900,7 +900,7 @@
             </h2>
             
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-text">
                     <strong>{% trans "Warning:" %}</strong> {% trans "These are advanced settings. Do not change if you don't know what you are doing." %}
                 </div>
@@ -925,25 +925,25 @@
 
                 <div style="margin-top: 30px;">
                     <button type="button" ng-click="saveRedisConfigurations()" class="save-btn">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                 </div>
 
                 <!-- Save Notifications -->
                 <div style="margin-top: 20px;">
-                    <div ng-hide="RedisfailedToSave" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="RedisfailedToSave" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Failed to save Redis configurations. Error message:" %} {$ errorMessage $}</span>
                     </div>
 
-                    <div ng-hide="RedissuccessfullySaved" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="RedissuccessfullySaved" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Redis configurations successfully saved." %}</span>
                     </div>
 
-                    <div ng-hide="RediscouldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-wifi alert-icon"></i>
+                    <div ng-hide="RediscouldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </div>
@@ -957,23 +957,23 @@
             
             <!-- Uninstall Notifications -->
             <div ng-hide="uninstallRspamdNotifyBox">
-                <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Failed to start uninstallation. Error message:" %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-wifi alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect. Please refresh this page." %}</span>
                 </div>
 
-                <div ng-hide="installationFailed" class="alert alert-danger">
-                    <i class="fas fa-times-circle alert-icon"></i>
+                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                    <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Installation failed." %} {$ errorMessage $}</span>
                 </div>
 
-                <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "RSPAMD successfully uninstalled, refreshing page in 3 seconds..." %}</span>
                 </div>
             </div>
@@ -981,7 +981,7 @@
             <!-- Uninstall Log -->
             <div ng-hide="uninstallRspamdInstallBox" class="install-log">
                 <div class="install-log-header">
-                    <i class="fas fa-terminal"></i>
+                    <i class="fas fa-terminal" aria-hidden="true"></i>
                     <h3 class="install-log-title">{% trans "Uninstallation Progress" %}</h3>
                     <span ng-hide="RspamdLoading" class="loading-spinner"></span>
                 </div>

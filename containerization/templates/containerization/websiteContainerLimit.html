@@ -12,16 +12,16 @@
 
         <div id="page-title">
             <h2 id="domainNamePage">{% trans "Limits/Usage" %}</h2> <img ng-hide="cyberPanelLoading"
-                                                                         src="{% static 'images/loading.gif' %}">
+                                                                         src="{% static 'images/loading.gif' %}" alt="">
             <p>{% trans "Set limits and view usage for " %} <span id="domain">{{ domain }}</span></p>
         </div>
 
         <button style="margin-bottom: 2%" class="btn btn-warning" data-toggle="modal" data-target="#settings"><i
-                class="fa fa-gear"></i> Edit Limits
+                class="fa fa-gear" aria-hidden="true"></i> Edit Limits
         </button>
 
         <div ng-hide="limitsInfoBox" class="form-group">
-            <div class="alert alert-info">
+            <div class="alert alert-info" role="status">
                 <p>{% trans "Limits are not being inforced, click Edit Limits to inforace the limits." %}</p>
             </div>
         </div>
@@ -67,50 +67,50 @@
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                         <h4 class="modal-title">Website Limits
-                            <img id="containerSettingLoading" src="/static/images/loading.gif" style="display: none;">
+                            <img id="containerSettingLoading" src="/static/images/loading.gif" style="display: none;" alt="">
                         </h4>
                     </div>
                     <div class="modal-body">
 
                         <form name="containerSettingsForm" action="/" class="form-horizontal">
                             <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "CPU Percentage" %}</label>
+                                <label for="cpa11y-cpu-percentage" class="col-sm-3 control-label">{% trans "CPU Percentage" %}</label>
                                 <div class="col-sm-6">
-                                    <input name="memory" type="number" class="form-control" ng-model="cpuPers" required>
+                                    <input id="cpa11y-cpu-percentage" name="memory" type="number" class="form-control" ng-model="cpuPers" required>
                                 </div>
                                 <div class="current-pack ng-binding">%</div>
                             </div>
                             <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Memory Limit" %}</label>
+                                <label for="cpa11y-memory-limit" class="col-sm-3 control-label">{% trans "Memory Limit" %}</label>
                                 <div class="col-sm-6">
-                                    <input name="memory" type="number" class="form-control" ng-model="memory" required>
+                                    <input id="cpa11y-memory-limit" name="memory" type="number" class="form-control" ng-model="memory" required>
                                 </div>
                                 <div class="current-pack ng-binding">MB</div>
                             </div>
                             <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "I/O" %}</label>
+                                <label for="cpa11y-i-o" class="col-sm-3 control-label">{% trans "I/O" %}</label>
                                 <div class="col-sm-6">
-                                    <input name="memory" type="number" class="form-control" ng-model="IO" required>
+                                    <input id="cpa11y-i-o" name="memory" type="number" class="form-control" ng-model="IO" required>
                                 </div>
                                 <div class="current-pack ng-binding">MB</div>
                             </div>
 
                             <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "IOPS" %}</label>
+                                <label for="cpa11y-iops" class="col-sm-3 control-label">{% trans "IOPS" %}</label>
                                 <div class="col-sm-6">
-                                    <input name="memory" type="number" class="form-control" ng-model="IOPS" required>
+                                    <input id="cpa11y-iops" name="memory" type="number" class="form-control" ng-model="IOPS" required>
                                 </div>
                                 <div class="current-pack ng-binding">Operations</div>
                             </div>
 
                             <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Network Speed" %}</label>
+                                <label for="cpa11y-network-speed" class="col-sm-3 control-label">{% trans "Network Speed" %}</label>
                                 <div class="col-sm-4">
-                                    <input name="memory" type="number" class="form-control" ng-model="networkSpeedBox"
+                                    <input id="cpa11y-network-speed" name="memory" type="number" class="form-control" ng-model="networkSpeedBox"
                                            required>
                                 </div>
                                 <div class="col-sm-2">
-                                    <select ng-model="networkHandle" class="form-control">
+                                    <select ng-model="networkHandle" class="form-control" aria-label="{% trans 'Network speed unit' %}">
                                         <option>kbps</option>
                                         <option>mbit</option>
                                     </select>

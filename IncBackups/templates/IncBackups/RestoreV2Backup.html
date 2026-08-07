@@ -25,7 +25,7 @@
                 <div class="panel-body">
                     <h3 class="title-hero">
                         {% trans "Restore V2 Backups" %} <img ng-hide="backupLoading"
-                                                              src="{% static 'images/loading.gif' %}">
+                                                              src="{% static 'images/loading.gif' %}" alt="">
                     </h3>
                     <div class="example-box-wrapper">
 
@@ -33,7 +33,7 @@
 
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                                <label for="create-backup-select" class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                                 <div class="col-sm-6">
                                     <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite"
                                             class="form-control">
@@ -44,10 +44,10 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
+                                <label for="cpa11y-select-repo" class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
                                 <div class="col-sm-6">
 
-                                    <select ng-change="selectrepo()" ng-model="testhabbi"
+                                    <select id="cpa11y-select-repo" ng-change="selectrepo()" ng-model="testhabbi"
                                             class="form-control">
                                         <option ng-repeat="repo in repos track by $index">{$ repo $}</option>
                                     </select>
@@ -87,7 +87,7 @@
                                         <button type="button" class="close" data-dismiss="modal">&times;
                                         </button>
                                         <h4 id="restore_header_text" class="modal-title">{% trans "Restore" %} <img
-                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}" alt=""></h4>
                                     </div>
                                     <div class="modal-body" style="">
 
@@ -101,7 +101,7 @@
                                                     style="margin-right: 20px!important;"
                                                     ng-click="RestorePathV2()">Yes <img
                                                     ng-hide="backupLoading"
-                                                    src="">
+                                                    src="" alt="">
                                             </button>
                                             <button type="button" ng-disabled="savingSettings"
                                                     class="btn btn-default mx-3" data-dismiss="modal">
@@ -113,7 +113,7 @@
                                             <label class="col-sm-12 control-label"></label>
                                             <div class="col-sm-12">
 
-                                                <div class="alert alert-success text-center">
+                                                <div class="alert alert-success text-center" role="status">
                                                     {#                                                <h2>{$ currentStatus $}</h2>#}
                                                     <h2 class="ng-binding">Successfully Restored</h2>
                                                 </div>
@@ -126,16 +126,16 @@
                                                     </div>
                                                 </div>
 
-                                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                                <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
                                                     <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                <div ng-hide="success" class="alert alert-success">
+                                                <div ng-hide="success" class="alert alert-success" role="status">
                                                     <p>{% trans "Restored succesfully." %}</p>
                                                 </div>
 
 
-                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                                     <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                                 </div>
 
@@ -171,7 +171,7 @@
                                         <button type="button" class="close" data-dismiss="modal">&times;
                                         </button>
                                         <h4 id="restore_header_text" class="modal-title">{% trans "Delete" %} <img
-                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}" alt=""></h4>
                                     </div>
                                     <div class="modal-body" style="">
 
@@ -184,7 +184,7 @@
                                                     style="margin-right: 20px!important;"
                                                     ng-click="DeleteSnapshotV2Final()">Yes <img
                                                     ng-hide="backupLoading"
-                                                    src="">
+                                                    src="" alt="">
                                             </button>
                                             <button type="button" ng-disabled="savingSettings"
                                                     class="btn btn-default mx-3" data-dismiss="modal">
@@ -196,7 +196,7 @@
                                             <label class="col-sm-12 control-label"></label>
                                             <div class="col-sm-12">
 
-                                                <div class="alert alert-success text-center">
+                                                <div class="alert alert-success text-center" role="status">
                                                     {#                                                <h2>{$ currentStatus $}</h2>#}
                                                     <h2 class="ng-binding">Successfully Restored</h2>
                                                 </div>
@@ -209,16 +209,16 @@
                                                     </div>
                                                 </div>
 
-                                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                                <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
                                                     <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                <div ng-hide="success" class="alert alert-success">
+                                                <div ng-hide="success" class="alert alert-success" role="status">
                                                     <p>{% trans "Restored succesfully." %}</p>
                                                 </div>
 
 
-                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                                     <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                                 </div>
 

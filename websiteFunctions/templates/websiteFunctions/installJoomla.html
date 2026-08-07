@@ -172,7 +172,7 @@
 <div ng-controller="installJoomlaCTRL" class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            <span id="domainNamePage">{{ domainName }}</span> -  {% trans "Installation Details" %} <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
+            <span id="domainNamePage">{{ domainName }}</span> -  {% trans "Installation Details" %} <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" alt="">
         </h3>
         <div class="example-box-wrapper">
 
@@ -181,37 +181,37 @@
 
                 <div ng-hide="installationDetailsForm" class="form-group">
 
-                    <label class="col-sm-3 control-label">{% trans "Site Name" %}</label>
+                    <label for="cpa11y-site-name" class="col-sm-3 control-label">{% trans "Site Name" %}</label>
                     <div class="col-sm-6">
-                        <input type="text" class="form-control" ng-model="siteName">
+                        <input id="cpa11y-site-name" type="text" class="form-control" ng-model="siteName">
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Login User" %}</label>
+                    <label for="cpa11y-login-user" class="col-sm-3 control-label">{% trans "Login User" %}</label>
                     <div class="col-sm-6">
-                        <input placeholder="admin" type="text" class="form-control" ng-model="adminUser" readonly>
+                        <input id="cpa11y-login-user" placeholder="admin" type="text" class="form-control" ng-model="adminUser" readonly>
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Login Password" %}</label>
+                    <label for="cpa11y-login-password" class="col-sm-3 control-label">{% trans "Login Password" %}</label>
                     <div class="col-sm-6">
-                        <input  type="password" class="form-control" ng-model="adminPassword" required>
+                        <input id="cpa11y-login-password"  type="password" class="form-control" ng-model="adminPassword" required>
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Database Prefix" %}</label>
+                    <label for="cpa11y-database-prefix" class="col-sm-3 control-label">{% trans "Database Prefix" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="databasePrefix" readonly>
+                        <input id="cpa11y-database-prefix"  type="text" class="form-control" ng-model="databasePrefix" readonly>
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                    <label for="cpa11y-path" class="col-sm-3 control-label">{% trans "Path" %}</label>
                     <div class="col-sm-6">
-                        <input placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" class="form-control" ng-model="installPath">
+                        <input id="cpa11y-path" placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" class="form-control" ng-model="installPath">
                     </div>
                 </div>
 
@@ -230,7 +230,7 @@
                     <label class="col-sm-2 control-label"></label>
                     <div class="col-sm-7">
 
-                            <div class="alert alert-success text-center">
+                            <div class="alert alert-success text-center" role="status">
                                         <h2>{$ currentStatus $}</h2>
                             </div>
 
@@ -243,17 +243,17 @@
 
 
 
-                            <div ng-hide="installationFailed" class="alert alert-danger">
+                            <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
                                         <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
-                            <div ng-hide="installationSuccessfull" class="alert alert-success">
+                            <div ng-hide="installationSuccessfull" class="alert alert-success" role="status">
                                 <p>{% trans "Installation successful. Visit:" %} {$ installationURL $}</p>
                             </div>
 
 
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                             </div>
 

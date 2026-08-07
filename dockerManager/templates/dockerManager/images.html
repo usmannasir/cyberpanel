@@ -423,18 +423,18 @@
     <div class="page-header">
         <h1 class="page-title">
             <div class="docker-icon">
-                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;"></i>
+                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;" aria-hidden="true"></i>
             </div>
             {% trans "Docker Images" %}
         </h1>
         <p class="page-subtitle">{% trans "Select an image to create a new container" %}</p>
         <div class="header-actions">
             <a href="{% url 'manageImages' %}" class="btn-primary">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search" aria-hidden="true"></i>
                 {% trans "Search & Manage Images" %}
             </a>
             <a href="{% url 'listContainers' %}" class="btn-secondary">
-                <i class="fas fa-cube"></i>
+                <i class="fas fa-cube" aria-hidden="true"></i>
                 {% trans "View Containers" %}
             </a>
         </div>
@@ -444,11 +444,11 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-hdd"></i>
+                <i class="fas fa-hdd" aria-hidden="true"></i>
                 {% trans "Available Images" %}
                 <span class="badge badge-count">{{ images|length }}</span>
             </h2>
-            <img id="imageLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
+            <img id="imageLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner" alt="">
         </div>
         <div class="card-body">
             {% if images %}
@@ -457,7 +457,7 @@
                 <div class="image-card">
                     <div class="image-header">
                         <div class="image-icon">
-                            <i class="fab fa-docker"></i>
+                            <i class="fab fa-docker" aria-hidden="true"></i>
                         </div>
                         <div class="image-name">
                             <h3 class="image-title">{{ image.name }}</h3>
@@ -466,7 +466,7 @@
                     </div>
                     
                     <div class="tag-selector">
-                        <label class="tag-label">{% trans "Select Tag" %}</label>
+                        <label for="{{ forloop.counter }}" class="tag-label">{% trans "Select Tag" %}</label>
                         <select class="tag-select" id="{{ forloop.counter }}" ng-model="imageTag['{{ image.name2 }}']">
                             <option value="" disabled selected>{% trans "Choose a tag..." %}</option>
                             {% for tag in image.tags %}
@@ -478,11 +478,11 @@
                     <div class="image-actions">
                         <a class="action-btn create" 
                            ng-href="/docker/runContainer/?image={{ image.name }}&tag={$ imageTag['{{ image.name2 }}'] $}">
-                            <i class="fas fa-plus-circle"></i>
+                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
                             {% trans "Create Container" %}
                         </a>
                         <button class="action-btn details" onclick="alert('Image details coming soon!')">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                             {% trans "Details" %}
                         </button>
                     </div>
@@ -492,12 +492,12 @@
             {% else %}
             <div class="empty-state">
                 <div class="empty-icon">
-                    <i class="far fa-images"></i>
+                    <i class="far fa-images" aria-hidden="true"></i>
                 </div>
                 <h3 class="empty-title">{% trans "No Images Found" %}</h3>
                 <p class="empty-text">{% trans "You don't have any Docker images installed yet." %}</p>
                 <a href="{% url 'manageImages' %}" class="btn-primary">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-search" aria-hidden="true"></i>
                     {% trans "Search for Images" %}
                 </a>
             </div>
@@ -509,7 +509,7 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-lightbulb"></i>
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
                 {% trans "Quick Tips" %}
             </h2>
         </div>
@@ -517,7 +517,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                 <div style="background: var(--bg-hover, #f8f9ff); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-color, #5b5fcf);">
                     <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #1e293b); margin-bottom: 0.5rem;">
-                        <i class="fas fa-tag" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                        <i class="fas fa-tag" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "About Tags" %}
                     </h4>
                     <p style="font-size: 0.8125rem; color: var(--text-secondary, #64748b); margin: 0;">
@@ -527,7 +527,7 @@
                 
                 <div style="background: var(--bg-hover, #f8f9ff); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success-color, #10b981);">
                     <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #1e293b); margin-bottom: 0.5rem;">
-                        <i class="fas fa-memory" style="color: var(--success-color, #10b981); margin-right: 0.5rem;"></i>
+                        <i class="fas fa-memory" style="color: var(--success-color, #10b981); margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Container Resources" %}
                     </h4>
                     <p style="font-size: 0.8125rem; color: var(--text-secondary, #64748b); margin: 0;">
@@ -537,7 +537,7 @@
                 
                 <div style="background: var(--bg-hover, #f8f9ff); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--warning-color, #f59e0b);">
                     <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #1e293b); margin-bottom: 0.5rem;">
-                        <i class="fas fa-network-wired" style="color: var(--warning-color, #f59e0b); margin-right: 0.5rem;"></i>
+                        <i class="fas fa-network-wired" style="color: var(--warning-color, #f59e0b); margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Port Mapping" %}
                     </h4>
                     <p style="font-size: 0.8125rem; color: var(--text-secondary, #64748b); margin: 0;">

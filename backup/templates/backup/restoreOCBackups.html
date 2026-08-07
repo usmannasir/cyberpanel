@@ -316,7 +316,7 @@
         <!-- Page header -->
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-undo-alt"></i>
+                <i class="fas fa-undo-alt" aria-hidden="true"></i>
                 {% trans "Restore Website" %}
             </h1>
             <p class="page-subtitle">
@@ -327,7 +327,7 @@
                 <a href="https://cyberpanel.net/KnowledgeBase/home/backup-restore/" 
                    target="_blank" 
                    class="btn-secondary">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Backup Documentation" %}
                 </a>
             </div>
@@ -338,16 +338,16 @@
             <div class="main-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-folder-open"></i>
+                        <i class="fas fa-folder-open" aria-hidden="true"></i>
                         {% trans "Select Backup to Restore" %}
-                        <img ng-hide="restoreLoading" src="{% static 'images/loading.gif' %}" style="width: 24px; margin-left: 10px;">
+                        <img ng-hide="restoreLoading" src="{% static 'images/loading.gif' %}" style="width: 24px; margin-left: 10px;" alt="">
                     </h2>
                 </div>
                 <div class="card-body">
                     <form action="/">
                         <div class="form-row">
-                            <label class="form-label">{% trans "Select Folder" %}</label>
-                            <select ng-change="FetchOCSites()" ng-model="ocFolder" class="form-control">
+                            <label for="cpa11y-select-folder" class="form-label">{% trans "Select Folder" %}</label>
+                            <select id="cpa11y-select-folder" ng-change="FetchOCSites()" ng-model="ocFolder" class="form-control">
                                 {% for items in directories %}
                                     <option>{{ items }}</option>
                                 {% endfor %}
@@ -355,15 +355,15 @@
                         </div>
 
                         <div class="form-row">
-                            <label class="form-label">{% trans "Select Backup" %}</label>
-                            <select ng-model="ocFile" class="form-control">
+                            <label for="cpa11y-select-backup" class="form-label">{% trans "Select Backup" %}</label>
+                            <select id="cpa11y-select-backup" ng-model="ocFile" class="form-control">
                                 <option ng-repeat="item in backups">{$ item $}</option>
                             </select>
                         </div>
 
                         <div class="form-actions">
                             <button type="button" ng-click="StartOCRestore()" class="btn-primary">
-                                <i class="fas fa-download"></i>
+                                <i class="fas fa-download" aria-hidden="true"></i>
                                 {% trans "Restore Backup" %}
                             </button>
                         </div>
@@ -371,7 +371,7 @@
                         <!-- Progress Section -->
                         <div ng-hide="installationProgress" class="progress-section">
                             <div class="status-message">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {$ currentStatus $}
                             </div>
 
@@ -383,24 +383,24 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="errorMessageBox" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 <div>
                                     <strong>{% trans "Error occurred:" %}</strong><br>
                                     {$ errorMessage $}
                                 </div>
                             </div>
 
-                            <div ng-hide="success" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="success" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 <div>
                                     <strong>{% trans "Success!" %}</strong><br>
                                     {% trans "Backup has been restored successfully." %}
                                 </div>
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-wifi"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-wifi" aria-hidden="true"></i>
                                 <div>
                                     <strong>{% trans "Connection Error" %}</strong><br>
                                     {% trans "Could not connect to server. Please refresh this page and try again." %}
@@ -409,7 +409,7 @@
 
                             <div class="form-actions">
                                 <button type="button" ng-disabled="goBackDisable" ng-click="goBack()" class="btn-secondary">
-                                    <i class="fas fa-arrow-left"></i>
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                     {% trans "Go Back" %}
                                 </button>
                             </div>

@@ -616,7 +616,7 @@
         <div class="header-content">
             <h1 class="page-title">
                 <div class="server-icon">
-                    <img src="{% static 'images/lsON.png' %}" style="width: 35px; filter: brightness(0) invert(1);">
+                    <img src="{% static 'images/lsON.png' %}" style="width: 35px; filter: brightness(0) invert(1);" alt="">
                 </div>
                 {% trans "LiteSpeed Server Status" %}
             </h1>
@@ -635,8 +635,8 @@
     <!-- License Warnings -->
     {% if message != 0 %}
         {% if message == 2 %}
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle alert-icon"></i>
+            <div class="alert alert-warning" role="status">
+                <i class="fas fa-exclamation-triangle alert-icon" aria-hidden="true"></i>
                 <div class="alert-content">
                     <div class="alert-title">{% trans "License Bundle Required" %}</div>
                     <div class="alert-message">
@@ -649,7 +649,7 @@
             </div>
         {% else %}
             <div class="alert alert-error">
-                <i class="fas fa-times-circle alert-icon"></i>
+                <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
                 <div class="alert-content">
                     <div class="alert-title">{% trans "License Expired" %}</div>
                     <div class="alert-message">{% trans "Your license has expired. Please renew your license to continue using LiteSpeed." %}</div>
@@ -665,7 +665,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <div class="card-icon">
-                        <i class="fas fa-microchip"></i>
+                        <i class="fas fa-microchip" aria-hidden="true"></i>
                     </div>
                     {% trans "LiteSpeed Processes" %}
                 </h3>
@@ -703,33 +703,33 @@
 
                 <div class="action-buttons">
                     <button ng-click="restartLitespeed()" ng-disabled="disableReboot" class="btn btn-primary">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
                         {% trans "Restart LiteSpeed" %}
                         <span ng-hide="restartorStopLoading" class="loading-spinner"></span>
                     </button>
                     <button ng-click="stopLitespeed()" ng-disabled="disableStop" class="btn btn-danger">
-                        <i class="fas fa-stop"></i>
+                        <i class="fas fa-stop" aria-hidden="true"></i>
                         {% trans "Stop LiteSpeed" %}
                     </button>
                 </div>
 
                 <!-- Action Results -->
-                <div ng-hide="actionResult" class="alert alert-success">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="actionResult" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <div class="alert-content">
                         <div class="alert-message">{% trans "Action completed successfully." %}</div>
                     </div>
                 </div>
 
                 <div ng-hide="actionResultBad" class="alert alert-error">
-                    <i class="fas fa-times-circle alert-icon"></i>
+                    <i class="fas fa-times-circle alert-icon" aria-hidden="true"></i>
                     <div class="alert-content">
                         <div class="alert-message">{% trans "Error occurred. Please check the CyberPanel main log file." %}</div>
                     </div>
                 </div>
 
                 <div ng-hide="serverStatusCouldNotConnect" class="alert alert-error">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <div class="alert-content">
                         <div class="alert-message">{% trans "Could not connect to server." %}</div>
                     </div>
@@ -743,7 +743,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <div class="card-icon">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                     </div>
                     {% trans "Server Information" %}
                 </h3>
@@ -751,7 +751,7 @@
             <div class="card-content">
                 <div class="version-info">
                     <div class="version-header">
-                        <i class="fas fa-code-branch"></i>
+                        <i class="fas fa-code-branch" aria-hidden="true"></i>
                         {% trans "Version" %}: {{ lsversion }}
                     </div>
                 </div>
@@ -774,7 +774,7 @@
         <div class="card-header">
             <h3 class="card-title">
                 <div class="card-icon">
-                    <i class="fas fa-key"></i>
+                    <i class="fas fa-key" aria-hidden="true"></i>
                 </div>
                 {% trans "License Manager" %}
             </h3>
@@ -784,21 +784,21 @@
         <div class="license-options">
             <div class="license-option" ng-click="licenseStatus(1)">
                 <div class="license-icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                 </div>
                 <div class="license-label">{% trans "License Status" %}</div>
             </div>
             
             <div class="license-option" ng-click="showSerialBox()">
                 <div class="license-icon">
-                    <i class="fas fa-exchange-alt"></i>
+                    <i class="fas fa-exchange-alt" aria-hidden="true"></i>
                 </div>
                 <div class="license-label">{% trans "Change License" %}</div>
             </div>
             
             <div class="license-option" ng-click="refreshLicense()">
                 <div class="license-icon">
-                    <i class="fas fa-sync"></i>
+                    <i class="fas fa-sync" aria-hidden="true"></i>
                 </div>
                 <div class="license-label">{% trans "Refresh License" %}</div>
             </div>
@@ -806,8 +806,8 @@
 
         <!-- License Status Display -->
         <div ng-hide="fetchedData" style="padding: 0 2rem 2rem 2rem;">
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div class="alert alert-success" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <div class="alert-content">
                     <div class="alert-title">{$ lsSerial $}</div>
                     <div class="alert-message">{$ lsexpiration $}</div>
@@ -819,11 +819,11 @@
         <div ng-hide="changeSerialBox" style="padding: 0 2rem 2rem 2rem;">
             <form>
                 <div class="form-group">
-                    <label class="form-label">{% trans "New License Key" %}</label>
-                    <input type="text" class="form-control" ng-model="newKey" placeholder="{% trans 'Enter your new license key' %}" required>
+                    <label for="cpa11y-new-license-key" class="form-label">{% trans "New License Key" %}</label>
+                    <input id="cpa11y-new-license-key" type="text" class="form-control" ng-model="newKey" placeholder="{% trans 'Enter your new license key' %}" required>
                 </div>
                 <button type="button" ng-click="changeLicense()" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <i class="fas fa-save" aria-hidden="true"></i>
                     {% trans "Update License Key" %}
                 </button>
             </form>
@@ -837,7 +837,7 @@
         <div class="card-header">
             <h3 class="card-title">
                 <div class="card-icon">
-                    <i class="fas fa-rocket"></i>
+                    <i class="fas fa-rocket" aria-hidden="true"></i>
                 </div>
                 {% trans "Upgrade to LiteSpeed Enterprise" %}
             </h3>
@@ -848,40 +848,40 @@
             <div ng-show="installBoxGen">
                 <form>
                     <div class="form-group">
-                        <label class="form-label">{% trans "LiteSpeed License Key (Optional for Trial)" %}</label>
-                        <input type="text" class="form-control" ng-model="licenseKey" 
+                        <label for="cpa11y-litespeed-license-key-optional-f" class="form-label">{% trans "LiteSpeed License Key (Optional for Trial)" %}</label>
+                        <input id="cpa11y-litespeed-license-key-optional-f" type="text" class="form-control" ng-model="licenseKey" 
                                placeholder="{% trans 'Enter license key or leave empty for 15-day trial' %}">
                     </div>
                     
                     <div class="action-buttons">
                         <button type="button" ng-click="switchTOLSWS()" class="btn btn-primary">
-                            <i class="fas fa-exchange-alt"></i>
+                            <i class="fas fa-exchange-alt" aria-hidden="true"></i>
                             {% trans "Switch to Enterprise" %}
                         </button>
                         <button type="button" ng-click="confrimtril()" class="btn btn-primary" style="background: var(--accent-hover);">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-clock" aria-hidden="true"></i>
                             {% trans "Get 15 Days Trial" %}
                         </button>
                     </div>
                     
                     <div id="confrimtril" style="display: none; margin-top: 1rem;">
-                        <div class="alert alert-info">
-                            <i class="fas fa-question-circle alert-icon"></i>
+                        <div class="alert alert-info" role="status">
+                            <i class="fas fa-question-circle alert-icon" aria-hidden="true"></i>
                             <div class="alert-content">
                                 <div class="alert-title">{% trans "Confirm Trial Activation" %}</div>
                                 <div class="alert-message">{% trans "Are you sure you want to activate the 15-day trial?" %}</div>
                             </div>
                         </div>
                         <button type="button" ng-click="switchTOLSWS()" class="btn btn-primary">
-                            <i class="fas fa-check"></i>
+                            <i class="fas fa-check" aria-hidden="true"></i>
                             {% trans "Yes, Activate Trial" %}
                         </button>
                     </div>
                 </form>
                 
                 <div style="margin-top: 2rem;">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle alert-icon"></i>
+                    <div class="alert alert-info" role="status">
+                        <i class="fas fa-info-circle alert-icon" aria-hidden="true"></i>
                         <div class="alert-content">
                             <div class="alert-message">
                                 {% trans "Note: If you select 15 days trial, there is no need to enter a license key. CyberPanel will automatically fetch a 15-day trial key for you. Make sure this server has not used a trial already." %}
@@ -889,8 +889,8 @@
                         </div>
                     </div>
                     
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                    <div class="alert alert-warning" role="status">
+                        <i class="fas fa-exclamation-triangle alert-icon" aria-hidden="true"></i>
                         <div class="alert-content">
                             <div class="alert-title" style="color: var(--danger-accent);">{% trans "Important Warning" %}</div>
                             <div class="alert-message">
@@ -904,7 +904,7 @@
             <!-- Installation Progress -->
             <div ng-hide="installBoxGen">
                 <h3 style="text-align: center; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
-                    <img style="width: 50px" src="{% static 'images/litespeed-logo.png' %}">
+                    <img style="width: 50px" src="{% static 'images/litespeed-logo.png' %}" alt="">
                     {% trans "Installation Progress" %}
                     <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
                 </h3>

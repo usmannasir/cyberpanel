@@ -470,27 +470,27 @@
     <div class="nameserver-container">
         <div class="nameserver-header">
             <h1 class="nameserver-title">
-                <i class="fas fa-server"></i>
+                <i class="fas fa-server" aria-hidden="true"></i>
                 {% trans "Create Nameserver" %}
             </h1>
             <p class="nameserver-subtitle">
                 {% trans "Set up custom nameservers to allow people on the internet to resolve websites hosted on this server" %}
             </p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/manage-dns-in-cyberpanel/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "DNS Documentation" %}
             </a>
         </div>
 
         {% if not status %}
         <div class="powerdns-disabled">
-            <i class="fas fa-exclamation-circle"></i>
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <h3>{% trans "PowerDNS is disabled" %}</h3>
             <p style="margin-bottom: 24px; color: var(--text-secondary, #64748b);">
                 {% trans "You need to enable PowerDNS to create custom nameservers" %}
             </p>
             <a href="{% url 'managePowerDNS' %}" class="enable-btn">
-                <i class="fas fa-power-off"></i>
+                <i class="fas fa-power-off" aria-hidden="true"></i>
                 {% trans "Enable PowerDNS" %}
             </a>
         </div>
@@ -500,7 +500,7 @@
         <div class="info-cards">
             <div class="info-card">
                 <div class="info-card-icon">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                 </div>
                 <div class="info-card-title">{% trans "What are Nameservers?" %}</div>
                 <div class="info-card-text">
@@ -509,7 +509,7 @@
             </div>
             <div class="info-card">
                 <div class="info-card-icon">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                 </div>
                 <div class="info-card-title">{% trans "Redundancy" %}</div>
                 <div class="info-card-text">
@@ -518,7 +518,7 @@
             </div>
             <div class="info-card">
                 <div class="info-card-icon">
-                    <i class="fas fa-globe"></i>
+                    <i class="fas fa-globe" aria-hidden="true"></i>
                 </div>
                 <div class="info-card-title">{% trans "Domain Registrar" %}</div>
                 <div class="info-card-text">
@@ -540,15 +540,15 @@
                 <!-- Domain Section -->
                 <div class="form-section">
                     <h3 class="section-title">
-                        <i class="fas fa-globe"></i>
+                        <i class="fas fa-globe" aria-hidden="true"></i>
                         {% trans "Domain Information" %}
                     </h3>
                     <div class="form-group">
-                        <label class="form-label">{% trans "Domain Name" %}</label>
-                        <input type="text" class="form-control" ng-model="domainForNS" 
+                        <label for="cpa11y-domain-name" class="form-label">{% trans "Domain Name" %}</label>
+                        <input id="cpa11y-domain-name" type="text" class="form-control" ng-model="domainForNS" 
                                placeholder="example.com" required>
                         <div class="form-hint">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                             {% trans "Enter the main domain for which you're creating nameservers" %}
                         </div>
                     </div>
@@ -559,20 +559,20 @@
                 <!-- Primary Nameserver Section -->
                 <div class="form-section">
                     <h3 class="section-title">
-                        <i class="fas fa-server"></i>
+                        <i class="fas fa-server" aria-hidden="true"></i>
                         {% trans "Primary Nameserver (NS1)" %}
                     </h3>
                     <div class="form-group">
-                        <label class="form-label">{% trans "Nameserver Hostname" %}</label>
-                        <input type="text" class="form-control" ng-model="firstNS" 
+                        <label for="cpa11y-nameserver-hostname" class="form-label">{% trans "Nameserver Hostname" %}</label>
+                        <input id="cpa11y-nameserver-hostname" type="text" class="form-control" ng-model="firstNS" 
                                placeholder="ns1.example.com" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{% trans "IP Address" %}</label>
-                        <input type="text" class="form-control" ng-model="firstNSIP" 
+                        <label for="cpa11y-ip-address" class="form-label">{% trans "IP Address" %}</label>
+                        <input id="cpa11y-ip-address" type="text" class="form-control" ng-model="firstNSIP" 
                                placeholder="192.168.1.1" required>
                         <div class="form-hint">
-                            <i class="fas fa-network-wired"></i>
+                            <i class="fas fa-network-wired" aria-hidden="true"></i>
                             {% trans "Enter the IP address for the primary nameserver" %}
                         </div>
                     </div>
@@ -583,20 +583,20 @@
                 <!-- Secondary Nameserver Section -->
                 <div class="form-section">
                     <h3 class="section-title">
-                        <i class="fas fa-server"></i>
+                        <i class="fas fa-server" aria-hidden="true"></i>
                         {% trans "Secondary Nameserver (NS2)" %}
                     </h3>
                     <div class="form-group">
-                        <label class="form-label">{% trans "Nameserver Hostname" %}</label>
-                        <input type="text" class="form-control" ng-model="secondNS" 
+                        <label for="cpa11y-nameserver-hostname-2" class="form-label">{% trans "Nameserver Hostname" %}</label>
+                        <input id="cpa11y-nameserver-hostname-2" type="text" class="form-control" ng-model="secondNS" 
                                placeholder="ns2.example.com" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{% trans "IP Address" %}</label>
-                        <input type="text" class="form-control" ng-model="secondNSIP" 
+                        <label for="cpa11y-ip-address-2" class="form-label">{% trans "IP Address" %}</label>
+                        <input id="cpa11y-ip-address-2" type="text" class="form-control" ng-model="secondNSIP" 
                                placeholder="192.168.1.2" required>
                         <div class="form-hint">
-                            <i class="fas fa-network-wired"></i>
+                            <i class="fas fa-network-wired" aria-hidden="true"></i>
                             {% trans "Enter the IP address for the secondary nameserver" %}
                         </div>
                     </div>
@@ -609,14 +609,14 @@
                         <div class="preview-servers">
                             <div class="preview-server">
                                 <div class="preview-server-icon">
-                                    <i class="fas fa-server"></i>
+                                    <i class="fas fa-server" aria-hidden="true"></i>
                                 </div>
                                 <div class="preview-server-name">{$ firstNS || 'ns1.example.com' $}</div>
                                 <div class="preview-server-ip">{$ firstNSIP || '0.0.0.0' $}</div>
                             </div>
                             <div class="preview-server">
                                 <div class="preview-server-icon">
-                                    <i class="fas fa-server"></i>
+                                    <i class="fas fa-server" aria-hidden="true"></i>
                                 </div>
                                 <div class="preview-server-name">{$ secondNS || 'ns2.example.com' $}</div>
                                 <div class="preview-server-ip">{$ secondNSIP || '0.0.0.0' $}</div>
@@ -629,7 +629,7 @@
                 <div class="form-actions">
                     <button type="button" ng-click="createNameserverFunc()" class="btn-create" 
                             ng-disabled="!domainForNS || !firstNS || !firstNSIP || !secondNS || !secondNSIP">
-                        <i class="fas fa-plus-circle"></i>
+                        <i class="fas fa-plus-circle" aria-hidden="true"></i>
                         {% trans "Create Nameservers" %}
                         <span ng-hide="createNameserverLoading" class="loading-spinner"></span>
                     </button>
@@ -637,16 +637,16 @@
 
                 <!-- Alert Messages -->
                 <div class="form-section" style="padding-top: 0;">
-                    <div ng-hide="nameserverCreationFailed" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle"></i>
+                    <div ng-hide="nameserverCreationFailed" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         <div class="alert-content">
                             <strong>{% trans "Nameserver creation failed" %}</strong><br>
                             {$ errorMessage $}
                         </div>
                     </div>
 
-                    <div ng-hide="nameserverCreated" class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                    <div ng-hide="nameserverCreated" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <div class="alert-content">
                             <strong>{% trans "Nameservers successfully created!" %}</strong>
                             <ul class="nameserver-list">
@@ -656,8 +656,8 @@
                         </div>
                     </div>
 
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-network-wired"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-network-wired" aria-hidden="true"></i>
                         <div class="alert-content">
                             {% trans "Could not connect to server. Please refresh this page." %}
                         </div>

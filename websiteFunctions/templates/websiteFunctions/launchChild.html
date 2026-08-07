@@ -827,11 +827,11 @@
                 </p>
                 <div class="hero-actions">
                     <a target="_blank" rel="noopener" href="{$ previewUrl $}" class="hero-btn primary">
-                        <i class="fas fa-external-link-alt"></i>
+                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                         {% trans "Preview Website" %}
                     </a>
                     <a href="/filemanager/{{ childDomain }}" class="hero-btn">
-                        <i class="fas fa-folder"></i>
+                        <i class="fas fa-folder" aria-hidden="true"></i>
                         {% trans "File Manager" %}
                     </a>
                 </div>
@@ -844,15 +844,15 @@
         <div class="quick-actions">
             <div class="action-group">
                 <a class="action-btn git" href="/websites/{{ childDomain }}/manageGIT" title="Manage Git">
-                    <i class="fas fa-code-branch"></i>
+                    <i class="fas fa-code-branch" aria-hidden="true"></i>
                     {% trans "Manage Git" %}
                 </a>
                 <a class="action-btn staging" href="/websites/{{ domain }}/{{ childDomain }}/syncToMaster" title="Copy/Sync to Master">
-                    <i class="fas fa-sync"></i>
+                    <i class="fas fa-sync" aria-hidden="true"></i>
                     {% trans "Sync to Master" %}
                 </a>
                 <a class="action-btn stress" href="https://cyberpanel.net/KnowledgeBase/home/child-domains-launcher/" target="_blank" title="Stress Test">
-                    <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                     {% trans "Stress Test" %}
                 </a>
             </div>
@@ -863,7 +863,7 @@
             <!-- Disk Usage Card -->
             <div class="resource-card disk">
                 <div class="resource-icon">
-                    <i class="fas fa-hdd"></i>
+                    <i class="fas fa-hdd" aria-hidden="true"></i>
                 </div>
                 <div class="resource-title">{% trans "Disk Usage" %}</div>
                 <div class="resource-value">{{ diskInMB }} MB</div>
@@ -876,7 +876,7 @@
             <!-- Bandwidth Card -->
             <div class="resource-card bandwidth">
                 <div class="resource-icon">
-                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-wifi" aria-hidden="true"></i>
                 </div>
                 <div class="resource-title">{% trans "Bandwidth Usage" %}</div>
                 <div class="resource-value">{{ bwInMB }} MB</div>
@@ -889,7 +889,7 @@
             <!-- Database Card -->
             <div class="resource-card database">
                 <div class="resource-icon">
-                    <i class="fas fa-database"></i>
+                    <i class="fas fa-database" aria-hidden="true"></i>
                 </div>
                 <div class="resource-title">{% trans "Databases" %}</div>
                 <div class="resource-value">{{ databasesUsed }}</div>
@@ -899,7 +899,7 @@
             <!-- FTP Card -->
             <div class="resource-card ftp">
                 <div class="resource-icon">
-                    <i class="fas fa-upload"></i>
+                    <i class="fas fa-upload" aria-hidden="true"></i>
                 </div>
                 <div class="resource-title">{% trans "FTP Accounts" %}</div>
                 <div class="resource-value">{{ ftpUsed }}</div>
@@ -911,7 +911,7 @@
             <div class="resource-card ssl">
                 <div class="ssl-info">
                     <div class="resource-icon">
-                        <i class="fas fa-lock"></i>
+                        <i class="fas fa-lock" aria-hidden="true"></i>
                     </div>
                     <div class="ssl-text">
                         <div class="resource-title">{{ authority }}</div>
@@ -927,22 +927,22 @@
             <div class="panel">
                 <div class="panel-body">
                     <h3 class="content-box-header">
-                        <i class="fas fa-file-alt"></i>
+                        <i class="fas fa-file-alt" aria-hidden="true"></i>
                         {% trans "Logs" %}
-                        <img ng-hide="logFileLoading" src="/static/images/loading.gif" style="width: 20px; height: 20px; margin-left: 10px;">
+                        <img ng-hide="logFileLoading" src="/static/images/loading.gif" style="width: 20px; height: 20px; margin-left: 10px;" alt="">
                     </h3>
 
                     <div class="row">
                         <div class="col-md-6">
                             <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}">
-                                <i class="fas fa-file-alt" style="font-size: 45px; color: var(--info-color, #2196f3);"></i>
+                                <i class="fas fa-file-alt" style="font-size: 45px; color: var(--info-color, #2196f3);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Access Logs" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-6">
                             <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
-                                <i class="fas fa-exclamation-triangle" style="font-size: 45px; color: var(--danger-color, #ef4444);"></i>
+                                <i class="fas fa-exclamation-triangle" style="font-size: 45px; color: var(--danger-color, #ef4444);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Error Logs" %}</span>
                             </a>
                         </div>
@@ -950,18 +950,18 @@
 
                     <div class="col-md-12" style="margin-top: 20px;">
                         <form ng-hide="hideLogs" class="form-horizontal">
-                            <div ng-hide="logsFeteched" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="logsFeteched" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Logs Fetched" %}
                             </div>
 
-                            <div ng-hide="couldNotFetchLogs" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="couldNotFetchLogs" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {% trans "Could not fetch logs, see the logs file through command line. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-wifi"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-wifi" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
 
@@ -969,28 +969,28 @@
                                 <div class="row" style="margin-bottom: 20px;">
                                     <div class="col-sm-3">
                                         <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
-                                               class="form-control" required>
+                                               class="form-control" required aria-label="Search...">
                                     </div>
 
                                     <div class="col-sm-2">
                                         <input placeholder="Page Number" type="number" class="form-control"
-                                               ng-model="pageNumber" required>
+                                               ng-model="pageNumber" required aria-label="Page Number">
                                     </div>
 
                                     <div class="col-sm-6">
                                         <button ng-click="fetchLogs(3)" type="button" class="btn btn-primary">
-                                            <i class="fas fa-chevron-right"></i>
+                                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                             {% trans "Next" %}
                                         </button>
                                         <button ng-click="fetchLogs(4)" type="button" class="btn btn-primary" style="margin-left: 10px;">
-                                            <i class="fas fa-chevron-left"></i>
+                                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
                                             {% trans "Previous" %}
                                         </button>
                                     </div>
 
                                     <div class="col-sm-1">
-                                        <button ng-click="hidelogsbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                            <i class="fas fa-times" style="font-size: 20px;"></i>
+                                        <button ng-click="hidelogsbtn()" type="button" class="btn btn-link" aria-label="{% trans 'Close logs' %}" style="color: var(--danger-color);">
+                                            <i class="fas fa-times" style="font-size: 20px;" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -1023,23 +1023,23 @@
                                 <div class="row" style="margin-bottom: 20px;">
                                     <div class="col-sm-2">
                                         <input placeholder="Page Number" type="number" class="form-control"
-                                               ng-model="errorPageNumber" required>
+                                               ng-model="errorPageNumber" required aria-label="Page Number">
                                     </div>
 
                                     <div class="col-sm-9">
                                         <button ng-click="fetchErrorLogs(3)" type="button" class="btn btn-primary">
-                                            <i class="fas fa-chevron-right"></i>
+                                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                             {% trans "Next" %}
                                         </button>
                                         <button ng-click="fetchErrorLogs(4)" type="button" class="btn btn-primary" style="margin-left: 10px;">
-                                            <i class="fas fa-chevron-left"></i>
+                                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
                                             {% trans "Previous" %}
                                         </button>
                                     </div>
 
                                     <div class="col-sm-1">
-                                        <button ng-click="hideErrorLogsbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                            <i class="fas fa-times" style="font-size: 20px;"></i>
+                                        <button ng-click="hideErrorLogsbtn()" type="button" class="btn btn-link" aria-label="{% trans 'Close error logs' %}" style="color: var(--danger-color);">
+                                            <i class="fas fa-times" style="font-size: 20px;" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -1059,43 +1059,43 @@
             <div class="panel">
                 <div class="panel-body">
                     <h3 class="content-box-header">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                         {% trans "Configurations" %}
-                        <img ng-hide="configFileLoading" src="/static/images/loading.gif" style="width: 20px; height: 20px; margin-left: 10px;">
+                        <img ng-hide="configFileLoading" src="/static/images/loading.gif" style="width: 20px; height: 20px; margin-left: 10px;" alt="">
                     </h3>
 
                     <div class="row">
                         <div class="col-md-3">
                             <a ng-click="fetchConfigurations()" href="" title="{% trans 'Edit vHost Main Configurations' %}">
-                                <i class="fas fa-file-code" style="font-size: 45px; color: var(--primary-color, #6366f1);"></i>
+                                <i class="fas fa-file-code" style="font-size: 45px; color: var(--primary-color, #6366f1);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "vHost Conf" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-3">
                             <a href="{% url 'ApacheManager' domain=childDomain %}" title="{% trans 'Apache Manager' %}">
-                                <i class="fas fa-server" style="font-size: 45px; color: var(--warning-color, #f59e0b);"></i>
+                                <i class="fas fa-server" style="font-size: 45px; color: var(--warning-color, #f59e0b);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Apache Manager" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-3">
                             <a ng-click="fetchRewriteFules()" href="" title="{% trans 'Add Rewrite Rules (.htaccess)' %}">
-                                <i class="fas fa-code" style="font-size: 45px; color: var(--secondary-color, #8b5cf6);"></i>
+                                <i class="fas fa-code" style="font-size: 45px; color: var(--secondary-color, #8b5cf6);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Rewrite Rules" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-3">
                             <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
-                                <i class="fas fa-lock" style="font-size: 45px; color: var(--success-color, #10b981);"></i>
+                                <i class="fas fa-lock" style="font-size: 45px; color: var(--success-color, #10b981);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Add SSL" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-3">
                             <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
-                                <i class="fab fa-php" style="font-size: 45px; color: var(--info-color, #3b82f6);"></i>
+                                <i class="fab fa-php" style="font-size: 45px; color: var(--info-color, #3b82f6);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Change PHP" %}</span>
                             </a>
                         </div>
@@ -1104,42 +1104,42 @@
                     <!---- HTML for SSL file ---->
                     <div class="col-md-12" style="margin-top: 20px;">
                         <form ng-hide="hidsslconfigs" class="form-horizontal">
-                            <div ng-hide="sslSaved" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="sslSaved" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "SSL Saved" %}
                             </div>
 
-                            <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="couldNotSaveSSL" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {% trans "Could not save SSL. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-wifi"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-wifi" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
 
                             <div class="form-group">
                                 <div style="margin-bottom: 20px; text-align: right;">
-                                    <button ng-click="hidesslbtn()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                        <i class="fas fa-times" style="font-size: 20px;"></i>
+                                    <button ng-click="hidesslbtn()" type="button" class="btn btn-link" aria-label="{% trans 'Close SSL section' %}" style="color: var(--danger-color);">
+                                        <i class="fas fa-times" style="font-size: 20px;" aria-hidden="true"></i>
                                     </button>
                                 </div>
                                 <div class="row">
                                     <div class="col-sm-6">
-                                        <label class="control-label">
-                                            <i class="fas fa-certificate"></i>
+                                        <label for="cpa11y-ssl-certificate" class="control-label">
+                                            <i class="fas fa-certificate" aria-hidden="true"></i>
                                             {% trans "SSL Certificate" %}
                                         </label>
-                                        <textarea placeholder="Paste Your Certificate Here" ng-model="cert" rows="10"
+                                        <textarea id="cpa11y-ssl-certificate" placeholder="Paste Your Certificate Here" ng-model="cert" rows="10"
                                                   class="form-control"></textarea>
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="control-label">
-                                            <i class="fas fa-key"></i>
+                                        <label for="cpa11y-private-key" class="control-label">
+                                            <i class="fas fa-key" aria-hidden="true"></i>
                                             {% trans "Private Key" %}
                                         </label>
-                                        <textarea placeholder="Paste Your Private Key Here" ng-model="key" rows="10"
+                                        <textarea id="cpa11y-private-key" placeholder="Paste Your Private Key Here" ng-model="key" rows="10"
                                                   class="form-control"></textarea>
                                     </div>
                                 </div>
@@ -1147,7 +1147,7 @@
 
                             <div class="form-group">
                                 <button type="button" ng-click="saveSSL()" class="btn btn-primary">
-                                    <i class="fas fa-save"></i>
+                                    <i class="fas fa-save" aria-hidden="true"></i>
                                     {% trans "Save SSL" %}
                                 </button>
                             </div>
@@ -1157,23 +1157,23 @@
                     <!---- HTML for main conf file ---->
                     <div class="col-md-12">
                         <form ng-hide="configurationsBox" class="form-horizontal bordered-row">
-                            <div ng-hide="configsFetched" class="alert alert-success">
+                            <div ng-hide="configsFetched" class="alert alert-success" role="status">
                                 {% trans "Current configuration in the file fetched." %}
                             </div>
 
-                            <div ng-hide="couldNotFetchConfigs" class="alert alert-danger">
+                            <div ng-hide="couldNotFetchConfigs" class="alert alert-danger" role="alert">
                                 {% trans "Could not fetch current configuration. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
 
-                            <div ng-hide="configSaved" class="alert alert-success">
+                            <div ng-hide="configSaved" class="alert alert-success" role="status">
                                 {% trans "Configurations saved." %}
                             </div>
 
-                            <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger">
+                            <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger" role="alert">
                                 {% trans "Could not fetch current configuration. Error message:" %} {$ errorMessage $}
                             </div>
 
@@ -1198,23 +1198,23 @@
                     <!-- HTML For rewrite rules-->
                     <div class="col-md-12">
                         <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row">
-                            <div ng-hide="rewriteRulesFetched" class="alert alert-success">
+                            <div ng-hide="rewriteRulesFetched" class="alert alert-success" role="status">
                                 {% trans "Current rewrite rules in the file fetched." %}
                             </div>
 
-                            <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
+                            <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger" role="alert">
                                 {% trans "Could not fetch current rewrite rules. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
 
-                            <div ng-hide="rewriteRulesSaved" class="alert alert-success">
+                            <div ng-hide="rewriteRulesSaved" class="alert alert-success" role="status">
                                 {% trans "Configurations saved." %}
                             </div>
 
-                            <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger">
+                            <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger" role="alert">
                                 {% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage $}
                             </div>
 
@@ -1240,9 +1240,9 @@
                     <div class="col-md-12">
                         <form ng-hide="changePHPView" name="" action="/" class="form-horizontal bordered-row">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                                <label for="cpa11y-select-php" class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                 <div class="col-sm-6">
-                                    <select ng-model="phpSelectionMaster" class="form-control">
+                                    <select id="cpa11y-select-php" ng-model="phpSelectionMaster" class="form-control">
                                         {% for php in phps %}
                                             <option>{{ php }}</option>
                                         {% endfor %}
@@ -1264,15 +1264,15 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-4">
-                                    <div ng-hide="failedToChangePHPMaster" class="alert alert-danger">
+                                    <div ng-hide="failedToChangePHPMaster" class="alert alert-danger" role="alert">
                                         {% trans "Failed to change PHP version. Error message:" %} {$ errorMessage $}
                                     </div>
 
-                                    <div ng-hide="phpChangedMaster" class="alert alert-success">
+                                    <div ng-hide="phpChangedMaster" class="alert alert-success" role="status">
                                         {% trans "PHP successfully changed for: " %} <strong>{$ websiteDomain $}</strong>
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                         {% trans "Could not connect to server. Please refresh this page." %}
                                     </div>
                                 </div>
@@ -1289,21 +1289,21 @@
             <div class="panel">
                 <div class="panel-body">
                     <h3 class="content-box-header">
-                        <i class="fas fa-folder"></i>
+                        <i class="fas fa-folder" aria-hidden="true"></i>
                         {% trans "Files" %}
                     </h3>
 
                     <div class="row">
                         <div class="col-md-3">
                             <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
-                                <i class="fas fa-folder-open" style="font-size: 45px; color: var(--primary-color, #6366f1);"></i>
+                                <i class="fas fa-folder-open" style="font-size: 45px; color: var(--primary-color, #6366f1);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "File Manager" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-3">
                             <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
-                                <i class="fas fa-shield-alt" style="font-size: 45px; color: var(--warning-color, #f59e0b);"></i>
+                                <i class="fas fa-shield-alt" style="font-size: 45px; color: var(--warning-color, #f59e0b);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "open_basedir" %}</span>
                             </a>
                         </div>
@@ -1311,14 +1311,14 @@
                         {% if ftp %}
                             <div class="col-md-3">
                                 <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
-                                    <i class="fas fa-user-plus" style="font-size: 45px; color: var(--success-color, #10b981);"></i>
+                                    <i class="fas fa-user-plus" style="font-size: 45px; color: var(--success-color, #10b981);" aria-hidden="true"></i>
                                     <span class="h4">{% trans "Create FTP Acct" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3">
                                 <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
-                                    <i class="fas fa-user-minus" style="font-size: 45px; color: var(--danger-color, #ef4444);"></i>
+                                    <i class="fas fa-user-minus" style="font-size: 45px; color: var(--danger-color, #ef4444);" aria-hidden="true"></i>
                                     <span class="h4">{% trans "Delete FTP Acct" %}</span>
                                 </a>
                             </div>
@@ -1329,24 +1329,24 @@
                     <div ng-hide="openBaseDirBox" class="col-md-12" style="margin-top: 20px;">
                         <form action="/" class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">
-                                    <i class="fas fa-shield-alt"></i>
+                                <label for="cpa11y-open-basedir-protection" class="col-sm-3 control-label">
+                                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                                     {% trans "open_basedir Protection" %}
                                 </label>
                                 <div class="col-sm-6">
-                                    <select ng-model="openBasedirValue" class="form-control">
+                                    <select id="cpa11y-open-basedir-protection" ng-model="openBasedirValue" class="form-control">
                                         <option>Enable</option>
                                         <option>Disable</option>
                                     </select>
                                 </div>
 
                                 <div ng-hide="baseDirLoading" class="col-sm-1">
-                                    <img src="{% static 'images/loading.gif' %}">
+                                    <img src="{% static 'images/loading.gif' %}" alt="">
                                 </div>
 
                                 <div class="col-sm-1">
-                                    <button title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" type="button" class="btn btn-link" style="color: var(--danger-color);">
-                                        <i class="fas fa-times" style="font-size: 20px;"></i>
+                                    <button title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" type="button" class="btn btn-link" style="color: var(--danger-color);" aria-label="{% trans 'Cancel' %}">
+                                        <i class="fas fa-times" style="font-size: 20px;" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
@@ -1355,7 +1355,7 @@
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-6">
                                     <button type="button" ng-click="applyOpenBasedirChanges()" class="btn btn-primary">
-                                        <i class="fas fa-save"></i>
+                                        <i class="fas fa-save" aria-hidden="true"></i>
                                         {% trans "Apply Changes" %}
                                     </button>
                                 </div>
@@ -1364,18 +1364,18 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-6">
-                                    <div ng-hide="operationFailed" class="alert alert-danger">
-                                        <i class="fas fa-exclamation-circle"></i>
+                                    <div ng-hide="operationFailed" class="alert alert-danger" role="alert">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                         {% trans "Error message:" %} {$ errorMessage $}
                                     </div>
 
-                                    <div ng-hide="operationSuccessfull" class="alert alert-success">
-                                        <i class="fas fa-check-circle"></i>
+                                    <div ng-hide="operationSuccessfull" class="alert alert-success" role="status">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                                         {% trans "Changes successfully saved." %}
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <i class="fas fa-wifi"></i>
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                        <i class="fas fa-wifi" aria-hidden="true"></i>
                                         {% trans "Could not connect to server. Please refresh this page." %}
                                     </div>
                                 </div>
@@ -1392,28 +1392,28 @@
             <div class="panel">
                 <div class="panel-body">
                     <h3 class="content-box-header">
-                        <i class="fas fa-box"></i>
+                        <i class="fas fa-box" aria-hidden="true"></i>
                         {% trans "Application Installer" %}
                     </h3>
 
                     <div class="row">
                         <div class="col-md-4">
                             <a href="{$ wordPressInstallURL $}" target="_blank" title="{% trans 'Install WordPress with LSCache' %}">
-                                <i class="fab fa-wordpress" style="font-size: 45px; color: #21759b;"></i>
+                                <i class="fab fa-wordpress" style="font-size: 45px; color: #21759b;" aria-hidden="true"></i>
                                 <span class="h4">{% trans "WP + LSCache" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-4">
                             <a href="/websites/{{ childDomain }}/manageGIT" target="_blank" title="{% trans 'Attach Git with this website!' %}">
-                                <i class="fab fa-git-alt" style="font-size: 45px; color: #f05032;"></i>
+                                <i class="fab fa-git-alt" style="font-size: 45px; color: #f05032;" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Git" %}</span>
                             </a>
                         </div>
 
                         <div class="col-md-4">
                             <a href="{$ installPrestaURL $}" target="_blank" title="{% trans 'Install Prestashop' %}">
-                                <i class="fas fa-shopping-cart" style="font-size: 45px; color: var(--accent-color, #ec4899);"></i>
+                                <i class="fas fa-shopping-cart" style="font-size: 45px; color: var(--accent-color, #ec4899);" aria-hidden="true"></i>
                                 <span class="h4">{% trans "Prestashop" %}</span>
                             </a>
                         </div>
@@ -1423,8 +1423,8 @@
         </div>
 
         {% else %}
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i>
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                 {{ domain }}
             </div>
         {% endif %}

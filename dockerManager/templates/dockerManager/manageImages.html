@@ -458,14 +458,14 @@
     <div class="page-header">
         <h1 class="page-title">
             <div class="docker-icon">
-                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;"></i>
+                <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;" aria-hidden="true"></i>
             </div>
             {% trans "Manage Docker Images" %}
         </h1>
         <p class="page-subtitle">{% trans "Pull, manage, and organize Docker images for your containers" %}</p>
         <div class="header-actions">
             <a href="{% url "containerImage" %}" class="btn-primary">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-plus" aria-hidden="true"></i>
                 {% trans "Create Container" %}
             </a>
         </div>
@@ -475,18 +475,18 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search" aria-hidden="true"></i>
                 {% trans "Search & Pull Images" %}
             </h2>
         </div>
         <div class="card-body">
             <div class="search-section">
                 <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-search" style="margin-right: 0.5rem;"></i>
+                    <label for="cpa11y-search-docker-hub" class="form-label">
+                        <i class="fas fa-search" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Search Docker Hub" %}
                     </label>
-                    <input type="text" ng-change="searchImages()" ng-model="searchString" 
+                    <input id="cpa11y-search-docker-hub" type="text" ng-change="searchImages()" ng-model="searchString" 
                            class="form-control" placeholder="{% trans 'Enter image name (e.g., nginx, mysql, ubuntu)' %}">
                 </div>
             </div>
@@ -505,20 +505,21 @@
                             <td>
                                 <div class="image-name">
                                     <div class="image-icon">
-                                        <i class="fab fa-docker"></i>
+                                        <i class="fab fa-docker" aria-hidden="true"></i>
                                     </div>
                                     <div>
                                         <span ng-bind="image.name"></span>
                                         <span ng-show="image.is_official == true" class="official-badge">
-                                            <i class="fas fa-check"></i>
+                                            <i class="fas fa-check" aria-hidden="true"></i>
                                             {% trans "Official" %}
                                         </span>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <select ng-focus="loadTags($event)" ng-click="selectTag()" 
-                                        ng-model="imageTag[image.name2]" 
+                                <select ng-focus="loadTags($event)" ng-click="selectTag()"
+                                        aria-label="{% trans 'Select image tag' %}"
+                                        ng-model="imageTag[image.name2]"
                                         ng-options="tag for tag in tagList[image.name2]" 
                                         ng-attr-id="{$ image.name2 $}" 
                                         data-pageloaded='0' 
@@ -529,7 +530,7 @@
                             <td style="text-align: center;">
                                 <button ng-click="pullImage(image.name, imageTag[image.name2])" 
                                         class="btn-primary">
-                                    <i class="fas fa-download"></i>
+                                    <i class="fas fa-download" aria-hidden="true"></i>
                                     {% trans "Pull" %}
                                 </button>
                             </td>
@@ -544,12 +545,12 @@
     <div class="main-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-hdd"></i>
+                <i class="fas fa-hdd" aria-hidden="true"></i>
                 {% trans "Local Images" %}
                 <span id="imageLoading" style="display: none;" class="loading-spinner"></span>
             </h2>
             <button class="btn-warning" ng-click="rmImage(0)" title="{% trans 'Delete unused images' %}">
-                <i class="fas fa-broom"></i>
+                <i class="fas fa-broom" aria-hidden="true"></i>
                 {% trans "Prune Unused" %}
             </button>
         </div>
@@ -569,13 +570,13 @@
                             <td>
                                 <div class="image-name">
                                     <div class="image-icon">
-                                        <i class="fab fa-docker"></i>
+                                        <i class="fab fa-docker" aria-hidden="true"></i>
                                     </div>
                                     <strong>{{ image.name }}</strong>
                                 </div>
                             </td>
                             <td>
-                                <select class="form-control tagList" id="{{ forloop.counter }}">
+                                <select class="form-control tagList" id="{{ forloop.counter }}" aria-label="{% trans 'Select image tag' %}">
                                     {% for tag in image.tags %}
                                     <option>{{ tag }}</option>
                                     {% endfor %}
@@ -584,12 +585,12 @@
                             <td style="text-align: center;">
                                 <div class="action-buttons">
                                     <button class="btn-info" title="{% trans 'View History' %}" 
-                                            ng-click="getHistory({{ forloop.counter }})">
-                                        <i class="fas fa-history"></i>
+                                            ng-click="getHistory({{ forloop.counter }})" aria-label="{% trans 'View History' %}">
+                                        <i class="fas fa-history" aria-hidden="true"></i>
                                     </button>
                                     <button class="btn-danger" title="{% trans 'Delete Image' %}" 
-                                            ng-click="rmImage({{ forloop.counter }})">
-                                        <i class="fas fa-trash"></i>
+                                            ng-click="rmImage({{ forloop.counter }})" aria-label="{% trans 'Delete Image' %}">
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </td>
@@ -607,7 +608,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
-                        <i class="fas fa-history" style="margin-right: 0.5rem;"></i>
+                        <i class="fas fa-history" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                         {% trans "Image History" %}
                     </h4>
                     <button type="button" class="close" data-dismiss="modal" 
@@ -637,7 +638,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-times" aria-hidden="true"></i>
                         {% trans "Close" %}
                     </button>
                 </div>

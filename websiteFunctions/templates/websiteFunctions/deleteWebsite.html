@@ -455,8 +455,8 @@
             </h2>
             
             <div class="website-selector-card">
-                <label class="website-selector-label">{% trans "Select Website to Delete" %}</label>
-                <select ng-change="fetchDetails()" ng-model="websiteToBeDeleted" class="form-control">
+                <label for="cpa11y-select-website-to-delete" class="website-selector-label">{% trans "Select Website to Delete" %}</label>
+                <select id="cpa11y-select-website-to-delete" ng-change="fetchDetails()" ng-model="websiteToBeDeleted" class="form-control">
                     <option value="">-- {% trans "Select a website" %} --</option>
                     {% for items in websiteList %}
                         <option>{{ items }}</option>
@@ -480,7 +480,7 @@
             </div>
 
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-content">
                     <div class="warning-title">{% trans "Warning: This action cannot be undone!" %}</div>
                     <div class="warning-text">
@@ -499,7 +499,7 @@
 
             <div class="button-container">
                 <button type="button" ng-click="deleteWebsite()" class="btn btn-danger" ng-disabled="!websiteToBeDeleted">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Delete Website" %}
                 </button>
             </div>
@@ -507,7 +507,7 @@
 
         <!-- Confirmation Section -->
         <div class="content-card confirmation-section" id="deleteWebsiteButton">
-            <i class="fas fa-exclamation-circle confirmation-icon"></i>
+            <i class="fas fa-exclamation-circle confirmation-icon" aria-hidden="true"></i>
             <h3 class="confirmation-title">{% trans "Are you absolutely sure?" %}</h3>
             <p class="confirmation-text">
                 {% trans "This action will permanently delete the website and all associated data." %}
@@ -516,24 +516,24 @@
             
             <div class="confirmation-buttons">
                 <button type="button" ng-click="cancelDelete()" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     {% trans "Cancel" %}
                 </button>
                 <button type="button" ng-click="deleteWebsiteFinal()" class="btn btn-danger">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Yes, Delete Website" %}
                 </button>
             </div>
         </div>
 
         <!-- Alert Messages -->
-        <div id="websiteDeleteFailure" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+        <div id="websiteDeleteFailure" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <span>{% trans "Cannot delete website. Error message:" %} {$ errorMessage $}</span>
         </div>
 
-        <div id="websiteDeleteSuccess" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div id="websiteDeleteSuccess" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <span>{% trans "Website" %} <strong>{$ deletedWebsite $}</strong> {% trans "successfully deleted." %}</span>
         </div>
     </div>

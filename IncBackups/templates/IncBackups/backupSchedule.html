@@ -21,7 +21,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Schedule Backup" %} <img ng-hide="cyberpanelLoading"
-                                                        src="{% static 'images/loading.gif' %}">
+                                                        src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -30,9 +30,9 @@
 
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Destination" %}</label>
+                            <label for="cpa11y-select-destination" class="col-sm-3 control-label">{% trans "Select Destination" %}</label>
                             <div class="col-sm-6">
-                                <select ng-change="scheduleFreqView()" ng-model="backupDest" class="form-control">
+                                <select id="cpa11y-select-destination" ng-change="scheduleFreqView()" ng-model="backupDest" class="form-control">
                                     {% for items in destinations %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
@@ -41,9 +41,9 @@
                         </div>
 
                         <div ng-hide="scheduleFreq" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Frequency" %}</label>
+                            <label for="cpa11y-select-frequency" class="col-sm-3 control-label">{% trans "Select Frequency" %}</label>
                             <div class="col-sm-6">
-                                <select ng-change="scheduleBtnView()" ng-model="backupFreq" class="form-control">
+                                <select id="cpa11y-select-frequency" ng-change="scheduleBtnView()" ng-model="backupFreq" class="form-control">
                                     <option>Daily</option>
                                     <option>Weekly</option>
                                 </select>
@@ -51,11 +51,11 @@
                         </div>
 
                         <div ng-hide="scheduleRetention" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
+                            <label class="col-sm-3 control-label" for="cpa11y-backup-retention">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
                             <div class="col-sm-9">
                                 <div class="number">
                                     <label>
-                                        <input ng-model="backupRetention" type="number" value="0">
+                                        <input ng-model="backupRetention" type="number" value="0" id="cpa11y-backup-retention">
                                     </label>
                                 </div>
                             </div>
@@ -122,7 +122,7 @@
                             <div class="col-sm-12">
                                 <input type="text" ng-model="accountsSearch"
                                        placeholder="{% trans 'Search Accounts..' %}"
-                                       class="form-control autocomplete-input">
+                                       class="form-control autocomplete-input" aria-label="{% trans 'Search Accounts..' %}">
                             </div>
                         </div>
 
@@ -214,7 +214,7 @@
                                                             </button>
                                                             <h4 class="modal-title">Edit Job
                                                                 <img ng-hide="cyberpanelLoading"
-                                                                     src="{% static 'images/loading.gif' %}">
+                                                                     src="{% static 'images/loading.gif' %}" alt="">
                                                             </h4>
                                                         </div>
                                                         <div class="modal-body">
@@ -224,9 +224,9 @@
 
                                                                 <div ng-hide="installationDetailsForm"
                                                                      class="form-group">
-                                                                    <label class="col-sm-3 control-label">{% trans "Job ID" %}</label>
+                                                                    <label for="cpa11y-job-id" class="col-sm-3 control-label">{% trans "Job ID" %}</label>
                                                                     <div class="col-sm-4">
-                                                                        <input name="name" type="number"
+                                                                        <input id="cpa11y-job-id" name="name" type="number"
                                                                                class="form-control"
                                                                                ng-model="jobID" readonly>
                                                                     </div>
@@ -329,9 +329,9 @@
 
 
                                                                             <div class="form-group">
-                                                                                <label class="col-sm-3 control-label">{% trans "Select Site" %}</label>
+                                                                                <label for="cpa11y-select-site" class="col-sm-3 control-label">{% trans "Select Site" %}</label>
                                                                                 <div class="col-sm-6">
-                                                                                    <select ng-model="$parent.websiteToBeAdded"
+                                                                                    <select id="cpa11y-select-site" ng-model="$parent.websiteToBeAdded"
                                                                                                 class="form-control">
                                                                                             {% for items in websiteList %}
                                                                                                 <option>{{ items }}</option>
@@ -339,7 +339,7 @@
                                                                                         </select>
                                                                                 </div>
                                                                                 <img ng-hide="cyberpanelLoading"
-                                                                                     src="{% static 'images/loading.gif' %}">
+                                                                                     src="{% static 'images/loading.gif' %}" alt="">
                                                                             </div>
 
                                                                             <div ng-hide="savebtn"

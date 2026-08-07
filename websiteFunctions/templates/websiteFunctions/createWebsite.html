@@ -369,8 +369,8 @@
             <form name="websiteCreationForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select Package" %}</label>
-                        <select ng-model="packageForWebsite" class="form-control">
+                        <label for="cpa11y-select-package" class="form-label">{% trans "Select Package" %}</label>
+                        <select id="cpa11y-select-package" ng-model="packageForWebsite" class="form-control">
                             <option value="">-- {% trans "Select a package" %} --</option>
                             {% for items in packageList %}
                                 <option>{{ items }}</option>
@@ -379,8 +379,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select Owner" %}</label>
-                        <select ng-model="websiteOwner" class="form-control">
+                        <label for="cpa11y-select-owner" class="form-label">{% trans "Select Owner" %}</label>
+                        <select id="cpa11y-select-owner" ng-model="websiteOwner" class="form-control">
                             <option value="">-- {% trans "Select an owner" %} --</option>
                             {% for items in owernList %}
                                 <option>{{ items }}</option>
@@ -390,8 +390,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Domain Name" %}</label>
-                    <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"
+                    <label for="cpa11y-domain-name" class="form-label">{% trans "Domain Name" %}</label>
+                    <input id="cpa11y-domain-name" name="dom" type="text" class="form-control" ng-model="domainNameCreate"
                            placeholder="{% trans "example.com (Do not enter WWW, it will be auto created)" %}" required>
                     <div ng-show="websiteCreationForm.dom.$error.pattern" class="field-error">
                         {% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}
@@ -400,8 +400,8 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Email" %}</label>
-                        <input type="email" name="email" class="form-control" ng-model="adminEmail" 
+                        <label for="cpa11y-email" class="form-label">{% trans "Email" %}</label>
+                        <input id="cpa11y-email" type="email" name="email" class="form-control" ng-model="adminEmail" 
                                placeholder="{% trans "admin@example.com" %}" required>
                         <div ng-show="websiteCreationForm.email.$error.email" class="field-error">
                             {% trans "Invalid Email" %}
@@ -409,8 +409,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select PHP Version" %}</label>
-                        <select ng-model="phpSelection" class="form-control">
+                        <label for="cpa11y-select-php-version" class="form-label">{% trans "Select PHP Version" %}</label>
+                        <select id="cpa11y-select-php-version" ng-model="phpSelection" class="form-control">
                             {% for php in phps %}
                                 <option>{{ php }}</option>
                             {% endfor %}
@@ -437,7 +437,7 @@
                                     OpenLiteSpeed + Apache (Backend) - 
                                     <a href="https://cyberpanel.net/KnowledgeBase/home/creating-website/" target="_blank">
                                         Premium Feature
-                                        <i class="fas fa-external-link-alt" style="font-size: 10px;"></i>
+                                        <i class="fas fa-external-link-alt" style="font-size: 10px;" aria-hidden="true"></i>
                                     </a>
                                     <small style="display: block; color: var(--text-secondary, #8893a7); font-weight: normal; margin-top: 4px;">
                                         {% trans "For Ubuntu 22, AlmaLinux 8 and AlmaLinux 9" %}
@@ -464,7 +464,7 @@
                     <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
                             type="button" ng-click="createWebsite()"
                             class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-plus" aria-hidden="true"></i>
                         {% trans "Create Website" %}
                     </button>
                 </div>
@@ -482,18 +482,18 @@
                     <div id="installProgress" class="progress-bar-fill" style="width:0%"></div>
                 </div>
                 
-                <div ng-hide="errorMessageBox" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     <span>{% trans "Error message:" %} {$ errorMessage $}</span>
                 </div>
                 
-                <div ng-hide="success" class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
+                <div ng-hide="success" class="alert alert-success" role="status">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                     <span>{% trans "Website successfully created." %}</span>
                 </div>
                 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-times-circle"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-times-circle" aria-hidden="true"></i>
                     <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
                 </div>
             </div>
@@ -501,7 +501,7 @@
             <div class="button-group">
                 <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
                         class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     {% trans "Go Back" %}
                 </button>
             </div>

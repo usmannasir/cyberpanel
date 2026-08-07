@@ -491,27 +491,27 @@
     <div class="dns-zone-container">
         <div class="dns-zone-header">
             <h1 class="dns-zone-title">
-                <i class="fas fa-globe-americas"></i>
+                <i class="fas fa-globe-americas" aria-hidden="true"></i>
                 {% trans "Create DNS Zone" %}
             </h1>
             <p class="dns-zone-subtitle">
                 {% trans "Set up a new DNS zone for your domain to manage its DNS records" %}
             </p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/manage-dns-in-cyberpanel/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "DNS Documentation" %}
             </a>
         </div>
 
         {% if not status %}
         <div class="powerdns-disabled">
-            <i class="fas fa-exclamation-circle"></i>
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <h3>{% trans "PowerDNS is disabled" %}</h3>
             <p style="margin-bottom: 24px; color: var(--text-secondary, #64748b);">
                 {% trans "You need to enable PowerDNS to create DNS zones" %}
             </p>
             <a href="{% url 'managePowerDNS' %}" class="enable-btn">
-                <i class="fas fa-power-off"></i>
+                <i class="fas fa-power-off" aria-hidden="true"></i>
                 {% trans "Enable PowerDNS" %}
             </a>
         </div>
@@ -521,7 +521,7 @@
         <div class="info-cards">
             <div class="info-card">
                 <div class="info-card-icon">
-                    <i class="fas fa-sitemap"></i>
+                    <i class="fas fa-sitemap" aria-hidden="true"></i>
                 </div>
                 <div class="info-card-title">{% trans "DNS Zone" %}</div>
                 <div class="info-card-text">
@@ -530,7 +530,7 @@
             </div>
             <div class="info-card">
                 <div class="info-card-icon">
-                    <i class="fas fa-server"></i>
+                    <i class="fas fa-server" aria-hidden="true"></i>
                 </div>
                 <div class="info-card-title">{% trans "Nameservers" %}</div>
                 <div class="info-card-text">
@@ -539,7 +539,7 @@
             </div>
             <div class="info-card">
                 <div class="info-card-icon">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit" aria-hidden="true"></i>
                 </div>
                 <div class="info-card-title">{% trans "DNS Records" %}</div>
                 <div class="info-card-text">
@@ -562,10 +562,10 @@
                     <!-- Domain Input Section -->
                     <div class="domain-input-section">
                         <div class="input-icon">
-                            <i class="fas fa-globe"></i>
+                            <i class="fas fa-globe" aria-hidden="true"></i>
                         </div>
-                        <label class="input-label">{% trans "Domain Name" %}</label>
-                        <input type="text" 
+                        <label for="cpa11y-domain-name" class="input-label">{% trans "Domain Name" %}</label>
+                        <input id="cpa11y-domain-name" type="text" 
                                class="domain-input" 
                                ng-model="zoneDomain" 
                                ng-change="updatePreview()"
@@ -601,7 +601,7 @@
                                 ng-click="createDNSZone()" 
                                 class="btn-create-zone" 
                                 ng-disabled="!zoneDomain">
-                            <i class="fas fa-plus-circle"></i>
+                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
                             {% trans "Create DNS Zone" %}
                             <span ng-hide="createDNSZoneLoading" class="loading-spinner"></span>
                         </button>
@@ -609,16 +609,16 @@
 
                     <!-- Alert Messages -->
                     <div class="alert-section">
-                        <div ng-hide="dnsZoneCreationFailed" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
+                        <div ng-hide="dnsZoneCreationFailed" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             <div class="alert-content">
                                 <strong>{% trans "DNS Zone creation failed" %}</strong><br>
                                 {$ errorMessage $}
                             </div>
                         </div>
 
-                        <div ng-hide="dnsZoneCreated" class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
+                        <div ng-hide="dnsZoneCreated" class="alert alert-success" role="status">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             <div class="alert-content">
                                 <strong>{% trans "DNS Zone successfully created!" %}</strong><br>
                                 {% trans "Zone created for domain:" %} <span style="font-family: 'Courier New', monospace; font-weight: 600;">{$ zoneDomain $}</span>
@@ -626,28 +626,28 @@
                             
                             <div class="zone-created-info">
                                 <div class="next-steps-title">
-                                    <i class="fas fa-tasks"></i>
+                                    <i class="fas fa-tasks" aria-hidden="true"></i>
                                     {% trans "Next Steps:" %}
                                 </div>
                                 <ul class="next-steps-list">
                                     <li>
-                                        <i class="fas fa-chevron-right"></i>
+                                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                         {% trans "Add DNS records (A, CNAME, MX, etc.) for your domain" %}
                                     </li>
                                     <li>
-                                        <i class="fas fa-chevron-right"></i>
+                                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                         {% trans "Update your domain registrar to use our nameservers" %}
                                     </li>
                                     <li>
-                                        <i class="fas fa-chevron-right"></i>
+                                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                         {% trans "Wait for DNS propagation (24-48 hours)" %}
                                     </li>
                                 </ul>
                             </div>
                         </div>
 
-                        <div ng-hide="couldNotConnect" class="alert alert-danger">
-                            <i class="fas fa-network-wired"></i>
+                        <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                            <i class="fas fa-network-wired" aria-hidden="true"></i>
                             <div class="alert-content">
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>

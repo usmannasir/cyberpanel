@@ -650,12 +650,12 @@
                             <div class="modal-body">
                                 <form>
                                     <div class="form-group">
-                                        <label>Username</label>
-                                        <input type="text" class="form-control" ng-model="currentWP.PPUsername" required>
+                                        <label for="cpa11y-username">Username</label>
+                                        <input id="cpa11y-username" type="text" class="form-control" ng-model="currentWP.PPUsername" required>
                                     </div>
                                     <div class="form-group">
-                                        <label>Password</label>
-                                        <input type="password" class="form-control" ng-model="currentWP.PPPassword" required>
+                                        <label for="cpa11y-password">Password</label>
+                                        <input id="cpa11y-password" type="password" class="form-control" ng-model="currentWP.PPPassword" required>
                                     </div>
                                 </form>
                             </div>
@@ -675,7 +675,7 @@
                     </div>
                     <div>
                         <a class="btn btn-primary" href="{% url 'createWebsite' %}">
-                            <i class="fas fa-plus"></i>
+                            <i class="fas fa-plus" aria-hidden="true"></i>
                             {% trans "Create Website" %}
                         </a>
                     </div>
@@ -691,11 +691,12 @@
                                    name="dom" 
                                    type="text" 
                                    class="form-control" 
-                                   required>
+                                   required aria-label="Search... (Press Enter to search)">
                         </div>
-                        <select ng-model="recordsToShow" 
-                                ng-change="getFurtherWebsitesFromDB()" 
-                                class="form-control form-select">
+                        <select ng-model="recordsToShow"
+                                ng-change="getFurtherWebsitesFromDB()"
+                                class="form-control form-select"
+                                aria-label="{% trans 'Records per page' %}">
                             <option>10</option>
                             <option>50</option>
                             <option>100</option>
@@ -707,22 +708,22 @@
                 <div class="websites-container">
                     <!-- Empty state with Build Services nudge -->
                     <div class="cp-empty-nudge" ng-if="WebSitesList && WebSitesList.length === 0">
-                        <div class="cp-empty-ic"><i class="fas fa-globe"></i></div>
+                        <div class="cp-empty-ic"><i class="fas fa-globe" aria-hidden="true"></i></div>
                         <h3>{% trans "No websites yet" %}</h3>
                         <p>{% trans "Create your first website to get started — or let our team build it for you." %}</p>
                         <div class="cp-empty-actions">
-                            <a class="btn btn-primary" href="{% url 'createWebsite' %}"><i class="fas fa-plus"></i> {% trans "Create Website" %}</a>
-                            <a class="cp-build-link" href="{% url 'buildServices' %}"><i class="fas fa-rocket"></i> {% trans "Let our team build it for you" %}</a>
+                            <a class="btn btn-primary" href="{% url 'createWebsite' %}"><i class="fas fa-plus" aria-hidden="true"></i> {% trans "Create Website" %}</a>
+                            <a class="cp-build-link" href="{% url 'buildServices' %}"><i class="fas fa-rocket" aria-hidden="true"></i> {% trans "Let our team build it for you" %}</a>
                         </div>
                     </div>
                     <div ng-repeat="web in WebSitesList track by $index">
                         <!-- Website Row -->
                         <div class="website-row" ng-click="toggleSite(web)" title="Expand/collapse details">
                             <div class="row-left">
-                                <i class="fas chevron" ng-class="{'fa-chevron-down': isExpanded(web.domain), 'fa-chevron-right': !isExpanded(web.domain)}"></i>
+                                <i class="fas chevron" ng-class="{'fa-chevron-down': isExpanded(web.domain), 'fa-chevron-right': !isExpanded(web.domain)}" aria-hidden="true"></i>
                                 <span class="domain" title="{$ web.domain $}">{$ web.domain $}</span>
                                 <span ng-if="web.loading" class="loading-indicator">
-                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
                                 </span>
                                 <!-- SSL Status Badge -->
                                 <span ng-if="web.ssl" class="ssl-badge" ng-class="web.ssl.status" 
@@ -734,7 +735,7 @@
                                         'fa-exclamation-triangle': web.ssl.status === 'warning' || web.ssl.status === 'self-signed',
                                         'fa-exclamation-circle': web.ssl.status === 'expiring' || web.ssl.status === 'expired',
                                         'fa-unlock': web.ssl.status === 'none'
-                                    }"></i>
+                                    }" aria-hidden="true"></i>
                                     <span ng-if="web.ssl.status === 'valid'">Secure</span>
                                     <span ng-if="web.ssl.status === 'warning'">SSL {$ web.ssl.days $}d</span>
                                     <span ng-if="web.ssl.status === 'expiring'">Expiring {$ web.ssl.days $}d</span>
@@ -746,7 +747,7 @@
                             </div>
                             <div class="row-actions">
                                 <a href="/websites/{$ web.domain $}/workspace" class="btn btn-primary btn-sm" title="{% trans 'Open site workspace' %}">
-                                    <i class="fas fa-grip"></i> Manage
+                                    <i class="fas fa-grip" aria-hidden="true"></i> Manage
                                 </a>
                                 <a href="/websites/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'Full settings page' %}">
                                     Settings
@@ -756,17 +757,17 @@
                                 </a>
                                 {% if admin or modifyWebsite %}
                                 <a href="{% url 'modifyWebsite' %}" class="btn btn-outline btn-sm" title="{% trans 'Modify website: package, owner, email & PHP' %}">
-                                    <i class="fas fa-pen-to-square"></i> {% trans "Modify" %}
+                                    <i class="fas fa-pen-to-square" aria-hidden="true"></i> {% trans "Modify" %}
                                 </a>
                                 {% endif %}
                                 {% if admin or suspendWebsite %}
                                 <a href="{% url 'siteState' %}" class="btn btn-outline btn-sm" title="{% trans 'Suspend / Unsuspend Website' %}">
-                                    <i class="fas fa-pause"></i> {% trans "Suspend" %}
+                                    <i class="fas fa-pause" aria-hidden="true"></i> {% trans "Suspend" %}
                                 </a>
                                 {% endif %}
                                 {% if admin or deleteWebsite %}
                                 <a href="{% url 'deleteWebsite' %}" class="btn btn-outline-danger btn-sm" title="{% trans 'Delete Website' %}">
-                                    <i class="fas fa-trash"></i> {% trans "Delete" %}
+                                    <i class="fas fa-trash" aria-hidden="true"></i> {% trans "Delete" %}
                                 </a>
                                 {% endif %}
                             </div>
@@ -787,7 +788,7 @@
                                         <a ng-click="issueSSL(web.domain)" href="javascript:void(0);" class="btn btn-primary btn-sm"
                                            ng-class="{'disabled': issuingSSL[web.domain]}">
                                             <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
-                                            <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin"></i> Issuing SSL...</span>
+                                            <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Issuing SSL...</span>
                                         </a>
                                         <button ng-click="showWPSites(web.domain); $event.stopPropagation();" 
                                                 class="btn btn-outline btn-sm" 
@@ -832,7 +833,7 @@
                                     <!-- WordPress Sites Section -->
                                     <div class="wp-sites-section" ng-if="web.showWPSites && web.wp_sites && web.wp_sites.length > 0">
                                         <h5 class="wp-sites-title">
-                                            <i class="fab fa-wordpress"></i>
+                                            <i class="fab fa-wordpress" aria-hidden="true"></i>
                                             WordPress Sites 
                                             <span class="badge">{$ web.wp_sites.length $}</span>
                                         </h5>
@@ -901,11 +902,11 @@
                                                     </div>
                                                     <div class="wp-site-actions">
                                                         <a href="/websites/WPHome?ID={$ wp.id $}" class="btn btn-primary btn-sm">
-                                                            <i class="fas fa-cog"></i>
+                                                            <i class="fas fa-cog" aria-hidden="true"></i>
                                                             Manage
                                                         </a>
                                                         <button class="btn btn-outline-danger btn-sm" ng-click="deleteWPSite(wp)">
-                                                            <i class="fas fa-trash"></i>
+                                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                                             Delete
                                                         </button>
                                                     </div>
@@ -920,15 +921,16 @@
                 </div>
 
                 <!-- Error Display -->
-                <div id="listFail" class="alert alert-danger" style="display: none;">
+                <div id="listFail" class="alert alert-danger" style="display: none;" role="alert">
                     <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
                 </div>
 
                 <!-- Pagination -->
                 <div class="pagination-section">
-                    <select ng-model="currentPage" 
-                            class="form-control pagination-select" 
-                            ng-change="getFurtherWebsitesFromDB()">
+                    <select ng-model="currentPage"
+                            class="form-control pagination-select"
+                            ng-change="getFurtherWebsitesFromDB()"
+                            aria-label="{% trans 'Page number' %}">
                         <option ng-repeat="page in pagination" value="{$ $index + 1 $}">Page {$ $index + 1 $}</option>
                     </select>
                 </div>

@@ -24,10 +24,10 @@
                         {% trans "Web Terminal" %} -
                         <button ng-click="restartSSH()" class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
                             <span>{% trans "Reboot SSH Server" %}</span>
-                            <i class="glyph-icon icon-arrow-right"></i>
+                            <i class="glyph-icon icon-arrow-right" aria-hidden="true"></i>
                         </button>
                         <img ng-hide="cyberpanelLoading"
-                             src="{% static 'images/loading.gif' %}">
+                             src="{% static 'images/loading.gif' %}" alt="">
                     </h3>
                     <div class="col-md-12">
 

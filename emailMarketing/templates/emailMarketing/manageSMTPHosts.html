@@ -16,7 +16,7 @@
 <div ng-controller="manageSMTPHostsCTRL" class="panel" style="background: var(--bg-primary, white); border-color: var(--border-color, #ddd);">
     <div class="panel-body" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
         <h3 class="title-hero">
-            {% trans "Manage SMTP Hosts" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Manage SMTP Hosts" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}" alt="">
         </h3>
         <div  class="example-box-wrapper">
 
@@ -26,30 +26,30 @@
             <!---- Create SMTP Host --->
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "SMTP Host" %}</label>
+                    <label for="cpa11y-smtp-host" class="col-sm-3 control-label">{% trans "SMTP Host" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="smtpHost" required>
+                        <input id="cpa11y-smtp-host"  type="text" class="form-control" ng-model="smtpHost" required>
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Port" %}</label>
+                    <label for="cpa11y-port" class="col-sm-3 control-label">{% trans "Port" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="smtpPort" required>
+                        <input id="cpa11y-port"  type="text" class="form-control" ng-model="smtpPort" required>
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                    <label for="cpa11y-username" class="col-sm-3 control-label">{% trans "Username" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="smtpUserName" required>
+                        <input id="cpa11y-username"  type="text" class="form-control" ng-model="smtpUserName" required>
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                    <label for="cpa11y-password" class="col-sm-3 control-label">{% trans "Password" %}</label>
                     <div class="col-sm-6">
-                        <input  type="password" class="form-control" ng-model="smtpPassword" required>
+                        <input id="cpa11y-password"  type="password" class="form-control" ng-model="smtpPassword" required>
                     </div>
                 </div>
 

@@ -611,7 +611,7 @@
         <div class="header-content">
             <h1 class="page-title">
                 <div class="process-icon">
-                    <i class="fas fa-microchip" style="font-size: 1.75rem;"></i>
+                    <i class="fas fa-microchip" style="font-size: 1.75rem;" aria-hidden="true"></i>
                 </div>
                 {% trans "System Processes Monitor" %}
             </h1>
@@ -637,7 +637,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">
                     <div class="stat-icon">
-                        <i class="fas fa-microchip"></i>
+                        <i class="fas fa-microchip" aria-hidden="true"></i>
                     </div>
                     {% trans "CPU Information" %}
                 </h3>
@@ -665,7 +665,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">
                     <div class="stat-icon">
-                        <i class="fas fa-tasks"></i>
+                        <i class="fas fa-tasks" aria-hidden="true"></i>
                     </div>
                     {% trans "Process Statistics" %}
                 </h3>
@@ -698,7 +698,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">
                     <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
                     </div>
                     {% trans "CPU Load Average" %}
                 </h3>
@@ -728,7 +728,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">
                     <div class="stat-icon">
-                        <i class="fas fa-memory"></i>
+                        <i class="fas fa-memory" aria-hidden="true"></i>
                     </div>
                     {% trans "Memory Usage" %}
                 </h3>
@@ -758,7 +758,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">
                     <div class="stat-icon">
-                        <i class="fas fa-hdd"></i>
+                        <i class="fas fa-hdd" aria-hidden="true"></i>
                     </div>
                     {% trans "Swap Memory" %}
                 </h3>
@@ -788,7 +788,7 @@
             <div class="stat-header">
                 <h3 class="stat-title">
                     <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-clock" aria-hidden="true"></i>
                     </div>
                     {% trans "CPU Time Distribution" %}
                 </h3>
@@ -818,12 +818,12 @@
     <div class="processes-panel">
         <div class="panel-header">
             <h2 class="panel-title">
-                <i class="fas fa-list"></i>
+                <i class="fas fa-list" aria-hidden="true"></i>
                 {% trans "Running Processes" %}
             </h2>
             <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="{% trans 'Search processes...' %}" ng-model="search">
+                <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                <input type="text" class="search-input" placeholder="{% trans 'Search processes...' %}" ng-model="search" aria-label="{% trans 'Search processes...' %}">
             </div>
         </div>
 
@@ -904,7 +904,7 @@
                         </td>
                         <td>
                             <button ng-click="killProcess(process.PID)" class="kill-button">
-                                <i class="fas fa-times"></i>
+                                <i class="fas fa-times" aria-hidden="true"></i>
                                 {% trans "Kill" %}
                             </button>
                         </td>

@@ -406,7 +406,7 @@
 <div class="container">
     <div id="page-title">
         <h2>
-            <i class="fab fa-wordpress wp-logo"></i>
+            <i class="fab fa-wordpress wp-logo" aria-hidden="true"></i>
             {% trans "Install WordPress" %}
         </h2>
         <p>{% trans "Install WordPress with LSCache for optimal performance. Get your site up and running in minutes!" %}</p>
@@ -415,20 +415,20 @@
     <div ng-controller="installWordPressCTRL" class="panel">
         <div class="panel-body">
             <h3 class="title-hero">
-                <i class="fab fa-wordpress" style="color: var(--primary-color);"></i>
+                <i class="fab fa-wordpress" style="color: var(--primary-color);" aria-hidden="true"></i>
                 <span id="domainNamePage">{{ domainName }}</span> - {% trans "Installation Details" %}
                 <span style="margin-left: auto;">
                     <a href="https://cyberpanel.net/KnowledgeBase/home/deploy-a-wordpress-on-cyberpanel/">
-                        <i class="fas fa-tachometer-alt"></i>
+                        <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                         Stress Test
                     </a>
                 </span>
-                <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" id="wpInstallLoading">
+                <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}" id="wpInstallLoading" alt="">
             </h3>
             <div class="example-box-wrapper">
 
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     <div>
                         <strong>{% trans "WordPress Installation" %}</strong><br>
                         {% trans "Fill in the details below to install WordPress. Your site will be ready with LSCache optimization enabled by default." %}
@@ -438,57 +438,57 @@
                 <form name="websiteCreationForm" action="/" id="createPackages" class="form-horizontal bordered-row">
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-heading"></i>
+                        <label for="cpa11y-blog-title" class="col-sm-3 control-label">
+                            <i class="fas fa-heading" aria-hidden="true"></i>
                             {% trans "Blog Title" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="blogTitle" placeholder="My Awesome WordPress Site" required>
+                            <input id="cpa11y-blog-title" type="text" class="form-control" ng-model="blogTitle" placeholder="My Awesome WordPress Site" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-user"></i>
+                        <label for="cpa11y-login-user" class="col-sm-3 control-label">
+                            <i class="fas fa-user" aria-hidden="true"></i>
                             {% trans "Login User" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" ng-model="adminUser" placeholder="admin" required>
+                            <input id="cpa11y-login-user" type="text" class="form-control" ng-model="adminUser" placeholder="admin" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-lock"></i>
+                        <label for="cpa11y-login-password" class="col-sm-3 control-label">
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                             {% trans "Login Password" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="password" class="form-control" ng-model="adminPassword" placeholder="Strong password required" required>
+                            <input id="cpa11y-login-password" type="password" class="form-control" ng-model="adminPassword" placeholder="Strong password required" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-envelope"></i>
+                        <label for="cpa11y-email" class="col-sm-3 control-label">
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
                             {% trans "Email" %}
                         </label>
                         <div class="col-sm-6">
-                            <input type="email" class="form-control" ng-model="adminEmail" placeholder="admin@example.com" required>
+                            <input id="cpa11y-email" type="email" class="form-control" ng-model="adminEmail" placeholder="admin@example.com" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
-                        <label class="col-sm-3 control-label">
-                            <i class="fas fa-folder"></i>
+                        <label for="cpa11y-path" class="col-sm-3 control-label">
+                            <i class="fas fa-folder" aria-hidden="true"></i>
                             {% trans "Path" %}
                         </label>
                         <div class="col-sm-6">
-                            <input placeholder="{% trans "Leave empty to install in website home directory. (Without preceding slash)" %}" 
+                            <input id="cpa11y-path" placeholder="{% trans "Leave empty to install in website home directory. (Without preceding slash)" %}" 
                                    type="text" 
                                    class="form-control" 
                                    ng-model="installPath">
                             <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% trans "Example: blog or shop (no leading slash)" %}
                             </small>
                         </div>
@@ -498,7 +498,7 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-6">
                             <button type="button" ng-click="installWordPress()" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-download"></i>
+                                <i class="fas fa-download" aria-hidden="true"></i>
                                 {% trans "Install Now" %}
                             </button>
                         </div>
@@ -508,7 +508,7 @@
                         <label class="col-sm-2 control-label"></label>
                         <div class="col-sm-8">
 
-                            <div class="alert alert-success text-center">
+                            <div class="alert alert-success text-center" role="status">
                                 <h2>{$ currentStatus $}</h2>
                             </div>
 
@@ -519,13 +519,13 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="installationFailed" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
-                            <div ng-hide="installationSuccessfull" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="installationSuccessfull" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 <p>
                                     {% trans "Installation successful. Visit:" %} 
                                     <a href="{$ installationURL $}" target="_blank" style="font-weight: 600;">
@@ -534,15 +534,15 @@
                                     {% trans "or perform" %} 
                                     <strong>
                                         <a href="https://cyberpanel.net/KnowledgeBase/home/deploy-a-wordpress-on-cyberpanel/">
-                                            <i class="fas fa-tachometer-alt"></i>
+                                            <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                                             stress test
                                         </a>
                                     </strong>.
                                 </p>
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-wifi"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-wifi" aria-hidden="true"></i>
                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                             </div>
 
@@ -553,7 +553,7 @@
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-6">
                             <button type="button" ng-disabled="goBackDisable" ng-click="goBack()" class="btn btn-primary btn-lg btn-block">
-                                <i class="fas fa-arrow-left"></i>
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                 {% trans "Go Back" %}
                             </button>
                         </div>

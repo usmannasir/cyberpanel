@@ -166,12 +166,12 @@
             <div class="docker-section">
                 <h2 class="section-title">
                     INSTALL DOCKER
-                    <img ng-hide="installDockerStatus" src="{% static 'images/loading.gif' %}" class="loading-spinner">
+                    <img ng-hide="installDockerStatus" src="{% static 'images/loading.gif' %}" class="loading-spinner" alt="">
                 </h2>
 
                 {% if conErr == 1 %}
                     <div class="error-message">
-                        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;" aria-hidden="true"></i>
                         {% if status == 1 %}
                             <strong>{% trans "Connection Error" %}</strong><br>
                             {% trans "Unable to connect to docker daemon, please try restarting docker from service page" %}
@@ -194,12 +194,12 @@
                     <div class="action-section">
                         {% if status == 1 %}
                             <button ng-hide="dockerInstallBTN" class="btn btn-primary" ng-click="installDocker()">
-                                <i class="fas fa-download"></i>
+                                <i class="fas fa-download" aria-hidden="true"></i>
                                 {% trans "Install Docker" %}
                             </button>
                         {% else %}
                             <div class="error-message">
-                                <i class="fas fa-lock" style="margin-right: 8px;"></i>
+                                <i class="fas fa-lock" style="margin-right: 8px;" aria-hidden="true"></i>
                                 {% trans "You do not have permissions to install Docker. Please contact your system administrator" %}
                             </div>
                         {% endif %}

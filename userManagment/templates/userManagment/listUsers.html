@@ -294,7 +294,7 @@
             <h3 class="section-title">{% trans "List Users" %}</h3>
             <div class="header-actions">
                 <a class="btn-primary" href="{% url 'createUser' %}">
-                    <i class="fa fa-user-plus"></i> {% trans "Create User" %}
+                    <i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Create User" %}
                 </a>
             </div>
           </div>
@@ -323,10 +323,10 @@
                         <td ng-bind="record.owner"></td>
                         <td>
                             <span ng-if="record.state=='ACTIVE'" class="state-badge state-active">
-                                <i class="fa fa-check-circle"></i> {% trans "Active" %}
+                                <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Active" %}
                             </span>
                             <span ng-if="record.state=='SUSPENDED'" class="state-badge state-suspended">
-                                <i class="fa fa-pause-circle"></i> {% trans "Suspended" %}
+                                <i class="fa fa-pause-circle" aria-hidden="true"></i> {% trans "Suspended" %}
                             </span>
                         </td>
                         <td>
@@ -334,23 +334,23 @@
                                class="btn-action btn-suspend"
                                ng-click="controlUserState(record.name, 'SUSPEND')"
                                title="Suspend User">
-                               <i class="fa fa-pause"></i> {% trans "Suspend" %}
+                               <i class="fa fa-pause" aria-hidden="true"></i> {% trans "Suspend" %}
                             </a>
                             <a ng-show="record.state=='SUSPENDED'"
                                class="btn-action btn-activate"
                                ng-click="controlUserState(record.name, 'ACTIVATE')"
                                title="Activate User">
-                               <i class="fa fa-play"></i> {% trans "Activate" %}
+                               <i class="fa fa-play" aria-hidden="true"></i> {% trans "Activate" %}
                             </a>
                             <a ng-click="editInitial(record.name)"
                                class="btn-action btn-edit"
                                title="Edit User">
-                               <i class="fa fa-edit"></i> {% trans "Edit" %}
+                               <i class="fa fa-edit" aria-hidden="true"></i> {% trans "Edit" %}
                             </a>
                             <a ng-click="deleteUserInitial(record.name)"
                                class="btn-action btn-delete"
                                title="Delete User">
-                               <i class="fa fa-trash"></i> {% trans "Delete" %}
+                               <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Delete" %}
                             </a>
                         </td>
                     </tr>
@@ -368,20 +368,20 @@
                               <span aria-hidden="true">&times;</span>
                           </button>
                           <h4 class="modal-title" id="deleteModalLabel">
-                              <i class="fa fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                              <i class="fa fa-exclamation-triangle" style="color: #f59e0b;" aria-hidden="true"></i>
                               {% trans "Delete User" %} {$ UserToDelete $}
-                              <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                              <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                           </h4>
                       </div>
                       <div class="modal-body">
                           <p class="danger-text">
-                              <i class="fa fa-warning"></i> {% trans "This will delete all sites owned by this user and this process cannot be reversed." %}
+                              <i class="fa fa-warning" aria-hidden="true"></i> {% trans "This will delete all sites owned by this user and this process cannot be reversed." %}
                           </p>
                       </div>
                       <div class="modal-footer">
                           <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Cancel" %}</button>
                           <button ng-click="deleteUserFinal()" type="button" class="btn btn-danger">
-                              <i class="fa fa-trash"></i> {% trans "Delete Now" %}
+                              <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Delete Now" %}
                           </button>
                       </div>
                   </div>
@@ -398,19 +398,19 @@
                           </button>
                           <h4 class="modal-title" id="editModalLabel">
                               {% trans "Edit User" %}
-                              <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                              <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                           </h4>
                       </div>
                       <div class="modal-body">
                           <form>
                               <div class="form-group">
-                                  <label class="form-label">{% trans "Username" %}</label>
-                                  <input type="text" class="form-control" ng-model="name" readonly>
+                                  <label for="cpa11y-username" class="form-label">{% trans "Username" %}</label>
+                                  <input id="cpa11y-username" type="text" class="form-control" ng-model="name" readonly>
                               </div>
 
                               <div class="form-group">
-                                  <label class="form-label">{% trans "New Owner" %}</label>
-                                  <select ng-change="saveResellerChanges()" ng-model="$parent.newOwner" class="form-control">
+                                  <label for="cpa11y-new-owner" class="form-label">{% trans "New Owner" %}</label>
+                                  <select id="cpa11y-new-owner" ng-change="saveResellerChanges()" ng-model="$parent.newOwner" class="form-control">
                                       <option value="">-- {% trans "Select new owner" %} --</option>
                                       {% for items in resellerPrivUsers %}
                                           <option>{{ items }}</option>
@@ -419,8 +419,8 @@
                               </div>
 
                               <div class="form-group">
-                                  <label class="form-label">{% trans "Access Control List" %}</label>
-                                  <select ng-change="changeACLFunc()" ng-model="$parent.selectedACL" class="form-control">
+                                  <label for="cpa11y-access-control-list" class="form-label">{% trans "Access Control List" %}</label>
+                                  <select id="cpa11y-access-control-list" ng-change="changeACLFunc()" ng-model="$parent.selectedACL" class="form-control">
                                       <option value="">-- {% trans "Select ACL" %} --</option>
                                       {% for items in aclNames %}
                                           <option>{{ items }}</option>

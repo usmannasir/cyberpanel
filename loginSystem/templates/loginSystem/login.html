@@ -23,11 +23,11 @@
         }
 
         .col-login-left {
-            background: rgb(51, 204, 204);
-            background: -moz-linear-gradient(0deg, rgba(51, 204, 204, 1) 0%, rgba(0, 0, 122, 1) 100%);
-            background: -webkit-linear-gradient(0deg, rgba(51, 204, 204, 1) 0%, rgba(0, 0, 122, 1) 100%);
-            background: linear-gradient(0deg, rgba(51, 204, 204, 1) 0%, rgba(0, 0, 122, 1) 100%);
-            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#33cccc", endColorstr="#00007a", GradientType=1);
+            background: #0E7D7D;
+            background: -moz-linear-gradient(0deg, rgba(14, 125, 125, 1) 0%, rgba(0, 0, 122, 1) 100%);
+            background: -webkit-linear-gradient(0deg, rgba(14, 125, 125, 1) 0%, rgba(0, 0, 122, 1) 100%);
+            background: linear-gradient(0deg, rgba(14, 125, 125, 1) 0%, rgba(0, 0, 122, 1) 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#0e7d7d", endColorstr="#00007a", GradientType=1);
             justify-content: space-between;
         }
 
@@ -39,7 +39,7 @@
         }
 
         button.btn.btn-login {
-            background-color: rgb(51, 204, 204);
+            background-color: #0E7D7D;
             box-shadow: 0 0px 0px rgba(0, 0, 0, 0), 0 1px 2px rgba(0, 0, 0, 0);
             transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
         }
@@ -51,7 +51,7 @@
         .form-group .input-group select.form-control:focus,
         .form-group .input-group input.form-control:focus,
         button.btn.btn-login {
-            border: 1px solid rgb(51, 204, 204);
+            border: 1px solid #0E7D7D;
         }
 
         .col-login-right {
@@ -78,7 +78,7 @@
         }
 
         .login-changelogs .card:hover {
-            color: rgb(51, 204, 204);
+            color: #0E7D7D;
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16), 0 10px 10px rgba(0, 0, 0, 0.18);
         }
 
@@ -96,7 +96,7 @@
         h4.card-learnmore {
             margin-top: 15px;
             position: relative;
-            color: rgb(51, 204, 204);
+            color: #0E7D7D;
             font-weight: 500;
             font-size: 1.2em;
 
@@ -105,7 +105,7 @@
         h4.card-learnmore span {
             display: inline;
             padding-bottom: 4px;
-            border-bottom: 1px solid rgb(51, 204, 204);
+            border-bottom: 1px solid #0E7D7D;
         }
 
         .alert.alert-danger {
@@ -184,7 +184,7 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
     <title> Login - CyberPanel </title>
     <meta name="description" content="Login to your CyberPanel Account">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Favicons -->
     {% load static %}
@@ -230,7 +230,7 @@
 </head>
 
 <body>
-<div id="loading">
+<div id="loading" role="status" aria-label="Loading">
     <div class="spinner">
         <div class="bounce1"></div>
         <div class="bounce2"></div>
@@ -238,16 +238,16 @@
     </div>
 </div>
 
-<div class>
+<div>
     <div class="col-md-6 col-sm-12 hidden-md col-login col-login-left">
         <div class="row panel-body my-30" style="padding-bottom: 0px;">
             <div class="col-lg-6 col-md-12 panel-body">
                 <h2 class="text-transform-upr text-white my-30 text-bold">WEB HOSTING CONTROL PANEL
-                    </br />FOR EVERYONE
+                    <br>FOR EVERYONE
 
                 </h2>
-                <h4 class="text-white">Powered By OpenLiteSpeed/LiteSpeed Enterprise. Built For Speed, Security and
-                    Reliability.</h4>
+                <p class="text-white" style="font-size: 17px;">Powered By OpenLiteSpeed/LiteSpeed Enterprise. Built For Speed, Security and
+                    Reliability.</p>
             </div>
             <div class="col-lg-6 col-md-12 text-center panel-body">
                 <img class="" src="/static/images/cyberpanel-banner-graphics.png" alt="" width="96%">
@@ -259,14 +259,14 @@
                     <div class="card mb-3" style="max-width: 540px;">
                         <div class="row g-0">
                             <div class="col-md-3">
-                                <img src="{% static 'baseTemplate/images/new-design-list-websites-square.png' %}" alt="..."
+                                <img src="{% static 'baseTemplate/images/new-design-list-websites-square.png' %}" alt=""
                                      class="object-fit">
                             </div>
                             <div class="col-md-8 ml-5">
                                 <div class="card-body d-flex flex-column justify-content-around">
                                     <h3 class="card-title mb-5 font-weight-bold">Change Logs</h3>
                                     <p class="card-text mt-10">Stay up to date about new releases and features.</p>
-                                    <h4 class="card-learnmore">
+                                    <span class="card-learnmore" style="display:block;">
                       <span>
                         Learn More
                         <i>
@@ -277,7 +277,7 @@
                             </svg>
                           </i>
                       </span>
-                                    </h4>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -289,44 +289,44 @@
 
     <div ng-app="loginSystem" ng-controller="loginSystem" class="col-md-6 col-sm-12 col-login col-login-right" style="">
         <div class="login-wrapper">
-            <form id="loginForm" action="/" class="col-md-8 col-md-offset-2">
+            <form id="loginForm" ng-submit="verifyLoginCredentials()" novalidate class="col-md-8 col-md-offset-2">
                 <h1 class="text-transform-upr text-center panel-body text-bold"
-                    style="padding-bottom: 0px; color: #33CCCC;">
-                    <img class="center-block text-center my-20" src="{% static 'baseTemplate/cyber-panel-logo.svg' %}">
+                    style="padding-bottom: 0px; color: #0E7D7D;">
+                    <img class="center-block text-center my-20" src="{% static 'baseTemplate/cyber-panel-logo.svg' %}" alt="">
                     CyberPanel
                 </h1>
-                <h4 class="text-muted text-center mb-10">Web Hosting Control Panel</h4>
+                <p class="text-muted text-center mb-10" style="font-size: 17px; margin-top: 10px;">Web Hosting Control Panel</p>
                 <div class="">
                     <div class="mx-30">
                         <div class="content-box-wrapper panel-body my-10 mx-30">
                             <div class="form-group">
                                 <div class="input-group">
-                                    <input ng-model="username" type="text" class="form-control" name="username"
-                                           placeholder="Enter username" required style="height: 45px;">
+                                    <input ng-model="username" type="text" class="form-control" name="username" autocomplete="username"
+                                           placeholder="Enter username" required style="height: 45px;" aria-label="Enter username">
                                     <span class="input-group-addon bg-blue">
-                      <i class="glyph-icon icon-envelope-o"></i>
+                      <i class="glyph-icon icon-envelope-o" aria-hidden="true"></i>
                     </span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <div class="input-group">
-                                    <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
+                                    <input ng-model="password" type="password"
                                            class="form-control" id="password" placeholder="Password" required
-                                           name="password" style="height: 45px;" autocomplete="current-password">
+                                           name="password" style="height: 45px;" autocomplete="current-password" aria-label="Password">
                                     <span class="input-group-addon bg-blue">
-                      <i class="glyph-icon icon-unlock-alt"></i>
+                      <i class="glyph-icon icon-unlock-alt" aria-hidden="true"></i>
                     </span>
                                 </div>
-                                <img id="verifyingLogin" class="center-block" src="{% static 'baseTemplate/images/loading.gif' %}">
+                                <img id="verifyingLogin" class="center-block" src="{% static 'baseTemplate/images/loading.gif' %}" alt="Verifying login">
                             </div>
 
                             <div ng-hide="verifyCode" class="form-group">
                                 <div class="input-group">
-                                    <input ng-model="twofa" type="text" class="form-control" name="twofa"
+                                    <input ng-model="twofa" type="text" class="form-control" name="twofa" autocomplete="one-time-code" inputmode="numeric"
                                            placeholder="Enter code from Google Authenticator" required
-                                           style="height: 45px;">
+                                           style="height: 45px;" aria-label="Enter code from Google Authenticator">
                                     <span class="input-group-addon bg-blue">
-                      <i class="glyph-icon icon-unlock-alt"></i>
+                      <i class="glyph-icon icon-unlock-alt" aria-hidden="true"></i>
                     </span>
                                 </div>
                             </div>
@@ -335,7 +335,7 @@
                             <div class="form-group">
                                 <div class="input-group">
                                     <select ng-model="languageSelection" ng-init="languageSelection='english'"
-                                            class="form-control">
+                                            class="form-control" aria-label="Language">
                                         <option value="english">English</option>
                                         <option>Bangla</option>
                                         <option>Bosnian</option>
@@ -358,20 +358,21 @@
                             </div>
 
 
-                            <button type="button" style="background-color: #33CCCC;" ng-click="verifyLoginCredentials()"
+                            <button type="submit" style="background-color: #0E7D7D;"
                                     class="btn btn-success btn-block  btn-login">Sign In
                             </button>
                         </div>
                     </div>
                 </div>
             </form>
-            <div id="loginFailed" class="alert alert-danger">
+            <div id="loginFailed" class="alert alert-danger" role="alert">
                 <p>Could Not Login, Error message: <span ng-bind="errorMessage"></span></p>
             </div>
         </div>
     </div>
 </div>
 <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
+<script src="https://code.angularjs.org/1.6.5/angular-aria.min.js"></script>
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
 <script src="{% static 'loginSystem/login-system.js' %}"></script>
 

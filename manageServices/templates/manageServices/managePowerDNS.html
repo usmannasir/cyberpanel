@@ -392,14 +392,14 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-sitemap"></i>
+                    <i class="fas fa-sitemap" aria-hidden="true"></i>
                 </div>
                 {% trans "Manage PowerDNS" %}
             </h1>
             <p>{% trans "Enable or disable DNS services and configure DNS operation mode" %}</p>
             <div style="margin-top: 20px;">
                 <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/dns-management-cyberpanel/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Services Docs" %}
                 </a>
             </div>
@@ -416,7 +416,7 @@
                 
                 <div class="status-box">
                     <div class="status-icon">
-                        <i class="fas fa-power-off"></i>
+                        <i class="fas fa-power-off" aria-hidden="true"></i>
                     </div>
                     <div class="status-info">
                         <div class="status-label">{% trans "Service Status" %}</div>
@@ -438,8 +438,8 @@
                 <form>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "Select Function Mode" %}</label>
-                        <select ng-change="modeChange()" ng-model="dnsMode" class="form-select">
+                        <label for="cpa11y-select-function-mode" class="form-label">{% trans "Select Function Mode" %}</label>
+                        <select id="cpa11y-select-function-mode" ng-change="modeChange()" ng-model="dnsMode" class="form-select">
                             <option>Default</option>
                             <option>MASTER</option>
                             <option>SLAVE</option>
@@ -451,20 +451,20 @@
                     <div ng-hide="masterServerHD" class="config-card">
                         <div class="config-card-title">
                             <div class="config-card-icon">
-                                <i class="fas fa-server"></i>
+                                <i class="fas fa-server" aria-hidden="true"></i>
                             </div>
                             {% trans "Slave Mode Configuration" %}
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServerNS='{{ slaveServerNS }}'" ng-model="slaveServerNS" placeholder="ns1.example.com" required>
+                            <label for="cpa11y-slave-server" class="form-label">{% trans "Slave Server" %}</label>
+                            <input id="cpa11y-slave-server" type="text" class="form-control" ng-init="slaveServerNS='{{ slaveServerNS }}'" ng-model="slaveServerNS" placeholder="ns1.example.com" required>
                             <div class="help-text">{% trans "Enter the hostname of the slave server" %}</div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Master Server IP" %}</label>
-                            <input type="text" class="form-control" ng-init="masterServerIP='{{ masterServerIP }}'" ng-model="masterServerIP" placeholder="192.168.1.100" required>
+                            <label for="cpa11y-master-server-ip" class="form-label">{% trans "Master Server IP" %}</label>
+                            <input id="cpa11y-master-server-ip" type="text" class="form-control" ng-init="masterServerIP='{{ masterServerIP }}'" ng-model="masterServerIP" placeholder="192.168.1.100" required>
                             <div class="help-text">{% trans "Enter the IP address of the master server" %}</div>
                         </div>
                     </div>
@@ -473,69 +473,69 @@
                     <div ng-hide="slaveIPs" class="config-card">
                         <div class="config-card-title">
                             <div class="config-card-icon">
-                                <i class="fas fa-network-wired"></i>
+                                <i class="fas fa-network-wired" aria-hidden="true"></i>
                             </div>
                             {% trans "Master Mode Configuration" %}
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server 1" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServer='{{ slaveServer }}'" ng-model="slaveServer" placeholder="ns2.example.com" required>
+                            <label for="cpa11y-slave-server-1" class="form-label">{% trans "Slave Server 1" %}</label>
+                            <input id="cpa11y-slave-server-1" type="text" class="form-control" ng-init="slaveServer='{{ slaveServer }}'" ng-model="slaveServer" placeholder="ns2.example.com" required>
                             <div class="help-text">{% trans "Enter the hostname of the first slave server" %}</div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server IP" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServerIP='{{ slaveServerIP }}'" ng-model="slaveServerIP" placeholder="192.168.1.101" required>
+                            <label for="cpa11y-slave-server-ip" class="form-label">{% trans "Slave Server IP" %}</label>
+                            <input id="cpa11y-slave-server-ip" type="text" class="form-control" ng-init="slaveServerIP='{{ slaveServerIP }}'" ng-model="slaveServerIP" placeholder="192.168.1.101" required>
                             <div class="help-text">{% trans "Enter the IP address of the first slave server" %}</div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server 2 (Optional)" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServer2='{{ slaveServer2 }}'" ng-model="slaveServer2" placeholder="ns3.example.com">
+                            <label for="cpa11y-slave-server-2-optional" class="form-label">{% trans "Slave Server 2 (Optional)" %}</label>
+                            <input id="cpa11y-slave-server-2-optional" type="text" class="form-control" ng-init="slaveServer2='{{ slaveServer2 }}'" ng-model="slaveServer2" placeholder="ns3.example.com">
                             <div class="help-text">{% trans "Enter the hostname of the second slave server (optional)" %}</div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server IP 2 (Optional)" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServerIP2='{{ slaveServerIP2 }}'" ng-model="slaveServerIP2" placeholder="192.168.1.102">
+                            <label for="cpa11y-slave-server-ip-2-optional" class="form-label">{% trans "Slave Server IP 2 (Optional)" %}</label>
+                            <input id="cpa11y-slave-server-ip-2-optional" type="text" class="form-control" ng-init="slaveServerIP2='{{ slaveServerIP2 }}'" ng-model="slaveServerIP2" placeholder="192.168.1.102">
                             <div class="help-text">{% trans "Enter the IP address of the second slave server (optional)" %}</div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server 3 (Optional)" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServer3='{{ slaveServer3 }}'" ng-model="slaveServer3" placeholder="ns4.example.com">
+                            <label for="cpa11y-slave-server-3-optional" class="form-label">{% trans "Slave Server 3 (Optional)" %}</label>
+                            <input id="cpa11y-slave-server-3-optional" type="text" class="form-control" ng-init="slaveServer3='{{ slaveServer3 }}'" ng-model="slaveServer3" placeholder="ns4.example.com">
                             <div class="help-text">{% trans "Enter the hostname of the third slave server (optional)" %}</div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">{% trans "Slave Server IP 3 (Optional)" %}</label>
-                            <input type="text" class="form-control" ng-init="slaveServerIP3='{{ slaveServerIP3 }}'" ng-model="slaveServerIP3" placeholder="192.168.1.103">
+                            <label for="cpa11y-slave-server-ip-3-optional" class="form-label">{% trans "Slave Server IP 3 (Optional)" %}</label>
+                            <input id="cpa11y-slave-server-ip-3-optional" type="text" class="form-control" ng-init="slaveServerIP3='{{ slaveServerIP3 }}'" ng-model="slaveServerIP3" placeholder="192.168.1.103">
                             <div class="help-text">{% trans "Enter the IP address of the third slave server (optional)" %}</div>
                         </div>
                     </div>
 
                     <div style="margin-top: 30px;">
                         <button type="button" ng-click="saveStatus('powerdns')" class="save-btn">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {% trans "Save changes" %}
                         </button>
                     </div>
 
                     <!-- Alert Messages -->
                     <div style="margin-top: 20px;">
-                        <div ng-hide="failedToFetch" class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle alert-icon"></i>
+                        <div ng-hide="failedToFetch" class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                             <span>{% trans "Error message: " %} {$ errorMessage $}</span>
                         </div>
 
-                        <div ng-hide="changesApplied" class="alert alert-success">
-                            <i class="fas fa-check-circle alert-icon"></i>
+                        <div ng-hide="changesApplied" class="alert alert-success" role="status">
+                            <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                             <span>{% trans "Changes successfully applied." %}</span>
                         </div>
 
-                        <div ng-hide="couldNotConnect" class="alert alert-danger">
-                            <i class="fas fa-wifi alert-icon"></i>
+                        <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                            <i class="fas fa-wifi alert-icon" aria-hidden="true"></i>
                             <span>{% trans "Could not connect. Please refresh this page." %}</span>
                         </div>
                     </div>
@@ -545,8 +545,8 @@
 
         {% else %}
         <div class="content-section">
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Only administrator can manage services." %}</span>
             </div>
         </div>

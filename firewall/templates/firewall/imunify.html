@@ -326,11 +326,11 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                 </div>
                 {% trans "Imunify 360" %}
                 <a href="https://cyberpanel.net/KnowledgeBase/home/install-and-use-imunify-on-cyberpanel/" target="_blank" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Documentation" %}
                 </a>
             </h1>
@@ -344,7 +344,7 @@
                 {% trans "Imunify is now integrated via their new API. You can manage Imunify by clicking below. You can use your server root credentials to access Imunify. Login details for Imunify360 is your server root and its password." %}
             </p>
             <a href="/imunify" target="_blank" class="access-btn">
-                <i class="fas fa-external-link-alt"></i>
+                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                 {% trans "Access Now" %}
             </a>
         </div>
@@ -363,7 +363,7 @@
             <div class="info-alert">
                 <div class="info-alert-header">
                     <div class="info-alert-icon">
-                        <i class="fas fa-info"></i>
+                        <i class="fas fa-info" aria-hidden="true"></i>
                     </div>
                     <h4 class="info-alert-title">{% trans "We will run following commands again:" %}</h4>
                 </div>
@@ -380,21 +380,21 @@
             <!-- Installation Output -->
             <div ng-hide="installBoxGen" style="margin-top: 20px;">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Installation Output" %}</label>
-                    <textarea ng-model="requestData" rows="10" class="form-control" readonly>{{ requestData }}</textarea>
+                    <label for="cpa11y-installation-output" class="form-label">{% trans "Installation Output" %}</label>
+                    <textarea id="cpa11y-installation-output" ng-model="requestData" rows="10" class="form-control" readonly>{{ requestData }}</textarea>
                 </div>
             </div>
 
             <!-- Reinstall Form -->
             <form style="margin-top: 20px;">
                 <div ng-hide="dockerInstallBTN" class="form-group">
-                    <label class="form-label">{% trans "Imunify Key" %}</label>
-                    <input name="key" type="text" class="form-control" ng-model="key" placeholder="{% trans 'Enter your Imunify360 license key' %}" required>
+                    <label for="cpa11y-imunify-key" class="form-label">{% trans "Imunify Key" %}</label>
+                    <input id="cpa11y-imunify-key" name="key" type="text" class="form-control" ng-model="key" placeholder="{% trans 'Enter your Imunify360 license key' %}" required>
                 </div>
 
                 <div ng-hide="dockerInstallBTN || installationDetailsForm">
                     <button type="button" class="submit-btn" ng-click="submitinstallImunify()">
-                        <i class="fas fa-download"></i>
+                        <i class="fas fa-download" aria-hidden="true"></i>
                         {% trans "Re-Install Now" %}
                     </button>
                 </div>

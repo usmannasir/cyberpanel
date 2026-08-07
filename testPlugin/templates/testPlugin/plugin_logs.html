@@ -192,7 +192,7 @@
         <!-- Logs Header -->
         <div class="logs-header">
             <h1>
-                <i class="fas fa-list" style="margin-right: 12px; color: #5856d6;"></i>
+                <i class="fas fa-list" style="margin-right: 12px; color: #5856d6;" aria-hidden="true"></i>
                 {% trans "Test Plugin Logs" %}
             </h1>
             <p>{% trans "View detailed activity logs for the test plugin" %}</p>
@@ -201,7 +201,7 @@
         <!-- Logs Content -->
         <div class="logs-content">
             <div class="filter-controls">
-                <select class="filter-select" id="action-filter" title="{% trans 'Filter logs by action type' %}">
+                <select class="filter-select" id="action-filter" title="{% trans 'Filter logs by action type' %}" aria-label="{% trans 'Filter logs by action type' %}">
                     <option value="">{% trans "All Actions" %}</option>
                     <option value="test_button_click">{% trans "Test Button Clicks" %}</option>
                     <option value="plugin_toggle">{% trans "Plugin Toggle" %}</option>
@@ -210,17 +210,17 @@
                 </select>
                 
                 <a href="{% url 'testPlugin:plugin_home' %}" class="btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     {% trans "Back to Plugin" %}
                 </a>
                 
         <a href="{% url 'testPlugin:plugin_docs' %}" class="btn-secondary">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-book" aria-hidden="true"></i>
             {% trans "Documentation" %}
         </a>
         
         <a href="{% url 'testPlugin:security_info' %}" class="btn-secondary">
-            <i class="fas fa-shield-alt"></i>
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>
             {% trans "Security Info" %}
         </a>
             </div>
@@ -240,15 +240,15 @@
                         <td>
                             <span class="log-icon {% if 'error' in log.action %}error{% elif 'success' in log.action or 'click' in log.action %}success{% elif 'warning' in log.action %}warning{% else %}info{% endif %}">
                                 {% if 'click' in log.action %}
-                                    <i class="fas fa-mouse-pointer"></i>
+                                    <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
                                 {% elif 'toggle' in log.action %}
-                                    <i class="fas fa-toggle-on"></i>
+                                    <i class="fas fa-toggle-on" aria-hidden="true"></i>
                                 {% elif 'settings' in log.action %}
-                                    <i class="fas fa-cog"></i>
+                                    <i class="fas fa-cog" aria-hidden="true"></i>
                                 {% elif 'visit' in log.action %}
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                 {% else %}
-                                    <i class="fas fa-info-circle"></i>
+                                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 {% endif %}
                             </span>
                             <span class="log-action">{{ log.action|title|replace:"_":" " }}</span>
@@ -261,7 +261,7 @@
             </table>
             {% else %}
             <div class="empty-state">
-                <i class="fas fa-inbox"></i>
+                <i class="fas fa-inbox" aria-hidden="true"></i>
                 <h3>{% trans "No Logs Found" %}</h3>
                 <p>{% trans "No activity logs available yet. Start using the plugin to see logs here." %}</p>
             </div>

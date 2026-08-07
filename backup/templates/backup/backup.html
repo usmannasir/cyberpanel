@@ -456,13 +456,13 @@
     <div class="modern-container" ng-controller="backupWebsiteControl">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-download"></i>
+                <i class="fas fa-download" aria-hidden="true"></i>
                 {% trans "Backup Website" %}
             </h1>
             <p class="page-subtitle">{% trans "Create and manage backups of your websites to ensure data safety" %}</p>
             <div class="header-actions">
                 <a href="https://cyberpanel.net/KnowledgeBase/home/backup-restore/" target="_blank" class="btn-secondary">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Backup Documentation" %}
                 </a>
             </div>
@@ -471,11 +471,11 @@
         <!-- Promo Banner -->
         <div class="promo-banner">
             <span class="promo-text">
-                <i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>
+                <i class="fas fa-shield-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                 {% trans "Configure automatic backups to our secure servers in 60 seconds" %}
             </span>
             <a href="/backup/OneClickBackups" class="promo-link">
-                <i class="fas fa-rocket"></i>
+                <i class="fas fa-rocket" aria-hidden="true"></i>
                 {% trans "Set-up now" %}
             </a>
         </div>
@@ -483,7 +483,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-archive"></i>
+                    <i class="fas fa-archive" aria-hidden="true"></i>
                     {% trans "Create New Backup" %}
                     <span ng-hide="backupLoading" class="loading-spinner"></span>
                 </h2>
@@ -495,7 +495,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Select Website" %}</label>
+                                    <label for="create-backup-select" class="form-label">{% trans "Select Website" %}</label>
                                     <select id="create-backup-select" ng-model="websiteToBeBacked" ng-change="fetchDetails()" class="form-control">
                                         <option value="">{% trans "Choose a website..." %}</option>
                                         {% for items in websiteList %}
@@ -506,8 +506,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group destinationHide">
-                                    <label class="form-label">{% trans "Destination" %}</label>
-                                    <select ng-change="destinationSelection()" ng-model="backupDestinations" class="form-control">
+                                    <label for="cpa11y-destination" class="form-label">{% trans "Destination" %}</label>
+                                    <select id="cpa11y-destination" ng-change="destinationSelection()" ng-model="backupDestinations" class="form-control">
                                         <option>{% trans "Home" %}</option>
                                     </select>
                                 </div>
@@ -521,7 +521,7 @@
                         <div class="running-status">
                             <div class="status-info">
                                 <div class="status-icon">
-                                    <i class="fas fa-sync-alt fa-spin" style="color: white;"></i>
+                                    <i class="fas fa-sync-alt fa-spin" style="color: white;" aria-hidden="true"></i>
                                 </div>
                                 <div class="status-details">
                                     <h4>{% trans "Backup in Progress" %}</h4>
@@ -538,11 +538,11 @@
 
                     <div class="button-group">
                         <button type="button" ng-click="createBackup()" id="createBackup" class="btn-primary destinationHide">
-                            <i class="fas fa-play"></i>
+                            <i class="fas fa-play" aria-hidden="true"></i>
                             {% trans "Create Backup" %}
                         </button>
                         <button type="button" ng-click="cancelBackup()" ng-hide="cancelButton" class="btn-danger">
-                            <i class="fas fa-stop"></i>
+                            <i class="fas fa-stop" aria-hidden="true"></i>
                             {% trans "Cancel Backup" %}
                         </button>
                     </div>
@@ -555,7 +555,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-history"></i>
+                    <i class="fas fa-history" aria-hidden="true"></i>
                     {% trans "Existing Backups" %}
                 </h2>
             </div>
@@ -578,7 +578,7 @@
                                 <span class="file-badge" ng-bind="record.file"></span>
                             </td>
                             <td>
-                                <i class="fas fa-calendar-alt" style="color: var(--text-secondary, #64748b); margin-right: 0.5rem;"></i>
+                                <i class="fas fa-calendar-alt" style="color: var(--text-secondary, #64748b); margin-right: 0.5rem;" aria-hidden="true"></i>
                                 <span ng-bind="record.date"></span>
                             </td>
                             <td>
@@ -589,7 +589,7 @@
                             </td>
                             <td style="text-align: center;">
                                 <button type="button" ng-click="deleteBackup(record.id)" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                     {% trans "Delete" %}
                                 </button>
                             </td>
@@ -600,13 +600,13 @@
         </div>
 
         <!-- Alert Messages -->
-        <div id="websiteDeleteFailure" class="alert alert-danger" style="display: none;">
-            <i class="fas fa-exclamation-circle"></i>
+        <div id="websiteDeleteFailure" class="alert alert-danger" style="display: none;" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             {% trans "Cannot delete backup. Error message:" %} {$ errorMessage $}
         </div>
 
-        <div id="websiteDeleteSuccess" class="alert alert-success" style="display: none;">
-            <i class="fas fa-check-circle"></i>
+        <div id="websiteDeleteSuccess" class="alert alert-success" style="display: none;" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             {% trans "Backup" %} <strong>{$ deletedWebsite $}</strong> {% trans "successfully deleted" %}
         </div>
     </div>

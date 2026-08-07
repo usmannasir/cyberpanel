@@ -148,7 +148,7 @@
                 {% if manageSSL or admin %}
                 <a href="{% url 'manageSSL' %}" class="function-card">
                     <div class="function-icon">
-                        <i class="fas fa-shield-alt"></i>
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i>
                     </div>
                     <h4 class="function-title">{% trans "Manage SSL" %}</h4>
                     <p class="function-desc">{% trans "Issue and manage SSL certificates for your websites" %}</p>
@@ -158,7 +158,7 @@
                 {% if hostnameSSL or admin %}
                 <a href="{% url 'sslForHostName' %}" class="function-card">
                     <div class="function-icon">
-                        <i class="fas fa-server"></i>
+                        <i class="fas fa-server" aria-hidden="true"></i>
                     </div>
                     <h4 class="function-title">{% trans "Hostname SSL" %}</h4>
                     <p class="function-desc">{% trans "Secure your server hostname with SSL certificate" %}</p>
@@ -168,7 +168,7 @@
                 {% if mailServerSSL or admin %}
                 <a href="{% url 'sslForMailServer' %}" class="function-card">
                     <div class="function-icon">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
                     </div>
                     <h4 class="function-title">{% trans "MailServer SSL" %}</h4>
                     <p class="function-desc">{% trans "Enable SSL for mail server (Postfix/Dovecot)" %}</p>
@@ -178,7 +178,7 @@
                 {% if admin %}
                 <a href="{% url 'v2ManageSSL' %}" class="function-card">
                     <div class="function-icon">
-                        <i class="fas fa-rocket"></i>
+                        <i class="fas fa-rocket" aria-hidden="true"></i>
                     </div>
                     <h4 class="function-title">{% trans "SSL v2" %}</h4>
                     <p class="function-desc">{% trans "Advanced SSL management with DNS automation" %}</p>

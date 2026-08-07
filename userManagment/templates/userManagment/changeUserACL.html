@@ -130,15 +130,15 @@
         <div ng-controller="changeUserACLCTRL" class="content-card">
             <h2 class="card-title">
                 {% trans "Change User ACL" %}
-                <img class="loading-icon" ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
+                <img class="loading-icon" ng-hide="aclLoading" src="{% static 'images/loading.gif' %}" alt="">
             </h2>
             
             <form action="/" class="form-horizontal">
 
 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select User" %}</label>
-                    <select ng-model="selectedUser" class="form-control">
+                    <label for="cpa11y-select-user" class="form-label">{% trans "Select User" %}</label>
+                    <select id="cpa11y-select-user" ng-model="selectedUser" class="form-control">
                         <option value="">-- {% trans "Choose a user" %} --</option>
                         {% for items in usersList %}
                             <option>{{ items }}</option>
@@ -147,8 +147,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select ACL" %}</label>
-                    <select ng-model="selectedACL" class="form-control">
+                    <label for="cpa11y-select-acl" class="form-label">{% trans "Select ACL" %}</label>
+                    <select id="cpa11y-select-acl" ng-model="selectedACL" class="form-control">
                         <option value="">-- {% trans "Choose an ACL" %} --</option>
                         {% for items in aclNames %}
                             <option>{{ items }}</option>
@@ -158,7 +158,7 @@
 
                 <div ng-hide="deleteACLButton" class="form-group">
                     <button type="button" ng-click="changeACLFunc()" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Change ACL" %}
                     </button>
                 </div>

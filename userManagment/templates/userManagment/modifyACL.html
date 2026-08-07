@@ -350,8 +350,8 @@
         <div class="content-card" ng-hide="aclDetails">
             <h2 class="card-title">{% trans "Permissions Configuration" %}</h2>
             
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
+            <div class="alert alert-info" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <span>{% trans "Configure the permissions for this ACL. Changes will be applied to all users assigned to this ACL." %}</span>
             </div>
 
@@ -366,7 +366,7 @@
                 <!-- Version Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-code-branch"></i>
+                        <i class="fas fa-code-branch" aria-hidden="true"></i>
                         {% trans "Version Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -380,7 +380,7 @@
                 <!-- User Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-users" aria-hidden="true"></i>
                         {% trans "User Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -410,7 +410,7 @@
                 <!-- Website Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-globe"></i>
+                        <i class="fas fa-globe" aria-hidden="true"></i>
                         {% trans "Website Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -436,7 +436,7 @@
                 <!-- Package Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-box"></i>
+                        <i class="fas fa-box" aria-hidden="true"></i>
                         {% trans "Package Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -462,7 +462,7 @@
                 <!-- Database Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-database" aria-hidden="true"></i>
                         {% trans "Database Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -484,7 +484,7 @@
                 <!-- DNS Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-network-wired"></i>
+                        <i class="fas fa-network-wired" aria-hidden="true"></i>
                         {% trans "DNS Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -510,7 +510,7 @@
                 <!-- Email Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
                         {% trans "Email Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -544,7 +544,7 @@
                 <!-- FTP Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-folder"></i>
+                        <i class="fas fa-folder" aria-hidden="true"></i>
                         {% trans "FTP Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -566,7 +566,7 @@
                 <!-- Backup Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Backup Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -600,7 +600,7 @@
                 <!-- SSL Management -->
                 <div class="permission-category">
                     <h3 class="category-title">
-                        <i class="fas fa-lock"></i>
+                        <i class="fas fa-lock" aria-hidden="true"></i>
                         {% trans "SSL Management" %}
                     </h3>
                     <div class="checkbox-group">
@@ -622,7 +622,7 @@
 
             <div class="save-container">
                 <button type="button" ng-click="saveChanges()" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
+                    <i class="fas fa-save" aria-hidden="true"></i>
                     {% trans "Save Changes" %}
                     <span ng-hide="aclLoading" class="loading-spinner"></span>
                 </button>

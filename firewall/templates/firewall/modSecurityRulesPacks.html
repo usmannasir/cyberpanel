@@ -406,7 +406,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="modsec-icon">
-                    <i class="fas fa-shield-alt fa-2x"></i>
+                    <i class="fas fa-shield-alt fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "ModSecurity Rules Packages" %}
             </div>
@@ -414,7 +414,7 @@
                 {% trans "Install and manage ModSecurity rule packages for enhanced web application security." %}
             </p>
             <a href="https://community.cyberpanel.net/t/4-mod-security-rules-packages/133" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "ModSec Docs" %}
             </a>
         </div>
@@ -423,10 +423,10 @@
     {% if modSecInstalled == 0 %}
         <!-- Install Panel -->
         <div class="install-panel">
-            <i class="fas fa-shield-alt install-icon"></i>
+            <i class="fas fa-shield-alt install-icon" aria-hidden="true"></i>
             <h2 class="install-title">{% trans "ModSecurity Not Installed" %}</h2>
             <a href="{% url 'modSecurity' %}" class="btn-install">
-                <i class="fas fa-download"></i>
+                <i class="fas fa-download" aria-hidden="true"></i>
                 {% trans "Install Now" %}
             </a>
         </div>
@@ -458,7 +458,7 @@
                         </td>
                         <td style="text-align: right;">
                             <button ng-disabled="owaspDisable" ng-click="fetchRulesFile('owasp')" class="btn-configure">
-                                <i class="fas fa-cog"></i>
+                                <i class="fas fa-cog" aria-hidden="true"></i>
                                 {% trans "Configure" %}
                             </button>
                         </td>
@@ -469,23 +469,23 @@
         
         <!-- Status Messages -->
         <div style="max-width: 600px; margin: 2rem auto;">
-            <div ng-hide="installationQuote" class="alert alert-success">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div ng-hide="installationQuote" class="alert alert-success" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Operation successful." %}</span>
             </div>
             
-            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Could not connect. Please refresh this page." %}</span>
             </div>
             
-            <div ng-hide="installationFailed" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Operation failed, Error message:" %} {$ errorMessage $}</span>
             </div>
             
-            <div ng-hide="installationSuccess" class="alert alert-success">
-                <i class="fas fa-check-circle alert-icon"></i>
+            <div ng-hide="installationSuccess" class="alert alert-success" role="status">
+                <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                 <span>{% trans "Operation successful." %}</span>
             </div>
         </div>
@@ -493,7 +493,7 @@
         <!-- Rule Files Section -->
         <div ng-hide="ruleFiles" class="rule-files-section">
             <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary, #1e293b); margin-bottom: 1.5rem;">
-                <i class="fas fa-file-code" style="color: #5b5fcf; margin-right: 0.5rem;"></i>
+                <i class="fas fa-file-code" style="color: #5b5fcf; margin-right: 0.5rem;" aria-hidden="true"></i>
                 {% trans "Rule Files" %}
             </h3>
             

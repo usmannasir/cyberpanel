@@ -346,7 +346,7 @@
     <div class="modern-container" ng-controller="catchAllEmail">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-inbox"></i>
+                <i class="fas fa-inbox" aria-hidden="true"></i>
                 {% trans "Catch-All Email" %}
             </h1>
             <p class="page-subtitle">{% trans "Forward all unmatched emails for a domain to a single address" %}</p>
@@ -355,7 +355,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-filter"></i>
+                    <i class="fas fa-filter" aria-hidden="true"></i>
                     {% trans "Catch-All Configuration" %}
                     <span ng-show="loading" class="loading-spinner"></span>
                 </h2>
@@ -363,11 +363,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon" aria-hidden="true"></i>
                         <h3>{% trans "Postfix is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable Postfix to configure catch-all email" %}</p>
                         <a href="{% url 'managePostfix' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable Postfix Now" %}
                         </a>
                     </div>
@@ -377,8 +377,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Domain" %}</label>
-                                        <select ng-change="fetchConfig()" ng-model="selectedDomain" class="form-control">
+                                        <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                                        <select id="cpa11y-select-domain" ng-change="fetchConfig()" ng-model="selectedDomain" class="form-control">
                                             <option value="">{% trans "Choose a domain..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -390,10 +390,10 @@
                         </div>
 
                         <div ng-hide="configBox" class="config-box">
-                            <h3><i class="fas fa-cog"></i> {% trans "Configure Catch-All" %}</h3>
+                            <h3><i class="fas fa-cog" aria-hidden="true"></i> {% trans "Configure Catch-All" %}</h3>
 
                             <div ng-show="currentConfigured" class="current-config">
-                                <h4><i class="fas fa-info-circle"></i> {% trans "Current Configuration" %}</h4>
+                                <h4><i class="fas fa-info-circle" aria-hidden="true"></i> {% trans "Current Configuration" %}</h4>
                                 <div class="config-item">
                                     <span class="config-label">{% trans "Status" %}</span>
                                     <span class="status-badge" ng-class="currentEnabled ? 'status-enabled' : 'status-disabled'">
@@ -409,8 +409,8 @@
                             <div class="row mt-4">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Destination Email" %}</label>
-                                        <input type="email" class="form-control" ng-model="destination"
+                                        <label for="cpa11y-destination-email" class="form-label">{% trans "Destination Email" %}</label>
+                                        <input id="cpa11y-destination-email" type="email" class="form-control" ng-model="destination"
                                                placeholder="{% trans 'catchall@example.com' %}" required>
                                         <small class="text-muted">{% trans "All unmatched emails will be forwarded to this address" %}</small>
                                     </div>
@@ -431,11 +431,11 @@
                             <div class="row mt-3">
                                 <div class="col-md-12">
                                     <button type="button" ng-click="saveConfig()" class="btn-primary">
-                                        <i class="fas fa-save"></i>
+                                        <i class="fas fa-save" aria-hidden="true"></i>
                                         {% trans "Save Configuration" %}
                                     </button>
                                     <button type="button" ng-show="currentConfigured" ng-click="deleteConfig()" class="btn-danger ml-2">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                         {% trans "Remove Catch-All" %}
                                     </button>
                                 </div>
@@ -444,18 +444,18 @@
 
                         <!-- Alert Messages -->
                         <div ng-hide="notifyBox" class="form-section mt-3">
-                            <div ng-hide="errorBox" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="errorBox" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="successBox" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="successBox" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {$ successMessage $}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>

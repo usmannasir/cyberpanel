@@ -1,0 +1,1634 @@
+{
+ "clickable-div-not-focusable (2.1.1)": [
+  [
+   "serverStatus/templates/serverStatus/packageManager.html",
+   938,
+   "<div class=\"modal-overlay\" ng-show=\"showDetails\" ng-click=\"closeModal($event)\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/packageManager.html",
+   939,
+   "<div class=\"modal-content\" ng-click=\"$event.stopPropagation()\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/packageManager.html",
+   956,
+   "<div class=\"modal-overlay\" ng-show=\"showUpdate\" ng-click=\"closeModal($event)\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/packageManager.html",
+   957,
+   "<div class=\"modal-content\" ng-click=\"$event.stopPropagation()\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/litespeedStatus.html",
+   785,
+   "<div class=\"license-option\" ng-click=\"licenseStatus(1)\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/litespeedStatus.html",
+   792,
+   "<div class=\"license-option\" ng-click=\"showSerialBox()\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/litespeedStatus.html",
+   799,
+   "<div class=\"license-option\" ng-click=\"refreshLicense()\">"
+  ],
+  [
+   "serverStatus/templates/serverStatus/Switchoffsecurity.html",
+   130,
+   "<div ng-repeat=\"tag in ActivateTags | filter:tagFilter\"\n                                         ng-click=\"toggleActivat"
+  ],
+  [
+   "serverStatus/templates/serverStatus/Switchoffsecurity.html",
+   149,
+   "<div ng-repeat=\"tag in DeactivatedTags | filter:deactivatedTagFilter\"\n                                         ng-click="
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1139,
+   "<div class=\"fm-grid-item\" \n                     ng-repeat=\"file in allFilesAndFolders | filter:searchFilter | orderBy:so"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1169,
+   "<div class=\"fm-list-item\" \n                     ng-repeat=\"file in allFilesAndFolders | filter:searchFilter | orderBy:so"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1201,
+   "<div class=\"fm-context-item\" ng-click=\"openFile()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1205,
+   "<div class=\"fm-context-item\" ng-click=\"showHTMLEditorModal(1)\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1209,
+   "<div class=\"fm-context-item\" ng-click=\"downloadFile()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1214,
+   "<div class=\"fm-context-item\" ng-click=\"showCopyModal()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1218,
+   "<div class=\"fm-context-item\" ng-click=\"showMoveModal()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1222,
+   "<div class=\"fm-context-item\" ng-click=\"showRenameModal()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1227,
+   "<div class=\"fm-context-item\" ng-click=\"showPermissionsModal()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1231,
+   "<div class=\"fm-context-item\" ng-click=\"showCompressionModal()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1236,
+   "<div class=\"fm-context-item danger\" ng-click=\"showDeleteModal()\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-icons.html",
+   2,
+   "<div class=\"item-list clearfix\" ng-click=\"selectOrUnselect(null, $event)\" ng-right-click=\"selectOrUnselect(null, $event)"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/suspendWebsite.html",
+   511,
+   "<div class=\"state-option suspend\" ng-class=\"{selected: state == 'Suspend'}\" ng-click=\"state = 'Suspend'\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/suspendWebsite.html",
+   517,
+   "<div class=\"state-option unsuspend\" ng-class=\"{selected: state == 'Un-Suspend'}\" ng-click=\"state = 'Un-Suspend'\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1595,
+   "<div class=\"clickable-log\" ng-click=\"fetchLogs(1)\" title=\"{% trans 'Load Access Logs' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1601,
+   "<div class=\"clickable-log\" ng-click=\"fetchErrorLogs(1)\" title=\"{% trans 'Load Error Logs' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/sshAccess.html",
+   620,
+   "<div class=\"delete-key\" ng-click=\"deleteKey(record.key)\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/listWebsites.html",
+   721,
+   "<div class=\"website-row\" ng-click=\"toggleSite(web)\" title=\"Expand/collapse details\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   50,
+   "<div class=\"wm-folder-item\" ng-repeat=\"folder in folders\"\n                     ng-class=\"{'active': currentFolder === fo"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   126,
+   "<div class=\"wm-msg-row\" ng-repeat=\"msg in messages\"\n                     ng-class=\"{'unread': !msg.is_read, 'flagged': m"
+  ],
+  [
+   "userManagment/templates/userManagment/resellerCenter.html",
+   403,
+   "<div class=\"quick-action\" ng-click=\"websitesLimit='0'\">"
+  ],
+  [
+   "userManagment/templates/userManagment/resellerCenter.html",
+   407,
+   "<div class=\"quick-action\" ng-click=\"websitesLimit='10'\">"
+  ],
+  [
+   "userManagment/templates/userManagment/resellerCenter.html",
+   411,
+   "<div class=\"quick-action\" ng-click=\"websitesLimit='50'\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   715,
+   "<div class=\"action-btn\" ng-click=\"cAction('start')\" ng-disabled=\"status=='running'\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   720,
+   "<div class=\"action-btn\" ng-click=\"cAction('restart')\" ng-disabled=\"status!='running'\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   725,
+   "<div class=\"action-btn\" ng-click=\"cAction('stop')\" ng-disabled=\"status!='running'\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   730,
+   "<div class=\"action-btn\" ng-click=\"cAction('pause')\" ng-disabled=\"status!='running'\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   735,
+   "<div class=\"action-btn danger\" ng-click=\"cRemove()\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   745,
+   "<div class=\"action-btn\" ng-click=\"recreate()\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   755,
+   "<div class=\"action-btn\" ng-click=\"showTop()\" ng-disabled=\"loadingTop\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   760,
+   "<div class=\"action-btn\" ng-click=\"showCommandModal()\" ng-disabled=\"status!='running'\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   1118,
+   "<div class=\"history-item\" \n                                 ng-repeat=\"cmd in commandHistory track by $index\" \n         "
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   1187,
+   "<div ng-repeat=\"container in importContainers\" \n                             class=\"container-item\" \n                   "
+  ]
+ ],
+ "clickable-a-not-focusable (2.1.1)": [
+  [
+   "IncBackups/templates/IncBackups/createBackup.html",
+   524,
+   "<a ng-click=\"restore(record.id)\" data-toggle=\"modal\" data-target=\"#settings\"\n                               class=\"actio"
+  ],
+  [
+   "IncBackups/templates/IncBackups/restoreRemoteBackups.html",
+   111,
+   "<a ng-click=\"restorePoint(record.id, record.path)\"\n                                               class=\"btn btn-border "
+  ],
+  [
+   "IncBackups/templates/IncBackups/backupSchedule.html",
+   195,
+   "<a ng-click=\"delSchedule(record.id)\"\n                                               class=\"btn btn-border btn-alt border"
+  ],
+  [
+   "IncBackups/templates/IncBackups/backupSchedule.html",
+   199,
+   "<a data-toggle=\"modal\" data-target=\"#settings\"\n                                               ng-click=\"editInitial(reco"
+  ],
+  [
+   "IncBackups/templates/IncBackups/backupSchedule.html",
+   312,
+   "<a ng-click=\"removeSite(record.website)\"\n                                                                               "
+  ],
+  [
+   "filemanager/templates/filemanager/editFile.html",
+   72,
+   "<a onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\" class=\"nav-link point-events\"\n                       href=\"#"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1061,
+   "<a href=\"#\" class=\"fm-path-item\" ng-click=\"navigateHome()\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1067,
+   "<a href=\"#\" class=\"fm-path-item\" ng-click=\"navigateToPath(segment.path)\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   443,
+   "<a onclick=\"return false;\" ng-click=\"showUploadBox()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   448,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFileModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   453,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFolderModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   458,
+   "<a onclick=\"return false;\" ng-click=\"showDeleteModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   463,
+   "<a onclick=\"return false;\" ng-click=\"showCopyModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   468,
+   "<a onclick=\"return false;\" ng-click=\"showMoveModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   473,
+   "<a onclick=\"return false;\" ng-click=\"showRenameModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   478,
+   "<a onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   483,
+   "<a onclick=\"return false;\" ng-click=\"showCompressionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   488,
+   "<a onclick=\"return false;\" ng-click=\"showExtractionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   508,
+   "<a href=\"#\" onclick=\"return false;\" ng-click=\"fetchChilds($event,currentRPath,'primary')\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   511,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'fromTree',completeStartingPath)\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   522,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'homeFetch')\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   525,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'goBackOnPath')\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   528,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'refresh')\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   531,
+   "<a onclick=\"return false;\" ng-click=\"selectAll()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   534,
+   "<a onclick=\"return false;\" ng-click=\"unSelectAll()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   939,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showMoveModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   940,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCopyModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   941,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showRenameModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   942,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showPermissionsModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   943,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showDeleteModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   944,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCompressionModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   945,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"extractOnRight\" onclick=\"return false;\" ng-click=\"showExtractionModal()"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   946,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRight\" onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\" h"
+  ],
+  [
+   "filemanager/templates/filemanager/indexIntegrated.html",
+   947,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"restoreRight\" onclick=\"return false;\" ng-click=\"showRestoreModal()\" hre"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   64,
+   "<a onclick=\"return false;\" ng-click=\"showUploadBox()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   67,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFileModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   70,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFolderModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   73,
+   "<a onclick=\"return false;\" ng-click=\"showDeleteModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   76,
+   "<a onclick=\"return false;\" ng-click=\"showCopyModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   79,
+   "<a onclick=\"return false;\" ng-click=\"showMoveModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   82,
+   "<a onclick=\"return false;\" ng-click=\"showRenameModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   85,
+   "<a onclick=\"return false;\" ng-click=\"showHTMLEditorModal(1)\"  class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   88,
+   "<a onclick=\"return false;\" ng-click=\"showCompressionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   91,
+   "<a onclick=\"return false;\" ng-click=\"showExtractionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   94,
+   "<a onclick=\"return false;\" ng-click=\"fixPermissions()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   125,
+   "<a href=\"#\" onclick=\"return false;\" ng-click=\"fetchChilds($event,completeStartingPath,'primary')\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   128,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'fromTree',completeStartingPath)\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   141,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'homeFetch')\"  class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   144,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'goBackOnPath')\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   148,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'refresh')\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   152,
+   "<a onclick=\"return false;\" ng-click=\"selectAll()\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   156,
+   "<a onclick=\"return false;\" ng-click=\"unSelectAll()\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   735,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showMoveModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   736,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"downloadOnRight\" onclick=\"return false;\" ng-click=\"downloadFile()\" href"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   737,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCopyModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   738,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showRenameModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   739,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showPermissionsModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   740,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showDeleteModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   741,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCompressionModal()\" href=\"#\">"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   742,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"extractOnRight\" onclick=\"return false;\" ng-click=\"showExtractionModal()"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   743,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRight\" onclick=\"return false;\" ng-click=\"showHTMLEditorModal(1)\" "
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   744,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRightCodeMirror\" onclick=\"return false;\" ng-click=\"editWithCodeMi"
+  ],
+  [
+   "filemanager/templates/filemanager/index.html",
+   745,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"restoreRight\" onclick=\"return false;\" ng-click=\"showRestoreModal()\" hre"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-table.html",
+   5,
+   "<a href=\"\" ng-click=\"order('model.name')\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-table.html",
+   11,
+   "<a href=\"\" ng-click=\"order('model.size')\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-table.html",
+   17,
+   "<a href=\"\" ng-click=\"order('model.date')\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-table.html",
+   23,
+   "<a href=\"\" ng-click=\"order('model.permissions')\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/sidebar.html",
+   6,
+   "<a href=\"\" ng-click=\"fileNavigator.folderClick(item.item)\" class=\"animated fast fadeInDown\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/modals.html",
+   413,
+   "<a href=\"\" class=\"label label-primary\" ng-click=\"openNavigator(fileNavigator.currentPath)\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/modals.html",
+   434,
+   "<a href=\"\" class=\"label label-primary\" ng-click=\"showDetails = !showDetails\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-icons.html",
+   4,
+   "<a href=\"\" class=\"thumbnail text-center\" ng-click=\"selectOrUnselect(item, $event)\" ng-dblclick=\"smartClick(item)\" ng-rig"
+  ],
+  [
+   "static/filemanager_app/src/templates/current-folder-breadcrumb.html",
+   3,
+   "<a href=\"\" ng-click=\"fileNavigator.goTo(-1)\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/current-folder-breadcrumb.html",
+   8,
+   "<a href=\"\" ng-show=\"!$last\" ng-click=\"fileNavigator.goTo(key)\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-table-modal.html",
+   5,
+   "<a href=\"\" ng-click=\"order('model.name')\">"
+  ],
+  [
+   "static/filemanager_app/src/templates/main-table-modal.html",
+   34,
+   "<a href=\"\" ng-click=\"fileNavigator.folderClick(item)\" title=\"{{item.model.name}} ({{item.model.size | humanReadableFileS"
+  ],
+  [
+   "managePHP/templates/managePHP/editPHPConfig.html",
+   559,
+   "<a href=\"#basic-tab\" class=\"tab-item active\" data-toggle=\"tab\" ng-click=\"fetchPHPDetails()\">"
+  ],
+  [
+   "managePHP/templates/managePHP/editPHPConfig.html",
+   563,
+   "<a href=\"#advanced-tab\" class=\"tab-item\" data-toggle=\"tab\" ng-click=\"fetchAdvancePHPDetails()\">"
+  ],
+  [
+   "mailServer/templates/mailServer/listEmails.html",
+   766,
+   "<a data-toggle=\"modal\" data-target=\"#settings\"\n                                                           ng-click=\"chan"
+  ],
+  [
+   "mailServer/templates/mailServer/listEmails.html",
+   774,
+   "<a ng-click=\"confirmDeleteEmail(record.email)\"\n                                                           class=\"btn-dan"
+  ],
+  [
+   "mailServer/templates/mailServer/dkimManager.html",
+   446,
+   "<a href=\"\" ng-click=\"installOpenDKIM()\" class=\"install-link\">"
+  ],
+  [
+   "mailServer/templates/mailServer/dkimManager.html",
+   519,
+   "<a href=\"\" ng-click=\"createDomainDKIMKeys()\" class=\"generate-link\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   56,
+   "<a onclick=\"return false;\" ng-click=\"showUploadBox()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   59,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFileModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   62,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFolderModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   65,
+   "<a onclick=\"return false;\" ng-click=\"showDeleteModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   68,
+   "<a onclick=\"return false;\" ng-click=\"showCopyModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   71,
+   "<a onclick=\"return false;\" ng-click=\"showMoveModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   74,
+   "<a onclick=\"return false;\" ng-click=\"showRenameModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   77,
+   "<a onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\"  class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   80,
+   "<a onclick=\"return false;\" ng-click=\"showCompressionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   83,
+   "<a onclick=\"return false;\" ng-click=\"showExtractionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   115,
+   "<a href=\"#\" onclick=\"return false;\" ng-click=\"fetchChilds($event,currentRPath,'primary')\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   118,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'fromTree',completeStartingPath)\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   131,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'homeFetch')\"  class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   134,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'goBackOnPath')\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   138,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'refresh')\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   142,
+   "<a onclick=\"return false;\" ng-click=\"selectAll()\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   146,
+   "<a onclick=\"return false;\" ng-click=\"unSelectAll()\" class=\"mx-10\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   636,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showMoveModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   638,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"downloadOnRight\" onclick=\"return false;\" ng-click=\"RootDownloadFile()\" "
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   640,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCopyModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   641,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showRenameModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   642,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showPermissionsModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   643,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showDeleteModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   644,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCompressionModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   645,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"extractOnRight\" onclick=\"return false;\" ng-click=\"showExtractionModal()"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   646,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRight\" onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\" h"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   648,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRightCodeMirror\" onclick=\"return false;\" ng-click=\"editWithCodeMi"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManager.html",
+   650,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"restoreRight\" onclick=\"return false;\" ng-click=\"showRestoreModal()\" hre"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   469,
+   "<a onclick=\"return false;\" ng-click=\"showUploadBox()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   474,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFileModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   479,
+   "<a onclick=\"return false;\" ng-click=\"showCreateFolderModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   484,
+   "<a onclick=\"return false;\" ng-click=\"showDeleteModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   489,
+   "<a onclick=\"return false;\" ng-click=\"showCopyModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   494,
+   "<a onclick=\"return false;\" ng-click=\"showMoveModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   499,
+   "<a onclick=\"return false;\" ng-click=\"showRenameModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   504,
+   "<a onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   509,
+   "<a onclick=\"return false;\" ng-click=\"showCompressionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   514,
+   "<a onclick=\"return false;\" ng-click=\"showExtractionModal()\" class=\"nav-link point-events\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   534,
+   "<a href=\"#\" onclick=\"return false;\" ng-click=\"fetchChilds($event,currentRPath,'primary')\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   537,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'fromTree',completeStartingPath)\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   548,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'homeFetch')\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   551,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'goBackOnPath')\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   554,
+   "<a onclick=\"return false;\" ng-click=\"fetchForTableSecondary($event,'refresh')\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   557,
+   "<a onclick=\"return false;\" ng-click=\"selectAll()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   560,
+   "<a onclick=\"return false;\" ng-click=\"unSelectAll()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   965,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showMoveModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   967,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"downloadOnRight\" onclick=\"return false;\" ng-click=\"RootDownloadFile()\" "
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   969,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCopyModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   970,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showRenameModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   971,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showPermissionsModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   972,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showDeleteModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   973,
+   "<a style=\"border-bottom: 1px solid #007bff;\" onclick=\"return false;\" ng-click=\"showCompressionModal()\" href=\"#\">"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   974,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"extractOnRight\" onclick=\"return false;\" ng-click=\"showExtractionModal()"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   975,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRight\" onclick=\"return false;\" ng-click=\"showHTMLEditorModal()\" h"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   977,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"editOnRightCodeMirror\" onclick=\"return false;\" ng-click=\"editWithCodeMi"
+  ],
+  [
+   "baseTemplate/templates/baseTemplate/FileManagerIntegrated.html",
+   979,
+   "<a style=\"border-bottom: 1px solid #007bff;\" id=\"restoreRight\" onclick=\"return false;\" ng-click=\"showRestoreModal()\" hre"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1637,
+   "<a ng-click=\"hidelogsbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1682,
+   "<a ng-click=\"hideErrorLogsbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1714,
+   "<a href=\"#\" ng-click=\"showListDomains(); $event.preventDefault()\" title=\"{% trans 'List Domains' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1747,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideDomainCreationForm()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1904,
+   "<a title=\"{% trans 'Close' %}\" ng-click=\"hideListDomains()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1991,
+   "<a href=\"#\" ng-click=\"fetchConfigurations(); $event.preventDefault()\"\n                               title=\"{% trans 'Ed"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   1999,
+   "<a href=\"#\" ng-click=\"fetchRewriteFules(); $event.preventDefault()\"\n                               title=\"{% trans 'Add "
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2007,
+   "<a href=\"#\" ng-click=\"changePHPMaster(); $event.preventDefault()\" title=\"{% trans 'Change PHP Version' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2041,
+   "<a ng-click=\"hideconfigbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2102,
+   "<a ng-click=\"hideRewriteRulesbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2140,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideChangePHPMaster()\"\n                                           href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2201,
+   "<a href=\"#\" ng-click=\"addSSL(); $event.preventDefault()\" title=\"{% trans 'Add Your Own SSL' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2225,
+   "<a ng-click=\"hidesslbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2267,
+   "<a href=\"#\" ng-click=\"openBaseDirView(); $event.preventDefault()\" title=\"{% trans 'open_basedir Protection' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/website.html",
+   2310,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideOpenBasedir()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   937,
+   "<a ng-click=\"fetchLogs(1)\" href=\"\" title=\"{% trans 'Load Access Logs' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   944,
+   "<a ng-click=\"fetchErrorLogs(1)\" href=\"\" title=\"{% trans 'Load Error Logs' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1069,
+   "<a ng-click=\"fetchConfigurations()\" href=\"\" title=\"{% trans 'Edit vHost Main Configurations' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1083,
+   "<a ng-click=\"fetchRewriteFules()\" href=\"\" title=\"{% trans 'Add Rewrite Rules (.htaccess)' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1090,
+   "<a ng-click=\"addSSL()\" href=\"\" title=\"{% trans 'Add Your Own SSL' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1097,
+   "<a ng-click=\"changePHPMaster()\" href=\"\" title=\"{% trans 'Change PHP Version' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1182,
+   "<a ng-click=\"hideconfigbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1223,
+   "<a ng-click=\"hideRewriteRulesbtn()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1253,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideChangePHPMaster()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/launchChild.html",
+   1305,
+   "<a ng-click=\"openBaseDirView()\" href=\"\" title=\"{% trans 'open_basedir Protection' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/WPsiteHome.html",
+   831,
+   "<a href=\"#tab2\" ng-click=\"GetCurrentPlugins()\" data-toggle=\"tab\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/WPsiteHome.html",
+   836,
+   "<a href=\"#tab3\" ng-click=\"GetCurrentThemes()\" data-toggle=\"tab\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/WPsiteHome.html",
+   841,
+   "<a href=\"#tab4\" data-toggle=\"tab\" ng-click=\"fetchstaging()\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/WPsiteHome.html",
+   851,
+   "<a ng-click=\"fetchDatabase()\" href=\"#tab6\" data-toggle=\"tab\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/listCron.html",
+   516,
+   "<a ng-click=\"addCronForm()\" class=\"btn btn-primary\" href=\"#\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/listCron.html",
+   520,
+   "<a ng-click=\"fetchWebsites()\" class=\"btn btn-border\" href=\"#\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/listCron.html",
+   552,
+   "<a class=\"btn btn-primary\" ng-click=\"fetchCron(cron.line)\" href=\"#\" title=\"{% trans 'Edit' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/listCron.html",
+   555,
+   "<a class=\"btn btn-warning\" ng-click=\"removeCron(cron.line)\" href=\"#\" title=\"{% trans 'Delete' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/manageGIT.html",
+   1060,
+   "<a ng-click=\"gitPull()\" ng-disabled=\"remote==0\" href=\"#\" class=\"btn btn-info\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/manageGIT.html",
+   1065,
+   "<a ng-click=\"gitPush()\" ng-disabled=\"remote==0\" href=\"#\" class=\"btn btn-info\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/manageGIT.html",
+   1071,
+   "<a ng-click=\"fetchGitignore()\" data-toggle=\"modal\" data-target=\"#gitignore\" href=\"#\"\n                           class=\"b"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/manageGIT.html",
+   1127,
+   "<a ng-click=\"fetchGitLogs()\" data-toggle=\"modal\" data-target=\"#gitLogs\" href=\"#\"\n                           class=\"btn b"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/domainAlias.html",
+   54,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideDomainCreationForm()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/domainAlias.html",
+   173,
+   "<a title=\"{% trans 'Close' %}\" ng-click=\"hideListDomains()\" href=\"\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/setupGit.html",
+   51,
+   "<a href=\"\" ng-click=\"setProvider('github')\" class=\"list-group-item\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/setupGit.html",
+   57,
+   "<a href=\"\" ng-click=\"setProvider('gitlab')\" class=\"list-group-item\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/setupGit.html",
+   223,
+   "<a href=\"\" ng-click=\"detachRepo()\" class=\"list-group-item\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/applicationInstaller.html",
+   28,
+   "<a  ng-click=\"installationDetails()\" href=\"\" title=\"{% trans 'Install wordpress with LSCache' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/applicationInstaller.html",
+   31,
+   "<a  ng-click=\"installationDetails()\" href=\"\" title=\"{% trans 'Install wordpress with LSCache' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/applicationInstaller.html",
+   34,
+   "<a ng-click=\"installationDetails()\" href=\"\" title=\"{% trans 'Install wordpress with LSCache' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/applicationInstaller.html",
+   41,
+   "<a  ng-click=\"installationDetailsJoomla()\" href=\"\" title=\"{% trans 'Install Joomla with(?) LSCache' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/applicationInstaller.html",
+   44,
+   "<a  ng-click=\"installationDetailsJoomla()\" href=\"\" title=\"{% trans 'Install Joomla with LSCache' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/applicationInstaller.html",
+   47,
+   "<a ng-click=\"installationDetailsJoomla()\" href=\"\" title=\"{% trans 'Install Joomla with LSCache' %}\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/ApacheManager.html",
+   471,
+   "<a data-toggle=\"modal\" data-target=\"#bs-example-modal-lg\" ng-show=\"!apacheOLS\"\n                           ng-click=\"swit"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/ApacheManager.html",
+   541,
+   "<a ng-show=\"!apacheOLS\" ng-click=\"tuneSettings()\"\n                                   href=\"#\" class=\"btn btn-primary\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/ApacheManager.html",
+   602,
+   "<a data-toggle=\"modal\" data-target=\"#bs-example-modal-lg\" ng-show=\"!pureOLS\"\n                           ng-click=\"switch"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/listChildDomains.html",
+   676,
+   "<a ng-click=\"issueSSL(web.domain)\" href=\"\" ng-class=\"{'disabled': issuingSSL[web.domain]}\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   62,
+   "<a ng-click=\"setView('contacts')\" class=\"wm-nav-link\" ng-class=\"{'active': viewMode === 'contacts'}\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   65,
+   "<a ng-click=\"setView('rules')\" class=\"wm-nav-link\" ng-class=\"{'active': viewMode === 'rules'}\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   68,
+   "<a ng-click=\"setView('settings')\" class=\"wm-nav-link\" ng-class=\"{'active': viewMode === 'settings'}\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   75,
+   "<a ng-click=\"createFolder()\" class=\"wm-nav-link\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   179,
+   "<a ng-click=\"downloadAttachment(att)\">"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   223,
+   "<a ng-click=\"showBcc = !showBcc\" class=\"wm-toggle-link\">"
+  ],
+  [
+   "userManagment/templates/userManagment/listUsers.html",
+   333,
+   "<a ng-show=\"record.state=='ACTIVE'\"\n                               class=\"btn-action btn-suspend\"\n                      "
+  ],
+  [
+   "userManagment/templates/userManagment/listUsers.html",
+   339,
+   "<a ng-show=\"record.state=='SUSPENDED'\"\n                               class=\"btn-action btn-activate\"\n                  "
+  ],
+  [
+   "userManagment/templates/userManagment/listUsers.html",
+   345,
+   "<a ng-click=\"editInitial(record.name)\"\n                               class=\"btn-action btn-edit\"\n                      "
+  ],
+  [
+   "userManagment/templates/userManagment/listUsers.html",
+   350,
+   "<a ng-click=\"deleteUserInitial(record.name)\"\n                               class=\"btn-action btn-delete\"\n              "
+  ],
+  [
+   "databases/templates/databases/phpMyAdmin.html",
+   122,
+   "<a ng-click=\"generateAccess()\" href=\"#\">"
+  ],
+  [
+   "CLManager/templates/CLManager/listPackages.html",
+   55,
+   "<a ng-click='deleteCLPackage(pack.name)'\n                                   class=\"btn btn-border btn-alt border-red btn"
+  ],
+  [
+   "CLManager/templates/CLManager/listPackages.html",
+   58,
+   "<a ng-click=\"populatePackage(pack.name, pack.SPEED, pack.VMEM, pack.PMEM, pack.IO, pack.IOPS, pack.EP, pack.NPROC, pack."
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   34,
+   "<a href=\"#\" ng-click=\"enableOrDisable(0, 0, 0, 1)\"\n                                   class=\"btn btn-border btn-alt bord"
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   39,
+   "<a href=\"#\" ng-click=\"enableOrDisable(0, 1, 1, 0)\" class=\"btn btn-success\" title=\"Enable All\">"
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   43,
+   "<a href=\"#\" ng-click=\"enableOrDisable(0, 1, 0, 0)\" class=\"btn btn-warning\" title=\"Disable All\">"
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   48,
+   "<a href=\"#\" ng-click=\"refreshStatus()\" class=\"btn btn-info\" title=\"Refresh Status\">"
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   75,
+   "<a ng-click=\"enableOrDisable(web.domain, 0, 0, 0)\" ng-hide=\"web.status==0\"\n                                   class=\"btn"
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   78,
+   "<a ng-click=\"enableOrDisable(web.domain, 0, 1, 0)\" ng-hide=\"web.status==1\"\n                                   class=\"btn"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   124,
+   "<a ng-click=\"fetchLogs(1)\" href=\"\" title=\"{% trans 'Load Access Logs' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   127,
+   "<a ng-click=\"fetchLogs(1)\" href=\"\" title=\"{% trans 'Load Access Logs' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   135,
+   "<a ng-click=\"fetchErrorLogs(1)\" href=\"\" title=\"{% trans 'Load Error Logs' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   138,
+   "<a ng-click=\"fetchErrorLogs(1)\" href=\"\" title=\"{% trans 'Load Error Logs' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   185,
+   "<a ng-click=\"hidelogsbtn()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   227,
+   "<a ng-click=\"hideErrorLogsbtn()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   262,
+   "<a href=\"\" ng-click=\"showCreateDomainForm()\" title=\"{% trans 'Add Domains' %}\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   265,
+   "<a ng-click=\"showCreateDomainForm()\" title=\"{% trans 'Add Domains' %}\" href=\"\"\n                                   title="
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   274,
+   "<a href=\"\" ng-click=\"showListDomains()\" title=\"{% trans 'List Domains' %}\" href=\"\"\n                                   ti"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   278,
+   "<a ng-click=\"showListDomains()\" title=\"{% trans 'List Domains' %}\" href=\"\"\n                                   title=\"{% "
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   324,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideDomainCreationForm()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   484,
+   "<a title=\"{% trans 'Close' %}\" ng-click=\"hideListDomains()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   567,
+   "<a ng-click=\"fetchConfigurations()\" href=\"\"\n                                   title=\"{% trans 'Edit vHost Main Configur"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   571,
+   "<a ng-click=\"fetchConfigurations()\" href=\"\"\n                                   title=\"{% trans 'Edit vHost Main Configur"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   581,
+   "<a ng-click=\"fetchRewriteFules()\" href=\"\"\n                                   title=\"{% trans 'Add Rewrite Rules (.htacce"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   585,
+   "<a ng-click=\"fetchRewriteFules()\" href=\"\"\n                                   title=\"{% trans 'Rewrite Rules (.htaccess)'"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   595,
+   "<a ng-click=\"addSSL()\" href=\"\" title=\"{% trans 'Add Your Own SSL' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   598,
+   "<a ng-click=\"addSSL()\" href=\"\" title=\"{% trans 'Add Your Own SSL' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   607,
+   "<a ng-click=\"changePHPMaster()\" href=\"\" title=\"{% trans 'Change PHP Version' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   610,
+   "<a ng-click=\"changePHPMaster()\" href=\"\" title=\"{% trans 'Change PHP Version' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   639,
+   "<a ng-click=\"hidesslbtn()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   704,
+   "<a ng-click=\"hideconfigbtn()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   764,
+   "<a ng-click=\"hideRewriteRulesbtn()\" href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   804,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideChangePHPMaster()\"\n                                               href=\"\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   874,
+   "<a ng-click=\"openBaseDirView()\" href=\"\" title=\"{% trans 'open_basedir Protection' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   877,
+   "<a ng-click=\"openBaseDirView()\" href=\"\" title=\"{% trans 'open_basedir Protection' %}\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/website.html",
+   928,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideOpenBasedir()\" href=\"\">"
+  ],
+  [
+   "emailPremium/templates/emailPremium/mailQueue.html",
+   502,
+   "<a href=\"#\" class=\"view-message-btn\" data-toggle=\"modal\" data-target=\"#viewMessage\" ng-click=\"fetchMessage(queue.queue_i"
+  ],
+  [
+   "emailPremium/templates/emailPremium/emailPage.html",
+   101,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideLimitsForm()\" href=\"\">"
+  ],
+  [
+   "emailPremium/templates/emailPremium/emailPage.html",
+   111,
+   "<a title=\"{% trans 'Cancel' %}\" ng-click=\"hideLimitsForm()\" href=\"\">"
+  ]
+ ],
+ "clickable-td-not-focusable (2.1.1)": [
+  [
+   "IncBackups/templates/IncBackups/backupSchedule.html",
+   144,
+   "<td ng-click=\"\">"
+  ],
+  [
+   "IncBackups/templates/IncBackups/ScheduleV2Backup.html",
+   158,
+   "<td data-toggle=\"modal\" data-target=\"#DeleteScheduleV2\"\n                                                    ng-click=\"de"
+  ],
+  [
+   "static/filemanager_app/src/templates/modals.html",
+   338,
+   "<td ng-repeat=\"(permKey, permValue) in permTypeValue\" class=\"col-xs-1 text-center\" ng-click=\"main()\">"
+  ]
+ ],
+ "clickable-li-not-focusable (2.1.1)": [
+  [
+   "IncBackups/templates/IncBackups/backupSchedule.html",
+   157,
+   "<li ng-repeat=\"page in pagination\"\n                                                    ng-click=\"getFurtherWebsitesFromD"
+  ],
+  [
+   "containerization/templates/containerization/listWebsites.html",
+   69,
+   "<li ng-repeat=\"page in pagination\" ng-click=\"getFurtherWebsitesFromDB($index+1)\" id=\"webPages\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/DockerSiteHome.html",
+   1428,
+   "<li ng-click=\"getFurtherContainersFromDB({{ forloop.counter }})\" id=\"webPages\">"
+  ],
+  [
+   "websiteFunctions/templates/websiteFunctions/DockerSiteHome_backup.html",
+   1087,
+   "<li ng-click=\"getFurtherContainersFromDB({{ forloop.counter }})\" id=\"webPages\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/listContainers.html",
+   556,
+   "<li ng-click=\"getFurtherContainersFromDB({{ forloop.counter }})\">"
+  ],
+  [
+   "CLManager/templates/CLManager/listPackages.html",
+   217,
+   "<li ng-repeat=\"page in pagination\" ng-click=\"getFurtherWebsitesFromDB($index+1)\"\n                                       "
+  ],
+  [
+   "CLManager/templates/CLManager/monitorUsage.html",
+   69,
+   "<li ng-repeat=\"page in pagination\" ng-click=\"getFurtherWebsitesFromDB($index+1)\" id=\"webPages\">"
+  ],
+  [
+   "CLManager/templates/CLManager/listWebsites.html",
+   98,
+   "<li ng-repeat=\"page in pagination\" ng-click=\"getFurtherWebsitesFromDB($index+1)\"\n                                       "
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   700,
+   "<li ng-click=\"fetchRecordsTabs('aRecord')\" id=\"aRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   706,
+   "<li ng-click=\"fetchRecordsTabs('aaaaRecord')\" id=\"aaaaRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   712,
+   "<li ng-click=\"fetchRecordsTabs('cNameRecord')\" id=\"cNameRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   718,
+   "<li ng-click=\"fetchRecordsTabs('mxRecord')\" id=\"mxRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   724,
+   "<li ng-click=\"fetchRecordsTabs('txtRecord')\" id=\"txtRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   730,
+   "<li ng-click=\"fetchRecordsTabs('spfRecord')\" id=\"spfRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   736,
+   "<li ng-click=\"fetchRecordsTabs('nsRecord')\" id=\"nsRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   742,
+   "<li ng-click=\"fetchRecordsTabs('soaRecord')\" id=\"soaRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   748,
+   "<li ng-click=\"fetchRecordsTabs('srvRecord')\" id=\"srvRecord\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecords.html",
+   754,
+   "<li ng-click=\"fetchRecordsTabs('caaRecord')\" id=\"caaRecord\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/sendEmails.html",
+   181,
+   "<li ng-click=\"fetchEmails(page)\" ng-repeat=\"page in pagination\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/manageLists.html",
+   295,
+   "<li ng-click=\"fetchEmails(page)\" ng-repeat=\"page in pagination\">"
+  ],
+  [
+   "emailMarketing/templates/emailMarketing/manageSMTPHosts.html",
+   103,
+   "<li ng-click=\"fetchEmails(page)\" ng-repeat=\"page in pagination\">"
+  ],
+  [
+   "emailPremium/templates/emailPremium/emailPage.html",
+   209,
+   "<li ng-click=\"getLogEntries({{ forloop.counter }})\" id=\"webPages\">"
+  ],
+  [
+   "emailPremium/templates/emailPremium/emailLimits.html",
+   598,
+   "<li ng-click=\"getFurtherEmailsFromDB({{ forloop.counter }})\" id=\"webPages\">"
+  ],
+  [
+   "emailPremium/templates/emailPremium/listDomains.html",
+   90,
+   "<li ng-click=\"getFurtherWebsitesFromDB({{ forloop.counter }})\" id=\"webPages\">"
+  ]
+ ],
+ "clickable-span-not-focusable (2.1.1)": [
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1083,
+   "<span style=\"cursor: pointer;\" onclick=\"expandDomainTree(this)\" ng-click=\"navigateHome()\">"
+  ]
+ ],
+ "clickable-span-onclick-not-focusable (2.1.1)": [
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1083,
+   "<span style=\"cursor: pointer;\" onclick=\"expandDomainTree(this)\" ng-click=\"navigateHome()\">"
+  ]
+ ],
+ "clickable-i-onclick-not-focusable (2.1.1)": [
+  [
+   "filemanager/templates/filemanager/indexModern.html",
+   1084,
+   "<i class=\"fas fa-chevron-right fm-tree-expand\" onclick=\"toggleTreeNode(event)\" aria-hidden=\"true\">"
+  ]
+ ],
+ "input-no-label-no-id (1.3.1/4.1.2)": [
+  [
+   "filemanager/templates/filemanager/modals.html",
+   29,
+   "<input type=\"file\" nv-file-select=\"\" uploader=\"uploader\" multiple style=\"display: none;\">"
+  ]
+ ],
+ "icon-button-no-accname (4.1.2)": [
+  [
+   "static/filemanager_app/src/templates/navbar.html",
+   15,
+   "<button class=\"btn btn-primary btn-flat\" ng-click=\"fileNavigator.upDir()\">                          "
+  ],
+  [
+   "static/filemanager_app/src/templates/navbar.html",
+   21,
+   "<button class=\"btn btn-flat btn-sm dropdown-toggle\" type=\"button\" id=\"dropDownMenuSearch\" data-toggl"
+  ],
+  [
+   "static/filemanager_app/src/templates/navbar.html",
+   38,
+   "<button class=\"btn btn-flat btn-sm dropdown-toggle\" type=\"button\" id=\"dropDownMenuLang\" data-toggle="
+  ],
+  [
+   "static/filemanager_app/src/templates/navbar.html",
+   62,
+   "<button class=\"btn btn-flat btn-sm dropdown-toggle\" type=\"button\" id=\"more\" data-toggle=\"dropdown\" a"
+  ]
+ ],
+ "clickable-i-not-focusable (2.1.1)": [
+  [
+   "websiteFunctions/templates/websiteFunctions/WPsitesList.html",
+   806,
+   "<i class=\"fas\" \n                                   ng-class=\"{'fa-chevron-down': isExpanded(site.id), 'fa-chevron-right'"
+  ],
+  [
+   "webmail/templates/webmail/index.html",
+   247,
+   "<i class=\"fa fa-times\" ng-click=\"removeFile($index)\" aria-hidden=\"true\">"
+  ],
+  [
+   "dockerManager/templates/dockerManager/viewContainer.html",
+   607,
+   "<i class=\"fas fa-sync refresh-icon\" ng-click=\"refreshStatus()\" title=\"{% trans 'Refresh status' %}\" aria-hidden=\"true\">"
+  ],
+  [
+   "dns/templates/dns/addDeleteDNSRecordsCloudFlare.html",
+   808,
+   "<i class=\"fas fa-trash delete-icon\" \n                                                           style=\"color: #ef4444;\" "
+  ]
+ ],
+ "clickable-div-onclick-not-focusable (2.1.1)": [
+  [
+   "databases/templates/databases/createDatabase.html",
+   454,
+   "<div class=\"password-toggle\" onclick=\"togglePasswordVisibility()\">"
+  ],
+  [
+   "firewall/templates/firewall/secureSSH.html",
+   553,
+   "<div class=\"tab-btn active\" onclick=\"switchTab('basic', this)\">"
+  ],
+  [
+   "firewall/templates/firewall/secureSSH.html",
+   557,
+   "<div class=\"tab-btn\" onclick=\"switchTab('keys', this)\">"
+  ]
+ ]
+}

@@ -422,8 +422,8 @@
             
             <div class="website-selector-card">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select Website" %}</label>
-                    <select ng-change="fetchDatabases()" ng-model="databaseWebsite" class="form-control">
+                    <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                    <select id="cpa11y-select-website" ng-change="fetchDatabases()" ng-model="databaseWebsite" class="form-control">
                         <option value="">-- {% trans "Select a website" %} --</option>
                         {% for items in websitesList %}
                             <option>{{ items }}</option>
@@ -434,15 +434,15 @@
 
             <div class="database-selector-section" ng-hide="fetchedDatabases">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select Database to Delete" %}</label>
-                    <select ng-model="selectedDB" ng-change="databaseSelected()" class="form-control">
+                    <label for="cpa11y-select-database-to-delete" class="form-label">{% trans "Select Database to Delete" %}</label>
+                    <select id="cpa11y-select-database-to-delete" ng-model="selectedDB" ng-change="databaseSelected()" class="form-control">
                         <option value="">-- {% trans "Select a database" %} --</option>
                         <option ng-repeat="db in dbnames track by $index">{$ db.dbName $}</option>
                     </select>
                 </div>
                 
                 <div ng-show="dbnames.length === 0" class="empty-state">
-                    <i class="fas fa-database"></i>
+                    <i class="fas fa-database" aria-hidden="true"></i>
                     <div class="empty-state-text">{% trans "No databases found for this website" %}</div>
                 </div>
             </div>
@@ -463,7 +463,7 @@
             </div>
 
             <div class="warning-box">
-                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <i class="fas fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
                 <div class="warning-content">
                     <div class="warning-title">{% trans "Warning: This action cannot be undone!" %}</div>
                     <div class="warning-text">
@@ -481,7 +481,7 @@
             <div class="button-container" ng-hide="fetchedDatabases">
                 <button type="button" ng-click="confirmDelete()" class="btn btn-danger" 
                         ng-disabled="!selectedDB">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Delete Database" %}
                 </button>
             </div>
@@ -489,7 +489,7 @@
 
         <!-- Confirmation Section -->
         <div class="content-card confirmation-section" id="deleteConfirmation">
-            <i class="fas fa-exclamation-circle confirmation-icon"></i>
+            <i class="fas fa-exclamation-circle confirmation-icon" aria-hidden="true"></i>
             <h3 class="confirmation-title">{% trans "Are you absolutely sure?" %}</h3>
             <p class="confirmation-text">
                 {% trans "This action will permanently delete the database and all its data." %}
@@ -498,29 +498,29 @@
             
             <div class="confirmation-buttons">
                 <button type="button" ng-click="cancelDelete()" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     {% trans "Cancel" %}
                 </button>
                 <button type="button" ng-click="deleteDatabase()" class="btn btn-danger">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" aria-hidden="true"></i>
                     {% trans "Yes, Delete Database" %}
                 </button>
             </div>
         </div>
 
         <!-- Alert Messages -->
-        <div ng-hide="databaseDeletionFailed" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+        <div ng-hide="databaseDeletionFailed" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <span>{% trans "Error message:" %} {$ errorMessage $}</span>
         </div>
 
-        <div ng-hide="databaseDeleted" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div ng-hide="databaseDeleted" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <span>{% trans "Database deleted successfully." %}</span>
         </div>
 
-        <div ng-hide="couldNotConnect" class="alert alert-danger">
-            <i class="fas fa-network-wired"></i>
+        <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+            <i class="fas fa-network-wired" aria-hidden="true"></i>
             <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
         </div>
     </div>

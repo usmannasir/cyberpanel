@@ -6,12 +6,12 @@
     <a href="" ng-click="fileNavigator.folderClick(item.item)" class="animated fast fadeInDown">
 
         <span class="point">
-            <i class="glyphicon glyphicon-chevron-down" ng-show="isInThisPath(item.name)"></i>
-            <i class="glyphicon glyphicon-chevron-right" ng-show="!isInThisPath(item.name)"></i>
+            <i class="glyphicon glyphicon-chevron-down" ng-show="isInThisPath(item.name)" aria-hidden="true"></i>
+            <i class="glyphicon glyphicon-chevron-right" ng-show="!isInThisPath(item.name)" aria-hidden="true"></i>
         </span>
 
-        <i class="glyphicon glyphicon-folder-open mr2" ng-show="isInThisPath(item.name)"></i>
-        <i class="glyphicon glyphicon-folder-close mr2" ng-show="!isInThisPath(item.name)"></i>
+        <i class="glyphicon glyphicon-folder-open mr2" ng-show="isInThisPath(item.name)" aria-hidden="true"></i>
+        <i class="glyphicon glyphicon-folder-close mr2" ng-show="!isInThisPath(item.name)" aria-hidden="true"></i>
         {{ (item.name.split('/').pop() || fileNavigator.getBasePath().join('/') || '/') | strLimit : 30 }}
     </a>
     <ul class="nav nav-sidebar">

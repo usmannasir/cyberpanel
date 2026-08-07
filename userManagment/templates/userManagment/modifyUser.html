@@ -227,12 +227,12 @@
         <div class="content-card" ng-controller="modifyUser">
             <h3 class="section-title">
                 {% trans "Modify User" %}
-                <img class="loading-icon" ng-hide="userModificationLoading" src="{% static 'images/loading.gif' %}">
+                <img class="loading-icon" ng-hide="userModificationLoading" src="{% static 'images/loading.gif' %}" alt="">
             </h3>
             <form name="modifyUserForm" action="/">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select User Account" %}</label>
-                    <select ng-change="fetchUserDetails()" ng-model="accountUsername" class="form-control">
+                    <label for="cpa11y-select-user-account" class="form-label">{% trans "Select User Account" %}</label>
+                    <select id="cpa11y-select-user-account" ng-change="fetchUserDetails()" ng-model="accountUsername" class="form-control">
                         <option value="">-- {% trans "Choose a user to modify" %} --</option>
                         {% for accts in acctNames %}
                             <option>{{ accts }}</option>
@@ -244,50 +244,50 @@
                     <div class="form-row">
                         <div class="form-col-6">
                             <div class="form-group">
-                                <label class="form-label">{% trans "First Name" %}</label>
-                                <input name="firstName" type="text" class="form-control" ng-model="firstName" required>
+                                <label for="cpa11y-first-name" class="form-label">{% trans "First Name" %}</label>
+                                <input id="cpa11y-first-name" name="firstName" type="text" class="form-control" ng-model="firstName" required>
                             </div>
                         </div>
                         <div class="form-col-6">
                             <div class="form-group">
-                                <label class="form-label">{% trans "Last Name" %}</label>
-                                <input name="lastName" type="text" class="form-control" ng-model="lastName" required>
+                                <label for="cpa11y-last-name" class="form-label">{% trans "Last Name" %}</label>
+                                <input id="cpa11y-last-name" name="lastName" type="text" class="form-control" ng-model="lastName" required>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{% trans "Email Address" %}</label>
-                        <input name="email" type="email" class="form-control" ng-model="email" required>
+                        <label for="cpa11y-email-address" class="form-label">{% trans "Email Address" %}</label>
+                        <input id="cpa11y-email-address" name="email" type="email" class="form-control" ng-model="email" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{% trans "New Password" %} <small class="text-muted">({% trans "Leave blank to keep current" %})</small></label>
+                        <label for="cpa11y-new-password-leave-blank-to-keep" class="form-label">{% trans "New Password" %} <small class="text-muted">({% trans "Leave blank to keep current" %})</small></label>
                         <div class="btn-row">
                             <div class="btn-col-8">
-                                <input name="password" type="password" class="form-control" ng-model="password">
+                                <input id="cpa11y-new-password-leave-blank-to-keep" name="password" type="password" class="form-control" ng-model="password">
                             </div>
                             <div class="btn-col-4">
                                 <button type="button" ng-click="generatePassword()" class="btn-generate" style="width: 100%;">
-                                    <i class="fa fa-magic"></i> {% trans "Generate" %}
+                                    <i class="fa fa-magic" aria-hidden="true"></i> {% trans "Generate" %}
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div ng-hide="generatedPasswordView" class="form-group">
-                        <label class="form-label">{% trans "Generated Password" %}</label>
+                        <label for="cpa11y-generated-password" class="form-label">{% trans "Generated Password" %}</label>
                         <div class="btn-row">
                             <div class="btn-col-8">
-                                <input type="text" class="form-control" ng-model="password" readonly>
+                                <input id="cpa11y-generated-password" type="text" class="form-control" ng-model="password" readonly>
                             </div>
                             <div class="btn-col-4">
                                 <button type="button" ng-click="usePassword()" class="btn-primary" style="width: 100%;">
-                                    <i class="fa fa-check"></i> {% trans "Use This Password" %}
+                                    <i class="fa fa-check" aria-hidden="true"></i> {% trans "Use This Password" %}
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{% trans "Security Level" %}</label>
-                        <select ng-init="securityLevels={{ securityLevels }}"
+                        <label for="cpa11y-security-level" class="form-label">{% trans "Security Level" %}</label>
+                        <select id="cpa11y-security-level" ng-init="securityLevels={{ securityLevels }}"
                                 ng-model="securityLevel" ng-options="s for s in securityLevels track by s"
                                 class="form-control">
                         </select>
@@ -310,10 +310,10 @@
                             <div class="mt-3">
                                 <p class="help-text mb-2">{% trans "Or manually enter this key:" %}</p>
                                 <div class="input-group" style="max-width:350px;">
-                                    <input type="text" class="form-control" ng-model="formattedSecretKey" readonly style="font-family: monospace; font-size: 14px;">
+                                    <input type="text" class="form-control" ng-model="formattedSecretKey" readonly aria-label="{% trans 'Two-factor authentication secret key' %}" style="font-family: monospace; font-size: 14px;">
                                     <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" ng-click="copySecretKey()" title="{% trans 'Copy to clipboard' %}">
-                                            <i class="fa fa-copy"></i>
+                                        <button class="btn btn-outline-secondary" type="button" ng-click="copySecretKey()" title="{% trans 'Copy to clipboard' %}" aria-label="{% trans 'Copy to clipboard' %}">
+                                            <i class="fa fa-copy" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -323,24 +323,24 @@
                     </div>
                     <div class="form-group" style="margin-top: 2rem;">
                         <button type="button" ng-click="modifyUser()" class="btn-primary">
-                            <i class="fa fa-save"></i> {% trans "Save Changes" %}
+                            <i class="fa fa-save" aria-hidden="true"></i> {% trans "Save Changes" %}
                         </button>
                     </div>
                 </div>
-                <div ng-hide="userModified" class="alert alert-success">
-                    <i class="fa fa-check-circle"></i> {% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully modified." %}
+                <div ng-hide="userModified" class="alert alert-success" role="status">
+                    <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully modified." %}
                 </div>
-                <div ng-hide="canotModifyUser" class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot modify user. Error message:" %} {$ errorMessage $}
+                <div ng-hide="canotModifyUser" class="alert alert-danger" role="alert">
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {% trans "Cannot modify user. Error message:" %} {$ errorMessage $}
                 </div>
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fa fa-times-circle" aria-hidden="true"></i> {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
-                <div ng-hide="canotFetchDetails" class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}
+                <div ng-hide="canotFetchDetails" class="alert alert-danger" role="alert">
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}
                 </div>
-                <div ng-hide="detailsFetched" class="alert alert-success">
-                    <i class="fa fa-info-circle"></i> {% trans "User details loaded successfully." %}
+                <div ng-hide="detailsFetched" class="alert alert-success" role="status">
+                    <i class="fa fa-info-circle" aria-hidden="true"></i> {% trans "User details loaded successfully." %}
                 </div>
             </form>
         </div>

@@ -243,8 +243,8 @@
                 <span ng-hide="aclLoading" class="loading-spinner"></span>
             </h2>
             
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
+            <div class="alert alert-info" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <span>{% trans "Warning: Deleting an ACL will remove all permissions associated with it. Users assigned to this ACL will lose their access rights." %}</span>
             </div>
 
@@ -261,11 +261,11 @@
 
                 <div class="btn-group">
                     <button type="button" ng-click="deleteACLFunc()" ng-show="deleteACLButton" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
                         {% trans "Delete ACL" %}
                     </button>
                     <button type="button" ng-click="deleteACLFinal()" ng-hide="deleteACLButton" class="btn btn-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                         {% trans "Confirm Deletion" %}
                     </button>
                 </div>

@@ -420,15 +420,15 @@
         <div class="page-header">
             <h1>
                 <div class="icon">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                 </div>
                 {% trans "Create Incremental Backup" %}
             </h1>
             <p>{% trans "Create incremental backups for your websites with efficient storage usage and quick restore capabilities." %}</p>
             <a href="https://cyberpanel.net/docs/2-create-restore-incremental-backups/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "View Documentation" %}
-                <i class="fas fa-external-link-alt" style="font-size: 11px;"></i>
+                <i class="fas fa-external-link-alt" style="font-size: 11px;" aria-hidden="true"></i>
             </a>
         </div>
 
@@ -439,8 +439,8 @@
 
             <form>
                 <div class="form-group">
-                    <label class="form-label">{% trans "Select Website" %}</label>
-                    <select ng-change="fetchDetails()" ng-model="websiteToBeBacked" class="form-select">
+                    <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                    <select id="cpa11y-select-website" ng-change="fetchDetails()" ng-model="websiteToBeBacked" class="form-select">
                         <option value="">{% trans "Choose a website to backup" %}</option>
                         {% for items in websiteList %}
                             <option>{{ items }}</option>
@@ -449,8 +449,8 @@
                 </div>
 
                 <div ng-hide="destination" class="form-group">
-                    <label class="form-label">{% trans "Backup Destination" %}</label>
-                    <select ng-change="destinationSelection()" ng-model="backupDestinations" class="form-select">
+                    <label for="cpa11y-backup-destination" class="form-label">{% trans "Backup Destination" %}</label>
+                    <select id="cpa11y-backup-destination" ng-change="destinationSelection()" ng-model="backupDestinations" class="form-select">
                         <option value="">{% trans "Select backup destination" %}</option>
                         {% for items in destinations %}
                             <option>{{ items }}</option>
@@ -459,7 +459,7 @@
                 </div>
 
                 <div ng-hide="destination" class="form-group">
-                    <label class="form-label">{% trans "Backup Content" %}</label>
+                    <label for="backup-data" class="form-label">{% trans "Backup Content" %}</label>
                     <div class="checkbox-group">
                         <div class="checkbox-wrapper">
                             <input ng-model="websiteData" type="checkbox" id="backup-data" checked>
@@ -479,15 +479,15 @@
 
                 <!-- Backup Status -->
                 <div ng-hide="runningBackup" class="form-group">
-                    <label class="form-label">{% trans "Backup Progress" %}</label>
-                    <textarea ng-model="status" class="status-textarea" readonly></textarea>
+                    <label for="cpa11y-backup-progress" class="form-label">{% trans "Backup Progress" %}</label>
+                    <textarea id="cpa11y-backup-progress" ng-model="status" class="status-textarea" readonly></textarea>
                 </div>
 
                 <!-- Create Backup Button -->
                 <div ng-hide="backupButton" class="form-group" style="text-align: center; margin-top: 30px;">
                     <button type="button" ng-click="createBackup()" class="btn-primary" ng-disabled="cyberpanelLoading">
-                        <i class="fas fa-shield-alt" ng-if="!cyberpanelLoading"></i>
-                        <i class="fas fa-spinner fa-spin" ng-if="cyberpanelLoading"></i>
+                        <i class="fas fa-shield-alt" ng-if="!cyberpanelLoading" aria-hidden="true"></i>
+                        <i class="fas fa-spinner fa-spin" ng-if="cyberpanelLoading" aria-hidden="true"></i>
                         <span ng-if="!cyberpanelLoading">{% trans "Create Backup" %}</span>
                         <span ng-if="cyberpanelLoading">{% trans "Creating Backup..." %}</span>
                     </button>
@@ -501,7 +501,7 @@
             <h2 class="section-title">{% trans "Existing Backups" %}</h2>
             
             <div ng-if="!records || records.length === 0" class="empty-state">
-                <i class="fas fa-folder-open"></i>
+                <i class="fas fa-folder-open" aria-hidden="true"></i>
                 <p>{% trans "No backups created yet" %}</p>
             </div>
             
@@ -516,18 +516,18 @@
                 <tbody>
                     <tr ng-repeat="record in records track by $index">
                         <td>
-                            <i class="fas fa-archive" style="color: var(--accent-color, #5b5fcf); margin-right: 8px;"></i>
+                            <i class="fas fa-archive" style="color: var(--accent-color, #5b5fcf); margin-right: 8px;" aria-hidden="true"></i>
                             <span ng-bind="record.id"></span>
                         </td>
                         <td ng-bind="record.date"></td>
                         <td style="text-align: center;">
                             <a ng-click="restore(record.id)" data-toggle="modal" data-target="#settings"
                                class="action-btn" title="Restore">
-                                <i class="fas fa-undo"></i>
+                                <i class="fas fa-undo" aria-hidden="true"></i>
                                 {% trans "Restore Points" %}
                             </a>
                             <button type="button" class="delete-btn" ng-click="deleteBackup(record.id)" style="margin-left: 10px;">
-                                <i class="fas fa-trash-alt"></i>
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                                 {% trans "Delete" %}
                             </button>
                         </td>
@@ -565,7 +565,7 @@
                                     <td ng-bind="job.destination"></td>
                                     <td style="text-align: center;">
                                         <button ng-click="restorePoint(job.id, 0)" class="action-btn">
-                                            <i class="fas fa-undo"></i>
+                                            <i class="fas fa-undo" aria-hidden="true"></i>
                                             {% trans "Restore" %}
                                         </button>
                                     </td>
@@ -574,8 +574,8 @@
                         </table>
 
                         <div ng-hide="restoreSt" style="margin-top: 20px;">
-                            <label class="form-label">{% trans "Restore Progress" %}</label>
-                            <textarea ng-model="status" class="status-textarea" rows="7" readonly></textarea>
+                            <label for="cpa11y-restore-progress" class="form-label">{% trans "Restore Progress" %}</label>
+                            <textarea id="cpa11y-restore-progress" ng-model="status" class="status-textarea" rows="7" readonly></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">

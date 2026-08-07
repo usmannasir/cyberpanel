@@ -22,7 +22,7 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger" role="alert">
                         <p>{% trans "CloudLinux is not installed on your server." %} <a target="_blank"
                                                                                         href="https://community.cyberpanel.net/t/1-convert-cyberpanel-to-cloudlinux-os-and-install-cagefs/174">Click
                             Here</a> {% trans " for conversion details." %}</p>
@@ -36,7 +36,7 @@
                 <div class="panel-body">
                     <h3 class="title-hero">
                         {% trans "Activate Now" %} <img ng-hide="installDockerStatus"
-                                                        src="{% static 'images/loading.gif' %}">
+                                                        src="{% static 'images/loading.gif' %}" alt="">
                     </h3>
                     <div class="example-box-wrapper">
 
@@ -63,9 +63,9 @@
                         <form action="/" id="" class="form-horizontal bordered-row">
 
                             <div ng-hide="dockerInstallBTN" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Imunify Key" %}</label>
+                                <label for="cpa11y-imunify-key" class="col-sm-3 control-label">{% trans "Imunify Key" %}</label>
                                 <div class="col-sm-6">
-                                    <input name="key" type="text" class="form-control" ng-model="key" required>
+                                    <input id="cpa11y-imunify-key" name="key" type="text" class="form-control" ng-model="key" required>
                                 </div>
                             </div>
 

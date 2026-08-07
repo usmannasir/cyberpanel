@@ -278,10 +278,10 @@
     <div class="modern-container" ng-controller="EmailLimitsNew">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-tachometer-alt"></i>
+                <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
                 {% trans "Email Limits Configuration" %}
                 <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/email-limits/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Documentation" %}
                 </a>
             </h1>
@@ -291,7 +291,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" aria-hidden="true"></i>
                     {% trans "Setup Email Limits" %}
                     <span ng-show="forwardLoading" class="loading-spinner"></span>
                 </h2>
@@ -299,11 +299,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #ffa000;"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #ffa000;" aria-hidden="true"></i>
                         <h3>{% trans "Postfix is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable Postfix to manage email limits" %}</p>
                         <a href="{% url 'managePostfix' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable Postfix Now" %}
                         </a>
                     </div>
@@ -313,8 +313,8 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Website" %}</label>
-                                        <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control">
+                                        <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                                        <select id="cpa11y-select-website" ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control">
                                             <option value="">{% trans "Choose a website..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -323,8 +323,8 @@
                                     </div>
 
                                     <div ng-hide="emailDetails" class="form-group">
-                                        <label class="form-label">{% trans "Select Email Account" %}</label>
-                                        <select ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control">
+                                        <label for="cpa11y-select-email-account" class="form-label">{% trans "Select Email Account" %}</label>
+                                        <select id="cpa11y-select-email-account" ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control">
                                             <option value="">{% trans "Choose an email account..." %}</option>
                                             <option ng-repeat="email in emails track by $index" value="{$ email.email $}">{$ email.email $}</option>
                                         </select>
@@ -335,30 +335,30 @@
 
                         <div ng-hide="creationBox" class="limits-config">
                             <h3 style="color: var(--text-primary, #1e293b); font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">
-                                <i class="fas fa-sliders-h"></i>
+                                <i class="fas fa-sliders-h" aria-hidden="true"></i>
                                 {% trans "Configure Email Limits" %}
                             </h3>
                             
                             <div class="preview-box">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
                                 <span>{$ selectedEmail $} {% trans "will be able to send" %} <strong>{$ numberofEmails $}</strong> {% trans "emails every" %} <strong>{$ duration $}</strong>.</span>
                             </div>
 
                             <div class="limits-form">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Number of Emails" %}</label>
-                                    <input type="number" class="form-control" ng-model="numberofEmails" 
+                                    <label for="cpa11y-number-of-emails" class="form-label">{% trans "Number of Emails" %}</label>
+                                    <input id="cpa11y-number-of-emails" type="number" class="form-control" ng-model="numberofEmails" 
                                            placeholder="{% trans 'e.g., 100' %}" min="1">
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Duration" %}</label>
-                                    <input type="text" class="form-control" ng-model="duration" 
+                                    <label for="cpa11y-duration" class="form-label">{% trans "Duration" %}</label>
+                                    <input id="cpa11y-duration" type="text" class="form-control" ng-model="duration" 
                                            placeholder="{% trans 'e.g., 1h, 24h, 1d' %}" required>
                                 </div>
 
                                 <button type="button" ng-click="SaveChanges()" class="btn-primary">
-                                    <i class="fas fa-save"></i>
+                                    <i class="fas fa-save" aria-hidden="true"></i>
                                     {% trans "Save Changes" %}
                                 </button>
                             </div>
@@ -366,18 +366,18 @@
 
                         <!-- Alert Messages -->
                         <div ng-hide="notifyBox" class="form-section">
-                            <div ng-hide="forwardError" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="forwardError" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="forwardSuccess" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="forwardSuccess" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {$ successMessage $}
                             </div>
                             
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>

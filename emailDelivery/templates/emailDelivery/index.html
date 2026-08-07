@@ -500,11 +500,11 @@
 
 <!-- Hero -->
 <div class="ed-hero">
-    <div class="ed-hero-pill"><i class="fas fa-bolt"></i> Free 15,000 Emails Every Month</div>
+    <div class="ed-hero-pill"><i class="fas fa-bolt" aria-hidden="true"></i> Free 15,000 Emails Every Month</div>
     <h1>Stop Landing<br>in Spam</h1>
     <p>Route your emails through dedicated infrastructure with automatic DNS setup, real-time analytics, and 98%+ inbox delivery rates.</p>
     <button class="ed-hero-cta" data-toggle="modal" data-target="#connectModal">
-        Get Started Free <i class="fas fa-arrow-right"></i>
+        Get Started Free <i class="fas fa-arrow-right" aria-hidden="true"></i>
     </button>
 </div>
 
@@ -605,32 +605,32 @@
 </div>
 <div class="ed-features">
     <div class="ed-feat">
-        <div class="ed-feat-icon purple"><i class="fas fa-server"></i></div>
+        <div class="ed-feat-icon purple"><i class="fas fa-server" aria-hidden="true"></i></div>
         <h4>Dedicated Infrastructure</h4>
         <p>Custom-built email servers optimized for maximum inbox placement rates.</p>
     </div>
     <div class="ed-feat">
-        <div class="ed-feat-icon blue"><i class="fas fa-wand-magic-sparkles"></i></div>
+        <div class="ed-feat-icon blue"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></div>
         <h4>Auto DNS Setup</h4>
         <p>One-click SPF, DKIM, and DMARC configuration through PowerDNS integration.</p>
     </div>
     <div class="ed-feat">
-        <div class="ed-feat-icon green"><i class="fas fa-chart-line"></i></div>
+        <div class="ed-feat-icon green"><i class="fas fa-chart-line" aria-hidden="true"></i></div>
         <h4>Real-time Analytics</h4>
         <p>Track delivery rates, bounces, opens, and engagement metrics live.</p>
     </div>
     <div class="ed-feat">
-        <div class="ed-feat-icon amber"><i class="fas fa-globe"></i></div>
+        <div class="ed-feat-icon amber"><i class="fas fa-globe" aria-hidden="true"></i></div>
         <h4>Multi-Region Delivery</h4>
         <p>Send from US and EU regions for optimal delivery speeds worldwide.</p>
     </div>
     <div class="ed-feat">
-        <div class="ed-feat-icon rose"><i class="fas fa-shield-halved"></i></div>
+        <div class="ed-feat-icon rose"><i class="fas fa-shield-halved" aria-hidden="true"></i></div>
         <h4>Reputation Management</h4>
         <p>Automatic IP warm-up and monitoring to protect your sender score.</p>
     </div>
     <div class="ed-feat">
-        <div class="ed-feat-icon cyan"><i class="fas fa-plug"></i></div>
+        <div class="ed-feat-icon cyan"><i class="fas fa-plug" aria-hidden="true"></i></div>
         <h4>One-Click Relay</h4>
         <p>Configure Postfix SMTP relay instantly. No code changes needed.</p>
     </div>
@@ -641,14 +641,14 @@
     <h2>Ready to improve your deliverability?</h2>
     <p>Join thousands of CyberPanel users sending emails with confidence.</p>
     <button class="ed-hero-cta" style="font-size:0.95em;" data-toggle="modal" data-target="#connectModal">
-        Get Started Free <i class="fas fa-arrow-right"></i>
+        Get Started Free <i class="fas fa-arrow-right" aria-hidden="true"></i>
     </button>
     <div style="margin-top:20px; display:flex; gap:24px; justify-content:center; flex-wrap:wrap;">
         <a href="https://cyberpanel.net/KnowledgeBase/cybermail-setup-guide/" target="_blank" style="color:#4f46e5; font-size:0.88em; font-weight:600; text-decoration:none;">
-            <i class="fas fa-book"></i> Setup Guide
+            <i class="fas fa-book" aria-hidden="true"></i> Setup Guide
         </a>
         <a href="https://cyberpanel.net/KnowledgeBase/cybermail-user-guide/" target="_blank" style="color:#4f46e5; font-size:0.88em; font-weight:600; text-decoration:none;">
-            <i class="fas fa-circle-question"></i> User Guide
+            <i class="fas fa-circle-question" aria-hidden="true"></i> User Guide
         </a>
     </div>
 </div>
@@ -671,13 +671,13 @@
         <div>
             <div class="ed-dash-title">Email Delivery</div>
             <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-                <span class="ed-pill ed-pill-green"><i class="fas fa-circle" style="font-size:6px;"></i> Connected</span>
+                <span class="ed-pill ed-pill-green"><i class="fas fa-circle" style="font-size:6px;" aria-hidden="true"></i> Connected</span>
                 <span class="ed-pill ed-pill-gray">{$ account.plan_name $} Plan</span>
             </div>
         </div>
         <div class="ed-actions">
-            <a href="https://cyberpanel.net/KnowledgeBase/cybermail-user-guide/" target="_blank" class="ed-btn ed-btn-outline" style="text-decoration:none;"><i class="fas fa-book"></i> Docs</a>
-            <button class="ed-btn ed-btn-outline" ng-click="refreshDashboard()"><i class="fas fa-arrows-rotate"></i> Refresh</button>
+            <a href="https://cyberpanel.net/KnowledgeBase/cybermail-user-guide/" target="_blank" class="ed-btn ed-btn-outline" style="text-decoration:none;"><i class="fas fa-book" aria-hidden="true"></i> Docs</a>
+            <button class="ed-btn ed-btn-outline" ng-click="refreshDashboard()"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> Refresh</button>
             <button class="ed-btn ed-btn-ghost" data-toggle="modal" data-target="#disconnectModal">Disconnect</button>
         </div>
     </div>
@@ -707,11 +707,11 @@
 
     <!-- Tabs -->
     <div class="ed-tabs">
-        <button class="ed-tab" ng-class="{'active': activeTab === 'domains'}" ng-click="switchTab('domains')"><i class="fas fa-globe"></i>&nbsp; Domains</button>
-        <button class="ed-tab" ng-class="{'active': activeTab === 'smtp'}" ng-click="switchTab('smtp')"><i class="fas fa-key"></i>&nbsp; SMTP</button>
-        <button class="ed-tab" ng-class="{'active': activeTab === 'relay'}" ng-click="switchTab('relay')"><i class="fas fa-route"></i>&nbsp; Relay</button>
-        <button class="ed-tab" ng-class="{'active': activeTab === 'logs'}" ng-click="switchTab('logs')"><i class="fas fa-list"></i>&nbsp; Logs</button>
-        <button class="ed-tab" ng-class="{'active': activeTab === 'stats'}" ng-click="switchTab('stats')"><i class="fas fa-chart-bar"></i>&nbsp; Stats</button>
+        <button class="ed-tab" ng-class="{'active': activeTab === 'domains'}" ng-click="switchTab('domains')"><i class="fas fa-globe" aria-hidden="true"></i>&nbsp; Domains</button>
+        <button class="ed-tab" ng-class="{'active': activeTab === 'smtp'}" ng-click="switchTab('smtp')"><i class="fas fa-key" aria-hidden="true"></i>&nbsp; SMTP</button>
+        <button class="ed-tab" ng-class="{'active': activeTab === 'relay'}" ng-click="switchTab('relay')"><i class="fas fa-route" aria-hidden="true"></i>&nbsp; Relay</button>
+        <button class="ed-tab" ng-class="{'active': activeTab === 'logs'}" ng-click="switchTab('logs')"><i class="fas fa-list" aria-hidden="true"></i>&nbsp; Logs</button>
+        <button class="ed-tab" ng-class="{'active': activeTab === 'stats'}" ng-click="switchTab('stats')"><i class="fas fa-chart-bar" aria-hidden="true"></i>&nbsp; Stats</button>
     </div>
 
     <!-- DOMAINS -->
@@ -719,10 +719,10 @@
         <div class="ed-card">
             <div class="ed-card-head">
                 <h3>Sending Domains</h3>
-                <button class="ed-btn ed-btn-primary ed-btn-sm" data-toggle="modal" data-target="#addDomainModal"><i class="fas fa-plus"></i> Add Domain</button>
+                <button class="ed-btn ed-btn-primary ed-btn-sm" data-toggle="modal" data-target="#addDomainModal"><i class="fas fa-plus" aria-hidden="true"></i> Add Domain</button>
             </div>
-            <div class="ed-alert ed-alert-info" ng-show="domains.length === 0">
-                <i class="fas fa-info-circle"></i>
+            <div class="ed-alert ed-alert-info" ng-show="domains.length === 0" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <span>No domains added yet. Add a domain to start sending emails through CyberMail.</span>
             </div>
             <table class="ed-table" ng-show="domains.length > 0">
@@ -736,9 +736,9 @@
                         <td><span class="ed-badge" ng-class="d.dmarc_verified ? 'ed-badge-ok' : 'ed-badge-err'">{$ d.dmarc_verified ? 'OK' : 'Missing' $}</span></td>
                         <td><span class="ed-badge" ng-class="d.dns_configured ? 'ed-badge-ok' : 'ed-badge-info'">{$ d.dns_configured ? 'Auto' : 'Manual' $}</span></td>
                         <td style="text-align:right; white-space:nowrap;">
-                            <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="verifyDomain(d.domain)" title="Verify"><i class="fas fa-check"></i></button>
-                            <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="configureDns(d.domain)" ng-show="!d.dns_configured" title="Auto DNS"><i class="fas fa-wand-magic-sparkles"></i></button>
-                            <button class="ed-btn ed-btn-danger ed-btn-sm" ng-click="removeDomain(d.domain)" title="Remove"><i class="fas fa-trash"></i></button>
+                            <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="verifyDomain(d.domain)" title="Verify" aria-label="Verify"><i class="fas fa-check" aria-hidden="true"></i></button>
+                            <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="configureDns(d.domain)" ng-show="!d.dns_configured" title="Auto DNS" aria-label="Auto DNS"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></button>
+                            <button class="ed-btn ed-btn-danger ed-btn-sm" ng-click="removeDomain(d.domain)" title="Remove" aria-label="Remove"><i class="fas fa-trash" aria-hidden="true"></i></button>
                         </td>
                     </tr>
                 </tbody>
@@ -751,10 +751,10 @@
         <div class="ed-card">
             <div class="ed-card-head">
                 <h3>SMTP Credentials</h3>
-                <button class="ed-btn ed-btn-primary ed-btn-sm" data-toggle="modal" data-target="#createSmtpModal"><i class="fas fa-plus"></i> Create Credential</button>
+                <button class="ed-btn ed-btn-primary ed-btn-sm" data-toggle="modal" data-target="#createSmtpModal"><i class="fas fa-plus" aria-hidden="true"></i> Create Credential</button>
             </div>
-            <div class="ed-alert ed-alert-info" ng-show="smtpCredentials.length === 0">
-                <i class="fas fa-info-circle"></i>
+            <div class="ed-alert ed-alert-info" ng-show="smtpCredentials.length === 0" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <span>No SMTP credentials yet. Create one to use for relay or external applications.</span>
             </div>
             <table class="ed-table" ng-show="smtpCredentials.length > 0">
@@ -765,8 +765,8 @@
                         <td>{$ cred.description $}</td>
                         <td style="white-space:nowrap;">{$ cred.created_at $}</td>
                         <td style="text-align:right; white-space:nowrap;">
-                            <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="rotatePassword(cred.credential_id)"><i class="fas fa-arrows-rotate"></i> Rotate</button>
-                            <button class="ed-btn ed-btn-danger ed-btn-sm" ng-click="deleteCredential(cred.credential_id)"><i class="fas fa-trash"></i></button>
+                            <button class="ed-btn ed-btn-outline ed-btn-sm" ng-click="rotatePassword(cred.credential_id)"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> Rotate</button>
+                            <button class="ed-btn ed-btn-danger ed-btn-sm" ng-click="deleteCredential(cred.credential_id)" aria-label="Delete credential"><i class="fas fa-trash" aria-hidden="true"></i></button>
                         </td>
                     </tr>
                 </tbody>
@@ -791,16 +791,16 @@
                     <small ng-show="!account.relay_enabled">Postfix is sending directly</small>
                 </div>
                 <button class="ed-btn ed-btn-success" ng-show="!account.relay_enabled" ng-click="enableRelay()" ng-disabled="relayLoading">
-                    <span ng-hide="relayLoading"><i class="fas fa-power-off"></i> Enable Relay</span>
+                    <span ng-hide="relayLoading"><i class="fas fa-power-off" aria-hidden="true"></i> Enable Relay</span>
                     <span ng-show="relayLoading"><span class="ed-spin"></span></span>
                 </button>
                 <button class="ed-btn ed-btn-danger" ng-show="account.relay_enabled" ng-click="disableRelay()" ng-disabled="relayLoading">
-                    <span ng-hide="relayLoading"><i class="fas fa-power-off"></i> Disable Relay</span>
+                    <span ng-hide="relayLoading"><i class="fas fa-power-off" aria-hidden="true"></i> Disable Relay</span>
                     <span ng-show="relayLoading"><span class="ed-spin"></span></span>
                 </button>
             </div>
-            <div class="ed-alert ed-alert-info">
-                <i class="fas fa-circle-info"></i>
+            <div class="ed-alert ed-alert-info" role="status">
+                <i class="fas fa-circle-info" aria-hidden="true"></i>
                 <span><strong>How it works:</strong> Enabling relay configures Postfix to send all outbound mail through CyberMail. An SMTP credential is created automatically.</span>
             </div>
         </div>
@@ -813,14 +813,14 @@
                 <h3>Delivery Logs</h3>
             </div>
             <div class="ed-filters">
-                <select ng-model="logFilters.status" ng-change="loadLogs()">
+                <select ng-model="logFilters.status" ng-change="loadLogs()" aria-label="Filter logs by status">
                     <option value="">All Statuses</option>
                     <option value="delivered">Delivered</option>
                     <option value="bounced">Bounced</option>
                     <option value="failed">Failed</option>
                     <option value="deferred">Deferred</option>
                 </select>
-                <select ng-model="logFilters.days" ng-change="loadLogs()">
+                <select ng-model="logFilters.days" ng-change="loadLogs()" aria-label="Filter logs by time period">
                     <option value="1">Last 24 Hours</option>
                     <option value="3">Last 3 Days</option>
                     <option value="7" selected>Last 7 Days</option>
@@ -829,8 +829,8 @@
                 </select>
             </div>
             <div ng-show="logsLoading" style="text-align:center; padding:30px;"><div class="ed-spin" style="width:28px;height:28px;"></div></div>
-            <div class="ed-alert ed-alert-info" ng-show="logs.length === 0 && !logsLoading">
-                <i class="fas fa-inbox"></i> <span>No delivery logs found for this period.</span>
+            <div class="ed-alert ed-alert-info" ng-show="logs.length === 0 && !logsLoading" role="status">
+                <i class="fas fa-inbox" aria-hidden="true"></i> <span>No delivery logs found for this period.</span>
             </div>
             <table class="ed-table" ng-show="logs.length > 0">
                 <thead><tr><th>Date</th><th>From</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>
@@ -847,9 +847,9 @@
                 </tbody>
             </table>
             <div class="ed-pager" ng-show="logsTotalPages > 1">
-                <button ng-disabled="logsPage <= 1" ng-click="logsPage = logsPage - 1; loadLogs();"><i class="fas fa-chevron-left"></i> Prev</button>
+                <button ng-disabled="logsPage <= 1" ng-click="logsPage = logsPage - 1; loadLogs();"><i class="fas fa-chevron-left" aria-hidden="true"></i> Prev</button>
                 <span class="ed-pager-info">Page {$ logsPage $} of {$ logsTotalPages $}</span>
-                <button ng-disabled="logsPage >= logsTotalPages" ng-click="logsPage = logsPage + 1; loadLogs();">Next <i class="fas fa-chevron-right"></i></button>
+                <button ng-disabled="logsPage >= logsTotalPages" ng-click="logsPage = logsPage + 1; loadLogs();">Next <i class="fas fa-chevron-right" aria-hidden="true"></i></button>
             </div>
         </div>
     </div>
@@ -876,8 +876,8 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="ed-alert ed-alert-info" ng-show="domainStats.length === 0 && !domainStatsLoading">
-                <i class="fas fa-chart-bar"></i> <span>No domain stats available yet. Send some emails first.</span>
+            <div class="ed-alert ed-alert-info" ng-show="domainStats.length === 0 && !domainStatsLoading" role="status">
+                <i class="fas fa-chart-bar" aria-hidden="true"></i> <span>No domain stats available yet. Send some emails first.</span>
             </div>
         </div>
     </div>
@@ -892,17 +892,17 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fas fa-plug" style="color:#7c3aed;"></i> Connect to CyberMail</h4>
+                <h4 class="modal-title"><i class="fas fa-plug" style="color:#7c3aed;" aria-hidden="true"></i> Connect to CyberMail</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p style="color:#64748b; font-size:0.9em; margin-bottom:18px;">Create your CyberMail account or connect an existing one.</p>
                 <div class="form-group">
-                    <label style="font-weight:600; font-size:0.88em;">Email Address</label>
+                    <label for="cmConnectEmail" style="font-weight:600; font-size:0.88em;">Email Address</label>
                     <input type="email" class="form-control" id="cmConnectEmail" value="{{ adminEmail }}" placeholder="you@example.com">
                 </div>
                 <div class="form-group">
-                    <label style="font-weight:600; font-size:0.88em;">Password</label>
+                    <label for="cmConnectPassword" style="font-weight:600; font-size:0.88em;">Password</label>
                     <input type="password" class="form-control" id="cmConnectPassword" placeholder="Choose a password for your CyberMail account">
                 </div>
             </div>
@@ -919,17 +919,17 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fas fa-globe" style="color:#7c3aed;"></i> Add Sending Domain</h4>
+                <h4 class="modal-title"><i class="fas fa-globe" style="color:#7c3aed;" aria-hidden="true"></i> Add Sending Domain</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p style="font-size:0.9em; color:#64748b; margin-bottom:18px;">Enter the domain you want to send emails from.</p>
                 <div class="form-group">
-                    <label style="font-weight:600; font-size:0.88em;">Domain Name</label>
+                    <label for="cmDomainName" style="font-weight:600; font-size:0.88em;">Domain Name</label>
                     <input type="text" class="form-control" id="cmDomainName" placeholder="example.com">
                 </div>
-                <div class="ed-alert ed-alert-info" style="margin-bottom:0;">
-                    <i class="fas fa-wand-magic-sparkles"></i>
+                <div class="ed-alert ed-alert-info" style="margin-bottom:0;" role="status">
+                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
                     <span>If this domain exists in CyberPanel's DNS, SPF, DKIM, and DMARC records will be configured automatically.</span>
                 </div>
             </div>
@@ -946,13 +946,13 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fas fa-key" style="color:#7c3aed;"></i> Create SMTP Credential</h4>
+                <h4 class="modal-title"><i class="fas fa-key" style="color:#7c3aed;" aria-hidden="true"></i> Create SMTP Credential</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p style="font-size:0.9em; color:#64748b; margin-bottom:18px;">Create a new SMTP credential for sending emails.</p>
                 <div class="form-group">
-                    <label style="font-weight:600; font-size:0.88em;">Description (optional)</label>
+                    <label for="cmSmtpDesc" style="font-weight:600; font-size:0.88em;">Description (optional)</label>
                     <input type="text" class="form-control" id="cmSmtpDesc" placeholder="e.g., WordPress mailer, Production relay">
                 </div>
             </div>
@@ -969,12 +969,12 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fas fa-lock" style="color:#f59e0b;"></i> Save Your Password</h4>
+                <h4 class="modal-title"><i class="fas fa-lock" style="color:#f59e0b;" aria-hidden="true"></i> Save Your Password</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="ed-alert ed-alert-warn">
-                    <i class="fas fa-triangle-exclamation"></i>
+                    <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
                     <span><strong>Copy this password now!</strong> It will not be shown again.</span>
                 </div>
                 <div class="ed-pw-box" id="cmPasswordDisplay"></div>
@@ -991,7 +991,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><i class="fas fa-unlink" style="color:#ef4444;"></i> Disconnect CyberMail</h4>
+                <h4 class="modal-title"><i class="fas fa-unlink" style="color:#ef4444;" aria-hidden="true"></i> Disconnect CyberMail</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">

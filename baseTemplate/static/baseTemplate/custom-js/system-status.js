@@ -35,7 +35,7 @@ function randomPassword(length) {
 
 /* Java script code to monitor system status */
 
-var app = angular.module('CyberCP', []);
+var app = angular.module('CyberCP', ['ngAria']);
 
 var globalScope;
 

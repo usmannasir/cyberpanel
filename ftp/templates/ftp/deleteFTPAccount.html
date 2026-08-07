@@ -305,7 +305,7 @@
     <div class="modern-container" ng-controller="deleteFTPAccount">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-trash-alt"></i>
+                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                 {% trans "Delete FTP Account" %}
             </h1>
             <p class="page-subtitle">{% trans "Select domain and delete its related FTP accounts" %}</p>
@@ -314,7 +314,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-user-times"></i>
+                    <i class="fas fa-user-times" aria-hidden="true"></i>
                     {% trans "Remove FTP Account" %}
                     <span ng-show="ftpLoading" class="loading-spinner"></span>
                 </h2>
@@ -322,11 +322,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);" aria-hidden="true"></i>
                         <h3>{% trans "PureFTPD is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable PureFTPD to manage FTP accounts" %}</p>
                         <a href="{% url 'managePureFtpd' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable PureFTPD Now" %}
                         </a>
                     </div>
@@ -336,8 +336,8 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Domain" %}</label>
-                                        <select ng-change="getFTPAccounts()" ng-model="selectedDomain" class="form-control">
+                                        <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                                        <select id="cpa11y-select-domain" ng-change="getFTPAccounts()" ng-model="selectedDomain" class="form-control">
                                             <option value="">{% trans "Choose a domain..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -352,8 +352,8 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select FTP Account" %}</label>
-                                        <select ng-model="selectedFTPAccount" class="form-control">
+                                        <label for="cpa11y-select-ftp-account" class="form-label">{% trans "Select FTP Account" %}</label>
+                                        <select id="cpa11y-select-ftp-account" ng-model="selectedFTPAccount" class="form-control">
                                             <option value="">{% trans "Choose an FTP account..." %}</option>
                                             <option ng-repeat="ftpAcct in ftpAccountsFeteched track by $index" value="{$ ftpAcct.userName $}">{$ ftpAcct.userName $}</option>
                                         </select>
@@ -361,7 +361,7 @@
                                     
                                     <div ng-hide="deleteFTPButtonInit" class="delete-warning">
                                         <h4>
-                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                                             {% trans "Warning" %}
                                         </h4>
                                         <p>{% trans "This action will permanently delete the FTP account. This cannot be undone." %}</p>
@@ -369,7 +369,7 @@
 
                                     <div ng-hide="deleteFTPButtonInit" style="margin-top: 1.5rem;">
                                         <button type="button" ng-click="deleteFTPAccount()" class="btn-danger">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                             {% trans "Delete FTP Account" %}
                                         </button>
                                     </div>
@@ -378,29 +378,29 @@
                         </div>
 
                         <div ng-hide="deleteFTPButton" class="confirm-section">
-                            <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: var(--danger-color, #ef4444);"></i>
+                            <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: var(--danger-color, #ef4444);" aria-hidden="true"></i>
                             <h3>{% trans "Confirm Deletion" %}</h3>
                             <p class="mb-3">{% trans "Are you absolutely sure you want to delete this FTP account?" %}</p>
                             <button type="button" ng-click="deleteFTPFinal()" class="btn-warning">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Yes, Delete FTP Account" %}
                             </button>
                         </div>
 
                         <!-- Alert Messages -->
                         <div class="form-section">
-                            <div ng-hide="deleteFailure" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="deleteFailure" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {% trans "Cannot delete account. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="deleteSuccess" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="deleteSuccess" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "FTP Account with username:" %} <strong>{$ ftpUserNameDeleted $}</strong> {% trans "is successfully deleted." %}
                             </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to the server. Please refresh this page." %}
                             </div>
                         </div>

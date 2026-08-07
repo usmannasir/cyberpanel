@@ -34,7 +34,7 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
     <div class="panel-body" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
     <h3 class="content-box-header">
-            {% trans "Email Marketing" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Email Marketing" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}" alt="">
         </h3>
 
     {% if installCheck == 0 %}
@@ -45,7 +45,7 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
                     <a href="{% url 'emailPolicyServer' %}">
                     <button class="btn btn-alt btn-hover btn-blue-alt">
                         <span>{% trans "Enable Now." %}</span>
-                        <i class="glyph-icon icon-arrow-right"></i>
+                        <i class="glyph-icon icon-arrow-right" aria-hidden="true"></i>
                     </button></a></h3>
             </div>
         </div>
@@ -66,9 +66,9 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
                     <td ><code ng-bind="user.id"></code></td>
                     <td><code ng-bind="user.userName"></code></td>
                     <td>
-                       <img style="margin-right: 4%;" ng-show="user.status==1"  title="{% trans 'Email Marketing Enabled.' %}"  src="{% static 'mailServer/vpsON.png' %}">
+                       <img style="margin-right: 4%;" ng-show="user.status==1"  title="{% trans 'Email Marketing Enabled.' %}"  src="{% static 'mailServer/vpsON.png' %}" alt="">
                        <button ng-click="enableDisableMarketing(0, user.userName)" ng-show="user.status==1" class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
-                       <img style="margin-right: 4%;" ng-show="user.status==0"  title="{% trans 'Email Marketing Disabled.' %}"  src="{% static 'mailServer/vpsOff.png' %}">
+                       <img style="margin-right: 4%;" ng-show="user.status==0"  title="{% trans 'Email Marketing Disabled.' %}"  src="{% static 'mailServer/vpsOff.png' %}" alt="">
                        <button ng-click="enableDisableMarketing(1, user.userName)" ng-show="user.status==0" class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
                     </td>
                 </tr>

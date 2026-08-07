@@ -367,7 +367,7 @@
         
         <div id="page-title">
             <h2>
-                <i class="fas fa-clone" style="margin-right: 10px;"></i>
+                <i class="fas fa-clone" style="margin-right: 10px;" aria-hidden="true"></i>
                 {% trans "Set up Staging Environment" %}
             </h2>
             <p>{% trans "Set up staging environment for" %} {{ domainName }}. {% trans "Any domain that you choose here will be created as child-domain for this master site." %}</p>
@@ -376,14 +376,14 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    <i class="fas fa-server" style="color: var(--primary-color);"></i>
+                    <i class="fas fa-server" style="color: var(--primary-color);" aria-hidden="true"></i>
                     {% trans "Create Staging Site for" %} <span id="domainName">{{ domainName }}</span>
-                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
                     <div class="info-box">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         <div>
                             <strong>{% trans "Important:" %}</strong> {% trans "The domain you enter below will be created as a child-domain to" %} {{ domainName }}. 
                             {% trans "This staging site will be an exact copy of your production site, allowing you to test changes safely." %}
@@ -394,19 +394,19 @@
                           class="form-horizontal bordered-row">
 
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">
-                                <i class="fas fa-globe"></i>
+                            <label for="cpa11y-staging-domain" class="col-sm-3 control-label">
+                                <i class="fas fa-globe" aria-hidden="true"></i>
                                 {% trans "Staging Domain" %}
                             </label>
                             <div class="col-sm-6">
-                                <input ng-keypress="cloneEnter($event)" 
+                                <input id="cpa11y-staging-domain" ng-keypress="cloneEnter($event)" 
                                        type="text" 
                                        class="form-control" 
                                        ng-model="domain" 
                                        placeholder="staging.{{ domainName }}" 
                                        required>
                                 <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                    <i class="fas fa-info-circle"></i>
+                                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                                     {% trans "Enter a subdomain or a completely different domain for your staging site" %}
                                 </small>
                             </div>
@@ -417,7 +417,7 @@
                             <div class="col-sm-6">
                                 <button type="button" ng-click="startCloning()"
                                         class="btn btn-primary btn-lg btn-block">
-                                    <i class="fas fa-clone"></i>
+                                    <i class="fas fa-clone" aria-hidden="true"></i>
                                     {% trans "Start Cloning" %}
                                 </button>
                             </div>
@@ -427,7 +427,7 @@
                             <label class="col-sm-2 control-label"></label>
                             <div class="col-sm-8">
 
-                                <div class="alert alert-success text-center">
+                                <div class="alert alert-success text-center" role="status">
                                     <h2>{$ currentStatus $}</h2>
                                 </div>
 
@@ -446,7 +446,7 @@
                             <div class="col-sm-6">
                                 <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
                                         class="btn btn-primary btn-lg">
-                                    <i class="fas fa-arrow-left"></i>
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                     {% trans "Go Back" %}
                                 </button>
                             </div>

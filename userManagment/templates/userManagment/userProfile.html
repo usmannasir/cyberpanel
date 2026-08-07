@@ -301,12 +301,12 @@
             <div class="profile-intro">
                 <div class="profile-intro-content">
                     <div class="profile-avatar">
-                        <i class="fa fa-user"></i>
+                        <i class="fa fa-user" aria-hidden="true"></i>
                     </div>
                     <div class="profile-details">
                         <h2 class="profile-name">{{ firstName }} {{ lastName }}</h2>
                         <p class="profile-role">
-                            <i class="fa fa-shield-alt"></i> {{ accountACL }}
+                            <i class="fa fa-shield-alt" aria-hidden="true"></i> {{ accountACL }}
                         </p>
                     </div>
                 </div>
@@ -317,21 +317,21 @@
                     <h3>{% trans "Personal Information" %}</h3>
                     <div class="info-row">
                         <div class="info-label">
-                            <i class="fa fa-user info-icon"></i>
+                            <i class="fa fa-user info-icon" aria-hidden="true"></i>
                             {% trans "Full Name" %}
                         </div>
                         <div class="info-value">{{ firstName }} {{ lastName }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">
-                            <i class="fa fa-at info-icon"></i>
+                            <i class="fa fa-at info-icon" aria-hidden="true"></i>
                             {% trans "Username" %}
                         </div>
                         <div class="info-value">{{ userName }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">
-                            <i class="fa fa-envelope info-icon"></i>
+                            <i class="fa fa-envelope info-icon" aria-hidden="true"></i>
                             {% trans "Email Address" %}
                         </div>
                         <div class="info-value">{{ email }}</div>
@@ -342,7 +342,7 @@
                     <h3>{% trans "Account Details" %}</h3>
                     <div class="info-row">
                         <div class="info-label">
-                            <i class="fa fa-shield-alt info-icon"></i>
+                            <i class="fa fa-shield-alt info-icon" aria-hidden="true"></i>
                             {% trans "Access Level" %}
                         </div>
                         <div class="info-value">
@@ -351,13 +351,13 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">
-                            <i class="fa fa-globe info-icon"></i>
+                            <i class="fa fa-globe info-icon" aria-hidden="true"></i>
                             {% trans "Websites Limit" %}
                         </div>
                         <div class="info-value">
                             {% if websitesLimit == "0" %}
                                 <span class="limit-badge">
-                                    <i class="fa fa-infinity"></i> {% trans "Unlimited" %}
+                                    <i class="fa fa-infinity" aria-hidden="true"></i> {% trans "Unlimited" %}
                                 </span>
                             {% else %}
                                 <span class="limit-badge">
@@ -370,17 +370,17 @@
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <i class="fa fa-check-circle stat-icon"></i>
+                        <i class="fa fa-check-circle stat-icon" aria-hidden="true"></i>
                         <div class="stat-value">{% trans "Active" %}</div>
                         <div class="stat-label">{% trans "Account Status" %}</div>
                     </div>
                     <div class="stat-card">
-                        <i class="fa fa-calendar stat-icon"></i>
+                        <i class="fa fa-calendar stat-icon" aria-hidden="true"></i>
                         <div class="stat-value">{{ type|default:"User" }}</div>
                         <div class="stat-label">{% trans "Account Type" %}</div>
                     </div>
                     <div class="stat-card">
-                        <i class="fa fa-server stat-icon"></i>
+                        <i class="fa fa-server stat-icon" aria-hidden="true"></i>
                         <div class="stat-value">{{ websitesLimit }}</div>
                         <div class="stat-label">{% trans "Site Limit" %}</div>
                     </div>

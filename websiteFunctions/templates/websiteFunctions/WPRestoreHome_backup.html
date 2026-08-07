@@ -409,7 +409,7 @@
 
         <div id="page-title">
             <h2 id="domainNamePage">
-                <i class="fas fa-undo-alt" style="margin-right: 10px;"></i>
+                <i class="fas fa-undo-alt" style="margin-right: 10px;" aria-hidden="true"></i>
                 {% trans "Restore WordPress Backup" %}
             </h2>
             <p>{% trans "Restore your WordPress site from a backup. Choose the restoration method and destination for your backup." %}</p>
@@ -419,10 +419,10 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
-                    <i class="fas fa-file-archive" style="color: var(--primary-color);"></i>
+                    <i class="fas fa-file-archive" style="color: var(--primary-color);" aria-hidden="true"></i>
                     {{ FileName }}
                     <img id="wordpresshomeloading" style="display: none"
-                         src="{% static 'images/loading.gif' %}">
+                         src="{% static 'images/loading.gif' %}" alt="">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -433,8 +433,8 @@
                         
                             <div id="exinstingsitedivDB" ng-hide="installationDetailsForm"
                                  class="form-group">
-                                <label class="col-sm-3 control-label">
-                                    <i class="fas fa-database"></i>
+                                <label for="DesSite" class="col-sm-3 control-label">
+                                    <i class="fas fa-database" aria-hidden="true"></i>
                                     {% trans "Restore Destination" %}
                                 </label>
                                 <div class="col-sm-9">
@@ -445,7 +445,7 @@
                                         {% endfor %}
                                     </select>
                                     <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                        <i class="fas fa-info-circle"></i>
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                                         Select the WordPress site where you want to restore the database backup
                                     </small>
                                 </div>
@@ -454,8 +454,8 @@
                         {% else %}
                         
                             <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">
-                                    <i class="fas fa-cogs"></i>
+                                <label for="RestoreMethode" class="col-sm-3 control-label">
+                                    <i class="fas fa-cogs" aria-hidden="true"></i>
                                     {% trans "Restore Method" %}
                                 </label>
                                 <div class="col-sm-9">
@@ -465,7 +465,7 @@
                                         <option value="0">Restore to Existing Site</option>
                                     </select>
                                     <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                        <i class="fas fa-info-circle"></i>
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                                         Choose whether to create a new site or overwrite an existing one
                                     </small>
                                 </div>
@@ -473,8 +473,8 @@
                             
                             <div id="exinstingsitediv" ng-hide="installationDetailsForm" style="display: none"
                                  class="form-group">
-                                <label class="col-sm-3 control-label">
-                                    <i class="fas fa-globe"></i>
+                                <label for="DesSite" class="col-sm-3 control-label">
+                                    <i class="fas fa-globe" aria-hidden="true"></i>
                                     {% trans "Target Site" %}
                                 </label>
                                 <div class="col-sm-9">
@@ -485,15 +485,15 @@
                                         {% endfor %}
                                     </select>
                                     <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                        <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i>
+                                        <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);" aria-hidden="true"></i>
                                         Warning: This will overwrite the selected site
                                     </small>
                                 </div>
                             </div>
                             
                             <div id="Newsitediv" ng-hide="installationDetailsForm" style="display: none" class="form-group">
-                                <label class="col-sm-3 control-label">
-                                    <i class="fas fa-globe"></i>
+                                <label for="wprestoresubdirdomain" class="col-sm-3 control-label">
+                                    <i class="fas fa-globe" aria-hidden="true"></i>
                                     {% trans "New Domain" %}
                                 </label>
                                 <div class="col-sm-9">
@@ -507,10 +507,10 @@
                                                placeholder="Path (optional)"
                                                type="text"
                                                name="wprestoresubdirpath" ng-model="installPath"
-                                               style="max-width: 150px;">
+                                               style="max-width: 150px;" aria-label="Path (optional)">
                                     </div>
                                     <small class="form-text text-muted" style="margin-top: 8px; color: var(--text-secondary);">
-                                        <i class="fas fa-info-circle"></i>
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                                         Enter domain without WWW prefix. Leave path empty for root installation.
                                     </small>
                                 </div>
@@ -522,7 +522,7 @@
                             <button id="RestoreWPbackupNow" type="button"
                                     ng-click="RestoreWPbackupNow()"
                                     class="btn btn-primary btn-lg">
-                                <i class="fas fa-undo-alt"></i>
+                                <i class="fas fa-undo-alt" aria-hidden="true"></i>
                                 {% trans "Restore Backup Now" %}
                             </button>
                         </div>
@@ -531,7 +531,7 @@
                             <label class="col-sm-2 control-label"></label>
                             <div class="col-sm-7">
 
-                                <div class="alert alert-success text-center">
+                                <div class="alert alert-success text-center" role="status">
                                     <h2>{$ currentStatus $}</h2>
                                 </div>
 
@@ -544,17 +544,17 @@
                                     </div>
                                 </div>
 
-                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                <div ng-hide="errorMessageBox" class="alert alert-danger" role="alert">
                                     <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                 </div>
 
-                                <div ng-hide="success" class="alert alert-success">
-                                    <i class="fas fa-check-circle"></i>
+                                <div ng-hide="success" class="alert alert-success" role="status">
+                                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                                     <p>{% trans "Backup successfully restored." %}</p>
                                 </div>
 
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                     <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                 </div>
 
@@ -567,7 +567,7 @@
                                 <button type="button" ng-disabled="goBackDisable"
                                         ng-click="goBack()"
                                         class="btn btn-primary btn-lg">
-                                    <i class="fas fa-arrow-left"></i>
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                     {% trans "Go Back" %}
                                 </button>
                             </div>

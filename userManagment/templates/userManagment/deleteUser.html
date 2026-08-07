@@ -184,12 +184,12 @@
 <div class="container">
     <div class="form-card" ng-controller="deleteUser">
         <h3 class="section-title">
-            <i class="fa fa-exclamation-triangle warning-icon"></i>
+            <i class="fa fa-exclamation-triangle warning-icon" aria-hidden="true"></i>
             {% trans "Delete User Account" %}
         </h3>
         
         <div class="delete-info">
-            <h4><i class="fa fa-info-circle"></i> {% trans "Important Information" %}</h4>
+            <h4><i class="fa fa-info-circle" aria-hidden="true"></i> {% trans "Important Information" %}</h4>
             <ul>
                 <li>{% trans "All websites owned by this user will be transferred to the root administrator" %}</li>
                 <li>{% trans "This action cannot be undone" %}</li>
@@ -199,8 +199,8 @@
         
         <form action="/" class="form-horizontal">
             <div class="form-group">
-                <label class="form-label">{% trans "Select User to Delete" %}</label>
-                <select ng-model="accountUsername" class="form-control">
+                <label for="cpa11y-select-user-to-delete" class="form-label">{% trans "Select User to Delete" %}</label>
+                <select id="cpa11y-select-user-to-delete" ng-model="accountUsername" class="form-control">
                     <option value="">-- {% trans "Choose a user" %} --</option>
                     {% for items in acctNames %}
                         <option>{{ items }}</option>
@@ -211,32 +211,32 @@
 
             <div class="form-group mt-4">
                 <button type="button" ng-click="deleteUser()" class="btn btn-danger btn-lg">
-                    <i class="fa fa-trash"></i> {% trans "Delete User" %}
+                    <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Delete User" %}
                 </button>
             </div>
 
             <div ng-hide="deleteUserButton" class="form-group">
-                <div class="alert alert-warning">
-                    <i class="fa fa-exclamation-triangle"></i> 
+                <div class="alert alert-warning" role="status">
+                    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> 
                     <strong>{% trans "Final Confirmation" %}</strong><br>
                     {% trans "You are about to delete user:" %} <strong>{$ accountUsername $}</strong><br>
                     {% trans "This action is permanent and cannot be reversed." %}
                 </div>
                 <button type="button" ng-click="deleteUserFinal()" class="btn btn-confirm btn-lg">
-                    <i class="fa fa-check"></i> {% trans "Yes, Delete This User" %}
+                    <i class="fa fa-check" aria-hidden="true"></i> {% trans "Yes, Delete This User" %}
                 </button>
             </div>
 
-            <div ng-hide="deleteFailure" class="alert alert-danger">
-                <i class="fa fa-times-circle"></i> {% trans "Cannot delete user. Error message:" %} {$ errorMessage $}
+            <div ng-hide="deleteFailure" class="alert alert-danger" role="alert">
+                <i class="fa fa-times-circle" aria-hidden="true"></i> {% trans "Cannot delete user. Error message:" %} {$ errorMessage $}
             </div>
 
-            <div ng-hide="deleteSuccess" class="alert alert-success">
-                <i class="fa fa-check-circle"></i> {% trans "User" %} <strong>{$ deletedUser $}</strong> {% trans "has been successfully deleted" %}
+            <div ng-hide="deleteSuccess" class="alert alert-success" role="status">
+                <i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "User" %} <strong>{$ deletedUser $}</strong> {% trans "has been successfully deleted" %}
             </div>
 
-            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                <i class="fa fa-times-circle"></i> {% trans "Could not connect to the server. Please refresh this page." %}
+            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                <i class="fa fa-times-circle" aria-hidden="true"></i> {% trans "Could not connect to the server. Please refresh this page." %}
             </div>
         </form>
     </div>

@@ -986,71 +986,71 @@
     <!-- Toolbar -->
     <div class="fm-toolbar fm-animate-in">
         <div class="fm-toolbar-group">
-            <button class="fm-btn" onclick="toggleSidebar()" data-tooltip="{% trans 'Toggle Sidebar' %}" style="background: rgba(88, 86, 214, 0.15);">
+            <button class="fm-btn" onclick="toggleSidebar()" data-tooltip="{% trans 'Toggle Sidebar' %}" style="background: rgba(88, 86, 214, 0.15);" aria-label="{% trans 'Toggle Sidebar' %}">
                 <i class="fas fa-bars"></i>
             </button>
-            <button class="fm-btn" ng-click="navigateBack()" data-tooltip="{% trans 'Go Back' %}">
+            <button class="fm-btn" ng-click="navigateBack()" data-tooltip="{% trans 'Go Back' %}" aria-label="{% trans 'Go Back' %}">
                 <i class="fas fa-arrow-left"></i>
             </button>
-            <button class="fm-btn" ng-click="navigateHome()" data-tooltip="{% trans 'Home' %}">
+            <button class="fm-btn" ng-click="navigateHome()" data-tooltip="{% trans 'Home' %}" aria-label="{% trans 'Home' %}">
                 <i class="fas fa-home"></i>
             </button>
-            <button class="fm-btn" ng-click="fetchForTableSecondary(null,'refresh')" data-tooltip="{% trans 'Refresh' %}">
+            <button class="fm-btn" ng-click="fetchForTableSecondary(null,'refresh')" data-tooltip="{% trans 'Refresh' %}" aria-label="{% trans 'Refresh' %}">
                 <i class="fas fa-sync-alt"></i>
             </button>
         </div>
         
         <div class="fm-toolbar-group">
             <button class="fm-btn primary" ng-click="showUploadBox()">
-                <i class="fas fa-cloud-upload-alt"></i>
+                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
                 {% trans "Upload" %}
             </button>
             <button class="fm-btn" ng-click="showCreateFileModal()">
-                <i class="fas fa-file-plus"></i>
+                <i class="fas fa-file-plus" aria-hidden="true"></i>
                 {% trans "New File" %}
             </button>
             <button class="fm-btn" ng-click="showCreateFolderModal()">
-                <i class="fas fa-folder-plus"></i>
+                <i class="fas fa-folder-plus" aria-hidden="true"></i>
                 {% trans "New Folder" %}
             </button>
         </div>
         
         <div class="fm-toolbar-group">
             <button class="fm-btn" ng-click="showCopyModal()" ng-disabled="allFilesAndFolders.length < 1">
-                <i class="fas fa-copy"></i>
+                <i class="fas fa-copy" aria-hidden="true"></i>
                 {% trans "Copy" %}
             </button>
             <button class="fm-btn" ng-click="showMoveModal()" ng-disabled="allFilesAndFolders.length < 1">
-                <i class="fas fa-cut"></i>
+                <i class="fas fa-cut" aria-hidden="true"></i>
                 {% trans "Move" %}
             </button>
             <button class="fm-btn" ng-click="showRenameModal()" ng-disabled="allFilesAndFolders.length !== 1">
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit" aria-hidden="true"></i>
                 {% trans "Rename" %}
             </button>
             <button class="fm-btn danger" ng-click="showDeleteModal()" ng-disabled="allFilesAndFolders.length < 1">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash" aria-hidden="true"></i>
                 {% trans "Delete" %}
             </button>
         </div>
         
         <div class="fm-toolbar-group">
             <button class="fm-btn" ng-click="showCompressionModal()" ng-disabled="allFilesAndFolders.length < 1">
-                <i class="fas fa-file-archive"></i>
+                <i class="fas fa-file-archive" aria-hidden="true"></i>
                 {% trans "Compress" %}
             </button>
             <button class="fm-btn" ng-click="showExtractionModal()" ng-disabled="allFilesAndFolders.length !== 1">
-                <i class="fas fa-file-export"></i>
+                <i class="fas fa-file-export" aria-hidden="true"></i>
                 {% trans "Extract" %}
             </button>
             <button class="fm-btn" ng-click="showHTMLEditorModal(1)" ng-disabled="allFilesAndFolders.length !== 1">
-                <i class="fas fa-code"></i>
+                <i class="fas fa-code" aria-hidden="true"></i>
                 {% trans "Edit" %}
             </button>
         </div>
         
         <div class="fm-toolbar-group">
-            <button class="fm-btn" ng-click="fixPermissions()" data-tooltip="{% trans 'Fix Permissions' %}">
+            <button class="fm-btn" ng-click="fixPermissions()" data-tooltip="{% trans 'Fix Permissions' %}" aria-label="{% trans 'Fix Permissions' %}">
                 <i class="fas fa-wrench"></i>
             </button>
         </div>
@@ -1059,7 +1059,7 @@
     <!-- Path Breadcrumb -->
     <div class="fm-path fm-animate-in" style="animation-delay: 0.1s">
         <a href="#" class="fm-path-item" ng-click="navigateHome()">
-            <i class="fas fa-home"></i>
+            <i class="fas fa-home" aria-hidden="true"></i>
             <span>{% trans "Home" %}</span>
         </a>
         <span class="fm-path-separator" ng-if="pathSegments.length > 0">/</span>
@@ -1079,9 +1079,9 @@
             <ul class="fm-tree">
                 <li class="fm-tree-item" data-path="{$ startingPath $}">
                     <div class="fm-tree-link">
-                        <i class="fas fa-folder fm-tree-icon"></i>
-                        <span style="cursor: pointer;" onclick="expandDomainTree(this)" ng-click="navigateHome()">{$ startingPath || 'Home' $}</span>
-                        <i class="fas fa-chevron-right fm-tree-expand" onclick="toggleTreeNode(event)"></i>
+                        <i class="fas fa-folder fm-tree-icon" aria-hidden="true"></i>
+                        <span style="cursor: pointer;" onclick="expandDomainTree(this)" onkeydown="if(event.key==='Enter'||event.key===' '){expandDomainTree(this);}" ng-click="navigateHome()">{$ startingPath || 'Home' $}</span>
+                        <i class="fas fa-chevron-right fm-tree-expand" onclick="toggleTreeNode(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTreeNode(event);}" role="button" tabindex="0" aria-label="{% trans 'Expand folder tree' %}"></i>
                     </div>
                     <ul class="fm-tree-children" id="treeRoot"></ul>
                 </li>
@@ -1092,28 +1092,28 @@
         <div class="fm-content">
             <div class="fm-content-header">
                 <div class="fm-toolbar-group">
-                    <button class="fm-btn" ng-click="fetchForTableSecondary(null,'refresh')" data-tooltip="{% trans 'Refresh' %}">
+                    <button class="fm-btn" ng-click="fetchForTableSecondary(null,'refresh')" data-tooltip="{% trans 'Refresh' %}" aria-label="{% trans 'Refresh' %}">
                         <i class="fas fa-sync-alt"></i>
                     </button>
-                    <button class="fm-btn" ng-click="selectAll()" data-tooltip="{% trans 'Select All' %}">
+                    <button class="fm-btn" ng-click="selectAll()" data-tooltip="{% trans 'Select All' %}" aria-label="{% trans 'Select All' %}">
                         <i class="fas fa-check-square"></i>
                     </button>
-                    <button class="fm-btn" ng-click="unSelectAll()" data-tooltip="{% trans 'Unselect All' %}">
+                    <button class="fm-btn" ng-click="unSelectAll()" data-tooltip="{% trans 'Unselect All' %}" aria-label="{% trans 'Unselect All' %}">
                         <i class="far fa-square"></i>
                     </button>
                 </div>
                 
                 <div class="fm-search">
-                    <input type="text" ng-model="searchFilter" placeholder="{% trans 'Search files...' %}" />
-                    <i class="fas fa-search fm-search-icon"></i>
+                    <input type="text" ng-model="searchFilter" placeholder="{% trans 'Search files...' %}" / aria-label="{% trans 'Search files...' %}">
+                    <i class="fas fa-search fm-search-icon" aria-hidden="true"></i>
                 </div>
                 
                 <div class="fm-view-toggle">
-                    <button class="fm-view-btn" ng-class="{active: viewMode === 'grid'}" ng-click="setViewMode('grid')">
-                        <i class="fas fa-th"></i>
+                    <button class="fm-view-btn" ng-class="{active: viewMode === 'grid'}" ng-click="setViewMode('grid')" aria-label="{% trans 'Grid view' %}">
+                        <i class="fas fa-th" aria-hidden="true"></i>
                     </button>
-                    <button class="fm-view-btn" ng-class="{active: viewMode === 'list'}" ng-click="setViewMode('list')">
-                        <i class="fas fa-list"></i>
+                    <button class="fm-view-btn" ng-class="{active: viewMode === 'list'}" ng-click="setViewMode('list')" aria-label="{% trans 'List view' %}">
+                        <i class="fas fa-list" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -1129,7 +1129,7 @@
                 
                 <!-- Empty State -->
                 <div class="fm-empty" ng-show="!isLoading && allFilesAndFolders && allFilesAndFolders.length === 0">
-                    <i class="fas fa-folder-open fm-empty-icon"></i>
+                    <i class="fas fa-folder-open fm-empty-icon" aria-hidden="true"></i>
                     <p class="fm-empty-text">{% trans "This folder is empty" %}</p>
                     <p class="fm-empty-subtext">{% trans "Upload files or create new folders to get started" %}</p>
                 </div>
@@ -1150,7 +1150,7 @@
                            ng-checked="isFileSelected(file)"
                            ng-click="toggleFileSelection(file, $event)">
                     <div class="fm-grid-item-icon">
-                        <i class="fas" ng-class="getFileIcon(file)"></i>
+                        <i class="fas" ng-class="getFileIcon(file)" aria-hidden="true"></i>
                     </div>
                     <div class="fm-grid-item-name" title="{$ file.fileName $}">{$ file.fileName $}</div>
                     <div class="fm-grid-item-size" ng-if="!file.dirCheck">{$ file.fileSize $}</div>
@@ -1176,7 +1176,7 @@
                            ng-checked="isFileSelected(file)"
                            ng-click="toggleFileSelection(file, $event)">
                     <div class="fm-list-name">
-                        <i class="fas fm-list-icon" ng-class="getFileIcon(file)"></i>
+                        <i class="fas fm-list-icon" ng-class="getFileIcon(file)" aria-hidden="true"></i>
                         <span title="{$ file.fileName $}">{$ file.fileName $}</span>
                     </div>
                     <div class="fm-list-size">{$ file.dirCheck ? '' : file.fileSize $}</div>
@@ -1191,7 +1191,7 @@
     <!-- Upload Drop Zone Overlay -->
     <div class="fm-upload-zone" id="uploadDropZone">
         <div class="fm-upload-content">
-            <i class="fas fa-cloud-upload-alt fm-upload-icon"></i>
+            <i class="fas fa-cloud-upload-alt fm-upload-icon" aria-hidden="true"></i>
             <p class="fm-upload-text">{% trans "Drop files here to upload" %}</p>
         </div>
     </div>
@@ -1199,42 +1199,42 @@
     <!-- Context Menu -->
     <div class="fm-context-menu" id="rightClickMenu">
         <div class="fm-context-item" ng-click="openFile()">
-            <i class="fas fa-external-link-alt"></i>
+            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
             {% trans "Open" %}
         </div>
         <div class="fm-context-item" ng-click="showHTMLEditorModal(1)">
-            <i class="fas fa-edit"></i>
+            <i class="fas fa-edit" aria-hidden="true"></i>
             {% trans "Edit" %}
         </div>
         <div class="fm-context-item" ng-click="downloadFile()">
-            <i class="fas fa-download"></i>
+            <i class="fas fa-download" aria-hidden="true"></i>
             {% trans "Download" %}
         </div>
         <div class="fm-context-divider"></div>
         <div class="fm-context-item" ng-click="showCopyModal()">
-            <i class="fas fa-copy"></i>
+            <i class="fas fa-copy" aria-hidden="true"></i>
             {% trans "Copy" %}
         </div>
         <div class="fm-context-item" ng-click="showMoveModal()">
-            <i class="fas fa-cut"></i>
+            <i class="fas fa-cut" aria-hidden="true"></i>
             {% trans "Cut" %}
         </div>
         <div class="fm-context-item" ng-click="showRenameModal()">
-            <i class="fas fa-i-cursor"></i>
+            <i class="fas fa-i-cursor" aria-hidden="true"></i>
             {% trans "Rename" %}
         </div>
         <div class="fm-context-divider"></div>
         <div class="fm-context-item" ng-click="showPermissionsModal()">
-            <i class="fas fa-lock"></i>
+            <i class="fas fa-lock" aria-hidden="true"></i>
             {% trans "Permissions" %}
         </div>
         <div class="fm-context-item" ng-click="showCompressionModal()">
-            <i class="fas fa-file-archive"></i>
+            <i class="fas fa-file-archive" aria-hidden="true"></i>
             {% trans "Compress" %}
         </div>
         <div class="fm-context-divider"></div>
         <div class="fm-context-item danger" ng-click="showDeleteModal()">
-            <i class="fas fa-trash"></i>
+            <i class="fas fa-trash" aria-hidden="true"></i>
             {% trans "Delete" %}
         </div>
     </div>

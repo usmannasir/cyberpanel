@@ -534,7 +534,7 @@
         <div class="header-content">
             <div class="page-title">
                 <div class="ssh-icon">
-                    <i class="fas fa-terminal fa-2x"></i>
+                    <i class="fas fa-terminal fa-2x" aria-hidden="true"></i>
                 </div>
                 {% trans "Secure SSH" %}
             </div>
@@ -542,7 +542,7 @@
                 {% trans "Secure and harden your SSH configurations to protect your server from unauthorized access." %}
             </p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/ssh-manager-cyberpanel/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "SSH Documentation" %}
             </a>
         </div>
@@ -550,12 +550,12 @@
     
     <!-- Tab Navigation -->
     <div class="tab-nav">
-        <div class="tab-btn active" onclick="switchTab('basic', this)">
-            <i class="fas fa-cog"></i>
+        <div class="tab-btn active" onclick="switchTab('basic', this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchTab('basic', this);}" role="button" tabindex="0">
+            <i class="fas fa-cog" aria-hidden="true"></i>
             <span>{% trans "Basic Settings" %}</span>
         </div>
-        <div class="tab-btn" onclick="switchTab('keys', this)">
-            <i class="fas fa-key"></i>
+        <div class="tab-btn" onclick="switchTab('keys', this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchTab('keys', this);}" role="button" tabindex="0">
+            <i class="fas fa-key" aria-hidden="true"></i>
             <span>{% trans "SSH Keys" %}</span>
         </div>
     </div>
@@ -566,7 +566,7 @@
             <div class="panel-header">
                 <div class="panel-title">
                     <div class="panel-icon">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                     </div>
                     {% trans "Basic SSH Settings" %}
                 </div>
@@ -576,8 +576,8 @@
             <div class="panel-content">
                 <form>
                     <div class="form-group">
-                        <label class="form-label">{% trans "SSH Port" %}</label>
-                        <input type="text" class="form-control" ng-model="sshPort" 
+                        <label for="cpa11y-ssh-port" class="form-label">{% trans "SSH Port" %}</label>
+                        <input id="cpa11y-ssh-port" type="text" class="form-control" ng-model="sshPort" 
                                placeholder="{% trans 'Default: 22' %}" 
                                pattern="[0-9]*" required>
                     </div>
@@ -592,32 +592,32 @@
                             <span>{% trans "Allow root user to login via SSH" %}</span>
                         </div>
                         
-                        <div class="alert alert-warning" style="margin-top: 1rem;">
-                            <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        <div class="alert alert-warning" style="margin-top: 1rem;" role="status">
+                            <i class="fas fa-exclamation-triangle alert-icon" aria-hidden="true"></i>
                             <span>{% trans "Before disabling root login, make sure you have another account with sudo privileges on server." %}</span>
                         </div>
                     </div>
                     
                     <div class="form-group" style="margin-top: 2rem;">
                         <button type="button" ng-click="saveChanges()" class="btn-primary">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {% trans "Save Changes" %}
                         </button>
                     </div>
                     
                     <!-- Status Messages -->
-                    <div ng-hide="couldNotSave" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="couldNotSave" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Error message:" %} {$ errorMessage $}</span>
                     </div>
                     
-                    <div ng-hide="detailsSaved" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
+                    <div ng-hide="detailsSaved" class="alert alert-success" role="status">
+                        <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "SSH Configurations Saved Successfully." %}</span>
                     </div>
                     
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                         <span>{% trans "Could not connect. Please refresh this page." %}</span>
                     </div>
                 </form>
@@ -631,7 +631,7 @@
             <div class="panel-header">
                 <div class="panel-title">
                     <div class="panel-icon">
-                        <i class="fas fa-key"></i>
+                        <i class="fas fa-key" aria-hidden="true"></i>
                     </div>
                     {% trans "SSH Keys Management" %}
                 </div>
@@ -654,8 +654,8 @@
                                 <td class="key-value" title="{$ record.key $}">{$ record.key $}</td>
                                 <td>
                                     <button type="button" ng-click="deleteKey(record.key)" class="btn-delete" 
-                                            title="{% trans 'Delete Key' %}">
-                                        <i class="fas fa-times"></i>
+                                            title="{% trans 'Delete Key' %}" aria-label="{% trans 'Delete Key' %}">
+                                        <i class="fas fa-times" aria-hidden="true"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -665,14 +665,14 @@
                 
                 <!-- Empty State -->
                 <div ng-if="records.length == 0" class="empty-state">
-                    <i class="fas fa-key empty-icon"></i>
+                    <i class="fas fa-key empty-icon" aria-hidden="true"></i>
                     <p class="empty-text">{% trans "No SSH keys found. Add your first key below." %}</p>
                 </div>
                 
                 <!-- Add Key Form -->
                 <div ng-hide="keyBox" style="margin-top: 2rem;">
-                    <label class="form-label">{% trans "Public Key" %}</label>
-                    <textarea ng-model="keyData" 
+                    <label for="cpa11y-public-key" class="form-label">{% trans "Public Key" %}</label>
+                    <textarea id="cpa11y-public-key" ng-model="keyData" 
                               class="key-textarea" 
                               placeholder="{% trans 'Paste your public key here (e.g., ssh-rsa AAAAB3...)' %}"></textarea>
                 </div>
@@ -680,24 +680,24 @@
                 <!-- Action Buttons -->
                 <div style="margin-top: 1.5rem;">
                     <button ng-hide="showKeyBox" type="button" ng-click="addKey()" class="btn-primary">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-plus" aria-hidden="true"></i>
                         {% trans "Add Key" %}
                     </button>
                     
                     <button ng-hide="saveKeyBtn" type="button" ng-click="saveKey()" class="btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Key" %}
                     </button>
                 </div>
                 
                 <!-- Status Messages -->
-                <div ng-hide="keyDeleted" class="alert alert-success" style="margin-top: 1rem;">
-                    <i class="fas fa-check-circle alert-icon"></i>
+                <div ng-hide="keyDeleted" class="alert alert-success" style="margin-top: 1rem;" role="status">
+                    <i class="fas fa-check-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "SSH Key Deleted Successfully" %}</span>
                 </div>
                 
-                <div ng-hide="couldNotConnect" class="alert alert-danger" style="margin-top: 1rem;">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" style="margin-top: 1rem;" role="alert">
+                    <i class="fas fa-exclamation-circle alert-icon" aria-hidden="true"></i>
                     <span>{% trans "Could not connect. Please refresh this page." %}</span>
                 </div>
             </div>

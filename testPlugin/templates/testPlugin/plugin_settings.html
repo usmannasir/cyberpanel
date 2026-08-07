@@ -105,7 +105,7 @@
         <!-- Settings Header -->
         <div class="settings-header">
             <h1>
-                <i class="fas fa-cog" style="margin-right: 12px; color: #5856d6;"></i>
+                <i class="fas fa-cog" style="margin-right: 12px; color: #5856d6;" aria-hidden="true"></i>
                 {% trans "Test Plugin Settings" %}
             </h1>
             <p>{% trans "Configure your test plugin settings and preferences" %}</p>
@@ -139,9 +139,9 @@
                     <div style="padding: 12px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; border: 1px solid var(--border-primary, #e8e9ff);">
                         <strong style="color: {% if settings.plugin_enabled %}#10b981{% else %}#ef4444{% endif %};">
                             {% if settings.plugin_enabled %}
-                                <i class="fas fa-check-circle"></i> {% trans "Enabled" %}
+                                <i class="fas fa-check-circle" aria-hidden="true"></i> {% trans "Enabled" %}
                             {% else %}
-                                <i class="fas fa-times-circle"></i> {% trans "Disabled" %}
+                                <i class="fas fa-times-circle" aria-hidden="true"></i> {% trans "Disabled" %}
                             {% endif %}
                         </strong>
                         <p style="margin: 8px 0 0 0; color: var(--text-secondary, #64748b); font-size: 14px;">
@@ -168,22 +168,22 @@
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-primary, #e8e9ff);">
                     <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Settings" %}
                     </button>
                     
                     <a href="{% url 'testPlugin:plugin_home' %}" class="btn-secondary">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         {% trans "Back to Plugin" %}
                     </a>
                     
         <a href="{% url 'testPlugin:plugin_docs' %}" class="btn-secondary">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-book" aria-hidden="true"></i>
             {% trans "Documentation" %}
         </a>
         
         <a href="{% url 'testPlugin:security_info' %}" class="btn-secondary">
-            <i class="fas fa-shield-alt"></i>
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>
             {% trans "Security Info" %}
         </a>
                 </div>

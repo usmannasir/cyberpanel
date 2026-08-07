@@ -393,14 +393,14 @@
     <div class="reset-dns-container">
         <div class="reset-dns-header">
             <h1 class="reset-dns-title">
-                <i class="fas fa-undo-alt"></i>
+                <i class="fas fa-undo-alt" aria-hidden="true"></i>
                 {% trans "Reset DNS Configurations" %}
             </h1>
             <p class="reset-dns-subtitle">
                 {% trans "Reset your DNS configurations to their default state. This will restore all DNS settings to their initial values." %}
             </p>
             <a href="https://cyberpanel.net/KnowledgeBase/home/manage-dns-in-cyberpanel/" target="_blank" class="docs-link">
-                <i class="fas fa-book"></i>
+                <i class="fas fa-book" aria-hidden="true"></i>
                 {% trans "DNS Documentation" %}
             </a>
         </div>
@@ -408,7 +408,7 @@
         <!-- Warning Card -->
         <div class="warning-card">
             <div class="warning-icon">
-                <i class="fas fa-exclamation-triangle"></i>
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
             </div>
             <div class="warning-content">
                 <div class="warning-title">{% trans "Important Notice" %}</div>
@@ -435,13 +435,13 @@
             <!-- Initial State -->
             <div class="action-section" ng-hide="installationDetailsForm">
                 <div class="action-icon">
-                    <i class="fas fa-sync-alt"></i>
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 </div>
                 <p class="action-description">
                     {% trans "Click the button below to start the DNS configuration reset process. This action will restore your DNS settings to their default state while preserving your zones and records." %}
                 </p>
                 <button type="button" ng-click="resetDNS()" class="btn-reset">
-                    <i class="fas fa-undo"></i>
+                    <i class="fas fa-undo" aria-hidden="true"></i>
                     {% trans "Reset DNS Configuration" %}
                 </button>
             </div>
@@ -457,23 +457,23 @@
 
             <!-- Alert Messages -->
             <div class="alert-section" ng-hide="NotifyBox">
-                <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div ng-hide="failedToStartInallation" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                     <div class="alert-content">
                         <strong>{% trans "Failed to start reset process" %}</strong><br>
                         {% trans "Error message:" %} {$ errorMessage $}
                     </div>
                 </div>
 
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                    <i class="fas fa-network-wired"></i>
+                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                    <i class="fas fa-network-wired" aria-hidden="true"></i>
                     <div class="alert-content">
                         {% trans "Could not connect to server. Please refresh this page." %}
                     </div>
                 </div>
 
-                <div ng-hide="installationFailed" class="alert alert-danger">
-                    <i class="fas fa-times-circle"></i>
+                <div ng-hide="installationFailed" class="alert alert-danger" role="alert">
+                    <i class="fas fa-times-circle" aria-hidden="true"></i>
                     <div class="alert-content">
                         <strong>{% trans "Reset process failed" %}</strong><br>
                         {$ errorMessage $}
@@ -482,7 +482,7 @@
 
                 <div ng-hide="modSecSuccessfullyInstalled" class="success-state">
                     <div class="success-icon">
-                        <i class="fas fa-check"></i>
+                        <i class="fas fa-check" aria-hidden="true"></i>
                     </div>
                     <h3 class="success-title">{% trans "DNS Configuration Reset Complete!" %}</h3>
                     <p class="success-text">

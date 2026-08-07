@@ -601,10 +601,10 @@
             <div class="search-row">
                 <div class="search-input-wrapper">
                     <input ng-change="searchWebsites()" placeholder="{% trans 'Search domains...' %}" 
-                           ng-model="patternAdded" name="dom" type="text" class="form-control">
+                           ng-model="patternAdded" name="dom" type="text" class="form-control" aria-label="{% trans 'Search domains...' %}">
                 </div>
-                <select ng-model="recordsToShow" ng-change="getFurtherWebsitesFromDB()" 
-                        class="form-select">
+                <select ng-model="recordsToShow" ng-change="getFurtherWebsitesFromDB()"
+                        class="form-select" aria-label="{% trans 'Records per page' %}">
                     <option>10</option>
                     <option>50</option>
                     <option>100</option>
@@ -621,16 +621,16 @@
                             {$ web.domain $}
                         </a>
                         <div class="master-domain">
-                            <i class="fas fa-folder"></i>
+                            <i class="fas fa-folder" aria-hidden="true"></i>
                             Master Domain: {$ web.masterDomain $} • 
                             <a target="_blank" rel="noopener" href="/filemanager/{$ web.masterDomain $}">
-                                <i class="fas fa-folder-open"></i> File Manager
+                                <i class="fas fa-folder-open" aria-hidden="true"></i> File Manager
                             </a>
                         </div>
                     </div>
                     <a href="/websites/{$ web.masterDomain $}/{$ web.domain $}" target="_blank" rel="noopener"
                        class="manage-btn">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                         {% trans "Manage" %}
                     </a>
                 </div>
@@ -638,7 +638,7 @@
                 <div class="domain-details">
                     <div class="detail-item">
                         <div class="detail-icon">
-                            <i class="fas fa-network-wired"></i>
+                            <i class="fas fa-network-wired" aria-hidden="true"></i>
                         </div>
                         <div class="detail-content">
                             <div class="detail-label">{% trans "IP Address" %}</div>
@@ -648,7 +648,7 @@
 
                     <div class="detail-item">
                         <div class="detail-icon">
-                            <i class="fas fa-box"></i>
+                            <i class="fas fa-box" aria-hidden="true"></i>
                         </div>
                         <div class="detail-content">
                             <div class="detail-label">{% trans "Package" %}</div>
@@ -658,7 +658,7 @@
 
                     <div class="detail-item">
                         <div class="detail-icon">
-                            <i class="fas fa-user"></i>
+                            <i class="fas fa-user" aria-hidden="true"></i>
                         </div>
                         <div class="detail-content">
                             <div class="detail-label">{% trans "Owner" %}</div>
@@ -668,14 +668,14 @@
 
                     <div class="detail-item">
                         <div class="detail-icon">
-                            <i class="fas fa-lock"></i>
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                         </div>
                         <div class="detail-content">
                             <div class="detail-label">{% trans "SSL Certificate" %}</div>
                             <div class="detail-value">
                                 <a ng-click="issueSSL(web.domain)" href="" ng-class="{'disabled': issuingSSL[web.domain]}">
                                     <span ng-hide="issuingSSL[web.domain]">{% trans "Issue SSL" %}</span>
-                                    <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin"></i> {% trans "Issuing SSL..." %}</span>
+                                    <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> {% trans "Issuing SSL..." %}</span>
                                 </a>
                             </div>
                         </div>
@@ -685,12 +685,12 @@
                 <div class="action-buttons">
                     <button class="action-btn convert" ng-click="initConvert(web.domain)" 
                             data-toggle="modal" data-target="#settings">
-                        <i class="fas fa-exchange-alt"></i>
+                        <i class="fas fa-exchange-alt" aria-hidden="true"></i>
                         {% trans "Convert to Website" %}
                     </button>
                     <button class="action-btn delete" ng-click="deleteDomainInit(web.domain)" 
                             data-toggle="modal" data-target="#DeleteChild">
-                        <i class="fas fa-trash"></i>
+                        <i class="fas fa-trash" aria-hidden="true"></i>
                         {% trans "Delete" %}
                     </button>
                 </div>
@@ -698,14 +698,14 @@
         </div>
 
         <!-- Error message -->
-        <div id="listFail" class="alert alert-danger" style="display: none;">
-            <i class="fas fa-exclamation-circle"></i>
+        <div id="listFail" class="alert alert-danger" style="display: none;" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <span>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</span>
         </div>
 
         <!-- Pagination -->
         <div class="pagination-section" ng-show="pagination.length > 0">
-            <select ng-model="currentPage" class="pagination-select" ng-change="getFurtherWebsitesFromDB()">
+            <select ng-model="currentPage" class="pagination-select" ng-change="getFurtherWebsitesFromDB()" aria-label="{% trans 'Page number' %}">
                 <option ng-repeat="page in pagination" value="{$ $index + 1 $}">{% trans "Page" %} {$ $index + 1 $}</option>
             </select>
         </div>
@@ -742,7 +742,7 @@
                         {% trans "Cancel" %}
                     </button>
                     <button type="button" class="btn btn-danger" ng-click="deleteChildDomain()">
-                        <i class="fas fa-trash"></i>
+                        <i class="fas fa-trash" aria-hidden="true"></i>
                         {% trans "Delete Now" %}
                     </button>
                 </div>
@@ -765,14 +765,14 @@
                     <form name="containerSettingsForm">
                         <div ng-hide="installationDetailsForm">
                             <div class="form-group">
-                                <label class="form-label">{% trans "Domain Name" %}</label>
-                                <input name="dom" type="text" class="form-control" 
+                                <label for="cpa11y-domain-name" class="form-label">{% trans "Domain Name" %}</label>
+                                <input id="cpa11y-domain-name" name="dom" type="text" class="form-control" 
                                        ng-model="domainName" readonly>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">{% trans "Select Owner" %}</label>
-                                <select ng-model="websiteOwner" class="form-control">
+                                <label for="cpa11y-select-owner" class="form-label">{% trans "Select Owner" %}</label>
+                                <select id="cpa11y-select-owner" ng-model="websiteOwner" class="form-control">
                                     <option value="">-- {% trans "Select an owner" %} --</option>
                                     {% for items in owernList %}
                                         <option>{{ items }}</option>
@@ -781,8 +781,8 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">{% trans "Select Package" %}</label>
-                                <select ng-model="packageForWebsite" class="form-control">
+                                <label for="cpa11y-select-package" class="form-label">{% trans "Select Package" %}</label>
+                                <select id="cpa11y-select-package" ng-model="packageForWebsite" class="form-control">
                                     <option value="">-- {% trans "Select a package" %} --</option>
                                     {% for items in packageList %}
                                         <option>{{ items }}</option>
@@ -791,14 +791,14 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">{% trans "Email" %}</label>
-                                <input type="email" name="email" class="form-control" 
+                                <label for="cpa11y-email" class="form-label">{% trans "Email" %}</label>
+                                <input id="cpa11y-email" type="email" name="email" class="form-control" 
                                        ng-model="adminEmail" placeholder="admin@example.com" required>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">{% trans "Select PHP Version" %}</label>
-                                <select ng-model="phpSelection" class="form-control">
+                                <label for="cpa11y-select-php-version" class="form-label">{% trans "Select PHP Version" %}</label>
+                                <select id="cpa11y-select-php-version" ng-model="phpSelection" class="form-control">
                                     {% for php in phps %}
                                         <option>{{ php }}</option>
                                     {% endfor %}
@@ -816,7 +816,7 @@
                         <div ng-hide="installationProgress" style="margin-top: 20px;">
                             <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
                                     class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i>
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                                 {% trans "Go Back" %}
                             </button>
                         </div>
@@ -827,7 +827,7 @@
                         {% trans "Cancel" %}
                     </button>
                     <button type="button" class="btn btn-primary" ng-click="convert()">
-                        <i class="fas fa-exchange-alt"></i>
+                        <i class="fas fa-exchange-alt" aria-hidden="true"></i>
                         {% trans "Convert" %}
                     </button>
                 </div>

@@ -373,7 +373,7 @@
     <div class="modern-container" ng-controller="backupDestinations" ng-init="destinationType='local'">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-cloud-upload-alt"></i>
+                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
                 {% trans "Backup Destinations" %}
             </h1>
             <p class="page-subtitle">{% trans "Configure local and remote destinations for your backups" %}</p>
@@ -381,7 +381,7 @@
                 <a href="https://cyberpanel.net/KnowledgeBase/home/add-destination-scheduled-local-sftp-remote-backups/" 
                    target="_blank" 
                    class="btn-secondary">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "Remote Backup Guide" %}
                 </a>
             </div>
@@ -390,11 +390,11 @@
         <!-- Promo Banner -->
         <div class="promo-banner">
             <span class="promo-text">
-                <i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>
+                <i class="fas fa-shield-alt" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                 {% trans "Configure automatic backups to our secure servers in 60 seconds" %}
             </span>
             <a href="/backup/OneClickBackups" class="promo-link">
-                <i class="fas fa-rocket"></i>
+                <i class="fas fa-rocket" aria-hidden="true"></i>
                 {% trans "Set-up now" %}
             </a>
         </div>
@@ -404,7 +404,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" aria-hidden="true"></i>
                     {% trans "Configure Backup Destination" %}
                     <span ng-hide="cyberpanelLoading" class="loading-spinner"></span>
                 </h2>
@@ -414,11 +414,11 @@
                     <!-- Destination Type Selector -->
                     <div class="destination-type-selector">
                         <div class="destination-icon">
-                            <i class="fas fa-server"></i>
+                            <i class="fas fa-server" aria-hidden="true"></i>
                         </div>
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="fas fa-check-square" style="margin-right: 0.5rem;"></i>
+                                <i class="fas fa-check-square" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                 {% trans "Select Destination Type" %}
                             </label>
                             <div class="destination-tabs">
@@ -426,14 +426,14 @@
                                         class="tab-button" 
                                         ng-class="{'active': destinationType === 'local'}" 
                                         ng-click="destinationType = 'local'; fetchDetails()">
-                                    <i class="fas fa-hdd" style="margin-right: 0.5rem;"></i>
+                                    <i class="fas fa-hdd" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                     {% trans "Local Storage" %}
                                 </button>
                                 <button type="button" 
                                         class="tab-button" 
                                         ng-class="{'active': destinationType === 'SFTP'}" 
                                         ng-click="destinationType = 'SFTP'; fetchDetails()">
-                                    <i class="fas fa-network-wired" style="margin-right: 0.5rem;"></i>
+                                    <i class="fas fa-network-wired" style="margin-right: 0.5rem;" aria-hidden="true"></i>
                                     {% trans "SFTP Server" %}
                                 </button>
                             </div>
@@ -443,36 +443,21 @@
                     <!-- SFTP Configuration -->
                     <div ng-hide="sftpHide" class="form-section">
                         <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary, #1e293b); margin-bottom: 1.5rem;">
-                            <i class="fas fa-network-wired" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                            <i class="fas fa-network-wired" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "SFTP Server Configuration" %}
                         </h3>
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Name" %}</label>
-                                    <input type="text" class="form-control" ng-model="name" placeholder="My SFTP Backup" required>
+                                    <label for="cpa11y-name" class="form-label">{% trans "Name" %}</label>
+                                    <input id="cpa11y-name" type="text" class="form-control" ng-model="name" placeholder="My SFTP Backup" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "IP Address" %}</label>
-                                    <input type="text" class="form-control" ng-model="IPAddress" placeholder="192.168.1.100" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">{% trans "Username" %}</label>
-                                    <input type="text" class="form-control" ng-model="userName" placeholder="backup_user" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">{% trans "Password" %}</label>
-                                    <input type="password" class="form-control" ng-model="password" placeholder="••••••••" required>
+                                    <label for="cpa11y-ip-address" class="form-label">{% trans "IP Address" %}</label>
+                                    <input id="cpa11y-ip-address" type="text" class="form-control" ng-model="IPAddress" placeholder="192.168.1.100" required>
                                 </div>
                             </div>
                         </div>
@@ -480,15 +465,30 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "SSH Port" %}</label>
-                                    <input type="text" class="form-control" ng-model="backupSSHPort" 
+                                    <label for="cpa11y-username" class="form-label">{% trans "Username" %}</label>
+                                    <input id="cpa11y-username" type="text" class="form-control" ng-model="userName" placeholder="backup_user" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cpa11y-password" class="form-label">{% trans "Password" %}</label>
+                                    <input id="cpa11y-password" type="password" class="form-control" ng-model="password" placeholder="••••••••" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cpa11y-ssh-port" class="form-label">{% trans "SSH Port" %}</label>
+                                    <input id="cpa11y-ssh-port" type="text" class="form-control" ng-model="backupSSHPort" 
                                            placeholder="{% trans "Default: 22" %}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Remote Path" %}</label>
-                                    <input type="text" class="form-control" ng-model="path" 
+                                    <label for="cpa11y-remote-path" class="form-label">{% trans "Remote Path" %}</label>
+                                    <input id="cpa11y-remote-path" type="text" class="form-control" ng-model="path" 
                                            placeholder="/home/backups" required>
                                 </div>
                             </div>
@@ -496,7 +496,7 @@
                         
                         <div style="text-align: center; margin-top: 2rem;">
                             <button type="button" ng-click="addDestination('SFTP')" class="btn-primary">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                 {% trans "Add SFTP Destination" %}
                             </button>
                         </div>
@@ -505,22 +505,22 @@
                     <!-- Local Configuration -->
                     <div ng-hide="localHide" class="form-section">
                         <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary, #1e293b); margin-bottom: 1.5rem;">
-                            <i class="fas fa-hdd" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                            <i class="fas fa-hdd" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                             {% trans "Local Storage Configuration" %}
                         </h3>
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Name" %}</label>
-                                    <input type="text" class="form-control" ng-model="name" 
+                                    <label for="cpa11y-name-2" class="form-label">{% trans "Name" %}</label>
+                                    <input id="cpa11y-name-2" type="text" class="form-control" ng-model="name" 
                                            placeholder="Local Backup Storage" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">{% trans "Local Path" %}</label>
-                                    <input type="text" class="form-control" ng-model="localPath" 
+                                    <label for="cpa11y-local-path" class="form-label">{% trans "Local Path" %}</label>
+                                    <input id="cpa11y-local-path" type="text" class="form-control" ng-model="localPath" 
                                            placeholder="/backup/local" required>
                                 </div>
                             </div>
@@ -528,7 +528,7 @@
                         
                         <div style="text-align: center; margin-top: 2rem;">
                             <button type="button" ng-click="addDestination('local')" class="btn-primary">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                 {% trans "Add Local Destination" %}
                             </button>
                         </div>
@@ -541,7 +541,7 @@
         <div ng-hide="sftpHide" class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-list"></i>
+                    <i class="fas fa-list" aria-hidden="true"></i>
                     {% trans "Configured SFTP Destinations" %}
                 </h2>
             </div>
@@ -567,11 +567,11 @@
                                     <span class="info-badge" ng-bind="record.ip"></span>
                                 </td>
                                 <td>
-                                    <i class="fas fa-user" style="color: var(--text-secondary, #64748b); margin-right: 0.5rem;"></i>
+                                    <i class="fas fa-user" style="color: var(--text-secondary, #64748b); margin-right: 0.5rem;" aria-hidden="true"></i>
                                     <span ng-bind="record.username"></span>
                                 </td>
                                 <td>
-                                    <i class="fas fa-folder" style="color: var(--text-secondary, #64748b); margin-right: 0.5rem;"></i>
+                                    <i class="fas fa-folder" style="color: var(--text-secondary, #64748b); margin-right: 0.5rem;" aria-hidden="true"></i>
                                     <span ng-bind="record.path"></span>
                                 </td>
                                 <td>
@@ -581,7 +581,7 @@
                                     <button type="button" 
                                             ng-click="removeDestination('SFTP', record.name)" 
                                             class="btn-danger">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                         {% trans "Delete" %}
                                     </button>
                                 </td>
@@ -596,7 +596,7 @@
         <div ng-hide="localHide" class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-list"></i>
+                    <i class="fas fa-list" aria-hidden="true"></i>
                     {% trans "Configured Local Destinations" %}
                 </h2>
             </div>
@@ -616,7 +616,7 @@
                                     <strong ng-bind="record.name"></strong>
                                 </td>
                                 <td>
-                                    <i class="fas fa-folder-open" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
+                                    <i class="fas fa-folder-open" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;" aria-hidden="true"></i>
                                     <span style="font-family: monospace; background: var(--border-light, #f3f4f6); padding: 0.25rem 0.5rem; border-radius: 4px;" 
                                           ng-bind="record.path"></span>
                                 </td>
@@ -624,7 +624,7 @@
                                     <button type="button" 
                                             ng-click="removeDestination('local', record.name)" 
                                             class="btn-danger">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
                                         {% trans "Delete" %}
                                     </button>
                                 </td>

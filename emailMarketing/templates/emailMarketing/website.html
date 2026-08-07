@@ -25,7 +25,7 @@
                 <div style="border-radius: 25px;border-color:#3498db; background: var(--bg-primary, white); color: var(--text-primary, #333);" class="content-box">
 
                     <h3 class="content-box-header bg-blue">
-                        {% trans "Resource Usage" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
+                        {% trans "Resource Usage" %} <img ng-hide="domainLoading" src="/static/images/loading.gif" alt="">
                     </h3>
 
 
@@ -114,7 +114,7 @@
 
                 <div style="border-radius: 25px;border-color:#3498db; background: var(--bg-primary, white); color: var(--text-primary, #333);" class="content-box">
                     <h3 class="content-box-header bg-blue">
-                        {% trans "Logs" %} <img ng-hide="logFileLoading" src="/static/images/loading.gif">
+                        {% trans "Logs" %} <img ng-hide="logFileLoading" src="/static/images/loading.gif" alt="">
                     </h3>
 
                     <div class="content-box-wrapper" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
@@ -122,7 +122,7 @@
 
                             <div class="col-md-6" style="margin-bottom: 2%;">
                                 <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}">
-                                    <img src="{% static 'images/icons/log-file-format.png' %}">
+                                    <img src="{% static 'images/icons/log-file-format.png' %}" alt="">
                                 </a>
                                 <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Access Logs" %}</span>
@@ -133,7 +133,7 @@
 
                             <div class="col-md-6" style="margin-bottom: 2%;">
                                 <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
-                                    <img src="{% static 'images/icons/warning.png' %}">
+                                    <img src="{% static 'images/icons/warning.png' %}" alt="">
                                 </a>
                                 <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Error Logs" %}</span>
@@ -146,18 +146,18 @@
 
                                 <form ng-hide="hideLogs" class="form-horizontal bordered-row" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
-                                    <div ng-hide="logsFeteched" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="logsFeteched" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Logs Fetched" %}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotFetchLogs" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotFetchLogs" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not fetch logs, see the logs file through command line. Error message:" %}
                                             {$ errorMessage $}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
@@ -166,12 +166,12 @@
 
                                         <div class="col-sm-3">
                                             <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
-                                                   class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" ng-model="domainNameCreate" required>
+                                                   class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" ng-model="domainNameCreate" required aria-label="Search...">
                                         </div>
 
                                         <div class="col-sm-2">
                                             <input placeholder="Page Number" type="number" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"
-                                                   ng-model="pageNumber" required>
+                                                   ng-model="pageNumber" required aria-label="Page Number">
                                         </div>
 
                                         <div class="col-sm-6">
@@ -182,7 +182,7 @@
                                         </div>
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a ng-click="hidelogsbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                            <a ng-click="hidelogsbtn()" href=""><img src="/static/images/close-32.png" alt=""></a>
                                         </div>
                                         <div class="col-sm-12">
                                             <table class="table" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
@@ -213,7 +213,7 @@
 
                                         <div class="col-sm-2">
                                             <input placeholder="Page Number" type="number" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"
-                                                   ng-model="errorPageNumber" required>
+                                                   ng-model="errorPageNumber" required aria-label="Page Number">
                                         </div>
 
                                         <div class="col-sm-9">
@@ -225,7 +225,7 @@
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a ng-click="hideErrorLogsbtn()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
 
                                         <div class="col-sm-12">
@@ -251,7 +251,7 @@
                 <div style="border-radius: 25px;border-color:#3498db; background: var(--bg-primary, white); color: var(--text-primary, #333);" class="content-box">
 
                     <h3 class="content-box-header bg-blue">
-                        {% trans "Domains" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
+                        {% trans "Domains" %} <img ng-hide="domainLoading" src="/static/images/loading.gif" alt="">
                     </h3>
 
                     <div class="content-box-wrapper" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
@@ -260,7 +260,7 @@
 
                             <div class="col-md-3" style="margin-bottom: 2%;">
                                 <a href="" ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href="">
-                                    <img src="{% static 'images/icons/domains.png' %}">
+                                    <img src="{% static 'images/icons/domains.png' %}" alt="">
                                 </a>
                                 <a ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href=""
                                    title="{% trans 'Add Domains' %}">
@@ -273,7 +273,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
                                 <a href="" ng-click="showListDomains()" title="{% trans 'List Domains' %}" href=""
                                    title="{% trans 'List Domains' %}">
-                                    <img src="{% static 'images/icons/sort.png' %}">
+                                    <img src="{% static 'images/icons/sort.png' %}" alt="">
                                 </a>
                                 <a ng-click="showListDomains()" title="{% trans 'List Domains' %}" href=""
                                    title="{% trans 'List Domains' %}">
@@ -285,7 +285,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
                                 <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}"
                                    href="" title="{% trans 'Domain Alias' %}">
-                                    <img src="{% static 'images/icons/web-domain.png' %}">
+                                    <img src="{% static 'images/icons/web-domain.png' %}" alt="">
                                 </a>
                                 <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}"
                                    href="" title="{% trans 'Domain Alias' %}">
@@ -298,7 +298,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
                                 <a href="{% url 'listCron' %}" target="_blank" title="{% trans 'Add new Cron Job' %}"
                                    href="" title="{% trans 'List Domains' %}">
-                                    <img src="{% static 'images/icons/repeat.png' %}">
+                                    <img src="{% static 'images/icons/repeat.png' %}" alt="">
                                 </a>
                                 <a href="{% url 'listCron' %}" target="_blank" title="{% trans 'List Domains' %}"
                                    title="{% trans 'Add new Cron Job' %}">
@@ -315,21 +315,21 @@
 
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                                        <label for="cpa11y-domain-name" class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                                         <div class="col-sm-6">
-                                            <input name="dom" type="text" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"
+                                            <input id="cpa11y-domain-name" name="dom" type="text" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"
                                                    ng-model="domainNameCreate" required>
                                         </div>
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
                                     </div>
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                                        <label for="cpa11y-path" class="col-sm-3 control-label">{% trans "Path" %}</label>
                                         <div class="col-sm-6">
-                                            <input placeholder="{% trans 'This path is relative to: ' %}{$ masterDomain $}. {% trans 'Leave empty to set default.' %}"
+                                            <input id="cpa11y-path" placeholder="{% trans 'This path is relative to: ' %}{$ masterDomain $}. {% trans 'Leave empty to set default.' %}"
                                                    type="text" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" ng-model="docRootPath" required>
                                         </div>
                                         <div ng-show="websiteCreationForm.dom.$error.pattern"
@@ -338,9 +338,9 @@
 
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                                        <label for="cpa11y-select-php" class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                         <div class="col-sm-6">
-                                            <select ng-model="phpSelection" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <select id="cpa11y-select-php" ng-model="phpSelection" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
                                                 {% for php in phps %}
                                                     <option>{{ php }}</option>
                                                 {% endfor %}
@@ -395,7 +395,7 @@
                                         <label class="col-sm-2 control-label"></label>
                                         <div class="col-sm-7">
 
-                                            <div class="alert alert-success text-center" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div class="alert alert-success text-center" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                                 <h2>{$ currentStatus $}</h2>
                                             </div>
 
@@ -407,16 +407,16 @@
                                                 </div>
                                             </div>
 
-                                            <div ng-hide="errorMessageBox" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="errorMessageBox" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                                 <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                             </div>
 
-                                            <div ng-hide="success" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="success" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                                 <p>{% trans "Website succesfully created." %}</p>
                                             </div>
 
 
-                                            <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                             </div>
 
@@ -445,29 +445,29 @@
                                 <form ng-hide="" class="form-horizontal bordered-row" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
 
-                                    <div ng-hide="phpChanged" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="phpChanged" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "PHP Version Changed to:" %} {$ changedPHPVersion $} </p>
                                     </div>
 
-                                    <div ng-hide="domainDeleted" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="domainDeleted" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Deleted:" %} {$ deletedDomain $} </p>
                                     </div>
 
-                                    <div ng-hide="sslIssued" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="sslIssued" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "SSL Issued:" %} {$ sslDomainIssued $} </p>
                                     </div>
 
-                                    <div ng-hide="childBaseDirChanged" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="childBaseDirChanged" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Changes applied successfully." %} </p>
                                     </div>
 
 
-                                    <div ng-hide="domainError" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="domainError" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{$ errorMessage $}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
@@ -477,12 +477,12 @@
                                         <div class="col-sm-11">
                                             <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
                                                    type="text" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" ng-model="domainNameCreate"
-                                                   required>
+                                                   required aria-label="Search Domain...">
                                         </div>
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
 
 
@@ -504,19 +504,19 @@
                                                     <td ng-bind="record.childDomain"></td>
                                                     <td><a href="{$ record.childLunch $}"><img width="30px" height="30"
                                                                                                class="center-block"
-                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
+                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}" alt=""></a>
                                                     </td>
                                                     <td ng-bind="record.path"></td>
                                                     <td>
                                                         <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)"
-                                                                ng-model="childBaseDir" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                                                ng-model="childBaseDir" class="form-control" aria-label="{% trans 'open_basedir protection' %}" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
                                                             <option>Enable</option>
                                                             <option>Disable</option>
                                                         </select>
                                                     </td>
                                                     <td>
                                                         <select ng-change="changePHP(record.childDomain,phpSelection)"
-                                                                ng-model="phpSelection" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                                                ng-model="phpSelection" class="form-control" aria-label="{% trans 'PHP version' %}" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
                                                             {% for php in phps %}
                                                                 <option>{{ php }}</option>
                                                             {% endfor %}
@@ -555,7 +555,7 @@
 
                 <div style="border-radius: 25px;border-color:#3498db; background: var(--bg-primary, white); color: var(--text-primary, #333); margin-bottom: 2%;" class="content-box">
                     <h3 class="content-box-header bg-blue">
-                        {% trans "Configurations" %} <img ng-hide="configFileLoading" src="/static/images/loading.gif">
+                        {% trans "Configurations" %} <img ng-hide="configFileLoading" src="/static/images/loading.gif" alt="">
                     </h3>
 
 
@@ -566,7 +566,7 @@
 
                                 <a ng-click="fetchConfigurations()" href=""
                                    title="{% trans 'Edit vHost Main Configurations' %}">
-                                    <img src="{% static 'images/icons/file.png' %}">
+                                    <img src="{% static 'images/icons/file.png' %}" alt="">
                                 </a>
                                 <a ng-click="fetchConfigurations()" href=""
                                    title="{% trans 'Edit vHost Main Configurations' %}">
@@ -580,7 +580,7 @@
 
                                 <a ng-click="fetchRewriteFules()" href=""
                                    title="{% trans 'Add Rewrite Rules (.htaccess)' %}">
-                                    <img src="{% static 'images/icons/pencilcase.png' %}">
+                                    <img src="{% static 'images/icons/pencilcase.png' %}" alt="">
                                 </a>
                                 <a ng-click="fetchRewriteFules()" href=""
                                    title="{% trans 'Rewrite Rules (.htaccess)' %}">
@@ -593,7 +593,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
-                                    <img src="{% static 'images/icons/locked.png' %}">
+                                    <img src="{% static 'images/icons/locked.png' %}" alt="">
                                 </a>
                                 <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Add SSL" %}</span>
@@ -605,7 +605,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
-                                    <img src="{% static 'images/icons/laptop.png' %}">
+                                    <img src="{% static 'images/icons/laptop.png' %}" alt="">
                                 </a>
                                 <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Change PHP" %}</span>
@@ -619,17 +619,17 @@
 
                                 <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
-                                    <div ng-hide="sslSaved" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="sslSaved" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "SSL Saved" %}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotSaveSSL" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotSaveSSL" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
@@ -637,15 +637,15 @@
                                     <div ng-hide="" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
                                             <a ng-click="hidesslbtn()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
                                         <div class="col-sm-6">
                                             <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
-                                                      class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"></textarea>
+                                                      class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" aria-label="Paste Your Cert"></textarea>
                                         </div>
                                         <div class="col-sm-6">
                                             <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
-                                                      class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"></textarea>
+                                                      class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" aria-label="Paste Your Key"></textarea>
                                         </div>
                                     </div>
 
@@ -674,26 +674,26 @@
 
                                 <form ng-hide="configurationsBox" class="form-horizontal bordered-row" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
-                                    <div ng-hide="configsFetched" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="configsFetched" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Current configuration in the file fetched." %}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotFetchConfigs" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotFetchConfigs" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not fetch current configuration. Error message:" %} {$
                                             errorMessage $}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
-                                    <div ng-hide="configSaved" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="configSaved" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Configurations saved." %}</p>
                                     </div>
 
-                                    <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not fetch current configuration. Error message:" %} {$
                                             errorMessage $}</p>
                                     </div>
@@ -702,7 +702,7 @@
                                     <div ng-hide="fetchedConfigsData" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
                                             <a ng-click="hideconfigbtn()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
                                         <div class="col-sm-12">
                                             <textarea ng-model="configData" rows="20" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"></textarea>
@@ -730,7 +730,7 @@
                                 <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
 
-                                    <div ng-hide="rewriteRulesFetched" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="rewriteRulesFetched" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Current rewrite rules in the file fetched." %} <a target="_blank"
                                                                                                        href="https://cyberpanel.net/KnowledgeBase/home/rewrite-rules/">Click</a>
                                             to read more about whats changed in <a target="_blank"
@@ -739,21 +739,21 @@
                                     </div>
 
 
-                                    <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$
                                             errorMessage $}</p>
                                     </div>
 
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
 
-                                    <div ng-hide="rewriteRulesSaved" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="rewriteRulesSaved" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                         <p>{% trans "Configurations saved." %}</p>
                                     </div>
 
-                                    <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                    <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                         <p>{% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage
                                             $}</p>
                                     </div>
@@ -762,7 +762,7 @@
                                     <div ng-hide="fetchedRewriteRules" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
                                             <a ng-click="hideRewriteRulesbtn()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
                                         <div class="col-sm-12">
                                             <textarea ng-model="rewriteRules" rows="10" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);"></textarea>
@@ -791,9 +791,9 @@
 
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                                        <label for="cpa11y-select-php-2" class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                         <div class="col-sm-6">
-                                            <select ng-model="phpSelectionMaster" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <select id="cpa11y-select-php-2" ng-model="phpSelectionMaster" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
                                                 {% for php in phps %}
                                                     <option>{{ php }}</option>
                                                 {% endfor %}
@@ -802,7 +802,7 @@
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
-                                               href=""><img src="/static/images/close-32.png"></a>
+                                               href=""><img src="/static/images/close-32.png" alt=""></a>
                                         </div>
 
                                     </div>
@@ -821,17 +821,17 @@
 
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
-                                            <div ng-hide="failedToChangePHPMaster" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="failedToChangePHPMaster" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                                 <p>{% trans "Failed to change PHP version. Error message:" %} {$
                                                     errorMessage $}</p>
                                             </div>
 
-                                            <div ng-hide="phpChangedMaster" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="phpChangedMaster" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                                 <p>{% trans "PHP successfully changed for: " %} <strong>{$ websiteDomain
                                                     $}</strong></p>
                                             </div>
 
-                                            <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                             </div>
                                         </div>
@@ -861,7 +861,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
-                                    <img src="{% static 'images/icons/office-material.png' %}">
+                                    <img src="{% static 'images/icons/office-material.png' %}" alt="">
                                 </a>
                                 <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "File Manager" %}</span>
@@ -872,7 +872,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
-                                    <img src="{% static 'images/icons/open_basedir.png' %}">
+                                    <img src="{% static 'images/icons/open_basedir.png' %}" alt="">
                                 </a>
                                 <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "open_basedir" %}</span>
@@ -884,7 +884,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
-                                    <img src="{% static 'images/icons/ftp-upload.png' %}">
+                                    <img src="{% static 'images/icons/ftp-upload.png' %}" alt="">
                                 </a>
                                 <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Create FTP Acct" %}</span>
@@ -896,7 +896,7 @@
                             <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
-                                    <img src="{% static 'images/icons/delete-ftp.png' %}">
+                                    <img src="{% static 'images/icons/delete-ftp.png' %}" alt="">
                                 </a>
                                 <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
                                     <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Delete FTP Acct" %}</span>
@@ -912,21 +912,21 @@
                                 <form action="/" class="form-horizontal bordered-row" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "open_basedir Protection" %}</label>
+                                        <label for="cpa11y-open-basedir-protection" class="col-sm-3 control-label">{% trans "open_basedir Protection" %}</label>
                                         <div class="col-sm-6">
-                                            <select ng-model="openBasedirValue" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <select id="cpa11y-open-basedir-protection" ng-model="openBasedirValue" class="form-control" style="background: var(--bg-primary, white); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
                                                 <option>Enable</option>
                                                 <option>Disable</option>
                                             </select>
                                         </div>
 
                                         <div ng-hide="baseDirLoading" style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <img src="{% static 'images/loading.gif' %}">
+                                            <img src="{% static 'images/loading.gif' %}" alt="">
                                         </div>
 
                                         <div style="margin-bottom: 2%;" class=" col-sm-1">
                                             <a title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                                    src="/static/images/close-32.png" alt=""></a>
                                         </div>
 
                                     </div>
@@ -943,15 +943,15 @@
 
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
-                                            <div ng-hide="operationFailed" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="operationFailed" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                                 <p>{% trans "Error message:" %} {$ errorMessage $} </p>
                                             </div>
 
-                                            <div ng-hide="operationSuccessfull" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="operationSuccessfull" class="alert alert-success" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="status">
                                                 <p>{% trans "Changes successfully saved." %}</p>
                                             </div>
 
-                                            <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                             </div>
                                         </div>
@@ -984,7 +984,7 @@
                                 <div class="col-md-3" style="margin-bottom: 2%;">
 
                                     <a id="emailLists" target="_blank" title="{% trans 'Create Lists' %}">
-                                        <img src="{% static 'emailMarketing/mailing.png' %}">
+                                        <img src="{% static 'emailMarketing/mailing.png' %}" alt="">
                                     </a>
                                     <a id="emailListsChild" target="_blank" title="{% trans 'Create Lists' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Create Lists" %}</span>
@@ -995,7 +995,7 @@
                                 <div class="col-md-3" style="margin-bottom: 2%;">
 
                                     <a id="manageLists" target="_blank" title="{% trans 'Manage Lists' %}">
-                                        <img src="{% static 'emailMarketing/checklist.png' %}">
+                                        <img src="{% static 'emailMarketing/checklist.png' %}" alt="">
                                     </a>
                                     <a id="manageListsChild" target="_blank" title="{% trans 'Manage Lists' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Manage Lists" %}</span>
@@ -1006,7 +1006,7 @@
                                 <div class="col-md-3" style="margin-bottom: 2%;">
 
                                     <a id="manageSMTPHosts" target="_blank" title="{% trans 'SMTP Hosts' %}">
-                                        <img src="{% static 'emailMarketing/post-office.png' %}">
+                                        <img src="{% static 'emailMarketing/post-office.png' %}" alt="">
                                     </a>
                                     <a id="manageSMTPHostsChild" target="_blank" title="{% trans 'SMTP Hosts' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "SMTP Hosts" %}</span>
@@ -1017,7 +1017,7 @@
                                 <div class="col-md-3" style="margin-bottom: 2%;">
 
                                     <a id="composeEmails" target="_blank" title="{% trans 'Compose Message' %}">
-                                        <img src="{% static 'emailMarketing/compose.png' %}">
+                                        <img src="{% static 'emailMarketing/compose.png' %}" alt="">
                                     </a>
                                     <a id="composeEmailsChild" target="_blank" title="{% trans 'Compose Message' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Compose" %}</span>
@@ -1028,7 +1028,7 @@
                                 <div class="col-md-3" style="margin-bottom: 2%;">
 
                                     <a id="sendEmailsPage" target="_blank" title="{% trans 'Send Emails' %}">
-                                        <img src="{% static 'emailMarketing/paper-plane.png' %}">
+                                        <img src="{% static 'emailMarketing/paper-plane.png' %}" alt="">
                                     </a>
                                     <a id="sendEmailsPageChild" target="_blank" title="{% trans 'Send Emails' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Send Emails" %}</span>
@@ -1048,7 +1048,7 @@
                 <div style="border-radius: 25px;border-color:#3498db; background: var(--bg-primary, white); color: var(--text-primary, #333);" class="content-box">
                     <h3 class="content-box-header bg-blue">
                         {% trans "Application Installer" %} <img ng-hide="applicationInstallerLoading"
-                                                                 src="/static/images/loading.gif">
+                                                                 src="/static/images/loading.gif" alt="">
                     </h3>
 
                     <div class="content-box-wrapper" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
@@ -1059,7 +1059,7 @@
 
                                 <a href="{$ wordPressInstallURL $}" target="_blank"
                                    title="{% trans 'Install wordpress with LSCache' %}">
-                                    <img src="{% static 'images/icons/wordpress.png' %}">
+                                    <img src="{% static 'images/icons/wordpress.png' %}" alt="">
                                 </a>
                                 <a href="{$ wordPressInstallURL $}" target="_blank"
                                    title="{% trans 'Install wordpress with LSCache' %}">
@@ -1073,7 +1073,7 @@
 
                                 <a href="{$ joomlaInstallURL $}" target="_blank"
                                    title="{% trans 'Install Joomla with LSCache' %}">
-                                    <img src="{% static 'images/icons/joomla-logo.png' %}">
+                                    <img src="{% static 'images/icons/joomla-logo.png' %}" alt="">
                                 </a>
                                 <a href="{$ joomlaInstallURL $}" target="_blank"
                                    title="{% trans 'Install Joomla with LSCache' %}">
@@ -1087,7 +1087,7 @@
 
                                 <a href="{$ setupGit $}" target="_blank"
                                    title="{% trans 'Attach Git with this website!' %}">
-                                    <img src="{% static 'images/icons/git-logo.png' %}">
+                                    <img src="{% static 'images/icons/git-logo.png' %}" alt="">
                                 </a>
                                 <a href="{$ setupGit $}" target="_blank"
                                    title="{% trans 'Attach Git with this website!' %}">
@@ -1101,7 +1101,7 @@
 
                                 <a href="{$ installPrestaURL $}" target="_blank"
                                    title="{% trans 'Install Prestashop' %}">
-                                    <img src="{% static 'images/icons/prestashop.png' %}">
+                                    <img src="{% static 'images/icons/prestashop.png' %}" alt="">
                                 </a>
                                 <a href="{$ installPrestaURL $}" target="_blank"
                                    title="{% trans 'Install Prestashop' %}">
@@ -1119,7 +1119,7 @@
 
         {% else %}
 
-            <div class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);">
+            <div class="alert alert-danger" style="background: var(--bg-secondary, #f8f9ff); color: var(--text-primary, #333); border-color: var(--border-color, #ddd);" role="alert">
                 <p>{{ domain }}</p>
             </div>
 

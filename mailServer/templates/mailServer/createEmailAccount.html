@@ -336,7 +336,7 @@
     <div class="modern-container" ng-controller="createEmailAccount">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-envelope"></i>
+                <i class="fas fa-envelope" aria-hidden="true"></i>
                 {% trans "Create Email Account" %}
             </h1>
             <p class="page-subtitle">{% trans "Select a website from the list to create an email account" %}</p>
@@ -345,11 +345,11 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-user-plus"></i>
+                    <i class="fas fa-user-plus" aria-hidden="true"></i>
                     {% trans "New Email Account" %}
                     <a target="_blank" rel="noopener" href="https://platform.cyberpersons.com/MailTester/MailTester?utm_source=from-cyberpanel-inside&utm_medium=from-cyberpanel-inside&utm_campaign=from-cyberpanel-inside&utm_id=from-cyberpanel-inside&utm_term=from-cyberpanel-inside" 
                        class="test-email-link">
-                        <i class="fas fa-vial"></i>
+                        <i class="fas fa-vial" aria-hidden="true"></i>
                         {% trans "Test Email Delivery" %}
                     </a>
                     <span ng-show="emailLoading" class="loading-spinner"></span>
@@ -358,11 +358,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--warning-color, #ffa000);" aria-hidden="true"></i>
                         <h3>{% trans "Postfix is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable Postfix to create email accounts" %}</p>
                         <a href="{% url 'managePostfix' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable Postfix Now" %}
                         </a>
                     </div>
@@ -372,8 +372,8 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Select Website" %}</label>
-                                        <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control" aria-label="{% trans 'Select Website' %}">
+                                        <label for="cpa11y-select-website" class="form-label">{% trans "Select Website" %}</label>
+                                        <select id="cpa11y-select-website" ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control" aria-label="{% trans 'Select Website' %}">
                                             <option value="">{% trans "Choose a website..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
@@ -386,28 +386,28 @@
 
                         <div ng-hide="emailDetails" class="form-section">
                             <h3 class="mb-4" style="color: var(--text-primary, #1e293b); font-weight: 600; font-size: 1.125rem;">
-                                <i class="fas fa-envelope-open-text"></i>
+                                <i class="fas fa-envelope-open-text" aria-hidden="true"></i>
                                 {% trans "Email Account Details" %}
                             </h3>
                             
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Email Username" %}</label>
+                                        <label for="cpa11y-email-username" class="form-label">{% trans "Email Username" %}</label>
                                         <div class="input-group">
-                                            <input ng-change="hideFewDetails" type="text" class="form-control" 
+                                            <input id="cpa11y-email-username" ng-change="hideFewDetails" type="text" class="form-control" 
                                                    ng-model="emailUsername" placeholder="john.doe" required>
                                             <span class="domain-suffix">@{$ selectedDomain $}</span>
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="form-label">{% trans "Password" %}</label>
+                                        <label for="cpa11y-password" class="form-label">{% trans "Password" %}</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" ng-model="emailPassword" 
+                                            <input id="cpa11y-password" type="password" class="form-control" ng-model="emailPassword" 
                                                    placeholder="Enter a strong password" required>
                                             <button type="button" ng-click="generatePassword()" class="btn-secondary">
-                                                <i class="fas fa-dice"></i>
+                                                <i class="fas fa-dice" aria-hidden="true"></i>
                                                 {% trans "Generate" %}
                                             </button>
                                         </div>
@@ -421,24 +421,24 @@
                                     </div>
 
                                     <div ng-hide="generatedPasswordView" class="form-group">
-                                        <label class="form-label">{% trans "Generated Password" %}</label>
+                                        <label for="cpa11y-generated-password" class="form-label">{% trans "Generated Password" %}</label>
                                         <div class="input-group">
-                                            <input type="text" name="email" class="form-control" 
+                                            <input id="cpa11y-generated-password" type="text" name="email" class="form-control" 
                                                    ng-model="emailPassword" readonly aria-label="{% trans 'Generated Password' %}">
                                             <button type="button" ng-click="usePassword()" class="btn-secondary">
-                                                <i class="fas fa-check"></i>
+                                                <i class="fas fa-check" aria-hidden="true"></i>
                                                 {% trans "Use This Password" %}
                                             </button>
                                         </div>
                                         <small class="password-hint">
-                                            <i class="fas fa-info-circle"></i>
+                                            <i class="fas fa-info-circle" aria-hidden="true"></i>
                                             {% trans "Make sure to save this password in a secure location" %}
                                         </small>
                                     </div>
 
                                     <div class="action-section">
                                         <button type="button" ng-click="createEmailAccount()" class="btn-primary">
-                                            <i class="fas fa-plus-circle"></i>
+                                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                             {% trans "Create Email Account" %}
                                         </button>
                                     </div>
@@ -448,18 +448,18 @@
 
                         <!-- Alert Messages -->
                         <div class="form-section">
-                            <div ng-hide="canNotCreate" class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i>
+                            <div ng-hide="canNotCreate" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 {% trans "Cannot create email account. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="successfullyCreated" class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
+                            <div ng-hide="successfullyCreated" class="alert alert-success" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                                 {% trans "Mailbox with username:" %} <strong>{$ createdID $}</strong> {% trans "has been successfully created." %}
                             </div>
                             
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <i class="fas fa-times-circle"></i>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
+                                <i class="fas fa-times-circle" aria-hidden="true"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
                         </div>

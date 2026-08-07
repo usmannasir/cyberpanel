@@ -25,7 +25,7 @@
                            id="datatable-example">
                         <thead>
                         <tr>
-                            <th>Name<img ng-hide="cyberPanelLoading" src="/static/images/loading.gif"></th>
+                            <th>Name<img ng-hide="cyberPanelLoading" src="/static/images/loading.gif" alt=""></th>
                             <th>SPEED</th>
                             <th>VMEM</th>
                             <th>PMEM</th>
@@ -68,16 +68,16 @@
                                                 </button>
                                                 <h4 class="modal-title">Edit Package
                                                     <img id="containerSettingLoading" src="/static/images/loading.gif"
-                                                         style="display: none;">
+                                                         style="display: none;" alt="">
                                                 </h4>
                                             </div>
                                             <div class="modal-body">
 
                                                 <form name="containerSettingsForm" action="/" class="form-horizontal">
                                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                                        <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                                                        <label for="cpa11y-name" class="col-sm-3 control-label">{% trans "Name" %}</label>
                                                         <div class="col-sm-6">
-                                                            <input name="name" type="text" class="form-control"
+                                                            <input id="cpa11y-name" name="name" type="text" class="form-control"
                                                                    ng-model="name" readonly>
                                                         </div>
                                                     </div>
@@ -86,9 +86,9 @@
 
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "SPEED" %}</label>
+                                                            <label for="cpa11y-speed" class="col-sm-3 control-label">{% trans "SPEED" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="SPEED" type="text" class="form-control"
+                                                                <input id="cpa11y-speed" name="SPEED" type="text" class="form-control"
                                                                        ng-model="$parent.SPEED" required>
                                                             </div>
                                                         </div>
@@ -97,9 +97,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "VMEM" %}</label>
+                                                            <label for="cpa11y-vmem" class="col-sm-3 control-label">{% trans "VMEM" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="VMEM" type="text" class="form-control"
+                                                                <input id="cpa11y-vmem" name="VMEM" type="text" class="form-control"
                                                                        ng-model="$parent.VMEM" required>
                                                             </div>
                                                         </div>
@@ -108,9 +108,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "PMEM" %}</label>
+                                                            <label for="cpa11y-pmem" class="col-sm-3 control-label">{% trans "PMEM" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="PMEM" type="text" class="form-control"
+                                                                <input id="cpa11y-pmem" name="PMEM" type="text" class="form-control"
                                                                        ng-model="$parent.PMEM" required>
                                                             </div>
                                                         </div>
@@ -119,9 +119,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "IO" %}</label>
+                                                            <label for="cpa11y-io" class="col-sm-3 control-label">{% trans "IO" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="IO" type="text" class="form-control"
+                                                                <input id="cpa11y-io" name="IO" type="text" class="form-control"
                                                                        ng-model="$parent.IO" required>
                                                             </div>
                                                         </div>
@@ -130,9 +130,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "IOPS" %}</label>
+                                                            <label for="cpa11y-iops" class="col-sm-3 control-label">{% trans "IOPS" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="IOPS" type="text" class="form-control"
+                                                                <input id="cpa11y-iops" name="IOPS" type="text" class="form-control"
                                                                        ng-model="$parent.IOPS" required>
                                                             </div>
                                                         </div>
@@ -141,9 +141,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "EP" %}</label>
+                                                            <label for="cpa11y-ep" class="col-sm-3 control-label">{% trans "EP" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="EP" type="text" class="form-control"
+                                                                <input id="cpa11y-ep" name="EP" type="text" class="form-control"
                                                                        ng-model="$parent.EP" required>
                                                             </div>
                                                         </div>
@@ -152,9 +152,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "NPROC" %}</label>
+                                                            <label for="cpa11y-nproc" class="col-sm-3 control-label">{% trans "NPROC" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="NPROC" type="text" class="form-control"
+                                                                <input id="cpa11y-nproc" name="NPROC" type="text" class="form-control"
                                                                        ng-model="$parent.NPROC" required>
                                                             </div>
                                                         </div>
@@ -163,9 +163,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "INODES soft" %}</label>
+                                                            <label for="cpa11y-inodes-soft" class="col-sm-3 control-label">{% trans "INODES soft" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="inodessoft" type="text" class="form-control"
+                                                                <input id="cpa11y-inodes-soft" name="inodessoft" type="text" class="form-control"
                                                                        ng-model="$parent.inodessoft" required>
                                                             </div>
                                                         </div>
@@ -174,9 +174,9 @@
                                                     <hr>
                                                     <div ng-hide="installationDetailsForm" class="form-group">
                                                         <div ng-hide="installationDetailsForm" class="form-group">
-                                                            <label class="col-sm-3 control-label">{% trans "INODES hard" %}</label>
+                                                            <label for="cpa11y-inodes-hard" class="col-sm-3 control-label">{% trans "INODES hard" %}</label>
                                                             <div class="col-sm-6">
-                                                                <input name="inodeshard" type="text" class="form-control"
+                                                                <input id="cpa11y-inodes-hard" name="inodeshard" type="text" class="form-control"
                                                                        ng-model="$parent.inodeshard" required>
                                                             </div>
                                                         </div>
@@ -203,7 +203,7 @@
                         </tbody>
                     </table>
 
-                    <div id="listFail" class="alert alert-danger">
+                    <div id="listFail" class="alert alert-danger" role="alert">
                         <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
                     </div>
 

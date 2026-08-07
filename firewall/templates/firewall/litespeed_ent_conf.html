@@ -17,7 +17,7 @@
 <div ng-controller="litespeed_ent_conf" class="example-box-wrapper">
         <div class="panel panel-body">
             <h3 class="content-box-header">
-                {% trans "Litespeed Enterprise Conf (/usr/local/lsws/conf/pre_main_global.conf)" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
+                {% trans "Litespeed Enterprise Conf (/usr/local/lsws/conf/pre_main_global.conf)" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif" alt="">
             </h3>
 
             <div class="content-box-wrapper">
@@ -45,16 +45,16 @@
                             </div>
 
 
-                                <div ng-hide="rulesSaved" class="alert alert-success">
+                                <div ng-hide="rulesSaved" class="alert alert-success" role="status">
                                         <p>{% trans "Litespeed Conf Saved" %}</p>
                                     </div>
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <div ng-hide="couldNotConnect" class="alert alert-danger" role="alert">
                                             <p>{% trans "Could not connect. Please refresh this page." %} </p>
                                 </div>
 
 
-                                <div ng-hide="couldNotSave" class="alert alert-danger">
+                                <div ng-hide="couldNotSave" class="alert alert-danger" role="alert">
                                     <p>{% trans "Could not save rules, Error message: " %} {$ errorMessage $}</p>
                                 </div>
 

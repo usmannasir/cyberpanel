@@ -445,10 +445,10 @@
     <div class="modern-container" ng-controller="addModifyDNSRecordsCloudFlare">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-globe"></i>
+                <i class="fas fa-globe" aria-hidden="true"></i>
                 {% trans "CloudFlare DNS Management" %}
                 <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/manage-dns-in-cyberpanel/" class="docs-link">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-book" aria-hidden="true"></i>
                     {% trans "DNS Docs" %}
                 </a>
             </h1>
@@ -458,7 +458,7 @@
         <div class="main-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <i class="fas fa-cloud"></i>
+                    <i class="fas fa-cloud" aria-hidden="true"></i>
                     {% trans "CloudFlare DNS Records" %}
                     <span ng-show="recordsLoading" class="loading-spinner"></span>
                 </h2>
@@ -466,11 +466,11 @@
             <div class="card-body">
                 {% if not status %}
                     <div class="disabled-notice">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #ffa000;"></i>
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #ffa000;" aria-hidden="true"></i>
                         <h3>{% trans "PowerDNS is disabled" %}</h3>
                         <p class="mb-3">{% trans "You need to enable PowerDNS to manage DNS records" %}</p>
                         <a href="{% url 'managePowerDNS' %}" class="btn-primary">
-                            <i class="fas fa-power-off"></i>
+                            <i class="fas fa-power-off" aria-hidden="true"></i>
                             {% trans "Enable PowerDNS Now" %}
                         </a>
                     </div>
@@ -478,7 +478,7 @@
                     {% if not CloudFlare %}
                         <div class="form-section">
                             <h3 class="mb-4" style="color: var(--text-primary, #1e293b); font-weight: 600;">
-                                <i class="fas fa-cog"></i>
+                                <i class="fas fa-cog" aria-hidden="true"></i>
                                 {% trans "CloudFlare Configuration" %}
                             </h3>
                             
@@ -486,27 +486,27 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "CloudFlare Email" %}</label>
-                                            <input name="cfEmail" type="email" class="form-control" ng-model="cfEmail" 
+                                            <label for="cpa11y-cloudflare-email" class="form-label">{% trans "CloudFlare Email" %}</label>
+                                            <input id="cpa11y-cloudflare-email" name="cfEmail" type="email" class="form-control" ng-model="cfEmail" 
                                                    placeholder="your@email.com" required>
                                         </div>
                                         
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "API Token" %}</label>
-                                            <input name="cfToken" type="text" class="form-control" ng-model="cfToken" 
+                                            <label for="cpa11y-api-token" class="form-label">{% trans "API Token" %}</label>
+                                            <input id="cpa11y-api-token" name="cfToken" type="text" class="form-control" ng-model="cfToken" 
                                                    placeholder="Enter your CloudFlare API token" required>
                                         </div>
                                         
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Sync Local Records to CloudFlare" %}</label>
-                                            <select ng-model="cfSync" class="form-control">
+                                            <label for="cpa11y-sync-local-records-to-cloudflare" class="form-label">{% trans "Sync Local Records to CloudFlare" %}</label>
+                                            <select id="cpa11y-sync-local-records-to-cloudflare" ng-model="cfSync" class="form-control">
                                                 <option value="Enable">{% trans "Enable" %}</option>
                                                 <option value="Disable">{% trans "Disable" %}</option>
                                             </select>
                                         </div>
                                         
                                         <button type="button" ng-click="saveCFConfigs()" class="btn-primary">
-                                            <i class="fas fa-save"></i>
+                                            <i class="fas fa-save" aria-hidden="true"></i>
                                             {% trans "Save Configuration" %}
                                         </button>
                                     </div>
@@ -516,11 +516,11 @@
                     {% else %}
                         <div class="modern-tabs">
                             <button class="modern-tab active" onclick="switchTab(this, 'manage-dns')">
-                                <i class="fas fa-globe"></i>
+                                <i class="fas fa-globe" aria-hidden="true"></i>
                                 {% trans "Manage DNS" %}
                             </button>
                             <button class="modern-tab" onclick="switchTab(this, 'api-settings')">
-                                <i class="fas fa-cogs"></i>
+                                <i class="fas fa-cogs" aria-hidden="true"></i>
                                 {% trans "API Settings" %}
                             </button>
                         </div>
@@ -530,8 +530,8 @@
                                 <div class="row mb-4">
                                     <div class="col-md-8">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Select Domain" %}</label>
-                                            <select ng-change="fetchRecords()" ng-model="selectedZone" class="form-control">
+                                            <label for="cpa11y-select-domain" class="form-label">{% trans "Select Domain" %}</label>
+                                            <select id="cpa11y-select-domain" ng-change="fetchRecords()" ng-model="selectedZone" class="form-control">
                                                 <option value="">{% trans "Choose a domain..." %}</option>
                                                 {% for items in domainsList %}
                                                     <option value="{{ items }}">{{ items }}</option>
@@ -541,7 +541,7 @@
                                     </div>
                                     <div class="col-md-4" ng-hide="addRecordsBox">
                                         <button type="button" ng-click="syncCF()" class="btn-primary w-100" style="margin-top: 30px;">
-                                            <i class="fas fa-sync"></i>
+                                            <i class="fas fa-sync" aria-hidden="true"></i>
                                             {% trans "Sync to CloudFlare" %}
                                         </button>
                                     </div>
@@ -549,7 +549,7 @@
                                 
                                 <div ng-hide="addRecordsBox">
                                     <h4 class="mb-3" style="color: var(--text-primary, #1e293b); font-weight: 600;">
-                                        <i class="fas fa-plus-circle"></i>
+                                        <i class="fas fa-plus-circle" aria-hidden="true"></i>
                                         {% trans "Add DNS Record" %}
                                     </h4>
                                     
@@ -569,198 +569,198 @@
                                     <!-- A Record -->
                                     <div class="record-form aRecord active">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="@" required>
+                                            <label for="cpa11y-name" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name" type="text" class="form-control" ng-model="recordName" placeholder="@" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "IP Address" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentA" placeholder="192.168.1.1" required>
+                                            <label for="cpa11y-ip-address" class="form-label">{% trans "IP Address" %}</label>
+                                            <input id="cpa11y-ip-address" type="text" class="form-control" ng-model="recordContentA" placeholder="192.168.1.1" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('A')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- AAAA Record -->
                                     <div class="record-form aaaaRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="@" required>
+                                            <label for="cpa11y-name-2" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-2" type="text" class="form-control" ng-model="recordName" placeholder="@" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-2" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-2" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "IPv6 Address" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentAAAA" placeholder="2001:db8::1" required>
+                                            <label for="cpa11y-ipv6-address" class="form-label">{% trans "IPv6 Address" %}</label>
+                                            <input id="cpa11y-ipv6-address" type="text" class="form-control" ng-model="recordContentAAAA" placeholder="2001:db8::1" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('AAAA')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- CNAME Record -->
                                     <div class="record-form cNameRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="www" required>
+                                            <label for="cpa11y-name-3" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-3" type="text" class="form-control" ng-model="recordName" placeholder="www" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-3" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-3" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Target Domain" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentCNAME" placeholder="example.com" required>
+                                            <label for="cpa11y-target-domain" class="form-label">{% trans "Target Domain" %}</label>
+                                            <input id="cpa11y-target-domain" type="text" class="form-control" ng-model="recordContentCNAME" placeholder="example.com" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('CNAME')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- MX Record -->
                                     <div class="record-form mxRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="@" required>
+                                            <label for="cpa11y-name-4" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-4" type="text" class="form-control" ng-model="recordName" placeholder="@" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-4" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-4" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Priority" %}</label>
-                                            <input type="number" class="form-control" ng-model="priority" placeholder="10" required>
+                                            <label for="cpa11y-priority" class="form-label">{% trans "Priority" %}</label>
+                                            <input id="cpa11y-priority" type="number" class="form-control" ng-model="priority" placeholder="10" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Mail Server" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentMX" placeholder="mail.example.com" required>
+                                            <label for="cpa11y-mail-server" class="form-label">{% trans "Mail Server" %}</label>
+                                            <input id="cpa11y-mail-server" type="text" class="form-control" ng-model="recordContentMX" placeholder="mail.example.com" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('MX')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- TXT Record -->
                                     <div class="record-form txtRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="@" required>
+                                            <label for="cpa11y-name-5" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-5" type="text" class="form-control" ng-model="recordName" placeholder="@" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-5" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-5" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group" style="flex: 2;">
-                                            <label class="form-label">{% trans "Text Value" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentTXT" placeholder="v=spf1 include:_spf.example.com ~all" required>
+                                            <label for="cpa11y-text-value" class="form-label">{% trans "Text Value" %}</label>
+                                            <input id="cpa11y-text-value" type="text" class="form-control" ng-model="recordContentTXT" placeholder="v=spf1 include:_spf.example.com ~all" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('TXT')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- SPF Record -->
                                     <div class="record-form spfRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="@" required>
+                                            <label for="cpa11y-name-6" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-6" type="text" class="form-control" ng-model="recordName" placeholder="@" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-6" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-6" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group" style="flex: 2;">
-                                            <label class="form-label">{% trans "SPF Policy" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentSPF" placeholder="v=spf1 include:_spf.example.com ~all" required>
+                                            <label for="cpa11y-spf-policy" class="form-label">{% trans "SPF Policy" %}</label>
+                                            <input id="cpa11y-spf-policy" type="text" class="form-control" ng-model="recordContentSPF" placeholder="v=spf1 include:_spf.example.com ~all" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('SPF')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- NS Record -->
                                     <div class="record-form nsRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="selectedZone" disabled>
+                                            <label for="cpa11y-name-7" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-7" type="text" class="form-control" ng-model="selectedZone" disabled>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-7" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-7" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name Server" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentNS" placeholder="ns1.example.com" required>
+                                            <label for="cpa11y-name-server" class="form-label">{% trans "Name Server" %}</label>
+                                            <input id="cpa11y-name-server" type="text" class="form-control" ng-model="recordContentNS" placeholder="ns1.example.com" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('NS')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- SOA Record -->
                                     <div class="record-form soaRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="selectedZone" disabled>
+                                            <label for="cpa11y-name-8" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-8" type="text" class="form-control" ng-model="selectedZone" disabled>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-8" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-8" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group" style="flex: 2;">
-                                            <label class="form-label">{% trans "SOA Value" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentSOA" placeholder="ns1.example.com. admin.example.com. 2023010101 3600 1800 604800 86400" required>
+                                            <label for="cpa11y-soa-value" class="form-label">{% trans "SOA Value" %}</label>
+                                            <input id="cpa11y-soa-value" type="text" class="form-control" ng-model="recordContentSOA" placeholder="ns1.example.com. admin.example.com. 2023010101 3600 1800 604800 86400" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('SOA')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- SRV Record -->
                                     <div class="record-form srvRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="_service._tcp" required>
+                                            <label for="cpa11y-name-9" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-9" type="text" class="form-control" ng-model="recordName" placeholder="_service._tcp" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-9" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-9" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Priority" %}</label>
-                                            <input type="number" class="form-control" ng-model="priority" placeholder="10" required>
+                                            <label for="cpa11y-priority-2" class="form-label">{% trans "Priority" %}</label>
+                                            <input id="cpa11y-priority-2" type="number" class="form-control" ng-model="priority" placeholder="10" required>
                                         </div>
                                         <div class="form-group" style="flex: 2;">
-                                            <label class="form-label">{% trans "Content" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentSRV" placeholder="0 5060 sipserver.example.com" required>
+                                            <label for="cpa11y-content" class="form-label">{% trans "Content" %}</label>
+                                            <input id="cpa11y-content" type="text" class="form-control" ng-model="recordContentSRV" placeholder="0 5060 sipserver.example.com" required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('SRV')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
                                     
                                     <!-- CAA Record -->
                                     <div class="record-form caaRecord">
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "Name" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordName" placeholder="@" required>
+                                            <label for="cpa11y-name-10" class="form-label">{% trans "Name" %}</label>
+                                            <input id="cpa11y-name-10" type="text" class="form-control" ng-model="recordName" placeholder="@" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">{% trans "TTL" %}</label>
-                                            <input type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
+                                            <label for="cpa11y-ttl-10" class="form-label">{% trans "TTL" %}</label>
+                                            <input id="cpa11y-ttl-10" type="number" class="form-control" ng-model="ttl" placeholder="3600" required>
                                         </div>
                                         <div class="form-group" style="flex: 2;">
-                                            <label class="form-label">{% trans "CAA Value" %}</label>
-                                            <input type="text" class="form-control" ng-model="recordContentCAA" placeholder='0 issue "letsencrypt.org"' required>
+                                            <label for="cpa11y-caa-value" class="form-label">{% trans "CAA Value" %}</label>
+                                            <input id="cpa11y-caa-value" type="text" class="form-control" ng-model="recordContentCAA" placeholder='0 issue "letsencrypt.org"' required>
                                         </div>
                                         <button type="button" ng-click="addDNSRecord('CAA')" class="btn-primary">
-                                            <i class="fas fa-plus"></i> {% trans "Add Record" %}
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {% trans "Add Record" %}
                                         </button>
                                     </div>
 
@@ -770,7 +770,7 @@
 
                                     <div ng-hide="currentRecords" style="margin-top: 3rem;">
                                         <h4 class="mb-3" style="color: var(--text-primary, #1e293b); font-weight: 600;">
-                                            <i class="fas fa-list"></i>
+                                            <i class="fas fa-list" aria-hidden="true"></i>
                                             {% trans "DNS Records" %}
                                         </h4>
                                         
@@ -808,7 +808,7 @@
                                                         <i class="fas fa-trash delete-icon" 
                                                            style="color: #ef4444;" 
                                                            ng-click="deleteRecord(record.id)"
-                                                           title="{% trans 'Delete Record' %}"></i>
+                                                           title="{% trans 'Delete Record' %}" aria-hidden="true"></i>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -823,38 +823,38 @@
                                 
                                 <!-- Alert Messages -->
                                 <div style="margin-top: 2rem;">
-                                    <div ng-hide="canNotFetchRecords" class="alert alert-danger">
-                                        <i class="fas fa-exclamation-circle"></i>
+                                    <div ng-hide="canNotFetchRecords" class="alert alert-danger" role="alert">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                         {% trans "Cannot fetch records. Error message:" %} {$ errorMessage $}
                                     </div>
 
-                                    <div ng-hide="couldNotAddRecord" class="alert alert-danger">
-                                        <i class="fas fa-exclamation-circle"></i>
+                                    <div ng-hide="couldNotAddRecord" class="alert alert-danger" role="alert">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                         {% trans "Cannot add record. Error message:" %} {$ errorMessage $}
                                     </div>
 
-                                    <div ng-hide="recordsFetched" class="alert alert-success">
-                                        <i class="fas fa-check-circle"></i>
+                                    <div ng-hide="recordsFetched" class="alert alert-success" role="status">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                                         {% trans "Records successfully fetched for" %} <strong>{$ domainFeteched $}</strong>
                                     </div>
 
-                                    <div ng-hide="recordDeleted" class="alert alert-success">
-                                        <i class="fas fa-check-circle"></i>
+                                    <div ng-hide="recordDeleted" class="alert alert-success" role="status">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                                         {% trans "Record Successfully Deleted" %}
                                     </div>
 
-                                    <div ng-hide="couldNotDeleteRecords" class="alert alert-danger">
-                                        <i class="fas fa-exclamation-circle"></i>
+                                    <div ng-hide="couldNotDeleteRecords" class="alert alert-danger" role="alert">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                         {% trans "Cannot delete record. Error message:" %} {$ errorMessage $}
                                     </div>
 
-                                    <div ng-hide="recordAdded" class="alert alert-success">
-                                        <i class="fas fa-check-circle"></i>
+                                    <div ng-hide="recordAdded" class="alert alert-success" role="status">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                                         {% trans "Record Successfully Added" %}
                                     </div>
 
-                                    <div ng-hide="couldNotConnect" class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle"></i>
+                                    <div ng-hide="couldNotConnect" class="alert alert-warning" role="status">
+                                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                                         {% trans "Could not connect to server. Please refresh this page." %}
                                     </div>
                                 </div>
@@ -866,7 +866,7 @@
                         <div id="api-settings" class="tab-content">
                             <div class="form-section">
                                 <h4 class="mb-4" style="color: var(--text-primary, #1e293b); font-weight: 600;">
-                                    <i class="fas fa-key"></i>
+                                    <i class="fas fa-key" aria-hidden="true"></i>
                                     {% trans "CloudFlare API Configuration" %}
                                 </h4>
                                 
@@ -874,29 +874,29 @@
                                     <div class="row">
                                         <div class="col-md-8">
                                             <div class="form-group">
-                                                <label class="form-label">{% trans "CloudFlare Email" %}</label>
-                                                <input ng-init="cfEmail='{{ cfEmail }}'" name="cfEmail" type="email" 
+                                                <label for="cpa11y-cloudflare-email-2" class="form-label">{% trans "CloudFlare Email" %}</label>
+                                                <input id="cpa11y-cloudflare-email-2" ng-init="cfEmail='{{ cfEmail }}'" name="cfEmail" type="email" 
                                                        class="form-control" ng-model="cfEmail" 
                                                        placeholder="your@email.com" required>
                                             </div>
                                             
                                             <div class="form-group">
-                                                <label class="form-label">{% trans "API Token" %}</label>
-                                                <input ng-init="cfToken='{{ cfToken }}'" name="cfToken" type="text" 
+                                                <label for="cpa11y-api-token-2" class="form-label">{% trans "API Token" %}</label>
+                                                <input id="cpa11y-api-token-2" ng-init="cfToken='{{ cfToken }}'" name="cfToken" type="text" 
                                                        class="form-control" ng-model="cfToken" 
                                                        placeholder="Enter your CloudFlare API token" required>
                                             </div>
                                             
                                             <div class="form-group">
-                                                <label class="form-label">{% trans "Sync Local Records to CloudFlare" %}</label>
-                                                <select ng-model="cfSync" class="form-control">
+                                                <label for="cpa11y-sync-local-records-to-cloudflare-2" class="form-label">{% trans "Sync Local Records to CloudFlare" %}</label>
+                                                <select id="cpa11y-sync-local-records-to-cloudflare-2" ng-model="cfSync" class="form-control">
                                                     <option value="Enable">{% trans "Enable" %}</option>
                                                     <option value="Disable">{% trans "Disable" %}</option>
                                                 </select>
                                             </div>
                                             
                                             <button type="button" ng-click="saveCFConfigs()" class="btn-primary">
-                                                <i class="fas fa-save"></i>
+                                                <i class="fas fa-save" aria-hidden="true"></i>
                                                 {% trans "Save Configuration" %}
                                             </button>
                                         </div>

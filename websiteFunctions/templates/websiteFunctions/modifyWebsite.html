@@ -396,8 +396,8 @@
             </h2>
             
             <div class="website-selector-card">
-                <label class="website-selector-label">{% trans "Select Website to Modify" %}</label>
-                <select ng-change="fetchWebsites()" ng-model="websiteToBeModified" class="form-control">
+                <label for="cpa11y-select-website-to-modify" class="website-selector-label">{% trans "Select Website to Modify" %}</label>
+                <select id="cpa11y-select-website-to-modify" ng-change="fetchWebsites()" ng-model="websiteToBeModified" class="form-control">
                     <option value="">-- {% trans "Select a website" %} --</option>
                     {% for items in websiteList %}
                         <option>{{ items }}</option>
@@ -406,7 +406,7 @@
             </div>
 
             <div class="info-box">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <div class="info-box-content">
                     <div class="info-box-title">{% trans "Modification Tips" %}</div>
                     <div class="info-box-text">
@@ -422,8 +422,8 @@
             
             <form>
                 <div class="form-group">
-                    <label class="form-label">{% trans "Package" %}</label>
-                    <select ng-model="selectedPack" class="form-control">
+                    <label for="cpa11y-package" class="form-label">{% trans "Package" %}</label>
+                    <select id="cpa11y-package" ng-model="selectedPack" class="form-control">
                         <option value="">-- {% trans "Select a package" %} --</option>
                         <option ng-repeat="pack in webpacks">{$ pack.pack $}</option>
                     </select>
@@ -436,8 +436,8 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Website Owner" %}</label>
-                        <select ng-model="selectedAdmin" class="form-control">
+                        <label for="cpa11y-website-owner" class="form-label">{% trans "Website Owner" %}</label>
+                        <select id="cpa11y-website-owner" ng-model="selectedAdmin" class="form-control">
                             <option value="">-- {% trans "Select an owner" %} --</option>
                             <option ng-repeat="admins in adminNames">{$ admins.adminNames $}</option>
                         </select>
@@ -447,8 +447,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "Email Address" %}</label>
-                        <input type="email" class="form-control" ng-model="adminEmail" 
+                        <label for="cpa11y-email-address" class="form-label">{% trans "Email Address" %}</label>
+                        <input id="cpa11y-email-address" type="email" class="form-control" ng-model="adminEmail" 
                                placeholder="{% trans 'admin@example.com' %}" required>
                     </div>
                 </div>
@@ -456,8 +456,8 @@
                 <div class="form-divider"></div>
 
                 <div class="form-group">
-                    <label class="form-label">{% trans "PHP Version" %}</label>
-                    <select ng-model="phpSelection" class="form-control">
+                    <label for="cpa11y-php-version" class="form-label">{% trans "PHP Version" %}</label>
+                    <select id="cpa11y-php-version" ng-model="phpSelection" class="form-control">
                         <option value="">-- {% trans "Select PHP version" %} --</option>
                         {% for php in phps %}
                             <option>{{ php }}</option>
@@ -467,7 +467,7 @@
 
                 <div class="button-container">
                     <button type="button" ng-click="modifyWebsiteFunc()" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
+                        <i class="fas fa-save" aria-hidden="true"></i>
                         {% trans "Save Changes" %}
                     </button>
                 </div>
@@ -475,23 +475,23 @@
         </div>
 
         <!-- Alert Messages -->
-        <div id="websiteModifyFailure" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+        <div id="websiteModifyFailure" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <span>{% trans "Cannot fetch website details. Error message:" %} {$ errorMessage $}</span>
         </div>
 
-        <div id="canNotModify" class="alert alert-danger">
-            <i class="fas fa-times-circle"></i>
+        <div id="canNotModify" class="alert alert-danger" role="alert">
+            <i class="fas fa-times-circle" aria-hidden="true"></i>
             <span>{% trans "Cannot modify website. Error message:" %} {$ errMessage $}</span>
         </div>
 
-        <div id="websiteModifySuccess" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div id="websiteModifySuccess" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <span>{% trans "Website details successfully fetched" %}</span>
         </div>
 
-        <div id="websiteSuccessfullyModified" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div id="websiteSuccessfullyModified" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <span><strong>{$ websiteModified $}</strong> {% trans "successfully modified" %}</span>
         </div>
     </div>

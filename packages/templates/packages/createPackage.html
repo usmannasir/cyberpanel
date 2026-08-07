@@ -344,7 +344,7 @@
         </div>
 
         <div class="info-box">
-            <i class="fas fa-info-circle"></i>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
             <div class="info-box-text">
                 {% trans "Packages define resources for your websites. You need to create a package before creating a website." %}
             </div>
@@ -355,11 +355,11 @@
             
             <form name="createPackageFrm">
                 <div class="form-group">
-                    <label class="form-label">{% trans "Package Name" %}</label>
-                    <input name="pname" type="text" class="form-control" ng-model="packageName" 
+                    <label for="cpa11y-package-name" class="form-label">{% trans "Package Name" %}</label>
+                    <input id="cpa11y-package-name" name="pname" type="text" class="form-control" ng-model="packageName" 
                            placeholder="{% trans 'Enter package name' %}" required>
                     <div class="package-name-preview" ng-show="packageName">
-                        <i class="fas fa-tag"></i> {{ adminNamePackage }}_{$ packageName $}
+                        <i class="fas fa-tag" aria-hidden="true"></i> {{ adminNamePackage }}_{$ packageName $}
                     </div>
                 </div>
             </form>
@@ -370,22 +370,22 @@
             
             <div class="resource-section">
                 <div class="resource-title">
-                    <i class="fas fa-globe"></i>
+                    <i class="fas fa-globe" aria-hidden="true"></i>
                     {% trans "Web Resources" %}
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Domains" %}</label>
-                        <input name="dspace" type="number" class="form-control" ng-model="allowedDomains" 
+                        <label for="cpa11y-domains" class="form-label">{% trans "Domains" %}</label>
+                        <input id="cpa11y-domains" name="dspace" type="number" class="form-control" ng-model="allowedDomains" 
                                placeholder="0" required>
                         <div class="help-text">{% trans "Number of domains allowed (0 = Unlimited)" %}</div>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Disk Space" %}</label>
+                        <label for="cpa11y-disk-space" class="form-label">{% trans "Disk Space" %}</label>
                         <div class="input-group">
-                            <input name="dspace" type="number" class="form-control" ng-model="diskSpace" 
+                            <input id="cpa11y-disk-space" name="dspace" type="number" class="form-control" ng-model="diskSpace" 
                                    placeholder="0" required>
                             <span class="input-suffix">MB</span>
                         </div>
@@ -394,9 +394,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Bandwidth" %}</label>
+                    <label for="cpa11y-bandwidth" class="form-label">{% trans "Bandwidth" %}</label>
                     <div class="input-group">
-                        <input name="bwidth" type="number" class="form-control" ng-model="bandwidth" 
+                        <input id="cpa11y-bandwidth" name="bwidth" type="number" class="form-control" ng-model="bandwidth" 
                                placeholder="0" required>
                         <span class="input-suffix">MB</span>
                     </div>
@@ -406,29 +406,29 @@
             
             <div class="resource-section">
                 <div class="resource-title">
-                    <i class="fas fa-server"></i>
+                    <i class="fas fa-server" aria-hidden="true"></i>
                     {% trans "Services & Features" %}
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "FTP Accounts" %}</label>
-                        <input name="eaccts" type="number" class="form-control" ng-model="ftpAccounts" 
+                        <label for="cpa11y-ftp-accounts" class="form-label">{% trans "FTP Accounts" %}</label>
+                        <input id="cpa11y-ftp-accounts" name="eaccts" type="number" class="form-control" ng-model="ftpAccounts" 
                                placeholder="0" required>
                         <div class="help-text">{% trans "Number of FTP accounts" %}</div>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">{% trans "Databases" %}</label>
-                        <input name="dbases" type="number" class="form-control" ng-model="dataBases" 
+                        <label for="cpa11y-databases" class="form-label">{% trans "Databases" %}</label>
+                        <input id="cpa11y-databases" name="dbases" type="number" class="form-control" ng-model="dataBases" 
                                placeholder="0" required>
                         <div class="help-text">{% trans "Number of MySQL databases" %}</div>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Email Accounts" %}</label>
-                    <input name="emails" type="number" class="form-control" ng-model="emails" 
+                    <label for="cpa11y-email-accounts" class="form-label">{% trans "Email Accounts" %}</label>
+                    <input id="cpa11y-email-accounts" name="emails" type="number" class="form-control" ng-model="emails" 
                            placeholder="0" required>
                     <div class="help-text">{% trans "Number of email accounts" %}</div>
                 </div>
@@ -440,7 +440,7 @@
             <h2 class="card-title">{% trans "Advanced Resource Limits" %}</h2>
 
             <div class="info-box">
-                <i class="fas fa-server"></i>
+                <i class="fas fa-server" aria-hidden="true"></i>
                 <div class="info-box-text">
                     {% trans "These limits are enforced via cgroups v2 and OpenLiteSpeed to prevent resource abuse and ensure server stability." %}
                 </div>
@@ -448,15 +448,15 @@
 
             <div class="resource-section">
                 <div class="resource-title">
-                    <i class="fas fa-microchip"></i>
+                    <i class="fas fa-microchip" aria-hidden="true"></i>
                     {% trans "CPU & Memory" %}
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Memory Limit" %}</label>
+                        <label for="cpa11y-memory-limit" class="form-label">{% trans "Memory Limit" %}</label>
                         <div class="input-group">
-                            <input name="memoryLimitMB" type="number" class="form-control" ng-model="memoryLimitMB"
+                            <input id="cpa11y-memory-limit" name="memoryLimitMB" type="number" class="form-control" ng-model="memoryLimitMB"
                                    value="1024" min="256" max="16384" step="256" required>
                             <span class="input-suffix">MB</span>
                         </div>
@@ -464,8 +464,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "CPU Cores" %}</label>
-                        <input name="cpuCores" type="number" class="form-control" ng-model="cpuCores"
+                        <label for="cpa11y-cpu-cores" class="form-label">{% trans "CPU Cores" %}</label>
+                        <input id="cpa11y-cpu-cores" name="cpuCores" type="number" class="form-control" ng-model="cpuCores"
                                value="1" min="1" max="16" required>
                         <div class="help-text">{% trans "Number of CPU cores (1-16)" %}</div>
                     </div>
@@ -474,15 +474,15 @@
 
             <div class="resource-section">
                 <div class="resource-title">
-                    <i class="fas fa-hdd"></i>
+                    <i class="fas fa-hdd" aria-hidden="true"></i>
                     {% trans "Disk & I/O" %}
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "I/O Limit" %}</label>
+                        <label for="cpa11y-i-o-limit" class="form-label">{% trans "I/O Limit" %}</label>
                         <div class="input-group">
-                            <input name="ioLimitMBPS" type="number" class="form-control" ng-model="ioLimitMBPS"
+                            <input id="cpa11y-i-o-limit" name="ioLimitMBPS" type="number" class="form-control" ng-model="ioLimitMBPS"
                                    value="10" min="5" max="100" required>
                             <span class="input-suffix">MB/s</span>
                         </div>
@@ -490,8 +490,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "Inode Limit" %}</label>
-                        <input name="inodeLimit" type="number" class="form-control" ng-model="inodeLimit"
+                        <label for="cpa11y-inode-limit" class="form-label">{% trans "Inode Limit" %}</label>
+                        <input id="cpa11y-inode-limit" name="inodeLimit" type="number" class="form-control" ng-model="inodeLimit"
                                value="400000" min="100000" max="2000000" step="100000" required>
                         <div class="help-text">{% trans "Maximum files/directories (100k - 2M)" %}</div>
                     </div>
@@ -500,29 +500,29 @@
 
             <div class="resource-section">
                 <div class="resource-title">
-                    <i class="fas fa-cogs"></i>
+                    <i class="fas fa-cogs" aria-hidden="true"></i>
                     {% trans "Process Limits" %}
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{% trans "Max Connections" %}</label>
-                        <input name="maxConnections" type="number" class="form-control" ng-model="maxConnections"
+                        <label for="cpa11y-max-connections" class="form-label">{% trans "Max Connections" %}</label>
+                        <input id="cpa11y-max-connections" name="maxConnections" type="number" class="form-control" ng-model="maxConnections"
                                value="10" min="1" max="100" required>
                         <div class="help-text">{% trans "Max concurrent PHP connections (1-100)" %}</div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">{% trans "Process Soft Limit" %}</label>
-                        <input name="procSoftLimit" type="number" class="form-control" ng-model="procSoftLimit"
+                        <label for="cpa11y-process-soft-limit" class="form-label">{% trans "Process Soft Limit" %}</label>
+                        <input id="cpa11y-process-soft-limit" name="procSoftLimit" type="number" class="form-control" ng-model="procSoftLimit"
                                value="400" min="100" max="2000" required>
                         <div class="help-text">{% trans "Soft process limit (100-2000)" %}</div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">{% trans "Process Hard Limit" %}</label>
-                    <input name="procHardLimit" type="number" class="form-control" ng-model="procHardLimit"
+                    <label for="cpa11y-process-hard-limit" class="form-label">{% trans "Process Hard Limit" %}</label>
+                    <input id="cpa11y-process-hard-limit" name="procHardLimit" type="number" class="form-control" ng-model="procHardLimit"
                            value="500" min="100" max="2000" required>
                     <div class="help-text">{% trans "Hard process limit (100-2000)" %}</div>
                 </div>
@@ -532,13 +532,13 @@
         <div class="content-card">
             <h2 class="card-title">{% trans "Advanced Resource Limits" %}</h2>
 
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
+            <div class="alert alert-info" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <div>
                     <strong>{% trans "Premium Feature" %}</strong><br>
                     {% trans "Advanced resource limits (CPU, Memory, I/O, Inode, Process limits) require CyberPanel Addons." %}<br>
                     <a href="https://cyberpanel.net/cyberpanel-addons" target="_blank" class="alert-link">
-                        <i class="fas fa-external-link-alt"></i>
+                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                         {% trans "Purchase CyberPanel Addons" %}
                     </a>
                 </div>
@@ -575,20 +575,20 @@
             
             <div class="button-container">
                 <button type="button" ng-click="insertPackInDB()" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-plus" aria-hidden="true"></i>
                     {% trans "Create Package" %}
                 </button>
             </div>
         </div>
 
         <!-- Alert Messages -->
-        <div id="packageCreationFailed" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+        <div id="packageCreationFailed" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
             <span>{% trans "Cannot create package. Error message:" %} {$ errorMessage $}</span>
         </div>
 
-        <div id="packageCreated" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+        <div id="packageCreated" class="alert alert-success" role="status">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
             <span>{% trans "Package" %} <strong>{$ createdPackage $}</strong> {% trans "successfully created" %}</span>
         </div>
     </div>
