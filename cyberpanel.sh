@@ -1632,6 +1632,7 @@ DNS=$DNS_Resolvers
 FallbackDNS=$DNS_Resolvers
 DNSStubListener=no
 EOF
+    chmod 0644 /etc/systemd/resolved.conf.d/cyberpanel.conf
     systemctl unmask systemd-resolved.service systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
     systemctl daemon-reload
     systemctl enable --now systemd-resolved.service >/dev/null 2>&1

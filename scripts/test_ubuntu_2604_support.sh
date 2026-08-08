@@ -203,6 +203,7 @@ echo ""
 echo "Test 8: DNS service handoff"
 echo "---------------------------"
 if grep -q 'DNSStubListener=no' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'chmod 0644 /etc/systemd/resolved.conf.d/cyberpanel.conf' "$REPO_ROOT/cyberpanel.sh" \
     && grep -q 'keep_resolved' "$REPO_ROOT/install/installCyberPanel.py"; then
     pass "installer keeps reliable DNS while reserving port 53 for PowerDNS"
 else
@@ -223,6 +224,12 @@ if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
         pass "systemd-resolved remains active for upstream DNS"
     else
         fail "systemd-resolved is not active"
+    fi
+
+    if [[ "$(stat -c %a /etc/systemd/resolved.conf.d/cyberpanel.conf 2>/dev/null)" == "644" ]]; then
+        pass "systemd-resolved can read the CyberPanel configuration"
+    else
+        fail "systemd-resolved configuration permissions are incorrect"
     fi
 
     if ss -lntup 2>/dev/null | grep -E ':53[[:space:]]' | grep -q systemd-resolve; then
