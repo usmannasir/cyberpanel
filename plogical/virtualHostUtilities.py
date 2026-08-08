@@ -30,6 +30,7 @@ from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
+from plogical.domainAliasUtilities import remove_alias_from_map_line
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
@@ -1369,32 +1370,10 @@ class virtualHostUtilities:
 
                 data = open(confPath, 'r').readlines()
                 writeToFile = open(confPath, 'w')
-                aliases = []
 
                 for items in data:
-                    if items.find(masterDomain) > -1 and items.find('map') > -1:
-                        data = [_f for _f in items.split(" ") if _f]
-                        if data[1] == masterDomain:
-                            length = len(data)
-                            for i in range(3, length):
-                                currentAlias = data[i].rstrip(',').strip('\n')
-                                if currentAlias != aliasDomain:
-                                    aliases.append(currentAlias)
-
-                            aliasString = ""
-
-                            for alias in aliases:
-                                aliasString = ", " + alias
-
-                            writeToFile.writelines(
-                                '  map                     ' + masterDomain + " " + masterDomain + aliasString + "\n")
-                            aliases = []
-                            aliasString = ""
-                        else:
-                            writeToFile.writelines(items)
-
-                    else:
-                        writeToFile.writelines(items)
+                    writeToFile.writelines(
+                        remove_alias_from_map_line(items, masterDomain, aliasDomain))
 
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()

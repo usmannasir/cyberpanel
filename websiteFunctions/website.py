@@ -4603,11 +4603,31 @@ context /cyberpanel_suspension_page.html {
             ## Create Configurations
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " issueAliasSSL --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
+            legacy_alias = ChildDomains.objects.filter(
+                master__domain=self.domain,
+                domain=aliasDomain,
+                alais=1,
+            ).first()
+            if legacy_alias:
+                execPath += " issueSSL --virtualHostName %s --path %s --administratorEmail %s --force 1" % (
+                    shlex.quote(aliasDomain),
+                    shlex.quote(legacy_alias.path),
+                    shlex.quote(legacy_alias.master.adminEmail),
+                )
+            else:
+                execPath += " issueAliasSSL --masterDomain %s --aliasDomain %s --sslPath %s --administratorEmail %s" % (
+                    shlex.quote(self.domain),
+                    shlex.quote(aliasDomain),
+                    shlex.quote(sslpath),
+                    shlex.quote(admin.email),
+                )
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
+                if legacy_alias:
+                    legacy_alias.ssl = 1
+                    legacy_alias.save(update_fields=['ssl'])
                 data_ret = {'sslStatus': 1, 'error_message': "None", "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -4643,7 +4663,18 @@ context /cyberpanel_suspension_page.html {
             ## Create Configurations
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
+            legacy_alias = ChildDomains.objects.filter(
+                master__domain=self.domain,
+                domain=aliasDomain,
+                alais=1,
+            ).first()
+            if legacy_alias:
+                execPath += " deleteDomain --virtualHostName %s --DeleteDocRoot 0" % shlex.quote(aliasDomain)
+            else:
+                execPath += " deleteAlias --masterDomain %s --aliasDomain %s" % (
+                    shlex.quote(self.domain),
+                    shlex.quote(aliasDomain),
+                )
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
@@ -8217,4 +8248,3 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
