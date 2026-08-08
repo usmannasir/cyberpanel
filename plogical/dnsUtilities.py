@@ -30,6 +30,26 @@ class DNS:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
     CFPath = '/home/cyberpanel/CloudFlare'
 
+    @staticmethod
+    def incrementSOASerial(zone):
+        """Increment the serial on every SOA record for a primary zone."""
+        if not zone or zone.type != 'MASTER':
+            return False
+
+        updated = False
+        for soa_record in Records.objects.filter(domainOwner=zone, type='SOA'):
+            try:
+                soa_content = soa_record.content.split()
+                soa_content[2] = str(int(soa_content[2]) + 1)
+                soa_record.content = ' '.join(soa_content)
+                soa_record.save(update_fields=['content'])
+                updated = True
+            except (AttributeError, IndexError, TypeError, ValueError) as error:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Unable to increment SOA serial for zone %s: %s' % (zone.name, str(error))
+                )
+        return updated
+
     ## DNS Functions
 
     def loadCFKeys(self):
@@ -679,16 +699,7 @@ class DNS:
             if Records.objects.filter(name=name, type=type, content=value).count() > 0:
                 return
 
-            if zone.type == 'MASTER':
-                try:
-                    for getSOA in Records.objects.filter(domainOwner=zone, type='SOA'):
-                    #getSOA = Records.objects.get(domainOwner=zone, type='SOA')
-                        soaContent = getSOA.content.split(' ')
-                        soaContent[2] = str(int(soaContent[2]) + 1)
-                        getSOA.content = " ".join(soaContent)
-                        getSOA.save()
-                except:
-                    pass
+            DNS.incrementSOASerial(zone)
 
 
             if type == 'NS':
@@ -869,7 +880,11 @@ class DNS:
     def deleteDNSRecord(recordID):
         try:
             delRecord = Records.objects.get(id=recordID)
+            zone = delRecord.domainOwner
+            recordType = delRecord.type
             delRecord.delete()
+            if recordType != 'SOA':
+                DNS.incrementSOASerial(zone)
         except:
             ## There does not exist a zone for this domain.
             pass

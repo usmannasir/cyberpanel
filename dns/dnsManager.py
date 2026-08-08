@@ -465,6 +465,9 @@ class DNSManager:
 
             record.save()
 
+            if record.type != 'SOA':
+                DNS.incrementSOASerial(record.domainOwner)
+
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -493,7 +496,12 @@ class DNSManager:
                 return ACLManager.loadError()
 
 
+            zone = delRecord.domainOwner
+            recordType = delRecord.type
             delRecord.delete()
+
+            if recordType != 'SOA':
+                DNS.incrementSOASerial(zone)
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
