@@ -1268,6 +1268,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/CyberCP"
             ProcessUtilities.executioner(command, 'root', True)
 
+            command = "if [ -f /usr/local/CyberCP/terminal_jwt_secret ]; then chown cyberpanel:cyberpanel /usr/local/CyberCP/terminal_jwt_secret && chmod 600 /usr/local/CyberCP/terminal_jwt_secret; fi"
+            ProcessUtilities.executioner(command, 'root', True)
+
             ########### Fix LSCPD
 
             command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
@@ -1458,7 +1461,5 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [fixPermissions]")
-
-
 
 

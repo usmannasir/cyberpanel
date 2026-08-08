@@ -4003,6 +4003,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/CyberCP"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            command = "if [ -f /usr/local/CyberCP/terminal_jwt_secret ]; then chown cyberpanel:cyberpanel /usr/local/CyberCP/terminal_jwt_secret && chmod 600 /usr/local/CyberCP/terminal_jwt_secret; fi"
+            Upgrade.executioner(command, 'secure terminal secret', 0)
+
             ########### Fix LSCPD
 
             command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"

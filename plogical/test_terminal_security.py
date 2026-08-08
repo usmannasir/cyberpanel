@@ -27,6 +27,20 @@ class TerminalSecretTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("CyberCPLogFileWriter.writeLog(", source)
 
+    def test_permission_repairs_preserve_terminal_secret_access(self):
+        root = pathlib.Path(__file__).parents[1]
+        for script_path in (root / "plogical/acl.py", root / "plogical/upgrade.py"):
+            source = script_path.read_text(encoding="utf-8")
+            self.assertIn(
+                "chown cyberpanel:cyberpanel "
+                "/usr/local/CyberCP/terminal_jwt_secret",
+                source,
+            )
+            self.assertIn(
+                "chmod 600 /usr/local/CyberCP/terminal_jwt_secret",
+                source,
+            )
+
     def test_secret_is_created_once_with_private_permissions(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             secret_path = os.path.join(temp_dir, "terminal-secret")
