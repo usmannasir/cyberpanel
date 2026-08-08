@@ -3643,28 +3643,13 @@ context /cyberpanel_suspension_page.html {
 
             Data['accessed_via_ip'] = bool(accessed_via_ip)
 
-            #### update jwt secret if needed
-
-            import secrets
-
-            fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
             try:
-                
-                content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
-                if 'REPLACE_ME_WITH_INSTALLER' in content:
-                    new_secret = secrets.token_urlsafe(32)
-                    
-                    sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
-                    ProcessUtilities.outputExecutioner(sed_cmd)
-                    
-                    command = 'systemctl restart fastapi_ssh_server'
-                    ProcessUtilities.outputExecutioner(command)
-            except Exception:
-                CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
-                pass
-
-            #####
+                from plogical.securityUtils import get_terminal_jwt_secret
+                get_terminal_jwt_secret(create_if_missing=True)
+            except Exception as error:
+                CyberCPLogFileWriter.writeLog(
+                    f"Failed to configure Web Terminal authentication: {error}"
+                )
 
             #####
 
@@ -5750,31 +5735,13 @@ StrictHostKeyChecking no
         website = Websites.objects.get(domain=self.domain)
         externalApp = website.externalApp
 
-        #### update jwt secret if needed
-
-        import secrets
-        import re
-        import os
-        from plogical.processUtilities import ProcessUtilities
-
-        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
         try:
-            
-            content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
-            if 'REPLACE_ME_WITH_INSTALLER' in content:
-                new_secret = secrets.token_urlsafe(32)
-                
-                sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
-                ProcessUtilities.outputExecutioner(sed_cmd)
-                
-                command = 'systemctl restart fastapi_ssh_server'
-                ProcessUtilities.outputExecutioner(command)
-        except Exception:
-            CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
-            pass
-
-        #####
+            from plogical.securityUtils import get_terminal_jwt_secret
+            get_terminal_jwt_secret(create_if_missing=True)
+        except Exception as error:
+            CyberCPLogFileWriter.writeLog(
+                f"Failed to configure Web Terminal authentication: {error}"
+            )
 
         from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
         # Ensure FastAPI SSH server systemd service file is in place

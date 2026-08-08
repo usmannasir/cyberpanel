@@ -5561,6 +5561,23 @@ pm.max_spare_servers = 3
 
         Upgrade.installDNS_CyberPanelACMEFile()
 
+        try:
+            from plogical.securityUtils import get_terminal_jwt_secret
+            get_terminal_jwt_secret(create_if_missing=True)
+
+            service_source = '/usr/local/CyberCP/fastapi_ssh_server.service'
+            service_target = '/etc/systemd/system/fastapi_ssh_server.service'
+            if os.path.isfile(service_source):
+                shutil.copy2(service_source, service_target)
+                Upgrade.executioner(
+                    'systemctl daemon-reload', 'systemctl daemon-reload', 0
+                )
+        except Exception as error:
+            Upgrade.stdOut(
+                "Warning: Web Terminal authentication could not be configured: %s" % error,
+                0,
+            )
+
         command = 'systemctl restart fastapi_ssh_server'
         Upgrade.executioner(command, command, 0)
 

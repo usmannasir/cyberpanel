@@ -9,11 +9,16 @@ import io
 import pwd
 from jose import jwt, JWTError
 import logging
-from plogical.securityUtils import get_terminal_jwt_secret
+from plogical.securityUtils import (
+    TERMINAL_JWT_AUDIENCE,
+    TERMINAL_JWT_ISSUER,
+    get_terminal_jwt_secret,
+)
 
 app = FastAPI()
 JWT_SECRET = get_terminal_jwt_secret(create_if_missing=True)
 JWT_ALGORITHM = "HS256"
+MAX_TOKEN_LIFETIME_SECONDS = 15 * 60
 
 allowed_origins = [
     origin.strip()
@@ -55,28 +60,76 @@ def remove_key_from_authorized_keys(comment):
             if comment not in line:
                 f.write(line)
 
+
+def decode_terminal_token(token):
+    payload = jwt.decode(
+        token,
+        JWT_SECRET,
+        algorithms=[JWT_ALGORITHM],
+        audience=TERMINAL_JWT_AUDIENCE,
+        issuer=TERMINAL_JWT_ISSUER,
+        options={
+            "verify_signature": True,
+            "verify_aud": True,
+            "require_aud": True,
+            "verify_iss": True,
+            "require_iss": True,
+            "verify_exp": True,
+            "require_exp": True,
+            "verify_iat": True,
+            "require_iat": True,
+            "verify_nbf": True,
+            "require_nbf": True,
+        },
+    )
+
+    try:
+        issued_at = int(payload["iat"])
+        expires_at = int(payload["exp"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise JWTError("Invalid Web Terminal token timestamps") from error
+    if expires_at <= issued_at or expires_at - issued_at > MAX_TOKEN_LIFETIME_SECONDS:
+        raise JWTError("Invalid Web Terminal token lifetime")
+
+    return payload
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh_user: str = Query(None)):
-    # Re-enable JWT validation
+    if not token:
+        await websocket.close(code=4401)
+        return
+
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = decode_terminal_token(token)
         user = payload.get("ssh_user")
-        if not user:
-            await websocket.close()
+        if not user or not isinstance(user, str):
+            await websocket.close(code=4403)
             return
     except JWTError:
-        await websocket.close()
+        await websocket.close(code=4403)
         return
-    home_dir = pwd.getpwnam(user).pw_dir
+
+    if ssh_user is not None and ssh_user != user:
+        await websocket.close(code=4403)
+        return
+
+    try:
+        account = pwd.getpwnam(user)
+    except KeyError:
+        await websocket.close(code=4403)
+        return
+
+    home_dir = account.pw_dir
     ssh_dir = os.path.join(home_dir, ".ssh")
     authorized_keys_path = os.path.join(ssh_dir, "authorized_keys")
 
     os.makedirs(ssh_dir, exist_ok=True)
     if not os.path.exists(authorized_keys_path):
         with open(authorized_keys_path, "w"): pass
-    os.chown(ssh_dir, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+    os.chown(ssh_dir, account.pw_uid, account.pw_gid)
     os.chmod(ssh_dir, 0o700)
-    os.chown(authorized_keys_path, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+    os.chown(authorized_keys_path, account.pw_uid, account.pw_gid)
     os.chmod(authorized_keys_path, 0o600)
 
     private_key, public_key = generate_ssh_keypair()

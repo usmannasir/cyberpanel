@@ -4,10 +4,12 @@ import re
 import secrets
 
 
-LEGACY_TERMINAL_JWT_SECRET = "DAsjK2gl50PE09d1N3uZPTQ6JdwwfiuhlyWKMVbUEpc"
 TERMINAL_JWT_SECRET_ENV = "CYBERPANEL_TERMINAL_JWT_SECRET"
 TERMINAL_JWT_SECRET_FILE_ENV = "CYBERPANEL_TERMINAL_JWT_SECRET_FILE"
 DEFAULT_TERMINAL_JWT_SECRET_FILE = "/usr/local/CyberCP/terminal_jwt_secret"
+TERMINAL_JWT_ISSUER = "cyberpanel-web-terminal"
+TERMINAL_JWT_AUDIENCE = "cyberpanel-fastapi-ssh"
+MINIMUM_TERMINAL_JWT_SECRET_LENGTH = 32
 SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9_]{1,64}$")
 NUMERIC_ID_RE = re.compile(r"^[0-9]{1,12}$")
 REMOTE_HOST_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,255}$")
@@ -43,6 +45,7 @@ def api_token_matches(provided, stored):
 
 def _read_secret_file(path):
     try:
+        os.chmod(path, 0o600)
         with open(path, "r") as secret_file:
             return secret_file.read().strip()
     except OSError:
@@ -63,27 +66,39 @@ def _create_secret_file(path):
             secret_file.write("\n")
         return secret
     except FileExistsError:
-        return _read_secret_file(path)
-    except OSError:
+        existing_secret = _read_secret_file(path)
+        if existing_secret:
+            return existing_secret
+        raise RuntimeError("Web Terminal secret file is empty: %s" % path)
+    except OSError as error:
+        raise RuntimeError(
+            "Unable to create Web Terminal secret file %s: %s" % (path, error)
+        )
+
+
+def _validate_terminal_jwt_secret(secret, source):
+    if not secret:
         return ""
+    if len(secret) < MINIMUM_TERMINAL_JWT_SECRET_LENGTH:
+        raise RuntimeError("Web Terminal secret in %s is too short" % source)
+    return secret
 
 
 def get_terminal_jwt_secret(create_if_missing=False):
     env_secret = os.environ.get(TERMINAL_JWT_SECRET_ENV, "").strip()
     if env_secret:
-        return env_secret
+        return _validate_terminal_jwt_secret(env_secret, TERMINAL_JWT_SECRET_ENV)
 
     secret_path = os.environ.get(TERMINAL_JWT_SECRET_FILE_ENV, DEFAULT_TERMINAL_JWT_SECRET_FILE)
     file_secret = _read_secret_file(secret_path)
     if file_secret:
-        return file_secret
+        return _validate_terminal_jwt_secret(file_secret, secret_path)
 
     if create_if_missing:
         created_secret = _create_secret_file(secret_path)
-        if created_secret:
-            return created_secret
+        return _validate_terminal_jwt_secret(created_secret, secret_path)
 
-    return LEGACY_TERMINAL_JWT_SECRET
+    raise RuntimeError("Web Terminal secret is not configured: %s" % secret_path)
 
 
 def is_safe_sql_identifier(value):

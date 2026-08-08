@@ -6,7 +6,6 @@ from unittest.mock import patch
 from django.test import SimpleTestCase
 
 from plogical.securityUtils import (
-    LEGACY_TERMINAL_JWT_SECRET,
     api_token_matches,
     get_remote_transfer_dir_path,
     get_remote_transfer_log_path,
@@ -28,8 +27,9 @@ class SecurityUtilsTests(SimpleTestCase):
         self.assertFalse(api_token_matches("Bearer abc123", "Basic different"))
 
     def test_terminal_secret_prefers_secret_file(self):
+        expected_secret = "file-secret-which-is-long-enough-for-hs256"
         with tempfile.NamedTemporaryFile("w", delete=False) as secret_file:
-            secret_file.write("file-secret\n")
+            secret_file.write(expected_secret + "\n")
             secret_path = secret_file.name
 
         old_path = os.environ.get("CYBERPANEL_TERMINAL_JWT_SECRET_FILE")
@@ -37,7 +37,7 @@ class SecurityUtilsTests(SimpleTestCase):
         try:
             os.environ["CYBERPANEL_TERMINAL_JWT_SECRET_FILE"] = secret_path
             os.environ.pop("CYBERPANEL_TERMINAL_JWT_SECRET", None)
-            self.assertEqual(get_terminal_jwt_secret(), "file-secret")
+            self.assertEqual(get_terminal_jwt_secret(), expected_secret)
         finally:
             if old_path is None:
                 os.environ.pop("CYBERPANEL_TERMINAL_JWT_SECRET_FILE", None)
@@ -49,14 +49,15 @@ class SecurityUtilsTests(SimpleTestCase):
 
             os.unlink(secret_path)
 
-    def test_terminal_secret_has_legacy_fallback_for_compatibility(self):
+    def test_terminal_secret_fails_when_not_configured(self):
         old_path = os.environ.get("CYBERPANEL_TERMINAL_JWT_SECRET_FILE")
         old_secret = os.environ.get("CYBERPANEL_TERMINAL_JWT_SECRET")
         os.environ["CYBERPANEL_TERMINAL_JWT_SECRET_FILE"] = "/path/that/does/not/exist"
         os.environ.pop("CYBERPANEL_TERMINAL_JWT_SECRET", None)
 
         try:
-            self.assertEqual(get_terminal_jwt_secret(), LEGACY_TERMINAL_JWT_SECRET)
+            with self.assertRaises(RuntimeError):
+                get_terminal_jwt_secret()
         finally:
             if old_path is None:
                 os.environ.pop("CYBERPANEL_TERMINAL_JWT_SECRET_FILE", None)

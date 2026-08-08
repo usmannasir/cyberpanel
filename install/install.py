@@ -2912,20 +2912,14 @@ vmail
 
 def configure_jwt_secret():
     try:
-        import secrets
-        secret = secrets.token_urlsafe(32)
-        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-        with open(fastapi_file, 'r') as f:
-            lines = f.readlines()
-        with open(fastapi_file, 'w') as f:
-            for line in lines:
-                if line.strip().startswith('JWT_SECRET'):
-                    f.write(f'JWT_SECRET = "{secret}"\n')
-                else:
-                    f.write(line)
-            print(f"Configured JWT_SECRET in fastapi_ssh_server.py")
-    except:
-        pass
+        sys.path.insert(0, '/usr/local/CyberCP')
+        from plogical.securityUtils import get_terminal_jwt_secret
+        get_terminal_jwt_secret(create_if_missing=True)
+        print("Configured Web Terminal authentication secret")
+    except Exception as error:
+        preFlightsChecks.stdOut(
+            "[WARNING] Could not configure Web Terminal authentication: %s" % error
+        )
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')

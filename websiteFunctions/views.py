@@ -24,7 +24,11 @@ import OpenSSL
 from plogical.processUtilities import ProcessUtilities
 import os
 import re
-from plogical.securityUtils import get_terminal_jwt_secret
+from plogical.securityUtils import (
+    TERMINAL_JWT_AUDIENCE,
+    TERMINAL_JWT_ISSUER,
+    get_terminal_jwt_secret,
+)
 
 
 def loadWebsitesHome(request):
@@ -2166,13 +2170,18 @@ def get_terminal_jwt(request):
         ssh_user = website.externalApp
         if not ssh_user:
             return JsonResponse({'status': 0, 'error_message': 'SSH user not configured for this website.'})
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         import jwt as pyjwt
         jwt_secret = get_terminal_jwt_secret(create_if_missing=True)
+        now = datetime.now(timezone.utc)
         payload = {
-            'user_id': user_id,
+            'iss': TERMINAL_JWT_ISSUER,
+            'aud': TERMINAL_JWT_AUDIENCE,
+            'iat': now,
+            'nbf': now,
+            'sub': str(user_id),
             'ssh_user': ssh_user,
-            'exp': datetime.utcnow() + timedelta(minutes=10)
+            'exp': now + timedelta(minutes=10)
         }
         token = pyjwt.encode(payload, jwt_secret, algorithm='HS256')
         return JsonResponse({'status': 1, 'token': token, 'ssh_user': ssh_user})
