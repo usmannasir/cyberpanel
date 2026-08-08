@@ -91,6 +91,7 @@ class UpgradeCyberPanel:
         Upgrade.enableServices()
         Upgrade.someDirectories()
         Upgrade.GeneralMigrations()
+        Upgrade.sensitiveFileProtectionMigration()
 
         ## Upgrade version
 

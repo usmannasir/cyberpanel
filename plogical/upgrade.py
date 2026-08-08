@@ -3375,6 +3375,25 @@ passdb {
             pass
 
     @staticmethod
+    def sensitiveFileProtectionMigration():
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            return
+
+        try:
+            from plogical.sensitiveFileProtection import protect_vhost_tree
+            results = protect_vhost_tree()
+            Upgrade.stdOut(
+                'Sensitive-file protection: examined=%s updated=%s skipped=%s errors=%s' % (
+                    results['examined'], results['updated'], results['skipped'], results['errors']),
+                0,
+            )
+            if results['updated']:
+                command = '/usr/local/lsws/bin/lswsctrl reload'
+                Upgrade.executioner(command, command, 0)
+        except BaseException as msg:
+            Upgrade.stdOut('Sensitive-file protection migration error: ' + str(msg), 0)
+
+    @staticmethod
     def pdnsSchemaMigrations():
         """
         Bring the PowerDNS gmysql schema up to PDNS 4.7+/5.x expectations.
