@@ -2414,7 +2414,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp82 lsphp82-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82 lsphp82-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82 lsphp82-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2426,7 +2426,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp83 lsphp83-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 
@@ -2442,7 +2442,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp84 lsphp84-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp84 lsphp84-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp84 lsphp84-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2453,7 +2453,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp85 lsphp85-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85 lsphp85-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85 lsphp85-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             

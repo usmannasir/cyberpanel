@@ -75,6 +75,33 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             2,
         )
 
+    def test_php_symlink_fallback_uses_executable_commands(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
+        self.assertEqual(
+            installer.count(
+                "'env DEBIAN_FRONTEND=noninteractive apt-get -y install "
+                "lsphp"
+            ),
+            4,
+        )
+        self.assertIn(
+            "'env DEBIAN_FRONTEND=noninteractive apt-get update'",
+            upgrader,
+        )
+        self.assertIn(
+            "'env DEBIAN_FRONTEND=noninteractive apt-get -y install "
+            "lsphp83 lsphp83-*'",
+            upgrader,
+        )
+        for script in (installer, upgrader):
+            self.assertNotIn(
+                "'DEBIAN_FRONTEND=noninteractive apt-get update && "
+                "DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp",
+                script,
+            )
+
 
 if __name__ == '__main__':
     unittest.main()

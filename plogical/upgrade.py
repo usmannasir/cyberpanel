@@ -5042,8 +5042,16 @@ pm.max_spare_servers = 3
                     command = 'yum install lsphp83 lsphp83-* -y'
                     Upgrade.executioner(command, 'Install PHP 8.3', 0)
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
-                    Upgrade.executioner(command, 'Install PHP 8.3', 0)
+                    Upgrade.executioner(
+                        'env DEBIAN_FRONTEND=noninteractive apt-get update',
+                        'Update package index for PHP 8.3',
+                        0,
+                    )
+                    Upgrade.executioner(
+                        'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*',
+                        'Install PHP 8.3',
+                        0,
+                    )
                 
                 # Verify installation
                 if not os.path.exists('/usr/local/lsws/lsphp83/bin/php'):
