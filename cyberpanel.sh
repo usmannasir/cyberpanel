@@ -1623,6 +1623,31 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     systemctl mask systemd-resolved  >/dev/null 2>&1
   fi
 
+  if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    # systemd 259 splits resolved's Varlink listeners into socket units. Keep
+    # them from reactivating a service that PowerDNS deliberately replaces.
+    systemctl disable --now systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
+    systemctl mask systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
+
+    # Netplan's generated wait-online drop-in requires systemd-resolved for
+    # DNS readiness. Preserve the routing check without waiting on DNS.
+    Wait_Online_Binary="/lib/systemd/systemd-networkd-wait-online"
+    if [[ ! -x "$Wait_Online_Binary" ]]; then
+      Wait_Online_Binary="/usr/lib/systemd/systemd-networkd-wait-online"
+    fi
+    mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
+    cat > /etc/systemd/system/systemd-networkd-wait-online.service.d/99-cyberpanel.conf <<EOF
+[Unit]
+After=
+After=systemd-networkd.service
+
+[Service]
+ExecStart=
+ExecStart=$Wait_Online_Binary --any -o routable
+EOF
+    systemctl daemon-reload
+  fi
+
   # Backup previous resolv.conf file
   cp /etc/resolv.conf /etc/resolv.conf_bak
 

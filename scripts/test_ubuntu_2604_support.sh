@@ -199,8 +199,35 @@ else
 fi
 echo ""
 
-# Test 8: services
-echo "Test 8: Services"
+# Test 8: systemd-resolved replacement
+echo "Test 8: DNS service handoff"
+echo "---------------------------"
+if grep -q '99-cyberpanel.conf' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'systemd-resolved-monitor.socket' "$REPO_ROOT/cyberpanel.sh"; then
+    pass "installer handles Ubuntu 26 resolved socket activation"
+else
+    fail "installer is missing the Ubuntu 26 resolved socket compatibility setup"
+fi
+
+if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
+    if systemctl is-active --quiet systemd-resolved-monitor.socket \
+        || systemctl is-active --quiet systemd-resolved-varlink.socket; then
+        fail "systemd-resolved socket activation remains enabled beside PowerDNS"
+    else
+        pass "systemd-resolved socket units are inactive"
+    fi
+
+    if systemctl is-failed --quiet systemd-networkd-wait-online.service \
+        || systemctl is-failed --quiet systemd-resolved-monitor.socket; then
+        fail "resolved handoff left failed systemd units"
+    else
+        pass "resolved handoff left no failed systemd units"
+    fi
+fi
+echo ""
+
+# Test 9: services
+echo "Test 9: Services"
 echo "----------------"
 for svc in lscpd lsws mariadb; do
     if systemctl list-unit-files 2>/dev/null | grep -q "^${svc}"; then
