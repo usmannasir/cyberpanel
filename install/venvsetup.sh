@@ -912,12 +912,12 @@ if [[ $DEV == "ON" ]] ; then
 	#install dev branch 
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 	cd /usr/local/
-	python3.6 -m venv CyberPanel
+	python3 -m venv --system-site-packages CyberPanel
 	source /usr/local/CyberPanel/bin/activate
 	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	pip3.6 install --ignore-installed -r requirements.txt
+	python -m pip install --ignore-installed -r requirements.txt
 	# Install python-dotenv for loading .env file (critical for AlmaLinux 8)
-	pip3.6 install python-dotenv
+	python -m pip install python-dotenv
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
@@ -968,12 +968,12 @@ fi
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
 
 if [[ $DEV == "ON" ]] ; then
-python3.6 -m venv /usr/local/CyberCP
+python3 -m venv --system-site-packages /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-pip3.6 install --ignore-installed -r requirements.txt
+python -m pip install --ignore-installed -r requirements.txt
 # Install python-dotenv for loading .env file (critical for AlmaLinux 8)
-pip3.6 install python-dotenv
+python -m pip install python-dotenv
 systemctl restart lscpd
 fi
 
