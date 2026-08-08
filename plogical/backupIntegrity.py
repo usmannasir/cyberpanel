@@ -1,5 +1,17 @@
 import os
+import tarfile
 import time
+
+
+def archive_is_valid(archive_path):
+    """Read every archive header so truncated or malformed backups fail."""
+    try:
+        with tarfile.open(archive_path, mode='r:*') as archive:
+            for _member in archive:
+                pass
+        return True
+    except (OSError, EOFError, tarfile.TarError):
+        return False
 
 
 def archive_is_ready(archive_path, settle_seconds=10, max_wait_seconds=300, stable_checks=3):
@@ -25,7 +37,7 @@ def archive_is_ready(archive_path, settle_seconds=10, max_wait_seconds=300, stab
             stable_count = 0
 
         if stable_count >= stable_checks:
-            return True
+            return archive_is_valid(archive_path)
 
         previous_size = current_size
         if check_number + 1 < checks:
@@ -42,7 +54,8 @@ def resolve_archive_path(virtual_host, temp_storage_path, file_name):
         archive_name = str(file_name).strip()
         if not archive_name.endswith('.tar.gz'):
             archive_name += '.tar.gz'
-        candidates.append(os.path.join('/home', virtual_host, 'backup', archive_name))
+        if os.path.basename(archive_name) == archive_name:
+            candidates.append(os.path.join('/home', virtual_host, 'backup', archive_name))
 
     for candidate in candidates:
         if os.path.exists(candidate):
