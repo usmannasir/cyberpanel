@@ -486,6 +486,14 @@ class preFlightsChecks:
                 command = "./" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
+                if get_Ubuntu_release() >= 26.0:
+                    # APT 3 verifies repository keys as its unprivileged user.
+                    # LiteSpeed's helper installs these files as root-only.
+                    for key_file in ('/etc/apt/trusted.gpg.d/lst_debian_repo.gpg',
+                                     '/etc/apt/trusted.gpg.d/lst_repo.gpg'):
+                        if os.path.exists(key_file):
+                            os.chmod(key_file, 0o644)
+
                 # LiteSpeed's helper only knows Ubuntu 16/18/20/22/24. On a newer release
                 # every branch falls through, so it writes no sources file, prints no
                 # warning and still exits 0 - the first sign is "Unable to locate package
@@ -493,6 +501,7 @@ class preFlightsChecks:
                 # write the list ourselves whenever the helper left it missing or empty.
                 # It still runs first because it registers the LiteSpeed GPG keys.
                 repoFile = '/etc/apt/sources.list.d/lst_debian_repo.list'
+                wrote_repo = False
                 if not os.path.exists(repoFile) or os.path.getsize(repoFile) == 0:
                     codename = install_utils.get_Ubuntu_code_name()
                     self.stdOut(f"LiteSpeed repo not configured by their helper; writing it for '{codename}'")
@@ -502,7 +511,14 @@ class preFlightsChecks:
                     with open(repoFile, 'w') as f:
                         f.write(f"deb http://rpms.litespeedtech.com/debian/ {codename} main\n")
                         f.write(f"#deb http://rpms.litespeedtech.com/edge/debian/ {codename} main\n")
+                    wrote_repo = True
 
+                if get_Ubuntu_release() >= 26.0:
+                    # The helper may return success even when its APT refresh only
+                    # emitted warnings. Require a usable package index on Ubuntu 26.
+                    command = 'apt-get update -y -o APT::Update::Error-Mode=any'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                elif wrote_repo:
                     command = 'apt-get update -y'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             except:

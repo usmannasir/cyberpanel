@@ -199,22 +199,36 @@ else
 fi
 echo ""
 
-# Test 8: systemd-resolved replacement
+# Test 8: systemd-resolved and PowerDNS handoff
 echo "Test 8: DNS service handoff"
 echo "---------------------------"
-if grep -q '99-cyberpanel.conf' "$REPO_ROOT/cyberpanel.sh" \
-    && grep -q 'systemd-resolved-monitor.socket' "$REPO_ROOT/cyberpanel.sh"; then
-    pass "installer handles Ubuntu 26 resolved socket activation"
+if grep -q 'DNSStubListener=no' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'keep_resolved' "$REPO_ROOT/install/installCyberPanel.py"; then
+    pass "installer keeps reliable DNS while reserving port 53 for PowerDNS"
 else
-    fail "installer is missing the Ubuntu 26 resolved socket compatibility setup"
+    fail "installer is missing the Ubuntu 26 resolved and PowerDNS handoff"
+fi
+
+if grep -q 'Acquire::Retries' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'APT::Update::Error-Mode=any' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'APT::Update::Error-Mode=any' "$REPO_ROOT/install/install.py" \
+    && grep -q 'os.chmod(key_file, 0o644)' "$REPO_ROOT/install/install.py"; then
+    pass "Ubuntu 26 package indexes and LiteSpeed keys are APT 3 compatible"
+else
+    fail "Ubuntu 26 package repository refresh is not resilient"
 fi
 
 if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
-    if systemctl is-active --quiet systemd-resolved-monitor.socket \
-        || systemctl is-active --quiet systemd-resolved-varlink.socket; then
-        fail "systemd-resolved socket activation remains enabled beside PowerDNS"
+    if systemctl is-active --quiet systemd-resolved.service; then
+        pass "systemd-resolved remains active for upstream DNS"
     else
-        pass "systemd-resolved socket units are inactive"
+        fail "systemd-resolved is not active"
+    fi
+
+    if ss -lntup 2>/dev/null | grep -E ':53[[:space:]]' | grep -q systemd-resolve; then
+        fail "systemd-resolved still owns port 53"
+    else
+        pass "systemd-resolved leaves port 53 available to PowerDNS"
     fi
 
     if systemctl is-failed --quiet systemd-networkd-wait-online.service \
@@ -222,6 +236,13 @@ if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
         fail "resolved handoff left failed systemd units"
     else
         pass "resolved handoff left no failed systemd units"
+    fi
+
+
+    if dpkg-query -W -f='${Status}' quota 2>/dev/null | grep -q 'install ok installed'; then
+        pass "quota package is installed"
+    else
+        fail "quota package is missing after installation"
     fi
 fi
 echo ""

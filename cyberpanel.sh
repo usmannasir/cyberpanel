@@ -1615,71 +1615,67 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   if [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
     echo "$(host mirrors.cloud.aliyuncs.com | awk '{print $4}') mirrors.cloud.aliyuncs.com " >> /etc/hosts
   fi
-  #add internal repo server to host file before systemd-resolved is disabled
-
-  if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
-    systemctl stop systemd-resolved  >/dev/null 2>&1
-    systemctl disable systemd-resolved  >/dev/null 2>&1
-    systemctl mask systemd-resolved  >/dev/null 2>&1
-  fi
-
   if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
-    # systemd 259 splits resolved's Varlink listeners into socket units. Keep
-    # them from reactivating a service that PowerDNS deliberately replaces.
-    systemctl disable --now systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
-    systemctl mask systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
-
-    # Netplan's generated wait-online drop-in requires systemd-resolved for
-    # DNS readiness. Preserve the routing check without waiting on DNS.
-    Wait_Online_Binary="/lib/systemd/systemd-networkd-wait-online"
-    if [[ ! -x "$Wait_Online_Binary" ]]; then
-      Wait_Online_Binary="/usr/lib/systemd/systemd-networkd-wait-online"
+    # Keep resolved's upstream resolver and Netplan readiness integration, but
+    # free port 53 so PowerDNS can bind on every interface.
+    if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
+      DNS_Resolvers="183.60.83.19 183.60.82.98"
+    elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
+      DNS_Resolvers="100.100.2.136 100.100.2.138"
+    else
+      DNS_Resolvers="1.1.1.1 8.8.8.8"
     fi
-    mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
-    cat > /etc/systemd/system/systemd-networkd-wait-online.service.d/99-cyberpanel.conf <<EOF
-[Unit]
-After=
-After=systemd-networkd.service
-
-[Service]
-ExecStart=
-ExecStart=$Wait_Online_Binary --any -o routable
+    mkdir -p /etc/systemd/resolved.conf.d
+    cat > /etc/systemd/resolved.conf.d/cyberpanel.conf <<EOF
+[Resolve]
+DNS=$DNS_Resolvers
+FallbackDNS=$DNS_Resolvers
+DNSStubListener=no
 EOF
+    systemctl unmask systemd-resolved.service systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
     systemctl daemon-reload
-  fi
-
-  # Backup previous resolv.conf file
-  cp /etc/resolv.conf /etc/resolv.conf_bak
-
-  # Delete resolv.conf file
-  rm -f /etc/resolv.conf
-
-  if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
-    echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
-    echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
-  elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
-    echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
-    echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
+    systemctl enable --now systemd-resolved.service >/dev/null 2>&1
+    ln -sfn /run/systemd/resolve/resolv.conf /etc/resolv.conf
+    systemctl restart systemd-networkd systemd-resolved >/dev/null 2>&1
   else
-    echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
-    echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
+    # Keep the established resolver replacement path unchanged on older systems.
+    if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
+      systemctl stop systemd-resolved  >/dev/null 2>&1
+      systemctl disable systemd-resolved  >/dev/null 2>&1
+      systemctl mask systemd-resolved  >/dev/null 2>&1
+    fi
+
+    cp /etc/resolv.conf /etc/resolv.conf_bak
+    rm -f /etc/resolv.conf
+
+    if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
+      echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
+      echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
+    elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
+      echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
+      echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
+    else
+      echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
+      echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
+    fi
+
+    systemctl restart systemd-networkd >/dev/null 2>&1
   fi
 
-  systemctl restart systemd-networkd >/dev/null 2>&1
   # Wait for network to come up, but check more frequently
   for j in {1..6}; do
     sleep 0.5
-    # Check if network is ready by trying to resolve DNS
     if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1 || nslookup cyberpanel.sh >/dev/null 2>&1; then
       break
     fi
   done
 
-  # Check Connectivity
   if ping -q -c 1 -W 1 cyberpanel.sh >/dev/null; then
     echo -e "\nSuccessfully set up nameservers..\n"
     echo -e "\nThe network is up.. :)\n"
     echo -e "\nContinue installation..\n"
+  elif [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    echo -e "\nWaiting for systemd-resolved to establish DNS..\n"
   else
     echo -e "\nThe network is down.. :(\n"
     rm -f /etc/resolv.conf
@@ -1687,8 +1683,15 @@ EOF
     systemctl restart systemd-networkd >/dev/null 2>&1
     echo -e "\nReturns the nameservers settings to default..\n"
     echo -e "\nContinue installation..\n"
-    # Brief pause for network stabilization
     sleep 1
+  fi
+
+  if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    # Require stable package indexes before the Python installer starts.
+    cat > /etc/apt/apt.conf.d/80-cyberpanel-retries <<EOF
+Acquire::Retries "5";
+EOF
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update -y -o APT::Update::Error-Mode=any"
   fi
 
 cp /etc/resolv.conf /etc/resolv.conf-tmp
@@ -1902,7 +1905,7 @@ if grep "CyberPanel installation successfully completed" /var/log/installLogs.tx
 else
   echo -e "Oops, something went wrong..."
   Debug_Log2 "Oops, something went wrong... [404]"
-  exit
+  exit 1
 fi
 }
 

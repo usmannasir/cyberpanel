@@ -1382,7 +1382,8 @@ gpgcheck=1
 
     def installPowerDNS(self):
         try:
-            if self.distro == ubuntu or self.distro == cent8 or self.distro == openeuler:
+            keep_resolved = self.distro == ubuntu and get_Ubuntu_release() >= 26.0
+            if (self.distro == ubuntu or self.distro == cent8 or self.distro == openeuler) and not keep_resolved:
                 # Stop and disable systemd-resolved
                 self.manage_service('systemd-resolved', 'stop')
                 self.manage_service('systemd-resolved.service', 'disable')
