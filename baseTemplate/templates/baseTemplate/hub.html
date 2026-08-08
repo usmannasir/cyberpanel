@@ -172,7 +172,7 @@
         </div>
         <h2 class="section-title" style="margin-top:26px;">{% trans "SSL CERTIFICATES" %}</h2>
         <div class="cp-tile-grid">
-            <a class="cp-tile" href="{% url 'v2ManageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Site certificates" %}</div></span></a>
+            <a class="cp-tile" href="{% url 'manageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Site certificates" %}</div></span></a>
             <a class="cp-tile" href="{% url 'sslForHostName' %}"><span class="cp-tile-ic"><i class="fas fa-server"></i></span><span><div class="cp-tile-title">{% trans "Hostname SSL" %}</div><div class="cp-tile-sub">{% trans "Panel hostname cert" %}</div></span></a>
             <a class="cp-tile" href="{% url 'sslForMailServer' %}"><span class="cp-tile-ic"><i class="fas fa-envelope"></i></span><span><div class="cp-tile-title">{% trans "Mail Server SSL" %}</div><div class="cp-tile-sub">{% trans "Mail cert" %}</div></span></a>
         </div>
