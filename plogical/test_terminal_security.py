@@ -1,5 +1,6 @@
 import importlib
 import os
+import pathlib
 import stat
 import sys
 import tempfile
@@ -19,6 +20,13 @@ from plogical.securityUtils import (
 
 
 class TerminalSecretTests(unittest.TestCase):
+    def test_terminal_errors_use_the_available_log_writer(self):
+        source = (
+            pathlib.Path(__file__).parents[1]
+            / "websiteFunctions/website.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("CyberCPLogFileWriter.writeLog(", source)
+
     def test_secret_is_created_once_with_private_permissions(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             secret_path = os.path.join(temp_dir, "terminal-secret")

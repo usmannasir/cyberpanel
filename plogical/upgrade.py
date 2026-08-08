@@ -5562,8 +5562,19 @@ pm.max_spare_servers = 3
         Upgrade.installDNS_CyberPanelACMEFile()
 
         try:
-            from plogical.securityUtils import get_terminal_jwt_secret
+            from plogical.securityUtils import (
+                DEFAULT_TERMINAL_JWT_SECRET_FILE,
+                TERMINAL_JWT_SECRET_FILE_ENV,
+                get_terminal_jwt_secret,
+            )
             get_terminal_jwt_secret(create_if_missing=True)
+            secret_path = os.environ.get(
+                TERMINAL_JWT_SECRET_FILE_ENV,
+                DEFAULT_TERMINAL_JWT_SECRET_FILE,
+            )
+            if os.path.exists(secret_path):
+                shutil.chown(secret_path, user='cyberpanel', group='cyberpanel')
+                os.chmod(secret_path, 0o600)
 
             service_source = '/usr/local/CyberCP/fastapi_ssh_server.service'
             service_target = '/etc/systemd/system/fastapi_ssh_server.service'

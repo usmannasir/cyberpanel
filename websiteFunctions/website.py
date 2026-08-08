@@ -3647,7 +3647,7 @@ context /cyberpanel_suspension_page.html {
                 from plogical.securityUtils import get_terminal_jwt_secret
                 get_terminal_jwt_secret(create_if_missing=True)
             except Exception as error:
-                CyberCPLogFileWriter.writeLog(
+                CyberCPLogFileWriter.writeToFile(
                     f"Failed to configure Web Terminal authentication: {error}"
                 )
 
@@ -3663,7 +3663,7 @@ context /cyberpanel_suspension_page.html {
                     ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
                     ProcessUtilities.outputExecutioner('systemctl daemon-reload')
             except Exception as e:
-                CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+                CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
             
 
             #####
@@ -3706,7 +3706,7 @@ context /cyberpanel_suspension_page.html {
                             CyberCPLogFileWriter.writeToFile(str(msg))
 
             except Exception as e:
-                CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
+                CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
             # Fetch actual resource limits from lscgctl command if they exist
             Data['resource_limits'] = None
@@ -5739,7 +5739,7 @@ StrictHostKeyChecking no
             from plogical.securityUtils import get_terminal_jwt_secret
             get_terminal_jwt_secret(create_if_missing=True)
         except Exception as error:
-            CyberCPLogFileWriter.writeLog(
+            CyberCPLogFileWriter.writeToFile(
                 f"Failed to configure Web Terminal authentication: {error}"
             )
 
@@ -5753,7 +5753,7 @@ StrictHostKeyChecking no
                 ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
                 ProcessUtilities.outputExecutioner('systemctl daemon-reload')
         except Exception as e:
-            CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+            CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
 
         # Ensure FastAPI SSH server is running using ProcessUtilities
         try:
@@ -5793,7 +5793,7 @@ StrictHostKeyChecking no
                         CyberCPLogFileWriter.writeToFile(str(msg))
 
         except Exception as e:
-            CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
+            CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
         # Add-on check logic
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"

@@ -4,6 +4,16 @@ import unittest
 
 class DeveloperInstallerPythonTests(unittest.TestCase):
 
+    def test_terminal_secret_is_private_and_readable_by_panel_worker(self):
+        root = pathlib.Path(__file__).parents[1]
+        for script_path in (root / 'install/install.py', root / 'plogical/upgrade.py'):
+            script = script_path.read_text(encoding='utf-8')
+            self.assertIn(
+                "shutil.chown(secret_path, user='cyberpanel', group='cyberpanel')",
+                script,
+            )
+            self.assertIn('os.chmod(secret_path, 0o600)', script)
+
     def test_ubuntu_dependencies_require_installable_pcre_candidate(self):
         root = pathlib.Path(__file__).parents[1]
         for script_path in (root / 'cyberpanel.sh', root / 'install/venvsetup.sh'):
