@@ -94,8 +94,11 @@ class WebsiteManager:
         }
 
         import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+        try:
+            response = requests.post(url, data=json.dumps(data), timeout=10)
+            Status = response.json()['status']
+        except (requests.RequestException, ValueError, KeyError):
+            Status = 0
 
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
@@ -136,8 +139,15 @@ class WebsiteManager:
                             Data, 'createDatabase')
             return proc.render()
         else:
-            from django.shortcuts import reverse
-            return redirect(reverse('pricing'))
+            currentACL = ACLManager.loadedACL(userID)
+            websites = ACLManager.findAllSites(currentACL, userID)
+            proc = httpProc(
+                request,
+                'websiteFunctions/freeWordpressInstall.html',
+                {'websiteList': websites},
+                'createDatabase',
+            )
+            return proc.render()
 
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         import json
