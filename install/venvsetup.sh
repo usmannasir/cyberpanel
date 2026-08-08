@@ -387,7 +387,7 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			# Ubuntu 26.04 dropped PCRE1; fall back to the pcre2 dev package there.
 			PCRE_DEV="libpcre3-dev"
-			apt-cache show libpcre3-dev >/dev/null 2>&1 || PCRE_DEV="libpcre2-dev"
+			apt-cache policy libpcre3-dev 2>/dev/null | grep -q 'Candidate: [^(]' || PCRE_DEV="libpcre2-dev"
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev "$PCRE_DEV" git -y
 			wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
 			tar xzvf lsmcd.tar.gz

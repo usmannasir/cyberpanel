@@ -115,11 +115,11 @@ echo ""
 echo "Test 4: PCRE libraries"
 echo "----------------------"
 if [[ "$VERSION_ID" == "26.04" ]]; then
-    if apt-cache show libpcre3-dev >/dev/null 2>&1; then
+    if apt-cache policy libpcre3-dev 2>/dev/null | grep -q 'Candidate: [^(]'; then
         info "libpcre3-dev unexpectedly available; PCRE1 path still usable"
     else
         pass "libpcre3-dev absent as expected on 26.04"
-        if apt-cache show libpcre2-dev >/dev/null 2>&1; then
+        if apt-cache policy libpcre2-dev 2>/dev/null | grep -q 'Candidate: [^(]'; then
             pass "libpcre2-dev available as the replacement"
         else
             fail "neither libpcre3-dev nor libpcre2-dev available"
