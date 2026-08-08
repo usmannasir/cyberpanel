@@ -65,6 +65,7 @@
         <div class="cp-tile-grid">
             {% if admin or listFTPAccounts %}<a class="cp-tile" href="{% url 'listFTPAccounts' %}"><span class="cp-tile-ic"><i class="fas fa-folder"></i></span><span><div class="cp-tile-title">{% trans "FTP Accounts" %}</div><div class="cp-tile-sub">{% trans "View FTP users" %}</div></span></a>{% endif %}
             {% if admin or createFTPAccount %}<a class="cp-tile" href="{% url 'createFTPAccount' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create FTP Account" %}</div><div class="cp-tile-sub">{% trans "Add an FTP user" %}</div></span></a>{% endif %}
+            {% if admin or deleteFTPAccount %}<a class="cp-tile" href="{% url 'deleteFTPAccount' %}"><span class="cp-tile-ic"><i class="fas fa-trash"></i></span><span><div class="cp-tile-title">{% trans "Delete FTP Account" %}</div><div class="cp-tile-sub">{% trans "Remove an FTP user" %}</div></span></a>{% endif %}
             {% if admin or listFTPAccounts %}<a class="cp-tile" href="{% url 'ResetFTPConfigurations' %}"><span class="cp-tile-ic"><i class="fas fa-rotate"></i></span><span><div class="cp-tile-title">{% trans "Reset FTP" %}</div><div class="cp-tile-sub">{% trans "Reset configuration" %}</div></span></a>{% endif %}
         </div>
 
