@@ -32,12 +32,17 @@ class TerminalSecretTests(unittest.TestCase):
         for script_path in (root / "plogical/acl.py", root / "plogical/upgrade.py"):
             source = script_path.read_text(encoding="utf-8")
             self.assertIn(
-                "chown cyberpanel:cyberpanel "
-                "/usr/local/CyberCP/terminal_jwt_secret",
+                'terminalSecretPath = '
+                "'/usr/local/CyberCP/terminal_jwt_secret'",
                 source,
             )
             self.assertIn(
-                "chmod 600 /usr/local/CyberCP/terminal_jwt_secret",
+                'command = "chown cyberpanel:cyberpanel %s" % '
+                'terminalSecretPath',
+                source,
+            )
+            self.assertIn(
+                'command = "chmod 600 %s" % terminalSecretPath',
                 source,
             )
 
