@@ -577,13 +577,20 @@ class backupUtilities:
             ProcessUtilities.executioner(command)
 
             command = f'mv {CPHomeStorage}/* {tempStoragePath}/'
-            ProcessUtilities.executioner(command, externalApp, True)
+            moveStatus = ProcessUtilities.executioner(command, externalApp, True)
+            if moveStatus != 1:
+                raise RuntimeError('Unable to prepare files for the backup archive')
 
             #make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             #rmtree(tempStoragePath)
 
-            command = f'tar -czf {backupPath}/{backupName}.tar.gz -C {tempStoragePath} .'
-            ProcessUtilities.executioner(command, externalApp, True)
+            filePath = f'{backupPath}/{backupName}.tar.gz'
+            command = f'tar -czf {filePath} -C {tempStoragePath} .'
+            tarStatus = ProcessUtilities.executioner(command, externalApp, True)
+            if tarStatus != 1:
+                raise RuntimeError('Backup archive creation failed with exit status %s' % str(tarStatus))
+            if not os.path.exists(filePath) or os.path.getsize(filePath) <= 0:
+                raise RuntimeError('Backup archive is missing or empty')
 
             ### remove leftover storages
 
@@ -597,7 +604,6 @@ class backupUtilities:
 
             backupObs = Backups.objects.filter(fileName=backupName)
 
-            filePath = f'{backupPath}/{backupName}.tar.gz'
             totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
 
             try:
@@ -623,18 +629,29 @@ class backupUtilities:
 
             os.remove(pidFile)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             if externalApp == None:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n')
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             else:
                 command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
                 ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                failedArchive = f'{backupPath}/{backupName}.tar.gz'
+                if os.path.exists(failedArchive):
+                    os.remove(failedArchive)
+            except OSError:
+                pass
 
             command = f'rm -rf {tempStoragePath}'
             ProcessUtilities.executioner(command, externalApp)
 
             command = f'rm -rf {CPHomeStorage}'
             ProcessUtilities.executioner(command)
+
+            try:
+                os.remove(pidFile)
+            except OSError:
+                pass
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):

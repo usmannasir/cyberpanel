@@ -64,6 +64,25 @@ class IncScheduler(multi.Thread):
             IncScheduler.CalculateAndUpdateDiskUsage()
 
     @staticmethod
+    def sendBackupFailureEmail(domain, currentTime, detail=''):
+        try:
+            subject = "Automatic backup failed for %s on %s." % (domain, currentTime)
+            adminEmail = open('/home/cyberpanel/adminEmail', 'r').read().rstrip('\n')
+            sender = 'root@%s' % socket.gethostname()
+            recipients = [adminEmail]
+            message = """\
+From: %s
+To: %s
+Subject: %s
+
+Automatic backup failed for %s on %s.
+%s
+""" % (sender, ", ".join(recipients), subject, domain, currentTime, detail)
+            logging.SendEmail(sender, recipients, message)
+        except BaseException as error:
+            logging.writeToFile('Unable to send backup failure notification: %s' % str(error))
+
+    @staticmethod
     def startBackup(type):
         try:
             logging.statusWriter(IncScheduler.logPath, 'Starting Incremental Backup job..', 1)
@@ -863,6 +882,11 @@ Automatic backup failed for %s on %s.
                                     logging.writeToFile(f'Failed to transfer backup via SFTP: {str(msg)}')
                                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
                                                         message='Backup transfer failed for %s: %s' % (domain, str(msg))).save()
+                                    IncScheduler.sendBackupFailureEmail(
+                                        domain,
+                                        currentTime,
+                                        'Remote transfer failed: %s' % str(msg)
+                                    )
                                     continue
 
                             try:
