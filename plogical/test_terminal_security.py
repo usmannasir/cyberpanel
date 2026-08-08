@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from jose import JWTError, jwt
@@ -173,6 +174,88 @@ class TerminalTokenTests(unittest.TestCase):
         token = self.make_token(iat=now, nbf=now, exp=now + 3600)
         with self.assertRaises(JWTError):
             self.server.decode_terminal_token(token)
+
+    def make_account(self, home):
+        return SimpleNamespace(
+            pw_dir=str(home),
+            pw_uid=os.getuid(),
+            pw_gid=os.getgid(),
+        )
+
+    def test_authorized_keys_updates_preserve_other_terminal_keys(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            home = pathlib.Path(temp_dir) / "site.example"
+            home.mkdir()
+            descriptor = self.server.open_authorized_keys(
+                self.make_account(home),
+                allowed_home_root=temp_dir,
+            )
+            try:
+                self.server.add_ephemeral_key(descriptor, "ssh-rsa first", "webterm-first")
+                self.server.add_ephemeral_key(descriptor, "ssh-rsa second", "webterm-second")
+                self.server.remove_ephemeral_key(descriptor, "webterm-first")
+            finally:
+                os.close(descriptor)
+
+            authorized_keys = home / ".ssh" / "authorized_keys"
+            content = authorized_keys.read_text(encoding="utf-8")
+            self.assertNotIn("webterm-first", content)
+            self.assertIn("webterm-second", content)
+            self.assertEqual(stat.S_IMODE(authorized_keys.stat().st_mode), 0o600)
+
+    def test_ssh_directory_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir)
+            home = root / "site.example"
+            target = root / "target"
+            home.mkdir()
+            target.mkdir()
+            victim = target / "authorized_keys"
+            victim.write_text("preserve\n", encoding="utf-8")
+            (home / ".ssh").symlink_to(target)
+
+            with self.assertRaises(OSError):
+                self.server.open_authorized_keys(
+                    self.make_account(home),
+                    allowed_home_root=temp_dir,
+                )
+            self.assertEqual(victim.read_text(encoding="utf-8"), "preserve\n")
+
+    def test_authorized_keys_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir)
+            home = root / "site.example"
+            ssh_dir = home / ".ssh"
+            home.mkdir()
+            ssh_dir.mkdir()
+            victim = root / "victim"
+            victim.write_text("preserve\n", encoding="utf-8")
+            (ssh_dir / "authorized_keys").symlink_to(victim)
+
+            with self.assertRaises(OSError):
+                self.server.open_authorized_keys(
+                    self.make_account(home),
+                    allowed_home_root=temp_dir,
+                )
+            self.assertEqual(victim.read_text(encoding="utf-8"), "preserve\n")
+
+    def test_authorized_keys_hard_link_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir)
+            home = root / "site.example"
+            ssh_dir = home / ".ssh"
+            home.mkdir()
+            ssh_dir.mkdir()
+            victim = root / "victim"
+            victim.write_text("preserve\n", encoding="utf-8")
+            os.link(victim, ssh_dir / "authorized_keys")
+
+            with self.assertRaises(PermissionError):
+                self.server.open_authorized_keys(
+                    self.make_account(home),
+                    allowed_home_root=temp_dir,
+                )
+            self.assertEqual(victim.read_text(encoding="utf-8"), "preserve\n")
 
 
 if __name__ == "__main__":

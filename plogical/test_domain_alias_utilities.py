@@ -65,6 +65,30 @@ class DomainAliasUtilitiesTests(unittest.TestCase):
                 0,
             )
 
+    def test_alias_certificate_cleanup_unlinks_symlink_without_deleting_target(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            certificate_root = pathlib.Path(temp_dir) / 'live'
+            target_path = certificate_root / 'keep.example.com'
+            alias_path = certificate_root / 'alias.example.com'
+            target_path.mkdir(parents=True)
+            (target_path / 'fullchain.pem').write_text('target', encoding='utf-8')
+            alias_path.symlink_to(target_path.name)
+
+            result = sslUtilities.removeSSLForDomain(
+                'alias.example.com',
+                certificateRoot=str(certificate_root),
+                acmePath=os.path.join(temp_dir, 'missing-acme'),
+            )
+
+            self.assertEqual(result, 1)
+            self.assertFalse(alias_path.exists())
+            self.assertFalse(alias_path.is_symlink())
+            self.assertTrue(target_path.is_dir())
+            self.assertEqual(
+                (target_path / 'fullchain.pem').read_text(encoding='utf-8'),
+                'target',
+            )
+
 
 if __name__ == '__main__':
     unittest.main()

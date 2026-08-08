@@ -31,7 +31,7 @@ class sslUtilities:
             return 0
 
         certificateRoot = os.path.realpath(certificateRoot)
-        certificatePath = os.path.realpath(os.path.join(certificateRoot, domain))
+        certificatePath = os.path.abspath(os.path.join(certificateRoot, domain))
         if os.path.commonpath([certificateRoot, certificatePath]) != certificateRoot:
             return 0
 
@@ -47,8 +47,10 @@ class sslUtilities:
         if os.path.lexists(certificatePath):
             if os.path.islink(certificatePath):
                 os.unlink(certificatePath)
-            else:
+            elif os.path.isdir(certificatePath):
                 shutil.rmtree(certificatePath)
+            else:
+                os.unlink(certificatePath)
         return 1
 
     @staticmethod
