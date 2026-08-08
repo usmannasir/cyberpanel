@@ -1656,19 +1656,23 @@ EOF
       echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
       echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
     fi
+    chmod 0644 /etc/resolv.conf
 
     systemctl restart systemd-networkd >/dev/null 2>&1
   fi
 
-  # Wait for network to come up, but check more frequently
-  for j in {1..6}; do
+  # A reachable IP only proves that routing is ready. Package installation also
+  # needs the replacement resolver to answer, which can lag behind networkd.
+  DNS_Ready="No"
+  for j in {1..20}; do
     sleep 0.5
-    if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1 || nslookup cyberpanel.sh >/dev/null 2>&1; then
+    if getent ahostsv4 cyberpanel.sh >/dev/null 2>&1 || nslookup cyberpanel.sh >/dev/null 2>&1; then
+      DNS_Ready="Yes"
       break
     fi
   done
 
-  if ping -q -c 1 -W 1 cyberpanel.sh >/dev/null; then
+  if [[ "$DNS_Ready" = "Yes" ]]; then
     echo -e "\nSuccessfully set up nameservers..\n"
     echo -e "\nThe network is up.. :)\n"
     echo -e "\nContinue installation..\n"

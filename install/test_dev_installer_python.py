@@ -44,6 +44,18 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             legacy_installer,
         )
 
+    def test_dns_handoff_waits_for_name_resolution(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        self.assertIn('chmod 0644 /etc/resolv.conf', installer)
+        self.assertIn('DNS_Ready="No"', installer)
+        self.assertIn('getent ahostsv4 cyberpanel.sh', installer)
+        self.assertIn('if [[ "$DNS_Ready" = "Yes" ]]', installer)
+        self.assertNotIn(
+            'ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1 || nslookup',
+            installer,
+        )
+
     def test_developer_install_uses_system_python_three(self):
         script = pathlib.Path(__file__).with_name('venvsetup.sh').read_text(
             encoding='utf-8'
