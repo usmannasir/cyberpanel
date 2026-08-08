@@ -195,6 +195,14 @@ else
     fail "installer does not select the Dovecot 2.4 template"
 fi
 
+if grep -q "dovecot_config_version = 2.4.0" "$REPO_ROOT/plogical/virtualHostUtilities.py" \
+    && grep -q "ssl_server_cert_file" "$REPO_ROOT/plogical/virtualHostUtilities.py" \
+    && grep -q "ssl_server_key_file" "$REPO_ROOT/plogical/virtualHostUtilities.py"; then
+    pass "website SSL uses Dovecot 2.4 SNI setting names"
+else
+    fail "website SSL still writes legacy Dovecot SNI settings"
+fi
+
 if [ -f "$REPO_ROOT/install/email-configs-one/dovecot-sql-2.4.conf" ]; then
     pass "Dovecot 2.4 SQL authentication template is present"
 else

@@ -458,6 +458,24 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname setup completed (without email configuration). [200]')
 
     @staticmethod
+    def getDovecotSNIBlock(domains, dovecotContent):
+        if 'dovecot_config_version = 2.4.0' in dovecotContent:
+            certSetting = 'ssl_server_cert_file'
+            keySetting = 'ssl_server_key_file'
+        else:
+            certSetting = 'ssl_cert'
+            keySetting = 'ssl_key'
+
+        blocks = []
+        for domain in domains:
+            blocks.append("""local_name %s {
+        %s = </etc/letsencrypt/live/%s/fullchain.pem
+        %s = </etc/letsencrypt/live/%s/privkey.pem
+}""" % (domain, certSetting, domain, keySetting, domain))
+
+        return '\n' + '\n'.join(blocks) + '\n'
+
+    @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
         # Check if email services are installed before proceeding
         if not virtualHostUtilities.emailServicesInstalled():
@@ -485,15 +503,8 @@ class virtualHostUtilities:
                 dovecotContent = open(dovecotPath, 'r').read()
 
                 if dovecotContent.find('/live/%s/' % (childDomain)) == -1:
-                    content = """\nlocal_name %s {
-        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}
-local_name %s {
-        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}
-\n""" % (childDomain, childDomain, childDomain, virtualHostName, virtualHostName, virtualHostName)
+                    content = virtualHostUtilities.getDovecotSNIBlock(
+                        [childDomain, virtualHostName], dovecotContent)
 
                     writeToFile = open(dovecotPath, 'a')
                     writeToFile.write(content)
@@ -548,12 +559,8 @@ local_name %s {
             dovecotContent = open(dovecotPath, 'r').read()
 
             if dovecotContent.find('/live/%s/' % (virtualHostName)) == -1:
-                content = """
-local_name %s {
-        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}
-""" % (virtualHostName, virtualHostName, virtualHostName)
+                content = virtualHostUtilities.getDovecotSNIBlock(
+                    [virtualHostName], dovecotContent)
 
                 writeToFile = open(dovecotPath, 'a')
                 writeToFile.write(content)
