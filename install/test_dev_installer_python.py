@@ -1,6 +1,8 @@
 import pathlib
 import unittest
 
+from install import install_utils
+
 
 class DeveloperInstallerPythonTests(unittest.TestCase):
 
@@ -117,6 +119,36 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             'Ubuntu 26.04: keeping systemd-logind running during installation.',
             installer,
         )
+
+    def test_ubuntu_package_commands_wait_for_dpkg_lock(self):
+        install_command, install_shell = install_utils.get_package_install_command(
+            install_utils.ubuntu,
+            'gcc',
+        )
+        remove_command, remove_shell = install_utils.get_package_remove_command(
+            install_utils.ubuntu,
+            'ufw',
+        )
+        self.assertIn('-o DPkg::Lock::Timeout=300', install_command)
+        self.assertIn('-o DPkg::Lock::Timeout=300', remove_command)
+        self.assertTrue(install_shell)
+        self.assertTrue(remove_shell)
+
+    def test_non_ubuntu_package_commands_are_unchanged(self):
+        centos_command, centos_shell = install_utils.get_package_install_command(
+            install_utils.centos,
+            'gcc',
+        )
+        openeuler_command, openeuler_shell = (
+            install_utils.get_package_install_command(
+                install_utils.openeuler,
+                'gcc',
+            )
+        )
+        self.assertEqual('yum install -y gcc ', centos_command)
+        self.assertEqual('dnf install -y gcc ', openeuler_command)
+        self.assertFalse(centos_shell)
+        self.assertFalse(openeuler_shell)
 
 
 if __name__ == '__main__':

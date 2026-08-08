@@ -277,7 +277,10 @@ def get_package_install_command(distro, package_name, options=""):
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
     if distro == ubuntu:
-        command = f"DEBIAN_FRONTEND=noninteractive apt-get -y install {package_name} {options}"
+        command = (
+            "DEBIAN_FRONTEND=noninteractive apt-get "
+            f"-o DPkg::Lock::Timeout=300 -y install {package_name} {options}"
+        )
         shell = True
     elif distro == centos:
         command = f"yum install -y {package_name} {options}"
@@ -301,7 +304,10 @@ def get_package_remove_command(distro, package_name):
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
     if distro == ubuntu:
-        command = f"DEBIAN_FRONTEND=noninteractive apt-get -y remove {package_name}"
+        command = (
+            "DEBIAN_FRONTEND=noninteractive apt-get "
+            f"-o DPkg::Lock::Timeout=300 -y remove {package_name}"
+        )
         shell = True
     elif distro == centos:
         command = f"yum remove -y {package_name}"
