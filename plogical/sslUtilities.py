@@ -2,7 +2,9 @@ import requests
 
 from plogical import CyberCPLogFileWriter as logging
 import os
+import re
 import shlex
+import shutil
 import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
@@ -20,6 +22,34 @@ class sslUtilities:
     ## Graceful LiteSpeed/OLS reload used as acme.sh --reloadcmd so that every
     ## auto-renewal re-applies the certificate and reloads the server. #1676
     lswsReloadCmd = '/usr/local/lsws/bin/lswsctrl reload'
+
+    @staticmethod
+    def removeSSLForDomain(domain, certificateRoot='/etc/letsencrypt/live',
+                           acmePath='/root/.acme.sh/acme.sh'):
+        if not re.fullmatch(
+                r'[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?', domain):
+            return 0
+
+        certificateRoot = os.path.realpath(certificateRoot)
+        certificatePath = os.path.realpath(os.path.join(certificateRoot, domain))
+        if os.path.commonpath([certificateRoot, certificatePath]) != certificateRoot:
+            return 0
+
+        if os.path.isfile(acmePath):
+            for extraArgs in (['--ecc'], []):
+                subprocess.run(
+                    [acmePath, '--remove', '-d', domain] + extraArgs,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
+
+        if os.path.lexists(certificatePath):
+            if os.path.islink(certificatePath):
+                os.unlink(certificatePath)
+            else:
+                shutil.rmtree(certificatePath)
+        return 1
 
     @staticmethod
     def parseACMEError(error_output):

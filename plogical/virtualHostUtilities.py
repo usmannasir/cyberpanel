@@ -1746,6 +1746,12 @@ class virtualHostUtilities:
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
 
+            try:
+                sslUtilities.removeSSLForDomain(virtualHostName)
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + "  [deleteDomain:removeSSLForDomain]")
+
             print("1,None")
             return 1, 'None'
 

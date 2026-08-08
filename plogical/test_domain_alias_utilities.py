@@ -1,6 +1,10 @@
+import os
+import pathlib
+import tempfile
 import unittest
 
 from plogical.domainAliasUtilities import merge_alias_names, remove_alias_from_map_line
+from plogical.sslUtilities import sslUtilities
 
 
 class DomainAliasUtilitiesTests(unittest.TestCase):
@@ -29,6 +33,37 @@ class DomainAliasUtilitiesTests(unittest.TestCase):
             line,
             remove_alias_from_map_line(line, 'main.example', 'remove.example'),
         )
+
+    def test_alias_certificate_files_are_removed_without_touching_siblings(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            certificate_root = pathlib.Path(temp_dir) / 'live'
+            alias_path = certificate_root / 'alias.example.com'
+            sibling_path = certificate_root / 'keep.example.com'
+            alias_path.mkdir(parents=True)
+            sibling_path.mkdir()
+            (alias_path / 'fullchain.pem').write_text('alias', encoding='utf-8')
+            (sibling_path / 'fullchain.pem').write_text('sibling', encoding='utf-8')
+
+            result = sslUtilities.removeSSLForDomain(
+                'alias.example.com',
+                certificateRoot=str(certificate_root),
+                acmePath=os.path.join(temp_dir, 'missing-acme'),
+            )
+
+            self.assertEqual(result, 1)
+            self.assertFalse(alias_path.exists())
+            self.assertTrue(sibling_path.exists())
+
+    def test_alias_certificate_cleanup_rejects_path_traversal(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertEqual(
+                sslUtilities.removeSSLForDomain(
+                    '../outside',
+                    certificateRoot=temp_dir,
+                    acmePath=os.path.join(temp_dir, 'missing-acme'),
+                ),
+                0,
+            )
 
 
 if __name__ == '__main__':
