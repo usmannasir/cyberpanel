@@ -85,8 +85,29 @@ if [ -x /usr/local/CyberCP/bin/python ]; then
     else
         fail "Django does not import inside the venv"
     fi
+
+    if [[ "$VERSION_ID" == "26.04" ]]; then
+        if [[ "$(stat -c %a /usr/local/CyberCP/pyvenv.cfg 2>/dev/null)" == "644" ]]; then
+            pass "CyberCP venv metadata is readable by lswsgi"
+        else
+            fail "CyberCP venv metadata permissions prevent lswsgi startup"
+        fi
+
+        if runuser -u cyberpanel -- test -r /usr/local/CyberCP/lib/python3.12/encodings/__init__.py; then
+            pass "embedded Python 3.12 standard library is readable"
+        else
+            fail "embedded Python 3.12 standard library is missing or unreadable"
+        fi
+    fi
 else
     info "CyberCP venv not present; skipping (run after install)"
+fi
+
+if grep -q 'cp -a /usr/lib/python3.12/. /usr/local/CyberCP/lib/python3.12/' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'chmod 0644 /usr/local/CyberCP/pyvenv.cfg' "$REPO_ROOT/cyberpanel.sh"; then
+    pass "Ubuntu 26 lswsgi runtime is provisioned"
+else
+    fail "Ubuntu 26 lswsgi runtime provisioning is incomplete"
 fi
 echo ""
 
@@ -203,7 +224,7 @@ echo ""
 echo "Test 8: DNS service handoff"
 echo "---------------------------"
 if grep -q 'DNSStubListener=no' "$REPO_ROOT/cyberpanel.sh" \
-    && grep -q 'chmod 0644 /etc/systemd/resolved.conf.d/cyberpanel.conf' "$REPO_ROOT/cyberpanel.sh" \
+    && grep -q 'chmod 0644 /etc/systemd/resolved.conf' "$REPO_ROOT/cyberpanel.sh" \
     && grep -q 'keep_resolved' "$REPO_ROOT/install/installCyberPanel.py"; then
     pass "installer keeps reliable DNS while reserving port 53 for PowerDNS"
 else
@@ -226,7 +247,7 @@ if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
         fail "systemd-resolved is not active"
     fi
 
-    if [[ "$(stat -c %a /etc/systemd/resolved.conf.d/cyberpanel.conf 2>/dev/null)" == "644" ]]; then
+    if [[ "$(stat -c %a /etc/systemd/resolved.conf 2>/dev/null)" == "644" ]]; then
         pass "systemd-resolved can read the CyberPanel configuration"
     else
         fail "systemd-resolved configuration permissions are incorrect"
@@ -277,6 +298,13 @@ if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
             fail "$svc is not active after the Ubuntu 26.04 install"
         fi
     done
+
+    PANEL_STATUS=$(curl -ksS -o /dev/null -w '%{http_code}' --max-time 15 https://127.0.0.1:8090/ || true)
+    if [[ "$PANEL_STATUS" == "200" ]]; then
+        pass "CyberPanel returns HTTP 200"
+    else
+        fail "CyberPanel returned HTTP $PANEL_STATUS"
+    fi
 fi
 echo ""
 

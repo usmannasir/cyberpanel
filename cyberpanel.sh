@@ -1625,14 +1625,14 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     else
       DNS_Resolvers="1.1.1.1 8.8.8.8"
     fi
-    mkdir -p /etc/systemd/resolved.conf.d
-    cat > /etc/systemd/resolved.conf.d/cyberpanel.conf <<EOF
+    rm -f /etc/systemd/resolved.conf.d/cyberpanel.conf
+    cat > /etc/systemd/resolved.conf <<EOF
 [Resolve]
 DNS=$DNS_Resolvers
 FallbackDNS=$DNS_Resolvers
 DNSStubListener=no
 EOF
-    chmod 0644 /etc/systemd/resolved.conf.d/cyberpanel.conf
+    chmod 0644 /etc/systemd/resolved.conf
     systemctl unmask systemd-resolved.service systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
     systemctl daemon-reload
     systemctl enable --now systemd-resolved.service >/dev/null 2>&1
@@ -2362,9 +2362,21 @@ fi
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
   # 26.04's system Python is 3.14, which Django 4.2 does not support. The venv was
-  # built on the deadsnakes 3.12 (see Setup_Python_Runtime); copy that same
-  # interpreter in so lscpd execs 3.12 rather than the system 3.14.
+  # built on the deadsnakes 3.12 (see Setup_Python_Runtime). lswsgi embeds Python
+  # with PYTHONHOME set to this venv, so it needs both the 3.12 interpreter and
+  # standard library in the venv rather than the system 3.14 runtime.
   cp "$CyberPanel_Python" /usr/local/CyberCP/bin/python3
+  if [[ -d /usr/lib/python3.12 ]] ; then
+    cp -a /usr/lib/python3.12/. /usr/local/CyberCP/lib/python3.12/
+  else
+    echo -e "\nERROR: Python 3.12 standard library is missing on Ubuntu 26.04.\n"
+    exit 1
+  fi
+
+  # lswsgi starts as the cyberpanel account. Keep the venv readable even when
+  # the installer itself was launched with a restrictive umask.
+  chmod 0644 /usr/local/CyberCP/pyvenv.cfg
+  chmod -R a+rX /usr/local/CyberCP/lib /usr/local/CyberCP/lib64 2>/dev/null || true
 elif [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
   # Ubuntu 24.04 ships with Python 3.12, but using 3.10 for compatibility with CyberPanel
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
