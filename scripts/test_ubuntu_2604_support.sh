@@ -218,6 +218,20 @@ if grep -q '/root/cyberpanel/cert_conf' "$REPO_ROOT/cyberpanel.sh"; then
 else
     pass "certificate generation is independent of the source checkout path"
 fi
+
+if awk '
+    /def installCustomOLSBinaries\(self\):/ { in_method=1 }
+    in_method && /lswsctrl.*stop/ { stop_line=NR }
+    in_method && /shutil\.move\(tmp_binary, OLS_BINARY_PATH\)/ {
+        move_line=NR
+        exit
+    }
+    END { exit !(stop_line && move_line && stop_line < move_line) }
+' "$REPO_ROOT/install/installCyberPanel.py"; then
+    pass "custom OpenLiteSpeed binary replacement stops the running server"
+else
+    fail "custom OpenLiteSpeed binary replacement can fail with a busy executable"
+fi
 echo ""
 
 # Test 8: systemd-resolved and PowerDNS handoff

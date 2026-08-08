@@ -485,7 +485,14 @@ class InstallCyberPanel:
             # Install OpenLiteSpeed binary
             InstallCyberPanel.stdOut("Installing custom binaries...", 1)
 
+            # The package starts OpenLiteSpeed immediately. Stop it before replacing
+            # the mapped executable, otherwise Linux rejects the move with ETXTBSY.
+            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
+
             try:
+                if os.path.exists(OLS_BINARY_PATH):
+                    os.remove(OLS_BINARY_PATH)
                 shutil.move(tmp_binary, OLS_BINARY_PATH)
                 os.chmod(OLS_BINARY_PATH, 0o755)
                 InstallCyberPanel.stdOut("Installed OpenLiteSpeed binary", 1)
