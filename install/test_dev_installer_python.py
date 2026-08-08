@@ -18,6 +18,22 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             )
             self.assertIn('libsasl2-dev', script)
 
+    def test_memcached_falls_back_when_pcre_one_is_unavailable(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        legacy_installer = (root / 'install/venvsetup.sh').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('lsmcd_supported="false"', installer)
+        self.assertIn(
+            '[[ $Total_RAM -ge 2048 && "$lsmcd_supported" = "true" ]]',
+            installer,
+        )
+        self.assertIn(
+            "&& apt-cache policy libpcre3-dev 2>/dev/null | grep -q 'Candidate: [^(]'",
+            legacy_installer,
+        )
+
     def test_developer_install_uses_system_python_three(self):
         script = pathlib.Path(__file__).with_name('venvsetup.sh').read_text(
             encoding='utf-8'

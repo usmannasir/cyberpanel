@@ -233,10 +233,7 @@ install_dev_tools() {
             yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
             ;;
         "Ubuntu")
-            # Ubuntu 26.04 dropped PCRE1; fall back to the pcre2 dev package there.
-            PCRE_DEV="libpcre3-dev"
-            apt-cache policy libpcre3-dev 2>/dev/null | grep -q 'Candidate: [^(]' || PCRE_DEV="libpcre2-dev"
-            DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev "$PCRE_DEV" git -y
+            DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
             ;;
     esac
 }
@@ -1934,7 +1931,12 @@ Post_Install_Addon_Memcached() {
   log_info "Installing Memcached and PHP extension"
   install_php_packages "memcached"
 
-  if [[ $Total_RAM -ge 2048 ]]; then
+  local lsmcd_supported="true"
+  if [[ "$Server_OS" = "Ubuntu" ]] && ! apt-cache policy libpcre3-dev 2>/dev/null | grep -q 'Candidate: [^(]'; then
+    lsmcd_supported="false"
+  fi
+
+  if [[ $Total_RAM -ge 2048 && "$lsmcd_supported" = "true" ]]; then
     Post_Install_Addon_Mecached_LSMCD
   else
     install_package "memcached"
