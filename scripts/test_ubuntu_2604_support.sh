@@ -253,6 +253,20 @@ if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
         fail "systemd-resolved configuration permissions are incorrect"
     fi
 
+    if runuser -u cyberpanel -- test -r /etc/cyberpanel/machineIP; then
+        pass "CyberPanel can read the installed server address"
+    else
+        fail "CyberPanel cannot read the installed server address"
+    fi
+
+    if runuser -u cyberpanel -- /usr/local/CyberCP/bin/python -c \
+        'import socket; s=socket.socket(socket.AF_UNIX); s.connect("/usr/local/lscpd/admin/comm.sock"); s.close()' \
+        2>/dev/null; then
+        pass "CyberPanel can reach the LSCPD command socket"
+    else
+        fail "CyberPanel cannot reach the LSCPD command socket"
+    fi
+
     if ss -lntup 2>/dev/null | grep -E ':53[[:space:]]' | grep -q systemd-resolve; then
         fail "systemd-resolved still owns port 53"
     else

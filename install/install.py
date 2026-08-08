@@ -2118,6 +2118,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "mkdir -p " + path
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            command = "chmod 755 /usr/local/lscpd /usr/local/lscpd/admin"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
             path = "/usr/local/CyberCP/conf/"
             command = "mkdir -p " + path
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2971,10 +2974,12 @@ def main():
         os.mkdir("/etc/cyberpanel")
     except:
         pass
+    os.chmod("/etc/cyberpanel", 0o755)
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
     machineIP.writelines(args.publicip)
     machineIP.close()
+    os.chmod("/etc/cyberpanel/machineIP", 0o644)
 
     cwd = os.getcwd()
 
