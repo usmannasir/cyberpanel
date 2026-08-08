@@ -10,6 +10,7 @@ import os
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheVhosts import ApacheVhost
+from managePHP.phpConfig import matches_directive
 
 import json
 from django.urls import reverse
@@ -143,7 +144,7 @@ class phpUtilities:
                 elif items.find("allow_url_include") > -1 and items.find("=") > -1:
                     writeToFile.writelines(allow_url_include + "\n")
                     found_directives['allow_url_include'] = True
-                elif items.find("memory_limit") > -1 and items.find("=") > -1:
+                elif matches_directive(items, "memory_limit"):
                     writeToFile.writelines("memory_limit = " + memory_limit + "\n")
                     found_directives['memory_limit'] = True
                 elif items.find("max_execution_time") > -1 and items.find("=") > -1:
