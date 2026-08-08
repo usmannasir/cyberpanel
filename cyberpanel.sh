@@ -201,17 +201,19 @@ log_function_end "Set_Default_Variables"
 
 # Helper Functions for Package Management
 install_package() {
-    local package="$1"
+    local package_spec="$1"
+    local -a packages
+    read -r -a packages <<<"$package_spec"
     case "$Server_OS" in
         "CentOS"|"openEuler")
             if [[ "$Server_OS_Version" -ge 8 ]]; then
-                dnf install -y "$package"
+                dnf install -y "${packages[@]}"
             else
-                yum install -y "$package"
+                yum install -y "${packages[@]}"
             fi
             ;;
         "Ubuntu")
-            DEBIAN_FRONTEND=noninteractive apt install -y "$package"
+            DEBIAN_FRONTEND=noninteractive apt install -y "${packages[@]}"
             ;;
     esac
 }
@@ -2146,7 +2148,9 @@ fi
 Post_Install_Regenerate_Cert() {
 log_function_start "Post_Install_Regenerate_Cert"
 log_info "Regenerating SSL certificates for control panel"
-cat <<EOF >/root/cyberpanel/cert_conf
+local cert_conf
+cert_conf=$(mktemp /tmp/cyberpanel-cert-conf.XXXXXX)
+cat <<EOF >"$cert_conf"
 [req]
 prompt=no
 distinguished_name=cyberpanel
@@ -2166,7 +2170,7 @@ dnQualifier = CyberPanel
 [server_exts]
 extendedKeyUsage = 1.3.6.1.5.5.7.3.1
 EOF
-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
+openssl req -x509 -config "$cert_conf" -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
 
 if [[ "$Server_Edition" = "OLS" ]]; then
   Key_Path="/usr/local/lsws/admin/conf/webadmin.key"
@@ -2175,8 +2179,8 @@ else
   Key_Path="/usr/local/lsws/admin/conf/cert/admin.key"
   Cert_Path="/usr/local/lsws/admin/conf/cert/admin.crt"
 fi
-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout "$Key_Path" -out "$Cert_Path"
-rm -f /root/cyberpanel/cert_conf
+openssl req -x509 -config "$cert_conf" -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout "$Key_Path" -out "$Cert_Path"
+rm -f "$cert_conf"
 }
 
 # When lscpd sets PYTHONHOME=/usr, lswsgi loads Django from system Python—not the CyberCP venv.

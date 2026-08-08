@@ -4,10 +4,11 @@
 # Verifies that CyberPanel detects Ubuntu 26.04 (Resolute Raccoon) and that the
 # dependencies which differ from earlier Ubuntu releases resolve correctly.
 #
-# Ubuntu 26.04 differs from 24.04 in three ways that matter to CyberPanel:
+# Ubuntu 26.04 differs from 24.04 in several ways that matter to CyberPanel:
 #   - it ships Python 3.14, which Django 4.2 does not support (we install 3.12)
 #   - MariaDB 10.11 publishes no resolute repo (we use 11.8 LTS)
 #   - libpcre3 (PCRE1) was removed from the archive (we use pcre2)
+#   - Dovecot 2.4 rejects the legacy 2.3 configuration syntax
 
 echo "CyberPanel Ubuntu 26.04 Support Test"
 echo "===================================="
@@ -17,6 +18,9 @@ FAILED=0
 pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1"; FAILED=1; }
 info() { echo "  ..  $1"; }
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
 if [ -f /etc/os-release ]; then
     . /etc/os-release
@@ -133,8 +137,70 @@ else
 fi
 echo ""
 
-# Test 6: services
-echo "Test 6: Services"
+# Test 6: Dovecot 2.4 configuration shipped by Ubuntu 26.04
+echo "Test 6: Dovecot 2.4 configuration"
+echo "--------------------------------"
+DOVECOT_24_CONFIG="$REPO_ROOT/install/email-configs-one/dovecot-2.4.conf"
+if [ -f "$DOVECOT_24_CONFIG" ]; then
+    FIRST_SETTING=$(grep -m1 -v -E '^[[:space:]]*(#|$)' "$DOVECOT_24_CONFIG")
+    if [[ "$FIRST_SETTING" == "dovecot_config_version = 2.4.0" ]]; then
+        pass "Dovecot 2.4 config version is the first setting"
+    else
+        fail "Dovecot 2.4 config must begin with dovecot_config_version = 2.4.0"
+    fi
+
+    grep -q '^dovecot_storage_version = 2\.4\.0$' "$DOVECOT_24_CONFIG" \
+        && pass "Dovecot 2.4 storage version is pinned" \
+        || fail "Dovecot 2.4 storage version is missing"
+    grep -q '^ssl_server_cert_file = ' "$DOVECOT_24_CONFIG" \
+        && pass "Dovecot 2.4 SSL setting names are used" \
+        || fail "Dovecot 2.4 SSL setting names are missing"
+    grep -q '^namespace inbox {' "$DOVECOT_24_CONFIG" \
+        && pass "Dovecot 2.4 namespace is named" \
+        || fail "Dovecot 2.4 namespace must be named"
+
+    if grep -q -E '^plugin \{|^passdb \{|^userdb \{|\$protocols|^ssl_(cert|key) = ' "$DOVECOT_24_CONFIG"; then
+        fail "Dovecot 2.4 config contains legacy 2.3 syntax"
+    else
+        pass "Dovecot 2.4 config excludes legacy 2.3 syntax"
+    fi
+else
+    fail "Dovecot 2.4 config template is missing"
+fi
+
+if grep -q 'dovecot-2.4.conf' "$REPO_ROOT/install/install.py"; then
+    pass "installer selects the Dovecot 2.4 template"
+else
+    fail "installer does not select the Dovecot 2.4 template"
+fi
+
+if [ -f "$REPO_ROOT/install/email-configs-one/dovecot-sql-2.4.conf" ]; then
+    pass "Dovecot 2.4 SQL authentication template is present"
+else
+    fail "Dovecot 2.4 SQL authentication template is missing"
+fi
+
+if [[ "$VERSION_ID" == "26.04" ]] && command -v doveconf >/dev/null 2>&1; then
+    if doveconf -n >/dev/null 2>&1; then
+        pass "installed Dovecot configuration parses successfully"
+    else
+        fail "installed Dovecot configuration does not parse"
+    fi
+fi
+echo ""
+
+# Test 7: source-checkout-independent certificate generation
+echo "Test 7: Certificate workspace"
+echo "-----------------------------"
+if grep -q '/root/cyberpanel/cert_conf' "$REPO_ROOT/cyberpanel.sh"; then
+    fail "certificate generation assumes a /root/cyberpanel checkout"
+else
+    pass "certificate generation is independent of the source checkout path"
+fi
+echo ""
+
+# Test 8: services
+echo "Test 8: Services"
 echo "----------------"
 for svc in lscpd lsws mariadb; do
     if systemctl list-unit-files 2>/dev/null | grep -q "^${svc}"; then
@@ -147,6 +213,16 @@ for svc in lscpd lsws mariadb; do
         info "$svc not installed; skipping"
     fi
 done
+
+if [[ "$VERSION_ID" == "26.04" ]] && [ -d /usr/local/CyberCP ]; then
+    for svc in pdns postfix dovecot pure-ftpd-mysql firewalld; do
+        if systemctl is-active --quiet "$svc"; then
+            pass "$svc is active"
+        else
+            fail "$svc is not active after the Ubuntu 26.04 install"
+        fi
+    done
+fi
 echo ""
 
 echo "===================================="

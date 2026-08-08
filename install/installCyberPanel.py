@@ -842,11 +842,13 @@ module cyberpanel_ols {
                 # For CentOS/AlmaLinux/OpenEuler
                 self.install_package('dovecot-pigeonhole')
 
-            # Write ManageSieve config
-            managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
-            os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
-            with open(managesieve_conf, 'w') as f:
-                f.write("""protocols = $protocols sieve
+            # Dovecot 2.4 uses named-list syntax. Ubuntu 26 ships a compatible
+            # ManageSieve config and our Dovecot 2.4 template enables it.
+            if not (self.distro == ubuntu and get_Ubuntu_release() >= 26.0):
+                managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
+                os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
+                with open(managesieve_conf, 'w') as f:
+                    f.write("""protocols = $protocols sieve
 
 service managesieve-login {
   inet_listener sieve {
@@ -1139,8 +1141,12 @@ gpgcheck=1
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
             if self.distro == ubuntu:
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (
-                    InstallCyberPanel.mysql_Root_password)
+                if get_Ubuntu_release() >= 26.0:
+                    passwordCMD = "DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('%s');GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;flush privileges;" % (
+                        InstallCyberPanel.mysql_Root_password)
+                else:
+                    passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (
+                        InstallCyberPanel.mysql_Root_password)
             else:
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (
                     InstallCyberPanel.mysql_Root_password)
@@ -1178,11 +1184,12 @@ gpgcheck=1
         conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
         cursor = conn.cursor()
         cursor.execute('set global innodb_file_per_table = on;')
-        try:
-            cursor.execute('set global innodb_file_format = Barracuda;')
-            cursor.execute('set global innodb_large_prefix = on;')
-        except BaseException as msg:
-            self.stdOut('%s. [ERROR:335]' % (str(msg)))
+        if not (self.distro == ubuntu and get_Ubuntu_release() >= 26.0):
+            try:
+                cursor.execute('set global innodb_file_format = Barracuda;')
+                cursor.execute('set global innodb_large_prefix = on;')
+            except BaseException as msg:
+                self.stdOut('%s. [ERROR:335]' % (str(msg)))
         cursor.close()
         conn.close()
 
@@ -1522,8 +1529,14 @@ setuid=pdns
             # Set proper permissions for PowerDNS config
             if self.distro == ubuntu:
                 # Ensure pdns user/group exists
-                command = 'id -u pdns &>/dev/null || useradd -r -s /usr/sbin/nologin pdns'
-                install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                pdns_exists = subprocess.run(
+                    ['id', '-u', 'pdns'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                ).returncode == 0
+                if not pdns_exists:
+                    command = 'useradd -r -s /usr/sbin/nologin pdns'
+                    install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 
                 command = 'chown root:pdns %s' % dnsPath
                 install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
