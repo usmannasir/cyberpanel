@@ -1804,7 +1804,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 # Not available in ubuntu
                 self.manage_service('dbus', 'restart')
 
-            self.manage_service('systemd-logind', 'restart')
+            # Ubuntu 26 terminates the installer's SSH session scope after
+            # systemd-logind is restarted, which kills the installation midway.
+            # Earlier Ubuntu releases and non-Ubuntu distributions retain the
+            # existing behavior.
+            if self.distro != ubuntu or get_Ubuntu_release() < 26.04:
+                self.manage_service('systemd-logind', 'restart')
+            else:
+                logging.InstallLog.writeToFile(
+                    "Ubuntu 26.04: keeping systemd-logind running during installation."
+                )
 
             self.manage_service('firewalld', 'start')
             self.manage_service('firewalld', 'enable')

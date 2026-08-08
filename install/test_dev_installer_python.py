@@ -102,6 +102,22 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 script,
             )
 
+    def test_ubuntu_26_install_does_not_restart_logind(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        self.assertIn(
+            "if self.distro != ubuntu or get_Ubuntu_release() < 26.04:",
+            installer,
+        )
+        self.assertIn(
+            "self.manage_service('systemd-logind', 'restart')",
+            installer,
+        )
+        self.assertIn(
+            'Ubuntu 26.04: keeping systemd-logind running during installation.',
+            installer,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
