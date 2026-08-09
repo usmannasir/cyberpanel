@@ -1,6 +1,7 @@
 import json
 import pathlib
 import unittest
+from unittest import mock
 
 from cyberpanel_version import (
     BUILD,
@@ -24,6 +25,19 @@ class PanelVersionTests(unittest.TestCase):
         version_data = json.loads(version_path.read_text(encoding='utf-8'))
         self.assertEqual(VERSION, version_data['version'])
         self.assertEqual(BUILD, version_data['build'])
+
+    def test_upgrade_writes_numeric_build_to_runtime_version_file(self):
+        from plogical.upgrade import Upgrade
+
+        version_file = mock.mock_open()
+        with mock.patch('builtins.open', version_file):
+            archive_name = Upgrade.downloadLink()
+
+        written_data = ''.join(
+            call.args[0] for call in version_file().write.call_args_list
+        )
+        self.assertEqual(BUILD, json.loads(written_data)['build'])
+        self.assertEqual('%s.%s.tar.gz' % (VERSION, BUILD), archive_name)
 
     def test_modern_backup_database_schema_accepts_3_x(self):
         self.assertTrue(backup_uses_database_users_schema('3.0', 0))

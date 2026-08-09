@@ -1524,7 +1524,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
     def downloadLink():
         try:
             version_number = VERSION
-            version_build = str(BUILD)
+            version_build = BUILD
 
             try:
                 Content = {"version":version_number,"build":version_build}
@@ -1535,7 +1535,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
-            return (version_number + "." + version_build + ".tar.gz")
+            return (version_number + "." + str(version_build) + ".tar.gz")
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
             os._exit(0)
