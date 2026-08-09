@@ -70,7 +70,6 @@
          Loads AFTER page styles so it calms every internal page consistently. -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-harmonize.css' %}?v={{ CP_VERSION }}&select=2">
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/cyberpanel-dark.css' %}?v={{ CP_VERSION }}&dark=2">
->>>>>>> ebadee17 (fix(ui): show overview progress bar track outline)
 
     <!-- Dark-mode overrides: re-maps the neutral light values legacy pages hardcode
          to the dark tokens. Scoped to [data-theme="dark"] so light mode is untouched.
@@ -284,7 +283,6 @@
         <!-- Plugins intentionally omitted from the sidebar; available via the
              Access hub (/base/hub/access) and the command palette instead. -->
 
->>>>>>> 1d5479d5 (feat(plugins): gate plugin access via managePlugins ACL; drop sidebar Extensions entry)
         <!-- ============================ HELP ============================ -->
         <div class="section-header">{% trans "HELP" %}</div>
 
@@ -372,7 +370,6 @@
             {% if admin %}{l:'{% trans "MySQL Manager" %}', h:'{% url "MysqlManager" %}', i:'fa-sliders', g:'{% trans "Data" %}'},{% endif %}
             {% if admin or listFTPAccounts %}{l:'{% trans "FTP Accounts" %}', h:'{% url "listFTPAccounts" %}', i:'fa-folder', g:'{% trans "Data" %}'},{% endif %}
             {% if admin or canViewPlugins %}{l:'{% trans "Plugins" %}', h:'{% url "installed" %}', i:'fa-puzzle-piece', g:'{% trans "Administration" %}'},{% endif %}
->>>>>>> fbcb77e0 (feat(plugins): split plugin ACL into view / use / install permissions)
             // Backups
             {% if admin or createBackup %}{l:'{% trans "One-Click Backups" %}', h:'{% url "OneClickBackups" %}', i:'fa-bolt', g:'{% trans "Backups" %}'},
             {l:'{% trans "Incremental Backups" %}', h:'{% url "backupDestinationsInc" %}', i:'fa-layer-group', g:'{% trans "Backups" %}'},

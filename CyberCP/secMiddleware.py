@@ -37,8 +37,14 @@ class secMiddleware:
         import re
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
-        if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
-                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
+        # Static assets and a few public plugin callbacks must not require a session.
+        _lpma_public_launch = pathActual.startswith('/plugins/limitedPhpmyAdmin/launch/')
+        _lpma_pma_signon = pathActual == '/phpmyadmin/phpmyadminsignin.php'
+        _ai_scanner_callback = pathActual in ('/aiscanner/callback/', '/aiscanner/callback')
+
+        if pathActual == "/backup/localInitiate" or pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
+                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI') or pathActual.startswith('/static/')\
+                or _lpma_public_launch or _lpma_pma_signon or _ai_scanner_callback:
             pass
         else:
             # Session check logging removed
