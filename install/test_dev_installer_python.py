@@ -37,6 +37,15 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         installer = (root / 'install/install.py').read_text(encoding='utf-8')
         self.assertIn("json.dump({'version': VERSION, 'build': BUILD}", installer)
 
+    def test_installer_keeps_its_module_ahead_of_the_package(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        source_root = (
+            'os.path.dirname(os.path.dirname(os.path.abspath(__file__)))'
+        )
+        self.assertIn(f'sys.path.insert(1, {source_root})', installer)
+        self.assertNotIn(f'sys.path.insert(0, {source_root})', installer)
+
     def test_upgrade_updates_database_version_record(self):
         root = pathlib.Path(__file__).parents[1]
         upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
