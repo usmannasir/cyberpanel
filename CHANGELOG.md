@@ -19,6 +19,13 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Note: the module may still write those WARNs to disk until a future
   `cyberpanel_ols.so` build logs them at DEBUG; the panel view no longer surfaces them.
 
+### Fix: email forwarding UI loading spinner
+- Forwarding page no longer leaves `forwardLoading` stuck when email or option is unset.
+
+### Fix: list emails disk usage badge
+- Use `ng-bind` for disk usage so Django does not eat `{{ record.DiskUsage }}` before Angular runs.
+- Dark-mode badge contrast in harmonize CSS.
+
 ### Feature: SPF record follows deployment type (CyberPersons vs self-hosted)
 - `DNS.getDeploymentType()` / `DNS.buildSpfRecord()`: CyberPersons rental publishes
   `v=spf1 include:spf.cyberpersons.com ~all`; self-hosted (default) keeps

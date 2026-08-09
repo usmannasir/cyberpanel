@@ -192,7 +192,8 @@
     text-shadow: none !important;
 }
 
-
+<<<<<<< HEAD
+=======
 /* Email list page: mail config sidebar, tables, disk usage badges */
 #main-content .info-card {
     background: var(--bg-muted) !important;
@@ -230,6 +231,7 @@
     color: var(--text-heading) !important;
 }
 
+>>>>>>> 589c89fd (fix(email): show disk usage in list emails badge)
 /* =====================================================================
    Site management page (website.html) bespoke components — centralized
    here so there is a single source of truth for the calm look.
