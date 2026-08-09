@@ -335,6 +335,12 @@ def versionManagment(request):
     head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
     Currentcomt = (ProcessUtilities.outputExecutioner(head_cmd) or '').rstrip('\n')
 
+    local_branch_cmd = (
+        'git -C /usr/local/CyberCP rev-parse --abbrev-ref HEAD 2>/dev/null || true')
+    local_branch = (ProcessUtilities.outputExecutioner(local_branch_cmd) or '').rstrip('\n')
+    if local_branch in ('', 'HEAD'):
+        local_branch = ''
+
     remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
     remote_out = (ProcessUtilities.outputExecutioner(remote_cmd) or '')
     origin_owner, origin_repo = _parse_github_origin(remote_out)
@@ -345,11 +351,30 @@ def versionManagment(request):
         if show_fork_block:
             fork_display = remote_display
     else:
-        remote_display = (remote_out.strip() or '—')
+        remote_display = (remote_out.strip() or '-')
         logging.CyberCPLogFileWriter.writeToFile(
             '[versionManagment] Unparseable git origin, upstream-only UI: %s'
             % (remote_out[:200] if remote_out else '(empty)'))
         show_fork_block = False
+
+    # Published version.txt stays the tracking label. Fork installs also compare tip
+    # against the local/dev branch (prefer v3.0.0-dev) so Version Management matches
+    # master3395/cyberpanel rather than stale upstream v3.0.0-dev.
+    preferred_upgrade_branch = branch_ref
+    fork_tip_branch = branch_ref
+    branches_api_owner = 'usmannasir'
+    branches_api_repo = 'cyberpanel'
+    include_dev_branches = False
+    if show_fork_block and origin_owner and origin_repo:
+        branches_api_owner = origin_owner
+        branches_api_repo = origin_repo
+        include_dev_branches = True
+        preferred_upgrade_branch = 'v3.0.0-dev'
+        if local_branch.startswith('v') and local_branch.endswith('-dev'):
+            fork_tip_branch = local_branch
+            preferred_upgrade_branch = local_branch
+        else:
+            fork_tip_branch = 'v3.0.0-dev'
 
     upstream_latest_sha = _github_branch_tip_sha('usmannasir', 'cyberpanel', branch_ref)
     latestcomit = upstream_latest_sha
@@ -357,10 +382,11 @@ def versionManagment(request):
         upstream_commit_url = 'https://github.com/usmannasir/cyberpanel/commit/%s' % upstream_latest_sha
 
     if show_fork_block and origin_owner and origin_repo:
-        fork_latest_sha = _github_branch_tip_sha(origin_owner, origin_repo, branch_ref)
+        fork_latest_sha = _github_branch_tip_sha(origin_owner, origin_repo, fork_tip_branch)
         if fork_latest_sha:
             fork_commit_url = 'https://github.com/%s/%s/commit/%s' % (
                 origin_owner, origin_repo, fork_latest_sha)
+            latestcomit = fork_latest_sha
 
     if (fork_latest_sha and upstream_latest_sha and fork_latest_sha != upstream_latest_sha):
         fork_drift_upstream = True
@@ -428,6 +454,14 @@ def versionManagment(request):
         'upstream_commit_short': _short_sha(upstream_commit),
         'fork_latest_sha_short': _short_sha(fork_latest_sha),
         'upstream_latest_sha_short': _short_sha(upstream_latest_sha),
+        'local_branch': local_branch,
+        'preferred_upgrade_branch': preferred_upgrade_branch,
+        'fork_tip_branch': fork_tip_branch,
+        'branches_api_url': 'https://api.github.com/repos/%s/%s/branches' % (
+            branches_api_owner, branches_api_repo),
+        'include_dev_branches': include_dev_branches,
+        'origin_owner': origin_owner or '',
+        'origin_repo': origin_repo or '',
     }
 
     proc = httpProc(request, template, finalData, 'versionManagement')

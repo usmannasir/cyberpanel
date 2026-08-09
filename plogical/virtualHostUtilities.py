@@ -4,7 +4,6 @@ import os.path
 import re
 import sys
 import time
-import re
 
 import django
 
