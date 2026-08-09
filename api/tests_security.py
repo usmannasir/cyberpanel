@@ -10,11 +10,14 @@ from plogical.securityUtils import (
     get_remote_transfer_dir_path,
     get_remote_transfer_log_path,
     get_remote_transfer_pid_path,
+    get_mysql_upgrade_status_path,
     get_terminal_jwt_secret,
+    is_safe_hostname,
     is_safe_sql_identifier,
     is_safe_numeric_id,
     is_safe_port,
     is_safe_remote_host,
+    is_safe_system_user,
 )
 from api.views import can_change_api_account_password, can_change_api_website_package
 
@@ -80,6 +83,55 @@ class SecurityUtilsTests(SimpleTestCase):
         self.assertFalse(is_safe_port("70000"))
         self.assertTrue(is_safe_remote_host("host.example.com"))
         self.assertFalse(is_safe_remote_host("host;rm"))
+
+    def test_admin_command_parameters_use_strict_formats(self):
+        self.assertTrue(is_safe_system_user('site_user-1'))
+        self.assertFalse(is_safe_system_user('site;id'))
+        self.assertTrue(is_safe_hostname('panel.example.com'))
+        self.assertFalse(is_safe_hostname('panel.example.com;id'))
+        self.assertFalse(is_safe_hostname('localhost'))
+
+    def test_mysql_upgrade_status_path_is_private_and_confined(self):
+        with tempfile.TemporaryDirectory() as base_path:
+            status_path = os.path.join(base_path, 'mysql-upgrade-safe123')
+            with open(status_path, 'w', encoding='utf-8') as status_file:
+                status_file.write('Starting\n')
+            os.chmod(status_path, 0o600)
+
+            self.assertEqual(
+                status_path,
+                get_mysql_upgrade_status_path(status_path, base_path),
+            )
+            self.assertEqual(
+                '',
+                get_mysql_upgrade_status_path('/etc/passwd', base_path),
+            )
+
+            os.chmod(status_path, 0o644)
+            self.assertEqual(
+                '',
+                get_mysql_upgrade_status_path(status_path, base_path),
+            )
+
+    def test_mysql_upgrade_status_path_rejects_symlinks_and_hard_links(self):
+        with tempfile.TemporaryDirectory() as base_path:
+            target = os.path.join(base_path, 'mysql-upgrade-target')
+            symlink = os.path.join(base_path, 'mysql-upgrade-symlink')
+            hard_link = os.path.join(base_path, 'mysql-upgrade-hardlink')
+            with open(target, 'w', encoding='utf-8') as status_file:
+                status_file.write('Starting\n')
+            os.chmod(target, 0o600)
+            os.symlink(target, symlink)
+            os.link(target, hard_link)
+
+            self.assertEqual(
+                '',
+                get_mysql_upgrade_status_path(symlink, base_path),
+            )
+            self.assertEqual(
+                '',
+                get_mysql_upgrade_status_path(hard_link, base_path),
+            )
 
     def test_remote_transfer_log_path_accepts_numeric_ids_only(self):
         with tempfile.TemporaryDirectory() as base_path:
