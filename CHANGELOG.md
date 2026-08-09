@@ -43,6 +43,14 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Restored domain-alias management, free WordPress installation navigation,
   Ubuntu Pure-FTPd reset behavior, PHP 8.5 parsing, and DNS SOA serial updates.
 
+### Fix: Issue SSL no longer fails on cloudflare 2.20 deprecation warning
+- `python-cloudflare` 2.20.* prints a noisy `PendingDeprecationWarning` when the
+  client is created. CyberPanel merges stderr into Issue SSL output, so the
+  warning was shown as **Operation Failed** even when SSL logic ran.
+- `get_cloudflare_client()` suppresses that warning hook; Issue SSL error text
+  also strips the banner if it still appears.
+- Recommended pin on panel hosts: `python -m pip install 'cloudflare==2.19.4'`.
+
 ### Fix: Recreate DNS API JSON encoding crash
 - `recreateWebsiteDNS` used PHP-style `json.JSON_PRETTY_PRINT` flags in Python, which
   raised `module 'json' has no attribute 'JSON_PRETTY_PRINT'` and aborted the request.
