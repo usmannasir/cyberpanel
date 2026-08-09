@@ -1169,10 +1169,61 @@ class ACLManager:
             }
 
             import requests
-            response = requests.post(url, data=json.dumps(data))
+            response = requests.post(url, data=json.dumps(data), timeout=3)
             return response.json()['status']
         except:
             return 1
+
+    @staticmethod
+    def CachedAddonPermission(feature='all', cacheSeconds=3600, requestTimeout=1.5):
+        """
+        Cached Adonpermission lookup for page renders (Full Settings, etc.).
+        Avoids blocking up to several seconds on every website.html load.
+        """
+        try:
+            if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                return 1
+
+            import time
+            cacheDir = '/home/cyberpanel'
+            try:
+                os.makedirs(cacheDir, mode=0o700, exist_ok=True)
+            except OSError:
+                pass
+            safeFeature = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in str(feature))
+            cachePath = os.path.join(cacheDir, 'addon_permission_%s.cache' % safeFeature)
+            now = time.time()
+            if os.path.exists(cachePath):
+                try:
+                    with open(cachePath, 'r', encoding='utf-8', errors='replace') as cacheFile:
+                        raw = cacheFile.read().strip().split('|', 1)
+                    if len(raw) == 2:
+                        ts = float(raw[0])
+                        if (now - ts) < float(cacheSeconds):
+                            return int(raw[1])
+                except (OSError, ValueError):
+                    pass
+
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            payload = {
+                "name": feature,
+                "IP": ACLManager.GetServerIP()
+            }
+            import requests
+            response = requests.post(url, data=json.dumps(payload), timeout=requestTimeout)
+            status = int(response.json().get('status', 0))
+            try:
+                with open(cachePath, 'w', encoding='utf-8') as cacheFile:
+                    cacheFile.write('%s|%s' % (str(now), str(status)))
+                try:
+                    os.chmod(cachePath, 0o600)
+                except OSError:
+                    pass
+            except OSError:
+                pass
+            return status
+        except Exception:
+            return 0
 
     @staticmethod
     def CheckIPBackupObjectOwner(currentACL, backupobj, user):

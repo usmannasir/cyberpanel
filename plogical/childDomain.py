@@ -11,9 +11,29 @@ import json
 
 
 class ChildDomainManager:
-    def __init__(self, masterDomain = None, childDomain = None):
+    def __init__(self, masterDomain=None, childDomain=None):
         self.masterDomain = masterDomain
         self.childDomain = childDomain
+
+    @staticmethod
+    def openBasedirLabel(domainName):
+        """Return Enable/Disable from live vhost.conf for List Domains selects."""
+        candidates = (
+            '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % domainName,
+            '/usr/local/lsws/conf/vhosts/%s/vhconf.conf' % domainName,
+        )
+        for confPath in candidates:
+            try:
+                if not os.path.exists(confPath):
+                    continue
+                with open(confPath, 'r', encoding='utf-8', errors='replace') as confFile:
+                    content = confFile.read()
+                if 'open_basedir' in content:
+                    return 'Enable'
+                return 'Disable'
+            except OSError:
+                continue
+        return 'Disable'
 
     def findChildDomainsJson(self, alias=0):
         master = Websites.objects.get(domain=self.masterDomain)
@@ -26,10 +46,13 @@ class ChildDomainManager:
             if items.domain == f'mail.{master.domain}':
                 pass
             else:
+                phpSelection = items.phpSelection or master.phpSelection or 'PHP 8.1'
                 dic = {
                     'childDomain': items.domain,
                     'path': items.path,
-                    'childLunch': '/websites/' + self.masterDomain + '/' + items.domain
+                    'childLunch': '/websites/' + self.masterDomain + '/' + items.domain,
+                    'phpSelection': phpSelection,
+                    'childBaseDir': ChildDomainManager.openBasedirLabel(items.domain),
                 }
 
                 if checker == 0:
