@@ -5600,7 +5600,7 @@ pm.max_spare_servers = 3
                 0,
             )
 
-        command = 'systemctl restart fastapi_ssh_server'
+        command = 'systemctl enable --now fastapi_ssh_server'
         Upgrade.executioner(command, command, 0)
 
         Upgrade.stdOut("Upgrade Completed.")
