@@ -10,7 +10,6 @@ import os
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheVhosts import ApacheVhost
-from managePHP.phpConfig import matches_directive
 
 import json
 from django.urls import reverse
@@ -144,7 +143,7 @@ class phpUtilities:
                 elif items.find("allow_url_include") > -1 and items.find("=") > -1:
                     writeToFile.writelines(allow_url_include + "\n")
                     found_directives['allow_url_include'] = True
-                elif matches_directive(items, "memory_limit"):
+                elif items.find("memory_limit") > -1 and items.find("=") > -1:
                     writeToFile.writelines("memory_limit = " + memory_limit + "\n")
                     found_directives['memory_limit'] = True
                 elif items.find("max_execution_time") > -1 and items.find("=") > -1:
@@ -373,7 +372,10 @@ class phpUtilities:
                 centOSPHP = 'php85'
                 ubuntuPHP = 'php8.5'
 
-
+            phpPath = ApacheVhost.DecidePHPPath('86', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php86'
+                ubuntuPHP = 'php8.6'
 
             ######
 
@@ -409,11 +411,98 @@ class phpUtilities:
             return result
 
         else:
-            command = f'grep -Po "php\d+" {vhFile} | head -n 1'
+            command = f'grep -Po "php\\d+" {vhFile} | head -n 1'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
             result = f'/usr/local/lsws/ls{result}/bin/lsphp'
             result = result.rsplit("lsphp", 1)[0] + "php"
             return result
+
+    ## Map OLS/LSWS vhost handler path to panel label (e.g. lsphp85 -> "PHP 8.5").
+    ## Fast: reads the LiteSpeed/OLS vhost only; does not spawn php -v and does not
+    ## depend on GetPHPVersionFromFile (which prefers leftover Apache PHP-FPM confs).
+    @staticmethod
+    def GetPHPSelectionFromVhostFile(vhFile):
+        try:
+            if not vhFile or not os.path.exists(vhFile):
+                return ''
+            import re
+            with open(vhFile, 'r', errors='ignore') as fh:
+                text = fh.read()
+            match = re.search(r'/usr/local/lsws/lsphp(\d{2,3})/bin/lsphp', text)
+            if not match:
+                # Enterprise AddHandler style: application/x-httpd-php85
+                match = re.search(r'x-httpd-php(\d{2,3})', text)
+            if not match:
+                return ''
+            digits = match.group(1)
+            if len(digits) == 2:
+                return 'PHP %s.%s' % (digits[0], digits[1])
+            if len(digits) >= 3:
+                return 'PHP %s.%s' % (digits[0], digits[1:])
+            return ''
+        except BaseException:
+            return ''
+
+    @staticmethod
+    def _lsphpDigitsFromVhostFile(vhFile):
+        try:
+            if not vhFile or not os.path.exists(vhFile):
+                return ''
+            import re
+            with open(vhFile, 'r', errors='ignore') as fh:
+                text = fh.read()
+            match = re.search(r'/usr/local/lsws/lsphp(\d{2,3})/bin/lsphp', text)
+            if not match:
+                match = re.search(r'x-httpd-php(\d{2,3})', text)
+            return match.group(1) if match else ''
+        except BaseException:
+            return ''
+
+    ## Full runtime version for List Websites (e.g. "PHP 8.5.7"). Cached per lsphp build.
+    @staticmethod
+    def GetFullPHPVersionFromVhostFile(vhFile):
+        selection = phpUtilities.GetPHPSelectionFromVhostFile(vhFile)
+        try:
+            import re
+            digits = phpUtilities._lsphpDigitsFromVhostFile(vhFile)
+            if not digits:
+                return selection or ''
+            phpBin = '/usr/local/lsws/lsphp%s/bin/php' % digits
+            if not os.path.exists(phpBin):
+                return selection or ''
+
+            cacheDir = '/usr/local/CyberCP/tmp'
+            try:
+                os.makedirs(cacheDir, exist_ok=True)
+            except BaseException:
+                pass
+            cacheFile = os.path.join(cacheDir, 'phpver_lsphp%s.cache' % digits)
+            try:
+                mtime = str(int(os.path.getmtime(phpBin)))
+            except BaseException:
+                mtime = '0'
+            if os.path.exists(cacheFile):
+                try:
+                    with open(cacheFile, 'r') as cf:
+                        cached = cf.read().strip().split('|', 1)
+                    if len(cached) == 2 and cached[0] == mtime and re.match(r'^\d+\.\d+', cached[1]):
+                        return 'PHP %s' % cached[1]
+                except BaseException:
+                    pass
+
+            command = '%s -r %s' % (shlex.quote(phpBin), shlex.quote('echo PHP_VERSION;'))
+            ver = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+            ver = (ver or '').strip().split()[0] if ver else ''
+            if re.match(r'^\d+\.\d+', ver):
+                try:
+                    with open(cacheFile, 'w') as cf:
+                        cf.write('%s|%s' % (mtime, ver))
+                except BaseException:
+                    pass
+                return 'PHP %s' % ver
+            return selection or ''
+        except BaseException:
+            return selection or ''
 
     ## returns something like PHP 8.2
     @staticmethod
@@ -455,8 +544,28 @@ class phpUtilities:
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or  ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
             command = f'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp{php}*'
         else:
-            command = f'dnf install lsphp{php}* --exclude lsphp73-pecl-zip --exclude *imagick* -y --skip-broken'
-
+            # Enhanced dependency handling for RHEL-based systems
+            # First try to install required dependencies
+            dependency_packages = [
+                'libmemcached', 'libmemcached-devel', 'libmemcached-libs',
+                'gd', 'gd-devel', 'libgd',
+                'c-client', 'c-client-devel',
+                'oniguruma', 'oniguruma-devel',
+                'libicu', 'libicu-devel',
+                'aspell', 'aspell-devel',
+                'pspell', 'pspell-devel'
+            ]
+            
+            # Install dependencies first
+            for dep in dependency_packages:
+                try:
+                    dep_command = f'dnf install -y {dep} --skip-broken'
+                    ProcessUtilities.executioner(dep_command, None, True)
+                except:
+                    pass  # Continue if dependency installation fails
+            
+            # Install PHP with better error handling
+            command = f'dnf install lsphp{php}* --exclude *imagick* -y --skip-broken --nobest'
 
         ProcessUtilities.executioner(command, None, True)
 
