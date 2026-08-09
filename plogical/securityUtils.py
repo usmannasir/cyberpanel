@@ -53,12 +53,25 @@ def api_token_matches(provided, stored):
 
 
 def _read_secret_file(path):
+    descriptor = None
     try:
-        os.chmod(path, 0o600)
-        with open(path, "r") as secret_file:
+        descriptor = os.open(
+            path,
+            os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
+        )
+        file_status = os.fstat(descriptor)
+        if not stat.S_ISREG(file_status.st_mode) or file_status.st_nlink != 1:
+            return ""
+        if stat.S_IMODE(file_status.st_mode) != 0o600:
+            os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "r") as secret_file:
+            descriptor = None
             return secret_file.read().strip()
     except OSError:
         return ""
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def _create_secret_file(path):
