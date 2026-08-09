@@ -25,8 +25,8 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 ### Security and reliability
 - Backup restores reject archive path traversal, escaping links, and special
   filesystem entries before extracting any content.
-- Child-domain deletion now invokes certificate cleanup correctly instead of
-  leaving the dedicated certificate directory behind.
+- Child-domain deletion now invokes certificate cleanup correctly and removes
+  the dedicated certificate and ACME state directories.
 - Hardened Web Terminal authentication and secret-file permissions.
 - Blocked sensitive application files through generated website
   configurations and tightened certificate-file handling.

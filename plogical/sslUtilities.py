@@ -44,6 +44,20 @@ class sslUtilities:
                     check=False,
                 )
 
+        acmeRoot = os.path.realpath(os.path.dirname(acmePath))
+        for suffix in ('_ecc', ''):
+            acmeStatePath = os.path.abspath(
+                os.path.join(acmeRoot, domain + suffix))
+            if os.path.commonpath([acmeRoot, acmeStatePath]) != acmeRoot:
+                continue
+            if os.path.lexists(acmeStatePath):
+                if os.path.islink(acmeStatePath):
+                    os.unlink(acmeStatePath)
+                elif os.path.isdir(acmeStatePath):
+                    shutil.rmtree(acmeStatePath)
+                else:
+                    os.unlink(acmeStatePath)
+
         if os.path.lexists(certificatePath):
             if os.path.islink(certificatePath):
                 os.unlink(certificatePath)

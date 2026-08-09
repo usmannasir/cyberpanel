@@ -64,6 +64,32 @@ class DomainAliasUtilitiesTests(unittest.TestCase):
             self.assertFalse(alias_path.exists())
             self.assertTrue(sibling_path.exists())
 
+    def test_alias_certificate_cleanup_removes_acme_domain_state(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            acme_root = pathlib.Path(temp_dir) / 'acme'
+            acme_root.mkdir()
+            acme_path = acme_root / 'acme.sh'
+            acme_path.write_text('#!/bin/sh\nexit 0\n', encoding='utf-8')
+            acme_path.chmod(0o700)
+
+            domain_path = acme_root / 'alias.example.com'
+            ecc_path = acme_root / 'alias.example.com_ecc'
+            sibling_path = acme_root / 'keep.example.com_ecc'
+            domain_path.mkdir()
+            ecc_path.mkdir()
+            sibling_path.mkdir()
+
+            result = sslUtilities.removeSSLForDomain(
+                'alias.example.com',
+                certificateRoot=os.path.join(temp_dir, 'live'),
+                acmePath=str(acme_path),
+            )
+
+            self.assertEqual(result, 1)
+            self.assertFalse(domain_path.exists())
+            self.assertFalse(ecc_path.exists())
+            self.assertTrue(sibling_path.exists())
+
     def test_alias_certificate_cleanup_rejects_path_traversal(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             self.assertEqual(
