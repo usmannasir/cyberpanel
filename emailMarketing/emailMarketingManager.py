@@ -14,6 +14,17 @@ from .models import SMTPHosts, EmailTemplate
 from loginSystem.models import Administrator
 from .emACL import emACL
 
+
+def _email_marketing_privileged(acl):
+    """Full admin or managePlugins (plugin / global email marketing admin actions)."""
+    if acl.get('admin') == 1:
+        return True
+    try:
+        return int(acl.get('managePlugins', 0) or 0) == 1
+    except (TypeError, ValueError):
+        return False
+
+
 class EmailMarketingManager:
 
     def __init__(self, request = None, domain = None):
@@ -21,7 +32,12 @@ class EmailMarketingManager:
         self.domain = domain
 
     def emailMarketing(self):
-        proc = httpProc(self.request, 'emailMarketing/emailMarketing.html', None, 'admin')
+        context = {
+            'plugin_name': 'Email Marketing',
+            'version': '1.0.0',
+            'status': 'Active'
+        }
+        proc = httpProc(self.request, 'emailMarketing/emailMarketing.html', context, 'managePlugins')
         return proc.render()
 
     def fetchUsers(self):
@@ -30,7 +46,7 @@ class EmailMarketingManager:
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             else:
                 return ACLManager.loadError()
@@ -76,7 +92,7 @@ class EmailMarketingManager:
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             else:
                 return ACLManager.loadErrorJson()
@@ -321,7 +337,7 @@ class EmailMarketingManager:
             emailList = EmailLists.objects.get(listName=listName)
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif emailList.owner.id != userID:
                 return ACLManager.loadErrorJson()
@@ -390,7 +406,7 @@ class EmailMarketingManager:
 
             delList = EmailLists.objects.get(listName=listName)
             currentACL = ACLManager.loadedACL(userID)
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif delList.owner.id != userID:
                 return ACLManager.loadErrorJson()
@@ -420,7 +436,7 @@ class EmailMarketingManager:
 
             delList = EmailLists.objects.get(listName=extraArgs['listName'])
             currentACL = ACLManager.loadedACL(userID)
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif delList.owner.id != userID:
                 return ACLManager.loadErrorJson()
@@ -453,7 +469,7 @@ class EmailMarketingManager:
             delEmail = EmailsInList.objects.get(id=id)
 
             currentACL = ACLManager.loadedACL(userID)
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif delEmail.owner.owner.id != userID:
                 return ACLManager.loadErrorJson()
@@ -562,7 +578,7 @@ class EmailMarketingManager:
 
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 allHosts = SMTPHosts.objects.all()
             else:
                 admin = Administrator.objects.get(pk=userID)
@@ -616,7 +632,7 @@ class EmailMarketingManager:
                     return ACLManager.loadErrorJson()
 
                 currentACL = ACLManager.loadedACL(userID)
-                if currentACL['admin'] == 1:
+                if _email_marketing_privileged(currentACL):
                     pass
                 elif delHost.owner.id != userID:
                     return ACLManager.loadErrorJson()
@@ -739,7 +755,7 @@ class EmailMarketingManager:
             template = EmailTemplate.objects.get(name=self.domain)
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif template.owner != admin:
                 return ACLManager.loadError()
@@ -763,7 +779,7 @@ class EmailMarketingManager:
             template = EmailTemplate.objects.get(name=selectedTemplate)
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif template.owner != admin:
                 return ACLManager.loadErrorJson()
@@ -824,7 +840,7 @@ class EmailMarketingManager:
             currentACL = ACLManager.loadedACL(userID)
             template = EmailTemplate.objects.get(name=extraArgs['selectedTemplate'])
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif template.owner != admin:
                 return ACLManager.loadErrorJson()
@@ -853,7 +869,7 @@ class EmailMarketingManager:
             delTemplate = EmailTemplate.objects.get(name=selectedTemplate)
             currentACL = ACLManager.loadedACL(userID)
 
-            if currentACL['admin'] == 1:
+            if _email_marketing_privileged(currentACL):
                 pass
             elif delTemplate.owner != admin:
                 return ACLManager.loadErrorJson()

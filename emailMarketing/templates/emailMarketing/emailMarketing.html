@@ -30,6 +30,20 @@ function dismissCyberMailBanner(){document.getElementById('cybermailBanner').sty
        <p>{% trans "Select users to Enable/Disable Email Marketing feature!" %}</p>
     </div>
 
+    <!-- Plugin Information Section - Always Visible -->
+    <div class="alert alert-info" style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px;">
+        <i class="fas fa-info-circle" style="color: #0c5460; margin-right: 8px;"></i>
+        <strong style="color: #0c5460;">{% trans "Plugin Information" %}</strong>
+        <ul class="mb-0 mt-2" style="list-style: none; padding-left: 0; margin-top: 10px;">
+            <li style="margin-bottom: 8px;"><strong>{% trans "Name" %}:</strong> {{ plugin_name|default:"Email Marketing" }}</li>
+            <li style="margin-bottom: 8px;"><strong>{% trans "Version" %}:</strong> {{ version|default:"1.0.0" }}</li>
+            <li style="margin-bottom: 0;">
+                <strong>{% trans "Status" %}:</strong> 
+                <span class="badge badge-success" style="background: #28a745; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">{{ status|default:"Active" }}</span>
+            </li>
+        </ul>
+    </div>
+
 <div ng-controller="emailMarketing" class="panel" style="background: var(--bg-primary, white); border-color: var(--border-color, #ddd);">
     <div class="panel-body" style="background: var(--bg-primary, white); color: var(--text-primary, #333);">
 

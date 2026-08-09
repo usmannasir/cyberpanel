@@ -497,6 +497,9 @@
 [data-theme="dark"] #main-content .plugin-card { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .plugin-footer { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .plugin-header { border-color: var(--border-color) !important; }
+[data-theme="dark"] #main-content .plugin-pricing-badge.free { background: var(--success-soft-bg) !important; border-color: var(--border-color) !important; color: var(--success-soft-text) !important; }
+[data-theme="dark"] #main-content .plugin-pricing-badge.paid { background: var(--warn-soft-bg) !important; border-color: var(--border-color) !important; color: var(--warn-soft-text) !important; }
+ db194878 (Improve plugin store UX and dark-mode contrast.)
 [data-theme="dark"] #main-content .plugin-section { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .plugins-section { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .plugins-table td { border-color: var(--border-color) !important; }
@@ -649,6 +652,29 @@
 [data-theme="dark"] #main-content .status-table td { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .status-table th { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .status-textarea { border-color: var(--border-color) !important; }
+
+
+[data-theme="dark"] #main-content .store-notice { background: var(--warn-soft-bg) !important; color: var(--warn-soft-text) !important; border-color: var(--border-color) !important; }
+[data-theme="dark"] #main-content .store-notice .notice-header { color: var(--warn-soft-text) !important; }
+[data-theme="dark"] #main-content .store-notice .notice-header strong { color: var(--warn-soft-text) !important; }
+[data-theme="dark"] #main-content .store-notice .notice-content p { color: var(--warn-soft-text) !important; }
+[data-theme="dark"] #main-content .store-notice .warning-text { color: var(--warn-soft-text) !important; }
+[data-theme="dark"] #main-content .store-notice .notice-close { color: var(--warn-soft-text) !important; }
+[data-theme="dark"] #main-content .store-notice .notice-content p[style] { color: var(--text-secondary) !important; background: var(--bg-secondary) !important; }
+[data-theme="dark"] #main-content .store-pagination-info { color: var(--text-secondary) !important; }
+[data-theme="dark"] #main-content .store-page-btn { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
+[data-theme="dark"] #main-content .store-page-btn.active { background: #5856d6 !important; border-color: #5856d6 !important; color: #fff !important; }
+[data-theme="dark"] #main-content .store-goto-page input,
+[data-theme="dark"] #main-content .store-page-size select { background: var(--bg-muted) !important; border-color: var(--border-color) !important; color: var(--text-heading) !important; }
+[data-theme="dark"] #main-content .store-mobile-card { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; }
+[data-theme="dark"] #main-content .store-table th.store-sortable:hover { background: #3d4654 !important; }
+[data-theme="dark"] #main-content .store-search-icon { color: var(--text-secondary) !important; }
+[data-theme="dark"] #main-content .store-search-input { background: var(--bg-muted) !important; border-color: var(--border-color) !important; color: var(--text-heading) !important; }
+[data-theme="dark"] #main-content .store-search-input::placeholder { color: var(--text-secondary) !important; }
+[data-theme="dark"] #main-content .store-search-input:focus { background: var(--bg-secondary) !important; }
+[data-theme="dark"] #main-content .store-table td { border-color: var(--border-color) !important; }
+[data-theme="dark"] #main-content .store-table-wrapper { border-color: var(--border-color) !important; }
+ db194878 (Improve plugin store UX and dark-mode contrast.)
 [data-theme="dark"] #main-content .tab-button { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .tab-content { border-color: var(--border-color) !important; }
 [data-theme="dark"] #main-content .table { background: var(--bg-secondary) !important; }
