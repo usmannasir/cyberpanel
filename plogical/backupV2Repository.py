@@ -1,6 +1,8 @@
 import re
 import shlex
 
+from plogical.backupExcludes import SITE_BACKUP_DIRECTORIES
+
 
 _DOMAIN_NAME = re.compile(
     r'^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$')
@@ -35,7 +37,7 @@ def website_exclude_arguments(source):
         raise ValueError('Invalid website backup path.')
     return ' '.join(
         '--glob !%s/%s' % (source, directory)
-        for directory in ('logs', 'backup', 'incbackup', 'incrementalbackups')
+        for directory in SITE_BACKUP_DIRECTORIES
     )
 
 

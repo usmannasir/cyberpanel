@@ -50,6 +50,7 @@ from cyberpanel_version import (
 )
 from plogical.backupIntegrity import safe_extract
 from plogical.backupMetadata import backup_includes_mail_domain
+from plogical.backupExcludes import rsync_exclude_arguments
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -386,7 +387,10 @@ class backupUtilities:
             #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
             #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
             ### doing backup of whole dir and keeping it in public_html folder will restore from here - ref https://github.com/usmannasir/cyberpanel/issues/1196
-            command = f"rsync -av --ignore-errors --exclude=.wp-cli --exclude=logs --exclude=backup --exclude=lscache /home/{domainName}/ {tempStoragePath}/public_html/"
+            command = (
+                f"rsync -av --ignore-errors {rsync_exclude_arguments()} "
+                f"/home/{domainName}/ {tempStoragePath}/public_html/"
+            )
             ProcessUtilities.normalExecutioner(command)
             # if ProcessUtilities.normalExecutioner(command) == 0:
             #      raise BaseException(f'Failed to run cp command during backup generation.')

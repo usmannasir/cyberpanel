@@ -5,6 +5,7 @@ import tempfile
 from unittest import TestCase
 from unittest.mock import patch
 
+from plogical.backupExcludes import rsync_exclude_arguments
 from plogical.backupIntegrity import (
     UnsafeArchiveError,
     archive_is_ready,
@@ -15,6 +16,12 @@ from plogical.backupIntegrity import (
 
 
 class BackupArchiveReadinessTests(TestCase):
+
+    def test_site_archive_excludes_backup_repositories(self):
+        exclusions = rsync_exclude_arguments()
+        self.assertIn('--exclude=incbackup', exclusions)
+        self.assertIn('--exclude=incrementalbackups', exclusions)
+        self.assertIn('--exclude=backup', exclusions)
     @patch('plogical.backupIntegrity.time.sleep')
     @patch('plogical.backupIntegrity.os.path.exists', return_value=True)
     @patch('plogical.backupIntegrity.os.path.getsize', side_effect=[10, 20, 20, 20])

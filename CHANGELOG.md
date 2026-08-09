@@ -27,6 +27,8 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
   available without a configured Rclone remote.
 - V2 database restores use the valid MySQL defaults-file option and report
   failed database or file imports instead of returning false success.
+- Full site archives omit local incremental repository directories to prevent
+  nested backup growth.
 
 ### Security and reliability
 - Backup restores reject archive path traversal, escaping links, and special
