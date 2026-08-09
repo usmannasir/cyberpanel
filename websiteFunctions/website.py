@@ -35,7 +35,11 @@ from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
-from emailMarketing.emACL import emACL
+try:
+    from emailMarketing.emACL import emACL
+except ImportError:
+    # emailMarketing is an optional plugin (lives in cyberpanel-plugins); core panel must work without it.
+    emACL = None
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
@@ -3667,7 +3671,7 @@ context /cyberpanel_suspension_page.html {
 
             from plogical.processUtilities import ProcessUtilities
 
-            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+            marketingStatus = emACL.checkIfEMEnabled(admin.userName) if emACL else 0
 
             Data['marketingStatus'] = marketingStatus
             Data['ftpTotal'] = website.package.ftpAccounts

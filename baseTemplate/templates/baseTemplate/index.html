@@ -281,6 +281,10 @@
         </a>
         {% endif %}
 
+        <!-- Plugins intentionally omitted from the sidebar; available via the
+             Access hub (/base/hub/access) and the command palette instead. -->
+
+>>>>>>> 1d5479d5 (feat(plugins): gate plugin access via managePlugins ACL; drop sidebar Extensions entry)
         <!-- ============================ HELP ============================ -->
         <div class="section-header">{% trans "HELP" %}</div>
 
@@ -367,6 +371,8 @@
             {% if admin or createDatabase %}{l:'{% trans "phpMyAdmin" %}', h:'{% url "phpMyAdmin" %}', i:'fa-table', g:'{% trans "Data" %}', t:'_blank'},{% endif %}
             {% if admin %}{l:'{% trans "MySQL Manager" %}', h:'{% url "MysqlManager" %}', i:'fa-sliders', g:'{% trans "Data" %}'},{% endif %}
             {% if admin or listFTPAccounts %}{l:'{% trans "FTP Accounts" %}', h:'{% url "listFTPAccounts" %}', i:'fa-folder', g:'{% trans "Data" %}'},{% endif %}
+            {% if admin or canViewPlugins %}{l:'{% trans "Plugins" %}', h:'{% url "installed" %}', i:'fa-puzzle-piece', g:'{% trans "Administration" %}'},{% endif %}
+>>>>>>> fbcb77e0 (feat(plugins): split plugin ACL into view / use / install permissions)
             // Backups
             {% if admin or createBackup %}{l:'{% trans "One-Click Backups" %}', h:'{% url "OneClickBackups" %}', i:'fa-bolt', g:'{% trans "Backups" %}'},
             {l:'{% trans "Incremental Backups" %}', h:'{% url "backupDestinationsInc" %}', i:'fa-layer-group', g:'{% trans "Backups" %}'},
