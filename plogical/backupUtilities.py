@@ -42,15 +42,6 @@ import time
 from shutil import copy
 from random import randint
 from plogical.processUtilities import ProcessUtilities
-from cyberpanel_version import (
-    BUILD,
-    VERSION,
-    backup_uses_database_users_schema,
-    backup_uses_full_directory_layout,
-)
-from plogical.backupIntegrity import safe_extract
-from plogical.backupMetadata import backup_includes_mail_domain
-from plogical.backupExcludes import rsync_exclude_arguments
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -61,6 +52,10 @@ try:
     from backup.models import DBUsers
 except:
     pass
+
+VERSION = '2.5.5'
+BUILD = 'dev'
+
 
 ## I am not the monster that you think I am..
 
@@ -387,10 +382,8 @@ class backupUtilities:
             #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
             #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
             ### doing backup of whole dir and keeping it in public_html folder will restore from here - ref https://github.com/usmannasir/cyberpanel/issues/1196
-            command = (
-                f"rsync -av --ignore-errors {rsync_exclude_arguments()} "
-                f"/home/{domainName}/ {tempStoragePath}/public_html/"
-            )
+            ### Using leading slash for exclude patterns to only exclude top-level directories, not all directories with these names - ref https://github.com/usmannasir/cyberpanel/issues/1615
+            command = f"rsync -av --ignore-errors --exclude=.wp-cli --exclude=/logs --exclude=/backup --exclude=lscache /home/{domainName}/ {tempStoragePath}/public_html/"
             ProcessUtilities.normalExecutioner(command)
             # if ProcessUtilities.normalExecutioner(command) == 0:
             #      raise BaseException(f'Failed to run cp command during backup generation.')
@@ -585,20 +578,43 @@ class backupUtilities:
             ProcessUtilities.executioner(command)
 
             command = f'mv {CPHomeStorage}/* {tempStoragePath}/'
-            moveStatus = ProcessUtilities.executioner(command, externalApp, True)
-            if moveStatus != 1:
-                raise RuntimeError('Unable to prepare files for the backup archive')
+            ProcessUtilities.executioner(command, externalApp, True)
 
             #make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             #rmtree(tempStoragePath)
 
+            command = f'tar -czf {backupPath}/{backupName}.tar.gz -C {tempStoragePath} .'
+            tarOk = ProcessUtilities.executioner(command, externalApp, True)
+
             filePath = f'{backupPath}/{backupName}.tar.gz'
-            command = f'tar -czf {filePath} -C {tempStoragePath} .'
-            tarStatus = ProcessUtilities.executioner(command, externalApp, True)
-            if tarStatus != 1:
-                raise RuntimeError('Backup archive creation failed with exit status %s' % str(tarStatus))
-            if not os.path.exists(filePath) or os.path.getsize(filePath) <= 0:
-                raise RuntimeError('Backup archive is missing or empty')
+            archiveBytes = 0
+            try:
+                if os.path.exists(filePath):
+                    archiveBytes = os.path.getsize(filePath)
+            except OSError:
+                archiveBytes = 0
+
+            # #1855: never mark Completed when tar failed or the archive is empty.
+            if tarOk != 1 or archiveBytes <= 0:
+                err = (
+                    'Backup archive creation failed (tar exit check=%s, size=%s bytes). '
+                    '[BackupRoot][[5009]]\n' % (str(tarOk), str(archiveBytes))
+                )
+                logging.CyberCPLogFileWriter.statusWriter(status, err)
+                command = f'rm -rf {tempStoragePath}'
+                ProcessUtilities.executioner(command, externalApp)
+                command = f'rm -rf {CPHomeStorage}'
+                ProcessUtilities.executioner(command)
+                try:
+                    if os.path.exists(filePath) and archiveBytes <= 0:
+                        os.remove(filePath)
+                except Exception:
+                    pass
+                try:
+                    os.remove(pidFile)
+                except Exception:
+                    pass
+                return
 
             ### remove leftover storages
 
@@ -612,7 +628,7 @@ class backupUtilities:
 
             backupObs = Backups.objects.filter(fileName=backupName)
 
-            totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
+            totalSize = '%sMB' % (str(int(archiveBytes / 1048576)))
 
             try:
                 for items in backupObs:
@@ -637,29 +653,18 @@ class backupUtilities:
 
             os.remove(pidFile)
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             if externalApp == None:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n')
             else:
                 command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
                 ProcessUtilities.executioner(command, externalApp)
-
-            try:
-                failedArchive = f'{backupPath}/{backupName}.tar.gz'
-                if os.path.exists(failedArchive):
-                    os.remove(failedArchive)
-            except OSError:
-                pass
 
             command = f'rm -rf {tempStoragePath}'
             ProcessUtilities.executioner(command, externalApp)
 
             command = f'rm -rf {CPHomeStorage}'
             ProcessUtilities.executioner(command)
-
-            try:
-                os.remove(pidFile)
-            except OSError:
-                pass
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):
@@ -697,9 +702,8 @@ class backupUtilities:
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
-            backup_version = backupMetaData.find('VERSION').text
-            backup_build = backupMetaData.find('BUILD').text
-            mail_domain = int(backup_includes_mail_domain(backupMetaData, domain))
+            VERSION = backupMetaData.find('VERSION').text
+            BUILD = backupMetaData.find('BUILD').text
 
             ### Fetch user details
 
@@ -747,7 +751,7 @@ class backupUtilities:
             #                                                 siteUser.userName, 'Default', 0)
             result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 1, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
-                                                   mail_domain)
+                                                   1)
 
             if result[0] == 0:
                 raise BaseException(result[1])
@@ -765,15 +769,15 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if backup_uses_database_users_schema(backup_version, backup_build):
+                if ((VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1) or (VERSION == '2.4' and int(BUILD) >= 0):
 
-                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
                     databaseUsers = database.findall('databaseUsers')
                     for databaseUser in databaseUsers:
 
                         dbUser = databaseUser.find('dbUser').text
                         res = mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel')
-                        if res == 0:
+                        if res != 1:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'Failed to restore database %s. But it can be false positive, moving on..' % (dbName))
 
@@ -784,7 +788,7 @@ class backupUtilities:
                 else:
                     dbUser = database.find('dbUser').text
 
-                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") != 1:
                         raise BaseException
 
                     newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
@@ -843,8 +847,9 @@ class backupUtilities:
 
             ## Converting /home/backup/backup-example.com-02.13.2018_10-24-52.tar.gz -> /home/backup/backup-example.com-02.13.2018_10-24-52
 
-            with tarfile.open(originalFile) as tar:
-                safe_extract(tar, completPath)
+            tar = tarfile.open(originalFile)
+            tar.extractall(completPath)
+            tar.close()
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Creating Accounts,Databases and DNS records!")
 
@@ -853,8 +858,8 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
-            backup_version = backupMetaData.find('VERSION').text
-            backup_build = backupMetaData.find('BUILD').text
+            VERSION = backupMetaData.find('VERSION').text
+            BUILD = backupMetaData.find('BUILD').text
 
             twoPointO = 0
             try:
@@ -1023,7 +1028,7 @@ class backupUtilities:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
 
-                        if backup_uses_full_directory_layout(version, build):
+                        if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
 
                                 if BackupWholeDir == 0:
@@ -1077,7 +1082,7 @@ class backupUtilities:
 
                     result = mailUtilities.createEmailAccount(masterDomain, username, password, 'restore')
                     if result[0] == 0:
-                        raise BaseException(result[1])
+                        raise BaseException(f'Unable to restore {email}: {result[1]}')
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(
                     msg) + ". Not able to create email accounts, aborting. [671][5009]")
@@ -1098,9 +1103,9 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if backup_uses_database_users_schema(backup_version, backup_build):
+                if ((VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1) or (VERSION == '2.4' and int(BUILD) >= 0):
 
-                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
 
                     first = 1
 
@@ -1151,10 +1156,11 @@ class backupUtilities:
 
 
             if not twoPointO:
-                with tarfile.open(pathToCompressedHome) as tar:
-                    safe_extract(tar, websiteHome)
+                tar = tarfile.open(pathToCompressedHome)
+                tar.extractall(websiteHome)
+                tar.close()
             else:
-                if backup_uses_full_directory_layout(version, build):
+                if float(version) > 2.0 or float(build) > 0:
                     #copy_tree('%s/public_html' % (completPath), websiteHome)
 
                     ## First remove if already exists
@@ -1180,8 +1186,9 @@ class backupUtilities:
                     pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
                     emailHome = os.path.join("/home", "vmail", masterDomain)
 
-                    with tarfile.open(pathToCompressedEmails) as tar:
-                        safe_extract(tar, emailHome)
+                    tar = tarfile.open(pathToCompressedEmails)
+                    tar.extractall(emailHome)
+                    tar.close()
 
                     ## Change permissions
 
@@ -1434,6 +1441,13 @@ class backupUtilities:
             if os.path.exists('/root/.ssh/cyberpanel.pub'):
                 pass
             else:
+                # Remove existing key files so ssh-keygen never prompts "Overwrite (y/n)?"
+                for f in ('/root/.ssh/cyberpanel', '/root/.ssh/cyberpanel.pub'):
+                    if os.path.exists(f):
+                        try:
+                            os.remove(f)
+                        except OSError:
+                            pass
                 command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
                 ProcessUtilities.executioner(command, 'root', True)
 
@@ -1932,18 +1946,19 @@ class backupUtilities:
                 databases.append({'databaseName': str(items.dbName), 'databaseUser': str(userToTry), 'password': str(dbuser.password)})
                 self.CheckIfSleepNeeded()
                 ### Fail the backup if a dump fails instead of silently producing an
-                ### SQL-less archive: createDatabaseBackup returns 0 (or (0, msg)) on
-                ### failure, so a mysqldump error previously left the databases dir
-                ### empty while the backup still reported success.
+                ### SQL-less archive (#1823).
                 dumpResult = mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, self.BackupDataPath)
                 if isinstance(dumpResult, tuple):
                     dumpOk = dumpResult[0]
                 else:
                     dumpOk = dumpResult
                 if dumpOk == 0:
-                    errorMessage = ('Failed to back up database %s. The mysqldump command failed — check the CyberPanel '
-                                    'log for the exact error. Common causes: a stale /home/cyberpanel/.my.cnf (delete it '
-                                    'and retry) or an orphaned database record whose MySQL database no longer exists.' % (items.dbName))
+                    errorMessage = (
+                        'Failed to back up database %s. The mysqldump command failed - check the CyberPanel '
+                        'log for the exact error. Common causes: a stale /home/cyberpanel/.my.cnf (delete it '
+                        'and retry) or an orphaned database record whose MySQL database no longer exists.'
+                        % (items.dbName)
+                    )
                     logging.CyberCPLogFileWriter.writeToFile(
                         'While creating backup for %s: %s' % (self.website.domain, errorMessage))
                     return 0, errorMessage
@@ -2165,7 +2180,7 @@ class backupUtilities:
 
                 mysqlUtilities.mysqlUtilities.submitDBDeletion(db['databaseName'])
 
-                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") == 0:
+                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") != 1:
                     raise BaseException("Failed to create Databases!")
 
                 newDB = Databases(website=self.website, dbName=db['databaseName'], dbUser=db['databaseUser'])
@@ -2370,7 +2385,7 @@ class backupUtilities:
 
                 mysqlUtilities.mysqlUtilities.submitDBDeletion(db['databaseName'])
 
-                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") == 0:
+                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") != 1:
                     raise BaseException("Failed to create Databases!")
 
                 newDB = Databases(website=self.website, dbName=db['databaseName'], dbUser=db['databaseUser'])
@@ -2491,20 +2506,27 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
             dbName = database.find('dbName').text
             res = mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel')
-            if res == 0:
-                ## This login can be further improved later.
-                logging.CyberCPLogFileWriter.writeToFile('Failed to create database backup for %s. This could be false positive, moving on.' % (dbName))
+            sql_gz = f'/home/cyberpanel/{dbName}.sql.gz'
+            sql_plain = f'/home/cyberpanel/{dbName}.sql'
+            dump_ok = res != 0 and (
+                (os.path.exists(sql_gz) and os.path.getsize(sql_gz) >= 64) or
+                (os.path.exists(sql_plain) and os.path.getsize(sql_plain) >= 64)
+            )
+            if not dump_ok:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Failed to create database backup for %s (empty or missing SQL dump). Aborting website backup.' % (dbName))
+                raise BaseException('Database backup failed for %s: dump missing or empty' % dbName)
 
             # Move database backup (check for both .sql.gz and .sql)
-            if os.path.exists(f'/home/cyberpanel/{dbName}.sql.gz'):
-                command = f'mv /home/cyberpanel/{dbName}.sql.gz {CPHomeStorage}/{dbName}.sql.gz'
+            if os.path.exists(sql_gz):
+                command = f'mv {sql_gz} {CPHomeStorage}/{dbName}.sql.gz'
                 ProcessUtilities.executioner(command)
                 # Also move metadata file if it exists
                 if os.path.exists(f'/home/cyberpanel/{dbName}.backup.json'):
                     command = f'mv /home/cyberpanel/{dbName}.backup.json {CPHomeStorage}/{dbName}.backup.json'
                     ProcessUtilities.executioner(command)
-            elif os.path.exists(f'/home/cyberpanel/{dbName}.sql'):
-                command = f'mv /home/cyberpanel/{dbName}.sql {CPHomeStorage}/{dbName}.sql'
+            elif os.path.exists(sql_plain):
+                command = f'mv {sql_plain} {CPHomeStorage}/{dbName}.sql'
                 ProcessUtilities.executioner(command)
 
 

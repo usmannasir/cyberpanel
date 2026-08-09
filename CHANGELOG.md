@@ -5,6 +5,43 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+
+### Fix: backup tar failures and premature remote transfer (#1855, #1856)
+- `BackupRoot()` checks `tar` exit status and refuses `Completed` for empty/missing archives.
+- `createLocalBackup()` waits until the `.tar.gz` exists with a stable non-zero size before
+  reporting success to remote/SFTP/GDrive jobs.
+
+### Fix: PHP Basic UI no longer corrupts `max_memory_limit` (#1784)
+- `managePHP/phpManager.py` matches `memory_limit` without rewriting PHP 8.5 `max_memory_limit`.
+
+### Security: default deny for sensitive web files (#1859)
+- New OpenLiteSpeed and LiteSpeed Enterprise / Apache vhost templates block direct
+  HTTP access to `.env`, `.git`, `.htpasswd`, `.user.ini`, and `.htaccess` (403).
+- Existing sites: run `CPScripts/retrofit-sensitive-file-denials.sh` (restarts LSWS).
+- Helper: `vhost.ensureSensitiveFileDenials()` for idempotent injection into OLS configs.
+
+### Settings: option to hide promotional content (port of #1841)
+- New **Hide promotional content** checkbox under Settings → Design (`HidePromotions`
+  on `CyberPanelCosmetic`, default off).
+- When enabled, hides Build Services / HIRE US sidebar entry, Build Services command
+  palette group, and Email Delivery / AI Scanner / .htaccess promo notifications.
+- Backup-not-configured notification stays visible (status warning, not a promo).
+- Upgrade path: `ALTER TABLE ... ADD HidePromotions` in `plogical/upgrade.py`.
+
+### Build metadata
+- `version.txt` and panel `BUILD` advanced to **2.5.5 build 1** (still the 2.5.5-dev line; not a 2.4.9 backport of release notes).
+
+### Mail: sieve install-first guard (#1733)
+- Keep sieve when pigeonhole is present; try installing OS packages when missing;
+  strip `sieve`/`managesieve` from `dovecot.conf` only if install fails; always
+  verify Dovecot/Postfix afterward (`plogical/sieveGuard.py`).
+
+### Upgrade reliability (#1727, #1853)
+- Modular upgrade no longer hardcodes `/usr/bin/php` to lsphp74; picks an installed
+  lsphp (prefer 8.3+). `install.py` uses `os.path.lexists` so broken symlinks are replaced.
+- Modular upgrade records `UPGRADE_FAILED` from real `upgrade.py`/`PIPESTATUS` and
+  refuses to print a success banner when the Python upgrade failed.
+
 ### Fix: show full PHP patch on List Websites
 - List Websites now shows the live runtime version (e.g. `PHP 8.5.7`) from the
   site's `lsphp` binary, not only the selector label (`PHP 8.5`).
