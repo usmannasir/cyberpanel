@@ -88,6 +88,26 @@ class TerminalSecretTests(unittest.TestCase):
 
             self.assertEqual(stat.S_IMODE(os.stat(secret_path).st_mode), 0o600)
 
+    def test_private_secret_does_not_require_a_permission_rewrite(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            secret_path = os.path.join(temp_dir, "terminal-secret")
+            with open(secret_path, "w") as secret_file:
+                secret_file.write("p" * 64)
+            os.chmod(secret_path, 0o600)
+            environment = {
+                TERMINAL_JWT_SECRET_ENV: "",
+                TERMINAL_JWT_SECRET_FILE_ENV: secret_path,
+            }
+            with mock.patch.dict(os.environ, environment, clear=False), \
+                    mock.patch(
+                        "plogical.securityUtils.os.chmod",
+                        side_effect=OSError("read-only filesystem"),
+                    ), mock.patch(
+                        "plogical.securityUtils.os.fchmod",
+                        side_effect=OSError("read-only filesystem"),
+                    ):
+                self.assertEqual(get_terminal_jwt_secret(), "p" * 64)
+
     def test_missing_secret_fails_closed(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             secret_path = os.path.join(temp_dir, "missing-secret")
