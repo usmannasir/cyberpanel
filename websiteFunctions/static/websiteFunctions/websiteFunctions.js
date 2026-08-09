@@ -2907,11 +2907,20 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     };
 
     // Initial fetch of websites
+    var _listWebsitesFetchAttempts = 0;
     $scope.getFurtherWebsitesFromDB = function () {
         $scope.loading = true; // Set loading to true when starting fetch
+        var csrf = getCookie('csrftoken');
+        if (!csrf && _listWebsitesFetchAttempts < 10) {
+            // Retry briefly if session/CSRF cookies are still settling after login
+            _listWebsitesFetchAttempts += 1;
+            setTimeout(function () { $scope.$applyAsync(function () { $scope.getFurtherWebsitesFromDB(); }); }, 150);
+            return;
+        }
+        _listWebsitesFetchAttempts = 0;
         var config = {
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': csrf || ''
             }
         };
 
@@ -2933,18 +2942,19 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 }
             } else {
                 $("#listFail").fadeIn();
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = response.data.error_message || response.data.errorMessage;
             }
             $scope.loading = false; // Set loading to false when done
         }).catch(function(error) {
             $("#listFail").fadeIn();
-            $scope.errorMessage = error.message || 'An error occurred while fetching websites';
+            var body = (error && error.data) ? error.data : {};
+            $scope.errorMessage = body.error_message || body.errorMessage || error.message || 'An error occurred while fetching websites';
             $scope.loading = false; // Set loading to false on error
         });
     };
 
-    // Call it immediately
-    $scope.getFurtherWebsitesFromDB();
+    // Call after tick so CSRF seed / cookies are available
+    setTimeout(function () { $scope.$applyAsync(function () { $scope.getFurtherWebsitesFromDB(); }); }, 0);
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);
@@ -6334,11 +6344,19 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     };
 
     // Initial fetch of websites
+    var _listWebsitesFetchAttempts = 0;
     $scope.getFurtherWebsitesFromDB = function () {
         $scope.loading = true; // Set loading to true when starting fetch
+        var csrf = getCookie('csrftoken');
+        if (!csrf && _listWebsitesFetchAttempts < 10) {
+            _listWebsitesFetchAttempts += 1;
+            setTimeout(function () { $scope.$applyAsync(function () { $scope.getFurtherWebsitesFromDB(); }); }, 150);
+            return;
+        }
+        _listWebsitesFetchAttempts = 0;
         var config = {
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': csrf || ''
             }
         };
 
@@ -6360,18 +6378,19 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 }
             } else {
                 $("#listFail").fadeIn();
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = response.data.error_message || response.data.errorMessage;
             }
             $scope.loading = false; // Set loading to false when done
         }).catch(function(error) {
             $("#listFail").fadeIn();
-            $scope.errorMessage = error.message || 'An error occurred while fetching websites';
+            var body = (error && error.data) ? error.data : {};
+            $scope.errorMessage = body.error_message || body.errorMessage || error.message || 'An error occurred while fetching websites';
             $scope.loading = false; // Set loading to false on error
         });
     };
 
-    // Call it immediately
-    $scope.getFurtherWebsitesFromDB();
+    // Call after tick so CSRF seed / cookies are available
+    setTimeout(function () { $scope.$applyAsync(function () { $scope.getFurtherWebsitesFromDB(); }); }, 0);
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);
@@ -10105,11 +10124,19 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     };
 
     // Initial fetch of websites
+    var _listWebsitesFetchAttempts = 0;
     $scope.getFurtherWebsitesFromDB = function () {
         $scope.loading = true; // Set loading to true when starting fetch
+        var csrf = getCookie('csrftoken');
+        if (!csrf && _listWebsitesFetchAttempts < 10) {
+            _listWebsitesFetchAttempts += 1;
+            setTimeout(function () { $scope.$applyAsync(function () { $scope.getFurtherWebsitesFromDB(); }); }, 150);
+            return;
+        }
+        _listWebsitesFetchAttempts = 0;
         var config = {
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': csrf || ''
             }
         };
 
@@ -10131,18 +10158,19 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 }
             } else {
                 $("#listFail").fadeIn();
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = response.data.error_message || response.data.errorMessage;
             }
             $scope.loading = false; // Set loading to false when done
         }).catch(function(error) {
             $("#listFail").fadeIn();
-            $scope.errorMessage = error.message || 'An error occurred while fetching websites';
+            var body = (error && error.data) ? error.data : {};
+            $scope.errorMessage = body.error_message || body.errorMessage || error.message || 'An error occurred while fetching websites';
             $scope.loading = false; // Set loading to false on error
         });
     };
 
-    // Call it immediately
-    $scope.getFurtherWebsitesFromDB();
+    // Call after tick so CSRF seed / cookies are available
+    setTimeout(function () { $scope.$applyAsync(function () { $scope.getFurtherWebsitesFromDB(); }); }, 0);
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);

@@ -951,11 +951,31 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
+    $scope.currentTab = 'upgrade';
     var globalType;
+    var packageCache = {};
+    var activeFetch = null;
 
-    $scope.fetchPackages = function (type = 'installed') {
-        $scope.cyberpanelLoading = false;
+    $scope.fetchPackages = function (type) {
+        if (typeof type === 'undefined' || type === null || type === '') {
+            type = 'installed';
+        }
+        $scope.currentTab = type;
         globalType = type;
+
+        // Serve cached tab data instantly (All Packages is expensive)
+        var cacheKey = type + '|' + $scope.currentPage + '|' + $scope.recordsToShow;
+        if (packageCache[cacheKey]) {
+            var cached = packageCache[cacheKey];
+            $scope.allPackages = cached.allPackages;
+            $scope.pagination = cached.pagination;
+            $scope.fetchedPackages = cached.fetchedPackages;
+            $scope.totalPackages = cached.totalPackages;
+            $scope.cyberpanelLoading = true;
+            return;
+        }
+
+        $scope.cyberpanelLoading = false;
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -969,16 +989,27 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         };
 
         dataurl = "/serverstatus/fetchPackages";
+        var fetchToken = {};
+        activeFetch = fetchToken;
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
+            if (activeFetch !== fetchToken) {
+                return; // stale response from another tab
+            }
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
                 $scope.allPackages = JSON.parse(response.data.packages);
                 $scope.pagination = response.data.pagination;
                 $scope.fetchedPackages = response.data.fetchedPackages;
                 $scope.totalPackages = response.data.totalPackages;
+                packageCache[cacheKey] = {
+                    allPackages: $scope.allPackages,
+                    pagination: $scope.pagination,
+                    fetchedPackages: $scope.fetchedPackages,
+                    totalPackages: $scope.totalPackages
+                };
             } else {
                 new PNotify({
                     title: 'Error!',
@@ -989,6 +1020,9 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialData(response) {
+            if (activeFetch !== fetchToken) {
+                return;
+            }
             $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -999,6 +1033,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 
     };
+    // Available Updates first; All Packages loads only when that tab is selected
     $scope.fetchPackages('upgrade');
 
     $scope.fetchPackageDetails = function (packageFetch) {

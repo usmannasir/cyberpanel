@@ -11,6 +11,8 @@
     <title>{% block title %}CyberPanel{% endblock %}</title>
     
     {% load static %}
+    <!-- Hide Angular templates until compiled (prevents {$ $} flash) -->
+    <style>[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none!important;}</style>
     <link rel="icon" type="image/x-icon" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}?v={{ CP_VERSION }}">
 
     <!-- Speed up third-party asset fetches (DNS + TLS handshake up front) -->
@@ -124,7 +126,6 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
-                        {% endif %}
                         <div class="cp-notif-item" data-key="backup" data-storekey="backupNotificationDismissed" data-store="session">
                             <div class="cp-notif-ic ic-warn"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
@@ -134,7 +135,6 @@
                             </div>
                             <button class="cp-notif-x" type="button" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
-                        {% if not cosmetic.HidePromotions %}
                         <div class="cp-notif-item" data-key="ai" data-storekey="aiScannerNotificationDismissed" data-store="session">
                             <div class="cp-notif-ic ic-accent"><i class="fas fa-brain" aria-hidden="true"></i></div>
                             <div class="cp-notif-body">
@@ -289,7 +289,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main id="main-content" role="main" tabindex="-1">
+    <main id="main-content" role="main" tabindex="-1" ng-cloak>
         <nav id="cp-breadcrumb" class="cp-breadcrumb" aria-label="{% trans 'Breadcrumb' %}" hidden>
             <a href="{% url 'index' %}"><i class="fas fa-house" aria-hidden="true"></i> {% trans "Dashboard" %}</a>
             <span class="cp-bc-sep" id="cp-bc-group-wrap" hidden><span class="cp-bc-chevron" aria-hidden="true">/</span><span id="cp-bc-group" class="cp-bc-group"></span></span>
@@ -535,6 +535,7 @@
     <script defer src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}"></script>
     <script defer src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}"></script>
     <script defer src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'emailMarketing/emailMarketing.js' %}?v={{ CP_VERSION }}"></script>
     <script defer src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}"></script>
     <script defer src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>
     {% endblock %}

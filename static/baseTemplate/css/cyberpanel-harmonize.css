@@ -1,5 +1,4 @@
-/* =====================================================================
-   CyberPanel Theme Harmonizer  (v2.4.8)
+/* ==============================================================   CyberPanel Theme Harmonizer  (v2.4.8)
    ---------------------------------------------------------------------
    Internal pages (dns, ftp, email, server, databases, firewall…) each ship
    their own embedded <style> with hardcoded colors copied from the OLD
@@ -128,8 +127,7 @@
 .modal-header,
 .modal-footer { background: var(--bg-secondary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
 
-/* =====================================================================
-   Shared "card surface" idiom classes (#1804)
+/* ==============================================================   Shared "card surface" idiom classes (#1804)
    ---------------------------------------------------------------------
    Many internal pages (email limits, backups, docker, git, onboarding…)
    hardcode `background: white / #fff / #f8f9ff` on their hero card,
@@ -192,8 +190,6 @@
     text-shadow: none !important;
 }
 
-<<<<<<< HEAD
-=======
 /* Email list page: mail config sidebar, tables, disk usage badges */
 #main-content .info-card {
     background: var(--bg-muted) !important;
@@ -231,9 +227,7 @@
     color: var(--text-heading) !important;
 }
 
->>>>>>> 589c89fd (fix(email): show disk usage in list emails badge)
-/* =====================================================================
-   Site management page (website.html) bespoke components — centralized
+/* ==============================================================   Site management page (website.html) bespoke components — centralized
    here so there is a single source of truth for the calm look.
    ===================================================================== */
 #main-content .cyberpanel-website-page { color: var(--text-primary) !important; }

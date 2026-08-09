@@ -12,6 +12,7 @@
 
     {# ============================ EMAIL ============================ #}
     {% if section == 'email' %}
+        {% if not cosmetic.HidePromotions %}
         <!-- Managed Email Delivery service promo -->
         <div class="cp-service-banner">
             <i class="fas fa-paper-plane cp-sb-deco" aria-hidden="true"></i>
@@ -24,6 +25,7 @@
                 <i class="fas fa-arrow-right" aria-hidden="true"></i> {% trans "Learn more" %}
             </a>
         </div>
+        {% endif %}
 
         <h2 class="section-title">{% trans "EMAIL" %}</h2>
         <div class="cp-tile-grid">

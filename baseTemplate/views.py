@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
 import json
 from loginSystem.views import loadLoginPage
-from .models import version
+from .models import version, UserNotificationPreferences
 import requests
 import subprocess
 import shlex
@@ -16,6 +16,7 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from plogical.processUtilities import ProcessUtilities
+from plogical.firewallUtilities import FirewallUtilities
 from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites, WPSites
 from databases.models import Databases
@@ -1383,3 +1384,626 @@ def getTopProcesses(request):
                 
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def blockIPAddress(request):
+    """
+    Block an IP address using the appropriate firewall (CSF or firewalld)
+    """
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        currentACL = ACLManager.loadedACL(user_id)
+        if not currentACL.get('admin', 0):
+            return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+        
+        # Check if user has CyberPanel addons
+        if not ACLManager.CheckForPremFeature('all'):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'Premium feature required'
+            }), content_type='application/json', status=403)
+        
+        # Parse request body - Django request.body is always bytes
+        try:
+            if not request.body:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            body_str = request.body.decode('utf-8')
+            if not body_str or body_str.strip() == '':
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            data = json.loads(body_str)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body[:200] if request.body else "empty"}')
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': f'Invalid request format: {str(e)}'
+            }), content_type='application/json', status=400)
+        
+        ip_address = data.get('ip_address', '').strip()
+        
+        if not ip_address:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'IP address is required'
+            }), content_type='application/json', status=400)
+        
+        # Validate IP address format and check for private/reserved ranges
+        import re
+        import ipaddress
+        ip_pattern = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        if not re.match(ip_pattern, ip_address):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'Invalid IP address format'
+            }), content_type='application/json', status=400)
+        
+        # Check for private/reserved IP ranges to prevent self-blocking
+        try:
+            ip_obj = ipaddress.ip_address(ip_address)
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_reserved:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Cannot block private, loopback, link-local, or reserved IP addresses'
+                }), content_type='application/json', status=400)
+            
+            # Additional check for common problematic ranges
+            if (ip_address.startswith('127.') or  # Loopback
+                ip_address.startswith('169.254.') or  # Link-local
+                ip_address.startswith('224.') or  # Multicast
+                ip_address.startswith('255.') or  # Broadcast
+                ip_address in ['0.0.0.0', '::1']):  # Invalid/loopback
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Cannot block system or reserved IP addresses'
+                }), content_type='application/json', status=400)
+                
+        except ValueError:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'Invalid IP address'
+            }), content_type='application/json', status=400)
+        
+        # Use FirewallUtilities so firewall-cmd runs with proper privileges (root/lscpd)
+        firewall_cmd = 'firewalld'
+        reason = data.get('reason', 'Security alert detected from dashboard')
+        try:
+            success, msg = FirewallUtilities.blockIP(ip_address, reason)
+        except Exception as e:
+            success = False
+            msg = str(e)
+        
+        if success:
+            # Add to banned IPs JSON file for consistency with firewall page
+            try:
+                import os
+                import time
+                primary_file = '/usr/local/CyberCP/data/banned_ips.json'
+                legacy_file = '/etc/cyberpanel/banned_ips.json'
+                banned_ips_file = primary_file if os.path.exists(primary_file) else legacy_file if os.path.exists(legacy_file) else primary_file
+                banned_ips = []
+                
+                if os.path.exists(banned_ips_file):
+                    try:
+                        with open(banned_ips_file, 'r') as f:
+                            banned_ips = json.load(f)
+                    except:
+                        banned_ips = []
+                
+                # Check if IP is already banned
+                ip_already_banned = False
+                for banned_ip in banned_ips:
+                    if banned_ip.get('ip') == ip_address and banned_ip.get('active', True):
+                        ip_already_banned = True
+                        break
+                
+                if not ip_already_banned:
+                    # Get reason from request data
+                    reason = data.get('reason', 'Security alert detected from dashboard')
+                    
+                    # Add new banned IP
+                    new_banned_ip = {
+                        'id': int(time.time()),
+                        'ip': ip_address,
+                        'reason': reason,
+                        'duration': 'permanent',
+                        'banned_on': time.time(),
+                        'expires': 'Never',
+                        'active': True
+                    }
+                    banned_ips.append(new_banned_ip)
+                    
+                    # Ensure directory exists
+                    os.makedirs(os.path.dirname(primary_file), exist_ok=True)
+                    
+                    # Save to file
+                    with open(primary_file, 'w') as f:
+                        json.dump(banned_ips, f, indent=2)
+                    
+                    # Also add to firewall DB so it shows on Firewall > Banned IPs
+                    try:
+                        from firewall.models import BannedIP
+                        from django.utils import timezone
+                        user_id = request.session.get('userID')
+                        if user_id:
+                            admin = Administrator.objects.get(pk=user_id)
+                            BannedIP.objects.get_or_create(
+                                ip_address=ip_address,
+                                defaults={
+                                    'reason': reason,
+                                    'duration': 'permanent',
+                                    'banned_on': timezone.now(),
+                                    'expires': None,
+                                    'active': True,
+                                    'admin': admin,
+                                }
+                            )
+                    except Exception as db_e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to add banned IP to firewall DB: {str(db_e)}')
+            except Exception as e:
+                # Log but don't fail the request if JSON update fails
+                import plogical.CyberCPLogFileWriter as logging
+                logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to update banned_ips.json: {str(e)}')
+            
+            # Log the action
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'IP address {ip_address} blocked via CyberPanel dashboard by user {user_id}')
+            
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'message': f'Successfully blocked IP address {ip_address}',
+                'firewall': firewall_cmd
+            }), content_type='application/json')
+        else:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': msg or 'Failed to block IP address'
+            }), content_type='application/json', status=500)
+        
+    except json.JSONDecodeError as e:
+        import plogical.CyberCPLogFileWriter as logging
+        logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body}')
+        return HttpResponse(json.dumps({
+            'status': 0,
+            'error': f'Invalid JSON in request: {str(e)}'
+        }), content_type='application/json', status=400)
+    except Exception as e:
+        import plogical.CyberCPLogFileWriter as logging
+        import traceback
+        error_trace = traceback.format_exc()
+        logging.CyberCPLogFileWriter.writeToFile(f'Error in blockIPAddress: {str(e)}\n{error_trace}')
+        return HttpResponse(json.dumps({
+            'status': 0,
+            'error': f'Server error: {str(e)}'
+        }), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def getSSHUserActivity(request):
+    import json, os
+    from plogical.processUtilities import ProcessUtilities
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'error': 'Not logged in'}), content_type='application/json', status=403)
+        currentACL = ACLManager.loadedACL(user_id)
+        if not currentACL.get('admin', 0):
+            return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+        data = json.loads(request.body.decode('utf-8'))
+        user = data.get('user')
+        tty = data.get('tty')
+        login_ip = data.get('ip', '')
+        if not user:
+            return HttpResponse(json.dumps({'error': 'Missing user'}), content_type='application/json', status=400)
+        # Get 'w' output first (fastest, most important for session status)
+        w_lines = []
+        try:
+            w_cmd = f"w -h {user} 2>/dev/null | head -10"
+            w_output = ProcessUtilities.outputExecutioner(w_cmd)
+            if w_output:
+                for line in w_output.strip().split('\n'):
+                    if line.strip():
+                        w_lines.append(line)
+        except Exception:
+            w_lines = []
+        
+        # Get processes for the user (limit to 50 for speed)
+        # If TTY is specified, filter by TTY; otherwise get all user processes
+        processes = []
+        try:
+            if tty:
+                # Filter by specific TTY
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | grep '{tty}' | head -50"
+            else:
+                # Get all processes for user
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | head -50"
+            ps_output = ProcessUtilities.outputExecutioner(ps_cmd)
+            if ps_output:
+                for line in ps_output.strip().split('\n'):
+                    if not line.strip():
+                        continue
+                    parts = line.split(None, 4)
+                    if len(parts) >= 5:
+                        pid, ppid, tty_val, time_val, cmd = parts[0], parts[1], parts[2], parts[3], parts[4]
+                        # Additional TTY check if tty was specified
+                        if tty and tty not in tty_val:
+                            continue
+                        # Skip CWD lookup for speed
+                        proc = {
+                            'pid': pid,
+                            'ppid': ppid,
+                            'tty': tty_val,
+                            'time': time_val,
+                            'cmd': cmd[:200] if len(cmd) > 200 else cmd,  # Limit command length
+                            'cwd': ''  # Skip for speed
+                        }
+                        processes.append(proc)
+        except Exception:
+            processes = []
+        
+        # Skip slow operations for fast response:
+        # - Process tree (can be computed client-side if needed)
+        # - Shell history (not critical for initial load)
+        # - Disk usage (not critical for initial load)
+        # - GeoIP (can be fetched async later if needed)
+        return HttpResponse(json.dumps({
+            'processes': processes,
+            'process_tree': [],  # Empty for speed
+            'shell_history': [],  # Empty for speed
+            'disk_usage': '',  # Empty for speed
+            'geoip': {},  # Empty for speed
+            'w': w_lines
+        }), content_type='application/json')
+    except Exception as e:
+        return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_GET
+def getTopProcesses(request):
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        currentACL = ACLManager.loadedACL(user_id)
+        if not currentACL.get('admin', 0):
+            return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        from django.core.cache import cache
+        cache_key = 'cp_top_processes'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return HttpResponse(json.dumps(cached), content_type='application/json')
+        
+        import subprocess
+        import tempfile
+        
+        # Create a temporary file to capture top output
+        with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_file:
+            temp_path = temp_file.name
+        
+        try:
+            # Get top processes data
+            with open(temp_path, "w") as outfile:
+                subprocess.call("top -n1 -b", shell=True, stdout=outfile)
+            
+            with open(temp_path, 'r') as infile:
+                data = infile.readlines()
+            
+            processes = []
+            counter = 0
+            
+            for line in data:
+                counter += 1
+                if counter <= 7:  # Skip header lines
+                    continue
+                
+                if len(processes) >= 10:  # Limit to top 10 processes
+                    break
+                
+                points = line.split()
+                points = [a for a in points if a != '']
+                
+                if len(points) >= 12:
+                    process = {
+                        'pid': points[0],
+                        'user': points[1],
+                        'cpu': points[8],
+                        'memory': points[9],
+                        'command': points[11]
+                    }
+                    processes.append(process)
+            
+            payload = {
+                'status': 1,
+                'processes': processes
+            }
+            try:
+                cache.set(cache_key, payload, 8)
+            except Exception:
+                pass
+            return HttpResponse(json.dumps(payload), content_type='application/json')
+            
+        finally:
+            # Clean up temporary file
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
+                
+    except Exception as e:
+        return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+
+
+@csrf_exempt
+@require_POST
+def dismiss_backup_notification(request):
+    """API endpoint to permanently dismiss the backup notification for the current user"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get or create user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        preferences, created = UserNotificationPreferences.objects.get_or_create(
+            user=user,
+            defaults={
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }
+        )
+        
+        # Mark backup notification as dismissed
+        preferences.backup_notification_dismissed = True
+        preferences.save()
+        
+        return HttpResponse(json.dumps({'status': 1, 'message': 'Backup notification dismissed permanently'}), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def dismiss_ai_scanner_notification(request):
+    """API endpoint to permanently dismiss the AI scanner notification for the current user"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get or create user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        preferences, created = UserNotificationPreferences.objects.get_or_create(
+            user=user,
+            defaults={
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }
+        )
+        
+        # Mark AI scanner notification as dismissed
+        preferences.ai_scanner_notification_dismissed = True
+        preferences.save()
+        
+        return HttpResponse(json.dumps({'status': 1, 'message': 'AI scanner notification dismissed permanently'}), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_GET
+def get_notification_preferences(request):
+    """API endpoint to get current user's notification preferences"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        try:
+            preferences = UserNotificationPreferences.objects.get(user=user)
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'backup_notification_dismissed': preferences.backup_notification_dismissed,
+                'ai_scanner_notification_dismissed': preferences.ai_scanner_notification_dismissed
+            }), content_type='application/json')
+        except UserNotificationPreferences.DoesNotExist:
+            # Return default values if preferences don't exist yet
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+
+def _ssh_whitelist_admin_gate(request):
+    """Return (user_id, error_response). error_response is HttpResponse or None."""
+    user_id = request.session.get('userID')
+    if not user_id:
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Not logged in'}),
+            content_type='application/json',
+            status=403,
+        )
+    currentACL = ACLManager.loadedACL(user_id)
+    if not currentACL.get('admin', 0):
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Admin only'}),
+            content_type='application/json',
+            status=403,
+        )
+    return user_id, None
+
+
+def _ssh_whitelist_parse_body(request):
+    try:
+        if not request.body:
+            return {}, None
+        body_str = request.body.decode('utf-8')
+        if not body_str or not body_str.strip():
+            return {}, None
+        data = json.loads(body_str)
+        if not isinstance(data, dict):
+            return None, HttpResponse(
+                json.dumps({'status': 0, 'error': 'Invalid request format'}),
+                content_type='application/json',
+                status=400,
+            )
+        return data, None
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Invalid request format: %s' % str(e)}),
+            content_type='application/json',
+            status=400,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistList(request):
+    """List Trusted IPs (SSH security whitelist)."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        entries = SSHSecurityWhitelistUtilities.load_entries()
+        return HttpResponse(
+            json.dumps({'status': 1, 'entries': entries}, ensure_ascii=False),
+            content_type='application/json',
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistList: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not load trusted IPs'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistAdd(request):
+    """Add IP to Trusted IPs whitelist."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        label = (data.get('label') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result = SSHSecurityWhitelistUtilities.add_entry(ip, label)
+        if ok:
+            return HttpResponse(
+                json.dumps({'status': 1, 'ip': result}),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistAdd: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not add trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistRemove(request):
+    """Remove IP from Trusted IPs whitelist."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result = SSHSecurityWhitelistUtilities.remove_entry(ip)
+        if ok:
+            return HttpResponse(
+                json.dumps({'status': 1, 'ip': result}),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistRemove: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not remove trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistUpdate(request):
+    """Update Trusted IP row (IP and/or label)."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        new_ip = data.get('new_ip')
+        label = data.get('label')
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result, unchanged = SSHSecurityWhitelistUtilities.update_entry(
+            ip,
+            new_ip=new_ip,
+            label=label,
+        )
+        if ok:
+            msg = 'No changes to save.' if unchanged else 'Entry updated'
+            return HttpResponse(
+                json.dumps({
+                    'status': 1,
+                    'ip': result,
+                    'unchanged': bool(unchanged),
+                    'message': msg,
+                }),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistUpdate: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not update trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+>>>>>>> 29e285e4 (fix(ui): HidePromotions gates, panel UX, SSH whitelist APIs (#19))

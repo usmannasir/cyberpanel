@@ -6,9 +6,10 @@
 
 <link rel="stylesheet" href="{% static 'webmail/webmail.css' %}">
 
-<div class="webmail-container" ng-controller="webmailCtrl" ng-init="init()">
+<div class="webmail-container" ng-controller="webmailCtrl" ng-init="init()" ng-cloak>
 
-    <div id="cybermailBanner" style="display:none;flex-shrink:0;">
+    {% if not cosmetic.HidePromotions %}
+<div id="cybermailBanner" style="display:none;flex-shrink:0;">
       <div style="padding:10px 20px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);">
         <div style="flex-shrink:0;font-size:22px;">&#9993;</div>
         <div style="flex:1;min-width:0;font-size:12.5px;color:rgba(255,255,255,0.85);">
@@ -22,8 +23,8 @@
     (function(){if(!document.cookie.includes('cybermail_dismiss=1')){document.getElementById('cybermailBanner').style.display='';}})();
     function dismissCyberMailBanner(){document.getElementById('cybermailBanner').style.display='none';document.cookie='cybermail_dismiss=1; path=/; max-age='+7*86400;}
     </script>
-
-    <!-- Account Switcher Bar -->
+{% endif %}
+<!-- Account Switcher Bar -->
     <div class="wm-account-bar" ng-show="managedAccounts.length > 1">
         <div class="wm-account-current">
             <i class="fa fa-envelope"></i>

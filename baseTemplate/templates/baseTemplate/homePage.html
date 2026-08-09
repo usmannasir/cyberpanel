@@ -42,10 +42,12 @@
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Back Up" %}</span><span class="cp-qa-sub">{% trans "Protect your data" %}</span></span>
         </a>
         {% endif %}
+        {% if not cosmetic.HidePromotions %}
         <a class="cp-qa-card" href="{% url 'buildServices' %}">
             <span class="cp-qa-ic" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;"><i class="fas fa-rocket"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Build Services" %}</span><span class="cp-qa-sub">{% trans "Let us build it" %}</span></span>
         </a>
+        {% endif %}
     </div>
 
     <!-- Onboarding checklist (shown when there are no websites yet) -->
@@ -87,6 +89,7 @@
         </div>
     </div>
 
+    {% if not cosmetic.HidePromotions %}
     <!-- Dismissible Build Services promo card -->
     <div class="cp-build-card" id="cp-build-card" hidden>
         <button class="cp-build-x" type="button" id="cp-build-card-x" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times"></i></button>
@@ -110,6 +113,7 @@
         } catch (e) {}
     })();
     </script>
+    {% endif %}
 
     <!-- Overview Section -->
     <div class="overview-section">
