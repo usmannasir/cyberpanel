@@ -945,17 +945,26 @@ fi
 # raw.githubusercontent.com intermittently answers HTTP 429; running that error page
 # through python later fails in confusing ways, so validate the download before use.
 for i in {1..3}; do
-  rm -f upgrade.py
+  rm -f upgrade.py cyberpanel_version.py
   wget -q "${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
-  if grep -q "^import " upgrade.py 2>/dev/null ; then
+  # upgrade.py imports BUILD/VERSION from sibling cyberpanel_version.py (repo root).
+  # Without this file in the temp dir, both primary and fallback Python runs fail (#1885).
+  wget -q "${Git_Content_URL}/${Branch_Name}/cyberpanel_version.py"
+  if grep -q "^import " upgrade.py 2>/dev/null \
+      && grep -qE "^(VERSION|BUILD)\s*=" cyberpanel_version.py 2>/dev/null ; then
     break
   fi
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] upgrade.py download failed or returned invalid content (attempt $i/3), GitHub may be rate limiting (HTTP 429). Retrying in 15 seconds..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] upgrade.py / cyberpanel_version.py download failed or returned invalid content (attempt $i/3), GitHub may be rate limiting (HTTP 429). Retrying in 15 seconds..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   sleep 15
 done
 if ! grep -q "^import " upgrade.py 2>/dev/null ; then
   echo -e "\nFailed to download upgrade.py from ${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
   echo -e "This is usually a temporary GitHub rate limit (HTTP 429 Too Many Requests). Please retry the upgrade later.\n"
+  exit 1
+fi
+if ! grep -qE "^(VERSION|BUILD)\s*=" cyberpanel_version.py 2>/dev/null ; then
+  echo -e "\nFailed to download cyberpanel_version.py from ${Git_Content_URL}/${Branch_Name}/cyberpanel_version.py"
+  echo -e "upgrade.py requires this sibling module (issue #1885). Please retry the upgrade later.\n"
   exit 1
 fi
 
@@ -1194,9 +1203,11 @@ if [ "$Server_OS" = "Ubuntu" ]; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Activate returned code: $ACTIVATE_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
   Check_Return
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrading setuptools and packaging..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip install --upgrade setuptools packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  # Always use the CyberCP venv interpreter. Bare pip/pip3 can hit system Python
+  # (PEP 668) or a deleted CyberPanelTemp path after fallback cleanup.
+  /usr/local/CyberCP/bin/python -m pip install --upgrade setuptools packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  /usr/local/CyberCP/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   PIP_CODE=$?
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
   Check_Return
