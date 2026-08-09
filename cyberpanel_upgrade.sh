@@ -942,22 +942,31 @@ fi
 #virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 #  Check_Return
 
-# raw.githubusercontent.com intermittently answers HTTP 429; running that error page
-# through python later fails in confusing ways, so validate the download before use.
-for i in {1..3}; do
-  rm -f upgrade.py
-  wget -q "${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
-  if grep -q "^import " upgrade.py 2>/dev/null ; then
-    break
-  fi
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] upgrade.py download failed or returned invalid content (attempt $i/3), GitHub may be rate limiting (HTTP 429). Retrying in 15 seconds..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  sleep 15
-done
-if ! grep -q "^import " upgrade.py 2>/dev/null ; then
-  echo -e "\nFailed to download upgrade.py from ${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
+# raw.githubusercontent.com intermittently answers HTTP 429; running an error
+# page through Python later fails in confusing ways, so validate every staged
+# source file before use.
+Download_Upgrade_Source() {
+  local Source_Path="$1"
+  local Destination="$2"
+  local Expected_Pattern="$3"
+
+  for i in {1..3}; do
+    rm -f "$Destination"
+    wget -q -O "$Destination" "${Git_Content_URL}/${Branch_Name}/${Source_Path}"
+    if grep -q -- "$Expected_Pattern" "$Destination" 2>/dev/null ; then
+      return 0
+    fi
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ${Destination} download failed or returned invalid content (attempt $i/3), GitHub may be rate limiting (HTTP 429). Retrying in 15 seconds..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    sleep 15
+  done
+
+  echo -e "\nFailed to download ${Destination} from ${Git_Content_URL}/${Branch_Name}/${Source_Path}"
   echo -e "This is usually a temporary GitHub rate limit (HTTP 429 Too Many Requests). Please retry the upgrade later.\n"
-  exit 1
-fi
+  return 1
+}
+
+Download_Upgrade_Source "plogical/upgrade.py" "upgrade.py" "^import " || exit 1
+Download_Upgrade_Source "cyberpanel_version.py" "cyberpanel_version.py" "^VERSION" || exit 1
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py

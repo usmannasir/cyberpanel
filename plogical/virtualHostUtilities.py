@@ -1,6 +1,7 @@
 #!/usr/local/CyberCP/bin/python
 import os
 import os.path
+import re
 import sys
 import time
 
@@ -463,18 +464,33 @@ class virtualHostUtilities:
         if 'dovecot_config_version = 2.4.0' in dovecotContent:
             certSetting = 'ssl_server_cert_file'
             keySetting = 'ssl_server_key_file'
+            fileMarker = ''
         else:
             certSetting = 'ssl_cert'
             keySetting = 'ssl_key'
+            fileMarker = '<'
 
         blocks = []
         for domain in domains:
             blocks.append("""local_name %s {
-        %s = </etc/letsencrypt/live/%s/fullchain.pem
-        %s = </etc/letsencrypt/live/%s/privkey.pem
-}""" % (domain, certSetting, domain, keySetting, domain))
+        %s = %s/etc/letsencrypt/live/%s/fullchain.pem
+        %s = %s/etc/letsencrypt/live/%s/privkey.pem
+}""" % (domain, certSetting, fileMarker, domain,
+           keySetting, fileMarker, domain))
 
         return '\n' + '\n'.join(blocks) + '\n'
+
+    @staticmethod
+    def normalizeDovecotSNIPaths(dovecotContent):
+        if 'dovecot_config_version = 2.4.0' not in dovecotContent:
+            return dovecotContent
+
+        return re.sub(
+            r'^(\s*ssl_server_(?:cert|key)_file\s*=\s*)<(?=/)',
+            r'\1',
+            dovecotContent,
+            flags=re.MULTILINE,
+        )
 
     @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
