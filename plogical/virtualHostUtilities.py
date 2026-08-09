@@ -1381,6 +1381,11 @@ class virtualHostUtilities:
                 ## Scope to the master and use filter().delete() so removing an
                 ## orphaned alias (config present, DB row missing) does not raise. #1738
                 aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
+                try:
+                    DNS.maybeDeleteOrphanDNSZone(aliasDomain)
+                except Exception as zoneError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Orphan DNS zone cleanup failed for alias %s: %s' % (aliasDomain, str(zoneError)))
 
                 print("1,None")
             except BaseException as msg:
@@ -1406,6 +1411,11 @@ class virtualHostUtilities:
                 ## Scope to the master and use filter().delete() so removing an
                 ## orphaned alias (config present, DB row missing) does not raise. #1738
                 aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
+                try:
+                    DNS.maybeDeleteOrphanDNSZone(aliasDomain)
+                except Exception as zoneError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Orphan DNS zone cleanup failed for alias %s: %s' % (aliasDomain, str(zoneError)))
 
                 print("1,None")
             except BaseException as msg:
@@ -1744,6 +1754,11 @@ class virtualHostUtilities:
                 ProcessUtilities.executioner(command)
 
             delWebsite.delete()
+            try:
+                DNS.maybeDeleteOrphanDNSZone(virtualHostName)
+            except Exception as zoneError:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Orphan DNS zone cleanup failed for %s: %s' % (virtualHostName, str(zoneError)))
             installUtilities.installUtilities.reStartLiteSpeed()
 
             try:

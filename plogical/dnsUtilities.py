@@ -30,327 +30,85 @@ class DNS:
     create_zone_dir = "/usr/local/lsws/conf/zones"
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
     CFPath = '/home/cyberpanel/CloudFlare'
-    DEPLOYMENT_TYPE_FILE = '/etc/cyberpanel/deployment_type'
-    SPF_CYBERPERSONS = 'v=spf1 include:spf.cyberpersons.com ~all'
-
-    @staticmethod
-    def incrementSOASerial(zone):
-        """Increment the serial on every SOA record for a primary zone."""
-        if not zone or zone.type != 'MASTER':
-            return False
-
-        updated = False
-        for soa_record in Records.objects.filter(domainOwner=zone, type='SOA'):
-            try:
-                soa_content = soa_record.content.split()
-                soa_content[2] = str(int(soa_content[2]) + 1)
-                soa_record.content = ' '.join(soa_content)
-                soa_record.save(update_fields=['content'])
-                updated = True
-            except (AttributeError, IndexError, TypeError, ValueError) as error:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Unable to increment SOA serial for zone %s: %s' % (zone.name, str(error))
-                )
-        return updated
 
     ## DNS Functions
-
-    @staticmethod
-    def getDeploymentType():
-        """
-        Resolve mail SPF mode: cyberpersons (platform rental) or selfhosted (own VPS).
-        Order: /etc/cyberpanel/deployment_type, admin config deploymentType, default selfhosted.
-        """
-        try:
-            if os.path.exists(DNS.DEPLOYMENT_TYPE_FILE):
-                with open(DNS.DEPLOYMENT_TYPE_FILE, 'r') as _df:
-                    raw = _df.read().strip().lower()
-                if raw in ('cyberpersons', 'selfhosted'):
-                    return raw
-        except Exception:
-            pass
-        try:
-            from loginSystem.models import Administrator
-            import json as _json
-            admin = Administrator.objects.get(pk=1)
-            config = _json.loads(admin.config) if admin.config else {}
-            val = str(config.get('deploymentType', '') or '').strip().lower()
-            if val in ('cyberpersons', 'selfhosted'):
-                return val
-        except Exception:
-            pass
-        return 'selfhosted'
-
-    @staticmethod
-    def buildSpfRecord(ipAddress=None):
-        """
-        SPF TXT content for new zones.
-        CyberPersons rental: include:spf.cyberpersons.com
-        Self-hosted (default): a mx ip4:<machineIP>
-        """
-        if DNS.getDeploymentType() == 'cyberpersons':
-            return DNS.SPF_CYBERPERSONS
-        if not ipAddress:
-            try:
-                with open('/etc/cyberpanel/machineIP', 'r') as _ipf:
-                    ipAddress = _ipf.read().split('\n', 1)[0].strip()
-            except Exception:
-                ipAddress = ''
-        if ipAddress:
-            return 'v=spf1 a mx ip4:%s ~all' % ipAddress
-        return 'v=spf1 a mx ~all'
-
-    @staticmethod
-    def _powerdns_models():
-        """
-        Return (Domains, Records) from CyberPanel's dns app.
-        dnspython also ships a top-level `dns` package; ensure /usr/local/CyberCP
-        is preferred so CLI RepairSpfRecords works when run as a script.
-        """
-        import importlib
-        import sys
-
-        root = '/usr/local/CyberCP'
-        if root in sys.path:
-            try:
-                sys.path.remove(root)
-            except ValueError:
-                pass
-        sys.path.insert(0, root)
-
-        dns_mod = sys.modules.get('dns')
-        dns_file = getattr(dns_mod, '__file__', '') or ''
-        if dns_mod is not None and 'site-packages' in dns_file.replace('\\', '/'):
-            for key in list(sys.modules):
-                if key == 'dns' or key.startswith('dns.'):
-                    del sys.modules[key]
-
-        existing = globals().get('Domains')
-        existing_rec = globals().get('Records')
-        if existing is not None and existing_rec is not None:
-            mod_name = getattr(existing, '__module__', '') or ''
-            if mod_name == 'dns.models':
-                return existing, existing_rec
-
-        models = importlib.import_module('dns.models')
-        return models.Domains, models.Records
-
-    @staticmethod
-    def RepairSpfRecords(domainName=None):
-        """
-        Replace apex TXT SPF that does not match the current deployment type.
-        domainName: optional single zone; otherwise all Websites apex zones.
-        Returns (ok_count, error_message_or_None).
-        """
-        try:
-            from websiteFunctions.models import Websites
-            Domains, Records = DNS._powerdns_models()
-
-            target = DNS.buildSpfRecord()
-            wrong_cp = 'include:spf.cyberpersons.com'
-            wrong_self_prefix = 'v=spf1 a mx ip4:'
-
-            names = []
-            if domainName:
-                names = [domainName.strip().lower().rstrip('.')]
-            else:
-                for site in Websites.objects.all():
-                    names.append(site.domain.lower().rstrip('.'))
-
-            ok = 0
-            for name in names:
-                try:
-                    import tldextract
-                    extract = tldextract.TLDExtract(cache_dir=None)
-                    ex = extract(name)
-                    apex = (ex.domain + '.' + ex.suffix).lower()
-                    if not ex.domain or not ex.suffix:
-                        continue
-                    zone = Domains.objects.filter(name=apex).first()
-                    if not zone:
-                        continue
-                    txts = Records.objects.filter(domainOwner=zone, type='TXT', name=apex)
-                    for rec in txts:
-                        content = (rec.content or '').strip().strip('"')
-                        if not content.lower().startswith('v=spf1'):
-                            continue
-                        dtype = DNS.getDeploymentType()
-                        needs = False
-                        if dtype == 'selfhosted' and wrong_cp in content and 'ip4:' not in content:
-                            needs = True
-                        elif dtype == 'cyberpersons' and content.startswith(wrong_self_prefix):
-                            needs = True
-                        elif content != target and (
-                            (dtype == 'selfhosted' and wrong_cp in content)
-                            or (dtype == 'cyberpersons' and 'ip4:' in content)
-                        ):
-                            needs = True
-                        if needs and content != target:
-                            rec.content = target
-                            rec.save()
-                            ok += 1
-                            try:
-                                DNS.bumpSOASerial(zone)
-                            except Exception:
-                                pass
-                except Exception as e:
-                    logging.writeToFile('RepairSpfRecords %s: %s' % (name, str(e)))
-            return ok, None
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + ' [RepairSpfRecords]')
-            return 0, str(msg)
-
-    @staticmethod
-    def UpsertSpfForName(hostName):
-        """
-        Ensure a single SPF TXT for hostName matches buildSpfRecord().
-        Creates missing SPF, updates wrong SPF, removes duplicate SPF TXT rows.
-        Returns (changed_count, error_or_None).
-        """
-        try:
-            Domains, Records = DNS._powerdns_models()
-            import tldextract
-
-            host = (hostName or '').strip().lower().rstrip('.')
-            if not host:
-                return 0, 'Empty hostname'
-
-            extract = tldextract.TLDExtract(cache_dir=None)
-            ex = extract(host)
-            if not ex.domain or not ex.suffix:
-                return 0, 'Invalid hostname'
-            apex = (ex.domain + '.' + ex.suffix).lower()
-            zone = Domains.objects.filter(name=apex).first()
-            if not zone:
-                return 0, 'No DNS zone for %s' % apex
-
-            target = DNS.buildSpfRecord()
-            txts = list(Records.objects.filter(domainOwner=zone, type='TXT', name=host))
-            spf_recs = []
-            for rec in txts:
-                content = (rec.content or '').strip().strip('"')
-                if content.lower().startswith('v=spf1'):
-                    spf_recs.append(rec)
-
-            changed = 0
-            if not spf_recs:
-                DNS.createDNSRecord(zone, host, 'TXT', target, 0, 3600)
-                changed = 1
-            else:
-                first = spf_recs[0]
-                content = (first.content or '').strip().strip('"')
-                if content != target:
-                    first.content = target
-                    first.save()
-                    changed = 1
-                    try:
-                        DNS.bumpSOASerial(zone)
-                    except Exception:
-                        pass
-                for extra in spf_recs[1:]:
-                    try:
-                        extra.delete()
-                        changed += 1
-                    except Exception:
-                        pass
-            return changed, None
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + ' [UpsertSpfForName]')
-            return 0, str(msg)
-
-    @staticmethod
-    def RecreateDNSForDomain(domainName, admin, includeChildren=True):
-        """
-        Full recreate for existing sites: repair PowerDNS template records (including
-        wrong A -> machine IP), upsert SPF, force Cloudflare sync, and report CF
-        zone status / required nameservers when the zone is not active yet.
-
-        Returns (status_1_or_0, message). For structured Cloudflare details use
-        plogical.dns_recreate.recreate_dns_for_domain().
-        """
-        try:
-            from plogical.dns_recreate import recreate_dns_for_domain
-            result = recreate_dns_for_domain(
-                domainName, admin, includeChildren=includeChildren)
-            return int(result.get('status') or 0), result.get('message') or ''
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + ' [RecreateDNSForDomain]')
-            return 0, str(msg)
 
     def loadCFKeys(self):
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
 
         if os.path.exists(cfFile):
             data = open(cfFile, 'r').readlines()
-            self.email = data[0].rstrip('\n')
-            self.key = data[1].rstrip('\n')
-            self.status = data[2].rstrip('\n')
+            self.email = data[0].strip() if len(data) > 0 else ''
+            self.key = data[1].strip() if len(data) > 1 else ''
+            self.status = data[2].strip() if len(data) > 2 else ''
             return 1
         else:
-            #logging.CyberCPLogFileWriter.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
+            #logging.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
             return 0
 
-    def cfTemplate(self, zoneDomain, admin, enableCheck=None):
+    def cfTemplate(self, zoneDomain, admin, enableCheck=True):
+        """
+        Sync local PowerDNS zone records to Cloudflare.
+
+        enableCheck defaults to True so cfSync=Disable is honored (same as delete path).
+        Resolves the Cloudflare zone by walking parents (blog.example.com -> example.com).
+        PowerDNS records are always loaded from the apex Domains row.
+        """
         try:
+            import tldextract
+            from plogical.cloudflare_dns_sync import CloudflareDnsSync
             self.admin = admin
-            ## Get zone
 
-            if self.loadCFKeys():
+            if not self.loadCFKeys():
+                return 0, 'Cloudflare keys not configured.'
 
-                if enableCheck == None:
-                    pass
-                else:
-                    if self.status == 'Enable':
-                        pass
-                    else:
-                        return 0, 'Sync not enabled.'
+            if enableCheck and self.status != 'Enable':
+                return 0, 'Sync not enabled.'
 
-                cf = get_cloudflare_client(self.email, self.key)
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+            extracted = no_cache_extract(zoneDomain)
+            apex = extracted.domain + '.' + extracted.suffix
+            if not extracted.domain or not extracted.suffix:
+                return 0, 'Could not resolve apex for %s' % zoneDomain
 
+            try:
+                domain = Domains.objects.get(name=apex)
+            except Domains.DoesNotExist:
+                return 0, 'No local PowerDNS zone for %s' % apex
+
+            cf = get_cloudflare_client(self.email, self.key)
+            zone_id, zone_name = CloudflareDnsSync.resolve_zone(cf, zoneDomain)
+
+            # Only create a Cloudflare zone for a true apex hostname. Never create
+            # zones named like blog.example.com when the parent zone is missing.
+            if not zone_id:
+                if zoneDomain.rstrip('.').lower() != apex.lower():
+                    return 0, 'Cloudflare zone not found for apex %s' % apex
                 try:
-                    params = {'name': zoneDomain, 'per_page': 50}
-                    zones = cf.zones.get(params=params)
-
-                    for zone in sorted(zones, key=lambda v: v['name']):
-                        zone = zone['id']
-
-                        domain = Domains.objects.get(name=zoneDomain)
-                        records = Records.objects.filter(domain_id=domain.id)
-
-                        for record in records:
-                            DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                          record.ttl)
-
-                        return 1, None
-
-
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
-
-                try:
-                    zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
-
-                    zone = zone_info['id']
-
-                    domain = Domains.objects.get(name=zoneDomain)
-                    records = Records.objects.filter(domain_id=domain.id)
-
-                    for record in records:
-                        DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                      record.ttl)
-
-                    return 1, None
-
+                    zone_info = cf.zones.post(data={'jump_start': False, 'name': apex})
+                    zone_id = zone_info['id']
+                    zone_name = zone_info['name']
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     return 0, str(e)
                 except Exception as e:
                     return 0, str(e)
+
+            records = Records.objects.filter(domain_id=domain.id)
+            existing_cf = CloudflareDnsSync.list_zone_records(cf, zone_id)
+
+            for record in records:
+                # Skip SOA/NS for Cloudflare (managed at registrar / CF defaults)
+                if (record.type or '').upper() in ('SOA', 'NS'):
+                    continue
+                DNS.createDNSRecordCloudFlare(
+                    cf, zone_id, zone_name, record.name, record.type, record.content,
+                    record.prio, record.ttl, existing_records=existing_cf)
+
+            return 1, None
 
         except BaseException as msg:
-            return 0, str(e)
-
+            logging.writeToFile(str(msg) + ' [cfTemplate]')
+            return 0, str(msg)
     @staticmethod
     def dnsTemplate(domain, admin):
         try:
@@ -465,6 +223,15 @@ class DNS:
 
                     DNS.createDNSRecord(zone, topLevelDomain, "A", ipAddress, 0, 3600)
 
+                    # AAAA Record (IPv6) - Required for mail delivery to Google, Outlook, etc.
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, topLevelDomain, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
+
                     # CNAME Records.
 
                     cNameValue = "www." + topLevelDomain
@@ -527,6 +294,15 @@ class DNS:
 
                     DNS.createDNSRecord(zone, mxValue, "A", ipAddress, 0, 3600)
 
+                    # AAAA Record for mail (IPv6) - Required for mail delivery
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, mxValue, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
+
                     ## TXT Records for mail
 
                     # record = Records(domainOwner=zone,
@@ -553,7 +329,9 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
+                    # Apex DMARC: do not auto-add p=none here — use one TXT at _dmarc.<apex> in Cloudflare/DNS
+                    # to avoid conflicting duplicate DMARC records (invalid per RFC 7489).
+                    # DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -609,6 +387,15 @@ class DNS:
                     # record.save()
 
                     DNS.createDNSRecord(zone, topLevelDomain, "A", ipAddress, 0, 3600)
+
+                    # AAAA Record (IPv6) - Required for mail delivery to Google, Outlook, etc.
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, topLevelDomain, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
 
                     # CNAME Records.
 
@@ -672,6 +459,15 @@ class DNS:
 
                     DNS.createDNSRecord(zone, mxValue, "A", ipAddress, 0, 3600)
 
+                    # AAAA Record for mail (IPv6) - Required for mail delivery
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, mxValue, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
+
                     ## TXT Records for mail
 
                     # record = Records(domainOwner=zone,
@@ -698,7 +494,9 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
+                    # Apex DMARC: do not auto-add p=none here — use one TXT at _dmarc.<apex> in Cloudflare/DNS
+                    # to avoid conflicting duplicate DMARC records (invalid per RFC 7489).
+                    # DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -723,10 +521,28 @@ class DNS:
 
                 DNS.createDNSRecord(zone, actualSubDomain, "A", ipAddress, 0, 3600)
 
+                # AAAA Record for subdomain (IPv6)
+                try:
+                    from plogical.acl import ACLManager
+                    ipv6Address = ACLManager.GetServerIPv6()
+                    if ipv6Address:
+                        DNS.createDNSRecord(zone, actualSubDomain, "AAAA", ipv6Address, 0, 3600)
+                except Exception as e:
+                    logging.writeToFile(
+                        'Error creating AAAA record for subdomain %s: %s' % (actualSubDomain, str(e)))
+
                 ## Mail Record
 
                 if ('mail.%s' % (actualSubDomain)).find('mail.mail') == -1:
                     DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "A", ipAddress, 0, 3600)
+                    # AAAA Record for mail subdomain (IPv6) - Required for mail delivery
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.writeToFile(f'Error creating AAAA record for mail subdomain {actualSubDomain}: {str(e)}')
 
                 # CNAME Records.
 
@@ -777,7 +593,9 @@ class DNS:
                 #                  auth=1)
                 # record.save()
 
-                DNS.createDNSRecord(zone, "_dmarc." + actualSubDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
+                # Do not auto-create subdomain _dmarc: one organizational policy at _dmarc.<apex> is enough for
+                # typical setups; avoids dozens of p=none records and Cloudflare clutter.
+                # DNS.createDNSRecord(zone, "_dmarc." + actualSubDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                 # record = Records(domainOwner=zone,
                 #                  domain_id=zone.id,
@@ -800,7 +618,7 @@ class DNS:
             dns.cfTemplate(domain, admin)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
@@ -873,24 +691,27 @@ class DNS:
 
                 if dns.status == 'Enable':
                     try:
-                        params = {'name': domain, 'per_page': 50}
-                        zones = cf.zones.get(params=params)
-
-                        for zone in sorted(zones, key=lambda v: v['name']):
-                            zone = zone['id']
-
-                            DNS.createDNSRecordCloudFlare(cf, zone, "default._domainkey." + topLevelDomain, 'TXT',
-                                                          output[leftIndex:rightIndex], 0,
-                                                          3600)
-
+                        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+                        zone_id, zone_name = CloudflareDnsSync.resolve_zone(cf, domain)
+                        if not zone_id:
+                            logging.writeToFile(
+                                'Cloudflare zone not found for DKIM on %s (apex %s)' % (domain, topLevelDomain))
+                        else:
+                            DNS.createDNSRecordCloudFlare(
+                                cf, zone_id, zone_name, "default._domainkey." + topLevelDomain, 'TXT',
+                                output[leftIndex:rightIndex], 0, 3600)
+                            if len(subDomain) > 0:
+                                DNS.createDNSRecordCloudFlare(
+                                    cf, zone_id, zone_name, "default._domainkey." + domain, 'TXT',
+                                    output[leftIndex:rightIndex], 0, 3600)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
@@ -901,21 +722,44 @@ class DNS:
             return 0
 
     @staticmethod
-    def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
+    def createDNSRecordCloudFlare(cf, zone, zone_name, name, type, value, priority, ttl, proxied=None,
+                                  existing_records=None):
         try:
-
-            if value.find('DKIM') > -1:
-                value = value.replace('\n\t', '')
-                value = value.replace('"', '')
-
-            if ttl > 0:
-                dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
-            else:
-                dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
-
-            cf.zones.dns_records.post(zone, data=dns_record)
+            import tldextract
+            from plogical.cloudflare_dns_sync import CloudflareDnsSync
+            if not zone_name:
+                parsed = tldextract.TLDExtract(cache_dir=None)(name)
+                zone_name = parsed.domain + '.' + parsed.suffix
+            CloudflareDnsSync.upsert_dns_record(
+                cf, zone, zone_name, name, type, value, priority, ttl, proxied, existing_records)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
+            logging.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
+
+    @staticmethod
+    def bumpSOASerial(zone):
+        """Increment SOA serial for MASTER and NATIVE zones (PowerDNS notify / local serial)."""
+        try:
+            if zone is None:
+                return False
+            updated = False
+            for getSOA in Records.objects.filter(domainOwner=zone, type='SOA'):
+                parts = (getSOA.content or '').split()
+                if len(parts) < 3:
+                    continue
+                try:
+                    parts[2] = str(int(parts[2]) + 1)
+                except (TypeError, ValueError):
+                    logging.writeToFile(
+                        'SOA serial bump skipped: invalid serial in record id %s' % (getSOA.id,)
+                    )
+                    continue
+                getSOA.content = ' '.join(parts)
+                getSOA.save()
+                updated = True
+            return updated
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [bumpSOASerial]')
+            return False
 
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
@@ -924,7 +768,7 @@ class DNS:
             if Records.objects.filter(name=name, type=type, content=value).count() > 0:
                 return
 
-            DNS.incrementSOASerial(zone)
+            DNS.bumpSOASerial(zone)
 
 
             if type == 'NS':
@@ -1048,23 +892,20 @@ class DNS:
 
                 if dns.status == 'Enable':
                     try:
-                        params = {'name': zone.name, 'per_page': 50}
-                        zones = cf.zones.get(params=params)
-
-                        for zone in sorted(zones, key=lambda v: v['name']):
-                            zone = zone['id']
-
-                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, ttl, priority)
+                        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+                        zone_id, zone_name = CloudflareDnsSync.resolve_zone(cf, name or zone.name)
+                        if zone_id:
+                            DNS.createDNSRecordCloudFlare(cf, zone_id, zone_name, name, type, value, priority, ttl)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
                     except Exception as e:
-                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        logging.writeToFile(str(e))
             except:
                 pass
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
+            logging.writeToFile(str(msg) + " [createDNSRecord]")
 
     @staticmethod
     def deleteDNSZone(virtualHostName):
@@ -1074,6 +915,73 @@ class DNS:
         except:
             ## There does not exist a zone for this domain.
             pass
+
+    @staticmethod
+    def maybeDeleteOrphanDNSZone(domainName):
+        """
+        Delete a PowerDNS Domains row for domainName when nothing in the panel still uses it.
+
+        Used after alias/child delete when dnsTemplate created a dedicated apex zone
+        (for example an alias that is its own registrable domain).
+        """
+        try:
+            import tldextract
+            from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+
+            fqdn = (domainName or '').rstrip('.').lower()
+            if not fqdn:
+                return 0, 'Empty domain'
+
+            if Domains.objects.filter(name=fqdn).count() == 0:
+                return 1, 'No dedicated zone'
+
+            if Websites.objects.filter(domain=fqdn).exists():
+                return 1, 'Website still uses zone'
+            if ChildDomains.objects.filter(domain=fqdn).exists():
+                return 1, 'Child domain still uses zone'
+            if aliasDomains.objects.filter(aliasDomain=fqdn).exists():
+                return 1, 'Alias still uses zone'
+
+            extract = tldextract.TLDExtract(cache_dir=None)
+            parsed = extract(fqdn)
+            apex = ('%s.%s' % (parsed.domain, parsed.suffix)).lower() if parsed.domain and parsed.suffix else fqdn
+
+            # If this Domains row is an apex that still backs other hosts, keep it.
+            if fqdn == apex:
+                if Websites.objects.filter(domain__iendswith='.' + apex).exists():
+                    return 1, 'Apex still used by websites'
+                if ChildDomains.objects.filter(domain__iendswith='.' + apex).exists():
+                    return 1, 'Apex still used by child domains'
+                if aliasDomains.objects.filter(aliasDomain__iendswith='.' + apex).exists():
+                    return 1, 'Apex still used by aliases'
+
+            DNS.deleteDNSZone(fqdn)
+            logging.writeToFile('Deleted orphan PowerDNS zone for %s' % fqdn, 0)
+            return 1, 'Deleted orphan zone'
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [maybeDeleteOrphanDNSZone]')
+            return 0, str(msg)
+
+    @staticmethod
+    def cleanupHostDNSRecords(domainName, adminUserName=None):
+        """Remove local PowerDNS and Cloudflare records for one website or child domain."""
+        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+        return CloudflareDnsSync.cleanup_host_dns_records(domainName, adminUserName)
+
+    @staticmethod
+    def pruneOrphanCloudflareHosts(apexDomain, adminUserName):
+        """Remove Cloudflare host records under apex that are not managed in CyberPanel."""
+        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+        return CloudflareDnsSync.prune_orphan_cloudflare_hosts(apexDomain, adminUserName)
+
+    @staticmethod
+    def deleteCloudFlareDNSRecords(domainName, adminUserName=None):
+        """
+        Delete all CloudFlare DNS records for a domain when domain is removed from CyberPanel.
+        This function is called automatically when domains/sub-domains are deleted.
+        """
+        from plogical.cloudflare_dns_sync import CloudflareDnsSync
+        return CloudflareDnsSync.delete_cloudflare_records_for_host(domainName, adminUserName)
 
     @staticmethod
     def createDNSZone(virtualHostName, admin):
@@ -1105,11 +1013,7 @@ class DNS:
     def deleteDNSRecord(recordID):
         try:
             delRecord = Records.objects.get(id=recordID)
-            zone = delRecord.domainOwner
-            recordType = delRecord.type
             delRecord.delete()
-            if recordType != 'SOA':
-                DNS.incrementSOASerial(zone)
         except:
             ## There does not exist a zone for this domain.
             pass
@@ -1162,7 +1066,7 @@ webserver-allow-from=0.0.0.0/0
             return 1, None
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f'ConfigurePowerDNSInAcme, Error: {str(msg)}')
+            logging.writeToFile(f'ConfigurePowerDNSInAcme, Error: {str(msg)}')
             return 0, str(msg)
 
     @staticmethod
@@ -1199,5 +1103,5 @@ webserver-allow-from=0.0.0.0/0
             return 1, None
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f'ConfigureCloudflareInAcme, Error: {str(msg)}')
+            logging.writeToFile(f'ConfigureCloudflareInAcme, Error: {str(msg)}')
             return 0, str(msg)
