@@ -2,12 +2,22 @@ import os
 import pathlib
 import tempfile
 import unittest
+from unittest.mock import patch
 
+from plogical import sslUtilities as ssl_utilities_module
 from plogical.domainAliasUtilities import merge_alias_names, remove_alias_from_map_line
 from plogical.sslUtilities import sslUtilities
 
 
 class DomainAliasUtilitiesTests(unittest.TestCase):
+
+    @patch.object(sslUtilities, 'removeSSLForDomain', return_value=1)
+    def test_module_level_certificate_cleanup_delegates_to_utility(self, remove_ssl):
+        self.assertEqual(
+            ssl_utilities_module.removeSSLForDomain('child.example.com'),
+            1,
+        )
+        remove_ssl.assert_called_once_with('child.example.com')
 
     def test_current_and_legacy_aliases_are_merged_without_duplicates(self):
         aliases = merge_alias_names(

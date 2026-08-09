@@ -945,6 +945,10 @@ context /.well-known/acme-challenge {
             return 0
 
 
+def removeSSLForDomain(domain, *args, **kwargs):
+    return sslUtilities.removeSSLForDomain(domain, *args, **kwargs)
+
+
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
     try:
         # Check if certificate already exists and try to renew it first
