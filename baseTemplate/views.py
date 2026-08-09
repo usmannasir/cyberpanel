@@ -1286,7 +1286,6 @@ def blockIPAddress(request):
             'error': f'Server error: {str(e)}'
         }), content_type='application/json', status=500)
 
-@csrf_exempt
 @require_POST
 def getSSHUserActivity(request):
     try:
