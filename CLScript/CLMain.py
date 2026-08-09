@@ -1,11 +1,12 @@
 import json
+from cyberpanel_version import BUILD, VERSION
 
 class CLMain():
     def __init__(self):
         self.path = '/usr/local/CyberCP/version.txt'
         #versionInfo = json.loads(open(self.path, 'r').read())
-        self.version = '2.4'
-        self.build = '4'
+        self.version = VERSION
+        self.build = str(BUILD)
 
         ipFile = "/etc/cyberpanel/machineIP"
         f = open(ipFile)

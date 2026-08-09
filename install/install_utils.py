@@ -78,6 +78,35 @@ def get_Ubuntu_release(use_print=False, exit_on_error=True):
     return release
 
 
+def get_Ubuntu_code_name(release=None):
+    """
+    Map an Ubuntu release number to its apt codename.
+
+    Newest first: each branch is a >= test, so a newer release must be matched
+    before the older ones or it silently falls into the wrong codename.
+
+    Args:
+        release: float release number; read from the system when omitted.
+
+    Returns: codename string
+    """
+    if release is None:
+        release = get_Ubuntu_release(use_print=False, exit_on_error=False)
+
+    if release >= 26.04:
+        return "resolute"
+    elif release >= 24.04:
+        return "noble"
+    elif release >= 22.04:
+        return "jammy"
+    elif release >= 20.04:
+        return "focal"
+    elif release >= 18.04:
+        return "bionic"
+    else:
+        return "xenial"
+
+
 # ANSI color codes
 class Colors:
     HEADER = '\033[95m'      # Purple
@@ -248,7 +277,10 @@ def get_package_install_command(distro, package_name, options=""):
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
     if distro == ubuntu:
-        command = f"DEBIAN_FRONTEND=noninteractive apt-get -y install {package_name} {options}"
+        command = (
+            "DEBIAN_FRONTEND=noninteractive apt-get "
+            f"-o DPkg::Lock::Timeout=300 -y install {package_name} {options}"
+        )
         shell = True
     elif distro == centos:
         command = f"yum install -y {package_name} {options}"
@@ -272,7 +304,10 @@ def get_package_remove_command(distro, package_name):
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
     if distro == ubuntu:
-        command = f"DEBIAN_FRONTEND=noninteractive apt-get -y remove {package_name}"
+        command = (
+            "DEBIAN_FRONTEND=noninteractive apt-get "
+            f"-o DPkg::Lock::Timeout=300 -y remove {package_name}"
+        )
         shell = True
     elif distro == centos:
         command = f"yum remove -y {package_name}"

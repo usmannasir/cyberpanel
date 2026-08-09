@@ -4,6 +4,7 @@ import shutil
 import installLog as logging
 import argparse
 import os
+import re
 import shlex
 from firewallUtilities import FirewallUtilities
 import time
@@ -15,9 +16,10 @@ from stat import *
 import stat
 import secrets
 import install_utils
+import json
 
-VERSION = '2.4'
-BUILD = 9
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from cyberpanel_version import BUILD, VERSION
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -87,6 +89,42 @@ class preFlightsChecks:
         else:
             return preFlightsChecks.call(command, self.distro, command, command, 0, 0, os.EX_OSERR, shell)
 
+    def setupLSCPDAccount(self):
+        """Create the panel daemon account before files are assigned to it."""
+        group_exists = subprocess.run(
+            ['getent', 'group', 'lscpd'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        ).returncode == 0
+        if not group_exists:
+            command = 'groupadd lscpd'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        user_exists = subprocess.run(
+            ['id', '-u', 'lscpd'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        ).returncode == 0
+        if not user_exists:
+            command = 'useradd -g lscpd -M -d /usr/local/lscp lscpd'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+    def addWebServerUserToLSCPDGroup(self):
+        """Allow the web-server account to access panel-owned webmail data."""
+        user_exists = subprocess.run(
+            ['id', '-u', 'nobody'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        ).returncode == 0
+        group_exists = subprocess.run(
+            ['getent', 'group', 'lscpd'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        ).returncode == 0
+        if user_exists and group_exists:
+            command = 'usermod -a -G lscpd nobody'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
                  mysqluser=None, mysqlpassword=None, mysqlport=None):
         self.ipAddr = ip
@@ -119,7 +157,7 @@ class preFlightsChecks:
 
                 command = 'mount -o remount /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True,universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -142,11 +180,24 @@ class preFlightsChecks:
                 # Skip apt update as it was already done in cyberpanel.sh
                 self.install_package("quota", silent=True)
 
-                command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
+                running_kernel = os.uname().release
+                module_root = '/lib/modules/%s' % running_kernel
+                quota_modules = []
+                for root, directories, files in os.walk(module_root):
+                    quota_modules.extend(
+                        os.path.join(root, name) for name in files
+                        if name.startswith('quota_v') and '.ko' in name
+                    )
 
-
-                if subprocess.check_output(command,shell=True).decode("utf-8").find("quota/") == -1:
-                    self.install_package("linux-image-extra-virtual", silent=True)
+                if not quota_modules:
+                    extra_package = 'linux-modules-extra-%s' % running_kernel
+                    candidate = subprocess.run(
+                        ['apt-cache', 'show', extra_package],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                    if candidate.returncode == 0:
+                        self.install_package(extra_package, silent=True)
 
                 if self.edit_fstab('/', '/') == 0:
                     preFlightsChecks.stdOut("Quotas will not be abled as we are are failed to modify fstab file.")
@@ -154,7 +205,7 @@ class preFlightsChecks:
 
                 command = 'mount -o remount /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -172,46 +223,11 @@ class preFlightsChecks:
                 command = 'quotacheck -ugm /'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                ####
+                command = f'modprobe quota_v1 -S {running_kernel}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
-                try:
-                    iResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                except:
-                    iResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                             universal_newlines=True, shell=True)
-
-                print(repr(iResult.stdout))
-
-                # Only if the first command works, run the rest
-
-                if iResult.returncode == 0:
-                    command = "echo '{}' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u".format(iResult.stdout)
-                    try:
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                    except:
-                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-                    fResult = result.stdout.rstrip('\n')
-                    print(repr(result.stdout.rstrip('\n')))
-
-                    command  = 'uname -r'
-                    try:
-                        ffResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                    except:
-                        ffResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-
-                    ffResult = ffResult.stdout.rstrip('\n')
-
-                    command = f"DEBIAN_FRONTEND=noninteractive  apt-get install linux-modules-extra-{ffResult}"
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
-
-                ###
-
-                    command = f'modprobe quota_v1 -S {ffResult}'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    command = f'modprobe quota_v2 -S {ffResult}'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = f'modprobe quota_v2 -S {running_kernel}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = f'quotacheck -ugm /'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -291,7 +307,7 @@ class preFlightsChecks:
         try:
 
             try:
-                result = subprocess.run('systemd-detect-virt', capture_output=True, universal_newlines=True, shell=True)
+                result = subprocess.run('systemd-detect-virt', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
             except:
                 result = subprocess.run('systemd-detect-virt', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -440,7 +456,7 @@ class preFlightsChecks:
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = 'groupadd docker'
+            command = 'groupadd -f docker'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'usermod -aG docker docker'
@@ -470,6 +486,42 @@ class preFlightsChecks:
 
                 command = "./" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                if get_Ubuntu_release() >= 26.0:
+                    # APT 3 verifies repository keys as its unprivileged user.
+                    # LiteSpeed's helper installs these files as root-only.
+                    for key_file in ('/etc/apt/trusted.gpg.d/lst_debian_repo.gpg',
+                                     '/etc/apt/trusted.gpg.d/lst_repo.gpg'):
+                        if os.path.exists(key_file):
+                            os.chmod(key_file, 0o644)
+
+                # LiteSpeed's helper only knows Ubuntu 16/18/20/22/24. On a newer release
+                # every branch falls through, so it writes no sources file, prints no
+                # warning and still exits 0 - the first sign is "Unable to locate package
+                # openlitespeed" much later. The repo itself does publish newer suites, so
+                # write the list ourselves whenever the helper left it missing or empty.
+                # It still runs first because it registers the LiteSpeed GPG keys.
+                repoFile = '/etc/apt/sources.list.d/lst_debian_repo.list'
+                wrote_repo = False
+                if not os.path.exists(repoFile) or os.path.getsize(repoFile) == 0:
+                    codename = install_utils.get_Ubuntu_code_name()
+                    self.stdOut(f"LiteSpeed repo not configured by their helper; writing it for '{codename}'")
+                    logging.InstallLog.writeToFile(
+                        f"enable_lst_debain_repo.sh did not configure a repo; falling back to codename {codename}")
+
+                    with open(repoFile, 'w') as f:
+                        f.write(f"deb http://rpms.litespeedtech.com/debian/ {codename} main\n")
+                        f.write(f"#deb http://rpms.litespeedtech.com/edge/debian/ {codename} main\n")
+                    wrote_repo = True
+
+                if get_Ubuntu_release() >= 26.0:
+                    # The helper may return success even when its APT refresh only
+                    # emitted warnings. Require a usable package index on Ubuntu 26.
+                    command = 'apt-get update -y -o APT::Update::Error-Mode=any'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                elif wrote_repo:
+                    command = 'apt-get update -y'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             except:
                 logging.InstallLog.writeToFile("[ERROR] Exception during CyberPanel install")
                 preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install")
@@ -665,10 +717,8 @@ password="%s"
 
         try:
             path = "/usr/local/CyberCP/version.txt"
-            writeToFile = open(path, 'w')
-            writeToFile.writelines('%s\n' % (VERSION))
-            writeToFile.writelines(str(BUILD))
-            writeToFile.close()
+            with open(path, 'w') as writeToFile:
+                json.dump({'version': VERSION, 'build': BUILD}, writeToFile)
         except:
             pass
 
@@ -676,10 +726,8 @@ password="%s"
 
         ###### fix Core CyberPanel permissions
 
-        command = "usermod -G lscpd,lsadm,nobody lscpd"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "usermod -G lscpd,lsadm,nogroup lscpd"
+        system_group = 'nogroup' if self.distro == ubuntu else 'nobody'
+        command = "usermod -G lscpd,lsadm,%s lscpd" % system_group
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
@@ -743,8 +791,9 @@ password="%s"
                  '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
 
         for items in files:
-            command = 'chmod 644 %s' % (items)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if os.path.exists(items):
+                command = 'chmod 644 %s' % (items)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                    '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
@@ -752,8 +801,9 @@ password="%s"
                    '/etc/powerdns/pdns.conf']
 
         for items in impFile:
-            command = 'chmod 600 %s' % (items)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if os.path.exists(items):
+                command = 'chmod 600 %s' % (items)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = 'chmod 640 /etc/postfix/*.cf'
         subprocess.call(command, shell=True)
@@ -767,8 +817,10 @@ password="%s"
         command = 'chmod 644 /etc/dovecot/dovecot.conf'
         subprocess.call(command, shell=True)
 
-        command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
-        subprocess.call(command, shell=True)
+        for dovecot_sql in ('/etc/dovecot/dovecot-sql.conf.ext',
+                            '/etc/dovecot/dovecot-sql-2.4.conf'):
+            if os.path.exists(dovecot_sql):
+                os.chmod(dovecot_sql, 0o640)
 
         command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
         subprocess.call(command, shell=True)
@@ -804,8 +856,9 @@ password="%s"
         command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        if os.path.exists('/etc/cagefs/exclude/cyberpanelexclude'):
+            command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -823,8 +876,9 @@ password="%s"
             command = 'chmod 640 /etc/powerdns/pdns.conf'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        if os.path.exists('/usr/local/lscp/cyberpanel/logs/access.log'):
+            command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Create complete SnappyMail directory structure early in installation
         command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/'
@@ -852,11 +906,10 @@ password="%s"
 
         # Ensure the web server user (nobody) can access the directories
         # Note: lscpd is already added to nobody group earlier in the installation
-        command = "usermod -a -G lscpd nobody 2>/dev/null || true"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        self.addWebServerUserToLSCPDGroup()
 
         # Fix SnappyMail public directory ownership early
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
+        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         snappymailinipath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
@@ -1075,7 +1128,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
             mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
             mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-            dovecotmysql = "email-configs-one/dovecot-sql.conf.ext"
+            dovecot_24 = self.distro == ubuntu and get_Ubuntu_release() >= 26.0
+            if dovecot_24:
+                dovecotmysql = "email-configs-one/dovecot-sql-2.4.conf"
+            else:
+                dovecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
             ### update password:
 
@@ -1083,16 +1140,33 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             writeDataToFile = open(dovecotmysql, "w")
 
-            if mysql == 'Two':
-                dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3307\n"
-            else:
-                dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
-
-            for items in data:
-                if items.find("connect") > -1:
-                    writeDataToFile.writelines(dataWritten)
+            if dovecot_24:
+                if self.remotemysql == 'ON':
+                    database_host = self.mysqlhost
+                    database_port = self.mysqlport
                 else:
-                    writeDataToFile.writelines(items)
+                    database_host = '127.0.0.1' if mysql == 'Two' else 'localhost'
+                    database_port = '3307' if mysql == 'Two' else '3306'
+                for items in data:
+                    if items.startswith('mysql '):
+                        writeDataToFile.write('mysql %s {\n' % database_host)
+                    elif items.strip().startswith('password ='):
+                        writeDataToFile.write('    password = %s\n' % mysqlPassword)
+                    elif items.strip().startswith('port ='):
+                        writeDataToFile.write('    port = %s\n' % database_port)
+                    else:
+                        writeDataToFile.write(items)
+            else:
+                if mysql == 'Two':
+                    dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3307\n"
+                else:
+                    dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
+
+                for items in data:
+                    if items.find("connect") > -1:
+                        writeDataToFile.writelines(dataWritten)
+                    else:
+                        writeDataToFile.writelines(items)
 
             writeDataToFile.close()
 
@@ -1161,11 +1235,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             writeDataToFile.close()
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, dovecotmysql)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                if not dovecot_24:
+                    command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, dovecotmysql)
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, dovecotmysql)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                    command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, dovecotmysql)
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 ##
 
@@ -1224,7 +1299,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             main = "/etc/postfix/main.cf"
             master = "/etc/postfix/master.cf"
             dovecot = "/etc/dovecot/dovecot.conf"
-            dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
+            dovecot_24 = self.distro == ubuntu and get_Ubuntu_release() >= 26.0
+            if dovecot_24:
+                dovecotmysql = "/etc/dovecot/dovecot-sql-2.4.conf"
+            else:
+                dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
             if os.path.exists(mysql_virtual_domains):
                 os.remove(mysql_virtual_domains)
@@ -1278,8 +1357,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("email-configs-one/main.cf", main)
             shutil.copy("email-configs-one/master.cf", master)
-            shutil.copy("email-configs-one/dovecot.conf", dovecot)
-            shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+            if dovecot_24:
+                shutil.copy("email-configs-one/dovecot-2.4.conf", dovecot)
+                shutil.copy("email-configs-one/dovecot-sql-2.4.conf", dovecotmysql)
+            else:
+                shutil.copy("email-configs-one/dovecot.conf", dovecot)
+                shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
             
             ########### Set custom settings
 
@@ -1373,12 +1456,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ######################################## Permissions
 
-            command = 'chgrp dovecot /etc/dovecot/dovecot-sql.conf.ext'
+            command = 'chgrp dovecot ' + dovecotmysql
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ##
 
-            command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
+            command = 'chmod o= ' + dovecotmysql
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ## The dovecot.conf template enables the sieve (pigeonhole) plugin in the
@@ -1542,11 +1625,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Ensure web server users are in the lscpd group for access
-            command = "usermod -a -G lscpd nobody 2>/dev/null || true"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            self.addWebServerUserToLSCPDGroup()
 
             # Fix SnappyMail public directory ownership immediately after creation
-            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
+            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
@@ -1694,14 +1776,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     def findSSHPort(self):
         try:
-            sshData = subprocess.check_output(shlex.split('cat /etc/ssh/sshd_config')).decode("utf-8").split('\n')
-
-            for items in sshData:
-                if items.find('Port') > -1:
-                    if items[0] == 0:
-                        pass
-                    else:
-                        return items.split(' ')[1]
+            with open('/etc/ssh/sshd_config', 'r') as ssh_config:
+                for line in ssh_config:
+                    match = re.match(r'^\s*Port\s+(\d+)\s*(?:#.*)?$', line, re.IGNORECASE)
+                    if match:
+                        port = int(match.group(1))
+                        if 1 <= port <= 65535:
+                            return str(port)
 
             return '22'
         except BaseException as msg:
@@ -1722,7 +1803,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 # Not available in ubuntu
                 self.manage_service('dbus', 'restart')
 
-            self.manage_service('systemd-logind', 'restart')
+            # Ubuntu 26 terminates the installer's SSH session scope after
+            # systemd-logind is restarted, which kills the installation midway.
+            # Earlier Ubuntu releases and non-Ubuntu distributions retain the
+            # existing behavior.
+            if self.distro != ubuntu or get_Ubuntu_release() < 26.04:
+                self.manage_service('systemd-logind', 'restart')
+            else:
+                logging.InstallLog.writeToFile(
+                    "Ubuntu 26.04: keeping systemd-logind running during installation."
+                )
 
             self.manage_service('firewalld', 'start')
             self.manage_service('firewalld', 'enable')
@@ -1781,7 +1871,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 self.install_package("gcc gcc-c++ make autoconf glibc")
 
             if self.distro == ubuntu:
-                self.install_package("libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev zlib1g zlib1g-dev libudns-dev whichman curl")
+                # libpcre3/libpcre3-dev (PCRE1) were dropped from Ubuntu 26.04; only
+                # pcre2 remains. Older releases keep PCRE1 - lscpd links against
+                # libpcre.so.1 there (see the symlink in installLSCPD).
+                release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
+                if release and release >= 26.04:
+                    pcre_packages = "libpcre2-8-0 libpcre2-dev"
+                else:
+                    pcre_packages = "libpcre3 libpcre3-dev"
+                self.install_package(f"{pcre_packages} openssl libexpat1 libexpat1-dev libgeoip-dev zlib1g zlib1g-dev libudns-dev whichman curl")
             else:
                 self.install_package("pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel")
 
@@ -1798,14 +1896,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #     lscpdSelection = 'lscpd-0.3.1'
             #     if os.path.exists('/etc/lsb-release'):
             #         result = open('/etc/lsb-release', 'r').read()
-            #         if result.find('22.04') > -1 or result.find('24.04') > -1:
+            #         if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
             #             lscpdSelection = 'lscpd.0.4.0'
             # else:
             #     lscpdSelection = 'lscpd.aarch64'
 
             try:
                 try:
-                    result = subprocess.run('uname -a', capture_output=True, universal_newlines=True, shell=True)
+                    result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -1813,7 +1911,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     lscpdSelection = 'lscpd-0.3.1'
                     if os.path.exists('/etc/lsb-release'):
                         result = open('/etc/lsb-release', 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1:
+                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
                 else:
                     lscpdSelection = 'lscpd.aarch64'
@@ -1823,7 +1921,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 lscpdSelection = 'lscpd-0.3.1'
                 if os.path.exists('/etc/lsb-release'):
                     result = open('/etc/lsb-release', 'r').read()
-                    if result.find('22.04') > -1 or result.find('24.04') > -1:
+                    if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                         lscpdSelection = 'lscpd.0.4.0'
 
 
@@ -1849,15 +1947,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             if self.is_centos_family():
                 command = 'adduser lscpd -M -d /usr/local/lscp'
-            else:
-                command = 'useradd lscpd -M -d /usr/local/lscp'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            if self.is_centos_family():
                 command = 'groupadd lscpd'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                # Added group in useradd for Ubuntu
+            else:
+                self.setupLSCPDAccount()
 
             command = 'usermod -a -G lscpd lscpd'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2031,6 +2126,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "mkdir -p " + path
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            command = "chmod 755 /usr/local/lscpd /usr/local/lscpd/admin"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
             path = "/usr/local/CyberCP/conf/"
             command = "mkdir -p " + path
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2050,9 +2148,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 0
 
             # In Ubuntu, the library that lscpd looks for is libpcre.so.1, but the one it installs is libpcre.so.3...
+            # Ubuntu 26.04 dropped PCRE1 entirely, so libpcre.so.3 no longer exists there and
+            # this symlink has nothing to point at. Only create it when the source is present;
+            # on 26.04 lscpd is expected to be linked against pcre2 by LiteSpeed's resolute build.
             if self.distro == ubuntu:
-                command = 'ln -s /lib/x86_64-linux-gnu/libpcre.so.3 /lib/x86_64-linux-gnu/libpcre.so.1'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                pcre_source = '/lib/x86_64-linux-gnu/libpcre.so.3'
+                pcre_target = '/lib/x86_64-linux-gnu/libpcre.so.1'
+                if os.path.exists(pcre_source) and not os.path.exists(pcre_target):
+                    command = f'ln -s {pcre_source} {pcre_target}'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                elif not os.path.exists(pcre_source):
+                    logging.InstallLog.writeToFile(
+                        'libpcre.so.3 not present (expected on Ubuntu 26.04+); skipping libpcre.so.1 symlink')
 
             ##
 
@@ -2315,7 +2422,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp82 lsphp82-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82 lsphp82-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82 lsphp82-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2327,7 +2434,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp83 lsphp83-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 
@@ -2343,7 +2450,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp84 lsphp84-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp84 lsphp84-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp84 lsphp84-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2354,7 +2461,7 @@ milter_default_action = accept
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                     command = 'yum install lsphp85 lsphp85-* -y'
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85 lsphp85-*'
+                    command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85 lsphp85-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
@@ -2623,9 +2730,6 @@ milter_default_action = accept
                 # Just install the package directly
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get install restic -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
-                
-                command = 'restic self-update'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except:
             pass
@@ -2816,20 +2920,25 @@ vmail
 
 def configure_jwt_secret():
     try:
-        import secrets
-        secret = secrets.token_urlsafe(32)
-        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-        with open(fastapi_file, 'r') as f:
-            lines = f.readlines()
-        with open(fastapi_file, 'w') as f:
-            for line in lines:
-                if line.strip().startswith('JWT_SECRET'):
-                    f.write(f'JWT_SECRET = "{secret}"\n')
-                else:
-                    f.write(line)
-            print(f"Configured JWT_SECRET in fastapi_ssh_server.py")
-    except:
-        pass
+        sys.path.insert(0, '/usr/local/CyberCP')
+        from plogical.securityUtils import (
+            DEFAULT_TERMINAL_JWT_SECRET_FILE,
+            TERMINAL_JWT_SECRET_FILE_ENV,
+            get_terminal_jwt_secret,
+        )
+        get_terminal_jwt_secret(create_if_missing=True)
+        secret_path = os.environ.get(
+            TERMINAL_JWT_SECRET_FILE_ENV,
+            DEFAULT_TERMINAL_JWT_SECRET_FILE,
+        )
+        if os.path.exists(secret_path):
+            shutil.chown(secret_path, user='cyberpanel', group='cyberpanel')
+            os.chmod(secret_path, 0o600)
+        print("Configured Web Terminal authentication secret")
+    except Exception as error:
+        preFlightsChecks.stdOut(
+            "[WARNING] Could not configure Web Terminal authentication: %s" % error
+        )
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -2878,10 +2987,12 @@ def main():
         os.mkdir("/etc/cyberpanel")
     except:
         pass
+    os.chmod("/etc/cyberpanel", 0o755)
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
     machineIP.writelines(args.publicip)
     machineIP.close()
+    os.chmod("/etc/cyberpanel/machineIP", 0o644)
 
     cwd = os.getcwd()
 
@@ -2929,6 +3040,9 @@ def main():
     checks.installCyberPanelRepo()
 
     import installCyberPanel
+
+    if distro == ubuntu:
+        checks.setupLSCPDAccount()
 
     if ent == 0:
         installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql,
@@ -3055,11 +3169,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         subprocess.call(shlex.split(command))
 
         # Ensure web server users are in the lscpd group
-        command = "usermod -a -G lscpd nobody 2>/dev/null || true"
-        subprocess.call(shlex.split(command))
+        checks.addWebServerUserToLSCPDGroup()
 
         # Fix SnappyMail public directory ownership (critical fix)
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
+        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data"
         subprocess.call(shlex.split(command))
     except:
         pass

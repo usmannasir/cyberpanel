@@ -21,6 +21,7 @@ class ProcessUtilities(multi.Thread):
     ubuntu22Check = 0
     alma9check = 0
     ubuntu24Check = 0  # New flag for Ubuntu 24.04 specific handling
+    ubuntu26Check = 0  # Flag for Ubuntu 26.04 specific handling
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
     portPath = '/usr/local/lscp/conf/bind.conf'
@@ -175,7 +176,15 @@ class ProcessUtilities(multi.Thread):
             with open('/etc/os-release', 'r') as f:
                 content = f.read()
                 if 'Ubuntu' in content:
-                    if '24.04' in content:
+                    if '26.04' in content:
+                        # 26.04 needs everything 24.04 needs (newer package versions,
+                        # SHA512 FTP hashing), so it sets the same compatibility flags.
+                        ProcessUtilities.ubuntu22Check = 1
+                        ProcessUtilities.ubuntu24Check = 1
+                        ProcessUtilities.ubuntu26Check = 1
+                        ProcessUtilities.alma9check = 1
+                        return ProcessUtilities.ubuntu20
+                    elif '24.04' in content:
                         ProcessUtilities.ubuntu22Check = 1
                         ProcessUtilities.ubuntu24Check = 1  # Specific flag for Ubuntu 24.04
                         # Ubuntu 24.04 uses newer package versions, set flag for compatibility
@@ -260,7 +269,7 @@ class ProcessUtilities(multi.Thread):
                         if attempt == 2:
                             logging.writeToFile("[sendCommand] Attempting to restart lscpd service...")
                             try:
-                                subprocess.run(['systemctl', 'restart', 'lscpd'], capture_output=True, text=True)
+                                subprocess.run(['systemctl', 'restart', 'lscpd'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
                                 time.sleep(3)  # Give lscpd time to start
                             except Exception as e:
                                 logging.writeToFile(f"[sendCommand] Failed to restart lscpd: {str(e)}")

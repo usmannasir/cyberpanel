@@ -42,6 +42,15 @@ import time
 from shutil import copy
 from random import randint
 from plogical.processUtilities import ProcessUtilities
+from cyberpanel_version import (
+    BUILD,
+    VERSION,
+    backup_uses_database_users_schema,
+    backup_uses_full_directory_layout,
+)
+from plogical.backupIntegrity import safe_extract
+from plogical.backupMetadata import backup_includes_mail_domain
+from plogical.backupExcludes import rsync_exclude_arguments
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -52,10 +61,6 @@ try:
     from backup.models import DBUsers
 except:
     pass
-
-VERSION = '2.4'
-BUILD = 9
-
 
 ## I am not the monster that you think I am..
 
@@ -382,7 +387,10 @@ class backupUtilities:
             #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
             #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
             ### doing backup of whole dir and keeping it in public_html folder will restore from here - ref https://github.com/usmannasir/cyberpanel/issues/1196
-            command = f"rsync -av --ignore-errors --exclude=.wp-cli --exclude=logs --exclude=backup --exclude=lscache /home/{domainName}/ {tempStoragePath}/public_html/"
+            command = (
+                f"rsync -av --ignore-errors {rsync_exclude_arguments()} "
+                f"/home/{domainName}/ {tempStoragePath}/public_html/"
+            )
             ProcessUtilities.normalExecutioner(command)
             # if ProcessUtilities.normalExecutioner(command) == 0:
             #      raise BaseException(f'Failed to run cp command during backup generation.')
@@ -577,13 +585,20 @@ class backupUtilities:
             ProcessUtilities.executioner(command)
 
             command = f'mv {CPHomeStorage}/* {tempStoragePath}/'
-            ProcessUtilities.executioner(command, externalApp, True)
+            moveStatus = ProcessUtilities.executioner(command, externalApp, True)
+            if moveStatus != 1:
+                raise RuntimeError('Unable to prepare files for the backup archive')
 
             #make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             #rmtree(tempStoragePath)
 
-            command = f'tar -czf {backupPath}/{backupName}.tar.gz -C {tempStoragePath} .'
-            ProcessUtilities.executioner(command, externalApp, True)
+            filePath = f'{backupPath}/{backupName}.tar.gz'
+            command = f'tar -czf {filePath} -C {tempStoragePath} .'
+            tarStatus = ProcessUtilities.executioner(command, externalApp, True)
+            if tarStatus != 1:
+                raise RuntimeError('Backup archive creation failed with exit status %s' % str(tarStatus))
+            if not os.path.exists(filePath) or os.path.getsize(filePath) <= 0:
+                raise RuntimeError('Backup archive is missing or empty')
 
             ### remove leftover storages
 
@@ -597,7 +612,6 @@ class backupUtilities:
 
             backupObs = Backups.objects.filter(fileName=backupName)
 
-            filePath = f'{backupPath}/{backupName}.tar.gz'
             totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
 
             try:
@@ -623,18 +637,29 @@ class backupUtilities:
 
             os.remove(pidFile)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             if externalApp == None:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n')
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             else:
                 command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
                 ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                failedArchive = f'{backupPath}/{backupName}.tar.gz'
+                if os.path.exists(failedArchive):
+                    os.remove(failedArchive)
+            except OSError:
+                pass
 
             command = f'rm -rf {tempStoragePath}'
             ProcessUtilities.executioner(command, externalApp)
 
             command = f'rm -rf {CPHomeStorage}'
             ProcessUtilities.executioner(command)
+
+            try:
+                os.remove(pidFile)
+            except OSError:
+                pass
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):
@@ -672,8 +697,9 @@ class backupUtilities:
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
-            VERSION = backupMetaData.find('VERSION').text
-            BUILD = backupMetaData.find('BUILD').text
+            backup_version = backupMetaData.find('VERSION').text
+            backup_build = backupMetaData.find('BUILD').text
+            mail_domain = int(backup_includes_mail_domain(backupMetaData, domain))
 
             ### Fetch user details
 
@@ -721,7 +747,7 @@ class backupUtilities:
             #                                                 siteUser.userName, 'Default', 0)
             result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 1, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
-                                                   1)
+                                                   mail_domain)
 
             if result[0] == 0:
                 raise BaseException(result[1])
@@ -739,9 +765,9 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if ((VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1) or (VERSION == '2.4' and int(BUILD) >= 0):
+                if backup_uses_database_users_schema(backup_version, backup_build):
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
                     databaseUsers = database.findall('databaseUsers')
                     for databaseUser in databaseUsers:
 
@@ -817,9 +843,8 @@ class backupUtilities:
 
             ## Converting /home/backup/backup-example.com-02.13.2018_10-24-52.tar.gz -> /home/backup/backup-example.com-02.13.2018_10-24-52
 
-            tar = tarfile.open(originalFile)
-            tar.extractall(completPath)
-            tar.close()
+            with tarfile.open(originalFile) as tar:
+                safe_extract(tar, completPath)
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Creating Accounts,Databases and DNS records!")
 
@@ -828,8 +853,8 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
-            VERSION = backupMetaData.find('VERSION').text
-            BUILD = backupMetaData.find('BUILD').text
+            backup_version = backupMetaData.find('VERSION').text
+            backup_build = backupMetaData.find('BUILD').text
 
             twoPointO = 0
             try:
@@ -998,7 +1023,7 @@ class backupUtilities:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
 
-                        if float(version) > 2.0 or float(build) > 0:
+                        if backup_uses_full_directory_layout(version, build):
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
 
                                 if BackupWholeDir == 0:
@@ -1073,9 +1098,9 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if ((VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1) or (VERSION == '2.4' and int(BUILD) >= 0):
+                if backup_uses_database_users_schema(backup_version, backup_build):
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
 
                     first = 1
 
@@ -1126,11 +1151,10 @@ class backupUtilities:
 
 
             if not twoPointO:
-                tar = tarfile.open(pathToCompressedHome)
-                tar.extractall(websiteHome)
-                tar.close()
+                with tarfile.open(pathToCompressedHome) as tar:
+                    safe_extract(tar, websiteHome)
             else:
-                if float(version) > 2.0 or float(build) > 0:
+                if backup_uses_full_directory_layout(version, build):
                     #copy_tree('%s/public_html' % (completPath), websiteHome)
 
                     ## First remove if already exists
@@ -1156,9 +1180,8 @@ class backupUtilities:
                     pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
                     emailHome = os.path.join("/home", "vmail", masterDomain)
 
-                    tar = tarfile.open(pathToCompressedEmails)
-                    tar.extractall(emailHome)
-                    tar.close()
+                    with tarfile.open(pathToCompressedEmails) as tar:
+                        safe_extract(tar, emailHome)
 
                     ## Change permissions
 

@@ -30,6 +30,7 @@ from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
+from plogical.domainAliasUtilities import remove_alias_from_map_line
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
@@ -458,6 +459,24 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname setup completed (without email configuration). [200]')
 
     @staticmethod
+    def getDovecotSNIBlock(domains, dovecotContent):
+        if 'dovecot_config_version = 2.4.0' in dovecotContent:
+            certSetting = 'ssl_server_cert_file'
+            keySetting = 'ssl_server_key_file'
+        else:
+            certSetting = 'ssl_cert'
+            keySetting = 'ssl_key'
+
+        blocks = []
+        for domain in domains:
+            blocks.append("""local_name %s {
+        %s = </etc/letsencrypt/live/%s/fullchain.pem
+        %s = </etc/letsencrypt/live/%s/privkey.pem
+}""" % (domain, certSetting, domain, keySetting, domain))
+
+        return '\n' + '\n'.join(blocks) + '\n'
+
+    @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
         # Check if email services are installed before proceeding
         if not virtualHostUtilities.emailServicesInstalled():
@@ -485,15 +504,8 @@ class virtualHostUtilities:
                 dovecotContent = open(dovecotPath, 'r').read()
 
                 if dovecotContent.find('/live/%s/' % (childDomain)) == -1:
-                    content = """\nlocal_name %s {
-        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}
-local_name %s {
-        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}
-\n""" % (childDomain, childDomain, childDomain, virtualHostName, virtualHostName, virtualHostName)
+                    content = virtualHostUtilities.getDovecotSNIBlock(
+                        [childDomain, virtualHostName], dovecotContent)
 
                     writeToFile = open(dovecotPath, 'a')
                     writeToFile.write(content)
@@ -548,12 +560,8 @@ local_name %s {
             dovecotContent = open(dovecotPath, 'r').read()
 
             if dovecotContent.find('/live/%s/' % (virtualHostName)) == -1:
-                content = """
-local_name %s {
-        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}
-""" % (virtualHostName, virtualHostName, virtualHostName)
+                content = virtualHostUtilities.getDovecotSNIBlock(
+                    [virtualHostName], dovecotContent)
 
                 writeToFile = open(dovecotPath, 'a')
                 writeToFile.write(content)
@@ -1362,32 +1370,10 @@ local_name %s {
 
                 data = open(confPath, 'r').readlines()
                 writeToFile = open(confPath, 'w')
-                aliases = []
 
                 for items in data:
-                    if items.find(masterDomain) > -1 and items.find('map') > -1:
-                        data = [_f for _f in items.split(" ") if _f]
-                        if data[1] == masterDomain:
-                            length = len(data)
-                            for i in range(3, length):
-                                currentAlias = data[i].rstrip(',').strip('\n')
-                                if currentAlias != aliasDomain:
-                                    aliases.append(currentAlias)
-
-                            aliasString = ""
-
-                            for alias in aliases:
-                                aliasString = ", " + alias
-
-                            writeToFile.writelines(
-                                '  map                     ' + masterDomain + " " + masterDomain + aliasString + "\n")
-                            aliases = []
-                            aliasString = ""
-                        else:
-                            writeToFile.writelines(items)
-
-                    else:
-                        writeToFile.writelines(items)
+                    writeToFile.writelines(
+                        remove_alias_from_map_line(items, masterDomain, aliasDomain))
 
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
@@ -1759,6 +1745,12 @@ local_name %s {
 
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
+
+            try:
+                sslUtilities.removeSSLForDomain(virtualHostName)
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + "  [deleteDomain:removeSSLForDomain]")
 
             print("1,None")
             return 1, 'None'

@@ -25,11 +25,9 @@ from loginSystem.models import Administrator
 from packages.models import Package
 from django.views.decorators.http import require_GET, require_POST
 import pwd
+from cyberpanel_version import BUILD, VERSION
 
 # Create your views here.
-
-VERSION = '2.4'
-BUILD = 9
 
 
 @ensure_csrf_cookie

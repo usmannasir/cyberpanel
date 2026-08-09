@@ -88,7 +88,7 @@ log_info "CyberPanel installation started"
 log_info "Log file: $LOG_FILE"
 log_info "Debug log file: $DEBUG_LOG_FILE"
 
-#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, openEuler 20.03 and openEuler 22.03
+#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, openEuler 20.03 and openEuler 22.03
 #For whoever may edit this script, please follow:
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
@@ -150,16 +150,23 @@ Server_Country="Unknow"
 Server_OS=""
 Server_OS_Version=""
 Server_Provider='Undefined'
+# Interpreter the CyberPanel/CyberCP virtualenvs are built on. Setup_Python_Runtime
+# overrides this to python3.12 on Ubuntu 26.04; every other OS keeps the default.
+CyberPanel_Python="/usr/bin/python3"
 
 Watchdog="On"
 Redis_Hosting="No"
+
+parse_panel_version() {
+  local version_data="$1"
+  Panel_Version=$(printf '%s' "$version_data" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p')
+  Panel_Build=$(printf '%s' "$version_data" | sed -n 's/.*"build"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9][0-9]*\)"\{0,1\}.*/\1/p')
+  [[ "$Panel_Version" =~ ^[0-9]+\.[0-9]+$ && "$Panel_Build" =~ ^[0-9]+$ ]]
+}
+
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}
-Panel_Build=${Temp_Value:25:1}
-
-Branch_Name="v${Panel_Version}.${Panel_Build}"
-
-if [[ $Branch_Name = v*.*.* ]] ; then
+if parse_panel_version "$Temp_Value"; then
+  Branch_Name="v${Panel_Version}.${Panel_Build}"
   echo -e  "\nBranch name fetched...$Branch_Name"
   log_info "Branch name fetched: $Branch_Name"
 else
@@ -198,17 +205,19 @@ log_function_end "Set_Default_Variables"
 
 # Helper Functions for Package Management
 install_package() {
-    local package="$1"
+    local package_spec="$1"
+    local -a packages
+    read -r -a packages <<<"$package_spec"
     case "$Server_OS" in
         "CentOS"|"openEuler")
             if [[ "$Server_OS_Version" -ge 8 ]]; then
-                dnf install -y "$package"
+                dnf install -y "${packages[@]}"
             else
-                yum install -y "$package"
+                yum install -y "${packages[@]}"
             fi
             ;;
         "Ubuntu")
-            DEBIAN_FRONTEND=noninteractive apt install -y "$package"
+            DEBIAN_FRONTEND=noninteractive apt install -y "${packages[@]}"
             ;;
     esac
 }
@@ -529,7 +538,7 @@ if [ -z "$XDG_CURRENT_DESKTOP" ]; then
     echo -e "Desktop OS not detected. Proceeding\n"
 else
     echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
-    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, Ubuntu 24.04 x86_64, Ubuntu 24.04.3 x86_64, CentOS 8.x, AlmaLinux 8.x, AlmaLinux 9.x, AlmaLinux 10.x and CloudLinux 7.x...\n"
+    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, Ubuntu 24.04 x86_64, Ubuntu 24.04.3 x86_64, Ubuntu 26.04 x86_64, CentOS 8.x, AlmaLinux 8.x, AlmaLinux 9.x, AlmaLinux 10.x and CloudLinux 7.x...\n"
     exit
 fi
 
@@ -552,7 +561,7 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 26.04" /etc/os-release ; then
   Server_OS="Ubuntu"
 elif grep -q -E "Debian GNU/Linux 11|Debian GNU/Linux 12|Debian GNU/Linux 13" /etc/os-release ; then
   Server_OS="Debian"
@@ -560,8 +569,8 @@ elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
-  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
@@ -1312,7 +1321,7 @@ Debug_Log2 "Setting up repositories for CN server...,1"
 Download_Requirement() {
 for i in {1..50} ;
   do
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
   else
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
@@ -1327,6 +1336,34 @@ for i in {1..50} ;
   fi
 done
 #special made function for Gitee.com , for whatever reason , sometimes it fails to download this file
+}
+
+# Resolve the interpreter the CyberPanel/CyberCP virtualenvs are built on.
+#
+# Ubuntu 26.04 ships Python 3.14, which Django 4.2.14 does not support (4.2 tops out
+# at 3.12). Install 3.12 from the deadsnakes PPA and build the venvs on that instead.
+# The system python3.14 is deliberately left alone - it stays the OS default for
+# Ubuntu's own tooling, and only CyberPanel's venvs point at 3.12.
+Setup_Python_Runtime() {
+  CyberPanel_Python="/usr/bin/python3"
+
+  if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    echo -e "Ubuntu 26.04 detected - installing Python 3.12 for the CyberPanel virtualenv..."
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common"
+    Retry_Command "add-apt-repository -y ppa:deadsnakes/ppa"
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update"
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3.12 python3.12-venv python3.12-dev"
+
+    if [[ -x /usr/bin/python3.12 ]] ; then
+      CyberPanel_Python="/usr/bin/python3.12"
+      echo -e "Using $CyberPanel_Python for the CyberPanel virtualenv"
+    else
+      echo -e "\nERROR: Python 3.12 is required on Ubuntu 26.04 but could not be installed."
+      echo -e "CyberPanel cannot run on the system Python 3.14 with Django 4.2.\n"
+      Debug_Log2 "Python 3.12 install failed on Ubuntu 26.04 [404]"
+      exit 1
+    fi
+  fi
 }
 
 Pre_Install_Required_Components() {
@@ -1368,7 +1405,7 @@ else
     apt install -y --allow-downgrades libgnutls30=3.6.13-2ubuntu1.3
   fi
 
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] ; then
     DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
      Check_Return
   else
@@ -1394,11 +1431,13 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
+Setup_Python_Runtime
+
 # Install virtualenv - handle Ubuntu 24.04's externally-managed-environment policy
 if [[ "$Server_OS" = "Ubuntu" ]]; then
-  if [[ "$Server_OS_Version" = "24" ]]; then
-    # Ubuntu 24.04 has python3-venv by default, no need to install virtualenv
-    echo -e "Ubuntu 24.04 detected - using built-in python3-venv"
+  if [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
+    # Ubuntu 24.04/26.04 have python3-venv available, no need to install virtualenv
+    echo -e "Ubuntu 24.04/26.04 detected - using built-in python3-venv"
   else
     # For older Ubuntu versions, install virtualenv via apt
     Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update"
@@ -1416,20 +1455,20 @@ echo -e "Creating CyberPanel virtual environment..."
 # First ensure the directory exists
 mkdir -p /usr/local/CyberPanel
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
-  echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
-  if python3 -m venv /usr/local/CyberPanel 2>&1; then
+if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]) ; then
+  echo -e "Ubuntu 22.04/24.04/26.04 detected, using $CyberPanel_Python -m venv..."
+  if "$CyberPanel_Python" -m venv /usr/local/CyberPanel 2>&1; then
     echo -e "Virtual environment created successfully"
   else
-    echo -e "python3 -m venv failed, trying virtualenv..."
-    # For Ubuntu 24.04, python3-venv should work, but if not, try apt install
-    if [[ "$Server_OS_Version" = "24" ]]; then
+    echo -e "$CyberPanel_Python -m venv failed, trying virtualenv..."
+    # For Ubuntu 24.04/26.04, python3-venv should work, but if not, try apt install
+    if [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv"
     else
       # For Ubuntu 22.04, install virtualenv via apt
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-virtualenv"
     fi
-    virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+    virtualenv -p "$CyberPanel_Python" /usr/local/CyberPanel
   fi
 else
   virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
@@ -1592,46 +1631,72 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   if [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
     echo "$(host mirrors.cloud.aliyuncs.com | awk '{print $4}') mirrors.cloud.aliyuncs.com " >> /etc/hosts
   fi
-  #add internal repo server to host file before systemd-resolved is disabled
-
-  if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
-    systemctl stop systemd-resolved  >/dev/null 2>&1
-    systemctl disable systemd-resolved  >/dev/null 2>&1
-    systemctl mask systemd-resolved  >/dev/null 2>&1
-  fi
-
-  # Backup previous resolv.conf file
-  cp /etc/resolv.conf /etc/resolv.conf_bak
-
-  # Delete resolv.conf file
-  rm -f /etc/resolv.conf
-
-  if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
-    echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
-    echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
-  elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
-    echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
-    echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
+  if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    # Keep resolved's upstream resolver and Netplan readiness integration, but
+    # free port 53 so PowerDNS can bind on every interface.
+    if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
+      DNS_Resolvers="183.60.83.19 183.60.82.98"
+    elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
+      DNS_Resolvers="100.100.2.136 100.100.2.138"
+    else
+      DNS_Resolvers="1.1.1.1 8.8.8.8"
+    fi
+    rm -f /etc/systemd/resolved.conf.d/cyberpanel.conf
+    cat > /etc/systemd/resolved.conf <<EOF
+[Resolve]
+DNS=$DNS_Resolvers
+FallbackDNS=$DNS_Resolvers
+DNSStubListener=no
+EOF
+    chmod 0644 /etc/systemd/resolved.conf
+    systemctl unmask systemd-resolved.service systemd-resolved-monitor.socket systemd-resolved-varlink.socket >/dev/null 2>&1
+    systemctl daemon-reload
+    systemctl enable --now systemd-resolved.service >/dev/null 2>&1
+    ln -sfn /run/systemd/resolve/resolv.conf /etc/resolv.conf
+    systemctl restart systemd-networkd systemd-resolved >/dev/null 2>&1
   else
-    echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
-    echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
+    # Keep the established resolver replacement path unchanged on older systems.
+    if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
+      systemctl stop systemd-resolved  >/dev/null 2>&1
+      systemctl disable systemd-resolved  >/dev/null 2>&1
+      systemctl mask systemd-resolved  >/dev/null 2>&1
+    fi
+
+    cp /etc/resolv.conf /etc/resolv.conf_bak
+    rm -f /etc/resolv.conf
+
+    if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
+      echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
+      echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
+    elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
+      echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
+      echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
+    else
+      echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
+      echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
+    fi
+    chmod 0644 /etc/resolv.conf
+
+    systemctl restart systemd-networkd >/dev/null 2>&1
   fi
 
-  systemctl restart systemd-networkd >/dev/null 2>&1
-  # Wait for network to come up, but check more frequently
-  for j in {1..6}; do
+  # A reachable IP only proves that routing is ready. Package installation also
+  # needs the replacement resolver to answer, which can lag behind networkd.
+  DNS_Ready="No"
+  for j in {1..20}; do
     sleep 0.5
-    # Check if network is ready by trying to resolve DNS
-    if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1 || nslookup cyberpanel.sh >/dev/null 2>&1; then
+    if getent ahostsv4 cyberpanel.sh >/dev/null 2>&1 || nslookup cyberpanel.sh >/dev/null 2>&1; then
+      DNS_Ready="Yes"
       break
     fi
   done
 
-  # Check Connectivity
-  if ping -q -c 1 -W 1 cyberpanel.sh >/dev/null; then
+  if [[ "$DNS_Ready" = "Yes" ]]; then
     echo -e "\nSuccessfully set up nameservers..\n"
     echo -e "\nThe network is up.. :)\n"
     echo -e "\nContinue installation..\n"
+  elif [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    echo -e "\nWaiting for systemd-resolved to establish DNS..\n"
   else
     echo -e "\nThe network is down.. :(\n"
     rm -f /etc/resolv.conf
@@ -1639,8 +1704,15 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     systemctl restart systemd-networkd >/dev/null 2>&1
     echo -e "\nReturns the nameservers settings to default..\n"
     echo -e "\nContinue installation..\n"
-    # Brief pause for network stabilization
     sleep 1
+  fi
+
+  if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+    # Require stable package indexes before the Python installer starts.
+    cat > /etc/apt/apt.conf.d/80-cyberpanel-retries <<EOF
+Acquire::Retries "5";
+EOF
+    Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update -y -o APT::Update::Error-Mode=any"
   fi
 
 cp /etc/resolv.conf /etc/resolv.conf-tmp
@@ -1854,7 +1926,7 @@ if grep "CyberPanel installation successfully completed" /var/log/installLogs.tx
 else
   echo -e "Oops, something went wrong..."
   Debug_Log2 "Oops, something went wrong... [404]"
-  exit
+  exit 1
 fi
 }
 
@@ -1882,7 +1954,12 @@ Post_Install_Addon_Memcached() {
   log_info "Installing Memcached and PHP extension"
   install_php_packages "memcached"
 
-  if [[ $Total_RAM -ge 2048 ]]; then
+  local lsmcd_supported="true"
+  if [[ "$Server_OS" = "Ubuntu" ]] && ! apt-cache policy libpcre3-dev 2>/dev/null | grep -q 'Candidate: [^(]'; then
+    lsmcd_supported="false"
+  fi
+
+  if [[ $Total_RAM -ge 2048 && "$lsmcd_supported" = "true" ]]; then
     Post_Install_Addon_Mecached_LSMCD
   else
     install_package "memcached"
@@ -2146,7 +2223,9 @@ fi
 Post_Install_Regenerate_Cert() {
 log_function_start "Post_Install_Regenerate_Cert"
 log_info "Regenerating SSL certificates for control panel"
-cat <<EOF >/root/cyberpanel/cert_conf
+local cert_conf
+cert_conf=$(mktemp /tmp/cyberpanel-cert-conf.XXXXXX)
+cat <<EOF >"$cert_conf"
 [req]
 prompt=no
 distinguished_name=cyberpanel
@@ -2166,7 +2245,7 @@ dnQualifier = CyberPanel
 [server_exts]
 extendedKeyUsage = 1.3.6.1.5.5.7.3.1
 EOF
-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
+openssl req -x509 -config "$cert_conf" -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
 
 if [[ "$Server_Edition" = "OLS" ]]; then
   Key_Path="/usr/local/lsws/admin/conf/webadmin.key"
@@ -2175,8 +2254,8 @@ else
   Key_Path="/usr/local/lsws/admin/conf/cert/admin.key"
   Cert_Path="/usr/local/lsws/admin/conf/cert/admin.crt"
 fi
-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout "$Key_Path" -out "$Cert_Path"
-rm -f /root/cyberpanel/cert_conf
+openssl req -x509 -config "$cert_conf" -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout "$Key_Path" -out "$Cert_Path"
+rm -f "$cert_conf"
 }
 
 # When lscpd sets PYTHONHOME=/usr, lswsgi loads Django from system Python—not the CyberCP venv.
@@ -2266,15 +2345,15 @@ echo -e "Creating CyberCP virtual environment..."
 # First ensure the directory exists
 mkdir -p /usr/local/CyberCP
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
-  echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
-  if python3 -m venv /usr/local/CyberCP 2>&1; then
+if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]) ; then
+  echo -e "Ubuntu 22.04/24.04/26.04 detected, using $CyberPanel_Python -m venv..."
+  if "$CyberPanel_Python" -m venv /usr/local/CyberCP 2>&1; then
     echo -e "Virtual environment created successfully"
   else
-    echo -e "python3 -m venv failed, trying virtualenv..."
+    echo -e "$CyberPanel_Python -m venv failed, trying virtualenv..."
     # Ensure virtualenv is properly installed
     pip3 install --upgrade virtualenv
-    virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+    virtualenv -p "$CyberPanel_Python" /usr/local/CyberCP
   fi
 elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]) ; then
   echo -e "AlmaLinux/Rocky Linux 9/10 detected, using python3 -m venv..."
@@ -2327,7 +2406,24 @@ if [[ -f /usr/local/requirments.txt ]]; then
   cp -f /usr/local/requirments.txt /etc/cyberpanel/cyberpanel-requirments-runtime.txt
 fi
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+  # 26.04's system Python is 3.14, which Django 4.2 does not support. The venv was
+  # built on the deadsnakes 3.12 (see Setup_Python_Runtime). lswsgi embeds Python
+  # with PYTHONHOME set to this venv, so it needs both the 3.12 interpreter and
+  # standard library in the venv rather than the system 3.14 runtime.
+  cp "$CyberPanel_Python" /usr/local/CyberCP/bin/python3
+  if [[ -d /usr/lib/python3.12 ]] ; then
+    cp -a /usr/lib/python3.12/. /usr/local/CyberCP/lib/python3.12/
+  else
+    echo -e "\nERROR: Python 3.12 standard library is missing on Ubuntu 26.04.\n"
+    exit 1
+  fi
+
+  # lswsgi starts as the cyberpanel account. Keep the venv readable even when
+  # the installer itself was launched with a restrictive umask.
+  chmod 0644 /usr/local/CyberCP/pyvenv.cfg
+  chmod -R a+rX /usr/local/CyberCP/lib /usr/local/CyberCP/lib64 2>/dev/null || true
+elif [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
   # Ubuntu 24.04 ships with Python 3.12, but using 3.10 for compatibility with CyberPanel
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
 else

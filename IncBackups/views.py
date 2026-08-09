@@ -13,6 +13,7 @@ from loginSystem.views import loadLoginPage
 from plogical.Backupsv2 import CPBackupsV2
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
+from plogical.backupV2Repository import repository_names
 from plogical.httpProc import httpProc
 from plogical.processUtilities import ProcessUtilities as pu
 from plogical.virtualHostUtilities import virtualHostUtilities as vhu
@@ -984,7 +985,6 @@ def DeleteSnapshotV2Final(request):
         return HttpResponse(json_data)
 
 def selectwebsiteRetorev2(request):
-    import re
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
@@ -1004,15 +1004,10 @@ def selectwebsiteRetorev2(request):
 
         command = 'cat %s'%(path)
         result = pu.outputExecutioner(command)
-
-        if result.find('type') > -1:
-            pattern = r'\[(.*?)\]'
-            matches = re.findall(pattern, result)
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
-            return HttpResponse(final_json)
-        else:
-            final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
-            return HttpResponse(final_json)
+        matches = repository_names(result)
+        final_json = json.dumps({'status': 1, 'fetchStatus': 1,
+                                 'error_message': "None", "data": matches})
+        return HttpResponse(final_json)
 
 
         # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": 1})
@@ -1081,7 +1076,6 @@ def ConfigureSftpV2Backup(request):
         return HttpResponse(final_json)
 
 def selectwebsiteCreatev2(request):
-    import re
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
@@ -1105,41 +1099,11 @@ def selectwebsiteCreatev2(request):
         status, currentSchedules = CPBackupsV2.FetchCurrentSchedules(str(Selectedwebsite))
 
 
-        if CurrentContent.find('No such file or directory') > -1:
-            LocalRclonePath = f'/home/{obj.domain}/.config/rclone'
-            command = f'mkdir -p {LocalRclonePath}'
-            pu.executioner(command, obj.externalApp)
-
-            # content = '''
-            #        [local]
-            #        type = local
-            #        '''
-            # command = f"echo '{content}' > {path}"
-            # pu.executioner(command, obj.externalApp, True)
-
-            command = 'cat %s' % (path)
-            result = pu.outputExecutioner(command)
-
-            if result.find('type') > -1:
-                pattern = r'\[(.*?)\]'
-                matches = re.findall(pattern, result)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches, 'currentSchedules': currentSchedules})
-                return HttpResponse(final_json)
-            else:
-                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
-                return HttpResponse(final_json)
-        else:
-            command = 'cat %s' % (path)
-            result = pu.outputExecutioner(command)
-
-            if result.find('type') > -1:
-                pattern = r'\[(.*?)\]'
-                matches = re.findall(pattern, result)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches, 'currentSchedules': currentSchedules})
-                return HttpResponse(final_json)
-            else:
-                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo', 'currentSchedules': currentSchedules})
-                return HttpResponse(final_json)
+        matches = repository_names(CurrentContent)
+        final_json = json.dumps({'status': 1, 'fetchStatus': 1,
+                                 'error_message': "None", "data": matches,
+                                 'currentSchedules': currentSchedules})
+        return HttpResponse(final_json)
 
 
         # logging.writeToFile(str(CurrentContent))

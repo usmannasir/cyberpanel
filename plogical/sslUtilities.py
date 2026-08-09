@@ -2,7 +2,9 @@ import requests
 
 from plogical import CyberCPLogFileWriter as logging
 import os
+import re
 import shlex
+import shutil
 import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
@@ -20,6 +22,50 @@ class sslUtilities:
     ## Graceful LiteSpeed/OLS reload used as acme.sh --reloadcmd so that every
     ## auto-renewal re-applies the certificate and reloads the server. #1676
     lswsReloadCmd = '/usr/local/lsws/bin/lswsctrl reload'
+
+    @staticmethod
+    def removeSSLForDomain(domain, certificateRoot='/etc/letsencrypt/live',
+                           acmePath='/root/.acme.sh/acme.sh'):
+        if not re.fullmatch(
+                r'[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?', domain):
+            return 0
+
+        certificateRoot = os.path.realpath(certificateRoot)
+        certificatePath = os.path.abspath(os.path.join(certificateRoot, domain))
+        if os.path.commonpath([certificateRoot, certificatePath]) != certificateRoot:
+            return 0
+
+        if os.path.isfile(acmePath):
+            for extraArgs in (['--ecc'], []):
+                subprocess.run(
+                    [acmePath, '--remove', '-d', domain] + extraArgs,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
+
+        acmeRoot = os.path.realpath(os.path.dirname(acmePath))
+        for suffix in ('_ecc', ''):
+            acmeStatePath = os.path.abspath(
+                os.path.join(acmeRoot, domain + suffix))
+            if os.path.commonpath([acmeRoot, acmeStatePath]) != acmeRoot:
+                continue
+            if os.path.lexists(acmeStatePath):
+                if os.path.islink(acmeStatePath):
+                    os.unlink(acmeStatePath)
+                elif os.path.isdir(acmeStatePath):
+                    shutil.rmtree(acmeStatePath)
+                else:
+                    os.unlink(acmeStatePath)
+
+        if os.path.lexists(certificatePath):
+            if os.path.islink(certificatePath):
+                os.unlink(certificatePath)
+            elif os.path.isdir(certificatePath):
+                shutil.rmtree(certificatePath)
+            else:
+                os.unlink(certificatePath)
+        return 1
 
     @staticmethod
     def parseACMEError(error_output):
@@ -107,12 +153,7 @@ class sslUtilities:
         try:
             # Use dig command to check DNS records from authoritative servers
             command = f"dig +short {domain} A @8.8.8.8"
-            try:
-                result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            except TypeError:
-                # Fallback for Python < 3.7
-                result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        universal_newlines=True)
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
             # If there's any output, the domain has A records
             if result.stdout.strip():
@@ -120,12 +161,7 @@ class sslUtilities:
 
             # Also check AAAA records
             command = f"dig +short {domain} AAAA @8.8.8.8"
-            try:
-                result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            except TypeError:
-                # Fallback for Python < 3.7
-                result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        universal_newlines=True)
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
             if result.stdout.strip():
                 return True
@@ -840,24 +876,14 @@ context /.well-known/acme-challenge {
                     command = acmePath + " --issue" + domain_list \
                               + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging'
 
-                    try:
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                    except TypeError:
-                        # Fallback for Python < 3.7
-                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                universal_newlines=True, shell=True)
+                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                     if result.returncode == 0:
                         # Step 2: Issue the certificate (production) - this stores config in /root/.acme.sh/
                         command = acmePath + " --issue" + domain_list \
                                   + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                        try:
-                            result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                        except TypeError:
-                            # Fallback for Python < 3.7
-                            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                    universal_newlines=True, shell=True)
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                         if result.returncode == 0:
                             # Step 3: Install the certificate to the desired location.
@@ -870,12 +896,7 @@ context /.well-known/acme-challenge {
                                             + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
                                             + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
-                            try:
-                                install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
-                            except TypeError:
-                                # Fallback for Python < 3.7
-                                install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                                universal_newlines=True, shell=True)
+                            install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                             if install_result.returncode == 0:
                                 logging.CyberCPLogFileWriter.writeToFile(
@@ -912,12 +933,7 @@ context /.well-known/acme-challenge {
                     command = acmePath + " --issue" + domain_list \
                               + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                    try:
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                    except TypeError:
-                        # Fallback for Python < 3.7
-                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                universal_newlines=True, shell=True)
+                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                     if result.returncode == 0:
                         # Step 2: Install the certificate to the desired location.
@@ -930,12 +946,7 @@ context /.well-known/acme-challenge {
                                         + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
                                         + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
-                        try:
-                            install_result = subprocess.run(install_command, capture_output=True, universal_newlines=True, shell=True)
-                        except TypeError:
-                            # Fallback for Python < 3.7
-                            install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                            universal_newlines=True, shell=True)
+                        install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                         if install_result.returncode == 0:
                             return 1
@@ -946,6 +957,10 @@ context /.well-known/acme-challenge {
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(str(e))
             return 0
+
+
+def removeSSLForDomain(domain, *args, **kwargs):
+    return sslUtilities.removeSSLForDomain(domain, *args, **kwargs)
 
 
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
@@ -995,12 +1010,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                     # Try to renew with explicit webroot
                     command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --ecc --force'
 
-                try:
-                    result = subprocess.run(command, capture_output=True, text=True, shell=True)
-                except TypeError:
-                    # Fallback for Python < 3.7
-                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                            universal_newlines=True, shell=True)
+                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")

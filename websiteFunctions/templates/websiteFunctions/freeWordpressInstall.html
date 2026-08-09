@@ -1,0 +1,38 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Install WordPress - CyberPanel" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div id="page-title">
+        <h2>{% trans "Install WordPress" %}</h2>
+        <p>{% trans "Choose an existing website where WordPress should be installed." %}</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">{% trans "Select Website" %}</h3>
+            <div class="example-box-wrapper">
+                {% for domain in websiteList %}
+                    <div class="row" style="padding: 12px 0; border-bottom: 1px solid var(--border-color, #e8e9ff);">
+                        <div class="col-sm-8" style="padding-top: 10px;">
+                            <strong>{{ domain }}</strong>
+                        </div>
+                        <div class="col-sm-4 text-right">
+                            <a class="btn btn-primary" href="{% url 'wordpressInstall' domain %}">
+                                {% trans "Install WordPress" %}
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-info">
+                        {% trans "Create a website first, then return here to install WordPress." %}
+                    </div>
+                    <a class="btn btn-primary" href="{% url 'createWebsite' %}">{% trans "Create Website" %}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

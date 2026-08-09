@@ -110,7 +110,7 @@ class restoreMeta():
 
                 dbName = database.find('dbName').text
 
-                logging.writeToFile('Backup version 2.1.1 detected..')
+                logging.writeToFile('Multi-user database backup metadata detected..')
 
                 first = 1
 

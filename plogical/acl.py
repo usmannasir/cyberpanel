@@ -1268,6 +1268,13 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/CyberCP"
             ProcessUtilities.executioner(command, 'root', True)
 
+            terminalSecretPath = '/usr/local/CyberCP/terminal_jwt_secret'
+            if os.path.exists(terminalSecretPath):
+                command = "chown cyberpanel:cyberpanel %s" % terminalSecretPath
+                ProcessUtilities.executioner(command, 'root', True)
+                command = "chmod 600 %s" % terminalSecretPath
+                ProcessUtilities.executioner(command, 'root', True)
+
             ########### Fix LSCPD
 
             command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
@@ -1458,7 +1465,4 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [fixPermissions]")
-
-
-
 

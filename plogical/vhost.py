@@ -813,6 +813,16 @@ class vhost:
         return 1
 
     @staticmethod
+    def ensureSensitiveFileDenials(vhFile):
+        try:
+            from plogical.sensitiveFileProtection import protect_vhost_file
+            return protect_vhost_file(vhFile)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + " [ensureSensitiveFileDenials]")
+            return -1
+
+    @staticmethod
     def checkIfRewriteEnabled(data):
         try:
             for items in data:

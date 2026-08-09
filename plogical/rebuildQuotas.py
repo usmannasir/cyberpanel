@@ -28,7 +28,7 @@ class rebuildQuotas:
                 command  = "mount | grep ' / '"
 
                 try:
-                    qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -41,7 +41,7 @@ class rebuildQuotas:
             else:
                 command  = "mount | grep quota"
                 try:
-                    qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -58,7 +58,7 @@ class rebuildQuotas:
                 print(f"Rebuilding quotas for {website.domain}...")
                 command = 'chattr -R -i /home/%s/' % (website.domain)
                 try:
-                    qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -68,7 +68,7 @@ class rebuildQuotas:
                     command = f'setquota -u {website.externalApp} {spaceString} 0 0 /'
                     print(command)
                     try:
-                        qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         qResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                  universal_newlines=True, shell=True)

@@ -25,6 +25,7 @@ except:
 import os
 
 from plogical.processUtilities import ProcessUtilities
+from plogical.ftpConfiguration import pure_ftpd_service_name, write_chroot_everyone
 import argparse
 
 class FTPManager:
@@ -287,9 +288,10 @@ class FTPManager:
     def installPureFTPD(self):
 
         def pureFTPDServiceName():
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                return 'pure-ftpd-mysql'
-            return 'pure-ftpd'
+            return pure_ftpd_service_name(
+                ProcessUtilities.decideDistro(),
+                (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20),
+            )
 
         #### new install
 
@@ -334,12 +336,11 @@ class FTPManager:
 
     def startPureFTPD(self):
         ############## Start pureftpd ######################
-        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-            serviceName = 'pure-ftpd-mysql'
-            command = 'systemctl start pure-ftpd-mysql'
-        else:
-            serviceName = 'pure-ftpd'
-            command = 'systemctl start pure-ftpd'
+        serviceName = pure_ftpd_service_name(
+            ProcessUtilities.decideDistro(),
+            (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20),
+        )
+        command = 'systemctl start ' + serviceName
         
         ProcessUtilities.executioner(command)
         
@@ -545,6 +546,8 @@ class FTPManager:
 
                 command = 'echo "no" > /etc/pure-ftpd/conf/UnixAuthentication'
                 ProcessUtilities.executioner(command, 'root', True)
+
+                write_chroot_everyone('/etc/pure-ftpd/conf')
 
                 command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
                 ProcessUtilities.executioner(command, 'root', True)

@@ -21,7 +21,7 @@ check_OS() {
 	  Server_OS="AlmaLinux"
 	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
 	  Server_OS="CloudLinux"
-	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
+	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 26.04" /etc/os-release ; then
 	  Server_OS="Ubuntu"
 	elif grep -q -E "Rocky Linux" /etc/os-release ; then
 	  Server_OS="RockyLinux"
@@ -29,7 +29,7 @@ check_OS() {
 	  Server_OS="openEuler"
 	else
 	  echo -e "Unable to detect your system..."
-	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   	  exit
 	fi
 
@@ -301,7 +301,10 @@ read TMP_YN
 				yum groupinstall "Development Tools" -y
 				yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
 			elif [[ $SERVER_OS == "Ubuntu" ]] ; then
-				DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
+				# Ubuntu 26.04 dropped PCRE1; fall back to the pcre2 dev package there.
+				PCRE_DEV="libpcre3-dev"
+				apt-cache show libpcre3-dev >/dev/null 2>&1 || PCRE_DEV="libpcre2-dev"
+				DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev "$PCRE_DEV" git -y
 			fi
 				wget https://cdn.cyberpanel.sh/litespeed/lsmcd.tar.gz
 				tar xzvf lsmcd.tar.gz

@@ -9,6 +9,13 @@ ExecStart=/usr/local/CyberCP/bin/python3 -m uvicorn fastapi_ssh_server:app --hos
 Restart=on-failure
 User=root
 Group=root
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/home
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
 
 [Install]
 WantedBy=multi-user.target 

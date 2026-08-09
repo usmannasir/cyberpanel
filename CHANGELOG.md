@@ -4,6 +4,54 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.0 (build 0) — 2026-08-09
+
+### Platform support
+- Added Ubuntu 26.04 installation and upgrade support with a Python 3.12 panel
+  runtime, distribution MariaDB packages, available mail-scanning packages,
+  reliable DNS handoff, and compatible Memcached fallback behavior.
+- Package operations now wait for package-manager locks, DNS readiness is
+  verified before downloads, and Ubuntu 26 installer sessions remain available
+  while long-running setup steps complete.
+
+### Backup and restore
+- Backup archives are accepted only after they are complete, stable, and valid.
+- Version 3 backups use the modern multi-user database metadata restore path;
+  all established legacy format boundaries remain supported.
+- Version comparisons no longer treat dotted releases as decimal numbers.
+- Restores preserve whether the original website had an automatic mail child
+  domain instead of always creating one.
+- Incremental backups exclude per-site logs and retain the correct Restic
+  snapshot identifier even when the backup command ends with a warning.
+- V2 local backups use their on-disk Rustic repository directly and remain
+  available without a configured Rclone remote.
+- V2 database restores use the valid MySQL defaults-file option and report
+  failed database or file imports instead of returning false success.
+- Full site archives omit local incremental repository directories to prevent
+  nested backup growth.
+
+### Security and reliability
+- Backup restores reject archive path traversal, escaping links, and special
+  filesystem entries before extracting any content.
+- V2 backup diagnostics no longer record repository tokens or database
+  passwords.
+- Child-domain deletion now invokes certificate cleanup correctly and removes
+  the dedicated certificate and ACME state directories.
+- Hardened Web Terminal authentication and secret-file permissions.
+- Blocked sensitive application files through generated website
+  configurations and tightened certificate-file handling.
+- Restored domain-alias management, free WordPress installation navigation,
+  Ubuntu Pure-FTPd reset behavior, PHP 8.5 parsing, and DNS SOA serial updates.
+
+### Release versioning
+- Consolidated runtime, API, installer, upgrade, backup, and CLI version values
+  into one source for v3.0.0.
+- Installer and upgrade scripts now parse version metadata without fixed byte
+  offsets and support multi-digit build numbers.
+- Fresh installations write the machine-readable JSON format expected by the
+  CyberPanel CLI.
+- Upgrades now synchronize the database-backed version returned by the API.
+
 ## v2.4.9 (build 9) — 2026-07-23
 
 A maintenance release: a broad batch of security, SSL, backup/restore and

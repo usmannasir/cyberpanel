@@ -4,7 +4,7 @@
 #set -x
 #set -u
 
-#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, openEuler 20.03 and openEuler 22.03
+#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, openEuler 20.03 and openEuler 22.03
 #For whoever may edit this script, please follow:
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
@@ -15,6 +15,10 @@ Sudo_Test=$(set)
 #for SUDO check
 
 Set_Default_Variables() {
+
+# Set to 1 when upgrade.py fails, so the final banner reports the failure instead
+# of claiming success just because the panel still answers on its port.
+UPGRADE_FAILED=0
 
 # Clear old log files
 echo -e "Clearing old log files..."
@@ -53,9 +57,19 @@ Server_OS=""
 Server_OS_Version=""
 Server_Provider='Undefined'
 
+parse_panel_version() {
+  local version_data="$1"
+  Panel_Version=$(printf '%s' "$version_data" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p')
+  Panel_Build=$(printf '%s' "$version_data" | sed -n 's/.*"build"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9][0-9]*\)"\{0,1\}.*/\1/p')
+  [[ "$Panel_Version" =~ ^[0-9]+\.[0-9]+$ && "$Panel_Build" =~ ^[0-9]+$ ]]
+}
+
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}
-Panel_Build=${Temp_Value:25:1}
+if ! parse_panel_version "$Temp_Value"; then
+  echo -e "\nUnable to fetch a valid CyberPanel version."
+  echo -e "\nPlease try again in a few moments."
+  exit 1
+fi
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 Base_Number="1.9.3"
@@ -151,14 +165,14 @@ elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
 elif grep -q -E "AlmaLinux-8|AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
   Server_OS="AlmaLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 26.04" /etc/os-release ; then
   Server_OS="Ubuntu"
 elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03...\n"
-  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
@@ -166,6 +180,34 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 #to make 20.04 display as 20, etc.
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
+
+# Interpreter the CyberPanel/CyberCP virtualenvs are built on.
+#
+# Ubuntu 26.04 ships Python 3.14, which Django 4.2.14 does not support (4.2 tops out
+# at 3.12). Build the venvs on the deadsnakes 3.12 instead and leave the system
+# python3.14 alone for Ubuntu's own tooling. Every other OS keeps /usr/bin/python3.
+CyberPanel_Python="/usr/bin/python3"
+
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
+  if [[ ! -x /usr/bin/python3.12 ]] ; then
+    echo -e "Ubuntu 26.04 detected - installing Python 3.12 for the CyberPanel virtualenv..."
+    # This runs before the main apt update, so refresh the lists first or
+    # software-properties-common can fail to resolve on a stale index.
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
+    add-apt-repository -y ppa:deadsnakes/ppa
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python3.12 python3.12-venv python3.12-dev
+  fi
+  if [[ -x /usr/bin/python3.12 ]] ; then
+    CyberPanel_Python="/usr/bin/python3.12"
+  else
+    echo -e "\nERROR: Python 3.12 is required on Ubuntu 26.04 but could not be installed."
+    echo -e "CyberPanel cannot run on the system Python 3.14 with Django 4.2.\n"
+    Debug_Log2 "Python 3.12 install failed on Ubuntu 26.04 [404]"
+    exit 1
+  fi
+fi
 
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]]; then
   Server_OS="CentOS"
@@ -492,13 +534,9 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   apt update -y
   export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
 
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
-    if [[ "$Server_OS_Version" = "24" ]]; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing Ubuntu 24.04 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    else
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing Ubuntu 22.04 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    fi
-    # Install Python development packages required for virtualenv on Ubuntu 22.04/24.04
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] ; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing Ubuntu ${Server_OS_Version}.04 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    # Install Python development packages required for virtualenv on Ubuntu 22.04/24.04/26.04
     DEBIAN_FRONTEND=noninteractive apt install -y python3-dev python3-venv python3-pip python3-setuptools python3-wheel
     DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
 
@@ -512,9 +550,9 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   ### fix for pip issue on ubuntu 22 and 24
 
   apt-get remove --purge virtualenv -y
-  # Handle Ubuntu 24.04's externally-managed-environment policy
-  if [[ "$Server_OS_Version" = "24" ]]; then
-    echo -e "Ubuntu 24.04 detected - using apt for virtualenv installation"
+  # Handle the externally-managed-environment policy (PEP 668) on Ubuntu 24.04+
+  if [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
+    echo -e "Ubuntu ${Server_OS_Version}.04 detected - using apt for virtualenv installation"
     DEBIAN_FRONTEND=noninteractive apt-get install -y python3-virtualenv
   else
     pip uninstall -y virtualenv 2>/dev/null || true
@@ -562,7 +600,7 @@ Download_Requirement() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting Download_Requirement function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 for i in {1..50};
   do
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
@@ -766,10 +804,10 @@ if [ "$Server_OS" = "Ubuntu" ]; then
   rm -rf /usr/local/CyberPanel
   
   # For Ubuntu 22.04 and 24.04, handle virtualenv installation properly
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]; then
-    if [[ "$Server_OS_Version" = "24" ]]; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu 24.04: Using apt for virtualenv installation (externally-managed-environment policy)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-      # Ubuntu 24.04 has externally-managed-environment, use apt
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
+    if [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu ${Server_OS_Version}.04: Using apt for virtualenv installation (externally-managed-environment policy)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      # Ubuntu 24.04+ has externally-managed-environment, use apt
       DEBIAN_FRONTEND=noninteractive apt-get install -y python3-virtualenv python3-venv
     else
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu 22.04: Installing/upgrading virtualenv with proper dependencies..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -796,9 +834,9 @@ fi
 if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
   echo -e "\nPython 2 dectected, doing re-setup...\n"
   rm -rf /usr/local/CyberPanel/bin
-  if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    python3 -m venv /usr/local/CyberPanel
+  if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]); then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using $CyberPanel_Python -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    "$CyberPanel_Python" -m venv /usr/local/CyberPanel
   elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
     PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
     virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
@@ -814,9 +852,9 @@ else
 echo -e "\nNothing found, need fresh setup...\n"
 
 # Attempt to create a virtual environment
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  python3 -m venv /usr/local/CyberPanel
+if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]); then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using $CyberPanel_Python -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  "$CyberPanel_Python" -m venv /usr/local/CyberPanel
 elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
   PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
   virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
@@ -849,9 +887,9 @@ if [ $? -ne 0 ]; then
                 # Verify the installation
                 if [ $? -eq 0 ]; then
                     echo "'packaging' module reinstalled and upgraded successfully."
-                    if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
-                        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-                        python3 -m venv /usr/local/CyberPanel
+                    if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]); then
+                        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using $CyberPanel_Python -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+                        "$CyberPanel_Python" -m venv /usr/local/CyberPanel
                     elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
                         PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
                         virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
@@ -1003,12 +1041,12 @@ else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating temporary virtual environment for fallback upgrade..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   
   # Try python3 -m venv first (more reliable on Ubuntu 22.04)
-  if python3 -m venv --system-site-packages /usr/local/CyberPanelTemp 2>/dev/null; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary virtualenv created with python3 -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if "$CyberPanel_Python" -m venv --system-site-packages /usr/local/CyberPanelTemp 2>/dev/null; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary virtualenv created with $CyberPanel_Python -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
     # Fallback to virtualenv command
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Trying virtualenv command for temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    virtualenv -p "$CyberPanel_Python" --system-site-packages /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 
 # shellcheck disable=SC1091
@@ -1034,9 +1072,14 @@ fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-FALLBACK_CODE=$?
+# upgrade.py is piped into tee, so $? is tee's status (always 0) — read the real
+# exit code of upgrade.py from PIPESTATUS or a failed upgrade looks like a success.
+FALLBACK_CODE=${PIPESTATUS[0]}
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-Check_Return
+if [ "$FALLBACK_CODE" -ne 0 ]; then
+  UPGRADE_FAILED=1
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback upgrade.py also failed with code $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -rf /usr/local/CyberPanelTemp
@@ -1072,7 +1115,7 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
   
   # First try using python3 -m venv (more reliable on Ubuntu 22.04)
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Attempting to create virtual environment using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  virtualenv_output=$(python3 -m venv --system-site-packages /usr/local/CyberCP 2>&1)
+  virtualenv_output=$("$CyberPanel_Python" -m venv --system-site-packages /usr/local/CyberCP 2>&1)
   VENV_CODE=$?
   echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
   
@@ -1098,7 +1141,7 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
       virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
     else
-      virtualenv_output=$(virtualenv -p /usr/bin/python3 /usr/local/CyberCP 2>&1)
+      virtualenv_output=$(virtualenv -p "$CyberPanel_Python" /usr/local/CyberCP 2>&1)
     fi
     VENV_CODE=$?
     echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1537,6 +1580,20 @@ if [[ $Panel_Port = "" ]] ; then
 fi
 
 Panel_HTTP_Code=$(curl -k -L -s -o /dev/null -w "%{http_code}" "https://127.0.0.1:${Panel_Port#*:}/")
+
+# A responding panel only proves the old build is still up — it says nothing about
+# whether the new code was applied. Never claim success when upgrade.py failed.
+if [[ "${UPGRADE_FAILED:-0}" -ne 0 ]] ; then
+  echo "###################################################################"
+  echo "                CyberPanel UPGRADE FAILED                          "
+  echo "###################################################################"
+  echo -e "\nupgrade.py did not complete, so this server is STILL RUNNING THE OLD BUILD."
+  echo -e "If you were applying a security release, you are NOT patched yet."
+  echo -e "Check /var/log/cyberpanel_upgrade_debug.log for the failure, then re-run the upgrade.\n"
+  rm -rf /root/cyberpanel_upgrade_tmp
+  exit 1
+fi
+
 if [[ "$Panel_HTTP_Code" =~ ^(200|302|401|403)$ ]] ; then
   echo "###################################################################"
   echo "                CyberPanel Upgraded                                "

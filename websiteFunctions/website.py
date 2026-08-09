@@ -94,8 +94,11 @@ class WebsiteManager:
         }
 
         import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+        try:
+            response = requests.post(url, data=json.dumps(data), timeout=10)
+            Status = response.json()['status']
+        except (requests.RequestException, ValueError, KeyError):
+            Status = 0
 
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
@@ -136,8 +139,15 @@ class WebsiteManager:
                             Data, 'createDatabase')
             return proc.render()
         else:
-            from django.shortcuts import reverse
-            return redirect(reverse('pricing'))
+            currentACL = ACLManager.loadedACL(userID)
+            websites = ACLManager.findAllSites(currentACL, userID)
+            proc = httpProc(
+                request,
+                'websiteFunctions/freeWordpressInstall.html',
+                {'websiteList': websites},
+                'createDatabase',
+            )
+            return proc.render()
 
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         import json
@@ -3633,28 +3643,13 @@ context /cyberpanel_suspension_page.html {
 
             Data['accessed_via_ip'] = bool(accessed_via_ip)
 
-            #### update jwt secret if needed
-
-            import secrets
-
-            fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
             try:
-                
-                content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
-                if 'REPLACE_ME_WITH_INSTALLER' in content:
-                    new_secret = secrets.token_urlsafe(32)
-                    
-                    sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
-                    ProcessUtilities.outputExecutioner(sed_cmd)
-                    
-                    command = 'systemctl restart fastapi_ssh_server'
-                    ProcessUtilities.outputExecutioner(command)
-            except Exception:
-                CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
-                pass
-
-            #####
+                from plogical.securityUtils import get_terminal_jwt_secret
+                get_terminal_jwt_secret(create_if_missing=True)
+            except Exception as error:
+                CyberCPLogFileWriter.writeToFile(
+                    f"Failed to configure Web Terminal authentication: {error}"
+                )
 
             #####
 
@@ -3668,7 +3663,7 @@ context /cyberpanel_suspension_page.html {
                     ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
                     ProcessUtilities.outputExecutioner('systemctl daemon-reload')
             except Exception as e:
-                CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+                CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
             
 
             #####
@@ -3711,7 +3706,7 @@ context /cyberpanel_suspension_page.html {
                             CyberCPLogFileWriter.writeToFile(str(msg))
 
             except Exception as e:
-                CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
+                CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
             # Fetch actual resource limits from lscgctl command if they exist
             Data['resource_limits'] = None
@@ -3725,8 +3720,8 @@ context /cyberpanel_suspension_page.html {
                     # Run lscgctl list-user command
                     result = subprocess.run(
                         [lscgctl_path, 'list-user', username],
-                        capture_output=True,
-                        text=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        universal_newlines=True,
                         timeout=5
                     )
 
@@ -4603,11 +4598,31 @@ context /cyberpanel_suspension_page.html {
             ## Create Configurations
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " issueAliasSSL --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
+            legacy_alias = ChildDomains.objects.filter(
+                master__domain=self.domain,
+                domain=aliasDomain,
+                alais=1,
+            ).first()
+            if legacy_alias:
+                execPath += " issueSSL --virtualHostName %s --path %s --administratorEmail %s --force 1" % (
+                    shlex.quote(aliasDomain),
+                    shlex.quote(legacy_alias.path),
+                    shlex.quote(legacy_alias.master.adminEmail),
+                )
+            else:
+                execPath += " issueAliasSSL --masterDomain %s --aliasDomain %s --sslPath %s --administratorEmail %s" % (
+                    shlex.quote(self.domain),
+                    shlex.quote(aliasDomain),
+                    shlex.quote(sslpath),
+                    shlex.quote(admin.email),
+                )
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
+                if legacy_alias:
+                    legacy_alias.ssl = 1
+                    legacy_alias.save(update_fields=['ssl'])
                 data_ret = {'sslStatus': 1, 'error_message': "None", "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -4643,7 +4658,18 @@ context /cyberpanel_suspension_page.html {
             ## Create Configurations
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
+            legacy_alias = ChildDomains.objects.filter(
+                master__domain=self.domain,
+                domain=aliasDomain,
+                alais=1,
+            ).first()
+            if legacy_alias:
+                execPath += " deleteDomain --virtualHostName %s --DeleteDocRoot 0" % shlex.quote(aliasDomain)
+            else:
+                execPath += " deleteAlias --masterDomain %s --aliasDomain %s" % (
+                    shlex.quote(self.domain),
+                    shlex.quote(aliasDomain),
+                )
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
@@ -5709,31 +5735,13 @@ StrictHostKeyChecking no
         website = Websites.objects.get(domain=self.domain)
         externalApp = website.externalApp
 
-        #### update jwt secret if needed
-
-        import secrets
-        import re
-        import os
-        from plogical.processUtilities import ProcessUtilities
-
-        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
         try:
-            
-            content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
-            if 'REPLACE_ME_WITH_INSTALLER' in content:
-                new_secret = secrets.token_urlsafe(32)
-                
-                sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
-                ProcessUtilities.outputExecutioner(sed_cmd)
-                
-                command = 'systemctl restart fastapi_ssh_server'
-                ProcessUtilities.outputExecutioner(command)
-        except Exception:
-            CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
-            pass
-
-        #####
+            from plogical.securityUtils import get_terminal_jwt_secret
+            get_terminal_jwt_secret(create_if_missing=True)
+        except Exception as error:
+            CyberCPLogFileWriter.writeToFile(
+                f"Failed to configure Web Terminal authentication: {error}"
+            )
 
         from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
         # Ensure FastAPI SSH server systemd service file is in place
@@ -5745,7 +5753,7 @@ StrictHostKeyChecking no
                 ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
                 ProcessUtilities.outputExecutioner('systemctl daemon-reload')
         except Exception as e:
-            CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+            CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
 
         # Ensure FastAPI SSH server is running using ProcessUtilities
         try:
@@ -5785,7 +5793,7 @@ StrictHostKeyChecking no
                         CyberCPLogFileWriter.writeToFile(str(msg))
 
         except Exception as e:
-            CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
+            CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
         # Add-on check logic
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
@@ -8217,4 +8225,3 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-

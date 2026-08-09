@@ -45,7 +45,7 @@
             <div class="cp-tile-grid">
                 <a class="cp-tile" href="{% url 'domain' domain %}"><span class="cp-tile-ic"><i class="fas fa-gear"></i></span><span><div class="cp-tile-title">{% trans "Site Settings" %}</div><div class="cp-tile-sub">{% trans "PHP, configs, rewrite rules" %}</div></span></a>
                 <a class="cp-tile" href="/filemanager/{{ domain }}"><span class="cp-tile-ic"><i class="fas fa-folder-open"></i></span><span><div class="cp-tile-title">{% trans "File Manager" %}</div><div class="cp-tile-sub">{% trans "Browse and edit files" %}</div></span></a>
-                <a class="cp-tile" href="{% url 'v2ManageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "SSL" %}</div><div class="cp-tile-sub">{% trans "Issue & manage certificates" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'manageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "SSL" %}</div><div class="cp-tile-sub">{% trans "Issue & manage certificates" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'addDeleteDNSRecords' %}"><span class="cp-tile-ic"><i class="fas fa-sitemap"></i></span><span><div class="cp-tile-title">{% trans "DNS" %}</div><div class="cp-tile-sub">{% trans "Manage DNS records" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'listEmails' %}"><span class="cp-tile-ic"><i class="fas fa-envelope"></i></span><span><div class="cp-tile-title">{% trans "Email" %}</div><div class="cp-tile-sub">{% trans "Mailboxes & forwarding" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'backupSite' %}"><span class="cp-tile-ic"><i class="fas fa-shield-halved"></i></span><span><div class="cp-tile-title">{% trans "Backups" %}</div><div class="cp-tile-sub">{% trans "Back up & restore" %}</div></span></a>
@@ -64,7 +64,7 @@
         <!-- SSL & Domains -->
         <div class="cp-tab-panel" data-panel="ssl">
             <div class="cp-tile-grid">
-                <a class="cp-tile" href="{% url 'v2ManageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Issue & renew certificates" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'manageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Issue & renew certificates" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'domainAlias' domain %}"><span class="cp-tile-ic"><i class="fas fa-clone"></i></span><span><div class="cp-tile-title">{% trans "Domain Aliases" %}</div><div class="cp-tile-sub">{% trans "Add alias domains" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'listChildDomains' %}"><span class="cp-tile-ic"><i class="fas fa-diagram-project"></i></span><span><div class="cp-tile-title">{% trans "Sub / Addon Domains" %}</div><div class="cp-tile-sub">{% trans "Manage child domains" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'CreateNewDomain' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create Sub/Addon Domain" %}</div><div class="cp-tile-sub">{% trans "Add a new domain" %}</div></span></a>

@@ -22,6 +22,7 @@ from xml.etree import ElementTree
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from .phpManager import PHPManager
+from .phpConfig import matches_directive
 from plogical.httpProc import httpProc
 
 
@@ -1744,7 +1745,7 @@ def getCurrentPHPConfig(request):
                     if items.find("allow_url_include") > -1 and items.find("=") > -1:
                         if items.find("On") > -1:
                             allow_url_include = "1"
-                    if items.find("memory_limit") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "memory_limit"):
                         memory_limit = re.findall(r"[A-Za-z0-9_]+", items)[1]
                     if items.find("max_execution_time") > -1 and items.find("=") > -1:
                         max_execution_time = re.findall(r"[A-Za-z0-9_]+", items)[1]

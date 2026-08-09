@@ -17,6 +17,7 @@ import MySQLdb as mysql
 import random
 import secrets
 import string
+from cyberpanel_version import BUILD, VERSION
 
 def update_all_config_files_with_password(new_password):
     """
@@ -139,7 +140,7 @@ def restart_affected_services():
         try:
             # Try systemctl first (systemd)
             result = subprocess.run(['systemctl', 'restart', service], 
-                                  capture_output=True, text=True)
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             if result.returncode == 0:
                 print("[RECOVERY] Restarted service: %s" % service)
             elif 'Unit' in result.stderr and 'not found' in result.stderr:
@@ -148,7 +149,7 @@ def restart_affected_services():
             else:
                 # Try service command (older systems)
                 result = subprocess.run(['service', service, 'restart'],
-                                      capture_output=True, text=True)
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
                 if result.returncode == 0:
                     print("[RECOVERY] Restarted service: %s" % service)
         except Exception as e:
@@ -291,9 +292,6 @@ except ImportError:
     settings = MinimalSettings()
     print("Recovery complete. Continuing with upgrade...")
 
-VERSION = '2.4'
-BUILD = 9
-
 CENTOS7 = 0
 CENTOS8 = 1
 Ubuntu18 = 2
@@ -304,6 +302,7 @@ openEuler20 = 6
 openEuler22 = 7
 Ubuntu22 = 8
 Ubuntu24 = 9
+Ubuntu26 = 10
 
 
 class Upgrade:
@@ -406,6 +405,8 @@ class Upgrade:
                 return Ubuntu22
             elif result.find('24.04') > -1:
                 return Ubuntu24
+            elif result.find('26.04') > -1:
+                return Ubuntu26
             else:
                 return Ubuntu18
 
@@ -748,7 +749,7 @@ class Upgrade:
         'not found') and passes. ldd being unavailable is non-blocking.
         """
         try:
-            result = subprocess.run(['ldd', binary_path], capture_output=True, text=True, timeout=15)
+            result = subprocess.run(['ldd', binary_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
             output = (result.stdout or '') + (result.stderr or '')
             if 'not found' in output:
                 Upgrade.stdOut("ERROR: Downloaded binary has unresolved libraries (incompatible with this OS):", 0)
@@ -914,7 +915,7 @@ class Upgrade:
             # does not reliably re-exec everything. Full stop/start required.
             Upgrade.stdOut("Stopping OpenLiteSpeed for binary installation...", 0)
             subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
-                           capture_output=True, timeout=60)
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
 
             try:
                 if os.path.exists(OLS_BINARY_PATH):
@@ -961,8 +962,8 @@ class Upgrade:
                     try:
                         result = subprocess.run(
                             [OLS_BINARY_PATH, '-v'],
-                            capture_output=True,
-                            text=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             timeout=10
                         )
                         if result.returncode != 0:
@@ -989,10 +990,10 @@ class Upgrade:
                     # Full start (counterpart of the full stop above)
                     Upgrade.stdOut("Starting OpenLiteSpeed with new binaries...", 0)
                     subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
-                                   capture_output=True, timeout=60)
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
                     time.sleep(3)
                     if subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                      capture_output=True).returncode != 0:
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
                         Upgrade.stdOut("ERROR: OpenLiteSpeed did not start with new binaries", 0)
                         Upgrade.stdOut("Initiating auto-rollback...", 0)
                         if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
@@ -1024,7 +1025,7 @@ class Upgrade:
             # If the failure happened after the full stop, don't leave lsws down
             try:
                 subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
-                               capture_output=True, timeout=60)
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
             except Exception:
                 pass
             Upgrade.stdOut("Continuing with standard OLS", 0)
@@ -1042,7 +1043,7 @@ class Upgrade:
                 # Stop OLS before rollback
                 Upgrade.stdOut("Stopping OpenLiteSpeed for rollback...", 0)
                 subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
-                             capture_output=True, timeout=30)
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
 
                 # Restore binary (remove first: cp onto a mapped binary = ETXTBSY)
                 if os.path.exists(binary_path):
@@ -1067,14 +1068,14 @@ class Upgrade:
                 # Start OLS after rollback
                 Upgrade.stdOut("Starting OpenLiteSpeed after rollback...", 0)
                 result = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
-                                       capture_output=True, timeout=30)
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
 
                 # Verify OLS started
                 import time
                 time.sleep(3)
 
                 result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                        capture_output=True)
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if result.returncode == 0:
                     Upgrade.stdOut("OpenLiteSpeed started successfully after rollback", 0)
                     return True
@@ -2266,7 +2267,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-            if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24:
+            if Upgrade.FindOperatingSytem() in (Ubuntu22, Ubuntu24, Ubuntu26):
                 ### If ftp not installed then upgrade will fail so this command should not do exit
 
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
@@ -3134,7 +3135,7 @@ protocol sieve {
                 # Hash the password using doveadm
                 result = subprocess.run(
                     ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
-                    capture_output=True, text=True
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
                 )
                 if result.returncode != 0:
                     Upgrade.stdOut("doveadm pw failed: " + result.stderr, 0)
@@ -3370,6 +3371,25 @@ passdb {
 
         except:
             pass
+
+    @staticmethod
+    def sensitiveFileProtectionMigration():
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            return
+
+        try:
+            from plogical.sensitiveFileProtection import protect_vhost_tree
+            results = protect_vhost_tree()
+            Upgrade.stdOut(
+                'Sensitive-file protection: examined=%s updated=%s skipped=%s errors=%s' % (
+                    results['examined'], results['updated'], results['skipped'], results['errors']),
+                0,
+            )
+            if results['updated']:
+                command = '/usr/local/lsws/bin/lswsctrl reload'
+                Upgrade.executioner(command, command, 0)
+        except BaseException as msg:
+            Upgrade.stdOut('Sensitive-file protection migration error: ' + str(msg), 0)
 
     @staticmethod
     def pdnsSchemaMigrations():
@@ -3815,7 +3835,7 @@ passdb {
 
                 try:
                     try:
-                        result = subprocess.run('uname -a', capture_output=True, universal_newlines=True, shell=True)
+                        result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -3823,7 +3843,7 @@ passdb {
                         lscpdSelection = 'lscpd-0.3.1'
                         if os.path.exists(Upgrade.UbuntuPath):
                             result = open(Upgrade.UbuntuPath, 'r').read()
-                            if result.find('22.04') > -1 or result.find('24.04') > -1:
+                            if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                                 lscpdSelection = 'lscpd.0.4.0'
                     else:
                         lscpdSelection = 'lscpd.aarch64'
@@ -3833,7 +3853,7 @@ passdb {
                     lscpdSelection = 'lscpd-0.3.1'
                     if os.path.exists(Upgrade.UbuntuPath):
                         result = open(Upgrade.UbuntuPath, 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1:
+                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
 
                 command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
@@ -3980,6 +4000,13 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             command = "chown -R root:root /usr/local/CyberCP"
             Upgrade.executioner(command, 'chown core code', 0)
+
+            terminalSecretPath = '/usr/local/CyberCP/terminal_jwt_secret'
+            if os.path.exists(terminalSecretPath):
+                command = "chown cyberpanel:cyberpanel %s" % terminalSecretPath
+                Upgrade.executioner(command, 'chown terminal secret', 0)
+                command = "chmod 600 %s" % terminalSecretPath
+                Upgrade.executioner(command, 'chmod terminal secret', 0)
 
             ########### Fix LSCPD
 
@@ -5013,8 +5040,16 @@ pm.max_spare_servers = 3
                     command = 'yum install lsphp83 lsphp83-* -y'
                     Upgrade.executioner(command, 'Install PHP 8.3', 0)
                 else:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
-                    Upgrade.executioner(command, 'Install PHP 8.3', 0)
+                    Upgrade.executioner(
+                        'env DEBIAN_FRONTEND=noninteractive apt-get update',
+                        'Update package index for PHP 8.3',
+                        0,
+                    )
+                    Upgrade.executioner(
+                        'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*',
+                        'Install PHP 8.3',
+                        0,
+                    )
                 
                 # Verify installation
                 if not os.path.exists('/usr/local/lsws/lsphp83/bin/php'):
@@ -5118,7 +5153,7 @@ pm.max_spare_servers = 3
                 time.sleep(5)  # Give OLS time to start
 
                 result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                        capture_output=True)
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if result.returncode != 0:
                     Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after upgrade!", 0)
                     Upgrade.stdOut("Attempting auto-rollback...", 0)
@@ -5250,9 +5285,7 @@ pm.max_spare_servers = 3
 
         ##
 
-        ### Disable version upgrade too
-
-        # Upgrade.upgradeVersion()
+        Upgrade.upgradeVersion()
 
         Upgrade.UpdateMaxSSLCons()
 
@@ -5539,6 +5572,34 @@ pm.max_spare_servers = 3
 
         Upgrade.installDNS_CyberPanelACMEFile()
 
+        try:
+            from plogical.securityUtils import (
+                DEFAULT_TERMINAL_JWT_SECRET_FILE,
+                TERMINAL_JWT_SECRET_FILE_ENV,
+                get_terminal_jwt_secret,
+            )
+            get_terminal_jwt_secret(create_if_missing=True)
+            secret_path = os.environ.get(
+                TERMINAL_JWT_SECRET_FILE_ENV,
+                DEFAULT_TERMINAL_JWT_SECRET_FILE,
+            )
+            if os.path.exists(secret_path):
+                shutil.chown(secret_path, user='cyberpanel', group='cyberpanel')
+                os.chmod(secret_path, 0o600)
+
+            service_source = '/usr/local/CyberCP/fastapi_ssh_server.service'
+            service_target = '/etc/systemd/system/fastapi_ssh_server.service'
+            if os.path.isfile(service_source):
+                shutil.copy2(service_source, service_target)
+                Upgrade.executioner(
+                    'systemctl daemon-reload', 'systemctl daemon-reload', 0
+                )
+        except Exception as error:
+            Upgrade.stdOut(
+                "Warning: Web Terminal authentication could not be configured: %s" % error,
+                0,
+            )
+
         command = 'systemctl restart fastapi_ssh_server'
         Upgrade.executioner(command, command, 0)
 
@@ -5567,7 +5628,7 @@ pm.max_spare_servers = 3
 
                 command = 'mount -o remount /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                             universal_newlines=True, shell=True)
@@ -5610,7 +5671,7 @@ pm.max_spare_servers = 3
 
                 command = 'mount -o remount /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -5626,7 +5687,7 @@ pm.max_spare_servers = 3
 
                 command = 'quotacheck -ugm /'
                 try:
-                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -5644,7 +5705,7 @@ pm.max_spare_servers = 3
 
                 command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
                 try:
-                    iResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    iResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 except:
                     iResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                              universal_newlines=True, shell=True)
@@ -5655,7 +5716,7 @@ pm.max_spare_servers = 3
                 if iResult.returncode == 0:
                     command = "echo '{}' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u".format(iResult.stdout)
                     try:
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                  universal_newlines=True, shell=True)
@@ -5664,7 +5725,7 @@ pm.max_spare_servers = 3
 
                     command  = 'uname -r'
                     try:
-                        ffResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        ffResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         ffResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                 universal_newlines=True, shell=True)
@@ -5677,7 +5738,7 @@ pm.max_spare_servers = 3
 
                     command = f'modprobe quota_v1 -S {ffResult}'
                     try:
-                        mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                   universal_newlines=True, shell=True)
@@ -5693,7 +5754,7 @@ pm.max_spare_servers = 3
 
                     command = f'modprobe quota_v2 -S {ffResult}'
                     try:
-                        mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     except:
                         mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                  universal_newlines=True, shell=True)
@@ -5709,7 +5770,7 @@ pm.max_spare_servers = 3
 
             command = f'quotacheck -ugm /'
             try:
-                mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
             except:
                 mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          universal_newlines=True, shell=True)
@@ -5725,7 +5786,7 @@ pm.max_spare_servers = 3
 
             command = f'quotaon -v /'
             try:
-                mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
             except:
                 mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          universal_newlines=True, shell=True)

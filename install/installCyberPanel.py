@@ -25,17 +25,9 @@ def get_Ubuntu_release():
 
 def get_Ubuntu_code_name():
     """Get Ubuntu codename based on version"""
-    release = get_Ubuntu_release()
-    if release >= 24.04:
-        return "noble"
-    elif release >= 22.04:
-        return "jammy"
-    elif release >= 20.04:
-        return "focal"
-    elif release >= 18.04:
-        return "bionic"
-    else:
-        return "xenial"
+    # Single source of truth in install_utils so install.py's LiteSpeed repo
+    # fallback and this MariaDB repo setup can never disagree on a codename.
+    return install_utils.get_Ubuntu_code_name(get_Ubuntu_release())
 
 
 # Using shared function from install_utils
@@ -141,7 +133,7 @@ class InstallCyberPanel:
         try:
             command = 'uname -a'
             try:
-                result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
             except:
                 result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
@@ -339,7 +331,7 @@ class InstallCyberPanel:
         'not found') and passes. ldd being unavailable is non-blocking.
         """
         try:
-            result = subprocess.run(['ldd', binary_path], capture_output=True, text=True, timeout=15)
+            result = subprocess.run(['ldd', binary_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
             output = (result.stdout or '') + (result.stderr or '')
             if 'not found' in output:
                 InstallCyberPanel.stdOut("ERROR: Downloaded binary has unresolved libraries (incompatible with this OS):", 1)
@@ -493,7 +485,14 @@ class InstallCyberPanel:
             # Install OpenLiteSpeed binary
             InstallCyberPanel.stdOut("Installing custom binaries...", 1)
 
+            # The package starts OpenLiteSpeed immediately. Stop it before replacing
+            # the mapped executable, otherwise Linux rejects the move with ETXTBSY.
+            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
+
             try:
+                if os.path.exists(OLS_BINARY_PATH):
+                    os.remove(OLS_BINARY_PATH)
                 shutil.move(tmp_binary, OLS_BINARY_PATH)
                 os.chmod(OLS_BINARY_PATH, 0o755)
                 InstallCyberPanel.stdOut("Installed OpenLiteSpeed binary", 1)
@@ -533,8 +532,8 @@ class InstallCyberPanel:
                     try:
                         result = subprocess.run(
                             [OLS_BINARY_PATH, '-v'],
-                            capture_output=True,
-                            text=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True,
                             timeout=10
                         )
                         if result.returncode != 0:
@@ -850,11 +849,13 @@ module cyberpanel_ols {
                 # For CentOS/AlmaLinux/OpenEuler
                 self.install_package('dovecot-pigeonhole')
 
-            # Write ManageSieve config
-            managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
-            os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
-            with open(managesieve_conf, 'w') as f:
-                f.write("""protocols = $protocols sieve
+            # Dovecot 2.4 uses named-list syntax. Ubuntu 26 ships a compatible
+            # ManageSieve config and our Dovecot 2.4 template enables it.
+            if not (self.distro == ubuntu and get_Ubuntu_release() >= 26.0):
+                managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
+                os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
+                with open(managesieve_conf, 'w') as f:
+                    f.write("""protocols = $protocols sieve
 
 service managesieve-login {
   inet_listener sieve {
@@ -911,7 +912,7 @@ protocol sieve {
             # Hash the password using doveadm
             result = subprocess.run(
                 ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
-                capture_output=True, text=True
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
             )
             if result.returncode != 0:
                 logging.InstallLog.writeToFile('[ERROR] doveadm pw failed: ' + result.stderr + " [setupWebmail]")
@@ -1001,8 +1002,44 @@ Components: main main/debug
 Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 """
 
-            if get_Ubuntu_release() > 21.00:
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+            # MariaDB 10.11's Ubuntu repository stops at noble, so 26.04 cannot use it.
+            mariadb_version = '11.8' if get_Ubuntu_release() >= 26.04 else '10.11'
+
+            # Ubuntu 26.04 ships MariaDB 11.8 in its own archive, so use the distro
+            # packages there and skip mariadb.org entirely. This is not just convenience:
+            # PowerDNS 5.0's pdns-backend-mysql links against libmysqlclient24, and
+            # mariadb.org's libmariadb3-compat only Provides libmysqlclient up to 21, so
+            # that dependency is unsatisfiable against their packages. Ubuntu's own
+            # mariadb-common Depends on mysql-common and is built to coexist with the
+            # MySQL client libraries, so PowerDNS installs cleanly beside it. It also
+            # sidesteps the MaxScale repository, which 404s for resolute.
+            #
+            # 24.04 and earlier keep mariadb.org exactly as before - there
+            # pdns-backend-mysql wants libmysqlclient21, which their compat package does
+            # provide, so nothing needs to change.
+            #
+            # For those releases, mariadb_repo_setup also adds MaxScale and Tools, which
+            # CyberPanel never installs (the RHEL path below disables MaxScale for the
+            # same reason), so both are skipped.
+            if get_Ubuntu_release() >= 26.04:
+                install_utils.writeToFile(
+                    f"Ubuntu {get_Ubuntu_release()}: using the distro's own MariaDB {mariadb_version} "
+                    "instead of the mariadb.org repository (PowerDNS needs libmysqlclient24).")
+
+                # A previous run of this installer may have configured mariadb.org.
+                # Leaving it in place would keep apt preferring those packages and
+                # reintroduce the libmysqlclient24 conflict, so drop the sources files.
+                for staleRepo in ('/etc/apt/sources.list.d/mariadb.sources',
+                                  '/etc/apt/sources.list.d/mariadb.list'):
+                    if os.path.exists(staleRepo):
+                        install_utils.writeToFile(f"Removing stale MariaDB repository {staleRepo}")
+                        try:
+                            os.remove(staleRepo)
+                        except OSError as e:
+                            logging.InstallLog.writeToFile(
+                                f"[ERROR] Unable to remove {staleRepo}: {e}")
+            elif get_Ubuntu_release() > 21.00:
+                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version={mariadb_version} --skip-maxscale --skip-tools'
                 result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 
                 # If the download fails, use manual repo configuration as fallback
@@ -1020,13 +1057,13 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
                     # Use multiple mirror options for better reliability
                     RepoPath = '/etc/apt/sources.list.d/mariadb.list'
                     codename = get_Ubuntu_code_name()
-                    RepoContent = f"""# MariaDB 10.11 repository list - manual fallback
+                    RepoContent = f"""# MariaDB {mariadb_version} repository list - manual fallback
 # Primary mirror
-deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/10.11/ubuntu {codename} main
+deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/{mariadb_version}/ubuntu {codename} main
 
 # Alternative mirrors (uncomment if primary fails)
-# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirrors.gigenet.com/mariadb/repo/10.11/ubuntu {codename} main
-# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://ftp.osuosl.org/pub/mariadb/repo/10.11/ubuntu {codename} main
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirrors.gigenet.com/mariadb/repo/{mariadb_version}/ubuntu {codename} main
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://ftp.osuosl.org/pub/mariadb/repo/{mariadb_version}/ubuntu {codename} main
 """
                     
                     WriteToFile = open(RepoPath, 'w')
@@ -1111,8 +1148,12 @@ gpgcheck=1
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
             if self.distro == ubuntu:
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (
-                    InstallCyberPanel.mysql_Root_password)
+                if get_Ubuntu_release() >= 26.0:
+                    passwordCMD = "DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('%s');GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;flush privileges;" % (
+                        InstallCyberPanel.mysql_Root_password)
+                else:
+                    passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (
+                        InstallCyberPanel.mysql_Root_password)
             else:
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (
                     InstallCyberPanel.mysql_Root_password)
@@ -1150,11 +1191,12 @@ gpgcheck=1
         conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
         cursor = conn.cursor()
         cursor.execute('set global innodb_file_per_table = on;')
-        try:
-            cursor.execute('set global innodb_file_format = Barracuda;')
-            cursor.execute('set global innodb_large_prefix = on;')
-        except BaseException as msg:
-            self.stdOut('%s. [ERROR:335]' % (str(msg)))
+        if not (self.distro == ubuntu and get_Ubuntu_release() >= 26.0):
+            try:
+                cursor.execute('set global innodb_file_format = Barracuda;')
+                cursor.execute('set global innodb_large_prefix = on;')
+            except BaseException as msg:
+                self.stdOut('%s. [ERROR:335]' % (str(msg)))
         cursor.close()
         conn.close()
 
@@ -1347,7 +1389,8 @@ gpgcheck=1
 
     def installPowerDNS(self):
         try:
-            if self.distro == ubuntu or self.distro == cent8 or self.distro == openeuler:
+            keep_resolved = self.distro == ubuntu and get_Ubuntu_release() >= 26.0
+            if (self.distro == ubuntu or self.distro == cent8 or self.distro == openeuler) and not keep_resolved:
                 # Stop and disable systemd-resolved
                 self.manage_service('systemd-resolved', 'stop')
                 self.manage_service('systemd-resolved.service', 'disable')
@@ -1494,8 +1537,14 @@ setuid=pdns
             # Set proper permissions for PowerDNS config
             if self.distro == ubuntu:
                 # Ensure pdns user/group exists
-                command = 'id -u pdns &>/dev/null || useradd -r -s /usr/sbin/nologin pdns'
-                install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                pdns_exists = subprocess.run(
+                    ['id', '-u', 'pdns'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                ).returncode == 0
+                if not pdns_exists:
+                    command = 'useradd -r -s /usr/sbin/nologin pdns'
+                    install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 
                 command = 'chown root:pdns %s' % dnsPath
                 install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)

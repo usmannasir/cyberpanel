@@ -1,5 +1,14 @@
 class vhostConfs:
 
+    olsSensitiveFileDenyRules = """# BEGIN CyberPanel sensitive-file denials
+RewriteRule (^|/)\\.env - [F,L]
+RewriteRule (^|/)\\.git(/|$) - [F,L]
+RewriteRule (^|/)\\.htpasswd$ - [F,L]
+RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+RewriteRule (^|/)\\.htaccess$ - [F,L]
+# END CyberPanel sensitive-file denials
+"""
+
     olsMasterMainConf = """virtualHost {virtualHostName} {
   vhRoot                  /home/$VH_NAME
   configFile              $SERVER_ROOT/conf/vhosts/$VH_NAME/vhost.conf
@@ -69,8 +78,17 @@ module cache {
 }
 
 rewrite  {
- enable                  1
+  enable                  1
   autoLoadHtaccess        1
+  rules                   <<<END_rules
+# BEGIN CyberPanel sensitive-file denials
+RewriteRule (^|/)\\.env - [F,L]
+RewriteRule (^|/)\\.git(/|$) - [F,L]
+RewriteRule (^|/)\\.htpasswd$ - [F,L]
+RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+RewriteRule (^|/)\\.htaccess$ - [F,L]
+# END CyberPanel sensitive-file denials
+  END_rules
 }
 
 context /.well-known/acme-challenge {
@@ -160,6 +178,15 @@ extprocessor {externalApp} {
 rewrite  {
   enable                  1
   autoLoadHtaccess        1
+  rules                   <<<END_rules
+# BEGIN CyberPanel sensitive-file denials
+RewriteRule (^|/)\\.env - [F,L]
+RewriteRule (^|/)\\.git(/|$) - [F,L]
+RewriteRule (^|/)\\.htpasswd$ - [F,L]
+RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+RewriteRule (^|/)\\.htaccess$ - [F,L]
+# END CyberPanel sensitive-file denials
+  END_rules
 }
 
 context /.well-known/acme-challenge {
@@ -192,6 +219,22 @@ context /.well-known/acme-challenge {
         CacheRoot lscache
         CacheLookup on
     </IfModule>
+    # BEGIN CyberPanel sensitive-file denials
+    <IfModule mod_rewrite.c>
+        RewriteEngine On
+        RewriteRule (^|/)\\.env - [F,L]
+        RewriteRule (^|/)\\.git(/|$) - [F,L]
+        RewriteRule (^|/)\\.htpasswd$ - [F,L]
+        RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+        RewriteRule (^|/)\\.htaccess$ - [F,L]
+    </IfModule>
+    <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+        Require all denied
+    </FilesMatch>
+    <DirectoryMatch "/\\.git">
+        Require all denied
+    </DirectoryMatch>
+    # END CyberPanel sensitive-file denials
 
 </VirtualHost>
 """
@@ -210,6 +253,22 @@ context /.well-known/acme-challenge {
         CacheRoot lscache
         CacheLookup on
     </IfModule>
+    # BEGIN CyberPanel sensitive-file denials
+    <IfModule mod_rewrite.c>
+        RewriteEngine On
+        RewriteRule (^|/)\\.env - [F,L]
+        RewriteRule (^|/)\\.git(/|$) - [F,L]
+        RewriteRule (^|/)\\.htpasswd$ - [F,L]
+        RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+        RewriteRule (^|/)\\.htaccess$ - [F,L]
+    </IfModule>
+    <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+        Require all denied
+    </FilesMatch>
+    <DirectoryMatch "/\\.git">
+        Require all denied
+    </DirectoryMatch>
+    # END CyberPanel sensitive-file denials
 
 </VirtualHost>"""
 
@@ -236,6 +295,14 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
         </Directory>
+        # BEGIN CyberPanel sensitive-file denials
+        <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+            Require all denied
+        </FilesMatch>
+        <DirectoryMatch "/\\.git">
+            Require all denied
+        </DirectoryMatch>
+        # END CyberPanel sensitive-file denials
 
 </VirtualHost>
 """
@@ -261,6 +328,14 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
          </Directory>
+         # BEGIN CyberPanel sensitive-file denials
+         <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+             Require all denied
+         </FilesMatch>
+         <DirectoryMatch "/\\.git">
+             Require all denied
+         </DirectoryMatch>
+         # END CyberPanel sensitive-file denials
 
          SSLEngine on
          SSLVerifyClient none
@@ -291,6 +366,14 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
         </Directory>
+        # BEGIN CyberPanel sensitive-file denials
+        <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+            Require all denied
+        </FilesMatch>
+        <DirectoryMatch "/\\.git">
+            Require all denied
+        </DirectoryMatch>
+        # END CyberPanel sensitive-file denials
 
 </VirtualHost>
 """
@@ -316,6 +399,14 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
         </Directory>
+        # BEGIN CyberPanel sensitive-file denials
+        <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+            Require all denied
+        </FilesMatch>
+        <DirectoryMatch "/\\.git">
+            Require all denied
+        </DirectoryMatch>
+        # END CyberPanel sensitive-file denials
         SSLEngine on
         SSLVerifyClient none
         SSLCertificateFile {SSLBase}.fullchain.pem

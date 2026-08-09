@@ -32,13 +32,6 @@ urlpatterns = [
     path('modSecRulesPacks', views.modSecRulesPacks, name='modSecRulesPacks'),
     path('getOWASPAndComodoStatus', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
     path('installModSecRulesPack', views.installModSecRulesPack, name='installModSecRulesPack'),
-    
-    # Firewall Export/Import
-    path('exportFirewallRules', views.exportFirewallRules, name='exportFirewallRules'),
-    path('importFirewallRules', views.importFirewallRules, name='importFirewallRules'),
-    
-    # Firewall Rule Edit
-    path('editRule', views.editRule, name='editRule'),
     path('getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
     path('enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 
