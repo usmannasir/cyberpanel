@@ -47,6 +47,13 @@ class TerminalSecretTests(unittest.TestCase):
         )
         self.assertNotIn("/usr/local/CyberCP/bin/python3", service)
 
+    def test_terminal_connects_to_the_effective_ssh_port(self):
+        source = (
+            pathlib.Path(__file__).parents[1]
+            / "fastapi_ssh_server.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("port=SSH_PORT", source)
+
     def test_terminal_errors_use_the_available_log_writer(self):
         source = (
             pathlib.Path(__file__).parents[1]
@@ -235,6 +242,50 @@ class TerminalTokenTests(unittest.TestCase):
         token = self.make_token(iat=now, nbf=now, exp=now + 3600)
         with self.assertRaises(JWTError):
             self.server.decode_terminal_token(token)
+
+    def test_ssh_port_uses_effective_sshd_configuration(self):
+        completed = SimpleNamespace(
+            returncode=0,
+            stdout="addressfamily any\nport 23456\n",
+        )
+        with mock.patch.object(
+            self.server.subprocess,
+            "run",
+            return_value=completed,
+        ) as run:
+            self.assertEqual(self.server.get_ssh_port(), 23456)
+
+        run.assert_called_once_with(
+            ["/usr/sbin/sshd", "-T"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+
+    def test_ssh_port_falls_back_to_main_configuration(self):
+        config = "# Port 22\nPort 2200 # managed by CyberPanel\n"
+        with mock.patch.object(
+            self.server.subprocess,
+            "run",
+            side_effect=OSError("sshd unavailable"),
+        ), mock.patch(
+            "builtins.open",
+            mock.mock_open(read_data=config),
+        ):
+            self.assertEqual(self.server.get_ssh_port(), 2200)
+
+    def test_ssh_port_falls_back_to_22_for_invalid_values(self):
+        completed = SimpleNamespace(returncode=0, stdout="port 70000\n")
+        with mock.patch.object(
+            self.server.subprocess,
+            "run",
+            return_value=completed,
+        ), mock.patch(
+            "builtins.open",
+            mock.mock_open(read_data="Port invalid\n"),
+        ):
+            self.assertEqual(self.server.get_ssh_port(), 22)
 
     @mock.patch(
         "websiteFunctions.models.Websites.objects.get",
