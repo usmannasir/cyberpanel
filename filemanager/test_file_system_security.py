@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import pwd
 import stat
@@ -8,7 +9,10 @@ import tarfile
 import tempfile
 import unittest
 import zipfile
+from types import SimpleNamespace
+from unittest import mock
 
+from filemanager.filemanager import FileManager
 from plogical.fileSystemSecurity import (
     read_text_file_under,
     safe_extract_archive,
@@ -25,6 +29,28 @@ def cyberpanel_account_available():
 
 
 class SafeFileReadTests(unittest.TestCase):
+    def test_file_manager_reads_as_the_website_account(self):
+        website = SimpleNamespace(externalApp="exampleuser")
+        manager = FileManager(
+            SimpleNamespace(),
+            {
+                "domainName": "example.com",
+                "fileName": "/home/example.com/public_html/index.txt",
+            },
+        )
+
+        with mock.patch(
+            "filemanager.filemanager.Websites.objects.get",
+            return_value=website,
+        ), mock.patch(
+            "filemanager.filemanager.ProcessUtilities.outputExecutioner",
+            return_value=(1, "hello"),
+        ) as executioner:
+            response = manager.readFileContents()
+
+        self.assertEqual(1, json.loads(response.content)["status"])
+        self.assertEqual("exampleuser", executioner.call_args.args[1])
+
     def test_staged_download_is_an_immutable_regular_copy(self):
         with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as staging:
             source = os.path.join(root, "download.txt")
