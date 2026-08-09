@@ -34,6 +34,7 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
   offsets and support multi-digit build numbers.
 - Fresh installations write the machine-readable JSON format expected by the
   CyberPanel CLI.
+- Upgrades now synchronize the database-backed version returned by the API.
 
 ## v2.4.9 (build 9) — 2026-07-23
 

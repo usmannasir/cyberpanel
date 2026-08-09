@@ -37,6 +37,12 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         installer = (root / 'install/install.py').read_text(encoding='utf-8')
         self.assertIn("json.dump({'version': VERSION, 'build': BUILD}", installer)
 
+    def test_upgrade_updates_database_version_record(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
+        self.assertIn('\n        Upgrade.upgradeVersion()\n', upgrader)
+        self.assertNotIn('# Upgrade.upgradeVersion()', upgrader)
+
     def test_repair_script_does_not_download_old_release_requirements(self):
         root = pathlib.Path(__file__).parents[1]
         repair_script = (root / 'fix_cyberpanel_install.sh').read_text(
