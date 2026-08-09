@@ -30,8 +30,155 @@ class DNS:
     create_zone_dir = "/usr/local/lsws/conf/zones"
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
     CFPath = '/home/cyberpanel/CloudFlare'
+    DEPLOYMENT_TYPE_FILE = '/etc/cyberpanel/deployment_type'
+    SPF_CYBERPERSONS = 'v=spf1 include:spf.cyberpersons.com ~all'
 
     ## DNS Functions
+
+    @staticmethod
+    def getDeploymentType():
+        """
+        Resolve mail SPF mode: cyberpersons (platform rental) or selfhosted (own VPS).
+        Order: /etc/cyberpanel/deployment_type, admin config deploymentType, default selfhosted.
+        """
+        try:
+            if os.path.exists(DNS.DEPLOYMENT_TYPE_FILE):
+                with open(DNS.DEPLOYMENT_TYPE_FILE, 'r') as _df:
+                    raw = _df.read().strip().lower()
+                if raw in ('cyberpersons', 'selfhosted'):
+                    return raw
+        except Exception:
+            pass
+        try:
+            from loginSystem.models import Administrator
+            import json as _json
+            admin = Administrator.objects.get(pk=1)
+            config = _json.loads(admin.config) if admin.config else {}
+            val = str(config.get('deploymentType', '') or '').strip().lower()
+            if val in ('cyberpersons', 'selfhosted'):
+                return val
+        except Exception:
+            pass
+        return 'selfhosted'
+
+    @staticmethod
+    def buildSpfRecord(ipAddress=None):
+        """
+        SPF TXT content for new zones.
+        CyberPersons rental: include:spf.cyberpersons.com
+        Self-hosted (default): a mx ip4:<machineIP>
+        """
+        if DNS.getDeploymentType() == 'cyberpersons':
+            return DNS.SPF_CYBERPERSONS
+        if not ipAddress:
+            try:
+                with open('/etc/cyberpanel/machineIP', 'r') as _ipf:
+                    ipAddress = _ipf.read().split('\n', 1)[0].strip()
+            except Exception:
+                ipAddress = ''
+        if ipAddress:
+            return 'v=spf1 a mx ip4:%s ~all' % ipAddress
+        return 'v=spf1 a mx ~all'
+
+    @staticmethod
+    def _powerdns_models():
+        """
+        Return (Domains, Records) from CyberPanel's dns app.
+        dnspython also ships a top-level `dns` package; ensure /usr/local/CyberCP
+        is preferred so CLI RepairSpfRecords works when run as a script.
+        """
+        import importlib
+        import sys
+
+        root = '/usr/local/CyberCP'
+        if root in sys.path:
+            try:
+                sys.path.remove(root)
+            except ValueError:
+                pass
+        sys.path.insert(0, root)
+
+        dns_mod = sys.modules.get('dns')
+        dns_file = getattr(dns_mod, '__file__', '') or ''
+        if dns_mod is not None and 'site-packages' in dns_file.replace('\\', '/'):
+            for key in list(sys.modules):
+                if key == 'dns' or key.startswith('dns.'):
+                    del sys.modules[key]
+
+        existing = globals().get('Domains')
+        existing_rec = globals().get('Records')
+        if existing is not None and existing_rec is not None:
+            mod_name = getattr(existing, '__module__', '') or ''
+            if mod_name == 'dns.models':
+                return existing, existing_rec
+
+        models = importlib.import_module('dns.models')
+        return models.Domains, models.Records
+
+    @staticmethod
+    def RepairSpfRecords(domainName=None):
+        """
+        Replace apex TXT SPF that does not match the current deployment type.
+        domainName: optional single zone; otherwise all Websites apex zones.
+        Returns (ok_count, error_message_or_None).
+        """
+        try:
+            from websiteFunctions.models import Websites
+            Domains, Records = DNS._powerdns_models()
+
+            target = DNS.buildSpfRecord()
+            wrong_cp = 'include:spf.cyberpersons.com'
+            wrong_self_prefix = 'v=spf1 a mx ip4:'
+
+            names = []
+            if domainName:
+                names = [domainName.strip().lower().rstrip('.')]
+            else:
+                for site in Websites.objects.all():
+                    names.append(site.domain.lower().rstrip('.'))
+
+            ok = 0
+            for name in names:
+                try:
+                    import tldextract
+                    extract = tldextract.TLDExtract(cache_dir=None)
+                    ex = extract(name)
+                    apex = (ex.domain + '.' + ex.suffix).lower()
+                    if not ex.domain or not ex.suffix:
+                        continue
+                    zone = Domains.objects.filter(name=apex).first()
+                    if not zone:
+                        continue
+                    txts = Records.objects.filter(domainOwner=zone, type='TXT', name=apex)
+                    for rec in txts:
+                        content = (rec.content or '').strip().strip('"')
+                        if not content.lower().startswith('v=spf1'):
+                            continue
+                        dtype = DNS.getDeploymentType()
+                        needs = False
+                        if dtype == 'selfhosted' and wrong_cp in content and 'ip4:' not in content:
+                            needs = True
+                        elif dtype == 'cyberpersons' and content.startswith(wrong_self_prefix):
+                            needs = True
+                        elif content != target and (
+                            (dtype == 'selfhosted' and wrong_cp in content)
+                            or (dtype == 'cyberpersons' and 'ip4:' in content)
+                        ):
+                            needs = True
+                        if needs and content != target:
+                            rec.content = target
+                            rec.save()
+                            ok += 1
+                            try:
+                                DNS.bumpSOASerial(zone)
+                            except Exception:
+                                pass
+                except Exception as e:
+                    logging.writeToFile('RepairSpfRecords %s: %s' % (name, str(e)))
+            return ok, None
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [RepairSpfRecords]')
+            return 0, str(msg)
 
     def loadCFKeys(self):
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
@@ -316,7 +463,7 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, topLevelDomain, "TXT", "v=spf1 a mx ip4:" + ipAddress + " ~all", 0, 3600)
+                    DNS.createDNSRecord(zone, topLevelDomain, "TXT", DNS.buildSpfRecord(ipAddress), 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -481,7 +628,7 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, topLevelDomain, "TXT", "v=spf1 a mx ip4:" + ipAddress + " ~all", 0, 3600)
+                    DNS.createDNSRecord(zone, topLevelDomain, "TXT", DNS.buildSpfRecord(ipAddress), 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -580,7 +727,7 @@ class DNS:
                 #                  auth=1)
                 # record.save()
 
-                DNS.createDNSRecord(zone, actualSubDomain, "TXT", "v=spf1 a mx ip4:" + ipAddress + " ~all", 0, 3600)
+                DNS.createDNSRecord(zone, actualSubDomain, "TXT", DNS.buildSpfRecord(ipAddress), 0, 3600)
 
                 # record = Records(domainOwner=zone,
                 #                  domain_id=zone.id,

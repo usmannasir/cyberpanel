@@ -5,6 +5,21 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: pluginHolder no longer traceback-spams on Fail2ban name collision
+- Plugins whose `AppConfig.name` differs from the directory (e.g. `fail2ban/` with
+  `name = 'fail2ban_plugin'`) are skipped once without a full traceback. That collision
+  with system `site-packages/fail2ban` was flooding CyberPanel Main Log every few seconds.
+- Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
+  preloaded package before `__import__`.
+
+### Feature: SPF record follows deployment type (CyberPersons vs self-hosted)
+- `DNS.getDeploymentType()` / `DNS.buildSpfRecord()`: CyberPersons rental publishes
+  `v=spf1 include:spf.cyberpersons.com ~all`; self-hosted (default) keeps
+  `v=spf1 a mx ip4:<machineIP> ~all`.
+- Detection: `/etc/cyberpanel/deployment_type`, then admin `config.deploymentType`, else `selfhosted`.
+- Onboarding sets `deploymentType=selfhosted` when unset and runs `RepairSpfRecords` for the hostname apex.
+- CLI: `virtualHostUtilities.py RepairSpfRecords [--virtualHostName domain]`.
+
 ### Fix: website/subdomain DNS and Cloudflare lifecycle
 - `cfTemplate` resolves Cloudflare zones by walking parents (child hosts sync into the apex zone),
   honors `cfSync=Disable`, and no longer tries to create CF zones named like `blog.example.com`.
