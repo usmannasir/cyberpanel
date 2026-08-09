@@ -538,6 +538,13 @@ if [[ -x /usr/local/CyberCP/CPScripts/ensure-cyberpanel-apache-permissions.sh ]]
   bash /usr/local/CyberCP/CPScripts/ensure-cyberpanel-apache-permissions.sh || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: ensure-cyberpanel-apache-permissions failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# Ensure dark-mode CSS stack and mailServer.js reach public/static after every upgrade
+UI_SYNC="/usr/local/CyberCP/scripts/utils/sync-panel-ui-static.sh"
+if [[ -x "$UI_SYNC" ]]; then
+  bash "$UI_SYNC" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post-upgrade UI static sync completed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
 systemctl restart lscpd
 
 }
