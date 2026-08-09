@@ -406,45 +406,51 @@
         color: var(--text-primary, #2f3640);
     }
     
-    /* Grid layout for items in sections */
-    .row {
+    /* Grid layout for items in sections (content-width aware, sidebar-safe) */
+    .cyberpanel-website-page > .row,
+    .cyberpanel-website-page .example-box-wrapper > .row {
         display: flex;
         flex-wrap: wrap;
         margin: 0 -15px;
     }
     
-    /* Ensure logs section displays horizontally */
-    .content-box-wrapper .row {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        align-items: stretch;
-    }
-    
-    .col-md-3, .col-md-4, .col-md-6 {
+    .cyberpanel-website-page .col-md-3,
+    .cyberpanel-website-page .col-md-4,
+    .cyberpanel-website-page .col-md-6 {
         padding: 0 15px;
         margin-bottom: 20px;
     }
     
-    .col-md-3 {
-        flex: 0 0 25%;
-        max-width: 25%;
-    }
-    
-    .col-md-4 {
-        flex: 0 0 33.333333%;
-        max-width: 33.333333%;
-    }
-    
-    .col-md-6 {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-    
-    .col-md-12 {
+    .cyberpanel-website-page .col-md-12 {
         flex: 0 0 100%;
         max-width: 100%;
         padding: 0 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Action tiles: wrap by available width, not viewport-only breakpoints */
+    .cyberpanel-website-page .content-box-wrapper .row {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+        margin: 0 !important;
+        align-items: stretch;
+    }
+    
+    .cyberpanel-website-page .content-box-wrapper .row > [class*="col-md-"] {
+        flex: none !important;
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+    
+    .cyberpanel-website-page .content-box-wrapper .row > .col-md-12,
+    .cyberpanel-website-page .content-box-wrapper .row > [class*="col-md-12"] {
+        grid-column: 1 / -1;
     }
     
     /* Section items styling */
@@ -487,53 +493,31 @@
         flex: 1;
     }
     
-    /* Special styling for all content sections */
-    .content-box-wrapper .row {
-        display: flex !important;
-        flex-wrap: wrap;
-        margin: 0 -10px;
-    }
-    
-    /* Handle different column sizes */
-    .content-box-wrapper .row .col-md-3 {
-        flex: 0 0 25%;
-        max-width: 25%;
-        padding: 10px;
-    }
-    
-    .content-box-wrapper .row .col-md-4 {
-        flex: 0 0 33.333%;
-        max-width: 33.333%;
-        padding: 10px;
-    }
-    
-    .content-box-wrapper .row .col-md-6 {
-        flex: 0 0 50%;
-        max-width: 50%;
-        padding: 10px;
-    }
-    
-    /* Style all clickable items consistently */
+    /* Style all clickable action tiles consistently */
     .content-box-wrapper .row .col-md-3 > a,
     .content-box-wrapper .row .col-md-4 > a,
+    .content-box-wrapper .row .col-md-6 > a,
     .content-box-wrapper .row .col-md-6 > div {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 15px;
+        padding: 14px 16px;
         background: var(--bg-hover, #f8f9ff);
         border: 1px solid var(--border-color, #e8e9ff);
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.2s ease;
-        min-height: 70px;
+        min-height: 72px;
         text-decoration: none;
         color: var(--text-primary, #2f3640);
         width: 100%;
+        box-sizing: border-box;
+        height: 100%;
     }
     
     .content-box-wrapper .row .col-md-3 > a:hover,
     .content-box-wrapper .row .col-md-4 > a:hover,
+    .content-box-wrapper .row .col-md-6 > a:hover,
     .content-box-wrapper .row .col-md-6 > div:hover {
         background: var(--border-color, #e8e9ff);
         border-color: var(--accent-color, #5b5fcf);
@@ -547,14 +531,16 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 15px;
+        padding: 14px 16px;
         background: var(--bg-hover, #f8f9ff);
         border: 1px solid var(--border-color, #e8e9ff);
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.2s ease;
-        min-height: 70px;
+        min-height: 72px;
         width: 100%;
+        box-sizing: border-box;
+        height: 100%;
     }
     
     .content-box-wrapper .row .col-md-6 .clickable-log:hover {
@@ -602,16 +588,14 @@
             width: auto;
         }
         
-        /* Make columns stack on mobile */
-        .content-box-wrapper .row .col-md-3,
-        .content-box-wrapper .row .col-md-4,
-        .content-box-wrapper .row .col-md-6 {
-            flex: 0 0 100%;
-            max-width: 100%;
+        .cyberpanel-website-page .content-box-wrapper .row {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
         }
         
         .content-box-wrapper .row .col-md-3 > a,
         .content-box-wrapper .row .col-md-4 > a,
+        .content-box-wrapper .row .col-md-6 > a,
         .content-box-wrapper .row .col-md-6 > div,
         .content-box-wrapper .row .col-md-6 .clickable-log {
             min-height: 60px;
@@ -626,6 +610,128 @@
         
         .content-box-wrapper .row .h4 {
             font-size: 13px;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .cyberpanel-website-page .form-horizontal.bordered-row {
+            padding: 16px !important;
+            margin: 12px 0 !important;
+        }
+    }
+    
+    /* Additional mobile improvements */
+    @media (max-width: 768px) {
+        .cyberpanel-website-page {
+            padding: 10px;
+        }
+        
+        /* Improve table responsiveness (skip List Domains cards) */
+        .table-responsive {
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .cyberpanel-website-page .table:not(.ld-exempt) {
+            font-size: 14px !important;
+        }
+        
+        .cyberpanel-website-page .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .cyberpanel-website-page .table th,
+        .cyberpanel-website-page .table td {
+            padding: 8px 6px !important;
+            font-size: 13px !important;
+        }
+        
+        /* Hide less important columns on mobile */
+        .table .d-none-mobile {
+            display: none !important;
+        }
+        
+        /* Improve form layout on mobile */
+        .form-horizontal .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-horizontal .control-label {
+            text-align: left !important;
+            margin-bottom: 5px;
+        }
+        
+        .form-horizontal .col-sm-3,
+        .form-horizontal .col-sm-6,
+        .form-horizontal .col-sm-9 {
+            width: 100% !important;
+            float: none !important;
+        }
+        
+        /* Improve button layout */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        /* Improve modal on mobile */
+        .modal-dialog {
+            margin: 5px;
+            width: calc(100% - 10px);
+            max-width: none;
+        }
+        
+        .modal-content {
+            padding: 15px;
+        }
+        
+        /* Improve close button visibility */
+        .glyph-icon.icon-close {
+            font-size: 20px !important;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* SSL form close (X) button – centered in row and icon centered in button */
+        .ssl-form-close-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .ssl-form-close-btn i.fa-times {
+            line-height: 1;
+            display: block;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        /* Extra small devices */
+        .cyberpanel-website-page {
+            padding: 5px;
+        }
+        
+        .table th, .table td {
+            padding: 6px 4px !important;
+            font-size: 12px !important;
+        }
+        
+        /* Hide even more columns on very small screens */
+        .table .d-none-mobile-sm {
+            display: none !important;
+        }
+        
+        .btn {
+            font-size: 14px !important;
+            padding: 10px 15px !important;
         }
     }
     
@@ -846,6 +952,42 @@
         color: #1e3c72;
     }
     
+    /* Convert to subdomain panel */
+    .convert-subdomain-panel {
+        background: var(--bg-secondary, white);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px var(--shadow-color, rgba(0,0,0,0.06));
+    }
+
+    .convert-subdomain-panel h3 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .convert-subdomain-panel p {
+        margin: 0 0 14px;
+        color: var(--text-muted, #6b7280);
+        line-height: 1.5;
+    }
+
+    .convert-subdomain-panel .convert-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .convert-subdomain-panel.info-only {
+        border-style: dashed;
+        background: var(--bg-tertiary, #f9fafb);
+    }
+
     /* Quick Actions Bar */
     .quick-actions {
         background: var(--bg-secondary, white);
@@ -1128,8 +1270,8 @@
     
     .app-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
         position: relative;
         z-index: 1;
     }
@@ -1280,6 +1422,296 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* List Domains: card layout (full path + works in narrow content with sidebar) */
+    #listDomains {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        float: none !important;
+    }
+    #listDomains .ld-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        width: 100%;
+    }
+    #listDomains .ld-toolbar .form-control {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto !important;
+    }
+    .cyberpanel-website-page .ld-close,
+    #listDomains .ld-close {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e5e7eb);
+        color: var(--danger-color, #ef4444);
+        font-size: 22px;
+        line-height: 1;
+        text-decoration: none !important;
+        background: var(--bg-secondary, transparent);
+    }
+    .cyberpanel-website-page .ld-close:hover,
+    #listDomains .ld-close:hover {
+        background: var(--bg-hover, rgba(239, 68, 68, 0.08));
+    }
+    #listDomains .ld-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    #listDomains .ld-card {
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 12px;
+        background: var(--bg-primary, #fff);
+        padding: 14px 16px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #listDomains .ld-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    #listDomains .ld-domain {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    #listDomains .ld-launch {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e5e7eb);
+        color: var(--text-primary, #2f3640);
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    #listDomains .ld-launch img {
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
+    #listDomains .ld-path-block {
+        margin-bottom: 12px;
+    }
+    #listDomains .ld-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary, #8893a7);
+        margin-bottom: 4px;
+    }
+    #listDomains .ld-path {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal !important;
+        line-height: 1.45;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        background: var(--bg-muted, rgba(0,0,0,0.04));
+        border-radius: 8px;
+        padding: 8px 10px;
+        user-select: all;
+    }
+    #listDomains .ld-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px 12px;
+        align-items: end;
+    }
+    /* Closed <select> labels clip if height + vertical padding fight (see harmonize.css). */
+    #listDomains .ld-field select.form-control,
+    #listDomains.form-horizontal select.form-control,
+    #listDomains .form-horizontal select.form-control,
+    #listDomains form.form-horizontal.bordered-row select.form-control {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: none !important;
+        padding: 0 36px 0 12px !important;
+        line-height: 44px !important;
+        font-size: 14px !important;
+        box-sizing: border-box !important;
+        vertical-align: middle;
+        overflow: visible !important;
+        color: var(--text-primary, #2f3640) !important;
+        background-color: var(--bg-secondary, #fff) !important;
+        background-position: right 12px center !important;
+        background-size: 18px !important;
+        white-space: nowrap;
+    }
+    #listDomains .ld-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        grid-column: 1 / -1;
+    }
+    #listDomains .ld-actions .btn {
+        flex: 1 1 auto;
+        min-width: 7rem;
+    }
+    @media (max-width: 560px) {
+        #listDomains .ld-controls {
+            grid-template-columns: 1fr;
+        }
+        #listDomains .ld-actions .btn {
+            flex: 1 1 100%;
+        }
+        .cyberpanel-website-page .content-box-wrapper .row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Page-wide: unclip every closed <select> on Full Settings */
+    .cyberpanel-website-page select.form-control {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: none !important;
+        padding: 0 36px 0 12px !important;
+        line-height: 44px !important;
+        font-size: 14px !important;
+        box-sizing: border-box !important;
+        vertical-align: middle;
+        overflow: visible !important;
+    }
+
+    /* Page-wide forms: stack label + field on narrow content */
+    .cyberpanel-website-page .form-horizontal.bordered-row .form-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 8px 0;
+    }
+    .cyberpanel-website-page .form-horizontal.bordered-row .form-group > [class*="col-sm-"],
+    .cyberpanel-website-page .form-horizontal.bordered-row .form-group > [class*="col-md-"] {
+        float: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    @media (min-width: 768px) {
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > .control-label.col-sm-3,
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > label.col-sm-3 {
+            width: 28% !important;
+            max-width: 28% !important;
+            padding-right: 12px !important;
+        }
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > .col-sm-6 {
+            width: 55% !important;
+            max-width: 55% !important;
+        }
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > .col-sm-4,
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > .col-sm-9 {
+            width: 55% !important;
+            max-width: 55% !important;
+        }
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > .col-sm-1 {
+            width: auto !important;
+            max-width: none !important;
+        }
+        .cyberpanel-website-page .form-horizontal.bordered-row .form-group > .col-sm-12 {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+    }
+
+    /* Access logs: card rows (same idea as List Domains) */
+    .cyberpanel-website-page .log-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        width: 100%;
+    }
+    .cyberpanel-website-page .log-toolbar .form-control {
+        flex: 1 1 140px;
+        min-width: 0;
+        width: auto !important;
+    }
+    .cyberpanel-website-page .log-toolbar .log-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex: 1 1 auto;
+    }
+    .cyberpanel-website-page .log-toolbar .log-nav .btn {
+        margin: 0 !important;
+    }
+    .cyberpanel-website-page .log-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .cyberpanel-website-page .log-card {
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 12px;
+        background: var(--bg-primary, #fff);
+        padding: 12px 14px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .cyberpanel-website-page .log-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px 12px;
+    }
+    .cyberpanel-website-page .log-card .ld-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary, #8893a7);
+        margin-bottom: 2px;
+    }
+    .cyberpanel-website-page .log-card .log-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal !important;
+    }
+    .cyberpanel-website-page .log-card .log-value.resource {
+        grid-column: 1 / -1;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-weight: 500;
+        background: var(--bg-muted, rgba(0,0,0,0.04));
+        border-radius: 8px;
+        padding: 8px 10px;
+    }
     
     </style>
 
@@ -1391,33 +1823,53 @@
             </div>
         </div>
 
-        <!-- Site management tabs (v2.4.8) -->
-        <div class="cp-tabs cp-wtabs" id="cp-wtabs" role="tablist">
-            <a class="cp-tab" data-wtab="overview"><i class="fas fa-grip"></i> {% trans "Overview" %}</a>
-            <a class="cp-tab" data-wtab="domains"><i class="fas fa-diagram-project"></i> {% trans "Domains" %}</a>
-            <a class="cp-tab" data-wtab="logs"><i class="fas fa-file-lines"></i> {% trans "Logs" %}</a>
-            <a class="cp-tab" data-wtab="config"><i class="fas fa-sliders"></i> {% trans "Config" %}</a>
-            <a class="cp-tab" data-wtab="ssl"><i class="fas fa-lock"></i> {% trans "SSL" %}</a>
-            <a class="cp-tab" data-wtab="files"><i class="fas fa-folder-open"></i> {% trans "Files" %}</a>
-            <a class="cp-tab" data-wtab="apps"><i class="fas fa-cubes"></i> {% trans "Apps" %}</a>
+        <div class="convert-subdomain-panel{% if not canConvertToChild %} info-only{% endif %}"
+             ng-init="convertMaster='{{ convertMaster|escapejs }}'; canConvertToChild={{ canConvertToChild|yesno:'true,false' }}; hasChildDuplicate={{ hasChildDuplicate|yesno:'true,false' }}; convertingToChild=false;">
+            <h3>
+                <i class="fas fa-sitemap"></i>
+                {% trans "Convert to subdomain" %}
+            </h3>
+            {% if canConvertToChild %}
+            <p>
+                {% blocktrans with master=convertMaster %}Move this top-level site under <strong>{{ master }}</strong> as a child domain. Files will be relocated under the parent home directory unless a child entry already exists.{% endblocktrans %}
+                {% if hasChildDuplicate %}
+                <br><strong>{% trans "Note:" %}</strong> {% trans "A child domain with this name already exists. Conversion will remove the duplicate top-level panel entry and keep existing child files." %}
+                {% endif %}
+            </p>
+            <div class="convert-actions">
+                <button type="button"
+                        class="hero-btn primary"
+                        ng-click="convertCurrentSiteToChild()"
+                        ng-disabled="convertingToChild">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span ng-hide="convertingToChild">{% trans "Convert to subdomain of" %} {{ convertMaster }}</span>
+                    <span ng-show="convertingToChild"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Converting..." %}</span>
+                </button>
+            </div>
+            {% elif convertHelp == 'apex' %}
+            <p>{% trans "This is an apex domain (for example example.com). Apex sites cannot be converted into subdomains. Use this tool on hostnames such as shop.example.com when example.com already exists as a website here." %}</p>
+            {% else %}
+            <p>{% trans "No matching parent website was found for this hostname. Create the parent apex site first (for example example.com), then convert hostnames like shop.example.com from List Websites or this page." %}</p>
+            {% endif %}
         </div>
 
         <!-- Modern Resource Cards Grid -->
-        <div class="resource-grid cp-wtab-panel" data-wtab="overview">
+        <div class="resource-grid">
             <!-- Disk Usage Card -->
             <div class="resource-card disk">
                 <div class="resource-icon">
                     <i class="fas fa-hdd"></i>
                 </div>
                 <div class="resource-title">{% trans "Disk Usage" %}</div>
-                <div class="resource-value">{{ diskUsedLabel|default:diskInMB }}{% if not diskUsedLabel %} MB{% endif %}</div>
-                {% if diskUnlimited or diskInMBTotal == 0 %}
+                <div class="resource-value">{{ diskInMB }} MB</div>
+                {% if diskInMBTotal == 0 %}
                 <div class="resource-limit">{% trans "Unlimited" %}</div>
                 {% else %}
-                <div class="resource-limit">{% trans "of" %} {{ diskTotalLabel|default:diskInMBTotal }}{% if not diskTotalLabel %} MB{% endif %}</div>
+                <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
+                {% endif %}
             </div>
             
             <!-- Bandwidth Card -->
@@ -1426,15 +1878,11 @@
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="resource-title">{% trans "Bandwidth" %}</div>
-                <div class="resource-value">{{ bwUsedLabel|default:bwInMB }}{% if not bwUsedLabel %} MB{% endif %}</div>
-                {% if bwUnlimited or bwInMBTotal == 0 %}
-                <div class="resource-limit">{% trans "Unlimited" %}</div>
-                {% else %}
-                <div class="resource-limit">{% trans "of" %} {{ bwTotalLabel|default:bwInMBTotal }}{% if not bwTotalLabel %} MB{% endif %}</div>
+                <div class="resource-value">{{ bwInMB }} MB</div>
+                <div class="resource-limit">{% trans "of" %} {{ bwInMBTotal }} MB</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ bwUsage }}%;"></div>
                 </div>
-                {% endif %}
             </div>
             
             <!-- Database Card -->
@@ -1495,17 +1943,17 @@
                         <span style="background: #f0fdf4; color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-lock" style="margin-right: 5px;"></i>{% trans "Secure" %}
                         </span>
-                        <span style="color: #64748b;">• {% trans "Valid for" %} {{ days }} {% trans "days" %}</span>
+                        <span style="color: #64748b;">• {% trans "Valid for" %} {{ days }} {% trans "days" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% elif days|add:0 >= 7 %}
                         <span style="background: #fef3c7; color: #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-clock" style="margin-right: 5px;"></i>{% trans "Expiring Soon" %}
                         </span>
-                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}</span>
+                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% else %}
                         <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-exclamation" style="margin-right: 5px;"></i>{% trans "Critical" %}
                         </span>
-                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}</span>
+                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -1515,7 +1963,7 @@
 
         <!-- Resource Limits Section -->
         {% if resource_limits %}
-        <div class="cyber-card cp-wtab-panel" data-wtab="overview" style="margin-top: 25px;">
+        <div class="cyber-card" style="margin-top: 25px;">
             <div class="cyber-section-title" style="margin-bottom:20px;">
                 <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid #dbeafe;border-radius:8px;margin-right:12px;background:#f6faff;">
                     <i class="fas fa-sliders-h" style="color: #222b38; font-size: 18px;"></i>
@@ -1577,7 +2025,7 @@
         {% endif %}
 
         <!-- Add Resource Usage Graphs -->
-        <div class="cyber-card cp-wtab-panel" data-wtab="overview">
+        <div class="cyber-card">
             <div class="cyber-section-title" style="margin-bottom:28px;">
                 <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid #dbeafe;border-radius:8px;margin-right:12px;background:#f6faff;">
                     <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M3 3V21H23" stroke="#222b38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 16L9 10L13 14L23 4" stroke="#222b38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1599,7 +2047,7 @@
             </div>
         </div>
 
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="logs">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Logs" %} <img ng-hide="logFileLoading" src="/static/images/loading.gif">
@@ -1632,78 +2080,67 @@
                                 <div ng-hide="couldNotConnect" class="alert alert-danger">
                                     <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                 </div>
-                                <div ng-hide="fetchedData" class="mx-10">
-                                    <div class="col-sm-3">
-                                        <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
-                                               class="form-control" ng-model="domainNameCreate" required>
+                                <div ng-hide="fetchedData">
+                                    <div class="log-toolbar">
+                                        <input placeholder="{% trans 'Search...' %}" ng-model="logSearch" name="dom"
+                                               type="search" class="form-control" aria-label="{% trans 'Search...' %}">
+                                        <input placeholder="{% trans 'Page Number' %}" type="number" class="form-control"
+                                               ng-model="pageNumber" aria-label="{% trans 'Page Number' %}"
+                                               style="flex:0 1 120px;">
+                                        <div class="log-nav">
+                                            <button ng-click="fetchLogs(3)" type="button"
+                                                    class="btn ra-50 btn-primary">{% trans "Next" %}</button>
+                                            <button ng-click="fetchLogs(4)" type="button"
+                                                    class="btn ra-50 btn-primary">{% trans "Previous" %}</button>
+                                        </div>
+                                        <a class="ld-close" ng-click="hidelogsbtn()" href=""
+                                           title="{% trans 'Close' %}" aria-label="{% trans 'Close' %}">&times;</a>
                                     </div>
-                                    <div class="col-sm-2">
-                                        <input placeholder="Page Number" type="number" class="form-control"
-                                               ng-model="pageNumber" required>
-                                    </div>
-
-                                    <div class="col-sm-6">
-                                        <button ng-click="fetchLogs(3)" type="button"
-                                                class="btn ra-50 btn-primary mx-5">{% trans "Next" %}</button>
-                                        <button ng-click="fetchLogs(4)" type="button"
-                                                class="btn ra-50 btn-primary mx-5">{% trans "Previous" %}</button>
-                                    </div>
-
-                                    <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                        <a ng-click="hidelogsbtn()" href="">
-                                            <!--img src="/static/images/close-32.png"-->
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <table class="table cyber-table">
-                                            <thead>
-                                            <tr>
-                                                <th>Type</th>
-                                                <th>IP Address</th>
-                                                <th>Time</th>
-                                                <th>Resource</th>
-                                                <th>Size</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr ng-repeat="record in records | filter:logSearch">
-                                                <td ng-bind="record.domain"></td>
-                                                <td ng-bind="record.ipAddress"></td>
-                                                <td ng-bind="record.time"></td>
-                                                <td ng-bind="record.resource"></td>
-                                                <td ng-bind="record.size"></td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
+                                    <div class="log-list">
+                                        <div class="log-card" ng-repeat="record in records | filter:logSearch">
+                                            <div class="log-card-grid">
+                                                <div>
+                                                    <span class="ld-label">{% trans "Type" %}</span>
+                                                    <div class="log-value" ng-bind="record.domain"></div>
+                                                </div>
+                                                <div>
+                                                    <span class="ld-label">{% trans "IP Address" %}</span>
+                                                    <div class="log-value" ng-bind="record.ipAddress"></div>
+                                                </div>
+                                                <div>
+                                                    <span class="ld-label">{% trans "Time" %}</span>
+                                                    <div class="log-value" ng-bind="record.time"></div>
+                                                </div>
+                                                <div>
+                                                    <span class="ld-label">{% trans "Size" %}</span>
+                                                    <div class="log-value" ng-bind="record.size"></div>
+                                                </div>
+                                                <div class="log-value resource">
+                                                    <span class="ld-label">{% trans "Resource" %}</span>
+                                                    <span ng-bind="record.resource"></span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
 
-                                <div ng-hide="hideErrorLogs" class="">
-
-                                    <div class="col-sm-2">
-                                        <input placeholder="Page Number" type="number" class="form-control"
-                                               ng-model="errorPageNumber" required>
+                                <div ng-hide="hideErrorLogs">
+                                    <div class="log-toolbar">
+                                        <input placeholder="{% trans 'Page Number' %}" type="number" class="form-control"
+                                               ng-model="errorPageNumber" aria-label="{% trans 'Page Number' %}"
+                                               style="flex:0 1 120px;">
+                                        <div class="log-nav">
+                                            <button ng-click="fetchErrorLogs(3)" type="button"
+                                                    class="btn ra-50 btn-primary">{% trans "Next" %}</button>
+                                            <button ng-click="fetchErrorLogs(4)" type="button"
+                                                    class="btn ra-50 btn-primary">{% trans "Previous" %}</button>
+                                        </div>
+                                        <a class="ld-close" ng-click="hideErrorLogsbtn()" href=""
+                                           title="{% trans 'Close' %}" aria-label="{% trans 'Close' %}">&times;</a>
                                     </div>
-
-                                    <div class="col-sm-9">
-                                        <button ng-click="fetchErrorLogs(3)" type="button"
-                                                class="btn btn-sm ra-50 btn-primary mx-5">{% trans "Next" %}</button>
-                                        <button ng-click="fetchErrorLogs(4)" type="button"
-                                                class="btn btn-sm ra-50 btn-primary mx-5">{% trans "Previous" %}</button>
-                                    </div>
-
-                                    <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                        <a ng-click="hideErrorLogsbtn()" href="">
-                                            <!--img src="/static/images/close-32.png"-->
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                        </a>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <textarea ng-model="errorLogsData" rows="25"
-                                                  class="form-control"></textarea>
-                                    </div>
+                                    <textarea ng-model="errorLogsData" rows="18" class="form-control"
+                                              style="width:100%;word-break:break-word;"></textarea>
                                 </div>
                             </form>
                         </div>
@@ -1712,7 +2149,7 @@
             </div>
         </div>
 
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="domains">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Domains" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
@@ -1761,7 +2198,7 @@
                                     </div>
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                 </div>
@@ -1779,15 +2216,15 @@
                                 <div ng-hide="installationDetailsForm" class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                     <div class="col-sm-6">
-                                        <select ng-model="phpSelection" class="form-control">
+                                        <select ng-model="phpSelection" class="form-control" aria-label="{% trans 'Select PHP' %}">
                                             {% for php in phps %}
-                                                <option>{{ php }}</option>
+                                                <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                 </div>
 
-                                <div ng-hide="installationDetailsForm" ng-hide="installationDetailsForm"
+                                <div ng-hide="installationDetailsForm"
                                      class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
                                     <div class="col-sm-9">
@@ -1908,70 +2345,57 @@
                                 </div>
 
 
-                                <div ng-hide="" class="form-group">
+                                <div class="ld-toolbar">
+                                    <input placeholder="{% trans 'Search Domain...' %}" ng-model="logSearch"
+                                           name="dom" type="search" class="form-control"
+                                           aria-label="{% trans 'Search Domain...' %}">
+                                    <a class="ld-close" title="{% trans 'Close' %}" ng-click="hideListDomains()" href=""
+                                       aria-label="{% trans 'Close' %}">&times;</a>
+                                </div>
 
-                                    <div class="col-sm-11">
-                                        <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
-                                               type="text" class="form-control" ng-model="domainNameCreate"
-                                               required>
-                                    </div>
-
-                                    <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                        <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
-                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                <div class="ld-list">
+                                    <div class="ld-card" ng-repeat="record in childDomains | filter:logSearch">
+                                        <div class="ld-card-top">
+                                            <div class="ld-domain" ng-bind="record.childDomain"></div>
+                                            <a class="ld-launch" href="{$ record.childLunch $}">
+                                                <img src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"
+                                                     alt="">
+                                                {% trans "Launch" %}
                                             </a>
                                         </div>
-
-
-                                    <div class="col-sm-12">
-                                        <table class="table cyber-table">
-                                            <thead>
-                                            <tr>
-                                                <th>Domain</th>
-                                                <th>Launch</th>
-                                                <th>Path</th>
-                                                <th>open_basedir</th>
-                                                <th>PHP</th>
-                                                <th>SSL</th>
-                                                <th>Delete</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr ng-repeat="record in childDomains | filter:logSearch">
-                                                <td ng-bind="record.childDomain"></td>
-                                                <td><a href="{$ record.childLunch $}"><img width="30px" height="30"
-                                                                                               class="center-block"
-                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
-                                                    </td>
-                                                    <td ng-bind="record.path"></td>
-                                                    <td>
-                                                        <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)"
-                                                                ng-model="childBaseDir" class="form-control">
-                                                            <option>Enable</option>
-                                                            <option>Disable</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <select ng-change="changePHP(record.childDomain,phpSelection)"
-                                                                ng-model="phpSelection" class="form-control">
-                                                            {% for php in phps %}
-                                                                <option>{{ php }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <button type="button"
-                                                                ng-click="issueSSL(record.childDomain,record.path)"
-                                                                class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
-                                                    </td>
-                                                    <td>
-                                                        <button type="button"
-                                                                ng-click="deleteChildDomain(record.childDomain)"
-                                                                class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <div class="ld-path-block">
+                                            <span class="ld-label">{% trans "Path" %}</span>
+                                            <code class="ld-path" title="{$ record.path $}" ng-bind="record.path"></code>
+                                        </div>
+                                        <div class="ld-controls">
+                                            <div class="ld-field">
+                                                <span class="ld-label">open_basedir</span>
+                                                <select ng-change="changeChildBaseDir(record.childDomain,record.childBaseDir)"
+                                                        ng-model="record.childBaseDir" class="form-control"
+                                                        aria-label="open_basedir">
+                                                    <option value="Enable" ng-value="'Enable'">Enable</option>
+                                                    <option value="Disable" ng-value="'Disable'">Disable</option>
+                                                </select>
+                                            </div>
+                                            <div class="ld-field">
+                                                <span class="ld-label">{% trans "PHP" %}</span>
+                                                <select ng-change="changePHP(record.childDomain,record.phpSelection)"
+                                                        ng-model="record.phpSelection" class="form-control"
+                                                        aria-label="PHP">
+                                                    {% for php in phps %}
+                                                        <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="ld-actions">
+                                                <button type="button"
+                                                        ng-click="issueSSL(record.childDomain,record.path)"
+                                                        class="btn ra-50 btn-primary">{% trans "Issue SSL" %}</button>
+                                                <button type="button"
+                                                        ng-click="deleteChildDomain(record.childDomain)"
+                                                        class="btn ra-50 btn-danger">{% trans "Delete" %}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1986,7 +2410,7 @@
             </div>
         </div>
 
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="config">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Configurations" %} <img ng-hide="configFileLoading" src="/static/images/loading.gif">
@@ -2049,6 +2473,59 @@
                             </a>
                         </div>
 
+                        <!---- HTML for main ssl file ---->
+
+                        <div class="col-md-12">
+
+                            <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
+
+                                <div ng-hide="sslSaved" class="alert alert-success">
+                                    <p>{% trans "SSL Saved" %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
+                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <div class="col-sm-12" style="margin-bottom: 15px; display: flex; justify-content: center; align-items: center;">
+                                        <button type="button" ng-click="hidesslbtn()" class="btn btn-link ssl-form-close-btn" style="color: var(--danger-color, #dc3545); padding: 8px 12px; min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                            <i class="fas fa-times" style="font-size: 24px;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="control-label">{% trans "Paste Your Cert" %}</label>
+                                        <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="control-label">{% trans "Paste Your Key" %}</label>
+                                        <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveSSL()"
+                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+                        <!----- HTML For SSL ---->
+
+
                         <!---- HTML for main conf file ---->
 
                         <div class="col-md-12">
@@ -2107,11 +2584,11 @@
                                         <label class="col-sm-3 control-label">{% trans "Select Template" %}</label>
                                         <div class="col-sm-6">
                                             <select ng-change="applyRewriteTemplate()" ng-model="rewriteTemplate"
-                                                    class="form-control">
-                                                <option>Force HTTP -> HTTPS</option>
-                                                <option>Force WWW -> NON-WWW</option>
-                                                <option>Force NON-WWW -> WWW</option>
-                                                <option>Disable Wordpress XMLRPC & Trackback</option>
+                                                    class="form-control" aria-label="{% trans 'Select Template' %}">
+                                                <option value="Force HTTP -> HTTPS" ng-value="'Force HTTP -> HTTPS'">Force HTTP -> HTTPS</option>
+                                                <option value="Force WWW -> NON-WWW" ng-value="'Force WWW -> NON-WWW'">Force WWW -> NON-WWW</option>
+                                                <option value="Force NON-WWW -> WWW" ng-value="'Force NON-WWW -> WWW'">Force NON-WWW -> WWW</option>
+                                                <option value="Disable Wordpress XMLRPC & Trackback" ng-value="'Disable Wordpress XMLRPC & Trackback'">Disable Wordpress XMLRPC & Trackback</option>
                                             </select>
                                         </div>
                                     </div>
@@ -2168,16 +2645,16 @@
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                     <div class="col-sm-6">
-                                        <select ng-model="phpSelectionMaster" class="form-control">
+                                        <select ng-model="phpSelectionMaster" class="form-control" aria-label="{% trans 'Select PHP' %}">
                                             {% for php in phps %}
-                                                <option>{{ php }}</option>
+                                                <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
 
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
-                                           href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                           href=""><h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3></a>
                                     </div>
 
                                 </div>
@@ -2221,74 +2698,7 @@
         </div>
 
 
-        <!-- SSL Tab -->
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="ssl">
-            <div class="panel panel-body">
-                <h3 class="content-box-header">
-                    {% trans "SSL" %}
-                </h3>
-                <div class="content-box-wrapper">
-                    <div class="row mx-10">
-                        <div class="col-md-3">
-                            <a href="{% url 'manageSSL' %}" title="{% trans 'Issue or renew a free SSL certificate' %}">
-                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
-                                <span class="h4">{% trans "Issue / Renew SSL" %}</span>
-                            </a>
-                        </div>
-
-                        <div class="col-md-3">
-                            <a href="#" ng-click="addSSL(); $event.preventDefault()" title="{% trans 'Add Your Own SSL' %}">
-                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
-                                <span class="h4">{% trans "Add SSL" %}</span>
-                            </a>
-                        </div>
-
-                        <!---- HTML for main ssl file ---->
-                        <div class="col-md-12">
-                            <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
-
-                                <div ng-hide="sslSaved" class="alert alert-success">
-                                    <p>{% trans "SSL Saved" %}</p>
-                                </div>
-
-                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
-                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                </div>
-
-                                <div ng-hide="" class="form-group">
-                                    <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                        <a ng-click="hidesslbtn()" href=""><img
-                                                src="/static/images/close-32.png"></a>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
-                                                  class="form-control"></textarea>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
-                                                  class="form-control"></textarea>
-                                    </div>
-                                </div>
-
-                                <div ng-hide="" class="form-group">
-                                    <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-4">
-                                        <button type="button" ng-click="saveSSL()"
-                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="files">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Files" %}
@@ -2335,9 +2745,9 @@
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "open_basedir Protection" %}</label>
                                     <div class="col-sm-6">
-                                        <select ng-model="openBasedirValue" class="form-control">
-                                            <option>Enable</option>
-                                            <option>Disable</option>
+                                        <select ng-model="openBasedirValue" class="form-control" aria-label="open_basedir">
+                                            <option value="Enable" ng-value="'Enable'">Enable</option>
+                                            <option value="Disable" ng-value="'Disable'">Disable</option>
                                         </select>
                                     </div>
 
@@ -2452,7 +2862,7 @@
         {% endif %}
 
         <!-- Creative Application Installer Section -->
-        <div class="app-installer-section cp-wtab-panel" data-wtab="apps">
+        <div class="app-installer-section">
             <div class="app-installer-header">
                 <h2 class="app-installer-title">
                     <i class="fas fa-magic" style="margin-right: 15px;"></i>
@@ -2559,8 +2969,9 @@
 {% block footer_scripts %}
 {{ block.super }}
 <!-- Add Chart.js and resource monitoring script -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}"></script>
+<!-- Note: Chart.js is already loaded in base template, but kept here for specific page functionality -->
+<script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}"></script>
+<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}?v={% now 'U' %}"></script>
 
 <!-- Fix modal functionality -->
 <script>
@@ -2723,22 +3134,5 @@ window.addEventListener('load', function() {
         console.error('Bootstrap modal not loaded properly');
     }
 });
-</script>
-<script>
-(function(){
-  var tabs=document.querySelectorAll('#cp-wtabs .cp-tab');
-  var panels=document.querySelectorAll('.cp-wtab-panel');
-  if(!tabs.length||!panels.length){return;}
-  var valid=["overview","domains","logs","config","ssl","files","apps"];
-  function activate(name){
-    tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-wtab')===name);});
-    panels.forEach(function(p){p.style.display=(p.getAttribute('data-wtab')===name)?'':'none';});
-    try{history.replaceState(null,'','#'+name);}catch(e){}
-    try{window.dispatchEvent(new Event('resize'));}catch(e){}
-  }
-  tabs.forEach(function(t){t.addEventListener('click',function(){activate(t.getAttribute('data-wtab'));});});
-  var h=(location.hash||'').replace('#','');
-  activate(valid.indexOf(h)>=0?h:"overview");
-})();
 </script>
 {% endblock %}

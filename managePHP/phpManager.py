@@ -6,70 +6,87 @@ import re
 from django.shortcuts import HttpResponse
 from random import randint
 from .models import *
-from .phpConfig import matches_directive
 from xml.etree import ElementTree
 
 class PHPManager:
 
     @staticmethod
     def findPHPVersions():
-        # distro = ProcessUtilities.decideDistro()
-        # if distro == ProcessUtilities.centos:
-        #     return ['PHP 5.3', 'PHP 5.4', 'PHP 5.5', 'PHP 5.6', 'PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        # elif distro == ProcessUtilities.cent8:
-        #     return ['PHP 7.1','PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        # elif distro == ProcessUtilities.ubuntu20:
-        #     return ['PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        # else:
-        #     return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
-
+        """
+        Detect installed LiteSpeed PHP versions via filesystem only.
+        Avoids `yum/dnf list available` (multi-second) on every page render.
+        """
         try:
-
-            # Run the shell command and capture the output
-            result = ProcessUtilities.outputExecutioner('ls -la /usr/local/lsws')
-
-            # Get the lines containing 'lsphp' in the output
-            lsphp_lines = [line for line in result.split('\n') if 'lsphp' in line]
-
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                logging.writeToFile(f'Found PHP lines in findPHPVersions: {lsphp_lines}')
-
-
-            # Extract the version from the lines and format it as 'PHP x.y'
-            php_versions = ['PHP ' + line.split()[8][5] + '.' + line.split()[8][6:] for line in lsphp_lines]
-
             finalPHPVersions = []
-            for php in php_versions:
-                phpString = PHPManager.getPHPString(php)
+            lsws_root = '/usr/local/lsws'
 
-                if os.path.exists("/usr/local/lsws/lsphp" + str(phpString) + "/bin/lsphp"):
-                    finalPHPVersions.append(php)
+            def _add_from_dirname(name):
+                if not name or not name.startswith('lsphp') or name == 'lsphp':
+                    return
+                version_part = name[5:]
+                if len(version_part) < 2 or not version_part.isdigit():
+                    return
+                major = version_part[0]
+                minor = version_part[1:]
+                formatted_version = f'PHP {major}.{minor}'
+                php_path = f"{lsws_root}/{name}/bin/php"
+                lsphp_path = f"{lsws_root}/{name}/bin/lsphp"
+                if os.path.exists(php_path) or os.path.exists(lsphp_path):
+                    if formatted_version not in finalPHPVersions:
+                        finalPHPVersions.append(formatted_version)
+
+            # Primary: scan /usr/local/lsws/lsphp* directories (no shell).
+            try:
+                if os.path.isdir(lsws_root):
+                    for entry in os.listdir(lsws_root):
+                        full = os.path.join(lsws_root, entry)
+                        if os.path.isdir(full):
+                            _add_from_dirname(entry)
+            except Exception as e:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                    logging.writeToFile(f'Error scanning /usr/local/lsws: {str(e)}')
+
+            # Fallback probe for common versions if scan returned nothing.
+            if not finalPHPVersions:
+                for version in ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']:
+                    formatted_version = f'PHP {version}'
+                    try:
+                        phpString = PHPManager.getPHPString(formatted_version)
+                        php_path = f"{lsws_root}/lsphp{phpString}/bin/php"
+                        lsphp_path = f"{lsws_root}/lsphp{phpString}/bin/lsphp"
+                        if os.path.exists(php_path) or os.path.exists(lsphp_path):
+                            finalPHPVersions.append(formatted_version)
+                    except Exception:
+                        continue
+
+            def version_sort_key(version):
+                try:
+                    version_num = version.replace('PHP ', '').split('.')
+                    major = int(version_num[0])
+                    minor = int(version_num[1]) if len(version_num) > 1 else 0
+                    return (major, minor)
+                except Exception:
+                    return (0, 0)
+
+            finalPHPVersions.sort(key=version_sort_key, reverse=True)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                logging.writeToFile(f'Found PHP versions in findPHPVersions: {finalPHPVersions}')
+                logging.writeToFile(f'Final PHP versions found: {finalPHPVersions}')
 
-            # Now php_versions contains the formatted PHP versions
-            return finalPHPVersions
+            return finalPHPVersions if finalPHPVersions else ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
+
         except BaseException as msg:
             from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
             logging.writeToFile(f'Error while finding php versions on system: {str(msg)}')
-            return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
+            return ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
 
     @staticmethod
     def findApachePHPVersions():
-        # distro = ProcessUtilities.decideDistro()
-        # if distro == ProcessUtilities.centos:
-        #     return ['PHP 5.3', 'PHP 5.4', 'PHP 5.5', 'PHP 5.6', 'PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        # elif distro == ProcessUtilities.cent8:
-        #     return ['PHP 7.1','PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        # elif distro == ProcessUtilities.ubuntu20:
-        #     return ['PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        # else:
-        #     return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
-
+        """
+        Dynamically detect available Apache PHP versions by scanning the system
+        """
         try:
 
             # Run the shell command and capture the output
@@ -90,10 +107,18 @@ class PHPManager:
                 php_versions = []
                 for entry in lsphp_lines:
                     # Find substring starting with 'php' and extract the version part
-                    version = entry.split('php')[1]
-                    # Format version as PHP X.Y
-                    formatted_version = f"PHP {version[0]}.{version[1]}"
-                    php_versions.append(formatted_version)
+                    try:
+                        if 'php' not in entry:
+                            continue
+                        parts = entry.split('php')
+                        if len(parts) < 2 or len(parts[1]) < 2:
+                            continue
+                        version = parts[1]
+                        # Format version as PHP X.Y
+                        formatted_version = f"PHP {version[0]}.{version[1]}"
+                        php_versions.append(formatted_version)
+                    except (IndexError, ValueError):
+                        continue
             else:
 
                 lsphp_lines = [line for line in result.split('\n')]
@@ -128,7 +153,7 @@ class PHPManager:
         except BaseException as msg:
             from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
             logging.writeToFile(f'Error while finding php versions on system: {str(msg)}')
-            return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
+            return ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
 
     @staticmethod
     def getPHPString(phpVersion):
@@ -137,6 +162,127 @@ class PHPManager:
         php = phpVersion[1].replace(".", "")
 
         return php
+
+    @staticmethod
+    def validatePHPInstallation(phpVersion):
+        """
+        Validate that a PHP installation is properly configured and accessible
+        Returns: (is_valid, error_message, php_path)
+        """
+        try:
+            php = PHPManager.getPHPString(phpVersion)
+            php_path = f'/usr/local/lsws/lsphp{php}/bin/php'
+            lsphp_path = f'/usr/local/lsws/lsphp{php}/bin/lsphp'
+            
+            # Check if PHP binary exists
+            if os.path.exists(php_path):
+                return True, None, php_path
+            elif os.path.exists(lsphp_path):
+                return True, None, lsphp_path
+            else:
+                # Try alternative locations
+                alternative_paths = [
+                    f'/usr/local/lsws/lsphp{php}/bin/lsphp',
+                    '/usr/bin/php',
+                    '/usr/local/bin/php'
+                ]
+                
+                for alt_path in alternative_paths:
+                    if os.path.exists(alt_path):
+                        return True, None, alt_path
+                
+                return False, f'PHP {phpVersion} binary not found. Please install or check PHP installation.', None
+                
+        except Exception as e:
+            return False, f'Error validating PHP installation: {str(e)}', None
+
+    @staticmethod
+    def fixPHPConfiguration(phpVersion):
+        """
+        Attempt to fix common PHP configuration issues
+        """
+        try:
+            php = PHPManager.getPHPString(phpVersion)
+            php_dir = f'/usr/local/lsws/lsphp{php}'
+            
+            # Check if PHP directory exists
+            if not os.path.exists(php_dir):
+                return False, f'PHP directory {php_dir} does not exist'
+            
+            # Check for missing php binary and create symlink if needed
+            php_binary = f'{php_dir}/bin/php'
+            lsphp_binary = f'{php_dir}/bin/lsphp'
+            
+            if not os.path.exists(php_binary) and os.path.exists(lsphp_binary):
+                # Create symlink from lsphp to php
+                import subprocess
+                subprocess.run(['ln', '-sf', 'lsphp', 'php'], cwd=f'{php_dir}/bin')
+                return True, 'PHP binary symlink created successfully'
+            
+            return True, 'PHP configuration appears to be correct'
+            
+        except Exception as e:
+            return False, f'Error fixing PHP configuration: {str(e)}'
+
+    @staticmethod
+    def getLatestPHPVersion():
+        """
+        Get the latest available PHP version from the system
+        Returns: (latest_version, all_versions)
+        """
+        try:
+            all_versions = PHPManager.findPHPVersions()
+            
+            if not all_versions:
+                return None, []
+            
+            # Sort versions to get the latest
+            def version_sort_key(version):
+                try:
+                    version_num = version.replace('PHP ', '').split('.')
+                    major = int(version_num[0])
+                    minor = int(version_num[1]) if len(version_num) > 1 else 0
+                    return (major, minor)
+                except:
+                    return (0, 0)
+            
+            sorted_versions = sorted(all_versions, key=version_sort_key, reverse=True)
+            latest_version = sorted_versions[0]
+            
+            return latest_version, all_versions
+            
+        except Exception as e:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            logging.writeToFile(f'Error getting latest PHP version: {str(e)}')
+            return None, []
+
+    @staticmethod
+    def getRecommendedPHPVersion():
+        """
+        Get the recommended PHP version for new installations
+        Priority: 8.3 (recommended), 8.2, 8.4, 8.5, 8.1, 8.0, 7.4
+        """
+        try:
+            all_versions = PHPManager.findPHPVersions()
+            
+            if not all_versions:
+                return 'PHP 8.3'  # Default recommendation
+            
+            # Priority order for recommendations
+            recommended_order = ['PHP 8.3', 'PHP 8.2', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6', 'PHP 8.1', 'PHP 8.0', 'PHP 7.4']
+            
+            for recommended in recommended_order:
+                if recommended in all_versions:
+                    return recommended
+            
+            # If none of the recommended versions are available, return the latest
+            latest, _ = PHPManager.getLatestPHPVersion()
+            return latest if latest else 'PHP 8.3'
+            
+        except Exception as e:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            logging.writeToFile(f'Error getting recommended PHP version: {str(e)}')
+            return 'PHP 8.3'
 
     @staticmethod
     def FindPHPFPMPath(phpVersion):
@@ -186,7 +332,7 @@ class PHPManager:
             if items.find("allow_url_include") > -1 and items.find("=") > -1:
                 if items.find("On") > -1:
                     allow_url_include = "1"
-            if matches_directive(items, "memory_limit"):
+            if items.find("memory_limit") > -1 and items.find("=") > -1 and items.find("max_memory_limit") == -1:
                 memory_limit = re.findall(r"[A-Za-z0-9_]+", items)[1]
             if items.find("max_execution_time") > -1 and items.find("=") > -1:
                 max_execution_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
@@ -281,7 +427,7 @@ class PHPManager:
             elif items.find("allow_url_include") > -1 and items.find("=") > -1:
                 writeToFile.writelines(allow_url_include + "\n")
                 found_directives['allow_url_include'] = True
-            elif matches_directive(items, "memory_limit"):
+            elif items.find("memory_limit") > -1 and items.find("=") > -1 and items.find("max_memory_limit") == -1:
                 writeToFile.writelines("memory_limit = " + memory_limit + "\n")
                 found_directives['memory_limit'] = True
             elif items.find("max_execution_time") > -1 and items.find("=") > -1:
