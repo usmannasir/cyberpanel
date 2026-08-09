@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from plogical.mysqlUtilities import mysqlUtilities
 
@@ -76,6 +76,43 @@ class MySQLLoopbackUserTests(unittest.TestCase):
         sql = '\n'.join(cursor.queries)
         self.assertIn("SET PASSWORD FOR 'site_user'@'localhost'", sql)
         self.assertIn("SET PASSWORD FOR 'site_user'@'127.0.0.1'", sql)
+
+
+class RusticDatabaseRestoreTests(unittest.TestCase):
+
+    @patch('plogical.mysqlUtilities.subprocess.Popen')
+    def test_rustic_dump_is_piped_to_mysql_with_defaults_file(self, popen):
+        dump_process = MagicMock(returncode=0)
+        dump_process.stdout = MagicMock()
+        import_process = MagicMock(returncode=0)
+        popen.side_effect = [dump_process, import_process]
+
+        result = mysqlUtilities.restoreRusticDatabase(
+            'site_db', '/home/site/incrementalbackups', 'siteuser',
+            'snapshot-id', 'root', 'localhost', '3306',
+        )
+
+        self.assertEqual(result, 1)
+        dump_command = popen.call_args_list[0].args[0]
+        import_command = popen.call_args_list[1].args[0]
+        self.assertEqual(dump_command[:3], ['sudo', '-u', 'siteuser'])
+        self.assertIn('snapshot-id:site_db.sql', dump_command)
+        self.assertIn('--defaults-file=/home/cyberpanel/.my.cnf', import_command)
+        self.assertNotIn('--defaults--file=/home/cyberpanel/.my.cnf', import_command)
+
+    @patch('plogical.mysqlUtilities.subprocess.Popen')
+    def test_failed_mysql_import_is_reported(self, popen):
+        dump_process = MagicMock(returncode=0)
+        dump_process.stdout = MagicMock()
+        import_process = MagicMock(returncode=1)
+        popen.side_effect = [dump_process, import_process]
+
+        result = mysqlUtilities.restoreRusticDatabase(
+            'site_db', '/home/site/incrementalbackups', 'siteuser',
+            'snapshot-id', 'root', 'localhost', '3306',
+        )
+
+        self.assertEqual(result, 0)
 
 
 if __name__ == '__main__':

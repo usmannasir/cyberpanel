@@ -23,10 +23,16 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
   domain instead of always creating one.
 - Incremental backups exclude per-site logs and retain the correct Restic
   snapshot identifier even when the backup command ends with a warning.
+- V2 local backups use their on-disk Rustic repository directly and remain
+  available without a configured Rclone remote.
+- V2 database restores use the valid MySQL defaults-file option and report
+  failed database or file imports instead of returning false success.
 
 ### Security and reliability
 - Backup restores reject archive path traversal, escaping links, and special
   filesystem entries before extracting any content.
+- V2 backup diagnostics no longer record repository tokens or database
+  passwords.
 - Child-domain deletion now invokes certificate cleanup correctly and removes
   the dedicated certificate and ACME state directories.
 - Hardened Web Terminal authentication and secret-file permissions.

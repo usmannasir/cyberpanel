@@ -15,6 +15,11 @@ import django
 import plogical.CyberCPLogFileWriter as logging
 
 import plogical.mysqlUtilities as mysqlUtilities
+from plogical.backupV2Repository import (
+    database_name_from_snapshot_path,
+    rustic_repository,
+    website_exclude_arguments,
+)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -57,74 +62,31 @@ class CPBackupsV2(multi.Thread):
         from websiteFunctions.models import Websites
         self.website = Websites.objects.get(domain=self.data['domain'])
 
-        # Resresh gdive access_token code
-        try:
-            self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
-            self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
+        self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
+        self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
 
-            reponame =  self.data['BackendName']
-
+        reponame = self.data['BackendName']
+        self.repo = rustic_repository(reponame, self.data['domain'])
+        if reponame != 'local':
             try:
-                ### refresh token if gdrie
-                command = f"rclone config dump"
-                token = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
-
-                refreshToken = json.loads(token[reponame]['token'])['refresh_token']
-
-                logging.CyberCPLogFileWriter.writeToFile(f"Refresh Token: {refreshToken}")
-
-                new_Acess_token = self.refresh_V2Gdive_token(refreshToken)
-
-                command = f"""rclone config update '{reponame}' token '{{"access_token":"{new_Acess_token}","token_type":"Bearer","refresh_token":"{refreshToken}","expiry":"2024-04-08T21:53:00.123456789Z"}}' --non-interactive"""
-                result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(result)
-
-
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(f"Token Not upadate inside. Error: {str(msg)}")
-                pass
-
-            # command = 'cat %s' % (path)
-            # CurrentContent = pu.outputExecutioner(command)
-
-
-            # if CurrentContent.find(reponame) > -1:
-            #     config = configparser.ConfigParser()
-            #     config.read_string(CurrentContent)
-            #
-            #     token_str = config.get(reponame, 'token')
-            #     token_dict = json.loads(token_str)
-            #     refresh_token = token_dict['refresh_token']
-            #
-            #     new_Acess_token = self.refresh_V2Gdive_token(refresh_token)
-            #
-            #     old_access_token = token_dict['access_token']
-            #
-            #     new_content = CurrentContent.replace(str(old_access_token), new_Acess_token)
-            #
-            #     command = f"cat /dev/null > {self.ConfigFilePath}"
-            #     pu.executioner(command, self.website.externalApp, True)
-            #
-            #     command = f"echo '{new_content}' >> {self.ConfigFilePath}"
-            #     ProcessUtilities.executioner(command, self.website.externalApp, True)
-            #
-            #     command = f"chmod 600 {self.ConfigFilePath}"
-            #     ProcessUtilities.executioner(command, self.website.externalApp)
-            # else:
-            #     logging.CyberCPLogFileWriter.writeToFile("Token Not upadate..........")
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error update token............%s"%msg)
+                command = 'rclone config dump'
+                token = json.loads(ProcessUtilities.outputExecutioner(
+                    command, self.website.externalApp, True).rstrip('\n'))
+                repoConfig = token.get(reponame, {})
+                if repoConfig.get('type') == 'drive' and repoConfig.get('token'):
+                    refreshToken = json.loads(
+                        repoConfig['token'])['refresh_token']
+                    newAccessToken = self.refresh_V2Gdive_token(refreshToken)
+                    command = f"""rclone config update '{reponame}' token '{{"access_token":"{newAccessToken}","token_type":"Bearer","refresh_token":"{refreshToken}","expiry":"2024-04-08T21:53:00.123456789Z"}}' --non-interactive"""
+                    ProcessUtilities.outputExecutioner(
+                        command, self.website.externalApp, True)
+            except BaseException:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Failed to refresh the backup repository access token.')
 
 
 
         ## Set up the repo name to be used
-
-        if self.data['BackendName'] != 'local':
-            self.repo = f"rclone:'{self.data['BackendName']}':{self.data['domain']}"
-        else:
-            self.repo = f"rclone:'{self.data['BackendName']}':/home/{self.data['domain']}/incrementalbackups"
 
         ### This will contain list of all snapshots id generated and it will be merged
 
@@ -708,7 +670,7 @@ team_drive =
 
         ## Pending add user provided folders in the exclude list
 
-        exclude = f' --glob !{source}/logs '
+        exclude = website_exclude_arguments(source)
 
         command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
         status, result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True, None, True)
@@ -904,7 +866,6 @@ team_drive =
                         if os.path.exists(ProcessUtilities.debugPath):
                             logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
                             logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
-                            logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
 
                         if first:
 
@@ -1022,8 +983,16 @@ team_drive =
                     return 0
 
                 if self.data["path"].find('.sql') > -1:
-                    mysqlUtilities.restoreDatabaseBackup(self.data["path"].rstrip('.sql'), None, None, None, None, 1,
-                                                         self.repo, self.website.externalApp, self.data["snapshotid"])
+                    restoreStatus = mysqlUtilities.restoreDatabaseBackup(
+                        database_name_from_snapshot_path(self.data["path"]),
+                        None, None,
+                        None, None, 1, self.repo,
+                        self.website.externalApp, self.data["snapshotid"])
+                    if restoreStatus == 0:
+                        self.UpdateStatus(
+                            'Failed to restore the database.',
+                            CPBackupsV2.FAILED)
+                        return 0
 
                 else:
 
@@ -1035,10 +1004,17 @@ team_drive =
                         InitialCommand = ''
 
                     command = f'{InitialCommand}rustic -r {self.repo} restore {self.data["snapshotid"]}:{self.data["path"]} {self.data["path"]} --password ""  2>/dev/null'
-                    result = ProcessUtilities.outputExecutioner(command, externalApp, True)
+                    restoreStatus, result = ProcessUtilities.outputExecutioner(
+                        command, externalApp, True, None, True)
 
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.CyberCPLogFileWriter.writeToFile(result)
+
+                    if restoreStatus == 0:
+                        self.UpdateStatus(
+                            'Failed to restore the selected path.',
+                            CPBackupsV2.FAILED)
+                        return 0
 
                 self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
@@ -1105,19 +1081,10 @@ team_drive =
     @staticmethod
     def refresh_V2Gdive_token(refresh_token):
         try:
-            # refresh_token = "1//09pPJHjUgyp09CgYIARAAGAkSNgF-L9IrZ0FLMhuKVfPEwmv_6neFto3JJ-B9uXBYu1kPPdsPhSk1OJXDBA3ZvC3v_AH9S1rTIQ"
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile('Current Token: ' + refresh_token )
-
             finalData = json.dumps({'refresh_token': refresh_token})
             r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
                               )
             newtoken = json.loads(r.text)['access_token']
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile('newtoken: ' + newtoken )
-                logging.CyberCPLogFileWriter.writeToFile(r.text)
 
             return newtoken
         except BaseException as msg:
