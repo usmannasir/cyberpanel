@@ -614,7 +614,7 @@ class ACLManager:
     def searchWebsiteObjects(currentACL, userID, searchTerm):
         if currentACL['admin'] == 1:
             # Get websites that match the search term
-            websites = Websites.objects.filter(domain__istartswith=searchTerm)
+            websites = Websites.objects.filter(domain__icontains=searchTerm)
             # Get WordPress sites that match the search term
             wp_sites = WPSites.objects.filter(title__icontains=searchTerm)
             # Add WordPress sites' parent websites to the results
@@ -627,7 +627,7 @@ class ACLManager:
             admin = Administrator.objects.get(pk=userID)
 
             # Get websites that match the search term
-            websites = admin.websites_set.filter(domain__istartswith=searchTerm)
+            websites = admin.websites_set.filter(domain__icontains=searchTerm)
             for items in websites:
                 websiteList.append(items)
 
@@ -640,7 +640,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
             for items in admins:
                 # Get websites that match the search term
-                webs = items.websites_set.filter(domain__istartswith=searchTerm)
+                webs = items.websites_set.filter(domain__icontains=searchTerm)
                 for web in webs:
                     if web not in websiteList:
                         websiteList.append(web)

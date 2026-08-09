@@ -149,6 +149,12 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
             $scope.cpuUsage = response.data.cpuUsage;
             $scope.ramUsage = response.data.ramUsage;
             $scope.diskUsage = response.data.diskUsage;
+            $scope.sizeDisplayUnit = response.data.sizeDisplayUnit || 'auto';
+            try { window.CPSizeDisplayUnit = $scope.sizeDisplayUnit; } catch (e) {}
+            if (response.data.ramTotalLabel) { $scope.ramTotalLabel = response.data.ramTotalLabel; }
+            if (response.data.diskTotalLabel) { $scope.diskTotalLabel = response.data.diskTotalLabel; }
+            if (response.data.diskFreeLabel) { $scope.diskFreeLabel = response.data.diskFreeLabel; }
+
             
             // Total system information
             $scope.cpuCores = response.data.cpuCores;

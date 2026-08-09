@@ -24,3 +24,16 @@ def cosmetic_context(request):
         return {
             'cosmetic': cosmetic
         }
+
+
+def size_display_unit_context(request):
+    """Expose viewing admin's sizeDisplayUnit for JS formatters."""
+    try:
+        if 'userID' not in request.session:
+            return {'sizeDisplayUnit': 'auto'}
+        from loginSystem.models import Administrator
+        from plogical.humanSize import get_admin_size_mode
+        admin = Administrator.objects.get(pk=request.session['userID'])
+        return {'sizeDisplayUnit': get_admin_size_mode(admin)}
+    except Exception:
+        return {'sizeDisplayUnit': 'auto'}

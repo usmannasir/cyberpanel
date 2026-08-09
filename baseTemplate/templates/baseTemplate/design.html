@@ -212,6 +212,15 @@
                         <label class="form-label">{% trans "Custom CSS" %}</label>
                         <textarea id="appendthemedata" name="MainDashboardCSS" rows="12" class="form-control">{{ cosmetic.MainDashboardCSS }}</textarea>
                     </div>
+<div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label" for="sizeDisplayUnit">{% trans "Size units" %}</label>
+                        <select id="sizeDisplayUnit" name="sizeDisplayUnit" class="form-select">
+                            <option value="auto" {% if sizeDisplayUnit == 'auto' %}selected{% endif %}>{% trans "Auto (KB / MB / GB / TB)" %}</option>
+                            <option value="MB" {% if sizeDisplayUnit == 'MB' %}selected{% endif %}>{% trans "Always MB" %}</option>
+                            <option value="GB" {% if sizeDisplayUnit == 'GB' %}selected{% endif %}>{% trans "Always GB" %}</option>
+                        </select>
+                        <p class="page-subtitle" style="margin: 6px 0 0;">{% trans "Your preference for disk, bandwidth, and memory labels across the panel." %}</p>
+                    </div>
 
                     <div class="form-group" style="margin-top: 2rem;">
                         <button type="submit" class="btn btn-primary">

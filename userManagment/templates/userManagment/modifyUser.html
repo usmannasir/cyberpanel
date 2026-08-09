@@ -294,6 +294,16 @@
                         <p class="help-text">{% trans "Choose the security level for this account" %}</p>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">{% trans "Size units" %}</label>
+                        <select ng-model="sizeDisplayUnit" class="form-control"
+                                ng-init="sizeDisplayUnit = sizeDisplayUnit || 'auto'">
+                            <option value="auto">{% trans "Auto (KB / MB / GB / TB)" %}</option>
+                            <option value="MB">{% trans "Always MB" %}</option>
+                            <option value="GB">{% trans "Always GB" %}</option>
+                        </select>
+                        <p class="help-text">{% trans "How disk, bandwidth, and memory sizes appear for this user in the panel." %}</p>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">{% trans "Additional Features" %}</label>
                         <div class="checkbox-wrapper">
                             <label>

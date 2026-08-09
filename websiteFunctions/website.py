@@ -56,6 +56,25 @@ class WebsiteManager:
         self.domain = domain
         self.childDomain = childDomain
 
+    def _resourceSizeLabels(self, userID, disk_mb, disk_total, bw_mb, bw_total):
+        from plogical.humanSize import format_mb, format_quota_mb, get_admin_size_mode
+        from loginSystem.models import Administrator
+        mode = 'auto'
+        try:
+            if userID is not None:
+                mode = get_admin_size_mode(Administrator.objects.get(pk=userID))
+        except BaseException:
+            mode = 'auto'
+        return {
+            'diskUsedLabel': format_mb(disk_mb, mode),
+            'diskTotalLabel': format_quota_mb(disk_total, mode),
+            'bwUsedLabel': format_mb(bw_mb, mode),
+            'bwTotalLabel': format_quota_mb(bw_total, mode),
+            'sizeDisplayUnit': mode,
+            'diskUnlimited': format_quota_mb(disk_total, mode) == 'Unlimited',
+            'bwUnlimited': format_quota_mb(bw_total, mode) == 'Unlimited',
+        }
+
     def createWebsite(self, request=None, userID=None, data=None):
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
@@ -2435,12 +2454,66 @@ Require valid-user
     def searchWebsites(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
+            pattern = data.get('patternAdded', '') if isinstance(data, dict) else ''
             try:
-                json_data = self.searchWebsitesJson(currentACL, userID, data['patternAdded'])
+                json_data = self.searchWebsitesJson(currentACL, userID, pattern)
             except BaseException as msg:
                 tempData = {}
                 tempData['page'] = 1
                 return self.getFurtherAccounts(userID, tempData)
+
+            # Also include matching child domains so List Websites search finds subdomains.
+            try:
+                master_rows = json.loads(json_data) if isinstance(json_data, str) else (json_data or [])
+            except Exception:
+                master_rows = []
+            if not isinstance(master_rows, list):
+                master_rows = []
+
+            child_rows = []
+            try:
+                websites = ACLManager.findWebsiteObjects(currentACL, userID)
+                seen = set()
+                for web in websites:
+                    qs = web.childdomains_set.filter(domain__icontains=pattern)
+                    for child in qs:
+                        if child.alais == 1:
+                            continue
+                        if child.domain == 'mail.%s' % web.domain:
+                            continue
+                        if child.domain in seen:
+                            continue
+                        seen.add(child.domain)
+                        DiskUsage = 0
+                        try:
+                            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(child.master)
+                        except Exception:
+                            pass
+                        child_rows.append({
+                            'domain': child.domain,
+                            'masterDomain': child.master.domain,
+                            'adminEmail': child.master.adminEmail,
+                            'ipAddress': master_rows[0]['ipAddress'] if master_rows else '',
+                            'admin': child.master.admin.userName,
+                            'package': child.master.package.packageName,
+                            'state': 'Active' if child.master.state == 1 else 'Suspended',
+                            'diskUsed': '%sMB' % str(DiskUsage),
+                            'phpVersion': child.phpSelection or child.master.phpSelection or '',
+                            'wp_sites': [],
+                            'isChild': 1,
+                            'manageUrl': '/websites/%s/%s' % (child.master.domain, child.domain),
+                        })
+            except Exception as child_err:
+                logging.CyberCPLogFileWriter.writeToFile('searchWebsites child merge: %s' % str(child_err))
+
+            for row in master_rows:
+                if 'isChild' not in row:
+                    row['isChild'] = 0
+                if 'manageUrl' not in row:
+                    row['manageUrl'] = '/websites/%s' % row.get('domain', '')
+
+            merged = master_rows + child_rows
+            json_data = json.dumps(merged)
 
             pagination = self.websitePagination(currentACL, userID)
             final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
@@ -2458,9 +2531,11 @@ Require valid-user
 
             websites = ACLManager.findWebsiteObjects(currentACL, userID)
             childDomains = []
+            pattern = data.get('patternAdded', '') if isinstance(data, dict) else ''
 
             for web in websites:
-                for child in web.childdomains_set.filter(domain__istartswith=data['patternAdded']):
+                qs = web.childdomains_set.filter(domain__icontains=pattern)
+                for child in qs:
                     childDomains.append(child)
 
             json_data = self.findChildsListJson(childDomains)
@@ -3546,6 +3621,7 @@ context /cyberpanel_suspension_page.html {
             Data['diskUsage'] = DiskUsagePercentage
             Data['diskInMB'] = DiskUsage
             Data['diskInMBTotal'] = website.package.diskSpace
+            Data.update(self._resourceSizeLabels(userID, DiskUsage, website.package.diskSpace, bwInMB, website.package.bandwidth))
 
             Data['phps'] = PHPManager.findPHPVersions()
             import os
@@ -3791,6 +3867,7 @@ context /cyberpanel_suspension_page.html {
             Data['diskUsage'] = DiskUsagePercentage
             Data['diskInMB'] = DiskUsage
             Data['diskInMBTotal'] = website.package.diskSpace
+            Data.update(self._resourceSizeLabels(userID, DiskUsage, website.package.diskSpace, bwInMB, website.package.bandwidth))
 
             Data['phps'] = PHPManager.findPHPVersions()
 

@@ -161,7 +161,8 @@
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="ramTotalMB === undefined" style="max-width:160px;" aria-hidden="true"></span>
-                    <span ng-if="ramTotalMB !== undefined">You've {$ ramTotalMB $} MB Memory.</span>
+                    <span ng-if="ramTotalLabel !== undefined">You've {$ ramTotalLabel $} Memory.</span>
+                    <span ng-if="ramTotalLabel === undefined && ramTotalMB !== undefined">You've {$ ramTotalMB $} MB Memory.</span>
                 </div>
             </div>
 
@@ -182,7 +183,8 @@
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="diskFreeGB === undefined" style="max-width:200px;" aria-hidden="true"></span>
-                    <span ng-if="diskFreeGB !== undefined">You've {$ diskFreeGB $} GB remaining out of {$ diskTotalGB $} GB.</span>
+                    <span ng-if="diskFreeLabel !== undefined">You've {$ diskFreeLabel $} remaining out of {$ diskTotalLabel $}.</span>
+                    <span ng-if="diskFreeLabel === undefined && diskFreeGB !== undefined">You've {$ diskFreeGB $} GB remaining out of {$ diskTotalGB $} GB.</span>
                 </div>
             </div>
         </div>

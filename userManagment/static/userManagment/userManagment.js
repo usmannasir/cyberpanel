@@ -216,6 +216,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.email = userDetails.email;
                 $scope.securityLevel = userDetails.securityLevel;
                 $scope.currentSecurityLevel = userDetails.securityLevel;
+                $scope.sizeDisplayUnit = userDetails.sizeDisplayUnit || 'auto';
                 $scope.twofa = Boolean(userDetails.twofa);
                 
                 // Format secret key with spaces for better readability
@@ -307,7 +308,8 @@ app.controller('modifyUser', function ($scope, $http) {
             email: email,
             passwordByPass: password,
             securityLevel: $scope.securityLevel,
-            twofa: $scope.twofa
+            twofa: $scope.twofa,
+            sizeDisplayUnit: $scope.sizeDisplayUnit || 'auto'
         };
 
         var config = {

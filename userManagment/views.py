@@ -309,6 +309,8 @@ def fetchUserDetails(request):
 
                 otpauth = pyotp.totp.TOTP(user.secretKey).provisioning_uri(email, issuer_name="CyberPanel")
 
+                from plogical.humanSize import get_admin_size_mode
+
                 userDetails = {
                     "id": user.id,
                     "firstName": firstName,
@@ -318,7 +320,8 @@ def fetchUserDetails(request):
                     "websitesLimit": websitesLimit,
                     "securityLevel": SecurityLevel(user.securityLevel).name,
                     "otpauth": otpauth,
-                    'twofa': user.twoFA
+                    'twofa': user.twoFA,
+                    "sizeDisplayUnit": get_admin_size_mode(user),
                 }
 
                 data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
@@ -403,6 +406,10 @@ def saveModifications(request):
                 user.securityLevel = secMiddleware.LOW
             else:
                 user.securityLevel = secMiddleware.HIGH
+
+            if isinstance(data, dict) and 'sizeDisplayUnit' in data:
+                from plogical.humanSize import set_admin_size_mode
+                set_admin_size_mode(user, data.get('sizeDisplayUnit'), save=False)
 
             user.save()
 

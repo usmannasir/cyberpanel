@@ -4,6 +4,8 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="CyberCP">
 <head>
+    <script>try { window.CPSizeDisplayUnit = "{{ sizeDisplayUnit|default:'auto'|escapejs }}"; } catch (e) {}</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CyberPanel{% endblock %}</title>
@@ -449,7 +451,12 @@
         function search(term) {
             term = term.trim().toLowerCase();
             if (!term) { filtered = items.slice(0, 8); }
-            else { filtered = items.filter(function (it) { return it.label.toLowerCase().indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1; }); }
+            else {
+                filtered = items.filter(function (it) {
+                    var hay = (it.hay || it.label || '').toLowerCase();
+                    return hay.indexOf(term) !== -1 || (it.group || '').toLowerCase().indexOf(term) !== -1;
+                });
+            }
             activeIdx = 0; render();
         }
         function open() {
@@ -486,7 +493,11 @@
             results = document.getElementById('cp-cmdk-results');
             emptyEl = document.getElementById('cp-cmdk-empty');
             if (!overlay) { return; }
-            input.addEventListener('input', function () { search(input.value); });
+            input.addEventListener('input', function () {
+                var t = input.value;
+                search(t);
+                searchRemoteSites(t, function () { search(input.value); });
+            });
             overlay.addEventListener('click', function (e) { if (e.target === overlay) { close(); } });
             var trigger = document.getElementById('cp-cmdk-trigger');
             if (trigger) { trigger.addEventListener('click', open); }
