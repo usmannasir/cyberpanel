@@ -1110,24 +1110,44 @@ class Upgrade:
                 Upgrade.stdOut("Continuing with standard OLS", 0)
                 return True  # Not fatal, continue with standard OLS
 
-            # CRITICAL: Verify GLIBC compatibility before installation
+            # CRITICAL: Verify GLIBC compatibility before installation.
+            # rhel9 OLS 2.5.1 needs GLIBC 2.35 (Alma/RHEL 10); AlmaLinux 9 is 2.34.
+            # Fall back to the rhel8 core artifact (same feature set, older GLIBC) so
+            # EL9 still gets core 2.5.1 + module 2.7.5 instead of skipping the whole overlay.
             Upgrade.stdOut("Verifying GLIBC compatibility...", 0)
+            skip_core_binary = False
             if not Upgrade.verifyBinaryCompatibility(tmp_binary):
                 Upgrade.stdOut("=" * 50, 0)
-                Upgrade.stdOut("ERROR: Binary GLIBC requirements incompatible with system", 0)
-                Upgrade.stdOut("This binary would cause OpenLiteSpeed to fail to start", 0)
-                Upgrade.stdOut("Skipping custom binary installation to preserve system stability", 0)
-                Upgrade.stdOut("Standard OLS binary from package manager will be used", 0)
-                Upgrade.stdOut("=" * 50, 0)
-                # Clean up downloaded binary
-                try:
-                    if os.path.exists(tmp_binary):
-                        os.remove(tmp_binary)
-                except:
-                    pass
-                return True  # Not fatal, continue with standard OLS
+                Upgrade.stdOut("WARNING: Primary OLS binary GLIBC incompatible with this system", 0)
+                fallback_ok = False
+                if platform == 'rhel9':
+                    fb = ols_binaries_config.BINARY_CONFIGS.get('rhel8')
+                    if fb:
+                        Upgrade.stdOut("Trying rhel8 OpenLiteSpeed 2.5.1 artifact as EL9-compatible fallback...", 0)
+                        try:
+                            if os.path.exists(tmp_binary):
+                                os.remove(tmp_binary)
+                        except Exception:
+                            pass
+                        if Upgrade.downloadCustomBinary(fb['url'], tmp_binary, fb['sha256'])                                 and Upgrade.verifyBinaryCompatibility(tmp_binary):
+                            OLS_BINARY_URL = fb['url']
+                            OLS_BINARY_SHA256 = fb['sha256']
+                            # Keep rhel9 module/modsec URLs (module only needs GLIBC <= 2.33).
+                            fallback_ok = True
+                            Upgrade.stdOut("rhel8 OLS core is GLIBC-compatible; continuing with rhel9 module", 0)
+                if not fallback_ok:
+                    Upgrade.stdOut("Skipping custom OLS *core* binary; will still try to install cyberpanel_ols module", 0)
+                    Upgrade.stdOut("=" * 50, 0)
+                    try:
+                        if os.path.exists(tmp_binary):
+                            os.remove(tmp_binary)
+                    except Exception:
+                        pass
+                    skip_core_binary = True
+                else:
+                    Upgrade.stdOut("=" * 50, 0)
 
-            # Download cyberpanel_ols module (checksum optional — v2.7.x may ship without published hash)
+            # Download cyberpanel_ols module (checksum optional - v2.7.x may ship without published hash)
             module_downloaded = False
             if MODULE_URL:
                 if not Upgrade.downloadCustomBinary(MODULE_URL, tmp_module, MODULE_SHA256):
@@ -1150,36 +1170,41 @@ class Upgrade:
                     Upgrade.stdOut("ModSecurity may crash due to ABI incompatibility", 0)
                     Upgrade.stdOut("Consider manually updating ModSecurity after upgrade", 0)
 
-            # Install OpenLiteSpeed binary
+            # Install OpenLiteSpeed binary (unless GLIBC forced a core skip)
             Upgrade.stdOut("Installing custom binaries...", 0)
 
-            try:
-                # Make binary executable before moving
-                os.chmod(tmp_binary, 0o755)
-
-                # Final compatibility test before installation
-                if not Upgrade.testBinaryExecution(tmp_binary):
-                    Upgrade.stdOut("ERROR: Final binary compatibility test failed", 0)
-                    Upgrade.stdOut("Skipping installation to prevent OpenLiteSpeed failure", 0)
-                    try:
-                        if os.path.exists(tmp_binary):
-                            os.remove(tmp_binary)
-                    except Exception:
-                        pass
-                    return True  # Not fatal, continue with standard OLS
-
-                shutil.move(tmp_binary, OLS_BINARY_PATH)
-                os.chmod(OLS_BINARY_PATH, 0o755)
-                Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
-            except Exception as e:
-                Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
+            if not skip_core_binary:
                 try:
-                    if os.path.exists(f"{backup_dir}/openlitespeed.backup"):
-                        shutil.copy2(f"{backup_dir}/openlitespeed.backup", OLS_BINARY_PATH)
-                        Upgrade.stdOut("Restored original binary from backup", 0)
-                except Exception:
-                    pass
-                return False
+                    # Make binary executable before moving
+                    os.chmod(tmp_binary, 0o755)
+
+                    # Final compatibility test before installation
+                    if not Upgrade.testBinaryExecution(tmp_binary):
+                        Upgrade.stdOut("ERROR: Final binary compatibility test failed", 0)
+                        Upgrade.stdOut("Skipping installation to prevent OpenLiteSpeed failure", 0)
+                        try:
+                            if os.path.exists(tmp_binary):
+                                os.remove(tmp_binary)
+                        except Exception:
+                            pass
+                        # Still allow module install below
+                        skip_core_binary = True
+                    else:
+                        shutil.move(tmp_binary, OLS_BINARY_PATH)
+                        os.chmod(OLS_BINARY_PATH, 0o755)
+                        Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
+                except Exception as e:
+                    if not skip_core_binary:
+                        Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
+                        try:
+                            if os.path.exists(f"{backup_dir}/openlitespeed.backup"):
+                                shutil.copy2(f"{backup_dir}/openlitespeed.backup", OLS_BINARY_PATH)
+                                Upgrade.stdOut("Restored original binary from backup", 0)
+                        except Exception:
+                            pass
+                        return False
+            else:
+                Upgrade.stdOut("Skipping OLS core binary install (GLIBC); installing module only if available", 0)
 
             # Install module (if downloaded)
             if module_downloaded:
