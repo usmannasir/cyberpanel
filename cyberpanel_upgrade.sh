@@ -718,6 +718,23 @@ Install_CyberCP_Runtime_Python_Requirements() {
   fi
 }
 
+Configure_LSCPD_Python_Environment() {
+  local environment_file="${LSCPD_PYTHON_ENV_FILE:-/usr/local/lscp/conf/pythonenv.conf}"
+  local runtime_root="${CYBERCP_RUNTIME_ROOT:-/usr/local/CyberCP}"
+  local runtime_site=""
+
+  if [[ "${Server_OS:-}" = "Ubuntu" ]] && [[ "${Server_OS_Version:-}" = "24" ]] \
+    && [[ -x "$runtime_root/bin/python" ]]; then
+    runtime_site="$("$runtime_root/bin/python" -c 'import site; print(site.getsitepackages()[0])' 2>/dev/null || true)"
+    if [[ "$runtime_site" = "$runtime_root"/lib/python*/site-packages ]] && [[ -d "$runtime_site" ]]; then
+      printf 'PYTHONHOME=/usr\nPYTHONPATH=.:%s:%s\n' "$runtime_root" "$runtime_site" > "$environment_file"
+      return 0
+    fi
+  fi
+
+  printf 'PYTHONHOME=/usr\n' > "$environment_file"
+}
+
 
 
 Pre_Upgrade_Required_Components() {
@@ -1531,7 +1548,7 @@ else
 fi
 
 if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
-    echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+    Configure_LSCPD_Python_Environment
     Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
   else
     # Uncomment and use the following lines if necessary for other OS versions
