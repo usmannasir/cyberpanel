@@ -96,8 +96,43 @@
             box-shadow: 0 0 0 3px rgba(91,95,207,0.1);
         }
         
+        /* Bootstrap .form-control is height:34px; page .form-control padding:10px
+           clips native <select> text. Override for these two dropdowns only. */
+        .form-select,
+        .pagination-select {
+            color: var(--text-primary, #2f3640);
+            background-color: var(--bg-secondary, var(--bg-primary, #fff));
+            height: 42px !important;
+            min-height: 42px !important;
+            padding: 8px 12px !important;
+            line-height: 1.4 !important;
+            box-sizing: border-box;
+        }
+
         .form-select {
             width: 120px;
+        }
+
+        .form-select option,
+        .pagination-select option {
+            color: var(--text-primary, #2f3640);
+            background-color: var(--bg-secondary, var(--bg-primary, #fff));
+        }
+
+        html[data-theme="dark"] .form-select,
+        html[data-theme="dark"] .pagination-select,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] .pagination-select {
+            color: var(--text-primary, #e4e4e7) !important;
+            background-color: var(--bg-secondary, #1d1f26) !important;
+        }
+
+        html[data-theme="dark"] .form-select option,
+        html[data-theme="dark"] .pagination-select option,
+        [data-theme="dark"] .form-select option,
+        [data-theme="dark"] .pagination-select option {
+            color: var(--text-primary, #e4e4e7) !important;
+            background-color: var(--bg-secondary, #1d1f26) !important;
         }
         
         /* Button Styles */
@@ -267,6 +302,11 @@
         .ssl-badge.expired {
             background: #fee2e2;
             color: #ef4444;
+        }
+
+        .ssl-badge.cloudflare {
+            background: #fef3c7;
+            color: #d97706;
         }
         
         .ssl-badge.self-signed {
@@ -625,6 +665,38 @@
         .mt-3 {
             margin-top: 1rem;
         }
+
+        .convert-info-banner {
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .convert-info-banner h3 {
+            margin: 0 0 8px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .convert-info-banner p {
+            margin: 0;
+            color: var(--text-muted, #6b7280);
+            line-height: 1.5;
+        }
+
+        .btn-convert-sub {
+            border-color: #7c3aed;
+            color: #7c3aed;
+        }
+
+        .btn-convert-sub:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
     </style>
 
     <div ng-controller="listWebsites" class="page-wrapper">
@@ -681,6 +753,11 @@
                     </div>
                 </div>
 
+                <div class="convert-info-banner">
+                    <h3><i class="fas fa-sitemap"></i> {% trans "Convert top-level site to subdomain" %}</h3>
+                    <p>{% trans "If a hostname was created as its own website by mistake (for example ols.example.com while example.com already exists), use Convert to subdomain on that row or open Full Settings for the site. Apex domains such as example.com cannot be converted." %}</p>
+                </div>
+
                 <!-- Search Section -->
                 <div class="search-section">
                     <div class="search-row">
@@ -695,26 +772,17 @@
                         </div>
                         <select ng-model="recordsToShow" 
                                 ng-change="getFurtherWebsitesFromDB()" 
-                                class="form-control form-select">
-                            <option>10</option>
-                            <option>50</option>
-                            <option>100</option>
+                                class="form-control form-select"
+                                aria-label="Records to show">
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Websites List Container -->
                 <div class="websites-container">
-                    <!-- Empty state with Build Services nudge -->
-                    <div class="cp-empty-nudge" ng-if="WebSitesList && WebSitesList.length === 0">
-                        <div class="cp-empty-ic"><i class="fas fa-globe"></i></div>
-                        <h3>{% trans "No websites yet" %}</h3>
-                        <p>{% trans "Create your first website to get started — or let our team build it for you." %}</p>
-                        <div class="cp-empty-actions">
-                            <a class="btn btn-primary" href="{% url 'createWebsite' %}"><i class="fas fa-plus"></i> {% trans "Create Website" %}</a>
-                            <a class="cp-build-link" href="{% url 'buildServices' %}"><i class="fas fa-rocket"></i> {% trans "Let our team build it for you" %}</a>
-                        </div>
-                    </div>
                     <div ng-repeat="web in WebSitesList track by $index">
                         <!-- Website Row -->
                         <div class="website-row" ng-click="toggleSite(web)" title="Expand/collapse details">
@@ -731,11 +799,13 @@
                                       title="{$ getSslTooltip(web) $}">
                                     <i class="fas" ng-class="{
                                         'fa-lock': web.ssl.status === 'valid',
+                                        'fa-cloud': web.ssl.status === 'cloudflare',
                                         'fa-exclamation-triangle': web.ssl.status === 'warning' || web.ssl.status === 'self-signed',
                                         'fa-exclamation-circle': web.ssl.status === 'expiring' || web.ssl.status === 'expired',
                                         'fa-unlock': web.ssl.status === 'none'
                                     }"></i>
                                     <span ng-if="web.ssl.status === 'valid'">Secure</span>
+                                    <span ng-if="web.ssl.status === 'cloudflare'">Cloudflare</span>
                                     <span ng-if="web.ssl.status === 'warning'">SSL {$ web.ssl.days $}d</span>
                                     <span ng-if="web.ssl.status === 'expiring'">Expiring {$ web.ssl.days $}d</span>
                                     <span ng-if="web.ssl.status === 'expired'">Expired</span>
@@ -743,13 +813,14 @@
                                     <span ng-if="web.ssl.status === 'none'">No SSL</span>
                                     <span ng-if="web.ssl.is_wildcard" class="wildcard-indicator" title="Wildcard SSL Certificate">*</span>
                                 </span>
+                                <span ng-if="web.duplicateTopLevel" class="ssl-badge warning" title="{% trans 'This domain is already a child domain. Remove the duplicate top-level entry.' %}">
+                                    <i class="fas fa-clone"></i>
+                                    {% trans "Duplicate top-level" %}
+                                </span>
                             </div>
                             <div class="row-actions">
-                                <a href="/websites/{$ web.domain $}/workspace" class="btn btn-primary btn-sm" title="{% trans 'Open site workspace' %}">
-                                    <i class="fas fa-grip"></i> Manage
-                                </a>
-                                <a href="/websites/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'Full settings page' %}">
-                                    Settings
+                                <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
+                                    Manage
                                 </a>
                                 <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
                                         ng-disabled="recreatingDNS[web.domain]"
@@ -774,16 +845,6 @@
                                     <i class="fas fa-pen-to-square"></i> {% trans "Modify" %}
                                 </a>
                                 {% endif %}
-                                {% if admin or suspendWebsite %}
-                                <a href="{% url 'siteState' %}" class="btn btn-outline btn-sm" title="{% trans 'Suspend / Unsuspend Website' %}">
-                                    <i class="fas fa-pause"></i> {% trans "Suspend" %}
-                                </a>
-                                {% endif %}
-                                {% if admin or deleteWebsite %}
-                                <a href="{% url 'deleteWebsite' %}" class="btn btn-outline-danger btn-sm" title="{% trans 'Delete Website' %}">
-                                    <i class="fas fa-trash"></i> {% trans "Delete" %}
-                                </a>
-                                {% endif %}
                             </div>
                         </div>
                         
@@ -799,10 +860,11 @@
                                         <a href="http://{$ web.domain $}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
                                             Visit Site
                                         </a>
-                                        <a ng-click="issueSSL(web.domain)" href="javascript:void(0);" class="btn btn-primary btn-sm"
-                                           ng-class="{'disabled': issuingSSL[web.domain]}">
+                                        <a ng-click="issueSSL(web.domain)" href="javascript:void(0);"
+                                           ng-class="{'disabled': issuingSSL[web.domain]}"
+                                           class="btn btn-primary btn-sm">
                                             <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
-                                            <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin"></i> Issuing SSL...</span>
+                                            <span ng-show="issuingSSL[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> Issuing SSL...</span>
                                         </a>
                                         <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
                                                 ng-disabled="recreatingDNS[web.domain]"
@@ -964,8 +1026,9 @@
                 <div class="pagination-section">
                     <select ng-model="currentPage" 
                             class="form-control pagination-select" 
-                            ng-change="getFurtherWebsitesFromDB()">
-                        <option ng-repeat="page in pagination" value="{$ $index + 1 $}">Page {$ $index + 1 $}</option>
+                            ng-change="getFurtherWebsitesFromDB()"
+                            aria-label="Current page">
+                        <option ng-repeat="page in pagination track by $index" ng-value="$index + 1">Page {$ $index + 1 $}</option>
                     </select>
                 </div>
             </div>

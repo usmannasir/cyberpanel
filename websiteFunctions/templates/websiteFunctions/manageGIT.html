@@ -1152,10 +1152,11 @@
                                                 <div class="form-group">
                                                     <select ng-model="recordsToShow"
                                                             ng-change="fetchGitLogs()"
-                                                            class="form-control" id="example-select">
-                                                        <option>10</option>
-                                                        <option>50</option>
-                                                        <option>100</option>
+                                                            class="form-control" id="example-select"
+                                                            aria-label="Records to show">
+                                                        <option ng-value="10">10</option>
+                                                        <option ng-value="50">50</option>
+                                                        <option ng-value="100">100</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -1186,8 +1187,9 @@
                                                     <div class="col-md-3">
                                                         <div class="form-group">
                                                             <select ng-model="currentPage" class="form-control"
-                                                                    ng-change="fetchGitLogs()">
-                                                                <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
+                                                                    ng-change="fetchGitLogs()"
+                                                                    aria-label="Current page">
+                                                                <option ng-repeat="page in pagination track by $index" ng-value="$index + 1">{$ $index + 1 $}</option>
                                                             </select>
                                                         </div>
                                                     </div>

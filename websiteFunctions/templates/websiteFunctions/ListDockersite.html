@@ -362,10 +362,8 @@
         }
 
         .pagination-select select {
-            padding: 10px 16px;
             border: 2px solid var(--border-color, #e8e9ff);
             border-radius: 8px;
-            font-size: 14px;
             background: var(--bg-secondary, white);
             color: var(--text-primary, #333);
             cursor: pointer;
@@ -556,10 +554,11 @@
             <div class="records-select">
                 <select ng-model="recordsToShow" 
                         ng-change="getFurtherWebsitesFromDB()" 
-                        class="form-control">
-                    <option>10</option>
-                    <option>50</option>
-                    <option>100</option>
+                        class="form-control"
+                        aria-label="Records to show">
+                    <option ng-value="10">10</option>
+                    <option ng-value="50">50</option>
+                    <option ng-value="100">100</option>
                 </select>
             </div>
         </div>
@@ -716,8 +715,9 @@
                 <div class="pagination-select">
                     <select ng-model="currentPage" 
                             class="form-control"
-                            ng-change="getFurtherWebsitesFromDB()">
-                        <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
+                            ng-change="getFurtherWebsitesFromDB()"
+                            aria-label="Current page">
+                        <option ng-repeat="page in pagination track by $index" ng-value="$index + 1">{$ $index + 1 $}</option>
                     </select>
                 </div>
             </div>

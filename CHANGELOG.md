@@ -5,6 +5,13 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
+### Fix: List Websites page/size dropdowns show selected values
+- `recordsToShow` and `currentPage` used numeric `ng-model` with string `<option>`
+  values, so AngularJS inserted a blank selected option (empty box until clicked).
+- Options now use `ng-value` (and the same fix on List Child Domains), plus dark-theme
+  select text/background so "10" and "Page 1" stay visible when collapsed.
+- Also override Bootstrap `form-control` height/padding on those selects so the label
+  is not vertically clipped inside a 34px box.
 
 ### Feature: Log source dropdown on every Server Log viewer
 - Main Log, Access, Error, Email, FTP, and ModSec Audit viewers include a
@@ -19,12 +26,50 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Note: the module may still write those WARNs to disk until a future
   `cyberpanel_ols.so` build logs them at DEBUG; the panel view no longer surfaces them.
 
-### Fix: email forwarding UI loading spinner
-- Forwarding page no longer leaves `forwardLoading` stuck when email or option is unset.
+### Fix: pluginHolder no longer traceback-spams on Fail2ban name collision
+- Plugins whose `AppConfig.name` differs from the directory (e.g. `fail2ban/` with
+  `name = 'fail2ban_plugin'`) are skipped once without a full traceback. That collision
+  with system `site-packages/fail2ban` was flooding CyberPanel Main Log every few seconds.
+- Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
+  preloaded package before `__import__`.
 
-### Fix: list emails disk usage badge
-- Use `ng-bind` for disk usage so Django does not eat `{{ record.DiskUsage }}` before Angular runs.
-- Dark-mode badge contrast in harmonize CSS.
+### Fix: Issue SSL no longer fails on cloudflare 2.20 deprecation warning
+- `python-cloudflare` 2.20.* prints a noisy `PendingDeprecationWarning` when the
+  client is created. CyberPanel merges stderr into Issue SSL output, so the
+  warning was shown as **Operation Failed** even when SSL logic ran.
+- `get_cloudflare_client()` suppresses that warning hook; Issue SSL error text
+  also strips the banner if it still appears.
+- Recommended pin on panel hosts: `python -m pip install 'cloudflare==2.19.4'`.
+
+### Fix: File Manager dark theme modal text contrast
+- Modal bodies were hard-coded white while dark theme set light label text, so
+  Copy/Move/Upload dialog labels were nearly invisible. Dark theme now forces
+  `.modal-body` and form labels to the dark palette.
+
+### Fix: File Manager header logo color + dark theme toggle
+- Header `.logo-icon` no longer renders purple-on-purple: a global
+  `i.fa.fa-folder-open { color: #5856d6 !important }` rule was overriding the brand tile.
+- File Manager header now uses the CyberPanel logo SVG (same as the main shell).
+- Added a dark/light theme toggle that shares `cyberPanelTheme` with the main panel.
+
+### Fix: Recreate DNS API JSON encoding crash
+- `recreateWebsiteDNS` used PHP-style `json.JSON_PRETTY_PRINT` flags in Python, which
+  raised `module 'json' has no attribute 'JSON_PRETTY_PRINT'` and aborted the request.
+- Now encodes with `json.dumps(..., indent=2, ensure_ascii=False)`.
+
+### Feature: Recreate DNS button on websites
+- Website detail, List Websites, and child domain pages include **Recreate DNS**.
+- Full recreate now repairs **existing** PowerDNS zones (missing template records and
+  wrong A/AAAA updated to the current machine IP), upserts SPF, force-syncs to
+  Cloudflare when sync is enabled, and returns Cloudflare zone status.
+- When the Cloudflare zone is not `active`, Recreate DNS lists the required
+  Cloudflare nameservers, requests Cloudflare `activation_check`, and warns that
+  public DNS stays NXDOMAIN until those NS are set at the registrar (DNSSEC off).
+  Registrar nameserver changes cannot be performed from CyberPanel.
+- API: `POST /websites/recreateWebsiteDNS` with `domainName` and optional `includeChildren`
+  (response includes `cloudflare` status object).
+- CLI: `virtualHostUtilities.py RecreateDNSForDomain --virtualHostName example.com`.
+- Intended for domains/subdomains created before SPF and related DNS template fixes.
 
 ### Feature: SPF record follows deployment type (CyberPersons vs self-hosted)
 - `DNS.getDeploymentType()` / `DNS.buildSpfRecord()`: CyberPersons rental publishes
