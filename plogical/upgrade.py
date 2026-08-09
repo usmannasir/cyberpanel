@@ -8,6 +8,12 @@ import grp
 import re
 
 sys.path.append('/usr/local/CyberCP')
+# When cyberpanel_upgrade.sh runs this file from /root/cyberpanel_upgrade_tmp/,
+# cyberpanel_version.py is downloaded beside it (repo-root sibling). Prefer that
+# directory so the import works before the full tree is cloned (#1885).
+_upgrade_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _upgrade_script_dir and _upgrade_script_dir not in sys.path:
+    sys.path.insert(0, _upgrade_script_dir)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import shlex
 import subprocess
