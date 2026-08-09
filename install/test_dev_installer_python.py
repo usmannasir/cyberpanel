@@ -88,7 +88,7 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual('3.0.0', result.stdout.strip())
+            self.assertEqual('3.0.1', result.stdout.strip())
 
     def test_repair_script_does_not_download_old_release_requirements(self):
         root = pathlib.Path(__file__).parents[1]

@@ -369,12 +369,12 @@ def versionManagment(request):
         branches_api_owner = origin_owner
         branches_api_repo = origin_repo
         include_dev_branches = True
-        preferred_upgrade_branch = 'v3.0.0-dev'
+        preferred_upgrade_branch = 'v3.0.1-dev'
         if local_branch.startswith('v') and local_branch.endswith('-dev'):
             fork_tip_branch = local_branch
             preferred_upgrade_branch = local_branch
         else:
-            fork_tip_branch = 'v3.0.0-dev'
+            fork_tip_branch = 'v3.0.1-dev'
 
     upstream_latest_sha = _github_branch_tip_sha('usmannasir', 'cyberpanel', branch_ref)
     latestcomit = upstream_latest_sha

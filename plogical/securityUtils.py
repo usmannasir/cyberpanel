@@ -1,7 +1,11 @@
 import hmac
+import json
 import os
+import pwd
 import re
 import secrets
+import stat
+import time
 
 
 TERMINAL_JWT_SECRET_ENV = "CYBERPANEL_TERMINAL_JWT_SECRET"
@@ -14,6 +18,11 @@ SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9_]{1,64}$")
 NUMERIC_ID_RE = re.compile(r"^[0-9]{1,12}$")
 REMOTE_HOST_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,255}$")
 PORT_RE = re.compile(r"^[0-9]{1,5}$")
+PRIVATE_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
+EMAIL_REPORT_DIRECTORY = "/home/cyberpanel/.email-reports"
+BACKUP_REQUEST_DIRECTORY = "/home/cyberpanel/.backup-requests"
+FILE_DOWNLOAD_DIRECTORY = "/home/cyberpanel/.file-downloads"
+BACKUP_REQUEST_MAX_AGE = 300
 
 
 def constant_time_equal(left, right):
@@ -154,3 +163,169 @@ def get_remote_transfer_pid_path(transfer_dir, base_path="/home/backup"):
         return ""
 
     return safe_path_under(base_path, "transfer-%s" % str(transfer_dir), "pid")
+
+
+def _owner_ids(owner_user):
+    if owner_user is None:
+        return None
+    account = pwd.getpwnam(owner_user)
+    return account.pw_uid, account.pw_gid
+
+
+def _open_private_directory(directory, owner_user=None):
+    directory = os.path.abspath(directory)
+    os.makedirs(directory, mode=0o700, exist_ok=True)
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW
+    descriptor = os.open(directory, flags)
+    file_status = os.fstat(descriptor)
+    if not stat.S_ISDIR(file_status.st_mode):
+        os.close(descriptor)
+        raise OSError("Private storage is not a directory")
+    owner_ids = _owner_ids(owner_user)
+    if owner_ids is not None and os.geteuid() == 0:
+        os.fchown(descriptor, owner_ids[0], owner_ids[1])
+    os.fchmod(descriptor, 0o700)
+    return descriptor
+
+
+def _validate_private_token(token):
+    if not isinstance(token, str) or PRIVATE_TOKEN_RE.fullmatch(token) is None:
+        raise ValueError("Invalid private request token")
+    return token
+
+
+def create_private_token_file(directory, content="", owner_user=None):
+    directory = os.path.abspath(directory)
+    directory_fd = _open_private_directory(directory, owner_user)
+    owner_ids = _owner_ids(owner_user)
+    try:
+        for unused_attempt in range(10):
+            token = secrets.token_urlsafe(32)
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW
+            try:
+                descriptor = os.open(token, flags, 0o600, dir_fd=directory_fd)
+            except FileExistsError:
+                continue
+            if owner_ids is not None and os.geteuid() == 0:
+                os.fchown(descriptor, owner_ids[0], owner_ids[1])
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(str(content))
+            return token, os.path.join(directory, token)
+    finally:
+        os.close(directory_fd)
+    raise OSError("Unable to allocate private request token")
+
+
+def read_private_token_file(token, directory, consume=False, max_age=None, max_bytes=1048576):
+    token = _validate_private_token(token)
+    directory_fd = _open_private_directory(directory)
+    stored_name = token
+    consumed_name = None
+    try:
+        if consume:
+            consumed_name = ".consuming-%s-%s" % (token, secrets.token_urlsafe(12))
+            os.rename(
+                token,
+                consumed_name,
+                src_dir_fd=directory_fd,
+                dst_dir_fd=directory_fd,
+            )
+            stored_name = consumed_name
+
+        flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
+        descriptor = os.open(stored_name, flags, dir_fd=directory_fd)
+        try:
+            file_status = os.fstat(descriptor)
+            if not stat.S_ISREG(file_status.st_mode) or file_status.st_nlink != 1:
+                raise OSError("Private request is not a regular file")
+            if max_age is not None and time.time() - file_status.st_mtime > max_age:
+                raise ValueError("Private request expired")
+            if file_status.st_size > max_bytes:
+                raise ValueError("Private request is too large")
+
+            chunks = []
+            remaining = max_bytes + 1
+            while remaining:
+                chunk = os.read(descriptor, min(65536, remaining))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            content = b"".join(chunks)
+            if len(content) > max_bytes:
+                raise ValueError("Private request is too large")
+            return content.decode("utf-8")
+        finally:
+            os.close(descriptor)
+    finally:
+        if consumed_name is not None:
+            try:
+                os.unlink(consumed_name, dir_fd=directory_fd)
+            except FileNotFoundError:
+                pass
+        os.close(directory_fd)
+
+
+def remove_stale_private_token_files(directory, max_age):
+    directory_fd = _open_private_directory(directory)
+    removed = 0
+    try:
+        now = time.time()
+        for name in os.listdir(directory_fd):
+            if PRIVATE_TOKEN_RE.fullmatch(name) is None:
+                continue
+            try:
+                file_status = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+                if (stat.S_ISREG(file_status.st_mode) and file_status.st_nlink == 1
+                        and now - file_status.st_mtime > max_age):
+                    os.unlink(name, dir_fd=directory_fd)
+                    removed += 1
+            except FileNotFoundError:
+                continue
+    finally:
+        os.close(directory_fd)
+    return removed
+
+
+def is_private_token_path(path, directory):
+    if not isinstance(path, str):
+        return False
+    absolute_path = os.path.abspath(path)
+    absolute_directory = os.path.abspath(directory)
+    return (
+        os.path.dirname(absolute_path) == absolute_directory
+        and PRIVATE_TOKEN_RE.fullmatch(os.path.basename(absolute_path)) is not None
+    )
+
+
+def create_backup_request(domain, directory=BACKUP_REQUEST_DIRECTORY):
+    domain = str(domain)
+    if not domain or len(domain) > 255 or "\x00" in domain:
+        raise ValueError("Invalid backup domain")
+    remove_stale_private_token_files(directory, BACKUP_REQUEST_MAX_AGE)
+    content = json.dumps({"domain": domain, "issued": int(time.time())})
+    token, unused_path = create_private_token_file(
+        directory,
+        content,
+        owner_user="cyberpanel",
+    )
+    return token
+
+
+def consume_backup_request(token, domain, directory=BACKUP_REQUEST_DIRECTORY):
+    try:
+        content = read_private_token_file(
+            token,
+            directory,
+            consume=True,
+            max_age=BACKUP_REQUEST_MAX_AGE,
+            max_bytes=4096,
+        )
+        request_data = json.loads(content)
+        issued = int(request_data["issued"])
+        age = time.time() - issued
+        if age < -30 or age > BACKUP_REQUEST_MAX_AGE:
+            return False
+        return constant_time_equal(request_data.get("domain"), str(domain))
+    except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError):
+        return False

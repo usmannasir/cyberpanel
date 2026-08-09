@@ -1,5 +1,8 @@
+import getpass
 import os
 import base64
+import shlex
+import sys
 
 from django.shortcuts import HttpResponse
 import json
@@ -176,6 +179,15 @@ class FileManager:
         except:
             return False
 
+    def notInside(self, path, root):
+        # Returns True when `path` is NOT safely contained within `root`.
+        # Rejects literal '..' and, after resolving symlinks/'..', any path that
+        # escapes `root`. This fixes the previous substring check which could be
+        # bypassed via symlinks or a non-prefix match of the home path.
+        if '..' in str(path):
+            return True
+        return not self.pathInside(path, root)
+
     def _moveViaPythonBase64(self, src_path, dest_path, user):
         """Fallback: use helper script or Python to move when mv fails (handles special chars)."""
         try:
@@ -230,13 +242,13 @@ class FileManager:
             logging.writeToFile(f"_deleteViaPythonBase64 failed: {str(e)}")
             return False
 
+
     def changeOwner(self, path):
         try:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
-            homePath = '/home/%s' % (domainName)
 
-            if not ACLManager.isPathInsideHome(path, homePath):
+            if path.find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = "chown -R " + website.externalApp + ':' + website.externalApp + ' ' + self.returnPathEnclosed(path)
@@ -257,7 +269,7 @@ class FileManager:
 
                 pathCheck = '/home/%s' % (domainName)
 
-                if not ACLManager.isPathInsideHome(self.data['completeStartingPath'], pathCheck):
+                if self.notInside(self.data['completeStartingPath'], pathCheck):
                     return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
                 command = "ls -la --group-directories-first " + self.returnPathEnclosed(
@@ -267,7 +279,7 @@ class FileManager:
             except:
                 pathCheck = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['completeStartingPath'], pathCheck):
+                if self.notInside(self.data['completeStartingPath'], pathCheck):
                     return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
                 command = "ls -la --group-directories-first " + self.returnPathEnclosed(
@@ -280,7 +292,7 @@ class FileManager:
                     currentFile = items.split(' ')
                     currentFile = [a for a in currentFile if a != '']
 
-                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
+                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total' or currentFile[-1].startswith('mail.'):
                         continue
 
                     if len(currentFile) > 9:
@@ -383,20 +395,16 @@ class FileManager:
                 website = Websites.objects.get(domain=domainName)
                 homePath = '/home/%s' % (domainName)
 
-                if not ACLManager.isPathInsideHome(self.data['fileName'], homePath):
+                if self.notInside(self.data['fileName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command, website.externalApp)
                 self.changeOwner(self.data['fileName'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
             except:
                 homePath = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['fileName'], homePath):
+                if self.notInside(self.data['fileName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
@@ -418,21 +426,17 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if not ACLManager.isPathInsideHome(self.data['folderName'], homePath):
+                if self.notInside(self.data['folderName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.data['folderName'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
             except:
                 homePath = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['folderName'], homePath):
+                if self.notInside(self.data['folderName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
@@ -461,193 +465,99 @@ class FileManager:
                 website = Websites.objects.get(domain=domainName)
                 self.homePath = '/home/%s' % (domainName)
 
-                logging.writeToFile(f"Attempting to delete files/folders for domain: {domainName}")
-
                 RemoveOK = 1
 
-                # Test if directory is writable
-                command = 'touch %s/public_html/hello.txt' % (self.homePath)
+                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                 result = ProcessUtilities.outputExecutioner(command)
-                if result is None:
-                    result = ''
 
-                if isinstance(result, (str, bytes)) and ('cannot touch' in str(result) or 'Permission denied' in str(result)):
+                if result.find('No such file or directory') > -1:
                     RemoveOK = 0
-                    logging.writeToFile(f"Directory {self.homePath} is not writable, removing chattr flags")
 
-                    # Remove immutable flag from entire directory (executioner returns 1=success, 0=failure)
-                    command = 'chattr -R -i %s' % (self.homePath)
-                    result = ProcessUtilities.executioner(command)
-                    if result != 1:
-                        logging.writeToFile(f"Warning: Failed to remove chattr -i from {self.homePath}: {result}")
-                    else:
-                        logging.writeToFile(f"Successfully removed chattr -i from {self.homePath}")
+                    command = 'chattr -R -i %s' % (self.returnPathEnclosed(self.homePath))
+                    ProcessUtilities.executioner(command)
 
                 else:
-                    command = 'rm -f %s/public_html/hello.txt' % (self.homePath)
+                    command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                     ProcessUtilities.executioner(command)
 
 
                 for item in self.data['fileAndFolders']:
-                    itemPath = self.data['path'] + '/' + item
-                    
-                    # Security check - prevent path traversal
-                    if not ACLManager.isPathInsideHome(itemPath, self.homePath):
-                        logging.writeToFile(f"Security violation: Attempted to delete outside home directory: {itemPath}")
-                        return self.ajaxPre(0, 'Not allowed to delete files outside home directory!')
 
-                    logging.writeToFile(f"Deleting: {itemPath}")
+                    if self.notInside(self.data['path'] + '/' + item, self.homePath):
+                        return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     if skipTrash:
-                        # Permanent deletion (executioner returns 1=success, 0=failure)
+                        itemPath = self.data['path'] + '/' + item
                         command = 'rm -rf ' + self.returnPathEnclosed(itemPath)
                         result = ProcessUtilities.executioner(command, website.externalApp)
                         if result != 1:
-                            logging.writeToFile(f"Failed to delete {itemPath}: result={result}, trying Python fallback")
-                            # Fallback: Python+base64 to handle special chars in paths
-                            if not self._deleteViaPythonBase64(itemPath, website.externalApp):
-                                return self.ajaxPre(0, f'Failed to delete {item}')
-                        logging.writeToFile(f"Successfully deleted: {itemPath}")
-
-                        ## Update disk usage in background
-                        command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                        ProcessUtilities.popenExecutioner(command)
+                            self._deleteViaPythonBase64(itemPath, website.externalApp)
                     else:
-                        # Move to trash
                         trashPath = '%s/.trash' % (self.homePath)
 
-                        # Ensure trash directory exists (executioner returns 1=success, 0=failure)
-                        command = 'mkdir -p %s' % (trashPath)
+                        command = 'mkdir %s' % (self.returnPathEnclosed(trashPath))
+                        ProcessUtilities.executioner(command, website.externalApp)
+
+                        Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
+                              fileName=self.returnPathEnclosed(item)).save()
+
+                        itemPath = self.data['path'] + '/' + item
+                        command = 'mv %s %s' % (
+                            self.returnPathEnclosed(itemPath),
+                            self.returnPathEnclosed(trashPath))
                         result = ProcessUtilities.executioner(command, website.externalApp)
                         if result != 1:
-                            logging.writeToFile(f"Failed to create trash directory: result={result}")
-                            return self.ajaxPre(0, f'Failed to create trash directory')
-
-                        # Save to trash database
-                        try:
-                            Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
-                                  fileName=self.returnPathEnclosed(item)).save()
-                        except Exception as e:
-                            logging.writeToFile(f"Failed to save trash record: {str(e)}")
-
-                        # Move to trash (executioner returns 1=success, 0=failure)
-                        command = 'mv %s %s' % (self.returnPathEnclosed(itemPath), trashPath)
-                        result = ProcessUtilities.executioner(command, website.externalApp)
-                        if result != 1:
-                            logging.writeToFile(f"Failed to move to trash {itemPath}: result={result}, trying Python fallback")
-                            # Fallback: Python+base64 to handle special chars in paths (e.g. lscpd/sendCommand)
-                            if not self._moveViaPythonBase64(itemPath, trashPath, website.externalApp):
-                                return self.ajaxPre(0, f'Failed to move {item} to trash')
-                        logging.writeToFile(f"Successfully moved to trash: {itemPath}")
-
-                        ## Update disk usage in background
-                        command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                        ProcessUtilities.popenExecutioner(command)
+                            self._moveViaPythonBase64(itemPath, trashPath + '/' + item, website.externalApp)
 
                 if RemoveOK == 0:
-                    logging.writeToFile(f"Restoring chattr +i flags for {self.homePath}")
-                    
-                    # Restore immutable flag to entire directory (executioner returns 1=success, 0=failure)
-                    command = 'chattr -R +i %s' % (self.homePath)
-                    result = ProcessUtilities.executioner(command)
-                    if result != 1:
-                        logging.writeToFile(f"Warning: Failed to restore chattr +i to {self.homePath}: result={result}")
-                    else:
-                        logging.writeToFile(f"Successfully restored chattr +i to {self.homePath}")
-                    
-                    # Allow specific directories to remain mutable
-                    mutable_dirs = ['/logs/', '/.trash/', '/backup/', '/incbackup/', '/lscache/', '/.cagefs/']
-                    for dir_name in mutable_dirs:
-                        dir_path = self.homePath + dir_name
-                        command = 'chattr -R -i %s' % (dir_path)
-                        result = ProcessUtilities.executioner(command)
-                        if result != 1:
-                            logging.writeToFile(f"Warning: Failed to remove chattr +i from {dir_path}: result={result}")
-                        else:
-                            logging.writeToFile(f"Successfully removed chattr +i from {dir_path}")
-            except Exception as e:
-                import traceback
-                logging.writeToFile(f"Error in deleteFolderOrFile for {domainName}: {str(e)}")
-                logging.writeToFile(traceback.format_exc())
+                    command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
+                    ProcessUtilities.executioner(command)
+            except:
                 try:
                     skipTrash = self.data['skipTrash']
                 except:
                     skipTrash = False
 
-                # Fallback to root path for system files (Root File Manager, domainName empty)
+
                 self.homePath = '/'
-                logging.writeToFile(f"Using fallback deletion for system files in {self.data['path']}")
 
                 RemoveOK = 1
 
-                # Test if we can write (use /tmp for root path since /public_html doesn't exist at /)
-                test_path = '/tmp' if self.homePath == '/' else (self.homePath + '/public_html')
-                command = 'touch %s/hello.txt' % (test_path)
+                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                 result = ProcessUtilities.outputExecutioner(command)
-                if result is None:
-                    result = ''
 
-                if isinstance(result, (str, bytes)) and ('cannot touch' in str(result) or 'Permission denied' in str(result)):
+                if result.find('No such file or directory') > -1:
                     RemoveOK = 0
-                    logging.writeToFile(f"Directory {self.homePath} is not writable, removing chattr flags")
 
-                    command = 'chattr -R -i %s' % (self.homePath)
-                    result = ProcessUtilities.executioner(command)
-                    if result != 1:
-                        logging.writeToFile(f"Warning: Failed to remove chattr -i from {self.homePath}: {result}")
+                    command = 'chattr -R -i %s' % (self.returnPathEnclosed(self.homePath))
+                    ProcessUtilities.executioner(command)
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (test_path)
+                    command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                     ProcessUtilities.executioner(command)
 
                 for item in self.data['fileAndFolders']:
-                    base = self.data['path'].rstrip('/') or '/'
-                    itemPath = base + '/' + item
-                    
-                    # Security check for system files
-                    if not ACLManager.isPathInsideHome(itemPath, self.homePath):
-                        logging.writeToFile(f"Security violation: Attempted to delete outside allowed path: {itemPath}")
-                        return self.ajaxPre(0, 'Not allowed to delete files outside allowed path!')
 
-                    logging.writeToFile(f"Deleting system file: {itemPath}")
+                    if self.notInside(self.data['path'] + '/' + item, self.homePath):
+                        return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     if skipTrash:
+                        itemPath = self.data['path'] + '/' + item
                         command = 'rm -rf ' + self.returnPathEnclosed(itemPath)
                         result = ProcessUtilities.executioner(command)
                         if result != 1:
-                            logging.writeToFile(f"Failed to delete system file {itemPath}: result={result}, trying Python fallback")
-                            if not self._deleteViaPythonBase64(itemPath, None):
-                                return self.ajaxPre(0, f'Failed to delete {item}')
-                        logging.writeToFile(f"Successfully deleted system file: {itemPath}")
+                            self._deleteViaPythonBase64(itemPath, None)
 
 
                 if RemoveOK == 0:
-                    logging.writeToFile(f"Restoring chattr +i flags for system path: {self.homePath}")
-                    command = 'chattr -R +i %s' % (self.homePath)
-                    result = ProcessUtilities.executioner(command)
-                    if result != 1:
-                        logging.writeToFile(f"Warning: Failed to restore chattr +i to system path {self.homePath}: result={result}")
-                    else:
-                        logging.writeToFile(f"Successfully restored chattr +i to system path {self.homePath}")
-                    
-                    # Allow specific directories to remain mutable for system files
-                    mutable_dirs = ['/logs/', '/.trash/', '/backup/', '/incbackup/', '/lscache/', '/.cagefs/']
-                    for dir_name in mutable_dirs:
-                        dir_path = self.homePath + dir_name
-                        command = 'chattr -R -i %s' % (dir_path)
-                        result = ProcessUtilities.executioner(command)
-                        if result != 1:
-                            logging.writeToFile(f"Warning: Failed to remove chattr +i from system {dir_path}: result={result}")
-                        else:
-                            logging.writeToFile(f"Successfully removed chattr +i from system {dir_path}")
+                    command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
+                    ProcessUtilities.executioner(command)
 
-            logging.writeToFile(f"File deletion completed successfully for domain: {domainName}")
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
         except BaseException as msg:
-            logging.writeToFile(f"Critical error in deleteFolderOrFile: {str(msg)}")
-            return self.ajaxPre(0, f"File deletion failed: {str(msg)}")
+            return self.ajaxPre(0, str(msg))
 
     def restore(self):
         try:
@@ -666,7 +576,7 @@ class FileManager:
 
             for item in self.data['fileAndFolders']:
 
-                if not ACLManager.isPathInsideHome(self.data['path'] + '/' + item, self.homePath):
+                if self.notInside(self.data['path'] + '/' + item, self.homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 trashPath = '%s/.trash' % (self.homePath)
@@ -677,10 +587,6 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 tItem.delete()
-
-            ## Update disk usage in background
-            command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-            ProcessUtilities.popenExecutioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -700,12 +606,12 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if not ACLManager.isPathInsideHome(self.data['newPath'], homePath):
+                if self.notInside(self.data['newPath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if len(self.data['fileAndFolders']) == 1:
 
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + self.data['fileAndFolders'][0], homePath):
+                    if self.notInside(self.data['basePath'] + '/' + self.data['fileAndFolders'][0], homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'yes| cp -Rf %s %s' % (
@@ -713,11 +619,6 @@ class FileManager:
                         self.returnPathEnclosed(self.data['newPath']))
                     ProcessUtilities.executioner(command, website.externalApp)
                     self.changeOwner(self.data['newPath'])
-
-                    ## Update disk usage in background
-                    command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                    ProcessUtilities.popenExecutioner(command)
-
                     json_data = json.dumps(finalData)
                     return HttpResponse(json_data)
 
@@ -725,7 +626,7 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 for item in self.data['fileAndFolders']:
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + item, homePath):
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(
@@ -733,21 +634,17 @@ class FileManager:
                     ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.data['newPath'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
             except:
 
 
                 homePath = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['newPath'], homePath):
+                if self.notInside(self.data['newPath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if len(self.data['fileAndFolders']) == 1:
 
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + self.data['fileAndFolders'][0], homePath):
+                    if self.notInside(self.data['basePath'] + '/' + self.data['fileAndFolders'][0], homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'yes| cp -Rf %s %s' % (
@@ -755,11 +652,6 @@ class FileManager:
                         self.returnPathEnclosed(self.data['newPath']))
                     ProcessUtilities.executioner(command,)
                     self.changeOwner(self.data['newPath'])
-
-                    ## Update disk usage in background
-                    command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                    ProcessUtilities.popenExecutioner(command)
-
                     json_data = json.dumps(finalData)
                     return HttpResponse(json_data)
 
@@ -767,7 +659,7 @@ class FileManager:
                 ProcessUtilities.executioner(command)
 
                 for item in self.data['fileAndFolders']:
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + item, homePath):
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(
@@ -775,10 +667,6 @@ class FileManager:
                     ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['newPath'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -802,20 +690,16 @@ class FileManager:
 
                 for item in self.data['fileAndFolders']:
 
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + item, homePath):
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                    if not ACLManager.isPathInsideHome(self.data['newPath'] + '/' + item, homePath):
+                    if self.notInside(self.data['newPath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'mv ' + self.returnPathEnclosed(
                         self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(
                         self.data['newPath'] + '/' + item)
                     ProcessUtilities.executioner(command, website.externalApp)
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
 
                 #self.changeOwner(self.data['newPath'])
 
@@ -830,10 +714,10 @@ class FileManager:
 
                 for item in self.data['fileAndFolders']:
 
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + item, homePath):
+                    if self.notInside(self.data['basePath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                    if not ACLManager.isPathInsideHome(self.data['newPath'] + '/' + item, homePath):
+                    if self.notInside(self.data['newPath'] + '/' + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = 'mv ' + self.returnPathEnclosed(
@@ -842,10 +726,6 @@ class FileManager:
                     ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['newPath'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
 
 
             json_data = json.dumps(finalData)
@@ -865,10 +745,10 @@ class FileManager:
 
                 homePath = '/home/%s' % (domainName)
 
-                if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + self.data['existingName'], homePath):
+                if self.notInside(self.data['basePath'] + '/' + self.data['existingName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + self.data['newFileName'], homePath):
+                if '..' in str(self.data['newFileName']) or self.notInside(self.data['basePath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'mv ' + self.returnPathEnclosed(
@@ -880,10 +760,10 @@ class FileManager:
             except:
                 homePath = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + self.data['existingName'], homePath):
+                if self.notInside(self.data['basePath'] + '/' + self.data['existingName'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if not ACLManager.isPathInsideHome(self.data['basePath'] + '/' + self.data['newFileName'], homePath):
+                if '..' in str(self.data['newFileName']) or self.notInside(self.data['basePath'], homePath):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'mv ' + self.returnPathEnclosed(
@@ -904,29 +784,40 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
-            domainName = self.data['domainName']
-            try:
-                website = Websites.objects.get(domain=domainName)
-
-                pathCheck = '/home/%s' % (domainName)
-
-                if not ACLManager.isPathInsideHome(self.data['fileName'], pathCheck):
+            domainName = self.data.get('domainName', '')
+            if domainName:
+                try:
+                    website = Websites.objects.get(domain=domainName)
+                except Websites.DoesNotExist:
                     return self.ajaxPre(0, 'Not allowed.')
-
-                # Ensure proper UTF-8 handling for file reading
-                # Use explicit UTF-8 locale for the cat command
-                command = 'LANG=C.UTF-8 LC_ALL=C.UTF-8 cat ' + self.returnPathEnclosed(self.data['fileName'])
-                finalData['fileContents'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
-            except:
+                pathCheck = '/home/%s' % (domainName)
+            else:
                 pathCheck = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['fileName'], pathCheck):
-                    return self.ajaxPre(0, 'Not allowed.')
-
-                # Ensure proper UTF-8 handling for file reading
-                # Use explicit UTF-8 locale for the cat command
-                command = 'LANG=C.UTF-8 LC_ALL=C.UTF-8 cat ' + self.returnPathEnclosed(self.data['fileName'])
-                finalData['fileContents'] = ProcessUtilities.outputExecutioner(command)
+            pythonPath = '/usr/local/CyberCP/bin/python'
+            if not os.path.exists(pythonPath):
+                pythonPath = sys.executable
+            readScript = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'plogical',
+                'safeFileRead.py',
+            )
+            command = '%s %s --allowed-root %s --file %s' % (
+                shlex.quote(pythonPath),
+                shlex.quote(readScript),
+                shlex.quote(pathCheck),
+                shlex.quote(self.data['fileName']),
+            )
+            websiteUser = website.externalApp if domainName else None
+            readStatus, fileContents = ProcessUtilities.outputExecutioner(
+                command,
+                websiteUser,
+                shell=False,
+                retRequired=True,
+            )
+            if readStatus != 1:
+                return self.ajaxPre(0, 'Not allowed.')
+            finalData['fileContents'] = fileContents
 
 
             # Ensure proper UTF-8 encoding in JSON response
@@ -944,14 +835,14 @@ class FileManager:
             try:
                 self.data['home'] = '/home/%s' % (self.data['domainName'])
 
-                if not self.pathInside(self.data['fileName'], self.data['home']):
-                    return self.ajaxPre(0, 'Not allowed.')
-
                 ACLManager.CreateSecureDir()
                 tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
 
                 domainName = self.data['domainName']
                 website = Websites.objects.get(domain=domainName)
+
+                if not self.pathInside(self.data['fileName'], self.data['home']):
+                    return self.ajaxPre(0, 'Not allowed.')
 
                 writeToFile = open(tempPath, 'wb')
                 writeToFile.write(self.data['fileContent'].encode('utf-8'))
@@ -1027,11 +918,10 @@ class FileManager:
                 if result.find('->') > -1:
                     return self.ajaxPre(0, "Symlink attack.")
 
-                uploadPathFull = self.data['completePath'] + '/' + myfile.name
-                if not ACLManager.isFilePathSafeForShell(uploadPathFull):
+                if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if not ACLManager.isPathInsideHome(uploadPathFull, pathCheck):
+                if self.notInside(self.data['completePath'] + '/' + myfile.name, pathCheck):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'cp ' + self.returnPathEnclosed(
@@ -1040,11 +930,6 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.data['completePath'] + '/' + myfile.name)
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
-
                 try:
                     os.remove(UploadPath + RanddomFileName)
                 except:
@@ -1054,11 +939,10 @@ class FileManager:
                 command = 'ls -la %s' % (self.returnPathEnclosed(self.data['completePath']))
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.writeToFile("upload file res %s" % result)
-                uploadPathFull = self.data['completePath'] + '/' + myfile.name
-                if not ACLManager.isFilePathSafeForShell(uploadPathFull):
+                if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if not ACLManager.isPathInsideHome(uploadPathFull, pathCheck):
+                if self.notInside(self.data['completePath'] + '/' + myfile.name, pathCheck):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 command = 'cp ' + self.returnPathEnclosed(
@@ -1067,11 +951,6 @@ class FileManager:
                 ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['completePath'] + '/' + myfile.name)
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
-
                 try:
                     os.remove(UploadPath + RanddomFileName)
                 except:
@@ -1095,70 +974,49 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
-            domainName = self.data['domainName']
-
-            try:
-
-                website = Websites.objects.get(domain=domainName)
-
+            domainName = self.data.get('domainName', '')
+            websiteUser = None
+            if domainName:
+                try:
+                    website = Websites.objects.get(domain=domainName)
+                except Websites.DoesNotExist:
+                    return self.ajaxPre(0, 'Not allowed.')
                 homePath = '/home/%s' % (domainName)
-
-                if not ACLManager.isPathInsideHome(self.data['extractionLocation'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-                if not ACLManager.isPathInsideHome(self.data['fileToExtract'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-                if self.data['extractionType'] == 'zip':
-                    command = 'unzip -o ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
-                elif self.data['extractionType'] == '7z':
-                    command = '7z x ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -o' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
-                elif self.data['extractionType'] == 'rar':
-                    # Try unrar first (free), fallback to 7z if unrar not available
-                    command = 'unrar x ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' ' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
-                else:
-                    command = 'tar -xf ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
-
-                ProcessUtilities.executioner(command, website.externalApp)
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
-
-                #self.fixPermissions(domainName)
-            except:
-
+                websiteUser = website.externalApp
+            else:
                 homePath = '/'
 
-                if not ACLManager.isPathInsideHome(self.data['extractionLocation'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+            if self.notInside(self.data['extractionLocation'], homePath):
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+            if self.notInside(self.data['fileToExtract'], homePath):
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if not ACLManager.isPathInsideHome(self.data['fileToExtract'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+            extractionType = self.data['extractionType']
+            if extractionType not in ('zip', 'tar', 'tar.gz', 'tgz'):
+                return self.ajaxPre(0, 'Unsupported archive type.')
 
-                if self.data['extractionType'] == 'zip':
-                    command = 'unzip -o ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
-                elif self.data['extractionType'] == '7z':
-                    command = '7z x ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -o' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
-                elif self.data['extractionType'] == 'rar':
-                    # Try unrar first (free), fallback to 7z if unrar not available
-                    command = 'unrar x ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' ' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
-                else:
-                    command = 'tar -xf ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
-
-                ProcessUtilities.executioner(command)
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
+            pythonPath = '/usr/local/CyberCP/bin/python'
+            if not os.path.exists(pythonPath):
+                pythonPath = sys.executable
+            extractionScript = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'plogical',
+                'safeArchiveExtraction.py',
+            )
+            command = '%s %s --allowed-root %s --archive %s --destination %s --type %s' % (
+                shlex.quote(pythonPath),
+                shlex.quote(extractionScript),
+                shlex.quote(homePath),
+                shlex.quote(self.data['fileToExtract']),
+                shlex.quote(self.data['extractionLocation']),
+                shlex.quote(extractionType),
+            )
+            if getpass.getuser() == 'root':
+                result = ProcessUtilities.normalExecutioner(command, User=websiteUser)
+            else:
+                result = ProcessUtilities.executioner(command, websiteUser)
+            if result != 1:
+                return self.ajaxPre(0, 'Archive extraction was rejected or failed.')
 
 
             json_data = json.dumps(finalData)
@@ -1180,15 +1038,6 @@ class FileManager:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.zip')
                     command = 'zip -r ' + compressedFileName + ' '
-                elif self.data['compressionType'] == '7z':
-                    compressedFileName = self.returnPathEnclosed(
-                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.7z')
-                    command = '7z a -t7z ' + compressedFileName + ' '
-                elif self.data['compressionType'] == 'rar':
-                    compressedFileName = self.returnPathEnclosed(
-                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.rar')
-                    # Use 7z to create RAR format (7z can create RAR archives)
-                    command = '7z a -trar ' + compressedFileName + ' '
                 else:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')
@@ -1198,7 +1047,7 @@ class FileManager:
 
                 for item in self.data['listOfFiles']:
 
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + item, homePath):
+                    if self.notInside(self.data['basePath'] + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     command = '%s%s ' % (command, self.returnPathEnclosed(item))
@@ -1208,24 +1057,11 @@ class FileManager:
                 ProcessUtilities.executioner(finalCommand, website.externalApp)
 
                 self.changeOwner(self.data['compressedFileName'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
             except:
                 if self.data['compressionType'] == 'zip':
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.zip')
                     command = 'zip -r ' + compressedFileName + ' '
-                elif self.data['compressionType'] == '7z':
-                    compressedFileName = self.returnPathEnclosed(
-                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.7z')
-                    command = '7z a -t7z ' + compressedFileName + ' '
-                elif self.data['compressionType'] == 'rar':
-                    compressedFileName = self.returnPathEnclosed(
-                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.rar')
-                    # Use 7z to create RAR format (7z can create RAR archives)
-                    command = '7z a -trar ' + compressedFileName + ' '
                 else:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')
@@ -1235,7 +1071,7 @@ class FileManager:
 
                 for item in self.data['listOfFiles']:
 
-                    if not ACLManager.isPathInsideHome(self.data['basePath'] + item, homePath):
+                    if self.notInside(self.data['basePath'] + item, homePath):
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
                     command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
@@ -1245,10 +1081,6 @@ class FileManager:
                 logging.writeToFile("compress file res %s"%res)
 
                 self.changeOwner(self.data['compressedFileName'])
-
-                ## Update disk usage in background
-                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
-                ProcessUtilities.popenExecutioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -1294,7 +1126,10 @@ class FileManager:
 
         ### symlink checks
 
-        command = 'ls -la /home/%s' % domainName
+        homePath = '/home/%s' % domainName
+        publicHtmlPath = '%s/public_html' % homePath
+
+        command = 'ls -la %s' % self.returnPathEnclosed(homePath)
         result = ProcessUtilities.outputExecutioner(command)
 
         if result.find('->') > -1:
@@ -1304,12 +1139,12 @@ class FileManager:
             return HttpResponse(final_json)
 
         # Set home directory ownership
-        command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.returnPathEnclosed(homePath))
         ProcessUtilities.executioner(command)
 
         ### Sym link checks
 
-        command = 'ls -la /home/%s/public_html/' % domainName
+        command = 'ls -la %s' % self.returnPathEnclosed(publicHtmlPath)
         result = ProcessUtilities.outputExecutioner(command)
 
         if result.find('->') > -1:
@@ -1319,25 +1154,28 @@ class FileManager:
             return HttpResponse(final_json)
 
         # Set file permissions first (before ownership to avoid conflicts)
-        command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
+        command = "find %s -type d -exec chmod 0755 {} \;" % self.returnPathEnclosed(publicHtmlPath)
         ProcessUtilities.executioner(command)
 
-        command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
+        command = "find %s -type f -exec chmod 0644 {} \;" % self.returnPathEnclosed(publicHtmlPath)
         ProcessUtilities.executioner(command)
 
         # Set ownership for all files inside public_html to user:user.
         # Recurse the directory itself instead of a "path/*" shell glob: commands that
         # run as root go through subprocess with shell=False (shlex.split), so the glob
         # was handed to chown literally, matched nothing, and left restored files owned
-        # by root/the source UID - the cause of WordPress asking for FTP credentials
+        # by root/the source UID — the cause of WordPress asking for FTP credentials
         # after a restore (#1735). -R also covers dotfiles, so the separate hidden-file
         # pass is no longer needed; the directory's own group is reset to nogroup below.
-        command = 'chown -R -P %s:%s /home/%s/public_html' % (externalApp, externalApp, domainName)
+        command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, self.returnPathEnclosed(publicHtmlPath))
         ProcessUtilities.executioner(command)
 
         # Process child domains first
         for childs in website.childdomains_set.all():
-            command = 'ls -la %s' % childs.path
+            childPath = childs.path
+            childPathArg = self.returnPathEnclosed(childPath)
+
+            command = 'ls -la %s' % childPathArg
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('->') > -1:
@@ -1347,29 +1185,29 @@ class FileManager:
                 return HttpResponse(final_json)
 
             # Set file permissions first
-            command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
+            command = "find %s -type d -exec chmod 0755 {} \;" % childPathArg
             ProcessUtilities.executioner(command)
 
-            command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
+            command = "find %s -type f -exec chmod 0644 {} \;" % childPathArg
             ProcessUtilities.executioner(command)
 
             # Set ownership for all files inside the child domain to user:user.
-            # Recurse the directory itself (no "path/*" glob) - see #1735 above: the glob
+            # Recurse the directory itself (no "path/*" glob) — see #1735 above: the glob
             # is passed literally under shell=False and never matches. The child domain
             # directory's own group is reset to nogroup below.
-            command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, childs.path)
+            command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, childPathArg)
             ProcessUtilities.executioner(command)
 
             # Set child domain directory itself to 755 with user:nogroup
-            command = 'chmod 755 %s' % (childs.path)
+            command = 'chmod 755 %s' % childPathArg
             ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (externalApp, groupName, childs.path)
+            command = 'chown %s:%s %s' % (externalApp, groupName, childPathArg)
             ProcessUtilities.executioner(command)
 
         # Set public_html directory itself to user:nogroup with 750 permissions (done at the end)
-        command = 'chown %s:%s /home/%s/public_html' % (externalApp, groupName, domainName)
+        command = 'chown %s:%s %s' % (externalApp, groupName, self.returnPathEnclosed(publicHtmlPath))
         ProcessUtilities.executioner(command)
 
-        command = 'chmod 750 /home/%s/public_html' % (domainName)
+        command = 'chmod 750 %s' % self.returnPathEnclosed(publicHtmlPath)
         ProcessUtilities.executioner(command)

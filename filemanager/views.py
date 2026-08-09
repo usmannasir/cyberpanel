@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
+import shlex
+import sys
+import threading
 from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
@@ -9,6 +12,8 @@ import json
 from websiteFunctions.models import Websites
 from plogical.acl import ACLManager
 from .filemanager import FileManager as FM
+from plogical.securityUtils import FILE_DOWNLOAD_DIRECTORY, is_private_token_path
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 def loadFileManagerHome(request,domain):
@@ -356,9 +361,41 @@ def downloadFile(request):
         except OSError as e:
             return HttpResponse("Unauthorized access: Cannot verify file path.")
 
+        pythonPath = '/usr/local/CyberCP/bin/python'
+        if not os.path.exists(pythonPath):
+            pythonPath = sys.executable
+        stagingScript = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'plogical',
+            'stageFileDownload.py',
+        )
+        command = '%s %s --allowed-root %s --file %s' % (
+            shlex.quote(pythonPath),
+            shlex.quote(stagingScript),
+            shlex.quote(homePath),
+            shlex.quote(fileToDownload),
+        )
+        stageStatus, stagedFile = ProcessUtilities.outputExecutioner(
+            command,
+            retRequired=True,
+        )
+        stagedFile = stagedFile.strip()
+        if stageStatus != 1 or not is_private_token_path(stagedFile, FILE_DOWNLOAD_DIRECTORY):
+            return HttpResponse("Unauthorized access: Unable to stage file securely.")
+
+        def removeStagedFile():
+            try:
+                os.remove(stagedFile)
+            except OSError:
+                pass
+
+        cleanupTimer = threading.Timer(300, removeStagedFile)
+        cleanupTimer.daemon = True
+        cleanupTimer.start()
+
         response = HttpResponse(content_type='application/force-download')
         response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
-        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
+        response['X-LiteSpeed-Location'] = stagedFile
 
         return response
 
