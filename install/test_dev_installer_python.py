@@ -1,5 +1,7 @@
 import pathlib
+import shutil
 import subprocess
+import tempfile
 import unittest
 
 from install import install_utils
@@ -51,6 +53,42 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
         self.assertIn('\n        Upgrade.upgradeVersion()\n', upgrader)
         self.assertNotIn('# Upgrade.upgradeVersion()', upgrader)
+
+    def test_upgrade_stages_runtime_version_module_with_upgrader(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrade_script = (root / 'cyberpanel_upgrade.sh').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn(
+            'Download_Upgrade_Source "plogical/upgrade.py" "upgrade.py"',
+            upgrade_script,
+        )
+        self.assertIn(
+            'Download_Upgrade_Source "cyberpanel_version.py" '
+            '"cyberpanel_version.py"',
+            upgrade_script,
+        )
+
+        with tempfile.TemporaryDirectory() as stage_dir:
+            stage = pathlib.Path(stage_dir)
+            shutil.copy2(root / 'plogical/upgrade.py', stage / 'upgrade.py')
+            shutil.copy2(
+                root / 'cyberpanel_version.py',
+                stage / 'cyberpanel_version.py',
+            )
+            result = subprocess.run(
+                [
+                    'python3',
+                    '-c',
+                    'from cyberpanel_version import BUILD, VERSION; '
+                    'print(f"{VERSION}.{BUILD}")',
+                ],
+                cwd=stage,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual('3.0.0', result.stdout.strip())
 
     def test_repair_script_does_not_download_old_release_requirements(self):
         root = pathlib.Path(__file__).parents[1]
