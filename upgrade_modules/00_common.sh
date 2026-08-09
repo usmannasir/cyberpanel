@@ -139,8 +139,10 @@ CyberCP_Detect_Lswsgi_Python() {
 }
 
 # lscpd reads /usr/local/lscp/conf/pythonenv.conf for lswsgi (PYTHONHOME=/usr).
+# On Ubuntu 24+, prefer CyberCP venv site-packages in PYTHONPATH when present
+# (parity with upstream Configure_LSCPD_Python_Environment / 4a77f1dfe).
 CyberCP_Write_Lscp_Pythonenv_Conf() {
-  local py_cmd site_py maj min
+  local py_cmd site_py maj min runtime_root runtime_site
   mkdir -p /usr/local/lscp/conf
   CyberCP_Detect_Lswsgi_Python
   py_cmd="${CYBERCP_LSWGI_PYTHON:-/usr/bin/python3.11}"
@@ -148,6 +150,19 @@ CyberCP_Write_Lscp_Pythonenv_Conf() {
   maj=$("$py_cmd" -c 'import sys; print(sys.version_info[0])' 2>/dev/null || echo 3)
   min=$("$py_cmd" -c 'import sys; print(sys.version_info[1])' 2>/dev/null || echo 11)
   site_py="/usr/local/lib/python${maj}.${min}/site-packages"
+  runtime_root="${CYBERCP_RUNTIME_ROOT:-/usr/local/CyberCP}"
+  runtime_site=""
+  if [[ -x "$runtime_root/bin/python" ]]; then
+    runtime_site="$("$runtime_root/bin/python" -c 'import site; print(site.getsitepackages()[0])' 2>/dev/null || true)"
+  fi
+  if [[ -n "$runtime_site" && -d "$runtime_site" && "$runtime_site" == "$runtime_root"/lib/python*/site-packages ]]; then
+    cat > /usr/local/lscp/conf/pythonenv.conf <<EOF
+PYTHONHOME=/usr
+PYTHONPATH=.:${runtime_root}:${runtime_site}
+EOF
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Wrote pythonenv.conf with CyberCP venv site-packages (${runtime_site})" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    return 0
+  fi
   cat > /usr/local/lscp/conf/pythonenv.conf <<EOF
 PYTHONHOME=/usr
 PYTHONPATH=${site_py}:/usr/local/CyberCP

@@ -11,6 +11,8 @@ import requests
 import subprocess
 import shlex
 import os
+import ipaddress
+import tempfile
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
@@ -27,6 +29,7 @@ from packages.models import Package
 from django.views.decorators.http import require_GET, require_POST
 import pwd
 import re
+from plogical.securityUtils import is_safe_hostname, is_safe_system_user
 
 # Create your views here.
 
@@ -704,6 +707,7 @@ def buildServices(request):
     return proc.render()
 
 
+@require_POST
 def runonboarding(request):
     try:
         userID = request.session['userID']
@@ -716,19 +720,37 @@ def runonboarding(request):
 
         data = json.loads(request.body)
         hostname = data['hostname']
+        if not is_safe_hostname(hostname):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error_message': 'Please provide a valid fully-qualified hostname.',
+            }))
 
         try:
-            rDNSCheck = str(int(data['rDNSCheck']))
+            rDNSCheck = int(data['rDNSCheck'])
         except:
             rDNSCheck = 0
+        if rDNSCheck not in (0, 1):
+            rDNSCheck = 0
 
-        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+        with tempfile.NamedTemporaryFile(
+                mode='w',
+                encoding='utf-8',
+                prefix='onboarding-',
+                dir='/home/cyberpanel',
+                delete=False) as status_file:
+            status_file.write('Starting')
+            tempStatusPath = status_file.name
+        os.chmod(tempStatusPath, 0o600)
 
-        WriteToFile = open(tempStatusPath, 'w')
-        WriteToFile.write('Starting')
-        WriteToFile.close()
-
-        command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py OnBoardingHostName --virtualHostName {hostname} --path {tempStatusPath} --rdns {rDNSCheck}'
+        command = shlex.join([
+            '/usr/local/CyberCP/bin/python',
+            '/usr/local/CyberCP/plogical/virtualHostUtilities.py',
+            'OnBoardingHostName',
+            '--virtualHostName', hostname,
+            '--path', tempStatusPath,
+            '--rdns', str(rDNSCheck),
+        ])
         ProcessUtilities.popenExecutioner(command)
 
         dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1471,7 +1493,6 @@ def analyzeSSHSecurity(request):
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
-@csrf_exempt
 @require_POST
 def blockIPAddress(request):
     """
@@ -1677,8 +1698,6 @@ def blockIPAddress(request):
 @csrf_exempt
 @require_POST
 def getSSHUserActivity(request):
-    import json, os
-    from plogical.processUtilities import ProcessUtilities
     try:
         user_id = request.session.get('userID')
         if not user_id:
@@ -1692,6 +1711,12 @@ def getSSHUserActivity(request):
         login_ip = data.get('ip', '')
         if not user:
             return HttpResponse(json.dumps({'error': 'Missing user'}), content_type='application/json', status=400)
+        if not is_safe_system_user(user):
+            return HttpResponse(json.dumps({'error': 'Invalid user'}), content_type='application/json', status=400)
+        try:
+            pwd.getpwnam(user)
+        except KeyError:
+            return HttpResponse(json.dumps({'error': 'Unknown user'}), content_type='application/json', status=400)
         # Get 'w' output first (fastest, most important for session status)
         w_lines = []
         try:

@@ -1673,6 +1673,9 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         }
         console.log('Fetching SSH activity for user:', login.user, 'IP:', login.ip, 'TTY:', tty);
         $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty, ip: login.ip || '' }, {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
             timeout: 30000
         }).then(function(response) {
             console.log('SSH Activity response received:', response);
