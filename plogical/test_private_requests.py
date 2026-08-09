@@ -8,8 +8,10 @@ import unittest
 
 from plogical.securityUtils import (
     consume_backup_request,
+    consume_terminal_request,
     create_backup_request,
     create_private_token_file,
+    create_terminal_request,
     read_private_token_file,
     remove_stale_private_token_files,
 )
@@ -106,6 +108,27 @@ class BackupRequestTests(unittest.TestCase):
             os.chmod(path, 0o600)
 
             self.assertFalse(consume_backup_request(token, "example.com", directory))
+
+
+class TerminalRequestTests(unittest.TestCase):
+    def test_request_is_bound_to_panel_and_system_users_and_consumed_once(self):
+        with tempfile.TemporaryDirectory() as directory:
+            token = create_terminal_request("7", "exampleuser", directory)
+
+            self.assertFalse(
+                consume_terminal_request(token, "8", "exampleuser", directory)
+            )
+            self.assertFalse(
+                consume_terminal_request(token, "7", "exampleuser", directory)
+            )
+
+            token = create_terminal_request("7", "exampleuser", directory)
+            self.assertTrue(
+                consume_terminal_request(token, "7", "exampleuser", directory)
+            )
+            self.assertFalse(
+                consume_terminal_request(token, "7", "exampleuser", directory)
+            )
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ import logging
 from plogical.securityUtils import (
     TERMINAL_JWT_AUDIENCE,
     TERMINAL_JWT_ISSUER,
+    consume_terminal_request,
     get_terminal_jwt_secret,
 )
 
@@ -191,6 +192,15 @@ def decode_terminal_token(token):
         raise JWTError("Invalid Web Terminal token timestamps") from error
     if expires_at <= issued_at or expires_at - issued_at > MAX_TOKEN_LIFETIME_SECONDS:
         raise JWTError("Invalid Web Terminal token lifetime")
+
+    request_token = payload.get("jti")
+    panel_user_id = payload.get("sub")
+    ssh_user = payload.get("ssh_user")
+    if not consume_terminal_request(
+            request_token,
+            panel_user_id,
+            ssh_user):
+        raise JWTError("Invalid or expired Web Terminal request")
 
     return payload
 
