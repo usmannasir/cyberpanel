@@ -1749,6 +1749,20 @@ class FirewallManager:
 
         if os.path.exists(FirewallManager.imunifyAVPath):
             data['imunify'] = 1
+            try:
+                from plogical.imunify_integration import (
+                    integration_conf_needs_repair,
+                    repair_integration_conf,
+                    ensure_clscripts_executable,
+                    chmod_imunify_execute_files,
+                    IMUNIFY_AV_UI,
+                )
+                ensure_clscripts_executable()
+                if integration_conf_needs_repair():
+                    repair_integration_conf()
+                chmod_imunify_execute_files(IMUNIFY_AV_UI)
+            except BaseException:
+                pass
         else:
             data['imunify'] = 0
 

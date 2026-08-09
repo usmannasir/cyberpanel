@@ -404,8 +404,14 @@ def securityruleUpdate(request):
 
 def switchTOLSWSStatus(request):
     try:
+        status_path = serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
 
-        command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        if not os.path.exists(status_path):
+            data_ret = {'status': 1, 'abort': 0, 'requestStatus': '', 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        command = 'cat ' + status_path
         output = ProcessUtilities.outputExecutioner(command)
 
         if output.find('[404]') > -1:

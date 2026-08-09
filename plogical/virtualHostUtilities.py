@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import time
+import re
 
 import django
 
@@ -30,7 +31,6 @@ from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
-from plogical.domainAliasUtilities import remove_alias_from_map_line
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
@@ -85,10 +85,6 @@ class virtualHostUtilities:
         except:
             config = {}
 
-        # Self-hosted Contabo-style installs: default SPF to machine IP (not CyberPersons include).
-        if not config.get('deploymentType'):
-            config['deploymentType'] = 'selfhosted'
-
         ### probably need to add temporary dns resolver nameserver here - pending
 
         try:
@@ -141,8 +137,14 @@ class virtualHostUtilities:
         else:
             try:
                 rDNS = mailUtilities.reverse_dns_lookup(serverIP)
+                # Check if rDNS lookup returned empty results (indicating lookup failure)
+                if not rDNS or len(rDNS) == 0:
+                    message = f'Failed to perform reverse DNS lookup for server IP {serverIP}. The DNS lookup service may be unavailable or the IP address may not have rDNS configured. Please verify your rDNS settings with your hosting provider or check the "Skip rDNS/PTR Check" option if you do not need email services. [404]'
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+                    return 0
             except Exception as e:
-                message = f'Failed to perform reverse DNS lookup: {str(e)} [404]'
+                message = f'Failed to perform reverse DNS lookup for server IP {serverIP}: {str(e)}. Please verify your rDNS settings with your hosting provider or check the "Skip rDNS/PTR Check" option if you do not need email services. [404]'
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
                 return 0
@@ -250,12 +252,6 @@ class virtualHostUtilities:
                 config['skipRDNSCheck'] = skipRDNSCheck
                 admin.config = json.dumps(config)
                 admin.save()
-                try:
-                    from plogical.dnsUtilities import DNS as _DNS
-                    _DNS.RepairSpfRecords(Domain)
-                except Exception as _spf_e:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'OnBoardingHostName RepairSpfRecords: %s' % str(_spf_e))
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
 
@@ -352,9 +348,22 @@ class virtualHostUtilities:
 
             #first check if hostname is already configured as rDNS, if not return error
 
+            # Validate that we have rDNS results before checking
+            if not rDNS or len(rDNS) == 0:
+                message = f'Reverse DNS lookup failed for server IP {serverIP}. Unable to verify if domain "{Domain}" is configured as rDNS. Please check your rDNS configuration with your hosting provider or select "Skip rDNS/PTR Check" if you do not need email services. [404]'
+                print(message)
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+                logging.CyberCPLogFileWriter.writeToFile(message)
+                config['hostname'] = Domain
+                config['onboarding'] = 3
+                config['skipRDNSCheck'] = skipRDNSCheck
+                admin.config = json.dumps(config)
+                admin.save()
+                return 0
 
             if Domain not in rDNS:
-                message = 'Domain that you have provided is not configured as rDNS for your server IP. [404]'
+                rDNS_list_str = ', '.join(rDNS) if rDNS else 'none'
+                message = f'Domain "{Domain}" that you have provided is not configured as rDNS for your server IP {serverIP}. Current rDNS records: {rDNS_list_str}. Please configure rDNS (PTR record) for your IP address to point to "{Domain}" with your hosting provider, or select "Skip rDNS/PTR Check" if you do not need email services. [404]'
                 print(message)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
@@ -454,12 +463,6 @@ class virtualHostUtilities:
                     config['skipRDNSCheck'] = skipRDNSCheck
                     admin.config = json.dumps(config)
                     admin.save()
-                    try:
-                        from plogical.dnsUtilities import DNS as _DNS
-                        _DNS.RepairSpfRecords(Domain)
-                    except Exception as _spf_e:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            'OnBoardingHostName RepairSpfRecords: %s' % str(_spf_e))
                     # First update the postfix hash database, then restart services
                     command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && doveadm reload'
                     ProcessUtilities.executioner(command, 'root', True)
@@ -472,31 +475,7 @@ class virtualHostUtilities:
                 config['skipRDNSCheck'] = skipRDNSCheck
                 admin.config = json.dumps(config)
                 admin.save()
-                try:
-                    from plogical.dnsUtilities import DNS as _DNS
-                    _DNS.RepairSpfRecords(Domain)
-                except Exception as _spf_e:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'OnBoardingHostName RepairSpfRecords: %s' % str(_spf_e))
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname setup completed (without email configuration). [200]')
-
-    @staticmethod
-    def getDovecotSNIBlock(domains, dovecotContent):
-        if 'dovecot_config_version = 2.4.0' in dovecotContent:
-            certSetting = 'ssl_server_cert_file'
-            keySetting = 'ssl_server_key_file'
-        else:
-            certSetting = 'ssl_cert'
-            keySetting = 'ssl_key'
-
-        blocks = []
-        for domain in domains:
-            blocks.append("""local_name %s {
-        %s = </etc/letsencrypt/live/%s/fullchain.pem
-        %s = </etc/letsencrypt/live/%s/privkey.pem
-}""" % (domain, certSetting, domain, keySetting, domain))
-
-        return '\n' + '\n'.join(blocks) + '\n'
 
     @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
@@ -526,8 +505,15 @@ class virtualHostUtilities:
                 dovecotContent = open(dovecotPath, 'r').read()
 
                 if dovecotContent.find('/live/%s/' % (childDomain)) == -1:
-                    content = virtualHostUtilities.getDovecotSNIBlock(
-                        [childDomain, virtualHostName], dovecotContent)
+                    content = """\nlocal_name %s {
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}
+local_name %s {
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}
+\n""" % (childDomain, childDomain, childDomain, virtualHostName, virtualHostName, virtualHostName)
 
                     writeToFile = open(dovecotPath, 'a')
                     writeToFile.write(content)
@@ -582,8 +568,12 @@ class virtualHostUtilities:
             dovecotContent = open(dovecotPath, 'r').read()
 
             if dovecotContent.find('/live/%s/' % (virtualHostName)) == -1:
-                content = virtualHostUtilities.getDovecotSNIBlock(
-                    [virtualHostName], dovecotContent)
+                content = """
+local_name %s {
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}
+""" % (virtualHostName, virtualHostName, virtualHostName)
 
                 writeToFile = open(dovecotPath, 'a')
                 writeToFile.write(content)
@@ -698,14 +688,6 @@ class virtualHostUtilities:
 
                 ####### Limitations Check End
 
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
-
-                ##### Zone creation
-
-                DNS.dnsTemplate(virtualHostName, admin)
-
-                ## Zone creation
-
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
 
                 if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
@@ -717,12 +699,46 @@ class virtualHostUtilities:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                     return 0, "This domain exists as Alias."
 
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
+
+                ##### Zone creation
+
+                DNS.dnsTemplate(virtualHostName, admin)
+
+                ## Zone creation
+
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
+
             postfixPath = '/home/cyberpanel/postfix'
 
             if os.path.exists(postfixPath):
-                retValues = mailUtilities.setupDKIM(virtualHostName)
-                if retValues[0] == 0:
-                    raise BaseException(retValues[1])
+                # Verify postfix is actually installed before attempting DKIM
+                if (os.path.exists('/etc/postfix/main.cf') and 
+                    (os.path.exists('/usr/sbin/postfix') or os.path.exists('/usr/bin/postfix'))):
+                    try:
+                        retValues = mailUtilities.setupDKIM(virtualHostName)
+                        if retValues[0] == 0:
+                            # Log warning but don't fail website creation
+                            logging.CyberCPLogFileWriter.statusWriter(
+                                tempStatusPath,
+                                'Warning: DKIM setup failed, continuing without mail...'
+                            )
+                    except Exception as e:
+                        # Log error but don't fail website creation
+                        logging.CyberCPLogFileWriter.statusWriter(
+                            tempStatusPath,
+                            f'Warning: DKIM error: {str(e)}, continuing without mail...'
+                        )
+                else:
+                    # Postfix marker exists but postfix not installed - clean up marker
+                    logging.CyberCPLogFileWriter.statusWriter(
+                        tempStatusPath,
+                        'Removing stale postfix marker file...'
+                    )
+                    try:
+                        os.remove(postfixPath)
+                    except:
+                        pass
 
             # Get package to retrieve resource limits
             selectedPackage = Package.objects.get(packageName=packageName)
@@ -885,6 +901,12 @@ class virtualHostUtilities:
                 print("0," + parsed_error)
                 return 0, parsed_error
 
+            # Update vhost SSL configuration with new certificate paths
+            virtualHostUtilities.updateVhostSSLConfig(virtualHost)
+            
+            # Update mail SSL configuration for this domain
+            virtualHostUtilities.updateMailSSLConfig(virtualHost)
+
             installUtilities.installUtilities.reStartLiteSpeed()
 
             command = 'systemctl restart postfix'
@@ -980,8 +1002,50 @@ class virtualHostUtilities:
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            numberOfTotalLines = int(
-                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
+            # Improved wc -l parsing with better error handling
+            wc_output = ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp)
+            
+            # Handle different wc output formats and potential errors
+            if wc_output and wc_output.strip():
+                # Split by whitespace and take the first part that looks like a number
+                wc_parts = wc_output.strip().split()
+                numberOfTotalLines = 0
+                
+                for part in wc_parts:
+                    try:
+                        numberOfTotalLines = int(part)
+                        break
+                    except ValueError:
+                        continue
+                
+                # If no valid number found, try to extract from common wc error formats
+                if numberOfTotalLines == 0:
+                    # Handle cases like "wc: filename: No such file or directory"
+                    if "No such file or directory" in wc_output:
+                        print("1,None")
+                        return "1,None"
+                    # Handle cases where wc returns just "wc:" or similar
+                    if "wc:" in wc_output:
+                        # Try to get line count using alternative method
+                        try:
+                            alt_output = ProcessUtilities.outputExecutioner('cat %s | wc -l' % (fileName), externalApp)
+                            if alt_output and alt_output.strip():
+                                alt_parts = alt_output.strip().split()
+                                for part in alt_parts:
+                                    try:
+                                        numberOfTotalLines = int(part)
+                                        break
+                                    except ValueError:
+                                        continue
+                        except:
+                            pass
+                
+                if numberOfTotalLines == 0:
+                    print("1,None")
+                    return "1,None"
+            else:
+                print("1,None")
+                return "1,None"
 
             if numberOfTotalLines < 25:
                 data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
@@ -1169,6 +1233,84 @@ class virtualHostUtilities:
             return 0, str(msg)
 
     @staticmethod
+    def updateVhostSSLConfig(virtualHost):
+        """Update vhost SSL configuration with new certificate paths"""
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(f"Updating vhost SSL configuration for {virtualHost}")
+            
+            # Update vhost configuration file
+            vhostConfPath = f'/usr/local/lsws/conf/vhosts/{virtualHost}/vhost.conf'
+            if os.path.exists(vhostConfPath):
+                with open(vhostConfPath, 'r') as f:
+                    content = f.read()
+                
+                # Update SSL certificate paths in vhost configuration
+                new_ssl_config = f"""vhssl {{
+  keyFile                 /etc/letsencrypt/live/{virtualHost}/privkey.pem
+  certFile                /etc/letsencrypt/live/{virtualHost}/fullchain.pem
+  certChain               1
+  sslProtocol             24
+  enableECDHE             1
+  renegProtection         1
+  sslSessionCache         1
+  enableSpdy              15
+  enableStapling           1
+  ocspRespMaxAge           86400
+}}"""
+                
+                # Replace existing vhssl block
+                import re
+                pattern = r'vhssl\s*\{[^}]*\}'
+                if re.search(pattern, content, re.DOTALL):
+                    content = re.sub(pattern, new_ssl_config, content, flags=re.DOTALL)
+                else:
+                    # Add vhssl block if it doesn't exist
+                    content += f"\n{new_ssl_config}\n"
+                
+                with open(vhostConfPath, 'w') as f:
+                    f.write(content)
+                
+                logging.CyberCPLogFileWriter.writeToFile(f"Updated vhost SSL configuration for {virtualHost}")
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error updating vhost SSL config for {virtualHost}: {str(e)}")
+
+    @staticmethod
+    def updateMailSSLConfig(virtualHost):
+        """Update mail SSL configuration with new certificate paths"""
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(f"Updating mail SSL configuration for {virtualHost}")
+            
+            # Update vmail_ssl.map file
+            postfixMapFile = '/etc/postfix/vmail_ssl.map'
+            if os.path.exists(postfixMapFile):
+                with open(postfixMapFile, 'r') as f:
+                    content = f.read()
+                
+                # Remove old entries for this domain
+                lines = content.split('\n')
+                new_lines = []
+                for line in lines:
+                    if not line.startswith(f'{virtualHost} ') and not line.startswith(f'mail.{virtualHost} '):
+                        new_lines.append(line)
+                
+                # Add new entries
+                new_lines.append(f'{virtualHost} /etc/letsencrypt/live/{virtualHost}/privkey.pem /etc/letsencrypt/live/{virtualHost}/fullchain.pem')
+                new_lines.append(f'mail.{virtualHost} /etc/letsencrypt/live/{virtualHost}/privkey.pem /etc/letsencrypt/live/{virtualHost}/fullchain.pem')
+                
+                with open(postfixMapFile, 'w') as f:
+                    f.write('\n'.join(new_lines))
+                
+                # Update postfix map database
+                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
+                ProcessUtilities.executioner(command)
+                
+                logging.CyberCPLogFileWriter.writeToFile(f"Updated mail SSL configuration for {virtualHost}")
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error updating mail SSL config for {virtualHost}: {str(e)}")
+
+    @staticmethod
     def issueSSLForMailServer(virtualHost, path):
         try:
             # Check if email services are installed before proceeding
@@ -1292,11 +1434,12 @@ class virtualHostUtilities:
         try:
 
             admin = Administrator.objects.get(userName=owner)
-            DNS.dnsTemplate(aliasDomain, admin)
 
             if vhost.checkIfAliasExists(aliasDomain) == 1:
                 print("0, This domain already exists as vHost or Alias.")
                 return
+
+            DNS.dnsTemplate(aliasDomain, admin)
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -1338,9 +1481,7 @@ class virtualHostUtilities:
             ## Persist the alias in the DB as soon as its vhost config exists.
             ## Previously the save happened only AFTER SSL issuance, so a failed
             ## SSL attempt returned early and left the alias present in the server
-            ## config but missing from the aliasDomains table — which then made
-            ## both "Issue SSL" and "Delete" for that alias fail with
-            ## "aliasDomains matching query does not exist". #1738
+            ## config but missing from the aliasDomains table (#1738).
             if not aliasDomains.objects.filter(master=website, aliasDomain=aliasDomain).exists():
                 aliasDomains(master=website, aliasDomain=aliasDomain).save()
 
@@ -1350,6 +1491,7 @@ class virtualHostUtilities:
                     print("0," + str(retValues[1]))
                     return
                 if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
                     vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
 
             print("1,None")
@@ -1392,22 +1534,48 @@ class virtualHostUtilities:
 
                 data = open(confPath, 'r').readlines()
                 writeToFile = open(confPath, 'w')
+                aliases = []
 
                 for items in data:
-                    writeToFile.writelines(
-                        remove_alias_from_map_line(items, masterDomain, aliasDomain))
+                    if items.find(masterDomain) > -1 and items.find('map') > -1:
+                        data = [_f for _f in items.split(" ") if _f]
+                        if data[1] == masterDomain:
+                            length = len(data)
+                            for i in range(3, length):
+                                currentAlias = data[i].rstrip(',').strip('\n')
+                                if currentAlias != aliasDomain:
+                                    aliases.append(currentAlias)
+
+                            aliasString = ""
+
+                            for alias in aliases:
+                                aliasString = ", " + alias
+
+                            writeToFile.writelines(
+                                '  map                     ' + masterDomain + " " + masterDomain + aliasString + "\n")
+                            aliases = []
+                            aliasString = ""
+                        else:
+                            writeToFile.writelines(items)
+
+                    else:
+                        writeToFile.writelines(items)
 
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                ## Scope to the master and use filter().delete() so removing an
-                ## orphaned alias (config present, DB row missing) does not raise. #1738
-                aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
+                adminUserName = None
                 try:
-                    DNS.maybeDeleteOrphanDNSZone(aliasDomain)
-                except Exception as zoneError:
+                    adminUserName = Websites.objects.get(domain=masterDomain).admin.userName
+                except:
+                    pass
+                try:
+                    DNS.cleanupHostDNSRecords(aliasDomain, adminUserName)
+                except Exception as cfError:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        'Orphan DNS zone cleanup failed for alias %s: %s' % (aliasDomain, str(zoneError)))
+                        'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
+                ## Scope to the master; filter().delete() is orphan-safe. #1738
+                aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
 
                 print("1,None")
             except BaseException as msg:
@@ -1430,14 +1598,18 @@ class virtualHostUtilities:
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                ## Scope to the master and use filter().delete() so removing an
-                ## orphaned alias (config present, DB row missing) does not raise. #1738
-                aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
+                adminUserName = None
                 try:
-                    DNS.maybeDeleteOrphanDNSZone(aliasDomain)
-                except Exception as zoneError:
+                    adminUserName = Websites.objects.get(domain=masterDomain).admin.userName
+                except:
+                    pass
+                try:
+                    DNS.cleanupHostDNSRecords(aliasDomain, adminUserName)
+                except Exception as cfError:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        'Orphan DNS zone cleanup failed for alias %s: %s' % (aliasDomain, str(zoneError)))
+                        'CloudFlare DNS deletion failed for alias %s: %s' % (aliasDomain, str(cfError)))
+                ## Scope to the master; filter().delete() is orphan-safe. #1738
+                aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=masterDomain).delete()
 
                 print("1,None")
             except BaseException as msg:
@@ -1604,8 +1776,6 @@ class virtualHostUtilities:
             master = Websites.objects.get(domain=masterDomain)
 
             if LimitsCheck:
-                DNS.dnsTemplate(virtualHostName, admin)
-
                 if Websites.objects.filter(domain=virtualHostName).count() > 0:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'This Domain already exists as a website. [404]')
@@ -1658,6 +1828,8 @@ class virtualHostUtilities:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                     #return 0, "This domain exists as Alias."
 
+                DNS.dnsTemplate(virtualHostName, admin)
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
             postFixPath = '/home/cyberpanel/postfix'
@@ -1693,11 +1865,7 @@ class virtualHostUtilities:
                     raise BaseException(retValues[1])
 
             ## Now restart litespeed after initial configurations are done
-
-            if LimitsCheck:
-                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
-                                       ssl=ssl, alais=alias)
-                website.save()
+            ## ChildDomains row is saved only after SSL/Apache succeed (avoids orphan DB rows on failure)
 
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
@@ -1733,7 +1901,7 @@ class virtualHostUtilities:
                     if result[0] == 0:
                         raise BaseException(result[1])
                     else:
-                        ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail)
+                        ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail, path)
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
@@ -1750,13 +1918,28 @@ class virtualHostUtilities:
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
+            if LimitsCheck:
+                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
+                                       ssl=ssl, alais=alias)
+                website.save()
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')
             return 1, "None"
 
         except BaseException as msg:
+            try:
+                if ChildDomains.objects.filter(domain=virtualHostName).exists():
+                    ChildDomains.objects.filter(domain=virtualHostName).delete()
+            except BaseException:
+                pass
+            try:
+                DNS.cleanupHostDNSRecords(virtualHostName, owner)
+            except Exception as cf_cleanup_error:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'CloudFlare DNS rollback failed for %s: %s' % (virtualHostName, str(cf_cleanup_error)))
             if ACLManager.FindIfChild() == 0:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-                vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+                vhost.deleteCoreConf(virtualHostName, numberOfWebsites, docRoot=path, removeDocRoot=True)
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ". [404]")
             logging.CyberCPLogFileWriter.writeToFile(
@@ -1766,28 +1949,31 @@ class virtualHostUtilities:
     @staticmethod
     def deleteDomain(virtualHostName, DeleteDocRoot=0):
         try:
+            delWebsite = ChildDomains.objects.get(domain=virtualHostName)
+            doc_root = delWebsite.path
+
+            adminUserName = None
+            try:
+                adminUserName = delWebsite.master.admin.userName
+            except:
+                pass
+
+            try:
+                DNS.cleanupHostDNSRecords(virtualHostName, adminUserName)
+            except Exception as cfError:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'CloudFlare DNS deletion failed for %s: %s' % (virtualHostName, str(cfError)))
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
-            delWebsite = ChildDomains.objects.get(domain=virtualHostName)
-
-            if DeleteDocRoot:
-                command = 'rm -rf %s' % (delWebsite.path)
-                ProcessUtilities.executioner(command)
+            vhost.deleteCoreConf(
+                virtualHostName,
+                numberOfWebsites,
+                docRoot=doc_root if DeleteDocRoot else None,
+                removeDocRoot=bool(DeleteDocRoot),
+            )
 
             delWebsite.delete()
-            try:
-                DNS.maybeDeleteOrphanDNSZone(virtualHostName)
-            except Exception as zoneError:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Orphan DNS zone cleanup failed for %s: %s' % (virtualHostName, str(zoneError)))
             installUtilities.installUtilities.reStartLiteSpeed()
-
-            try:
-                sslUtilities.removeSSLForDomain(virtualHostName)
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    str(msg) + "  [deleteDomain:removeSSLForDomain]")
 
             print("1,None")
             return 1, 'None'
@@ -1824,16 +2010,28 @@ class virtualHostUtilities:
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating apache configurations..,90')
                 if child:
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.master.adminEmail)
+                    # Handle None values for child domains
+                    admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email, website.path)
                 else:
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.adminEmail)
+                    # Handle None values for main domains
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email, None)
 
                 if child:
-                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp,
-                                                      website.master.externalApp,
+                    # Handle None values for child domains
+                    admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
+                    external_app = website.master.externalApp if website.master.externalApp else "".join(re.findall("[a-zA-Z]+", virtualHostName))[:5] + str(randint(1000, 9999))
+                    
+                    ApacheVhost.setupApacheVhostChild(admin_email, external_app,
+                                                      external_app,
                                                       phpVersion, virtualHostName, website.path)
                 else:
-                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp,
+                    # Handle None values for main domains
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                    external_app = website.externalApp if website.externalApp else "".join(re.findall("[a-zA-Z]+", virtualHostName))[:5] + str(randint(1000, 9999))
+                    
+                    ApacheVhost.setupApacheVhost(admin_email, external_app, external_app,
                                                  phpVersion, virtualHostName)
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
@@ -1911,9 +2109,31 @@ class virtualHostUtilities:
     @staticmethod
     def getDiskUsageofPath(path):
         try:
-            return subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
-        except BaseException:
-            return '0MB'
+            # Check if path exists first
+            if not os.path.exists(path):
+                return '0 MB'
+            
+            # Use du command to get disk usage in MB
+            result = subprocess.check_output('du -sm %s' % (path), shell=True).decode("utf-8").strip()
+            
+            if result:
+                # Extract the number from the result (format: "123\t/path")
+                usage_mb = result.split('\t')[0]
+                try:
+                    # Convert to float and format properly
+                    usage_value = float(usage_mb)
+                    if usage_value < 1:
+                        return '0.1 MB'
+                    else:
+                        return f"{usage_value:.1f} MB"
+                except ValueError:
+                    return '0 MB'
+            else:
+                return '0 MB'
+        except BaseException as e:
+            # Log the error for debugging
+            logging.CyberCPLogFileWriter.writeToFile(f"Error calculating disk usage for {path}: {str(e)}")
+            return '0 MB'
 
     @staticmethod
     def permissionControl(path):
@@ -2210,7 +2430,12 @@ def main():
         admin = Administrator.objects.get(userName=args.websiteOwner)
         virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', args.virtualHostName, admin)
     elif args.function == "deleteVirtualHostConfigurations":
-        vhost.deleteVirtualHostConfigurations(args.virtualHostName)
+        ret = vhost.deleteVirtualHostConfigurations(args.virtualHostName)
+        if ret == 1:
+            print("1,None")
+            sys.exit(0)
+        print("0,None")
+        sys.exit(1)
     elif args.function == "createDomain":
         try:
             dkimCheck = int(args.dkimCheck)
@@ -2237,9 +2462,14 @@ def main():
         except:
             aliasDomain = 0
 
-        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,
-                                          int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
-                                          tempStatusPath, 1, aliasDomain)
+        ret = virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,
+                                                int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
+                                                tempStatusPath, 1, aliasDomain)
+        if ret[0] == 1:
+            print("1," + str(ret[1]))
+            sys.exit(0)
+        print("0," + str(ret[1]))
+        sys.exit(1)
     elif args.function == "issueSSL":
         virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail,
                                       forceIssue=(str(args.force) == '1'))
@@ -2293,24 +2523,6 @@ def main():
         # in virtualHostName pass domain for which hostname should be set up
         # in path pass temporary path where status of the function will be stored
         virtualHostUtilities.OnBoardingHostName(args.virtualHostName, args.path, int(args.rdns))
-    elif args.function == 'RepairSpfRecords':
-        from plogical.dnsUtilities import DNS
-        domain = args.virtualHostName if getattr(args, 'virtualHostName', None) else None
-        ok, err = DNS.RepairSpfRecords(domain)
-        if err:
-            print('0,' + str(err))
-        else:
-            print('1,repaired=%s' % ok)
-    elif args.function == 'RecreateDNSForDomain':
-        from plogical.dnsUtilities import DNS
-        from loginSystem.models import Administrator
-        domain = args.virtualHostName if getattr(args, 'virtualHostName', None) else None
-        if not domain:
-            print('0,Missing virtualHostName')
-        else:
-            admin = Administrator.objects.get(pk=1)
-            status, message = DNS.RecreateDNSForDomain(domain, admin, includeChildren=True)
-            print('%s,%s' % (status, message))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,27 @@
+phpMyAdmin OLS fix (v2.5.5-dev)
+================================
+
+Problem
+-------
+On OpenLiteSpeed :8090, CyberPanel proxied all traffic to Django/gunicorn.
+Django serve_phpmyadmin served .php as static files (5804-byte download).
+
+Fix (automatic on install/upgrade)
+----------------------------------
+plogical/cyberpanelOlsPhpmyadmin.py writes /usr/local/lsws/conf/vhosts/CyberPanel/vhost.conf
+with explicit /phpmyadmin/ and /snappymail/ contexts + lsapi:cyberpanelphp scripthandler.
+
+Hooks:
+- install/install.py -> ensureCyberPanelPhpmyadminOls() after setupLSCPDDaemon
+- plogical/upgrade.py -> after download_install_phpmyadmin and post-upgrade service verify
+
+Manual repair
+-------------
+sudo bash /usr/local/CyberCP/fix-phpmyadmin.sh
+# or
+sudo bash /usr/local/CyberCP/CPScripts/fix-cyberpanel-phpmyadmin-ols.sh --restart
+
+Verify
+------
+curl -skI https://127.0.0.1:8090/phpmyadmin/phpmyadminsignin.php | grep -i x-powered-by
+POST must be < 5000 bytes (not 5804).

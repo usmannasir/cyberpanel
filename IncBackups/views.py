@@ -318,6 +318,12 @@ def submit_backup_creation(request):
         else:
             return ACLManager.loadErrorJson('metaStatus', 0)
 
+        ### For the local restore path jobid is a JobSnapshots primary key; ensure it
+        ### belongs to the owned domain so another tenant's snapshot cannot be targeted.
+        if data['reconstruct'] != 'remote':
+            if not JobSnapshots.objects.filter(id=job_id, job__website__domain=backup_domain).exists():
+                return ACLManager.loadErrorJson('metaStatus', 0)
+
         temp_path = Path("/home/cyberpanel/") / str(randint(1000, 9999))
 
         extra_args = {}
