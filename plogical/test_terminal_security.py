@@ -1,4 +1,5 @@
 import importlib
+import json
 import os
 import pathlib
 import stat
@@ -185,13 +186,28 @@ class TerminalTokenTests(unittest.TestCase):
             "exp": now + 600,
             "sub": "1",
             "ssh_user": "example",
+            "jti": "t" * 43,
         }
         payload.update(overrides)
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def test_valid_panel_token_is_accepted(self):
-        payload = self.server.decode_terminal_token(self.make_token())
+        with mock.patch.object(
+            self.server,
+            "consume_terminal_request",
+            return_value=True,
+        ):
+            payload = self.server.decode_terminal_token(self.make_token())
         self.assertEqual(payload["ssh_user"], "example")
+
+    def test_signing_secret_alone_cannot_authorize_a_terminal(self):
+        with mock.patch.object(
+            self.server,
+            "consume_terminal_request",
+            return_value=False,
+        ):
+            with self.assertRaises(JWTError):
+                self.server.decode_terminal_token(self.make_token())
 
     def test_wrong_signing_secret_is_rejected(self):
         token = jwt.encode(
@@ -219,6 +235,58 @@ class TerminalTokenTests(unittest.TestCase):
         token = self.make_token(iat=now, nbf=now, exp=now + 3600)
         with self.assertRaises(JWTError):
             self.server.decode_terminal_token(token)
+
+    @mock.patch(
+        "websiteFunctions.models.Websites.objects.get",
+        return_value=SimpleNamespace(externalApp="example"),
+    )
+    @mock.patch(
+        "loginSystem.models.Administrator.objects.get",
+        return_value=SimpleNamespace(),
+    )
+    @mock.patch("plogical.acl.ACLManager.loadedACL", return_value={})
+    @mock.patch("plogical.acl.ACLManager.checkOwnership", return_value=1)
+    @mock.patch(
+        "websiteFunctions.views.get_terminal_jwt_secret",
+        return_value="s" * 64,
+    )
+    @mock.patch(
+        "websiteFunctions.views.create_terminal_request",
+        return_value="r" * 43,
+    )
+    def test_panel_token_contains_one_time_authorization(
+            self,
+            create_request,
+            unused_secret,
+            unused_ownership,
+            unused_acl,
+            unused_admin,
+            unused_website):
+        from django.test import RequestFactory
+        from websiteFunctions.views import get_terminal_jwt
+
+        request = RequestFactory().post(
+            "/websites/getTerminalJWT",
+            data=json.dumps({"domain": "example.com"}),
+            content_type="application/json",
+        )
+        request.session = {"userID": 7}
+
+        response = get_terminal_jwt(request)
+        result = json.loads(response.content.decode("utf-8"))
+        payload = jwt.decode(
+            result["token"],
+            "s" * 64,
+            algorithms=["HS256"],
+            audience=TERMINAL_JWT_AUDIENCE,
+            issuer=TERMINAL_JWT_ISSUER,
+        )
+
+        self.assertEqual(result["status"], 1)
+        self.assertEqual(payload["jti"], "r" * 43)
+        self.assertEqual(payload["sub"], "7")
+        self.assertEqual(payload["ssh_user"], "example")
+        create_request.assert_called_once_with(7, "example")
 
     def make_account(self, home):
         return SimpleNamespace(
