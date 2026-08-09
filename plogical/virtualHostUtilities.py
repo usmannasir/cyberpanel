@@ -1894,8 +1894,10 @@ class virtualHostUtilities:
             totalUsageInMB = \
                 subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
 
-            percentage = float(100) / float(totalAllowed)
+            if not totalAllowed or int(totalAllowed) <= 0:
+                return [int(totalUsageInMB), 0]
 
+            percentage = float(100) / float(totalAllowed)
             percentage = float(percentage) * float(totalUsageInMB)
 
             data = [int(totalUsageInMB), int(percentage)]
