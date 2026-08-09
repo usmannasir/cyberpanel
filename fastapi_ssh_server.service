@@ -13,7 +13,7 @@ UMask=0077
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
-ReadWritePaths=/home
+ReadWritePaths=/home /usr/local/CyberCP/terminal_jwt_secret
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 
