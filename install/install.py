@@ -16,9 +16,10 @@ from stat import *
 import stat
 import secrets
 import install_utils
+import json
 
-VERSION = '2.4'
-BUILD = 9
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from cyberpanel_version import BUILD, VERSION
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -716,10 +717,8 @@ password="%s"
 
         try:
             path = "/usr/local/CyberCP/version.txt"
-            writeToFile = open(path, 'w')
-            writeToFile.writelines('%s\n' % (VERSION))
-            writeToFile.writelines(str(BUILD))
-            writeToFile.close()
+            with open(path, 'w') as writeToFile:
+                json.dump({'version': VERSION, 'build': BUILD}, writeToFile)
         except:
             pass
 

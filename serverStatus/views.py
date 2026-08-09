@@ -16,18 +16,13 @@ from . import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 from plogical.installUtilities import installUtilities
+from cyberpanel_version import BUILD, VERSION
 
 # Create your views here.
 
 NOTHING = 0
 BUNDLE = 2
 EXPIRE = 3
-
-### Version
-
-VERSION = '2.4'
-BUILD = 9
-
 
 def serverStatusHome(request):
     proc = httpProc(request, 'serverStatus/index.html',

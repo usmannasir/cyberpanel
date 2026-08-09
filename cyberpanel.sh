@@ -156,13 +156,17 @@ CyberPanel_Python="/usr/bin/python3"
 
 Watchdog="On"
 Redis_Hosting="No"
+
+parse_panel_version() {
+  local version_data="$1"
+  Panel_Version=$(printf '%s' "$version_data" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p')
+  Panel_Build=$(printf '%s' "$version_data" | sed -n 's/.*"build"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9][0-9]*\)"\{0,1\}.*/\1/p')
+  [[ "$Panel_Version" =~ ^[0-9]+\.[0-9]+$ && "$Panel_Build" =~ ^[0-9]+$ ]]
+}
+
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}
-Panel_Build=${Temp_Value:25:1}
-
-Branch_Name="v${Panel_Version}.${Panel_Build}"
-
-if [[ $Branch_Name = v*.*.* ]] ; then
+if parse_panel_version "$Temp_Value"; then
+  Branch_Name="v${Panel_Version}.${Panel_Build}"
   echo -e  "\nBranch name fetched...$Branch_Name"
   log_info "Branch name fetched: $Branch_Name"
 else

@@ -56,11 +56,17 @@ else
         rm -f /tmp/requirements.txt
     fi
     
-    # Detect OS version and download appropriate requirements
+    # Detect OS version and use requirements from the installed release.
     if grep -q "22.04" /etc/os-release || grep -q "VERSION_ID=\"9" /etc/os-release; then
-        wget -q -O /tmp/requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.4.5/requirments.txt
+        requirements_name="requirments.txt"
     else
-        wget -q -O /tmp/requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.4.5/requirments-old.txt
+        requirements_name="requirments-old.txt"
+    fi
+
+    if [[ -f "/usr/local/CyberCP/$requirements_name" ]]; then
+        cp "/usr/local/CyberCP/$requirements_name" /tmp/requirements.txt
+    else
+        wget -q -O /tmp/requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/$requirements_name"
     fi
     
     # Upgrade pip first

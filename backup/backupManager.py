@@ -36,6 +36,7 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 from django.http import JsonResponse
+from cyberpanel_version import version_at_least
 
 class BackupManager:
     localBackupPath = '/home/cyberpanel/localBackupPath'
@@ -1146,7 +1147,7 @@ class BackupManager:
 
                 if data['getVersion'] == 1:
 
-                    if float(data['currentVersion']) >= 1.6 and data['build'] >= 0:
+                    if version_at_least(data['currentVersion'], data['build'], '1.6'):
                         pass
                     else:
                         data_ret = {'status': 0,
@@ -2785,5 +2786,4 @@ class BackupManager:
 
         except Exception as e:
             return JsonResponse({'status': 0, 'error_message': str(e)})
-
 

@@ -57,9 +57,19 @@ Server_OS=""
 Server_OS_Version=""
 Server_Provider='Undefined'
 
+parse_panel_version() {
+  local version_data="$1"
+  Panel_Version=$(printf '%s' "$version_data" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p')
+  Panel_Build=$(printf '%s' "$version_data" | sed -n 's/.*"build"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9][0-9]*\)"\{0,1\}.*/\1/p')
+  [[ "$Panel_Version" =~ ^[0-9]+\.[0-9]+$ && "$Panel_Build" =~ ^[0-9]+$ ]]
+}
+
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}
-Panel_Build=${Temp_Value:25:1}
+if ! parse_panel_version "$Temp_Value"; then
+  echo -e "\nUnable to fetch a valid CyberPanel version."
+  echo -e "\nPlease try again in a few moments."
+  exit 1
+fi
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 Base_Number="1.9.3"

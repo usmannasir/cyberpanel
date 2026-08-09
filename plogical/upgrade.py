@@ -17,6 +17,7 @@ import MySQLdb as mysql
 import random
 import secrets
 import string
+from cyberpanel_version import BUILD, VERSION
 
 def update_all_config_files_with_password(new_password):
     """
@@ -290,9 +291,6 @@ except ImportError:
     
     settings = MinimalSettings()
     print("Recovery complete. Continuing with upgrade...")
-
-VERSION = '2.4'
-BUILD = 9
 
 CENTOS7 = 0
 CENTOS8 = 1

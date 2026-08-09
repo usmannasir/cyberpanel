@@ -42,6 +42,12 @@ import time
 from shutil import copy
 from random import randint
 from plogical.processUtilities import ProcessUtilities
+from cyberpanel_version import (
+    BUILD,
+    VERSION,
+    backup_uses_database_users_schema,
+    backup_uses_full_directory_layout,
+)
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -52,10 +58,6 @@ try:
     from backup.models import DBUsers
 except:
     pass
-
-VERSION = '2.4'
-BUILD = 9
-
 
 ## I am not the monster that you think I am..
 
@@ -689,8 +691,8 @@ class backupUtilities:
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
-            VERSION = backupMetaData.find('VERSION').text
-            BUILD = backupMetaData.find('BUILD').text
+            backup_version = backupMetaData.find('VERSION').text
+            backup_build = backupMetaData.find('BUILD').text
 
             ### Fetch user details
 
@@ -756,9 +758,9 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if ((VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1) or (VERSION == '2.4' and int(BUILD) >= 0):
+                if backup_uses_database_users_schema(backup_version, backup_build):
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
                     databaseUsers = database.findall('databaseUsers')
                     for databaseUser in databaseUsers:
 
@@ -845,8 +847,8 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
-            VERSION = backupMetaData.find('VERSION').text
-            BUILD = backupMetaData.find('BUILD').text
+            backup_version = backupMetaData.find('VERSION').text
+            backup_build = backupMetaData.find('BUILD').text
 
             twoPointO = 0
             try:
@@ -1015,7 +1017,7 @@ class backupUtilities:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
 
-                        if float(version) > 2.0 or float(build) > 0:
+                        if backup_uses_full_directory_layout(version, build):
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
 
                                 if BackupWholeDir == 0:
@@ -1090,9 +1092,9 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if ((VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1) or (VERSION == '2.4' and int(BUILD) >= 0):
+                if backup_uses_database_users_schema(backup_version, backup_build):
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
 
                     first = 1
 
@@ -1147,7 +1149,7 @@ class backupUtilities:
                 tar.extractall(websiteHome)
                 tar.close()
             else:
-                if float(version) > 2.0 or float(build) > 0:
+                if backup_uses_full_directory_layout(version, build):
                     #copy_tree('%s/public_html' % (completPath), websiteHome)
 
                     ## First remove if already exists

@@ -14,10 +14,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
+from cyberpanel_version import BUILD, VERSION
 # Create your views here.
-
-VERSION = '2.4'
-BUILD = 9
 
 
 def verifyLogin(request):

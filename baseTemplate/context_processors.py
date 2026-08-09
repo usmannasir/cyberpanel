@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from .views import VERSION, BUILD
+from cyberpanel_version import BUILD, FULL_VERSION, VERSION
 
 def version_context(request):
     """Add version information to all templates"""
     return {
         'CYBERPANEL_VERSION': VERSION,
         'CYBERPANEL_BUILD': BUILD,
-        'CYBERPANEL_FULL_VERSION': f"{VERSION}.{BUILD}"
+        'CYBERPANEL_FULL_VERSION': FULL_VERSION
     }
 
 def cosmetic_context(request):

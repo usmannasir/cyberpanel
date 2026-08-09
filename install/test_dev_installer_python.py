@@ -1,10 +1,49 @@
 import pathlib
+import subprocess
 import unittest
 
 from install import install_utils
 
 
 class DeveloperInstallerPythonTests(unittest.TestCase):
+
+    def test_version_parsers_do_not_depend_on_fixed_json_offsets(self):
+        root = pathlib.Path(__file__).parents[1]
+        for script_path in (root / 'cyberpanel.sh', root / 'cyberpanel_upgrade.sh'):
+            script = script_path.read_text(encoding='utf-8')
+            self.assertNotIn('${Temp_Value:12:3}', script)
+            self.assertNotIn('${Temp_Value:25:1}', script)
+            self.assertIn('parse_panel_version', script)
+
+            function_start = script.index('parse_panel_version()')
+            function_end = script.index('\n}\n', function_start) + 3
+            parser = script[function_start:function_end]
+            command = parser + '\nparse_panel_version "$VERSION_DATA" && ' \
+                'printf \'%s.%s\' "$Panel_Version" "$Panel_Build"'
+            result = subprocess.run(
+                ['bash', '-c', command],
+                check=True,
+                capture_output=True,
+                text=True,
+                env={
+                    'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                    'VERSION_DATA': '{"version": "3.0", "build": 12}',
+                },
+            )
+            self.assertEqual('3.0.12', result.stdout)
+
+    def test_installer_writes_machine_readable_version_file(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        self.assertIn("json.dump({'version': VERSION, 'build': BUILD}", installer)
+
+    def test_repair_script_does_not_download_old_release_requirements(self):
+        root = pathlib.Path(__file__).parents[1]
+        repair_script = (root / 'fix_cyberpanel_install.sh').read_text(
+            encoding='utf-8'
+        )
+        self.assertNotIn('/v2.4.5/requirments', repair_script)
+        self.assertIn('/usr/local/CyberCP/$requirements_name', repair_script)
 
     def test_terminal_secret_is_private_and_readable_by_panel_worker(self):
         root = pathlib.Path(__file__).parents[1]
