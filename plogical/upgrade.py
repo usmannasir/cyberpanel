@@ -1645,6 +1645,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
+            try:
+                cursor.execute(
+                    'ALTER TABLE baseTemplate_cyberpanelcosmetic ADD HidePromotions integer NOT NULL DEFAULT 0')
+            except:
+                pass
+
             # AI Scanner Tables
             try:
                 cursor.execute('''
