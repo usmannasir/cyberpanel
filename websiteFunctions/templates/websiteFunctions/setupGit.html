@@ -59,6 +59,12 @@
                                             <i class="glyph-icon font-green icon-chevron-right"></i>
                                         </a>
                                     </li>
+                                    <li class="col-md-3">
+                                        <a href="" ng-click="setProvider('custom')" class="list-group-item">
+                                             {% trans "Custom / Private Git" %}
+                                            <i class="glyph-icon font-orange icon-chevron-right"></i>
+                                        </a>
+                                    </li>
                                 </ul>
 
                                 <form  action="/" class="form-horizontal bordered-row">
@@ -66,6 +72,14 @@
                                     <div ng-hide="installationDetailsForm" class="form-group">
                                         <label style="color: green;" class="col-sm-10 control-label">{% trans "Before attaching repo to your website, make sure to place your Development key in your GIT repository." %}</label>
                                      </div>
+
+                                    <div ng-show="showCustomGitHost && !installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Git Host" %}</label>
+                                        <div class="col-sm-6">
+                                            <input placeholder="Ex. git.example.com or git.example.com:9008"
+                                                   type="text" class="form-control" ng-model="customGitHost">
+                                        </div>
+                                    </div>
 
                                      <div ng-hide="installationDetailsForm" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Username" %}</label>
