@@ -1023,6 +1023,24 @@ def convertDomainToSite(request):
         return redirect(loadLoginPage)
 
 
+def convertWebsiteToChildDomain(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.convertWebsiteToChildDomain(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def recreateWebsiteDNS(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.recreateWebsiteDNS(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def submitWebsiteStatus(request):
     try:
 

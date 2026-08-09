@@ -2806,6 +2806,106 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         return tooltip;
     };
 
+    $scope.convertingToChild = {};
+
+    $scope.recreatingDNS = {};
+    $scope.recreateWebsiteDNS = function (domain) {
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS[domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS[domain] = false;
+            if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
+                new PNotify({
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS[domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
     // Initial fetch of websites
     $scope.getFurtherWebsitesFromDB = function () {
         $scope.loading = true; // Set loading to true when starting fetch
@@ -6131,6 +6231,106 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         
         return tooltip;
+    };
+
+    $scope.convertingToChild = {};
+
+    $scope.recreatingDNS = {};
+    $scope.recreateWebsiteDNS = function (domain) {
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS[domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS[domain] = false;
+            if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
+                new PNotify({
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS[domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
     };
 
     // Initial fetch of websites
@@ -9804,6 +10004,106 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         return tooltip;
     };
 
+    $scope.convertingToChild = {};
+
+    $scope.recreatingDNS = {};
+    $scope.recreateWebsiteDNS = function (domain) {
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS[domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS[domain] = false;
+            if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
+                new PNotify({
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS[domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
     // Initial fetch of websites
     $scope.getFurtherWebsitesFromDB = function () {
         $scope.loading = true; // Set loading to true when starting fetch
@@ -11034,6 +11334,112 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.installMauticURL = $("#domainNamePage").text() + "/installMautic";
     $scope.domainAliasURL = "/websites/" + $("#domainNamePage").text() + "/domainAlias";
     $scope.previewUrl = "/preview/" + $("#domainNamePage").text() + "/";
+
+    $scope.convertCurrentSiteToChild = function () {
+        if (!$scope.canConvertToChild || !$scope.convertMaster) {
+            return;
+        }
+        var domain = $("#domainNamePage").text();
+        var web = {
+            domain: domain,
+            canConvertToChild: true,
+            convertMaster: $scope.convertMaster,
+            hasChildDuplicate: $scope.hasChildDuplicate
+        };
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function (response) {
+            $scope.convertingToChild = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion completed.',
+                    type: 'success'
+                });
+                $window.location.href = '/websites/' + master;
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.convertingToChild = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
+    $scope.recreatingDNS = false;
+    $scope.recreateWebsiteDNS = function () {
+        var domain = $("#domainNamePage").text();
+        if (!domain) {
+            return;
+        }
+        if (!$window.confirm(
+            'Recreate DNS for ' + domain + ' (and its child domains)?\n\n' +
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: true
+        }, config).then(function (response) {
+            $scope.recreatingDNS = false;
+            if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
+                new PNotify({
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
 
     var logType = 0;
     $scope.pageNumber = 1;
@@ -18023,6 +18429,59 @@ app.controller('launchChild', function ($scope, $http) {
             $scope.installMagentoURL = "/websites/" + $scope.childDomainName + "/installMagento";
         }
     });
+
+    $scope.recreatingDNS = false;
+    $scope.recreateWebsiteDNS = function () {
+        var domain = $scope.childDomainName || '';
+        if (!domain && document.getElementById('childDomain')) {
+            domain = document.getElementById('childDomain').textContent.trim();
+        }
+        if (!domain) {
+            return;
+        }
+        if (!window.confirm(
+            'Recreate DNS for ' + domain + '?\n\n' +
+            'This repairs local PowerDNS (including wrong A records), upserts SPF, and syncs to Cloudflare when enabled. '
+            + 'If Cloudflare is pending nameservers, set those NS at your registrar (DNSSEC off). Custom records are kept.'
+        )) {
+            return;
+        }
+        $scope.recreatingDNS = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/recreateWebsiteDNS', {
+            domainName: domain,
+            includeChildren: false
+        }, config).then(function (response) {
+            $scope.recreatingDNS = false;
+            if (response.data.status === 1) {
+                var cf = response.data.cloudflare || {};
+                var pending = cf.zone_status && cf.zone_status !== 'active';
+                new PNotify({
+                    title: pending ? 'DNS updated (Cloudflare pending)' : 'Success',
+                    text: response.data.success_message || 'DNS recreated.',
+                    type: pending ? 'warning' : 'success',
+                    delay: pending ? 15000 : 5000
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'DNS recreate failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.recreatingDNS = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
 
     var logType = 0;
     $scope.pageNumber = 1;

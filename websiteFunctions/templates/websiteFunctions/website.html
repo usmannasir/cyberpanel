@@ -1379,6 +1379,15 @@
                     <i class="fas fa-tachometer-alt"></i>
                     {% trans "Stress Test" %}
                 </a>
+                <button type="button"
+                        class="action-btn"
+                        ng-click="recreateWebsiteDNS()"
+                        ng-disabled="recreatingDNS"
+                        title="{% trans 'Re-apply DNS template and fix SPF for this domain and its subdomains' %}">
+                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': recreatingDNS}"></i>
+                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                    <span ng-show="recreatingDNS">{% trans "Recreating DNS..." %}</span>
+                </button>
             </div>
         </div>
 
@@ -2005,6 +2014,31 @@
                                title="{% trans 'Add Rewrite Rules (.htaccess)' %}">
                                 <img src="{% static 'images/icons/pencilcase.png' %}" width="65" class="mr-10">
                                 <span class="h4">{% trans "Rewrite Rules" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="#" ng-click="addSSL(); $event.preventDefault()" title="{% trans 'Add Your Own SSL' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Add SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="#" ng-click="issueSSL('{{ domain|escapejs }}'); $event.preventDefault()" title="{% trans 'Obtain or restore Let\'s Encrypt SSL (default)' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Issue SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="#" ng-click="recreateWebsiteDNS(); $event.preventDefault()"
+                               title="{% trans 'Re-apply DNS template and fix SPF (for domains created before DNS fixes)' %}">
+                                <img src="{% static 'images/icons/file.png' %}" width="65" class="mr-10">
+                                <span class="h4">
+                                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                                    <span ng-show="recreatingDNS"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Recreating..." %}</span>
+                                </span>
                             </a>
                         </div>
 

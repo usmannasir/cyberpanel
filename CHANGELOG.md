@@ -43,6 +43,33 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Restored domain-alias management, free WordPress installation navigation,
   Ubuntu Pure-FTPd reset behavior, PHP 8.5 parsing, and DNS SOA serial updates.
 
+### Fix: Recreate DNS API JSON encoding crash
+- `recreateWebsiteDNS` used PHP-style `json.JSON_PRETTY_PRINT` flags in Python, which
+  raised `module 'json' has no attribute 'JSON_PRETTY_PRINT'` and aborted the request.
+- Now encodes with `json.dumps(..., indent=2, ensure_ascii=False)`.
+
+### Feature: Recreate DNS button on websites
+- Website detail, List Websites, and child domain pages include **Recreate DNS**.
+- Full recreate now repairs **existing** PowerDNS zones (missing template records and
+  wrong A/AAAA updated to the current machine IP), upserts SPF, force-syncs to
+  Cloudflare when sync is enabled, and returns Cloudflare zone status.
+- When the Cloudflare zone is not `active`, Recreate DNS lists the required
+  Cloudflare nameservers, requests Cloudflare `activation_check`, and warns that
+  public DNS stays NXDOMAIN until those NS are set at the registrar (DNSSEC off).
+  Registrar nameserver changes cannot be performed from CyberPanel.
+- API: `POST /websites/recreateWebsiteDNS` with `domainName` and optional `includeChildren`
+  (response includes `cloudflare` status object).
+- CLI: `virtualHostUtilities.py RecreateDNSForDomain --virtualHostName example.com`.
+- Intended for domains/subdomains created before SPF and related DNS template fixes.
+
+### Feature: SPF record follows deployment type (CyberPersons vs self-hosted)
+- `DNS.getDeploymentType()` / `DNS.buildSpfRecord()`: CyberPersons rental publishes
+  `v=spf1 include:spf.cyberpersons.com ~all`; self-hosted (default) keeps
+  `v=spf1 a mx ip4:<machineIP> ~all`.
+- Detection: `/etc/cyberpanel/deployment_type`, then admin `config.deploymentType`, else `selfhosted`.
+- Onboarding sets `deploymentType=selfhosted` when unset and runs `RepairSpfRecords` for the hostname apex.
+- CLI: `virtualHostUtilities.py RepairSpfRecords [--virtualHostName domain]`.
+
 ### Release versioning
 - Consolidated runtime, API, installer, upgrade, backup, and CLI version values
   into one source for v3.0.0.

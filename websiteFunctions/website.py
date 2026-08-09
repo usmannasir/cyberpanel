@@ -2683,6 +2683,77 @@ Require valid-user
             })
         return json.dumps(json_data)
 
+    def _findConvertMasterCandidate(self, domain):
+        try:
+            from plogical.convert_to_child import find_master_candidate
+            return find_master_candidate(domain)
+        except BaseException:
+            return None
+
+    def convertWebsiteToChildDomain(self, userID=None, data=None):
+        try:
+            from plogical.convert_to_child import convert_website_to_child_domain
+
+            website_name = data.get('websiteName', '')
+            master_domain = data.get('masterDomain', '')
+            status, message = convert_website_to_child_domain(
+                userID, website_name, master_domain or None)
+            return HttpResponse(json.dumps({
+                'status': status,
+                'convertStatus': status,
+                'error_message': message if status == 0 else 'None',
+                'success': message if status == 1 else None,
+            }))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'convertStatus': 0,
+                'error_message': str(msg),
+            }))
+
+    def recreateWebsiteDNS(self, userID=None, data=None):
+        """
+        Full Recreate DNS: repair PowerDNS, force Cloudflare sync, report NS status.
+        """
+        try:
+            from plogical.dns_recreate import recreate_dns_for_domain
+
+            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
+            domain_name = (
+                (data or {}).get('domainName')
+                or (data or {}).get('websiteName')
+                or ''
+            ).strip()
+            include_children = bool((data or {}).get('includeChildren', True))
+
+            if not domain_name:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': 'Missing domainName',
+                }))
+
+            if ACLManager.checkOwnership(domain_name, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+
+            result = recreate_dns_for_domain(
+                domain_name, admin, includeChildren=include_children)
+            status = int(result.get('status') or 0)
+            message = result.get('message') or ''
+            # Use Python json kwargs (not PHP JSON_* bitflags).
+            return HttpResponse(json.dumps({
+                'status': status,
+                'error_message': message if status == 0 else 'None',
+                'success_message': message if status == 1 else None,
+                'applied': result.get('applied') or [],
+                'cloudflare': result.get('cloudflare'),
+            }, indent=2, ensure_ascii=False))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error_message': str(msg),
+            }))
+
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
         try:

@@ -751,6 +751,21 @@
                                 <a href="/websites/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'Full settings page' %}">
                                     Settings
                                 </a>
+                                <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
+                                        ng-disabled="recreatingDNS[web.domain]"
+                                        class="btn btn-outline btn-sm"
+                                        title="{% trans 'Re-apply DNS template and fix SPF for this domain and its subdomains' %}">
+                                    <span ng-hide="recreatingDNS[web.domain]"><i class="fas fa-sync-alt"></i> {% trans "Recreate DNS" %}</span>
+                                    <span ng-show="recreatingDNS[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
+                                </button>
+                                <button ng-if="web.canConvertToChild"
+                                        ng-click="convertToChildDomain(web); $event.stopPropagation();"
+                                        ng-disabled="convertingToChild[web.domain]"
+                                        class="btn btn-outline btn-sm btn-convert-sub"
+                                        title="{% trans 'Move this top-level site under its parent domain' %}">
+                                    <span ng-hide="convertingToChild[web.domain]"><i class="fas fa-sitemap"></i> {% trans "Convert" %}</span>
+                                    <span ng-show="convertingToChild[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
+                                </button>
                                 <a href="/filemanager/{$ web.domain $}" class="btn btn-outline btn-sm" title="{% trans 'File Manager' %}">
                                     Filemanager
                                 </a>
@@ -789,6 +804,27 @@
                                             <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
                                             <span ng-show="issuingSSL[web.domain]"><i class="fas fa-spinner fa-spin"></i> Issuing SSL...</span>
                                         </a>
+                                        <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
+                                                ng-disabled="recreatingDNS[web.domain]"
+                                                class="btn btn-outline btn-sm"
+                                                title="{% trans 'Re-apply DNS template and fix SPF' %}">
+                                            <span ng-hide="recreatingDNS[web.domain]"><i class="fas fa-sync-alt"></i> {% trans "Recreate DNS" %}</span>
+                                            <span ng-show="recreatingDNS[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
+                                        </button>
+                                        <button ng-if="web.canConvertToChild"
+                                                ng-click="convertToChildDomain(web); $event.stopPropagation();"
+                                                ng-disabled="convertingToChild[web.domain]"
+                                                class="btn btn-outline btn-sm btn-convert-sub"
+                                                title="{% trans 'Move this top-level site under its parent domain' %}">
+                                            <span ng-hide="convertingToChild[web.domain]"><i class="fas fa-sitemap"></i> {% trans "Convert to subdomain" %}</span>
+                                            <span ng-show="convertingToChild[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Converting..." %}</span>
+                                        </button>
+                                        <div ng-if="!web.canConvertToChild && web.convertHelp === 'apex'" class="convert-row-hint" style="font-size:12px;color:var(--text-muted,#6b7280);margin-top:8px;">
+                                            {% trans "Apex domain: cannot convert to subdomain." %}
+                                        </div>
+                                        <div ng-if="!web.canConvertToChild && web.convertHelp === 'no_parent'" class="convert-row-hint" style="font-size:12px;color:var(--text-muted,#6b7280);margin-top:8px;">
+                                            {% trans "No parent website found for conversion." %}
+                                        </div>
                                         <button ng-click="showWPSites(web.domain); $event.stopPropagation();" 
                                                 class="btn btn-outline btn-sm" 
                                                 ng-if="(web.wp_sites && web.wp_sites.length) > 0">

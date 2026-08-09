@@ -2254,6 +2254,24 @@ def main():
         # in virtualHostName pass domain for which hostname should be set up
         # in path pass temporary path where status of the function will be stored
         virtualHostUtilities.OnBoardingHostName(args.virtualHostName, args.path, int(args.rdns))
+    elif args.function == 'RepairSpfRecords':
+        from plogical.dnsUtilities import DNS
+        domain = args.virtualHostName if getattr(args, 'virtualHostName', None) else None
+        ok, err = DNS.RepairSpfRecords(domain)
+        if err:
+            print('0,' + str(err))
+        else:
+            print('1,repaired=%s' % ok)
+    elif args.function == 'RecreateDNSForDomain':
+        from plogical.dnsUtilities import DNS
+        from loginSystem.models import Administrator
+        domain = args.virtualHostName if getattr(args, 'virtualHostName', None) else None
+        if not domain:
+            print('0,Missing virtualHostName')
+        else:
+            admin = Administrator.objects.get(pk=1)
+            status, message = DNS.RecreateDNSForDomain(domain, admin, includeChildren=True)
+            print('%s,%s' % (status, message))
 
 
 if __name__ == "__main__":

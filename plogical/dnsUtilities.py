@@ -20,14 +20,7 @@ except:
     pass
 
 import CloudFlare
-import warnings
-
-def _cf_client(**kwargs):
-    """Instantiate python-cloudflare without PendingDeprecationWarning noise (2.20)."""
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', PendingDeprecationWarning)
-        return _cf_client(**kwargs)
-
+from plogical.cloudflareClient import get_cloudflare_client
 from plogical.processUtilities import ProcessUtilities
 
 
@@ -37,6 +30,8 @@ class DNS:
     create_zone_dir = "/usr/local/lsws/conf/zones"
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
     CFPath = '/home/cyberpanel/CloudFlare'
+    DEPLOYMENT_TYPE_FILE = '/etc/cyberpanel/deployment_type'
+    SPF_CYBERPERSONS = 'v=spf1 include:spf.cyberpersons.com ~all'
 
     @staticmethod
     def incrementSOASerial(zone):
@@ -59,6 +54,228 @@ class DNS:
         return updated
 
     ## DNS Functions
+
+    @staticmethod
+    def getDeploymentType():
+        """
+        Resolve mail SPF mode: cyberpersons (platform rental) or selfhosted (own VPS).
+        Order: /etc/cyberpanel/deployment_type, admin config deploymentType, default selfhosted.
+        """
+        try:
+            if os.path.exists(DNS.DEPLOYMENT_TYPE_FILE):
+                with open(DNS.DEPLOYMENT_TYPE_FILE, 'r') as _df:
+                    raw = _df.read().strip().lower()
+                if raw in ('cyberpersons', 'selfhosted'):
+                    return raw
+        except Exception:
+            pass
+        try:
+            from loginSystem.models import Administrator
+            import json as _json
+            admin = Administrator.objects.get(pk=1)
+            config = _json.loads(admin.config) if admin.config else {}
+            val = str(config.get('deploymentType', '') or '').strip().lower()
+            if val in ('cyberpersons', 'selfhosted'):
+                return val
+        except Exception:
+            pass
+        return 'selfhosted'
+
+    @staticmethod
+    def buildSpfRecord(ipAddress=None):
+        """
+        SPF TXT content for new zones.
+        CyberPersons rental: include:spf.cyberpersons.com
+        Self-hosted (default): a mx ip4:<machineIP>
+        """
+        if DNS.getDeploymentType() == 'cyberpersons':
+            return DNS.SPF_CYBERPERSONS
+        if not ipAddress:
+            try:
+                with open('/etc/cyberpanel/machineIP', 'r') as _ipf:
+                    ipAddress = _ipf.read().split('\n', 1)[0].strip()
+            except Exception:
+                ipAddress = ''
+        if ipAddress:
+            return 'v=spf1 a mx ip4:%s ~all' % ipAddress
+        return 'v=spf1 a mx ~all'
+
+    @staticmethod
+    def _powerdns_models():
+        """
+        Return (Domains, Records) from CyberPanel's dns app.
+        dnspython also ships a top-level `dns` package; ensure /usr/local/CyberCP
+        is preferred so CLI RepairSpfRecords works when run as a script.
+        """
+        import importlib
+        import sys
+
+        root = '/usr/local/CyberCP'
+        if root in sys.path:
+            try:
+                sys.path.remove(root)
+            except ValueError:
+                pass
+        sys.path.insert(0, root)
+
+        dns_mod = sys.modules.get('dns')
+        dns_file = getattr(dns_mod, '__file__', '') or ''
+        if dns_mod is not None and 'site-packages' in dns_file.replace('\\', '/'):
+            for key in list(sys.modules):
+                if key == 'dns' or key.startswith('dns.'):
+                    del sys.modules[key]
+
+        existing = globals().get('Domains')
+        existing_rec = globals().get('Records')
+        if existing is not None and existing_rec is not None:
+            mod_name = getattr(existing, '__module__', '') or ''
+            if mod_name == 'dns.models':
+                return existing, existing_rec
+
+        models = importlib.import_module('dns.models')
+        return models.Domains, models.Records
+
+    @staticmethod
+    def RepairSpfRecords(domainName=None):
+        """
+        Replace apex TXT SPF that does not match the current deployment type.
+        domainName: optional single zone; otherwise all Websites apex zones.
+        Returns (ok_count, error_message_or_None).
+        """
+        try:
+            from websiteFunctions.models import Websites
+            Domains, Records = DNS._powerdns_models()
+
+            target = DNS.buildSpfRecord()
+            wrong_cp = 'include:spf.cyberpersons.com'
+            wrong_self_prefix = 'v=spf1 a mx ip4:'
+
+            names = []
+            if domainName:
+                names = [domainName.strip().lower().rstrip('.')]
+            else:
+                for site in Websites.objects.all():
+                    names.append(site.domain.lower().rstrip('.'))
+
+            ok = 0
+            for name in names:
+                try:
+                    import tldextract
+                    extract = tldextract.TLDExtract(cache_dir=None)
+                    ex = extract(name)
+                    apex = (ex.domain + '.' + ex.suffix).lower()
+                    if not ex.domain or not ex.suffix:
+                        continue
+                    zone = Domains.objects.filter(name=apex).first()
+                    if not zone:
+                        continue
+                    txts = Records.objects.filter(domainOwner=zone, type='TXT', name=apex)
+                    for rec in txts:
+                        content = (rec.content or '').strip().strip('"')
+                        if not content.lower().startswith('v=spf1'):
+                            continue
+                        dtype = DNS.getDeploymentType()
+                        needs = False
+                        if dtype == 'selfhosted' and wrong_cp in content and 'ip4:' not in content:
+                            needs = True
+                        elif dtype == 'cyberpersons' and content.startswith(wrong_self_prefix):
+                            needs = True
+                        elif content != target and (
+                            (dtype == 'selfhosted' and wrong_cp in content)
+                            or (dtype == 'cyberpersons' and 'ip4:' in content)
+                        ):
+                            needs = True
+                        if needs and content != target:
+                            rec.content = target
+                            rec.save()
+                            ok += 1
+                            try:
+                                DNS.bumpSOASerial(zone)
+                            except Exception:
+                                pass
+                except Exception as e:
+                    logging.writeToFile('RepairSpfRecords %s: %s' % (name, str(e)))
+            return ok, None
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [RepairSpfRecords]')
+            return 0, str(msg)
+
+    @staticmethod
+    def UpsertSpfForName(hostName):
+        """
+        Ensure a single SPF TXT for hostName matches buildSpfRecord().
+        Creates missing SPF, updates wrong SPF, removes duplicate SPF TXT rows.
+        Returns (changed_count, error_or_None).
+        """
+        try:
+            Domains, Records = DNS._powerdns_models()
+            import tldextract
+
+            host = (hostName or '').strip().lower().rstrip('.')
+            if not host:
+                return 0, 'Empty hostname'
+
+            extract = tldextract.TLDExtract(cache_dir=None)
+            ex = extract(host)
+            if not ex.domain or not ex.suffix:
+                return 0, 'Invalid hostname'
+            apex = (ex.domain + '.' + ex.suffix).lower()
+            zone = Domains.objects.filter(name=apex).first()
+            if not zone:
+                return 0, 'No DNS zone for %s' % apex
+
+            target = DNS.buildSpfRecord()
+            txts = list(Records.objects.filter(domainOwner=zone, type='TXT', name=host))
+            spf_recs = []
+            for rec in txts:
+                content = (rec.content or '').strip().strip('"')
+                if content.lower().startswith('v=spf1'):
+                    spf_recs.append(rec)
+
+            changed = 0
+            if not spf_recs:
+                DNS.createDNSRecord(zone, host, 'TXT', target, 0, 3600)
+                changed = 1
+            else:
+                first = spf_recs[0]
+                content = (first.content or '').strip().strip('"')
+                if content != target:
+                    first.content = target
+                    first.save()
+                    changed = 1
+                    try:
+                        DNS.bumpSOASerial(zone)
+                    except Exception:
+                        pass
+                for extra in spf_recs[1:]:
+                    try:
+                        extra.delete()
+                        changed += 1
+                    except Exception:
+                        pass
+            return changed, None
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [UpsertSpfForName]')
+            return 0, str(msg)
+
+    @staticmethod
+    def RecreateDNSForDomain(domainName, admin, includeChildren=True):
+        """
+        Full recreate for existing sites: repair PowerDNS template records (including
+        wrong A -> machine IP), upsert SPF, force Cloudflare sync, and report CF
+        zone status / required nameservers when the zone is not active yet.
+
+        Returns (status_1_or_0, message). For structured Cloudflare details use
+        plogical.dns_recreate.recreate_dns_for_domain().
+        """
+        try:
+            from plogical.dns_recreate import recreate_dns_for_domain
+            result = recreate_dns_for_domain(
+                domainName, admin, includeChildren=includeChildren)
+            return int(result.get('status') or 0), result.get('message') or ''
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [RecreateDNSForDomain]')
+            return 0, str(msg)
 
     def loadCFKeys(self):
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
@@ -88,7 +305,7 @@ class DNS:
                     else:
                         return 0, 'Sync not enabled.'
 
-                cf = _cf_client(email=self.email, token=self.key)
+                cf = get_cloudflare_client(self.email, self.key)
 
                 try:
                     params = {'name': zoneDomain, 'per_page': 50}
@@ -652,7 +869,7 @@ class DNS:
             dns = DNS()
             dns.admin = zone.admin
             if dns.loadCFKeys():
-                cf = _cf_client(email=dns.email, token=dns.key)
+                cf = get_cloudflare_client(dns.email, dns.key)
 
                 if dns.status == 'Enable':
                     try:
@@ -827,7 +1044,7 @@ class DNS:
                 dns.admin = zone.admin
                 dns.loadCFKeys()
 
-                cf = _cf_client(email=dns.email, token=dns.key)
+                cf = get_cloudflare_client(dns.email, dns.key)
 
                 if dns.status == 'Enable':
                     try:
