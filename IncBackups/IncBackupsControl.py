@@ -17,6 +17,7 @@ except:
 import threading as multi
 from plogical.processUtilities import ProcessUtilities
 from .models import IncJob, JobSnapshots
+from .resticOutput import extract_snapshot_id
 from websiteFunctions.models import Websites
 import plogical.randomPassword as randomPassword
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -150,7 +151,7 @@ class IncJobs(multi.Thread):
                     logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
                     return 0
 
-                snapShotid = result.split(' ')[-2]
+                snapShotid = extract_snapshot_id(result)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'Snapshot id {snapShotid} from result {result}.')
@@ -231,8 +232,9 @@ class IncJobs(multi.Thread):
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
-            command = 'restic -r %s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
-                self.repoPath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
+            command = 'restic -r %s backup %s --password-file %s --exclude %s --exclude /home/%s/backup --exclude /home/%s/logs' % (
+                self.repoPath, backupPath, self.passwordFile, self.repoPath,
+                self.website.domain, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
@@ -242,7 +244,7 @@ class IncJobs(multi.Thread):
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
                 return 0
 
-            snapShotid = result.split(' ')[-2]
+            snapShotid = extract_snapshot_id(result)
 
             if type == 'database':
                 newSnapshot = JobSnapshots(job=self.jobid,
@@ -293,8 +295,9 @@ class IncJobs(multi.Thread):
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
             remotePath = '/home/backup/%s' % (self.website.domain)
-            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
-                self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup --exclude /home/%s/logs' % (
+                self.backupDestinations, remotePath, backupPath, self.passwordFile,
+                self.repoPath, self.website.domain, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
@@ -304,7 +307,7 @@ class IncJobs(multi.Thread):
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
                 return 0
 
-            snapShotid = result.split(' ')[-2]
+            snapShotid = extract_snapshot_id(result)
 
             if type == 'database':
                 newSnapshot = JobSnapshots(job=self.jobid,

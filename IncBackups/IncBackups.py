@@ -20,6 +20,7 @@ from plogical.backupUtilities import backupUtilities
 from plogical.dnsUtilities import DNS
 from mailServer.models import Domains as eDomains
 from random import randint
+from .resticOutput import extract_snapshot_id
 
 
 class IncJobs(multi.Thread):
@@ -225,11 +226,14 @@ class IncJobs(multi.Thread):
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
             if self.backupDestinations == 'local':
-                command = 'restic -r %s backup %s --password-file %s --exclude %s' % (self.repoPath, backupPath, self.passwordFile, self.repoPath)
+                command = 'restic -r %s backup %s --password-file %s --exclude %s --exclude /home/%s/backup --exclude /home/%s/logs' % (
+                    self.repoPath, backupPath, self.passwordFile, self.repoPath,
+                    self.website.domain, self.website.domain)
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
                     command = command + resticBackupExcludeCMD
-                snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
+                snapShotid = extract_snapshot_id(
+                    ProcessUtilities.outputExecutioner(command))
 
                 newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (backupPath), snapshotid=snapShotid, destination=self.backupDestinations)
                 newSnapshot.save()
@@ -237,11 +241,14 @@ class IncJobs(multi.Thread):
 
             elif self.backupDestinations[:4] == 'sftp':
                 remotePath = '/home/backup/%s' % (self.website.domain)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
+                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup --exclude /home/%s/logs' % (
+                    self.backupDestinations, remotePath, backupPath, self.passwordFile,
+                    self.repoPath, self.website.domain, self.website.domain)
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
                     command = command + resticBackupExcludeCMD
-                snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
+                snapShotid = extract_snapshot_id(
+                    ProcessUtilities.outputExecutioner(command))
                 newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (remotePath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
                 newSnapshot.save()
@@ -266,7 +273,8 @@ class IncJobs(multi.Thread):
 
                 if self.backupDestinations == 'local':
                     command = 'restic -r %s backup %s --password-file %s' % (self.repoPath, dbPath, self.passwordFile)
-                    snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
+                    snapShotid = extract_snapshot_id(
+                        ProcessUtilities.outputExecutioner(command))
 
                     newSnapshot = JobSnapshots(job=self.jobid, type='database:%s' % (items.dbName), snapshotid=snapShotid, destination=self.backupDestinations)
                     newSnapshot.save()
@@ -275,7 +283,8 @@ class IncJobs(multi.Thread):
                     remotePath = '/home/backup/%s' % (self.website.domain)
                     command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
                     self.backupDestinations, remotePath, dbPath, self.passwordFile, self.repoPath)
-                    snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
+                    snapShotid = extract_snapshot_id(
+                        ProcessUtilities.outputExecutioner(command))
                     newSnapshot = JobSnapshots(job=self.jobid, type='database:%s' % (items.dbName), snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                     newSnapshot.save()
@@ -295,7 +304,8 @@ class IncJobs(multi.Thread):
                     logging.statusWriter(self.statusPath, 'hello world', 1)
                     command = 'restic -r %s backup %s --password-file %s' % (
                     self.repoPath, backupPath, self.passwordFile)
-                    snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
+                    snapShotid = extract_snapshot_id(
+                        ProcessUtilities.outputExecutioner(command))
 
                     newSnapshot = JobSnapshots(job=self.jobid, type='email:%s' % (backupPath), snapshotid=snapShotid,
                                                destination=self.backupDestinations)
@@ -306,7 +316,8 @@ class IncJobs(multi.Thread):
                     remotePath = '/home/backup/%s' % (self.website.domain)
                     command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
                         self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
-                    snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
+                    snapShotid = extract_snapshot_id(
+                        ProcessUtilities.outputExecutioner(command))
                     newSnapshot = JobSnapshots(job=self.jobid, type='email:%s' % (backupPath), snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                     newSnapshot.save()

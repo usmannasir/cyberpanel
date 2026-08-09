@@ -21,6 +21,8 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Version comparisons no longer treat dotted releases as decimal numbers.
 - Restores preserve whether the original website had an automatic mail child
   domain instead of always creating one.
+- Incremental backups exclude per-site logs and retain the correct Restic
+  snapshot identifier even when the backup command ends with a warning.
 
 ### Security and reliability
 - Backup restores reject archive path traversal, escaping links, and special
