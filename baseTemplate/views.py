@@ -30,8 +30,11 @@ import re
 
 # Create your views here.
 
-VERSION = '2.5.5'
-BUILD = 2
+try:
+    from cyberpanel_version import VERSION, BUILD
+except Exception:
+    VERSION = '3.0'
+    BUILD = 0
 
 
 def _version_compare(a, b):
