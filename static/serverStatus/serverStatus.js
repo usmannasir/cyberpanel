@@ -305,6 +305,32 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
 /* Java script code to start/stop litespeed */
 
+/** Navigate between Main / Access / Error / Email / FTP / ModSec log viewers. */
+window.CyberPanelLogSources = window.CyberPanelLogSources || {
+    routes: {
+        cyberpanel: '/serverstatus/cyberCPMainLogFile',
+        access: '/serverlogs/accessLogs',
+        error: '/serverlogs/errorLogs',
+        email: '/serverlogs/emaillogs',
+        ftp: '/serverlogs/ftplogs',
+        modSec: '/serverlogs/modSecAuditLogs'
+    },
+    bindScope: function ($scope, currentType) {
+        $scope.selectedLogSource = currentType || '';
+        $scope.changeLogSource = function () {
+            var key = $scope.selectedLogSource;
+            var dest = window.CyberPanelLogSources.routes[key];
+            if (!key || !dest) {
+                return;
+            }
+            if (window.location.pathname.replace(/\/$/, '') === dest.replace(/\/$/, '')) {
+                return;
+            }
+            window.location.href = dest;
+        };
+    }
+};
+
 /* Java script code to read log file */
 
 app.controller('readCyberCPLogFile', function ($scope, $http) {
@@ -312,6 +338,7 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'cyberpanel');
 
 
     var url = "/serverstatus/getFurtherDataFromLogFile";
@@ -844,23 +871,9 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
-    $scope.currentTab = 'upgrade';
-    $scope.showDetails = false;
-    $scope.showUpdate = false;
-    $scope.selectedPackage = '';
-    $scope.updatingPackage = '';
-    $scope.updateComplete = false;
     var globalType;
 
     $scope.fetchPackages = function (type = 'installed') {
-        if (type === 'upgrade') {
-            $scope.currentTab = 'upgrade';
-        } else if (type === 'CyberPanel') {
-            $scope.currentTab = 'cyberpanel';
-        } else {
-            $scope.currentTab = 'all';
-        }
-
         $scope.cyberpanelLoading = false;
         globalType = type;
         var config = {
@@ -907,38 +920,6 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     };
     $scope.fetchPackages('upgrade');
-
-    $scope.showPackageDetails = function (packageName) {
-        $scope.selectedPackage = packageName;
-        $scope.showDetails = true;
-        $scope.fetchPackageDetails(packageName);
-    };
-
-    $scope.closeDetails = function () {
-        $scope.showDetails = false;
-        $scope.selectedPackage = '';
-        $scope.packageDetails = '';
-    };
-
-    $scope.showUpdateModal = function (packageName) {
-        $scope.updatingPackage = packageName;
-        $scope.showUpdate = true;
-        $scope.updateComplete = false;
-        $scope.updatePackage(packageName);
-    };
-
-    $scope.closeUpdate = function () {
-        $scope.showUpdate = false;
-        $scope.updatingPackage = '';
-        $scope.requestData = '';
-    };
-
-    $scope.closeModal = function (event) {
-        if (event.target.classList.contains('modal-overlay')) {
-            if ($scope.showDetails) $scope.closeDetails();
-            if ($scope.showUpdate && $scope.updateComplete) $scope.closeUpdate();
-        }
-    };
 
     $scope.fetchPackageDetails = function (packageFetch) {
         $scope.cyberpanelLoading = false;
@@ -1053,7 +1034,6 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 $timeout.cancel();
                 $scope.cyberpanelLoading = true;
                 $scope.requestData = response.data.requestStatus;
-                $scope.updateComplete = true;
             }
         }
 

@@ -304,6 +304,32 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
 /* Java script code to start/stop litespeed */
 
+/** Navigate between Main / Access / Error / Email / FTP / ModSec log viewers. */
+window.CyberPanelLogSources = window.CyberPanelLogSources || {
+    routes: {
+        cyberpanel: '/serverstatus/cyberCPMainLogFile',
+        access: '/serverlogs/accessLogs',
+        error: '/serverlogs/errorLogs',
+        email: '/serverlogs/emaillogs',
+        ftp: '/serverlogs/ftplogs',
+        modSec: '/serverlogs/modSecAuditLogs'
+    },
+    bindScope: function ($scope, currentType) {
+        $scope.selectedLogSource = currentType || '';
+        $scope.changeLogSource = function () {
+            var key = $scope.selectedLogSource;
+            var dest = window.CyberPanelLogSources.routes[key];
+            if (!key || !dest) {
+                return;
+            }
+            if (window.location.pathname.replace(/\/$/, '') === dest.replace(/\/$/, '')) {
+                return;
+            }
+            window.location.href = dest;
+        };
+    }
+};
+
 /* Java script code to read log file */
 
 app.controller('readCyberCPLogFile', function ($scope, $http) {
@@ -311,6 +337,7 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'cyberpanel');
 
 
     var url = "/serverstatus/getFurtherDataFromLogFile";

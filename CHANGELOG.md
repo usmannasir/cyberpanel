@@ -5,12 +5,19 @@ continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## Unreleased
-### Fix: pluginHolder no longer traceback-spams on Fail2ban name collision
-- Plugins whose `AppConfig.name` differs from the directory (e.g. `fail2ban/` with
-  `name = 'fail2ban_plugin'`) are skipped once without a full traceback. That collision
-  with system `site-packages/fail2ban` was flooding CyberPanel Main Log every few seconds.
-- Plugin URL import now puts the plugin root first on `sys.path` and evicts a wrong
-  preloaded package before `__import__`.
+
+### Feature: Log source dropdown on every Server Log viewer
+- Main Log, Access, Error, Email, FTP, and ModSec Audit viewers include a
+  **Log source** dropdown (same pattern as other required panel selects) so
+  operators can jump between log types without returning to the Logs hub.
+
+### Fix: quieter Server Error Logs (hide cyberpanel_ols gzip WARN noise)
+- `/serverlogs/errorLogs` filters `[CyberPanel-OLS] Restored Content-Encoding: ...`
+  WARN lines. Those are gzip header-restore notices from `cyberpanel_ols.so`, not
+  PHP/site bugs. Real ERROR/NOTICE lines still show.
+- Reads a wider tail window before filtering so the UI still gets ~50 useful lines.
+- Note: the module may still write those WARNs to disk until a future
+  `cyberpanel_ols.so` build logs them at DEBUG; the panel view no longer surfaces them.
 
 ### Feature: SPF record follows deployment type (CyberPersons vs self-hosted)
 - `DNS.getDeploymentType()` / `DNS.buildSpfRecord()`: CyberPersons rental publishes
