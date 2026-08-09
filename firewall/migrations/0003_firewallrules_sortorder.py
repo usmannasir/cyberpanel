@@ -72,6 +72,7 @@ def drop_sort_order_column(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('firewall', '0002_create_bannedips_table'),
     ]
 
     operations = [
