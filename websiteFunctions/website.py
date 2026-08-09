@@ -4957,14 +4957,15 @@ context /cyberpanel_suspension_page.html {
 
             ###
 
-            configContent = """Host github.com
-IdentityFile /home/%s/.ssh/%s
-StrictHostKeyChecking no
-""" % (self.domain, website.externalApp)
+            from plogical.gitSSH import build_ssh_config
+            identity = '/home/%s/.ssh/%s' % (self.domain, website.externalApp)
+            # Include common providers plus any custom host the admin may use later.
+            configContent = build_ssh_config(
+                identity, ['github.com', 'gitlab.com'])
 
             path = "/home/cyberpanel/config"
             writeToFile = open(path, 'w')
-            writeToFile.writelines(configContent)
+            writeToFile.write(configContent)
             writeToFile.close()
 
             command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
@@ -5007,6 +5008,7 @@ StrictHostKeyChecking no
             extraArgs['branch'] = data['branch']
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
             extraArgs['defaultProvider'] = data['defaultProvider']
+            extraArgs['gitHost'] = data.get('gitHost', '')
 
             background = ApplicationInstaller('git', extraArgs)
             background.start()
@@ -6418,10 +6420,23 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
-            ### set default ssh key
+            ### set default ssh key and ensure Host/Port entry for custom Git hosts
 
-            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
-                self.folder, self.masterDomain, self.externalAppLocal)
+            from plogical.gitSSH import build_ssh_config, parse_git_host
+            identity = '/home/%s/.ssh/%s' % (self.masterDomain, self.externalAppLocal)
+            ssh_config_path = '/home/%s/.ssh/config' % self.masterDomain
+            hosts = ['github.com', 'gitlab.com', self.gitHost]
+            config_body = build_ssh_config(identity, hosts)
+            tmp_cfg = '/home/cyberpanel/git_ssh_config_%s' % self.masterDomain
+            writeToFile = open(tmp_cfg, 'w')
+            writeToFile.write(config_body)
+            writeToFile.close()
+            ProcessUtilities.executioner('mv %s %s' % (tmp_cfg, ssh_config_path))
+            ProcessUtilities.executioner(
+                'chown %s:%s %s' % (self.externalAppLocal, self.externalAppLocal, ssh_config_path))
+
+            command = 'git -C %s config --local core.sshCommand "ssh -i %s -o StrictHostKeyChecking=no"' % (
+                self.folder, identity)
             ProcessUtilities.executioner(command, self.externalAppLocal)
 
             ## Check if remote exists
@@ -6431,12 +6446,13 @@ StrictHostKeyChecking no
 
             ## Set new remote
 
+            from plogical.gitSSH import build_ssh_remote_url
+            remote_url = build_ssh_remote_url(
+                self.gitHost, self.gitUsername, self.gitReponame)
             if remoteResult.find('origin') == -1:
-                command = 'git -C %s remote add origin git@%s:%s/%s.git' % (
-                    self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+                command = 'git -C %s remote add origin %s' % (self.folder, remote_url)
             else:
-                command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (
-                    self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+                command = 'git -C %s remote set-url origin %s' % (self.folder, remote_url)
 
             possibleError = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
@@ -6850,7 +6866,10 @@ StrictHostKeyChecking no
 
             ##
 
-            command = 'git clone git@%s:%s/%s.git %s' % (self.gitHost, self.gitUsername, self.gitReponame, self.folder)
+            from plogical.gitSSH import build_ssh_remote_url
+            remote_url = build_ssh_remote_url(
+                self.gitHost, self.gitUsername, self.gitReponame)
+            command = 'git clone %s %s' % (remote_url, self.folder)
             commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('already exists') == -1 and commandStatus.find('Permission denied') == -1:

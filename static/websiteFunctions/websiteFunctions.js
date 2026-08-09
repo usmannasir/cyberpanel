@@ -5100,7 +5100,9 @@ app.controller('setupGit', function ($scope, $http, $timeout, $window) {
 
     $scope.setProvider = function (provider) {
         defaultProvider = provider;
+        $scope.showCustomGitHost = (provider === 'custom' || provider === 'private');
     };
+    $scope.showCustomGitHost = false;
 
 
     var statusFile;
@@ -5211,7 +5213,8 @@ app.controller('setupGit', function ($scope, $http, $timeout, $window) {
             username: $scope.githubUserName,
             reponame: $scope.githubRepo,
             branch: $scope.githubBranch,
-            defaultProvider: defaultProvider
+            defaultProvider: defaultProvider,
+            gitHost: $scope.customGitHost || ''
         };
 
         var config = {

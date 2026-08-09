@@ -91,6 +91,14 @@ class ApplicationInstaller(multi.Thread):
                 self.UpgradeCP()
             elif self.installApp == 'StartOCRestore':
                 self.StartOCRestore()
+            elif self.installApp == 'git':
+                self.setupGit()
+            elif self.installApp == 'pull':
+                self.gitPull()
+            elif self.installApp == 'detach':
+                self.detachRepo()
+            elif self.installApp == 'changeBranch':
+                self.changeBranch()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
@@ -6852,6 +6860,198 @@ class ApplicationInstaller(multi.Thread):
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
+            return 0
+
+
+
+    def _writeGitStatus(self, message):
+        try:
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(message)
+            statusFile.close()
+        except BaseException:
+            pass
+
+    def setupGit(self):
+        """Attach a Git repository to a website document root (setupGit UI)."""
+        try:
+            from plogical.gitSSH import build_ssh_remote_url, resolve_provider_host, parse_git_host
+            from plogical.vhost import vhost
+            from plogical import mailUtilities
+
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
+            domainName = self.extraArgs['domainName']
+            username = self.extraArgs['username']
+            reponame = self.extraArgs['reponame']
+            branch = self.extraArgs['branch']
+            admin = self.extraArgs['admin']
+            defaultProvider = self.extraArgs.get('defaultProvider', 'github')
+            customHost = self.extraArgs.get('gitHost', '')
+
+            self._writeGitStatus('Checking if GIT installed..,0')
+            try:
+                ProcessUtilities.outputExecutioner('git --help')
+            except BaseException:
+                self._writeGitStatus('Installing GIT..,0')
+                self.installGit()
+            self._writeGitStatus('GIT successfully installed,20')
+
+            host, err = resolve_provider_host(defaultProvider, customHost)
+            if err:
+                self._writeGitStatus(err + ' [404]')
+                return 0
+            domain_part, port_or_err = parse_git_host(host)
+            if domain_part is None:
+                self._writeGitStatus(str(port_or_err) + ' [404]')
+                return 0
+            if not ACLManager.validateInput(username) or not ACLManager.validateInput(reponame):
+                self._writeGitStatus('Invalid characters in your input. [404]')
+                return 0
+            if not ACLManager.validateInput(branch):
+                self._writeGitStatus('Invalid characters in your input. [404]')
+                return 0
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                masterDomain = website.master.domain
+                if admin.type != 1 and website.master.admin != admin:
+                    self._writeGitStatus('You do not own this website. [404]')
+                    return 0
+            except BaseException:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                masterDomain = website.domain
+                if admin.type != 1 and website.admin != admin:
+                    self._writeGitStatus('You do not own this website. [404]')
+                    return 0
+
+            finalPath = '/home/%s/public_html/' % domainName
+            if finalPath.find('..') > -1:
+                self._writeGitStatus('Specified path must be inside virtual host home. [404]')
+                return 0
+
+            self._writeGitStatus('Setting up directories..,20')
+            if not os.path.exists(finalPath):
+                ProcessUtilities.executioner('mkdir -p %s' % finalPath)
+
+            dirFiles = os.listdir(finalPath)
+            if len(dirFiles) == 1 and dirFiles[0] == '.well-known':
+                pass
+            elif len(dirFiles) == 0:
+                pass
+            else:
+                self._writeGitStatus(
+                    'Target directory should be empty before attaching GIT, otherwise data loss could occur. [404]')
+                return 0
+
+            identity = '/home/%s/.ssh/%s' % (masterDomain, externalApp)
+            remote_url = build_ssh_remote_url(host, username, reponame)
+            self._writeGitStatus('Cloning the repo..,40')
+            command = (
+                'GIT_SSH_COMMAND="ssh -i %s -o StrictHostKeyChecking=no" '
+                'git clone --depth 1 --no-single-branch %s -b %s %s'
+            ) % (identity, remote_url, branch, finalPath)
+            result = ProcessUtilities.outputExecutioner(command)
+            if result.find('Permission denied') > -1 or result.find('Could not read from remote') > -1 \
+                    or result.find('fatal:') > -1:
+                self._writeGitStatus(
+                    'Failed to clone repository, make sure you deployed your key to repository. [404]')
+                return 0
+
+            ProcessUtilities.executioner(
+                'chown -R %s:%s %s' % (externalApp, externalApp, finalPath))
+            try:
+                vhost.addRewriteRules(domainName)
+                installUtilities.reStartLiteSpeed()
+            except BaseException as msg:
+                logging.writeToFile(str(msg) + ' [ApplicationInstaller.setupGit.restart]')
+
+            mailUtilities.checkHome()
+            gitPath = '/home/cyberpanel/%s.git' % domainName
+            writeToFile = open(gitPath, 'w')
+            writeToFile.write('%s:%s:%s' % (username, reponame, host))
+            writeToFile.close()
+
+            self._writeGitStatus('GIT Repository successfully attached. [200]')
+            return 0
+        except BaseException as msg:
+            try:
+                os.remove('/home/cyberpanel/%s.git' % self.extraArgs.get('domainName', ''))
+            except BaseException:
+                pass
+            self._writeGitStatus(str(msg) + ' [404]')
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.setupGit]')
+            return 0
+
+    def gitPull(self):
+        try:
+            domain = self.extraArgs['domain']
+            try:
+                website = ChildDomains.objects.get(domain=domain)
+                externalApp = website.master.externalApp
+                masterDomain = website.master.domain
+            except BaseException:
+                website = Websites.objects.get(domain=domain)
+                externalApp = website.externalApp
+                masterDomain = website.domain
+            identity = '/home/%s/.ssh/%s' % (masterDomain, externalApp)
+            path = '/home/%s/public_html/' % domain
+            command = (
+                'GIT_SSH_COMMAND="ssh -i %s -o StrictHostKeyChecking=no" '
+                'git -C %s pull'
+            ) % (identity, path)
+            ProcessUtilities.outputExecutioner(command, externalApp)
+            ProcessUtilities.executioner('chown -R %s:%s %s' % (externalApp, externalApp, path))
+            return 0
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.gitPull]')
+            return 0
+
+    def detachRepo(self):
+        try:
+            domainName = self.extraArgs['domainName']
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+            except BaseException:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+            path = '/home/%s/public_html/' % domainName
+            ProcessUtilities.executioner('rm -rf %s.git' % path.rstrip('/'), externalApp)
+            gitPath = '/home/cyberpanel/%s.git' % domainName
+            if os.path.exists(gitPath):
+                os.remove(gitPath)
+            return 0
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.detachRepo]')
+            return 0
+
+    def changeBranch(self):
+        try:
+            domainName = self.extraArgs['domainName']
+            branch = self.extraArgs['githubBranch']
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                masterDomain = website.master.domain
+            except BaseException:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                masterDomain = website.domain
+            if not ACLManager.validateInput(branch):
+                return 0
+            identity = '/home/%s/.ssh/%s' % (masterDomain, externalApp)
+            path = '/home/%s/public_html/' % domainName
+            command = (
+                'GIT_SSH_COMMAND="ssh -i %s -o StrictHostKeyChecking=no" '
+                'git -C %s checkout %s'
+            ) % (identity, path, branch)
+            ProcessUtilities.outputExecutioner(command, externalApp)
+            return 0
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.changeBranch]')
             return 0
 
 
