@@ -27,6 +27,7 @@ import re
 from plogical.securityUtils import (
     TERMINAL_JWT_AUDIENCE,
     TERMINAL_JWT_ISSUER,
+    create_terminal_request,
     get_terminal_jwt_secret,
 )
 
@@ -2203,6 +2204,7 @@ def get_terminal_jwt(request):
             'nbf': now,
             'sub': str(user_id),
             'ssh_user': ssh_user,
+            'jti': create_terminal_request(user_id, ssh_user),
             'exp': now + timedelta(minutes=10)
         }
         token = pyjwt.encode(payload, jwt_secret, algorithm='HS256')

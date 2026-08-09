@@ -1,4 +1,5 @@
 import importlib
+import json
 import os
 import pathlib
 import stat
@@ -21,6 +22,20 @@ from plogical.securityUtils import (
 
 
 class TerminalSecretTests(unittest.TestCase):
+    def test_upgrade_restarts_terminal_after_rebuilding_the_virtualenv(self):
+        upgrade_script = (
+            pathlib.Path(__file__).parents[1]
+            / "cyberpanel_upgrade.sh"
+        ).read_text(encoding="utf-8")
+        main_upgrade_call = upgrade_script.rfind("\nMain_Upgrade\n")
+        terminal_restart_call = upgrade_script.rfind("\nRestart_Web_Terminal\n")
+        self.assertGreater(main_upgrade_call, 0)
+        self.assertGreater(terminal_restart_call, main_upgrade_call)
+        self.assertIn(
+            "if [[ -x /usr/local/CyberCP/bin/python ]]",
+            upgrade_script,
+        )
+
     def test_service_uses_the_virtualenv_python_entry_point(self):
         service = (
             pathlib.Path(__file__).parents[1]
@@ -31,6 +46,13 @@ class TerminalSecretTests(unittest.TestCase):
             service,
         )
         self.assertNotIn("/usr/local/CyberCP/bin/python3", service)
+
+    def test_terminal_connects_to_the_effective_ssh_port(self):
+        source = (
+            pathlib.Path(__file__).parents[1]
+            / "fastapi_ssh_server.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("port=SSH_PORT", source)
 
     def test_terminal_errors_use_the_available_log_writer(self):
         source = (
@@ -87,6 +109,26 @@ class TerminalSecretTests(unittest.TestCase):
                 self.assertEqual(get_terminal_jwt_secret(), "p" * 64)
 
             self.assertEqual(stat.S_IMODE(os.stat(secret_path).st_mode), 0o600)
+
+    def test_private_secret_does_not_require_a_permission_rewrite(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            secret_path = os.path.join(temp_dir, "terminal-secret")
+            with open(secret_path, "w") as secret_file:
+                secret_file.write("p" * 64)
+            os.chmod(secret_path, 0o600)
+            environment = {
+                TERMINAL_JWT_SECRET_ENV: "",
+                TERMINAL_JWT_SECRET_FILE_ENV: secret_path,
+            }
+            with mock.patch.dict(os.environ, environment, clear=False), \
+                    mock.patch(
+                        "plogical.securityUtils.os.chmod",
+                        side_effect=OSError("read-only filesystem"),
+                    ), mock.patch(
+                        "plogical.securityUtils.os.fchmod",
+                        side_effect=OSError("read-only filesystem"),
+                    ):
+                self.assertEqual(get_terminal_jwt_secret(), "p" * 64)
 
     def test_missing_secret_fails_closed(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -151,13 +193,28 @@ class TerminalTokenTests(unittest.TestCase):
             "exp": now + 600,
             "sub": "1",
             "ssh_user": "example",
+            "jti": "t" * 43,
         }
         payload.update(overrides)
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def test_valid_panel_token_is_accepted(self):
-        payload = self.server.decode_terminal_token(self.make_token())
+        with mock.patch.object(
+            self.server,
+            "consume_terminal_request",
+            return_value=True,
+        ):
+            payload = self.server.decode_terminal_token(self.make_token())
         self.assertEqual(payload["ssh_user"], "example")
+
+    def test_signing_secret_alone_cannot_authorize_a_terminal(self):
+        with mock.patch.object(
+            self.server,
+            "consume_terminal_request",
+            return_value=False,
+        ):
+            with self.assertRaises(JWTError):
+                self.server.decode_terminal_token(self.make_token())
 
     def test_wrong_signing_secret_is_rejected(self):
         token = jwt.encode(
@@ -185,6 +242,102 @@ class TerminalTokenTests(unittest.TestCase):
         token = self.make_token(iat=now, nbf=now, exp=now + 3600)
         with self.assertRaises(JWTError):
             self.server.decode_terminal_token(token)
+
+    def test_ssh_port_uses_effective_sshd_configuration(self):
+        completed = SimpleNamespace(
+            returncode=0,
+            stdout="addressfamily any\nport 23456\n",
+        )
+        with mock.patch.object(
+            self.server.subprocess,
+            "run",
+            return_value=completed,
+        ) as run:
+            self.assertEqual(self.server.get_ssh_port(), 23456)
+
+        run.assert_called_once_with(
+            ["/usr/sbin/sshd", "-T"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+
+    def test_ssh_port_falls_back_to_main_configuration(self):
+        config = "# Port 22\nPort 2200 # managed by CyberPanel\n"
+        with mock.patch.object(
+            self.server.subprocess,
+            "run",
+            side_effect=OSError("sshd unavailable"),
+        ), mock.patch(
+            "builtins.open",
+            mock.mock_open(read_data=config),
+        ):
+            self.assertEqual(self.server.get_ssh_port(), 2200)
+
+    def test_ssh_port_falls_back_to_22_for_invalid_values(self):
+        completed = SimpleNamespace(returncode=0, stdout="port 70000\n")
+        with mock.patch.object(
+            self.server.subprocess,
+            "run",
+            return_value=completed,
+        ), mock.patch(
+            "builtins.open",
+            mock.mock_open(read_data="Port invalid\n"),
+        ):
+            self.assertEqual(self.server.get_ssh_port(), 22)
+
+    @mock.patch(
+        "websiteFunctions.models.Websites.objects.get",
+        return_value=SimpleNamespace(externalApp="example"),
+    )
+    @mock.patch(
+        "loginSystem.models.Administrator.objects.get",
+        return_value=SimpleNamespace(),
+    )
+    @mock.patch("plogical.acl.ACLManager.loadedACL", return_value={})
+    @mock.patch("plogical.acl.ACLManager.checkOwnership", return_value=1)
+    @mock.patch(
+        "websiteFunctions.views.get_terminal_jwt_secret",
+        return_value="s" * 64,
+    )
+    @mock.patch(
+        "websiteFunctions.views.create_terminal_request",
+        return_value="r" * 43,
+    )
+    def test_panel_token_contains_one_time_authorization(
+            self,
+            create_request,
+            unused_secret,
+            unused_ownership,
+            unused_acl,
+            unused_admin,
+            unused_website):
+        from django.test import RequestFactory
+        from websiteFunctions.views import get_terminal_jwt
+
+        request = RequestFactory().post(
+            "/websites/getTerminalJWT",
+            data=json.dumps({"domain": "example.com"}),
+            content_type="application/json",
+        )
+        request.session = {"userID": 7}
+
+        response = get_terminal_jwt(request)
+        result = json.loads(response.content.decode("utf-8"))
+        payload = jwt.decode(
+            result["token"],
+            "s" * 64,
+            algorithms=["HS256"],
+            audience=TERMINAL_JWT_AUDIENCE,
+            issuer=TERMINAL_JWT_ISSUER,
+        )
+
+        self.assertEqual(result["status"], 1)
+        self.assertEqual(payload["jti"], "r" * 43)
+        self.assertEqual(payload["sub"], "7")
+        self.assertEqual(payload["ssh_user"], "example")
+        create_request.assert_called_once_with(7, "example")
 
     def make_account(self, home):
         return SimpleNamespace(

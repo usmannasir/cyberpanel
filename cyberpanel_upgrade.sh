@@ -63,6 +63,19 @@ if [[ ! -d /etc/cyberpanel ]]; then
   exit 1
 fi
 
+Restart_Web_Terminal() {
+if [[ -x /usr/local/CyberCP/bin/python ]] && \
+   [[ -f /etc/systemd/system/fastapi_ssh_server.service ]]; then
+  systemctl daemon-reload
+  systemctl reset-failed fastapi_ssh_server >/dev/null 2>&1 || true
+  if systemctl restart fastapi_ssh_server; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Web Terminal restarted after virtualenv rebuild" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Web Terminal could not be restarted" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+}
+
 if [[ "$*" = *"--debug"* ]]; then
   Debug="On"
   Random_Log_Name=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 5)
@@ -117,6 +130,7 @@ else
 fi
 export CYBERPANEL_GIT_SYNC_OK
 Post_Upgrade_System_Tweak || exit 1
+Restart_Web_Terminal
 CyberPanel_Final_Upgrade_Verification
 Post_Install_Display_Final_Info
 if [[ "$CYBERPANEL_GIT_SYNC_OK" -ne 1 ]] || [[ "${CYBERPANEL_UPGRADE_VERIFY_OK:-0}" -ne 1 ]]; then

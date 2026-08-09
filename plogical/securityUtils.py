@@ -22,7 +22,10 @@ PRIVATE_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
 EMAIL_REPORT_DIRECTORY = "/home/cyberpanel/.email-reports"
 BACKUP_REQUEST_DIRECTORY = "/home/cyberpanel/.backup-requests"
 FILE_DOWNLOAD_DIRECTORY = "/home/cyberpanel/.file-downloads"
+TERMINAL_REQUEST_DIRECTORY = "/home/cyberpanel/.terminal-requests"
 BACKUP_REQUEST_MAX_AGE = 300
+TERMINAL_REQUEST_MAX_AGE = 15 * 60
+SYSTEM_USER_RE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
 
 
 def constant_time_equal(left, right):
@@ -53,12 +56,25 @@ def api_token_matches(provided, stored):
 
 
 def _read_secret_file(path):
+    descriptor = None
     try:
-        os.chmod(path, 0o600)
-        with open(path, "r") as secret_file:
+        descriptor = os.open(
+            path,
+            os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
+        )
+        file_status = os.fstat(descriptor)
+        if not stat.S_ISREG(file_status.st_mode) or file_status.st_nlink != 1:
+            return ""
+        if stat.S_IMODE(file_status.st_mode) != 0o600:
+            os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "r") as secret_file:
+            descriptor = None
             return secret_file.read().strip()
     except OSError:
         return ""
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def _create_secret_file(path):
@@ -327,5 +343,59 @@ def consume_backup_request(token, domain, directory=BACKUP_REQUEST_DIRECTORY):
         if age < -30 or age > BACKUP_REQUEST_MAX_AGE:
             return False
         return constant_time_equal(request_data.get("domain"), str(domain))
+    except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError):
+        return False
+
+
+def create_terminal_request(
+        panel_user_id,
+        ssh_user,
+        directory=TERMINAL_REQUEST_DIRECTORY):
+    panel_user_id = str(panel_user_id)
+    ssh_user = str(ssh_user)
+    if not is_safe_numeric_id(panel_user_id) or SYSTEM_USER_RE.fullmatch(ssh_user) is None:
+        raise ValueError("Invalid terminal request identity")
+    remove_stale_private_token_files(directory, TERMINAL_REQUEST_MAX_AGE)
+    content = json.dumps({
+        "panel_user_id": panel_user_id,
+        "ssh_user": ssh_user,
+        "issued": int(time.time()),
+    })
+    token, unused_path = create_private_token_file(
+        directory,
+        content,
+        owner_user="cyberpanel",
+    )
+    return token
+
+
+def consume_terminal_request(
+        token,
+        panel_user_id,
+        ssh_user,
+        directory=TERMINAL_REQUEST_DIRECTORY):
+    try:
+        content = read_private_token_file(
+            token,
+            directory,
+            consume=True,
+            max_age=TERMINAL_REQUEST_MAX_AGE,
+            max_bytes=4096,
+        )
+        request_data = json.loads(content)
+        issued = int(request_data["issued"])
+        age = time.time() - issued
+        if age < -30 or age > TERMINAL_REQUEST_MAX_AGE:
+            return False
+        return (
+            constant_time_equal(
+                request_data.get("panel_user_id"),
+                str(panel_user_id),
+            )
+            and constant_time_equal(
+                request_data.get("ssh_user"),
+                str(ssh_user),
+            )
+        )
     except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError):
         return False

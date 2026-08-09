@@ -21,8 +21,11 @@ class DomainAliasTemplateTests(unittest.TestCase):
 
     def test_both_static_copies_initialize_the_master_domain(self):
         repository = pathlib.Path(__file__).parents[1]
+        collected_static = repository / 'static'
+        if not collected_static.exists():
+            collected_static = repository / 'public' / 'static'
         copies = (
-            repository / 'static' / 'websiteFunctions' / 'websiteFunctions.js',
+            collected_static / 'websiteFunctions' / 'websiteFunctions.js',
             pathlib.Path(__file__).with_name('static') / 'websiteFunctions' / 'websiteFunctions.js',
         )
         for javascript_path in copies:

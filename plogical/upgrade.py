@@ -2019,7 +2019,7 @@ $cfg['Servers'][$i]['port'] = '3306';
     def downloadLink():
         try:
             version_number = VERSION
-            version_build = str(BUILD)
+            version_build = BUILD
 
             try:
                 Content = {"version":version_number,"build":version_build}
@@ -2030,7 +2030,7 @@ $cfg['Servers'][$i]['port'] = '3306';
             except:
                 pass
 
-            return (version_number + "." + version_build + ".tar.gz")
+            return (version_number + "." + str(version_build) + ".tar.gz")
         except Exception as e:
             ErrorSanitizer.log_error_securely(e, 'downloadLink')
             Upgrade.stdOut("Failed to download required files [downloadLink]")

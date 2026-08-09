@@ -9,11 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import paramiko  # For key generation and manipulation
 import io
 import pwd
+import subprocess
 from jose import jwt, JWTError
 import logging
 from plogical.securityUtils import (
     TERMINAL_JWT_AUDIENCE,
     TERMINAL_JWT_ISSUER,
+    consume_terminal_request,
     get_terminal_jwt_secret,
 )
 
@@ -34,6 +36,52 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _ssh_port_from_text(content):
+    for raw_line in content.splitlines():
+        line = raw_line.partition("#")[0].strip()
+        parts = line.split()
+        if len(parts) < 2 or parts[0].lower() != "port":
+            continue
+        try:
+            port = int(parts[1])
+        except (TypeError, ValueError):
+            continue
+        if 1 <= port <= 65535:
+            return port
+    return None
+
+
+def get_ssh_port():
+    try:
+        result = subprocess.run(
+            ["/usr/sbin/sshd", "-T"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if result.returncode == 0:
+            port = _ssh_port_from_text(result.stdout)
+            if port is not None:
+                return port
+    except (OSError, subprocess.SubprocessError) as error:
+        logging.warning("Unable to read effective SSH configuration: %s", error)
+
+    try:
+        with open("/etc/ssh/sshd_config", "r", encoding="utf-8") as config:
+            port = _ssh_port_from_text(config.read())
+            if port is not None:
+                return port
+    except OSError as error:
+        logging.warning("Unable to read SSH configuration: %s", error)
+
+    logging.warning("Unable to determine the SSH port; using port 22")
+    return 22
+
+
+SSH_PORT = get_ssh_port()
 
 # Helper to generate a keypair
 def generate_ssh_keypair():
@@ -192,6 +240,15 @@ def decode_terminal_token(token):
     if expires_at <= issued_at or expires_at - issued_at > MAX_TOKEN_LIFETIME_SECONDS:
         raise JWTError("Invalid Web Terminal token lifetime")
 
+    request_token = payload.get("jti")
+    panel_user_id = payload.get("sub")
+    ssh_user = payload.get("ssh_user")
+    if not consume_terminal_request(
+            request_token,
+            panel_user_id,
+            ssh_user):
+        raise JWTError("Invalid or expired Web Terminal request")
+
     return payload
 
 
@@ -261,7 +318,8 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
     try:
         await websocket.accept()
         conn = await asyncssh.connect(
-            "localhost",
+            "127.0.0.1",
+            port=SSH_PORT,
             username=user,
             client_keys=[keyfile_path],
             known_hosts=None
