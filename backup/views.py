@@ -13,6 +13,7 @@ from loginSystem.views import loadLoginPage
 import os
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.views.decorators.csrf import csrf_exempt
+from plogical.securityUtils import consume_backup_request
 from django.contrib.auth.models import User
 from loginSystem.models import Administrator
 
@@ -421,20 +422,22 @@ def fetchLogs(request):
 @csrf_exempt
 def localInitiate(request):
     try:
+        if request.method != 'POST':
+            raise ValueError('Invalid request method.')
         data = json.loads(request.body)
-        randomFile = data['randomFile']
+        requestToken = data['randomFile']
+        backupDomain = data['websiteToBeBacked']
 
-        try:
-            randInt = int(randomFile)
-            pathToFile = "/home/cyberpanel/" + randomFile
-
-            if os.path.exists(pathToFile):
-                wm = BackupManager()
-                return wm.submitBackupCreation(1, json.loads(request.body))
-        except:
-            pass
+        if consume_backup_request(requestToken, backupDomain):
+            wm = BackupManager()
+            return wm.submitBackupCreation(1, data)
     except BaseException as msg:
         logging.writeToFile(str(msg))
+    return HttpResponse(json.dumps({
+        'status': 0,
+        'metaStatus': 0,
+        'error_message': 'Invalid or expired backup request.'
+    }), status=403, content_type='application/json')
 
 def fetchgNormalSites(request):
     try:
