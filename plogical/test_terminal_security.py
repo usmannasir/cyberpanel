@@ -21,6 +21,17 @@ from plogical.securityUtils import (
 
 
 class TerminalSecretTests(unittest.TestCase):
+    def test_service_uses_the_virtualenv_python_entry_point(self):
+        service = (
+            pathlib.Path(__file__).parents[1]
+            / "fastapi_ssh_server.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "ExecStart=/usr/local/CyberCP/bin/python -m uvicorn",
+            service,
+        )
+        self.assertNotIn("/usr/local/CyberCP/bin/python3", service)
+
     def test_terminal_errors_use_the_available_log_writer(self):
         source = (
             pathlib.Path(__file__).parents[1]
