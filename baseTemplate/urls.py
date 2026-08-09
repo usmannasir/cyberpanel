@@ -34,5 +34,4 @@ urlpatterns = [
     re_path(r'^sshSecurityWhitelistAdd$', views.sshSecurityWhitelistAdd, name='sshSecurityWhitelistAdd'),
     re_path(r'^sshSecurityWhitelistRemove$', views.sshSecurityWhitelistRemove, name='sshSecurityWhitelistRemove'),
     re_path(r'^sshSecurityWhitelistUpdate$', views.sshSecurityWhitelistUpdate, name='sshSecurityWhitelistUpdate'),
->>>>>>> 29e285e4 (fix(ui): HidePromotions gates, panel UX, SSH whitelist APIs (#19))
 ]
