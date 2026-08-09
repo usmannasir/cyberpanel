@@ -722,7 +722,7 @@ class FileManager:
             domainName = self.data.get('domainName', '')
             if domainName:
                 try:
-                    Websites.objects.get(domain=domainName)
+                    website = Websites.objects.get(domain=domainName)
                 except Websites.DoesNotExist:
                     return self.ajaxPre(0, 'Not allowed.')
                 pathCheck = '/home/%s' % (domainName)
