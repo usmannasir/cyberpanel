@@ -15,10 +15,10 @@ from re import match,I,M
 from websiteFunctions.models import Backups, BackupJob, BackupJobLogs
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupIntegrity import archive_is_ready, resolve_archive_path
-from random import randint
 import json, requests
 from datetime import datetime
 import signal
+from plogical.securityUtils import create_backup_request
 
 
 class backupSchedule:
@@ -69,13 +69,9 @@ class backupSchedule:
         return False
 
     @staticmethod
-    def removeBackupMarkers(statusPath, backupFileNamePath, pidPath, requestPath):
+    def removeBackupMarkers(statusPath, backupFileNamePath, pidPath):
         for markerPath in (statusPath, backupFileNamePath, pidPath):
             ProcessUtilities.normalExecutioner('sudo rm -f ' + markerPath)
-        try:
-            os.remove(requestPath)
-        except OSError:
-            pass
 
     @staticmethod
     def createLocalBackup(virtualHost, backupLogPath):
@@ -84,14 +80,11 @@ class backupSchedule:
             backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
 
             ###
-            randNBR = str(randint(10**9, 10**10 - 1))
-            pathToFile = "/home/cyberpanel/" + randNBR
-            file = open(pathToFile, "w+")
-            file.close()
+            requestToken = create_backup_request(virtualHost)
 
             port = ProcessUtilities.fetchCurrentPort()
 
-            finalData = json.dumps({'randomFile': randNBR, 'websiteToBeBacked': virtualHost})
+            finalData = json.dumps({'randomFile': requestToken, 'websiteToBeBacked': virtualHost})
             r = requests.post("https://localhost:%s/backup/localInitiate" % (port), data=finalData, verify=False)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -144,7 +137,7 @@ class backupSchedule:
                             if not backupSchedule.completedArchiveIsReady(
                                     virtualHost, tempStoragePath, fileName, backupLogPath):
                                 backupSchedule.removeBackupMarkers(
-                                    statusPath, backupFileNamePath, pid, pathToFile
+                                    statusPath, backupFileNamePath, pid
                                 )
                                 return 0, tempStoragePath
 
@@ -160,10 +153,6 @@ class backupSchedule:
                             ProcessUtilities.normalExecutioner(command)
 
                             backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
-                            try:
-                                os.remove(pathToFile)
-                            except:
-                                pass
                             return 1, tempStoragePath
 
                         elif status.find("[5009]") > -1:
@@ -194,11 +183,6 @@ class backupSchedule:
                             backupSchedule.remoteBackupLogging(backupLogPath,
                                                                "Local backup creating failed for %s, Error message: %s" % (
                                                                virtualHost, status), backupSchedule.ERROR)
-
-                            try:
-                                os.remove(pathToFile)
-                            except:
-                                pass
 
                             command = 'rm -rf %s' % (tempStoragePath)
                             ProcessUtilities.normalExecutioner(command)
@@ -232,7 +216,7 @@ class backupSchedule:
                             if not backupSchedule.completedArchiveIsReady(
                                     virtualHost, tempStoragePath, fileName, backupLogPath):
                                 backupSchedule.removeBackupMarkers(
-                                    statusPath, backupFileNamePath, pid, pathToFile
+                                    statusPath, backupFileNamePath, pid
                                 )
                                 return 0, tempStoragePath
 
@@ -248,10 +232,6 @@ class backupSchedule:
                             ProcessUtilities.normalExecutioner(command)
 
                             backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
-                            try:
-                                os.remove(pathToFile)
-                            except:
-                                pass
                             return 1, tempStoragePath
                         elif os.path.exists(schedulerPath):
 

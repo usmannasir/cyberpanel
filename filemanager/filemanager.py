@@ -1,4 +1,7 @@
+import getpass
 import os
+import shlex
+import sys
 
 from django.shortcuts import HttpResponse
 import json
@@ -716,29 +719,40 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
-            domainName = self.data['domainName']
-            try:
-                website = Websites.objects.get(domain=domainName)
-
-                pathCheck = '/home/%s' % (domainName)
-
-                if self.notInside(self.data['fileName'], pathCheck):
+            domainName = self.data.get('domainName', '')
+            if domainName:
+                try:
+                    Websites.objects.get(domain=domainName)
+                except Websites.DoesNotExist:
                     return self.ajaxPre(0, 'Not allowed.')
-
-                # Ensure proper UTF-8 handling for file reading
-                # Use explicit UTF-8 locale for the cat command
-                command = 'LANG=C.UTF-8 LC_ALL=C.UTF-8 cat ' + self.returnPathEnclosed(self.data['fileName'])
-                finalData['fileContents'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
-            except:
+                pathCheck = '/home/%s' % (domainName)
+            else:
                 pathCheck = '/'
 
-                if self.notInside(self.data['fileName'], pathCheck):
-                    return self.ajaxPre(0, 'Not allowed.')
-
-                # Ensure proper UTF-8 handling for file reading
-                # Use explicit UTF-8 locale for the cat command
-                command = 'LANG=C.UTF-8 LC_ALL=C.UTF-8 cat ' + self.returnPathEnclosed(self.data['fileName'])
-                finalData['fileContents'] = ProcessUtilities.outputExecutioner(command)
+            pythonPath = '/usr/local/CyberCP/bin/python'
+            if not os.path.exists(pythonPath):
+                pythonPath = sys.executable
+            readScript = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'plogical',
+                'safeFileRead.py',
+            )
+            command = '%s %s --allowed-root %s --file %s' % (
+                shlex.quote(pythonPath),
+                shlex.quote(readScript),
+                shlex.quote(pathCheck),
+                shlex.quote(self.data['fileName']),
+            )
+            websiteUser = website.externalApp if domainName else None
+            readStatus, fileContents = ProcessUtilities.outputExecutioner(
+                command,
+                websiteUser,
+                shell=False,
+                retRequired=True,
+            )
+            if readStatus != 1:
+                return self.ajaxPre(0, 'Not allowed.')
+            finalData['fileContents'] = fileContents
 
 
             # Ensure proper UTF-8 encoding in JSON response
@@ -895,48 +909,49 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
-            domainName = self.data['domainName']
-
-            try:
-
-                website = Websites.objects.get(domain=domainName)
-
+            domainName = self.data.get('domainName', '')
+            websiteUser = None
+            if domainName:
+                try:
+                    website = Websites.objects.get(domain=domainName)
+                except Websites.DoesNotExist:
+                    return self.ajaxPre(0, 'Not allowed.')
                 homePath = '/home/%s' % (domainName)
-
-                if self.notInside(self.data['extractionLocation'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-                if self.notInside(self.data['fileToExtract'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-                if self.data['extractionType'] == 'zip':
-                    command = 'unzip -o ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
-                else:
-                    command = 'tar -xf ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
-
-                ProcessUtilities.executioner(command, website.externalApp)
-
-                #self.fixPermissions(domainName)
-            except:
-
+                websiteUser = website.externalApp
+            else:
                 homePath = '/'
 
-                if self.notInside(self.data['extractionLocation'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+            if self.notInside(self.data['extractionLocation'], homePath):
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+            if self.notInside(self.data['fileToExtract'], homePath):
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                if self.notInside(self.data['fileToExtract'], homePath):
-                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+            extractionType = self.data['extractionType']
+            if extractionType not in ('zip', 'tar', 'tar.gz', 'tgz'):
+                return self.ajaxPre(0, 'Unsupported archive type.')
 
-                if self.data['extractionType'] == 'zip':
-                    command = 'unzip -o ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
-                else:
-                    command = 'tar -xf ' + self.returnPathEnclosed(
-                        self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
-
-                ProcessUtilities.executioner(command)
+            pythonPath = '/usr/local/CyberCP/bin/python'
+            if not os.path.exists(pythonPath):
+                pythonPath = sys.executable
+            extractionScript = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'plogical',
+                'safeArchiveExtraction.py',
+            )
+            command = '%s %s --allowed-root %s --archive %s --destination %s --type %s' % (
+                shlex.quote(pythonPath),
+                shlex.quote(extractionScript),
+                shlex.quote(homePath),
+                shlex.quote(self.data['fileToExtract']),
+                shlex.quote(self.data['extractionLocation']),
+                shlex.quote(extractionType),
+            )
+            if getpass.getuser() == 'root':
+                result = ProcessUtilities.normalExecutioner(command, User=websiteUser)
+            else:
+                result = ProcessUtilities.executioner(command, websiteUser)
+            if result != 1:
+                return self.ajaxPre(0, 'Archive extraction was rejected or failed.')
 
 
             json_data = json.dumps(finalData)
