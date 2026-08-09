@@ -18,7 +18,7 @@ import secrets
 import install_utils
 import json
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cyberpanel_version import BUILD, VERSION
 
 # Using shared char_set from install_utils
