@@ -19,6 +19,8 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Version 3 backups use the modern multi-user database metadata restore path;
   all established legacy format boundaries remain supported.
 - Version comparisons no longer treat dotted releases as decimal numbers.
+- Restores preserve whether the original website had an automatic mail child
+  domain instead of always creating one.
 
 ### Security and reliability
 - Backup restores reject archive path traversal, escaping links, and special

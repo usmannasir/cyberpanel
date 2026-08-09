@@ -49,6 +49,7 @@ from cyberpanel_version import (
     backup_uses_full_directory_layout,
 )
 from plogical.backupIntegrity import safe_extract
+from plogical.backupMetadata import backup_includes_mail_domain
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -694,6 +695,7 @@ class backupUtilities:
             externalApp = backupMetaData.find('externalApp').text
             backup_version = backupMetaData.find('VERSION').text
             backup_build = backupMetaData.find('BUILD').text
+            mail_domain = int(backup_includes_mail_domain(backupMetaData, domain))
 
             ### Fetch user details
 
@@ -741,7 +743,7 @@ class backupUtilities:
             #                                                 siteUser.userName, 'Default', 0)
             result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 1, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
-                                                   1)
+                                                   mail_domain)
 
             if result[0] == 0:
                 raise BaseException(result[1])
