@@ -96,43 +96,8 @@
             box-shadow: 0 0 0 3px rgba(91,95,207,0.1);
         }
         
-        /* Bootstrap .form-control is height:34px; page .form-control padding:10px
-           clips native <select> text. Override for these two dropdowns only. */
-        .form-select,
-        .pagination-select {
-            color: var(--text-primary, #2f3640);
-            background-color: var(--bg-secondary, var(--bg-primary, #fff));
-            height: 42px !important;
-            min-height: 42px !important;
-            padding: 8px 12px !important;
-            line-height: 1.4 !important;
-            box-sizing: border-box;
-        }
-
         .form-select {
             width: 120px;
-        }
-
-        .form-select option,
-        .pagination-select option {
-            color: var(--text-primary, #2f3640);
-            background-color: var(--bg-secondary, var(--bg-primary, #fff));
-        }
-
-        html[data-theme="dark"] .form-select,
-        html[data-theme="dark"] .pagination-select,
-        [data-theme="dark"] .form-select,
-        [data-theme="dark"] .pagination-select {
-            color: var(--text-primary, #e4e4e7) !important;
-            background-color: var(--bg-secondary, #1d1f26) !important;
-        }
-
-        html[data-theme="dark"] .form-select option,
-        html[data-theme="dark"] .pagination-select option,
-        [data-theme="dark"] .form-select option,
-        [data-theme="dark"] .pagination-select option {
-            color: var(--text-primary, #e4e4e7) !important;
-            background-color: var(--bg-secondary, #1d1f26) !important;
         }
         
         /* Button Styles */
@@ -772,11 +737,10 @@
                         </div>
                         <select ng-model="recordsToShow" 
                                 ng-change="getFurtherWebsitesFromDB()" 
-                                class="form-control form-select"
-                                aria-label="Records to show">
-                            <option ng-value="10">10</option>
-                            <option ng-value="50">50</option>
-                            <option ng-value="100">100</option>
+                                class="form-control form-select">
+                            <option>10</option>
+                            <option>50</option>
+                            <option>100</option>
                         </select>
                     </div>
                 </div>
@@ -822,13 +786,6 @@
                                 <a href="/websites/{$ web.domain $}" class="btn btn-primary btn-sm" title="{% trans 'Manage' %}">
                                     Manage
                                 </a>
-                                <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
-                                        ng-disabled="recreatingDNS[web.domain]"
-                                        class="btn btn-outline btn-sm"
-                                        title="{% trans 'Re-apply DNS template and fix SPF for this domain and its subdomains' %}">
-                                    <span ng-hide="recreatingDNS[web.domain]"><i class="fas fa-sync-alt"></i> {% trans "Recreate DNS" %}</span>
-                                    <span ng-show="recreatingDNS[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
-                                </button>
                                 <button ng-if="web.canConvertToChild"
                                         ng-click="convertToChildDomain(web); $event.stopPropagation();"
                                         ng-disabled="convertingToChild[web.domain]"
@@ -866,13 +823,6 @@
                                             <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
                                             <span ng-show="issuingSSL[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> Issuing SSL...</span>
                                         </a>
-                                        <button ng-click="recreateWebsiteDNS(web.domain); $event.stopPropagation();"
-                                                ng-disabled="recreatingDNS[web.domain]"
-                                                class="btn btn-outline btn-sm"
-                                                title="{% trans 'Re-apply DNS template and fix SPF' %}">
-                                            <span ng-hide="recreatingDNS[web.domain]"><i class="fas fa-sync-alt"></i> {% trans "Recreate DNS" %}</span>
-                                            <span ng-show="recreatingDNS[web.domain]"><i class="fas fa-circle-notch fa-spin"></i></span>
-                                        </button>
                                         <button ng-if="web.canConvertToChild"
                                                 ng-click="convertToChildDomain(web); $event.stopPropagation();"
                                                 ng-disabled="convertingToChild[web.domain]"
@@ -1026,9 +976,8 @@
                 <div class="pagination-section">
                     <select ng-model="currentPage" 
                             class="form-control pagination-select" 
-                            ng-change="getFurtherWebsitesFromDB()"
-                            aria-label="Current page">
-                        <option ng-repeat="page in pagination track by $index" ng-value="$index + 1">Page {$ $index + 1 $}</option>
+                            ng-change="getFurtherWebsitesFromDB()">
+                        <option ng-repeat="page in pagination" value="{$ $index + 1 $}">Page {$ $index + 1 $}</option>
                     </select>
                 </div>
             </div>
