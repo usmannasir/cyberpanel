@@ -1613,6 +1613,19 @@ fi
 rm -rf /root/cyberpanel_upgrade_tmp
 }
 
+Restart_Web_Terminal() {
+if [[ -x /usr/local/CyberCP/bin/python ]] && \
+   [[ -f /etc/systemd/system/fastapi_ssh_server.service ]]; then
+  systemctl daemon-reload
+  systemctl reset-failed fastapi_ssh_server >/dev/null 2>&1 || true
+  if systemctl restart fastapi_ssh_server; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Web Terminal restarted after virtualenv rebuild" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Web Terminal could not be restarted" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+}
+
 if [[ ! -d /etc/cyberpanel ]] ; then
   echo -e "\n\nCan not detect CyberCP..."
   exit
@@ -1651,5 +1664,7 @@ Pre_Upgrade_Required_Components
 Main_Upgrade
 
 Post_Upgrade_System_Tweak
+
+Restart_Web_Terminal
 
 Post_Install_Display_Final_Info

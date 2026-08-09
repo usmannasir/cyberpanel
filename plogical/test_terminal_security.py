@@ -21,6 +21,20 @@ from plogical.securityUtils import (
 
 
 class TerminalSecretTests(unittest.TestCase):
+    def test_upgrade_restarts_terminal_after_rebuilding_the_virtualenv(self):
+        upgrade_script = (
+            pathlib.Path(__file__).parents[1]
+            / "cyberpanel_upgrade.sh"
+        ).read_text(encoding="utf-8")
+        main_upgrade_call = upgrade_script.rfind("\nMain_Upgrade\n")
+        terminal_restart_call = upgrade_script.rfind("\nRestart_Web_Terminal\n")
+        self.assertGreater(main_upgrade_call, 0)
+        self.assertGreater(terminal_restart_call, main_upgrade_call)
+        self.assertIn(
+            "if [[ -x /usr/local/CyberCP/bin/python ]]",
+            upgrade_script,
+        )
+
     def test_service_uses_the_virtualenv_python_entry_point(self):
         service = (
             pathlib.Path(__file__).parents[1]
