@@ -11,6 +11,8 @@ import requests
 import subprocess
 import shlex
 import os
+import ipaddress
+import tempfile
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
@@ -26,6 +28,7 @@ from packages.models import Package
 from django.views.decorators.http import require_GET, require_POST
 import pwd
 from cyberpanel_version import BUILD, VERSION
+from plogical.securityUtils import is_safe_hostname, is_safe_system_user
 
 # Create your views here.
 
@@ -488,6 +491,7 @@ def buildServices(request):
     return proc.render()
 
 
+@require_POST
 def runonboarding(request):
     try:
         userID = request.session['userID']
@@ -500,19 +504,37 @@ def runonboarding(request):
 
         data = json.loads(request.body)
         hostname = data['hostname']
+        if not is_safe_hostname(hostname):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error_message': 'Please provide a valid fully-qualified hostname.',
+            }))
 
         try:
-            rDNSCheck = str(int(data['rDNSCheck']))
+            rDNSCheck = int(data['rDNSCheck'])
         except:
             rDNSCheck = 0
+        if rDNSCheck not in (0, 1):
+            rDNSCheck = 0
 
-        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+        with tempfile.NamedTemporaryFile(
+                mode='w',
+                encoding='utf-8',
+                prefix='onboarding-',
+                dir='/home/cyberpanel',
+                delete=False) as status_file:
+            status_file.write('Starting')
+            tempStatusPath = status_file.name
+        os.chmod(tempStatusPath, 0o600)
 
-        WriteToFile = open(tempStatusPath, 'w')
-        WriteToFile.write('Starting')
-        WriteToFile.close()
-
-        command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py OnBoardingHostName --virtualHostName {hostname} --path {tempStatusPath} --rdns {rDNSCheck}'
+        command = shlex.join([
+            '/usr/local/CyberCP/bin/python',
+            '/usr/local/CyberCP/plogical/virtualHostUtilities.py',
+            'OnBoardingHostName',
+            '--virtualHostName', hostname,
+            '--path', tempStatusPath,
+            '--rdns', str(rDNSCheck),
+        ])
         ProcessUtilities.popenExecutioner(command)
 
         dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1127,7 +1149,6 @@ def analyzeSSHSecurity(request):
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
-@csrf_exempt
 @require_POST
 def blockIPAddress(request):
     """
@@ -1268,8 +1289,6 @@ def blockIPAddress(request):
 @csrf_exempt
 @require_POST
 def getSSHUserActivity(request):
-    import json, os
-    from plogical.processUtilities import ProcessUtilities
     try:
         user_id = request.session.get('userID')
         if not user_id:
@@ -1283,11 +1302,25 @@ def getSSHUserActivity(request):
         login_ip = data.get('ip', '')
         if not user:
             return HttpResponse(json.dumps({'error': 'Missing user'}), content_type='application/json', status=400)
-        # Get processes for the user
-        ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers"
+        if not is_safe_system_user(user):
+            return HttpResponse(json.dumps({'error': 'Invalid user'}), content_type='application/json', status=400)
         try:
-            ps_output = ProcessUtilities.outputExecutioner(ps_cmd)
-        except Exception as e:
+            account = pwd.getpwnam(user)
+        except KeyError:
+            return HttpResponse(json.dumps({'error': 'Unknown user'}), content_type='application/json', status=400)
+        # Get processes for the user
+        try:
+            result = subprocess.run(
+                ['ps', '-u', user, '-o', 'pid,ppid,tty,time,cmd', '--no-headers'],
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                timeout=10,
+                check=False,
+            )
+            ps_output = result.stdout if result.returncode == 0 else ''
+        except (OSError, subprocess.SubprocessError):
             ps_output = ''
         processes = []
         pid_map = {}
@@ -1301,6 +1334,8 @@ def getSSHUserActivity(request):
                     # Try to get CWD
                     cwd = ''
                     try:
+                        if not pid.isdigit():
+                            continue
                         cwd_path = f"/proc/{pid}/cwd"
                         if os.path.islink(cwd_path):
                             cwd = os.readlink(cwd_path)
@@ -1333,9 +1368,9 @@ def getSSHUserActivity(request):
                 website = Websites.objects.get(externalApp=user)
                 shell_home = f'/home/{website.domain}'
             except Exception:
-                shell_home = pwd.getpwnam(user).pw_dir
+                shell_home = account.pw_dir
         except Exception:
-            shell_home = f"/home/{user}"
+            shell_home = account.pw_dir
         history_file = ''
         for shell in ['.bash_history', '.zsh_history']:
             path = os.path.join(shell_home, shell)
@@ -1353,9 +1388,18 @@ def getSSHUserActivity(request):
         disk_usage = ''
         if os.path.exists(shell_home):
             try:
-                du_out = ProcessUtilities.outputExecutioner(f'du -sh {shell_home}')
+                result = subprocess.run(
+                    ['du', '-sh', '--', shell_home],
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace',
+                    timeout=15,
+                    check=False,
+                )
+                du_out = result.stdout if result.returncode == 0 else ''
                 disk_usage = du_out.strip().split('\t')[0] if du_out else ''
-            except Exception:
+            except (OSError, subprocess.SubprocessError):
                 disk_usage = ''
         else:
             disk_usage = 'Home directory does not exist'
@@ -1363,7 +1407,8 @@ def getSSHUserActivity(request):
         geoip = {}
         if login_ip and login_ip not in ['127.0.0.1', 'localhost']:
             try:
-                geo = requests.get(f'http://ip-api.com/json/{login_ip}?fields=status,message,country,regionName,city,isp,org,as,query', timeout=2).json()
+                normalized_ip = str(ipaddress.ip_address(login_ip))
+                geo = requests.get(f'http://ip-api.com/json/{normalized_ip}?fields=status,message,country,regionName,city,isp,org,as,query', timeout=2).json()
                 if geo.get('status') == 'success':
                     geoip = {
                         'country': geo.get('country'),
@@ -1377,10 +1422,18 @@ def getSSHUserActivity(request):
             except Exception:
                 geoip = {}
         # Optionally, get 'w' output for more info
-        w_cmd = f"w -h {user}"
         try:
-            w_output = ProcessUtilities.outputExecutioner(w_cmd)
-        except Exception as e:
+            result = subprocess.run(
+                ['w', '-h', user],
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                timeout=10,
+                check=False,
+            )
+            w_output = result.stdout if result.returncode == 0 else ''
+        except (OSError, subprocess.SubprocessError):
             w_output = ''
         w_lines = []
         if w_output:

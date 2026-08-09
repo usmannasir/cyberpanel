@@ -26,6 +26,8 @@ TERMINAL_REQUEST_DIRECTORY = "/home/cyberpanel/.terminal-requests"
 BACKUP_REQUEST_MAX_AGE = 300
 TERMINAL_REQUEST_MAX_AGE = 15 * 60
 SYSTEM_USER_RE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+HOSTNAME_LABEL_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+MYSQL_UPGRADE_STATUS_RE = re.compile(r"^mysql-upgrade-[A-Za-z0-9_.-]{1,80}$")
 
 
 def constant_time_equal(left, right):
@@ -142,6 +144,19 @@ def is_safe_remote_host(value):
     return REMOTE_HOST_RE.match(value) is not None
 
 
+def is_safe_system_user(value):
+    return isinstance(value, str) and SYSTEM_USER_RE.fullmatch(value) is not None
+
+
+def is_safe_hostname(value):
+    if not isinstance(value, str) or not value or len(value) > 253:
+        return False
+    labels = value.split('.')
+    return len(labels) > 1 and all(
+        HOSTNAME_LABEL_RE.fullmatch(label) is not None for label in labels
+    )
+
+
 def is_safe_port(value):
     if not PORT_RE.match(str(value)):
         return False
@@ -179,6 +194,28 @@ def get_remote_transfer_pid_path(transfer_dir, base_path="/home/backup"):
         return ""
 
     return safe_path_under(base_path, "transfer-%s" % str(transfer_dir), "pid")
+
+
+def get_mysql_upgrade_status_path(status_file, base_path="/home/cyberpanel"):
+    if not isinstance(status_file, str):
+        return ""
+    try:
+        real_base = os.path.realpath(base_path)
+        candidate = os.path.abspath(status_file)
+        if os.path.dirname(candidate) != real_base:
+            return ""
+        if os.path.realpath(candidate) != candidate:
+            return ""
+        if MYSQL_UPGRADE_STATUS_RE.fullmatch(os.path.basename(candidate)) is None:
+            return ""
+        file_status = os.lstat(candidate)
+        if not stat.S_ISREG(file_status.st_mode) or file_status.st_nlink != 1:
+            return ""
+        if stat.S_IMODE(file_status.st_mode) & 0o077:
+            return ""
+        return candidate
+    except (OSError, ValueError):
+        return ""
 
 
 def _owner_ids(owner_user):
