@@ -60,8 +60,18 @@ echo "$@" > /etc/cyberpanel/adminPass
 EOF
 chmod 700 /usr/bin/adminPass
 
+# Point /usr/bin/php at an lsphp that is actually installed, preferring the
+# default CLI version (8.3, matching upgrade.py/install.py) and falling back to
+# whatever is present. This block previously hardcoded lsphp74 unconditionally,
+# so on servers without PHP 7.4 it replaced a working symlink with a broken one
+# and `php -v` failed with "command not found". (#1727)
 rm -f /usr/bin/php
-ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
+for _php_ver in 83 84 85 82 81 80 74; do
+  if [ -x "/usr/local/lsws/lsphp${_php_ver}/bin/php" ]; then
+    ln -s "/usr/local/lsws/lsphp${_php_ver}/bin/php" /usr/bin/php
+    break
+  fi
+done
 
 if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
   chmod 600 /etc/cyberpanel/webadmin_passwd
@@ -216,7 +226,7 @@ if [[ ! -f /usr/local/lscp/bin/lscpd ]] || [[ ! -s /usr/local/lscp/bin/lscpd ]];
         # For x86_64 systems, check Ubuntu version
         if [[ "$Server_OS" = "Ubuntu" ]] && [[ -f /etc/lsb-release ]]; then
             ubuntu_version=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2 | cut -d'.' -f1)
-            if [[ "$ubuntu_version" = "22" ]] || [[ "$ubuntu_version" = "24" ]]; then
+            if [[ "$ubuntu_version" = "22" ]] || [[ "$ubuntu_version" = "24" ]] || [[ "$ubuntu_version" = "26" ]]; then
                 lscpd_selection='lscpd.0.4.0'
             fi
         fi
@@ -239,7 +249,7 @@ else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lscpd binary exists and is valid" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
-if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
+if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]]; then
     if declare -F CyberCP_Write_Lscp_Pythonenv_Conf >/dev/null 2>&1; then
       CyberCP_Write_Lscp_Pythonenv_Conf
     else
@@ -330,12 +340,36 @@ else
     mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
 fi
 
-# Ensure proper ownership for SnappyMail data directories
-if id -u lscpd >/dev/null 2>&1; then
+# Ensure proper ownership for SnappyMail data directories (rainloop + snappymail)
+ENSURE_SNAPPY="/usr/local/CyberCP/scripts/utils/ensure-snappymail-permissions.sh"
+if [[ -x "$ENSURE_SNAPPY" ]]; then
+    bash "$ENSURE_SNAPPY" || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ran ensure-snappymail-permissions.sh" | tee -a /var/log/cyberpanel_upgrade_debug.log
+elif id -u lscpd >/dev/null 2>&1; then
+    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/ 2>/dev/null || true
     chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+# Remove leftover RainLoop-era domain .ini when a matching .json exists.
+# Dual configs confuse operators; SnappyMail prefers .json (localhost:143 STARTTLS).
+DOMAINS_DIR="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains"
+DOMAINS_BAK="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains.bak"
+if [ -d "$DOMAINS_DIR" ]; then
+    mkdir -p "$DOMAINS_BAK"
+    ts="$(date +%Y%m%d-%H%M%S)"
+    for jsonf in "$DOMAINS_DIR"/*.json; do
+        [ -f "$jsonf" ] || continue
+        base="$(basename "$jsonf" .json)"
+        inif="$DOMAINS_DIR/${base}.ini"
+        if [ -f "$inif" ]; then
+            cp -a "$inif" "$DOMAINS_BAK/${base}.ini.$ts"
+            rm -f "$inif"
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removed conflicting SnappyMail domain .ini (backed up): ${base}.ini" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        fi
+    done
 fi
 
 # Ensure /rainloop→/snappymail redirect exists (even when no migration ran)
@@ -354,6 +388,7 @@ fi
 
 # Set proper permissions for SnappyMail data directories (group writable)
 chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/
+chmod -R 775 /usr/local/lscp/cyberpanel/rainloop/data/ 2>/dev/null || true
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail data directory permissions to 775 (group writable)" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Ensure web server users are in the lscpd group for access

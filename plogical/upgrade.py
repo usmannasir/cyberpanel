@@ -3975,6 +3975,48 @@ passdb {
             Upgrade.stdOut("fixMailTLS error: " + str(msg), 0)
 
     @staticmethod
+    def repairDovecot24SNIPaths():
+        dovecot_conf = '/etc/dovecot/dovecot.conf'
+        if not os.path.isfile(dovecot_conf):
+            return
+
+        with open(dovecot_conf, 'r') as conf_file:
+            content = conf_file.read()
+
+        if 'dovecot_config_version = 2.4.0' not in content:
+            return
+
+        from plogical.virtualHostUtilities import virtualHostUtilities
+        normalized = virtualHostUtilities.normalizeDovecotSNIPaths(content)
+
+        if normalized != content:
+            conf_stat = os.stat(dovecot_conf)
+            temporary_conf = dovecot_conf + '.cyberpanel-sni.tmp'
+            try:
+                with open(temporary_conf, 'w') as conf_file:
+                    conf_file.write(normalized)
+                    conf_file.flush()
+                    os.fsync(conf_file.fileno())
+                os.chmod(temporary_conf, conf_stat.st_mode & 0o7777)
+                os.chown(temporary_conf, conf_stat.st_uid, conf_stat.st_gid)
+                os.replace(temporary_conf, dovecot_conf)
+                Upgrade.stdOut("Updated Dovecot 2.4 SNI certificate paths.", 0)
+            finally:
+                if os.path.exists(temporary_conf):
+                    os.remove(temporary_conf)
+
+        validation = subprocess.run(
+            ['doveconf', '-n'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+        if validation.returncode != 0:
+            raise RuntimeError(
+                'Dovecot configuration validation failed after SNI path repair.'
+            )
+
+    @staticmethod
     def manageServiceMigrations():
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
@@ -7157,6 +7199,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.manageServiceMigrations()
         Upgrade.pdnsSchemaMigrations()
         Upgrade.firewallMigrations()
+        Upgrade.repairDovecot24SNIPaths()
         Upgrade.fixMailTLS()
         Upgrade.setupWebmail()
         Upgrade.setupSieve()
