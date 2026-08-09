@@ -21,6 +21,8 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 - Version comparisons no longer treat dotted releases as decimal numbers.
 
 ### Security and reliability
+- Backup restores reject archive path traversal, escaping links, and special
+  filesystem entries before extracting any content.
 - Hardened Web Terminal authentication and secret-file permissions.
 - Blocked sensitive application files through generated website
   configurations and tightened certificate-file handling.

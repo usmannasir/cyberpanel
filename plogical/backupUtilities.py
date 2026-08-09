@@ -48,6 +48,7 @@ from cyberpanel_version import (
     backup_uses_database_users_schema,
     backup_uses_full_directory_layout,
 )
+from plogical.backupIntegrity import safe_extract
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -836,9 +837,8 @@ class backupUtilities:
 
             ## Converting /home/backup/backup-example.com-02.13.2018_10-24-52.tar.gz -> /home/backup/backup-example.com-02.13.2018_10-24-52
 
-            tar = tarfile.open(originalFile)
-            tar.extractall(completPath)
-            tar.close()
+            with tarfile.open(originalFile) as tar:
+                safe_extract(tar, completPath)
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Creating Accounts,Databases and DNS records!")
 
@@ -1145,9 +1145,8 @@ class backupUtilities:
 
 
             if not twoPointO:
-                tar = tarfile.open(pathToCompressedHome)
-                tar.extractall(websiteHome)
-                tar.close()
+                with tarfile.open(pathToCompressedHome) as tar:
+                    safe_extract(tar, websiteHome)
             else:
                 if backup_uses_full_directory_layout(version, build):
                     #copy_tree('%s/public_html' % (completPath), websiteHome)
@@ -1175,9 +1174,8 @@ class backupUtilities:
                     pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
                     emailHome = os.path.join("/home", "vmail", masterDomain)
 
-                    tar = tarfile.open(pathToCompressedEmails)
-                    tar.extractall(emailHome)
-                    tar.close()
+                    with tarfile.open(pathToCompressedEmails) as tar:
+                        safe_extract(tar, emailHome)
 
                     ## Change permissions
 
