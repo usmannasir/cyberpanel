@@ -6,4 +6,6 @@ class FirewallRules(models.Model):
     name = models.CharField(unique=True, max_length=32)  # Field name made lowercase.
     proto = models.CharField(max_length=10)
     port = models.CharField(max_length=25)
-    ipAddress = models.CharField(max_length=30,default="0.0.0.0/0")
+    ipAddress = models.CharField(max_length=30, default="0.0.0.0/0")
+    # Display / apply order for Firewall Rules table (1 = top). Independent of auto-increment PK.
+    sortOrder = models.IntegerField(default=0, db_index=True)

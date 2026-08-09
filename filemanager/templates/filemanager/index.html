@@ -1,6 +1,6 @@
 {% load i18n %}
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light" class="cp-theme-light">
 <head>
     <title>{% trans "File Manager - CyberPanel" %}</title>
     <!-- Required meta tags -->
@@ -9,17 +9,22 @@
 
     {% load static %}
     <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
+    <script>
+    (function(){try{var t=localStorage.getItem('cyberPanelTheme');t=(t==='dark')?'dark':'light';var h=document.documentElement;h.setAttribute('data-theme',t);h.classList.toggle('cp-theme-dark',t==='dark');h.classList.toggle('cp-theme-light',t==='light');h.style.colorScheme=t;}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.classList.add('cp-theme-light');}})();
+    </script>
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'filemanager/images/fonts/css/font-awesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'filemanager/css/fileManager.css' %}">
+    <link rel="stylesheet" href="{% static 'filemanager/css/fileManager-theme.css' %}">
 
 
     <!-- Angular JS -->
 
     <script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
     <script src="{% static 'filemanager/js/fileManager.js' %}"></script>
+    <script src="{% static 'filemanager/js/fileManager-theme.js' %}"></script>
 
     <!-- Fix for old browsers -->
     <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
@@ -43,7 +48,7 @@
     <div class="header-logo">
         <a href="/websites/{{ domainName }}">
             <div class="logo-icon">
-                <i class="fa fa-folder-open"></i>
+                <img src="{% static 'baseTemplate/cyber-panel-logo.svg' %}" alt="CyberPanel">
             </div>
             <div class="logo-text">
                 <span class="brand">File Manager</span>
@@ -60,7 +65,7 @@
             </div-->
             <ul class="nav mr-10">
                 <li class="nav-item">
-                    <a onclick="return false;" ng-click="showUploadBox()" class="nav-link point-events" href="#"><i class="fa fa-upload" aria-hidden="true"></i>  {% trans "Upload" %}</a>
+                    <a id="uploadTriggerBtn" onclick="return false;" ng-click="showUploadBox()" class="nav-link point-events" href="#"><i class="fa fa-upload" aria-hidden="true"></i>  {% trans "Upload" %}</a>
                 </li>
                 <li class="nav-item">
                     <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link point-events" href="#"><i class="fa fa-plus-square" aria-hidden="true"></i>  {% trans "New File" %}</a>
@@ -97,6 +102,9 @@
     </div>
 
     <!--- second bar ends ---->
+    <button id="fm-theme-toggle" class="fm-theme-toggle" type="button" title="{% trans 'Toggle dark mode' %}" aria-label="{% trans 'Toggle dark mode' %}" aria-pressed="false">
+        <i class="fa fa-moon-o" id="fm-theme-icon" aria-hidden="true"></i>
+    </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
 
@@ -463,6 +471,8 @@
                         <select ng-model="compressionType" class="form-control">
                             <option>zip</option>
                             <option>tar.gz</option>
+                            <option>7z</option>
+                            <option>rar</option>
                         </select>
                     </div>
                 </form>
@@ -707,7 +717,7 @@
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
 
 <!-- HTML Editor Include -->

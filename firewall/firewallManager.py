@@ -22,6 +22,7 @@ from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
+from firewall import ruleOrder as FirewallRuleOrder
 from plogical.modSec import modSec
 from plogical.csf import CSF
 from plogical.processUtilities import ProcessUtilities
@@ -51,43 +52,115 @@ class FirewallManager:
                             None, 'admin')
             return proc.render()
 
-    def getCurrentRules(self, userID = None):
+
+    def getCurrentRules(self, userID=None, data=None):
+        """Get firewall rules with optional pagination (sortOrder-aware)."""
         try:
             currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
+            if currentACL['admin'] != 1:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            rules = FirewallRules.objects.all()
+            try:
+                FirewallRuleOrder.ensure_sort_orders()
+            except BaseException:
+                pass
+            rules_qs = FirewallRuleOrder.ordered_queryset()
 
+            if not rules_qs.filter(port='7080').exists():
+                try:
+                    FirewallRules(
+                        name="CyberPanel Admin",
+                        proto="tcp",
+                        port="7080",
+                        ipAddress="0.0.0.0/0",
+                        sortOrder=FirewallRuleOrder.next_sort_order()
+                    ).save()
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Failed to add CyberPanel port 7080 to database: %s" % str(e))
+                rules_qs = FirewallRuleOrder.ordered_queryset()
+
+            total_count = rules_qs.count()
+            page = 1
+            page_size = 10
+            if data:
+                try:
+                    page = max(1, int(data.get('page', 1)))
+                except (TypeError, ValueError):
+                    pass
+                try:
+                    page_size = max(1, min(100, int(data.get('page_size', 10))))
+                except (TypeError, ValueError):
+                    pass
+
+            start = (page - 1) * page_size
+            rules = list(rules_qs[start:start + page_size])
             json_data = "["
-            checker = 0
-
-            for items in rules:
+            for i, items in enumerate(rules):
+                display_id = start + i + 1
                 dic = {
-                       'id': items.id,
-                       'name': items.name,
-                       'proto': items.proto,
-                       'port': items.port,
-                       'ipAddress': items.ipAddress,
-                       }
-
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
-
-            json_data = json_data + ']'
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
-            return HttpResponse(final_json)
-
+                    'id': items.id,
+                    'displayId': display_id,
+                    'sortOrder': items.sortOrder or display_id,
+                    'name': items.name,
+                    'proto': items.proto,
+                    'port': items.port,
+                    'ipAddress': items.ipAddress,
+                }
+                if i > 0:
+                    json_data += ','
+                json_data += json.dumps(dic)
+            json_data += ']'
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'fetchStatus': 1,
+                'error_message': "None",
+                "data": json_data,
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size
+            }))
         except BaseException as msg:
-            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            return HttpResponse(json.dumps({
+                'status': 0, 'fetchStatus': 0, 'error_message': str(msg)
+            }))
+
+    def reorderRules(self, userID=None, data=None):
+        """Persist Firewall Rules table order in MariaDB (sortOrder)."""
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] != 1:
+                return ACLManager.loadErrorJson('reorder_status', 0)
+            data = data or {}
+            direction = (data.get('direction') or '').strip().lower()
+            rule_id = data.get('id')
+            page_ordered_ids = data.get('page_ordered_ids')
+            ordered_ids = data.get('ordered_ids')
+            if direction in ('up', 'down') and rule_id is not None:
+                new_order = FirewallRuleOrder.move_rule(rule_id, direction)
+            elif page_ordered_ids is not None:
+                new_order = FirewallRuleOrder.apply_page_order(
+                    page_ordered_ids, data.get('page', 1), data.get('page_size', 10)
+                )
+            elif ordered_ids is not None:
+                new_order = FirewallRuleOrder.apply_ordered_ids(ordered_ids)
+            else:
+                return HttpResponse(json.dumps({
+                    'status': 0, 'reorder_status': 0,
+                    'error_message': 'Provide direction+id, page_ordered_ids, or ordered_ids'
+                }))
+            return HttpResponse(json.dumps({
+                'status': 1, 'reorder_status': 1, 'error_message': 'None',
+                'ordered_ids': new_order,
+            }))
+        except ValueError as msg:
+            return HttpResponse(json.dumps({
+                'status': 0, 'reorder_status': 0, 'error_message': str(msg)
+            }))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0, 'reorder_status': 0, 'error_message': str(msg)
+            }))
 
     def addRule(self, userID = None, data = None):
         try:
@@ -106,7 +179,7 @@ class FirewallManager:
 
             FirewallUtilities.addRule(ruleProtocol, rulePort, ruleIP)
 
-            newFWRule = FirewallRules(name=ruleName, proto=ruleProtocol, port=rulePort, ipAddress=ruleIP)
+            newFWRule = FirewallRules(name=ruleName, proto=ruleProtocol, port=rulePort, ipAddress=ruleIP, sortOrder=FirewallRuleOrder.next_sort_order())
             newFWRule.save()
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}

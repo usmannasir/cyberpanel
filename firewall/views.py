@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.http import HttpResponse
 import json
 from loginSystem.views import loadLoginPage
 from plogical.processUtilities import ProcessUtilities
@@ -85,6 +86,27 @@ def deleteRule(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+
+def reorderRules(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except BaseException:
+        return HttpResponse(json.dumps({'status': 0, 'reorder_status': 0, 'error_message': 'Invalid session or payload'}))
+    fm = FirewallManager()
+    return fm.reorderRules(userID, data)
+
+def modifyRule(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except BaseException:
+        return HttpResponse(json.dumps({'status': 0, 'error_message': 'Invalid session or payload'}))
+    fm = FirewallManager()
+    if hasattr(fm, 'modifyRule'):
+        return fm.modifyRule(userID, data)
+    return HttpResponse(json.dumps({'status': 0, 'error_message': 'modifyRule not available'}))
 
 def reloadFirewall(request):
     try:

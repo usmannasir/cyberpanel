@@ -20,6 +20,14 @@ except:
     pass
 
 import CloudFlare
+import warnings
+
+def _cf_client(**kwargs):
+    """Instantiate python-cloudflare without PendingDeprecationWarning noise (2.20)."""
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', PendingDeprecationWarning)
+        return _cf_client(**kwargs)
+
 from plogical.processUtilities import ProcessUtilities
 
 
@@ -80,7 +88,7 @@ class DNS:
                     else:
                         return 0, 'Sync not enabled.'
 
-                cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+                cf = _cf_client(email=self.email, token=self.key)
 
                 try:
                     params = {'name': zoneDomain, 'per_page': 50}
@@ -644,7 +652,7 @@ class DNS:
             dns = DNS()
             dns.admin = zone.admin
             if dns.loadCFKeys():
-                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                cf = _cf_client(email=dns.email, token=dns.key)
 
                 if dns.status == 'Enable':
                     try:
@@ -819,7 +827,7 @@ class DNS:
                 dns.admin = zone.admin
                 dns.loadCFKeys()
 
-                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                cf = _cf_client(email=dns.email, token=dns.key)
 
                 if dns.status == 'Enable':
                     try:
