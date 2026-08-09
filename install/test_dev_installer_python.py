@@ -1,5 +1,6 @@
 import pathlib
 import subprocess
+import tempfile
 import unittest
 
 from install import install_utils
@@ -42,6 +43,58 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
         self.assertIn('\n        Upgrade.upgradeVersion()\n', upgrader)
         self.assertNotIn('# Upgrade.upgradeVersion()', upgrader)
+
+    def test_ubuntu_24_lscpd_keeps_virtualenv_packages_visible(self):
+        root = pathlib.Path(__file__).parents[1]
+        script = (root / 'cyberpanel_upgrade.sh').read_text(encoding='utf-8')
+        function_start = script.index('Configure_LSCPD_Python_Environment()')
+        function_end = script.index('\n}\n', function_start) + 3
+        function = script[function_start:function_end]
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            temporary_root = pathlib.Path(temporary_directory)
+            runtime_root = temporary_root / 'CyberCP'
+            runtime_site = runtime_root / 'lib/python3.12/site-packages'
+            runtime_site.mkdir(parents=True)
+            runtime_python = runtime_root / 'bin/python'
+            runtime_python.parent.mkdir()
+            runtime_python.write_text(
+                '#!/bin/sh\nprintf \'%s\\n\' "$RUNTIME_SITE"\n',
+                encoding='utf-8',
+            )
+            runtime_python.chmod(0o755)
+            environment_file = temporary_root / 'pythonenv.conf'
+            environment = {
+                'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                'Server_OS': 'Ubuntu',
+                'Server_OS_Version': '24',
+                'LSCPD_PYTHON_ENV_FILE': str(environment_file),
+                'CYBERCP_RUNTIME_ROOT': str(runtime_root),
+                'RUNTIME_SITE': str(runtime_site),
+            }
+
+            subprocess.run(
+                ['bash', '-c', function + '\nConfigure_LSCPD_Python_Environment'],
+                check=True,
+                env=environment,
+            )
+            self.assertEqual(
+                'PYTHONHOME=/usr\n'
+                f'PYTHONPATH=.:{runtime_root}:{runtime_site}\n',
+                environment_file.read_text(encoding='utf-8'),
+            )
+
+            environment['Server_OS'] = 'CentOS'
+            environment['Server_OS_Version'] = '9'
+            subprocess.run(
+                ['bash', '-c', function + '\nConfigure_LSCPD_Python_Environment'],
+                check=True,
+                env=environment,
+            )
+            self.assertEqual(
+                'PYTHONHOME=/usr\n',
+                environment_file.read_text(encoding='utf-8'),
+            )
 
     def test_repair_script_does_not_download_old_release_requirements(self):
         root = pathlib.Path(__file__).parents[1]
