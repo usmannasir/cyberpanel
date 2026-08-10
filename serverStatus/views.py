@@ -402,19 +402,27 @@ def securityruleUpdate(request):
 
 def switchTOLSWSStatus(request):
     try:
+        from plogical.imunify_integration import read_install_status
 
-        command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
-        output = ProcessUtilities.outputExecutioner(command)
+        statusPath = serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        output = read_install_status(statusPath)
+        if output is None:
+            data_ret = {'status': 1, 'abort': 0, 'requestStatus': '', 'installed': 0}
+            return HttpResponse(json.dumps(data_ret))
 
         if output.find('[404]') > -1:
-            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
-            ProcessUtilities.popenExecutioner(command)
+            try:
+                os.remove(statusPath)
+            except FileNotFoundError:
+                pass
             data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         elif output.find('[200]') > -1:
-            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
-            ProcessUtilities.popenExecutioner(command)
+            try:
+                os.remove(statusPath)
+            except FileNotFoundError:
+                pass
             data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -424,8 +432,10 @@ def switchTOLSWSStatus(request):
             return HttpResponse(json_data)
 
     except BaseException as msg:
-        command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
-        ProcessUtilities.popenExecutioner(command)
+        try:
+            os.remove(serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath)
+        except OSError:
+            pass
         data_ret = {'status': 0, 'abort': 1, 'requestStatus': str(msg), 'installed': 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

@@ -2,7 +2,7 @@
 import sys
 import os
 import django
-sys.path.append('/usr/local/CyberCP')
+sys.path.insert(0, '/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
 django.setup()
@@ -13,6 +13,18 @@ from plogical.processUtilities import ProcessUtilities
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
 from serverStatus.serverStatusUtil import ServerStatusUtil
+from plogical.imunify_integration import (
+    IMUNIFY_360_UI,
+    IMUNIFY_AV_UI,
+    build_deploy_commands,
+    build_imunify360_integration_conf,
+    build_imunifyav_integration_conf,
+    chmod_imunify_execute_files,
+    ensure_clscripts_executable,
+    ensure_install_status_file,
+    run_deploy_commands,
+    write_integration_conf,
+)
 
 
 class CageFS:
@@ -148,74 +160,43 @@ class CageFS:
     @staticmethod
     def submitinstallImunify(key):
         try:
-
-            imunifyKeyPath = '/home/cyberpanel/imunifyKeyPath'
-
-            ##
-
-            writeToFile = open(imunifyKeyPath, 'w')
-            writeToFile.write(key)
-            writeToFile.close()
-
-            ##
+            if key is None or not str(key).strip():
+                raise ValueError('An Imunify360 license key is required.')
+            key = str(key).strip()
 
             mailUtilities.checkHome()
+            ensure_install_status_file()
 
-            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+            imunifyKeyPath = '/home/cyberpanel/imunifyKeyPath'
+            keyFileDescriptor = os.open(
+                imunifyKeyPath,
+                os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+                0o600,
+            )
+            with os.fdopen(keyFileDescriptor, 'w') as writeToFile:
+                writeToFile.write(key)
+            os.chmod(imunifyKeyPath, 0o600)
 
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Starting Imunify Installation..\n", 1)
+            with open(ServerStatusUtil.lswsInstallStatusPath, 'w') as statusFile:
+                logging.CyberCPLogFileWriter.statusWriter(
+                    ServerStatusUtil.lswsInstallStatusPath,
+                    "Starting Imunify360 Installation..\n", 1)
 
-            ##
+                os.makedirs('/etc/sysconfig/imunify360/generic', exist_ok=True)
+                with open('/etc/sysconfig/imunify360/generic/modsec.conf', 'a'):
+                    pass
+                os.makedirs(IMUNIFY_360_UI, exist_ok=True)
 
-            command = 'mkdir -p /etc/sysconfig/imunify360/generic'
-            ServerStatusUtil.executioner(command, statusFile)
+                write_integration_conf(build_imunify360_integration_conf())
+                ensure_clscripts_executable()
 
-            command = 'touch /etc/sysconfig/imunify360/generic/modsec.conf'
-            ServerStatusUtil.executioner(command, statusFile)
+                commands = build_deploy_commands('360', key=key)
+                run_deploy_commands(commands, statusFile)
+                chmod_imunify_execute_files(IMUNIFY_360_UI)
 
-            integrationFile = '/etc/sysconfig/imunify360/integration.conf'
-
-            content = """[paths]
-ui_path =/usr/local/CyberCP/public/imunify
-[web_server]
-server_type = litespeed
-graceful_restart_script = /usr/local/lsws/bin/lswsctrl restart
-modsec_audit_log = /usr/local/lsws/logs/auditmodsec.log
-modsec_audit_logdir = /usr/local/lsws/logs/
-
-[malware]
-basedir = /home
-pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
-"""
-
-            writeToFile = open(integrationFile, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
-
-            ##
-
-            ### address issue to create imunify dir - https://app.clickup.com/t/86engx249
-
-            command = 'mkdir /usr/local/CyberCP/public/imunify'
-            ProcessUtilities.executioner(command)
-
-            command = 'pkill -f "bash i360deploy.sh"'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            if not os.path.exists('i360deploy.sh'):
-                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh'
-                ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'bash i360deploy.sh --uninstall --yes'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'bash i360deploy.sh --key %s --yes' % (key)
-            ServerStatusUtil.executioner(command, statusFile)
-
-
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Imunify reinstalled..\n", 1)
+                logging.CyberCPLogFileWriter.statusWriter(
+                    ServerStatusUtil.lswsInstallStatusPath,
+                    "Imunify360 reinstalled..\n", 1)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Packages successfully installed.[200]\n", 1)
@@ -226,54 +207,29 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
     @staticmethod
     def submitinstallImunifyAV():
         try:
-
-
             mailUtilities.checkHome()
+            ensure_install_status_file()
 
-            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+            with open(ServerStatusUtil.lswsInstallStatusPath, 'w') as statusFile:
+                logging.CyberCPLogFileWriter.statusWriter(
+                    ServerStatusUtil.lswsInstallStatusPath,
+                    "Starting ImunifyAV Installation..\n", 1)
 
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Starting ImunifyAV Installation..\n", 1)
+                os.makedirs('/etc/sysconfig/imunify360/generic', exist_ok=True)
+                with open('/etc/sysconfig/imunify360/generic/modsec.conf', 'a'):
+                    pass
+                os.makedirs(IMUNIFY_AV_UI, exist_ok=True)
 
-            ##
+                write_integration_conf(build_imunifyav_integration_conf())
+                ensure_clscripts_executable()
 
-            command = 'mkdir -p /etc/sysconfig/imunify360'
-            ServerStatusUtil.executioner(command, statusFile)
+                commands = build_deploy_commands('av')
+                run_deploy_commands(commands, statusFile)
+                chmod_imunify_execute_files(IMUNIFY_AV_UI)
 
-
-            integrationFile = '/etc/sysconfig/imunify360/integration.conf'
-
-            content = """[paths]
-ui_path = /usr/local/CyberCP/public/imunifyav
-ui_path_owner = lscpd:lscpd
-"""
-
-            writeToFile = open(integrationFile, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
-
-            ##
-
-            ### address issue to create imunify dir - https://app.clickup.com/t/86engx249
-
-            command = 'pkill -f "bash imav-deploy.sh"'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            if not os.path.exists('imav-deploy.sh'):
-                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh'
-                ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'bash imav-deploy.sh --uninstall --yes'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'mkdir -p /usr/local/CyberCP/public/imunifyav'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'bash imav-deploy.sh --yes'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "ImunifyAV reinstalled..\n", 1)
+                logging.CyberCPLogFileWriter.statusWriter(
+                    ServerStatusUtil.lswsInstallStatusPath,
+                    "ImunifyAV reinstalled..\n", 1)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Packages successfully installed.[200]\n", 1)
@@ -299,4 +255,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

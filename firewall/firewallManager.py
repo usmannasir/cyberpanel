@@ -1651,9 +1651,18 @@ class FirewallManager:
                 return 0
 
             data = json.loads(self.request.body)
+            key = str(data.get('key', '')).strip()
+            if not key:
+                data_ret = {'status': 0, 'error_message': 'An Imunify360 license key is required.'}
+                return HttpResponse(json.dumps(data_ret))
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
-            execPath = execPath + " --function submitinstallImunify --key %s" % (data['key'])
+            from plogical.imunify_integration import (
+                build_install_worker_command,
+                ensure_install_status_file,
+            )
+            ensure_install_status_file(reset=True)
+
+            execPath = build_install_worker_command('360', key=key)
             ProcessUtilities.popenExecutioner(execPath)
 
             data_ret = {'status': 1, 'error_message': 'None'}
@@ -1701,8 +1710,13 @@ class FirewallManager:
                                                           1)
                 return 0
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
-            execPath = execPath + " --function submitinstallImunifyAV"
+            from plogical.imunify_integration import (
+                build_install_worker_command,
+                ensure_install_status_file,
+            )
+            ensure_install_status_file(reset=True)
+
+            execPath = build_install_worker_command('av')
             ProcessUtilities.popenExecutioner(execPath)
 
             data_ret = {'status': 1, 'error_message': 'None'}
@@ -1800,11 +1814,6 @@ class FirewallManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
-
-
-
-
 
 
 
