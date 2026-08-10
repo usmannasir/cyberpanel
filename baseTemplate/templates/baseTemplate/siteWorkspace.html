@@ -112,7 +112,7 @@
         <!-- Advanced -->
         <div class="cp-tab-panel" data-panel="advanced">
             <div class="cp-tile-grid">
-                <a class="cp-tile" href="{% url 'setupGit' domain %}"><span class="cp-tile-ic"><i class="fab fa-git-alt"></i></span><span><div class="cp-tile-title">{% trans "Git Deployment" %}</div><div class="cp-tile-sub">{% trans "Deploy from a Git repo" %}</div></span></a>
+                <a class="cp-tile" href="{% url 'manageGIT' domain %}"><span class="cp-tile-ic"><i class="fab fa-git-alt"></i></span><span><div class="cp-tile-title">{% trans "Git Deployment" %}</div><div class="cp-tile-sub">{% trans "Deploy from a Git repo" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'setupStaging' domain %}"><span class="cp-tile-ic"><i class="fas fa-code-branch"></i></span><span><div class="cp-tile-title">{% trans "Staging" %}</div><div class="cp-tile-sub">{% trans "Create a staging copy" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'sshAccess' domain %}"><span class="cp-tile-ic"><i class="fas fa-terminal"></i></span><span><div class="cp-tile-title">{% trans "SSH / Terminal" %}</div><div class="cp-tile-sub">{% trans "SSH keys & web terminal" %}</div></span></a>
                 <a class="cp-tile" href="{% url 'ApacheManager' domain %}"><span class="cp-tile-ic"><i class="fas fa-feather"></i></span><span><div class="cp-tile-title">{% trans "Web Server Config" %}</div><div class="cp-tile-sub">{% trans "Apache / LiteSpeed settings" %}</div></span></a>

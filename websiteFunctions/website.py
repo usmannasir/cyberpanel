@@ -56,6 +56,21 @@ class WebsiteManager:
         self.domain = domain
         self.childDomain = childDomain
 
+    @staticmethod
+    def gitCloneURL(host, username, repository):
+        if ':' in host:
+            domain, port = host.rsplit(':', 1)
+            port = int(port)
+            if port < 1 or port > 65535:
+                raise ValueError('Invalid SSH port.')
+            return 'ssh://git@%s:%d/%s/%s.git' % (
+                domain,
+                port,
+                username,
+                repository,
+            )
+        return 'git@%s:%s/%s.git' % (host, username, repository)
+
     def createWebsite(self, request=None, userID=None, data=None):
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
@@ -6839,18 +6854,27 @@ StrictHostKeyChecking no
             self.externalApp = ACLManager.FetchExternalApp(self.domain)
 
             if self.overrideData:
-                command = 'rm -rf %s' % (self.folder)
+                command = 'rm -rf %s' % shlex.quote(self.folder)
                 ProcessUtilities.executioner(command, self.externalApp)
 
             ## Set defauly key
 
-            command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
+            sshCommand = 'ssh -i /home/%s/.ssh/%s -o StrictHostKeyChecking=no' % (
                 self.masterDomain, self.externalAppLocal)
+            command = 'git config --global core.sshCommand %s' % shlex.quote(sshCommand)
             ProcessUtilities.executioner(command, self.externalApp)
 
             ##
 
-            command = 'git clone git@%s:%s/%s.git %s' % (self.gitHost, self.gitUsername, self.gitReponame, self.folder)
+            cloneURL = WebsiteManager.gitCloneURL(
+                self.gitHost,
+                self.gitUsername,
+                self.gitReponame,
+            )
+            command = 'git clone %s %s' % (
+                shlex.quote(cloneURL),
+                shlex.quote(self.folder),
+            )
             commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('already exists') == -1 and commandStatus.find('Permission denied') == -1:
@@ -6860,10 +6884,16 @@ StrictHostKeyChecking no
                 # fm = FileManager(None, None)
                 # fm.fixPermissions(self.masterDomain)
 
-                command = 'git -C %s config --local user.email %s' % (self.folder, self.adminEmail)
+                command = 'git -C %s config --local user.email %s' % (
+                    shlex.quote(self.folder),
+                    shlex.quote(self.adminEmail),
+                )
                 ProcessUtilities.executioner(command, self.externalApp)
 
-                command = 'git -C %s config --local user.name "%s %s"' % (self.folder, self.firstName, self.lastName)
+                command = 'git -C %s config --local user.name %s' % (
+                    shlex.quote(self.folder),
+                    shlex.quote('%s %s' % (self.firstName, self.lastName)),
+                )
                 ProcessUtilities.executioner(command, self.externalApp)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
