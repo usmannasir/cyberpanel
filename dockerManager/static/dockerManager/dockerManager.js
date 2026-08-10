@@ -142,7 +142,7 @@ app.controller('runContainer', function ($scope, $http) {
 
     $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
-        $scope.envList[countEnv + 1] = {'name': '', 'value': ''};
+        $scope.envList[countEnv] = {'name': '', 'value': ''};
     };
 
     // Advanced Environment Variable Functions
@@ -1041,7 +1041,7 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
 
     $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
-        $scope.envList[countEnv + 1] = {'name': '', 'value': ''};
+        $scope.envList[countEnv] = {'name': '', 'value': ''};
     };
 
     // Advanced Environment Variable Functions for viewContainer
