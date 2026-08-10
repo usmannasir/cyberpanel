@@ -5390,8 +5390,19 @@ pm.max_spare_servers = 3
                 with open(integrationConfig, 'r') as f:
                     configContent = f.read()
 
-                # Check which product the config file is for by looking at the ui_path
-                if 'ui_path =/usr/local/CyberCP/public/imunifyav' in configContent:
+                from plogical.imunify_integration import (
+                    detect_imunify_product,
+                    ensure_clscripts_executable,
+                    integration_conf_needs_repair,
+                    repair_integration_conf,
+                )
+
+                product = detect_imunify_product(configContent)
+                if product and integration_conf_needs_repair(integrationConfig):
+                    repair_integration_conf(integrationConfig)
+                ensure_clscripts_executable()
+
+                if product == 'av':
                     # This is ImunifyAV configuration
                     Upgrade.stdOut("Detected ImunifyAV configuration, reconfiguring...")
                     imunifyAVPath = '/usr/local/CyberCP/public/imunifyav'
@@ -5412,7 +5423,7 @@ pm.max_spare_servers = 3
                     else:
                         Upgrade.stdOut("ImunifyAV directory not found despite config file existing")
 
-                elif 'ui_path =/usr/local/CyberCP/public/imunify' in configContent:
+                elif product == '360':
                     # This is Imunify360 configuration
                     Upgrade.stdOut("Detected Imunify360 configuration, checking system installation...")
                     imunify360Path = '/usr/local/CyberCP/public/imunify'
