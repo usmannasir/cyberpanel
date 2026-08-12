@@ -24,6 +24,36 @@ NOTHING = 0
 BUNDLE = 2
 EXPIRE = 3
 
+
+SERVICE_PROCESS_NAMES = {
+    'litespeed': ('litespeed', 'lshttpd'),
+    'mysql': ('mariadbd', 'mysqld', 'mysql'),
+    'powerdns': ('pdns_server', 'pdns'),
+    'pureftp': ('pure-ftpd',),
+    'postfix': ('postfix',),
+}
+
+
+def get_service_memory_usage(service_names, process_iter=psutil.process_iter):
+    memory_usage = 0
+
+    for process in process_iter(['name', 'memory_info']):
+        try:
+            info = process.info
+            process_name = info.get('name') or ''
+            if not any(process_name == name or process_name.startswith(name + '-')
+                       for name in service_names):
+                continue
+
+            memory_info = info.get('memory_info')
+            if memory_info:
+                memory_usage += memory_info.rss
+        except (psutil.Error, OSError, AttributeError):
+            continue
+
+    return memory_usage
+
+
 def serverStatusHome(request):
     proc = httpProc(request, 'serverStatus/index.html',
                     None, 'admin')
@@ -195,24 +225,13 @@ def servicesStatus(request):
 
         processlist = ProcessUtilities.outputExecutioner('ps -A')
 
-        def getServiceStats(service):
-            if service in processlist:
-                return 1
-            else:
-                return 0
-
-        def getMemStats(service):
-            memCount = 0
-            for proc in psutil.process_iter():
-                if service in proc.name():
-                    process = psutil.Process(proc.pid)
-                    memCount += process.memory_info().rss
-            return memCount
+        def getServiceStats(*service_names):
+            return int(any(service in processlist for service in service_names))
 
         ### [1] status [2] mem
-        lsStatus.append(getServiceStats('litespeed'))
-        if getServiceStats('litespeed'):
-            lsStatus.append(getMemStats('litespeed'))
+        lsStatus.append(getServiceStats(*SERVICE_PROCESS_NAMES['litespeed']))
+        if lsStatus[0]:
+            lsStatus.append(get_service_memory_usage(SERVICE_PROCESS_NAMES['litespeed']))
         else:
             lsStatus.append(0)
 
@@ -227,7 +246,7 @@ def servicesStatus(request):
 
             if mysqlResult.find('active (running)') > -1:
                 sqlStatus.append(1)
-                sqlStatus.append(getMemStats('mariadbd'))
+                sqlStatus.append(get_service_memory_usage(SERVICE_PROCESS_NAMES['mysql']))
             else:
                 sqlStatus.append(0)
                 sqlStatus.append(0)
@@ -243,26 +262,23 @@ def servicesStatus(request):
                 sqlStatus.append(0)
             s.close()
 
-            if getServiceStats('mysql'):
-                sqlStatus.append(getMemStats('mysql'))
-            else:
-                sqlStatus.append(0)
+            sqlStatus.append(get_service_memory_usage(SERVICE_PROCESS_NAMES['mysql']))
 
-        dnsStatus.append(getServiceStats('pdns'))
-        if getServiceStats('pdns'):
-            dnsStatus.append(getMemStats('pdns'))
+        dnsStatus.append(getServiceStats(*SERVICE_PROCESS_NAMES['powerdns']))
+        if dnsStatus[0]:
+            dnsStatus.append(get_service_memory_usage(SERVICE_PROCESS_NAMES['powerdns']))
         else:
             dnsStatus.append(0)
 
-        ftpStatus.append(getServiceStats('pure-ftpd'))
-        if getServiceStats('pure-ftpd'):
-            ftpStatus.append(getMemStats('pure-ftpd'))
+        ftpStatus.append(getServiceStats(*SERVICE_PROCESS_NAMES['pureftp']))
+        if ftpStatus[0]:
+            ftpStatus.append(get_service_memory_usage(SERVICE_PROCESS_NAMES['pureftp']))
         else:
             ftpStatus.append(0)
 
-        mailStatus.append(getServiceStats('postfix'))
-        if getServiceStats('postfix'):
-            mailStatus.append(getMemStats('postfix'))
+        mailStatus.append(getServiceStats(*SERVICE_PROCESS_NAMES['postfix']))
+        if mailStatus[0]:
+            mailStatus.append(get_service_memory_usage(SERVICE_PROCESS_NAMES['postfix']))
         else:
             mailStatus.append(0)
 
