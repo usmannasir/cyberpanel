@@ -1,7 +1,8 @@
 import email
 import re
-from email.header import decode_header
 from email.utils import parsedate_to_datetime
+
+from .mime_utils import decode_mime_bytes, decode_mime_header
 
 
 class EmailParser:
@@ -35,16 +36,7 @@ class EmailParser:
 
     @staticmethod
     def _decode_header_value(value):
-        if value is None:
-            return ''
-        decoded_parts = decode_header(value)
-        result = []
-        for part, charset in decoded_parts:
-            if isinstance(part, bytes):
-                result.append(part.decode(charset or 'utf-8', errors='replace'))
-            else:
-                result.append(part)
-        return ''.join(result)
+        return decode_mime_header(value)
 
     @classmethod
     def parse_message(cls, raw_bytes):
@@ -97,18 +89,17 @@ class EmailParser:
                     part_idx += 1
                 elif content_type == 'text/html':
                     payload = part.get_payload(decode=True)
-                    charset = part.get_content_charset() or 'utf-8'
-                    body_html = payload.decode(charset, errors='replace') if payload else ''
+                    body_html = decode_mime_bytes(
+                        payload, part.get_content_charset())
                 elif content_type == 'text/plain':
                     payload = part.get_payload(decode=True)
-                    charset = part.get_content_charset() or 'utf-8'
-                    body_text = payload.decode(charset, errors='replace') if payload else ''
+                    body_text = decode_mime_bytes(
+                        payload, part.get_content_charset())
         else:
             content_type = msg.get_content_type()
             payload = msg.get_payload(decode=True)
-            charset = msg.get_content_charset() or 'utf-8'
             if payload:
-                decoded = payload.decode(charset, errors='replace')
+                decoded = decode_mime_bytes(payload, msg.get_content_charset())
                 if content_type == 'text/html':
                     body_html = decoded
                 else:

@@ -2,7 +2,8 @@ import imaplib
 import ssl
 import email
 import re
-from email.header import decode_header
+
+from .mime_utils import decode_mime_header
 
 
 class IMAPClient:
@@ -63,16 +64,7 @@ class IMAPClient:
         self.close()
 
     def _decode_header_value(self, value):
-        if value is None:
-            return ''
-        decoded_parts = decode_header(value)
-        result = []
-        for part, charset in decoded_parts:
-            if isinstance(part, bytes):
-                result.append(part.decode(charset or 'utf-8', errors='replace'))
-            else:
-                result.append(part)
-        return ''.join(result)
+        return decode_mime_header(value)
 
     def _parse_folder_list(self, line):
         if isinstance(line, bytes):
