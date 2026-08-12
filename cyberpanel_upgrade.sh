@@ -1607,15 +1607,15 @@ fi
 
 Panel_HTTP_Code=$(curl -k -L -s -o /dev/null -w "%{http_code}" "https://127.0.0.1:${Panel_Port#*:}/")
 
-# A responding panel only proves the old build is still up — it says nothing about
-# whether the new code was applied. Never claim success when upgrade.py failed.
+# A responding panel cannot prove the upgrade completed. upgrade.py refreshes
+# source files before later migrations and service work, so a failed run can
+# leave a mixture of old and new state even though the panel is online again.
 if [[ "${UPGRADE_FAILED:-0}" -ne 0 ]] ; then
   echo "###################################################################"
   echo "                CyberPanel UPGRADE FAILED                          "
   echo "###################################################################"
-  echo -e "\nupgrade.py did not complete, so this server is STILL RUNNING THE OLD BUILD."
-  echo -e "If you were applying a security release, you are NOT patched yet."
-  echo -e "Check /var/log/cyberpanel_upgrade_debug.log for the failure, then re-run the upgrade.\n"
+  echo -e "\nupgrade.py did not complete. The panel runtime was restored, but source files or database state may be partially updated."
+  echo -e "Do not treat this run as a completed upgrade. Check /var/log/cyberpanel_upgrade_debug.log, correct the failure, then re-run the upgrade.\n"
   rm -rf /root/cyberpanel_upgrade_tmp
   exit 1
 fi

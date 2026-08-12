@@ -90,6 +90,16 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             )
             self.assertEqual('3.0.1', result.stdout.strip())
 
+    def test_upgrade_failure_banner_does_not_claim_the_old_build_is_running(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrade_script = (root / 'cyberpanel_upgrade.sh').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertIn('UPGRADE_FAILED', upgrade_script)
+        self.assertIn('may be partially updated', upgrade_script)
+        self.assertNotIn('STILL RUNNING THE OLD BUILD', upgrade_script)
+
     def test_ubuntu_24_lscpd_keeps_virtualenv_packages_visible(self):
         root = pathlib.Path(__file__).parents[1]
         script = (root / 'cyberpanel_upgrade.sh').read_text(encoding='utf-8')

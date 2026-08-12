@@ -1636,39 +1636,59 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return ''
 
     @staticmethod
+    def localCyberPanelDatabaseAccountHosts(database_host, machine_ip):
+        """Return the MySQL accounts used by a local panel database."""
+        if database_host in ('', 'localhost', '127.0.0.1', '::1'):
+            # The installer creates both accounts so socket and TCP connections
+            # keep working when a local service uses a different connection mode.
+            return ('localhost', '127.0.0.1')
+        if machine_ip and database_host == machine_ip:
+            return (machine_ip,)
+        return ()
+
+    @staticmethod
     def repairLocalCyberPanelDatabaseAccess():
-        """Restore the panel account only when its database host is this server."""
+        """Restore the configured credentials for a local panel database."""
         connection = None
 
         try:
             database = settings.DATABASES['default']
             database_host = str(database.get('HOST') or '').strip()
             machine_ip = Upgrade.getMachineIP()
+            account_hosts = Upgrade.localCyberPanelDatabaseAccountHosts(
+                database_host, machine_ip,
+            )
 
             if (database.get('NAME') != 'cyberpanel' or
                     database.get('USER') != 'cyberpanel' or
-                    not machine_ip or database_host != machine_ip):
+                    not database.get('PASSWORD') or not account_hosts):
                 return 0
 
             connection, cursor = Upgrade.setupConnection()
             if connection == 0:
                 return 0
 
-            cursor.execute(
-                'SELECT 1 FROM mysql.user WHERE User = %s AND Host = %s',
-                ('cyberpanel', machine_ip),
-            )
-
-            if not cursor.fetchone():
+            for account_host in account_hosts:
                 cursor.execute(
-                    'CREATE USER %s@%s IDENTIFIED BY %s',
-                    ('cyberpanel', machine_ip, database['PASSWORD']),
+                    'SELECT 1 FROM mysql.user WHERE User = %s AND Host = %s',
+                    ('cyberpanel', account_host),
                 )
 
-            cursor.execute(
-                'GRANT ALL PRIVILEGES ON `cyberpanel`.* TO %s@%s',
-                ('cyberpanel', machine_ip),
-            )
+                if cursor.fetchone():
+                    cursor.execute(
+                        'ALTER USER %s@%s IDENTIFIED BY %s',
+                        ('cyberpanel', account_host, database['PASSWORD']),
+                    )
+                else:
+                    cursor.execute(
+                        'CREATE USER %s@%s IDENTIFIED BY %s',
+                        ('cyberpanel', account_host, database['PASSWORD']),
+                    )
+
+                cursor.execute(
+                    'GRANT ALL PRIVILEGES ON `cyberpanel`.* TO %s@%s',
+                    ('cyberpanel', account_host),
+                )
             cursor.execute('FLUSH PRIVILEGES')
             connection.close()
             return 1
