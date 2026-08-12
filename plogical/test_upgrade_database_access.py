@@ -52,7 +52,7 @@ class UpgradeDatabaseAccessTests(unittest.TestCase):
     @patch('plogical.upgrade.Upgrade.getMachineIP', return_value='198.51.100.42')
     @patch('plogical.upgrade.settings')
     @patch('plogical.upgrade.Upgrade.setupConnection')
-    def test_existing_account_keeps_its_password(
+    def test_existing_account_password_is_repaired(
             self, setup_connection, settings, get_machine_ip, std_out):
         connection = MagicMock()
         cursor = MagicMock()
@@ -64,7 +64,37 @@ class UpgradeDatabaseAccessTests(unittest.TestCase):
 
         queries = [call.args[0] for call in cursor.execute.call_args_list]
         self.assertNotIn('CREATE USER %s@%s IDENTIFIED BY %s', queries)
+        self.assertIn('ALTER USER %s@%s IDENTIFIED BY %s', queries)
         self.assertIn('GRANT ALL PRIVILEGES ON `cyberpanel`.* TO %s@%s', queries)
+
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.Upgrade.getMachineIP', return_value='198.51.100.42')
+    @patch('plogical.upgrade.settings')
+    @patch('plogical.upgrade.Upgrade.setupConnection')
+    def test_repairs_socket_and_loopback_accounts(
+            self, setup_connection, settings, get_machine_ip, std_out):
+        connection = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchone.side_effect = [(1,), None]
+        setup_connection.return_value = connection, cursor
+        self.database_settings['default']['HOST'] = 'localhost'
+        settings.DATABASES = self.database_settings
+
+        self.assertEqual(1, Upgrade.repairLocalCyberPanelDatabaseAccess())
+
+        calls = cursor.execute.call_args_list
+        self.assertIn(
+            ('ALTER USER %s@%s IDENTIFIED BY %s',
+             ('cyberpanel', 'localhost', 'database-password')),
+            [(call.args[0], call.args[1]) for call in calls
+             if len(call.args) > 1],
+        )
+        self.assertIn(
+            ('CREATE USER %s@%s IDENTIFIED BY %s',
+             ('cyberpanel', '127.0.0.1', 'database-password')),
+            [(call.args[0], call.args[1]) for call in calls
+             if len(call.args) > 1],
+        )
 
 
 if __name__ == '__main__':
