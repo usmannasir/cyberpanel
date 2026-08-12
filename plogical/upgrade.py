@@ -1628,6 +1628,63 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 0, 0
 
     @staticmethod
+    def getMachineIP():
+        try:
+            with open('/etc/cyberpanel/machineIP', 'r') as ip_file:
+                return ip_file.readline().strip()
+        except Exception:
+            return ''
+
+    @staticmethod
+    def repairLocalCyberPanelDatabaseAccess():
+        """Restore the panel account only when its database host is this server."""
+        connection = None
+
+        try:
+            database = settings.DATABASES['default']
+            database_host = str(database.get('HOST') or '').strip()
+            machine_ip = Upgrade.getMachineIP()
+
+            if (database.get('NAME') != 'cyberpanel' or
+                    database.get('USER') != 'cyberpanel' or
+                    not machine_ip or database_host != machine_ip):
+                return 0
+
+            connection, cursor = Upgrade.setupConnection()
+            if connection == 0:
+                return 0
+
+            cursor.execute(
+                'SELECT 1 FROM mysql.user WHERE User = %s AND Host = %s',
+                ('cyberpanel', machine_ip),
+            )
+
+            if not cursor.fetchone():
+                cursor.execute(
+                    'CREATE USER %s@%s IDENTIFIED BY %s',
+                    ('cyberpanel', machine_ip, database['PASSWORD']),
+                )
+
+            cursor.execute(
+                'GRANT ALL PRIVILEGES ON `cyberpanel`.* TO %s@%s',
+                ('cyberpanel', machine_ip),
+            )
+            cursor.execute('FLUSH PRIVILEGES')
+            connection.close()
+            return 1
+        except Exception:
+            if connection:
+                try:
+                    connection.close()
+                except Exception:
+                    pass
+            Upgrade.stdOut(
+                'Unable to verify the local CyberPanel database account during upgrade.',
+                0,
+            )
+            return 0
+
+    @staticmethod
     def applyLoginSystemMigrations():
         try:
 
@@ -5263,6 +5320,8 @@ pm.max_spare_servers = 3
         # execPath = "sudo /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/csf.py"
         # execPath = execPath + " removeCSF"
         # Upgrade.executioner(execPath, 'fix csf if there', 0)
+
+        Upgrade.repairLocalCyberPanelDatabaseAccess()
 
         Upgrade.downloadAndUpgrade(versionNumbring, branch)
         versionNumbring = Upgrade.downloadLink()
