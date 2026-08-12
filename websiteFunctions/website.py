@@ -47,6 +47,42 @@ from django.http import JsonResponse
 import ipaddress
 
 
+def get_wordpress_version(output):
+    value = str(output or '').strip()
+    if re.fullmatch(r'\d+(?:\.\d+){1,3}(?:[-+._a-zA-Z0-9]+)?', value):
+        return value
+    return 'Unavailable'
+
+
+def get_wordpress_flag(output, default=0):
+    for line in reversed(str(output or '').splitlines()):
+        value = line.strip()
+        if value in ('0', '1'):
+            return int(value)
+    return default
+
+
+def get_wordpress_maintenance_mode(output):
+    value = str(output or '').strip().lower()
+    if 'not active' in value:
+        return 0
+    return int('active' in value)
+
+
+def get_wordpress_json_list(output):
+    value = str(output or '').strip()
+    candidates = [value] + list(reversed(value.splitlines()))
+
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, list):
+                return parsed
+        except (TypeError, ValueError):
+            continue
+    return []
+
+
 class WebsiteManager:
     apache = 1
     ols = 2
@@ -924,22 +960,23 @@ class WebsiteManager:
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
             version = ProcessUtilities.outputExecutioner(command, None, True)
-            version = html.escape(version)
+            version = get_wordpress_version(version)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (
                 Vhuser, FinalPHPPath, path)
-            lscachee = ProcessUtilities.outputExecutioner(command)
+            lscachee = str(ProcessUtilities.outputExecutioner(command) or '')
 
             # Get current theme
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme list --status=active --field=name --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
-            currentTheme = ProcessUtilities.outputExecutioner(command, None, True)
-            currentTheme = currentTheme.strip()
+            currentTheme = str(ProcessUtilities.outputExecutioner(command, None, True) or '').strip()
+            if not currentTheme:
+                currentTheme = 'Unavailable'
 
             # Get number of plugins
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin list --field=name --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
-            plugins = ProcessUtilities.outputExecutioner(command, None, True)
+            plugins = str(ProcessUtilities.outputExecutioner(command, None, True) or '')
             pluginCount = len([p for p in plugins.split('\n') if p.strip()])
 
 
@@ -950,7 +987,7 @@ class WebsiteManager:
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
                 Vhuser, FinalPHPPath, path)
-            stdout = ProcessUtilities.outputExecutioner(command)
+            stdout = str(ProcessUtilities.outputExecutioner(command) or '')
             debugging = 0
             for items in stdout.split('\n'):
                 if items.find('WP_DEBUG	true	constant') > -1:
@@ -960,19 +997,12 @@ class WebsiteManager:
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp option get blog_public --skip-plugins --skip-themes --path=%s' % (
                 Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
-            searchindex = int(stdoutput.splitlines()[-1])
+            searchindex = get_wordpress_flag(stdoutput)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode status --skip-plugins --skip-themes --path=%s' % (
                 Vhuser, FinalPHPPath, path)
             maintenanceMod = ProcessUtilities.outputExecutioner(command)
-
-            
-
-            result = maintenanceMod.splitlines()[-1]
-            if result.find('not active') > -1:
-                maintenanceMode = 0
-            else:
-                maintenanceMode = 1
+            maintenanceMode = get_wordpress_maintenance_mode(maintenanceMod)
 
             ##### Check passwd protection
             vhostName = wpsite.owner.domain
@@ -985,14 +1015,14 @@ class WebsiteManager:
 
             #### Check WP cron
             command = "sudo -u %s cat %s/wp-config.php" % (Vhuser, wpsite.path)
-            stdout = ProcessUtilities.outputExecutioner(command)
+            stdout = str(ProcessUtilities.outputExecutioner(command) or '')
             if stdout.find("'DISABLE_WP_CRON', 'true'") > -1:
                 wpcron = 1
             else:
                 wpcron = 0
 
             fb = {
-                'version': version.rstrip('\n'),
+                'version': version,
                 'lscache': lscache,
                 'debugging': debugging,
                 'searchIndex': searchindex,
@@ -1041,9 +1071,9 @@ class WebsiteManager:
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin list --skip-plugins --skip-themes --format=json --path=%s' % (
                 Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
-            json_data = stdoutput.splitlines()[-1]
+            plugin_data = json.dumps(get_wordpress_json_list(stdoutput))
 
-            data_ret = {'status': 1, 'error_message': 'None', 'plugins': json_data}
+            data_ret = {'status': 1, 'error_message': 'None', 'plugins': plugin_data}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1079,9 +1109,9 @@ class WebsiteManager:
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme list --skip-plugins --skip-themes --format=json --path=%s' % (
                 Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
-            json_data = stdoutput.splitlines()[-1]
+            theme_data = json.dumps(get_wordpress_json_list(stdoutput))
 
-            data_ret = {'status': 1, 'error_message': 'None', 'themes': json_data}
+            data_ret = {'status': 1, 'error_message': 'None', 'themes': theme_data}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

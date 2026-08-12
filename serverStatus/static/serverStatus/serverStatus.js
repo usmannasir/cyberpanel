@@ -924,10 +924,19 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
+    $scope.currentTab = 'upgrade';
+    $scope.allPackages = [];
+    $scope.showDetails = false;
+    $scope.showUpdate = false;
+    $scope.updateComplete = true;
     var globalType;
 
     $scope.fetchPackages = function (type = 'installed') {
         $scope.cyberpanelLoading = false;
+        if ($scope.currentTab !== type) {
+            $scope.currentPage = 1;
+        }
+        $scope.currentTab = type;
         globalType = type;
         var config = {
             headers: {
@@ -974,6 +983,17 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     };
     $scope.fetchPackages('upgrade');
 
+    $scope.showPackageDetails = function (packageFetch) {
+        $scope.selectedPackage = packageFetch;
+        $scope.packageDetails = '';
+        $scope.showDetails = true;
+        $scope.fetchPackageDetails(packageFetch);
+    };
+
+    $scope.closeDetails = function () {
+        $scope.showDetails = false;
+    };
+
     $scope.fetchPackageDetails = function (packageFetch) {
         $scope.cyberpanelLoading = false;
         $scope.package = packageFetch;
@@ -1017,6 +1037,28 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     };
 
+    $scope.showUpdateModal = function (packageToUpgrade) {
+        $scope.updatingPackage = packageToUpgrade;
+        $scope.requestData = '';
+        $scope.updateComplete = false;
+        $scope.showUpdate = true;
+        $scope.updatePackage(packageToUpgrade);
+    };
+
+    $scope.closeUpdate = function () {
+        if ($scope.updateComplete) {
+            $scope.showUpdate = false;
+        }
+    };
+
+    $scope.closeModal = function (event) {
+        if (event.target !== event.currentTarget) {
+            return;
+        }
+        $scope.closeDetails();
+        $scope.closeUpdate();
+    };
+
     $scope.updatePackage = function (packageToUpgrade = 'all') {
         $scope.cyberpanelLoading = false;
         $scope.package = packageToUpgrade;
@@ -1040,6 +1082,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
             if (response.data.status === 1) {
                 getRequestStatus();
             } else {
+                $scope.updateComplete = true;
                 new PNotify({
                     title: 'Error!',
                     text: response.data.error_message,
@@ -1050,6 +1093,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
+            $scope.updateComplete = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
@@ -1083,15 +1127,18 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 $scope.requestData = response.data.requestStatus;
                 $timeout(getRequestStatus, 1000);
             } else {
-                // Notifications
-                $timeout.cancel();
                 $scope.cyberpanelLoading = true;
                 $scope.requestData = response.data.requestStatus;
+                $scope.updateComplete = true;
+                if (response.data.installed === 1) {
+                    $scope.fetchPackages($scope.currentTab);
+                }
             }
         }
 
         function cantLoadInitialDatas(response) {
             $scope.cyberpanelLoading = true;
+            $scope.updateComplete = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',

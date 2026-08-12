@@ -195,17 +195,40 @@
                 GLobalAjaxCall($http, "{% url 'GetCurrentThemes' %}", data,
                     function(response) {
                         if (response.data.status === 1) {
-                            var themes = JSON.parse(response.data.themes);
-                            site.activeTheme = themes.find(function(t) { return t.status === 'active'; }).name;
-                            site.totalThemes = themes.length;
+                            try {
+                                var themes = JSON.parse(response.data.themes);
+                                var activeTheme = themes.find(function(t) {
+                                    return t.status && t.status.toLowerCase() === 'active';
+                                });
+                                site.activeTheme = activeTheme ? activeTheme.name : 'Unavailable';
+                                site.totalThemes = themes.length;
+                            } catch (e) {
+                                site.activeTheme = 'Unavailable';
+                                site.totalThemes = 0;
+                            }
+                        } else {
+                            site.activeTheme = 'Unavailable';
+                            site.totalThemes = 0;
                         }
                         site.loadingTheme = false;
                     },
                     function(response) {
-                        site.activeTheme = 'Error';
+                        site.activeTheme = 'Unavailable';
+                        site.totalThemes = 0;
                         site.loadingTheme = false;
                     }
                 );
+            }
+
+            function markSiteDataUnavailable(site) {
+                site.version = 'Unavailable';
+                site.phpVersion = 'Unavailable';
+                site.activeTheme = 'Unavailable';
+                site.activePlugins = 0;
+                site.totalPlugins = 0;
+                site.loading = false;
+                site.loadingTheme = false;
+                site.loadingPlugins = false;
             }
 
             // Function to fetch site data
@@ -219,7 +242,7 @@
                         if (response.data.status === 1) {
                             var data = response.data.ret_data;
                             site.version = data.version;
-                            site.phpVersion = data.phpVersion || 'PHP 7.4'; // Default to PHP 7.4 if not set
+                            site.phpVersion = data.phpVersion || 'Unavailable';
                             site.searchIndex = data.searchIndex === 1;
                             site.debugging = data.debugging === 1;
                             site.passwordProtection = data.passwordprotection === 1;
@@ -228,14 +251,12 @@
                             fetchPluginData(site);
                             fetchThemeData(site);
                         } else {
-                            site.phpVersion = 'PHP 7.4'; // Default value on error
-                            site.loading = false;
+                            markSiteDataUnavailable(site);
                             console.log('Failed to fetch site data:', response.data.error_message);
                         }
                     },
                     function(response) {
-                        site.phpVersion = 'PHP 7.4'; // Default value on error
-                        site.loading = false;
+                        markSiteDataUnavailable(site);
                         console.log('Failed to fetch site data');
                     }
                 );
