@@ -936,11 +936,10 @@ class virtualHostUtilities:
 
             groupName = 'nobody'
 
-            numberOfTotalLines = int(
-                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), groupName).split(" ")[0])
+            numberOfTotalLines = virtualHostUtilities.getLogLineCount(fileName, groupName)
 
             if numberOfTotalLines < 25:
-                data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), groupName)
+                data = ProcessUtilities.outputExecutioner('cat -- %s' % shlex.quote(fileName), groupName)
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -948,7 +947,7 @@ class virtualHostUtilities:
                     if start <= 0:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                    command = "sed -n " + startingAndEnding + " " + fileName
+                    command = "sed -n " + startingAndEnding + " -- " + shlex.quote(fileName)
                     data = ProcessUtilities.outputExecutioner(command, groupName)
                 else:
                     end = numberOfTotalLines - ((page - 1) * 25)
@@ -956,7 +955,7 @@ class virtualHostUtilities:
                     if start <= 0:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                    command = "sed -n " + startingAndEnding + " " + fileName
+                    command = "sed -n " + startingAndEnding + " -- " + shlex.quote(fileName)
                     data = ProcessUtilities.outputExecutioner(command, groupName)
             print(data)
             return data
@@ -974,11 +973,10 @@ class virtualHostUtilities:
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            numberOfTotalLines = int(
-                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
+            numberOfTotalLines = virtualHostUtilities.getLogLineCount(fileName, externalApp)
 
             if numberOfTotalLines < 25:
-                data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
+                data = ProcessUtilities.outputExecutioner('cat -- %s' % shlex.quote(fileName), externalApp)
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -986,7 +984,7 @@ class virtualHostUtilities:
                     if start <= 0:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                    command = "sed -n " + startingAndEnding + " " + fileName
+                    command = "sed -n " + startingAndEnding + " -- " + shlex.quote(fileName)
                     data = ProcessUtilities.outputExecutioner(command, externalApp)
                 else:
                     end = numberOfTotalLines - ((page - 1) * 25)
@@ -994,7 +992,7 @@ class virtualHostUtilities:
                     if start <= 0:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                    command = "sed -n " + startingAndEnding + " " + fileName
+                    command = "sed -n " + startingAndEnding + " -- " + shlex.quote(fileName)
                     data = ProcessUtilities.outputExecutioner(command, externalApp)
             print(data)
             return data
@@ -1003,6 +1001,17 @@ class virtualHostUtilities:
                 str(msg) + "  [getErrorLogs]")
             print("1,None")
             return "1,None"
+
+    @staticmethod
+    def getLogLineCount(fileName, externalApp):
+        output = ProcessUtilities.outputExecutioner(
+            'wc -l -- %s' % shlex.quote(fileName), externalApp)
+        first_field = str(output or '').split(None, 1)
+
+        if not first_field or not first_field[0].isdigit():
+            raise ValueError('Unable to determine the log line count.')
+
+        return int(first_field[0])
 
     @staticmethod
     def saveVHostConfigs(fileName, tempPath):
