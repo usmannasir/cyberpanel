@@ -27,6 +27,11 @@ from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from plogical.installUtilities import installUtilities
 from plogical.processUtilities import ProcessUtilities
+from plogical.wordpressInstallerUtilities import (
+    build_directory_probe,
+    build_wordpress_core_install_command,
+    directory_allows_install,
+)
 from random import randint
 import hashlib
 
@@ -536,21 +541,27 @@ class ApplicationInstaller(multi.Thread):
 
     def dataLossCheck(self, finalPath, tempStatusPath, user=None):
 
-        if user == None:
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) <= 3:
-                return 1
-            else:
+        if user is None:
+            try:
+                return 1 if len(os.listdir(finalPath)) <= 3 else 0
+            except BaseException as msg:
+                logging.writeToFile(
+                    str(msg) + ' [ApplicationInstaller.dataLossCheck]'
+                )
                 return 0
-        else:
-            command = 'ls %s | wc -l' % (finalPath)
-            result = ProcessUtilities.outputExecutioner(command, user, True).rstrip('\n')
 
-            if int(result) <= 3:
-                return 1
-            else:
-                return 0
+        command = build_directory_probe(finalPath)
+        success, result = ProcessUtilities.outputExecutioner(
+            command, user, True, None, True
+        )
+        if directory_allows_install(success, result):
+            return 1
+
+        logging.writeToFile(
+            'Unable to confirm an empty install directory for %s '
+            '[ApplicationInstaller.dataLossCheck]' % finalPath
+        )
+        return 0
 
     def installGit(self):
         try:
@@ -779,11 +790,9 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading WordPress Core,30')
             statusFile.close()
 
-            try:
-                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --allow-root --path={finalPath} --version={self.extraArgs['WPVersion']}"
-            except:
-                # Fallback to using explicit PHP 8.3 path even in exception
-                command = f"/usr/local/lsws/lsphp83/bin/php -d error_reporting=0 /usr/bin/wp core download --allow-root --path={finalPath}"
+            command = build_wordpress_core_install_command(
+                self.extraArgs['WPVersion'], finalPath, FinalPHPPath
+            )
 
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
