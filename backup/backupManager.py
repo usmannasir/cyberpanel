@@ -36,6 +36,7 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 from plogical.remoteTransferResponse import parse_remote_transfer_response
+from plogical.normalBackupUtilities import normalize_local_backup_path
 from django.http import JsonResponse
 from cyberpanel_version import version_at_least
 
@@ -856,7 +857,13 @@ class BackupManager:
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             else:
-                config = {'type': data['type'], 'path': data['path']}
+                try:
+                    localPath = normalize_local_backup_path(data.get('path', ''))
+                except ValueError as msg:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': str(msg)}
+                    return HttpResponse(json.dumps(final_dic))
+
+                config = {'type': data['type'], 'path': localPath}
                 nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
                 nd.save()
 
