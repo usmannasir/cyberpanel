@@ -1,11 +1,13 @@
 import os
 import tempfile
+import time
 import unittest
 
 from plogical.normalBackupUtilities import (
     move_local_backup_archive,
     normalize_local_backup_path,
     prepare_local_backup_run,
+    prune_expired_local_backup_runs,
 )
 
 
@@ -45,6 +47,43 @@ class NormalBackupUtilitiesTests(unittest.TestCase):
             run_path = prepare_local_backup_run(temp_dir, '08.13.2026_10-00-00')
             with self.assertRaisesRegex(FileNotFoundError, 'missing or empty'):
                 move_local_backup_archive(os.path.join(temp_dir, 'missing.tar.gz'), run_path)
+
+    def test_only_expired_backup_run_directories_are_pruned(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            now = time.time()
+            expired = os.path.join(temp_dir, '08.01.2026_00-00-00')
+            recent = os.path.join(temp_dir, '08.13.2026_00-00-00')
+            unrelated = os.path.join(temp_dir, 'customer-files')
+            for path in (expired, recent, unrelated):
+                os.mkdir(path)
+            os.utime(expired, (now - (4 * 86400), now - (4 * 86400)))
+            os.utime(recent, (now - 3600, now - 3600))
+            os.utime(unrelated, (now - (30 * 86400), now - (30 * 86400)))
+
+            removed = prune_expired_local_backup_runs(temp_dir, 3, now=now)
+
+            self.assertEqual([expired], removed)
+            self.assertFalse(os.path.exists(expired))
+            self.assertTrue(os.path.isdir(recent))
+            self.assertTrue(os.path.isdir(unrelated))
+
+    def test_zero_retention_keeps_all_backup_runs(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            expired = os.path.join(temp_dir, '08.01.2026_00-00-00')
+            os.mkdir(expired)
+            removed = prune_expired_local_backup_runs(temp_dir, 0, now=time.time())
+            self.assertEqual([], removed)
+            self.assertTrue(os.path.isdir(expired))
+
+    def test_backup_run_symlink_is_not_pruned(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target = os.path.join(temp_dir, 'target')
+            link = os.path.join(temp_dir, '08.01.2026_00-00-00')
+            os.mkdir(target)
+            os.symlink(target, link)
+            removed = prune_expired_local_backup_runs(temp_dir, 1, now=time.time() + (2 * 86400))
+            self.assertEqual([], removed)
+            self.assertTrue(os.path.islink(link))
 
 
 if __name__ == '__main__':

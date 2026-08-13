@@ -23,7 +23,11 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
-from plogical.normalBackupUtilities import prepare_local_backup_run, move_local_backup_archive
+from plogical.normalBackupUtilities import (
+    move_local_backup_archive,
+    prepare_local_backup_run,
+    prune_expired_local_backup_runs,
+)
 import requests
 import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
@@ -541,6 +545,9 @@ Automatic backup failed for %s on %s.
                 if jobConfig[IncScheduler.frequency] == type:
 
                     try:
+                        prune_expired_local_backup_runs(
+                            destinationConfig.get('path'), jobConfig.get('retention', 0)
+                        )
                         finalPath = prepare_local_backup_run(destinationConfig.get('path'), currentTime)
                     except (OSError, ValueError) as msg:
                         NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
