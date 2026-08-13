@@ -23,6 +23,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
+from plogical.normalBackupUtilities import prepare_local_backup_run, move_local_backup_archive
 import requests
 import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
@@ -539,9 +540,13 @@ Automatic backup failed for %s on %s.
 
                 if jobConfig[IncScheduler.frequency] == type:
 
-                    finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
-                    command = 'mkdir -p %s' % (finalPath)
-                    ProcessUtilities.executioner(command)
+                    try:
+                        finalPath = prepare_local_backup_run(destinationConfig.get('path'), currentTime)
+                    except (OSError, ValueError) as msg:
+                        NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                            message='Backup destination is invalid: %s' % str(msg)).save()
+                        continue
 
                     ### Check if an old job prematurely killed, then start from there.
                     try:
@@ -630,8 +635,14 @@ Automatic backup failed for %s on %s.
                         else:
                             backupPath = retValues[1] + ".tar.gz"
 
-                            command = 'mv %s %s' % (backupPath, finalPath)
-                            ProcessUtilities.executioner(command)
+                            try:
+                                move_local_backup_archive(backupPath, finalPath)
+                            except (OSError, ValueError) as msg:
+                                NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                                    message='Backup archive could not be stored for %s: %s' % (
+                                                        domain, str(msg))).save()
+                                IncScheduler.sendBackupFailureEmail(domain, currentTime, str(msg))
+                                continue
 
                             NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                                 message='Backup completed for %s on %s.' % (
