@@ -37,6 +37,10 @@ from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
 from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
+from plogical.systemPassword import (
+    consume_system_password_request,
+    create_system_password_request,
+)
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.vhostConfs import vhostConfs
@@ -5897,10 +5901,17 @@ StrictHostKeyChecking no
     def saveSSHAccessChanges(self, userID=None, data=None):
         try:
 
+            if not isinstance(data, dict):
+                raise ValueError('Invalid request.')
+            domain = data.get('domain')
+            password = data.get('password')
+            if not isinstance(domain, str) or not isinstance(password, str):
+                raise ValueError('Invalid request.')
+
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            self.domain = data['domain']
+            self.domain = domain
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
@@ -5914,14 +5925,29 @@ StrictHostKeyChecking no
             #     json_data = json.dumps(data_ret)
             #     return HttpResponse(json_data)
 
-            uBuntuPath = '/etc/lsb-release'
-
-            if os.path.exists(uBuntuPath):
-                command = "echo '%s:%s' | chpasswd" % (website.externalApp, data['password'])
-            else:
-                command = 'echo "%s" | passwd --stdin %s' % (data['password'], website.externalApp)
-
-            ProcessUtilities.executioner(command)
+            requestToken = create_system_password_request(
+                website.externalApp,
+                password,
+            )
+            pythonPath = '/usr/local/CyberCP/bin/python'
+            if not os.path.exists(pythonPath):
+                pythonPath = sys.executable
+            passwordScript = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'plogical',
+                'changeSystemPassword.py',
+            )
+            command = '%s %s --token %s' % (
+                shlex.quote(pythonPath),
+                shlex.quote(passwordScript),
+                shlex.quote(requestToken),
+            )
+            if ProcessUtilities.executioner(command) != 1:
+                try:
+                    consume_system_password_request(requestToken)
+                except Exception:
+                    pass
+                raise RuntimeError('Unable to change system password.')
 
             data_ret = {'status': 1, 'error_message': 'None', 'LinuxUser': website.externalApp}
             json_data = json.dumps(data_ret)

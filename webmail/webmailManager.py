@@ -9,6 +9,7 @@ from .models import Contact, ContactGroup, ContactGroupMembership, WebmailSettin
 from .services.imap_client import IMAPClient
 from .services.smtp_client import SMTPClient
 from .services.email_composer import EmailComposer
+from .services.email_parser import EmailParser
 from .services.sieve_client import SieveClient
 
 import plogical.CyberCPLogFileWriter as logging
@@ -748,7 +749,7 @@ class WebmailManager:
             return self._success({
                 'settings': {
                     'displayName': settings.display_name,
-                    'signatureHtml': settings.signature_html,
+                    'signatureHtml': EmailParser.sanitize_html(settings.signature_html),
                     'messagesPerPage': settings.messages_per_page,
                     'defaultReplyBehavior': settings.default_reply_behavior,
                     'themePreference': settings.theme_preference,
@@ -766,7 +767,7 @@ class WebmailManager:
             if 'displayName' in data:
                 settings.display_name = data['displayName']
             if 'signatureHtml' in data:
-                settings.signature_html = data['signatureHtml']
+                settings.signature_html = EmailParser.sanitize_html(data['signatureHtml'])
             if 'messagesPerPage' in data:
                 settings.messages_per_page = int(data['messagesPerPage'])
             if 'defaultReplyBehavior' in data:
@@ -776,7 +777,9 @@ class WebmailManager:
             if 'autoCollectContacts' in data:
                 settings.auto_collect_contacts = bool(data['autoCollectContacts'])
             settings.save()
-            return self._success()
+            return self._success({
+                'signatureHtml': settings.signature_html,
+            })
         except Exception as e:
             return self._error(str(e))
 
