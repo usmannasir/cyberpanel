@@ -51,6 +51,10 @@ from cyberpanel_version import (
 from plogical.backupIntegrity import safe_extract
 from plogical.backupMetadata import backup_includes_mail_domain
 from plogical.backupExcludes import rsync_exclude_arguments
+from plogical.backupMetadataBuilder import (
+    build_dns_records_xml,
+    build_email_accounts_xml,
+)
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
@@ -244,49 +248,25 @@ class backupUtilities:
 
             ## DNS Records XML
 
+            dnsRecordsXML = build_dns_records_xml([])
             try:
-
-                dnsRecordsXML = Element("dnsrecords")
-                dnsRecords = DNS.getDNSRecords(backupDomain)
-
-                for items in dnsRecords:
-                    dnsRecordXML = Element('dnsrecord')
-
-                    child = SubElement(dnsRecordXML, 'type')
-                    child.text = items.type
-                    child = SubElement(dnsRecordXML, 'name')
-                    child.text = items.name
-                    child = SubElement(dnsRecordXML, 'content')
-                    child.text = items.content
-                    child = SubElement(dnsRecordXML, 'priority')
-                    child.text = str(items.prio)
-
-                    dnsRecordsXML.append(dnsRecordXML)
-
-                metaFileXML.append(dnsRecordsXML)
+                dnsRecords = list(DNS.getDNSRecords(backupDomain) or [])
+                dnsRecordsXML = build_dns_records_xml(dnsRecords)
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile('%s. [158:prepMeta]' % (str(msg)))
+            metaFileXML.append(dnsRecordsXML)
 
             ## Email accounts XML
 
+            emailRecordsXML = build_email_accounts_xml([])
             try:
-                emailRecordsXML = Element('emails')
-                eDomain = eDomains.objects.get(domain=backupDomain)
-                emailAccounts = eDomain.eusers_set.all()
-
-                for items in emailAccounts:
-                    emailRecordXML = Element('emailAccount')
-
-                    child = SubElement(emailRecordXML, 'email')
-                    child.text = items.email
-                    child = SubElement(emailRecordXML, 'password')
-                    child.text = items.password
-
-                    emailRecordsXML.append(emailRecordXML)
-
-                metaFileXML.append(emailRecordsXML)
+                eDomain = eDomains.objects.filter(domain=backupDomain).first()
+                if eDomain is not None:
+                    emailAccounts = list(eDomain.eusers_set.all())
+                    emailRecordsXML = build_email_accounts_xml(emailAccounts)
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile('%s. [179:prepMeta]' % (str(msg)))
+            metaFileXML.append(emailRecordsXML)
 
             ## Email meta generated!
 

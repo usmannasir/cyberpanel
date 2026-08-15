@@ -17,6 +17,10 @@ from xml.dom import minidom
 from backup.models import DBUsers
 import plogical.mysqlUtilities as mysqlUtilities
 from plogical.backupUtilities import backupUtilities
+from plogical.backupMetadataBuilder import (
+    build_dns_records_xml,
+    build_email_accounts_xml,
+)
 from plogical.dnsUtilities import DNS
 from mailServer.models import Domains as eDomains
 from random import randint
@@ -135,50 +139,25 @@ class IncJobs(multi.Thread):
 
             ## DNS Records XML
 
+            dnsRecordsXML = build_dns_records_xml([])
             try:
-
-                dnsRecordsXML = Element("dnsrecords")
-                dnsRecords = DNS.getDNSRecords(self.website.domain)
-
-                for items in dnsRecords:
-                    dnsRecordXML = Element('dnsrecord')
-
-                    child = SubElement(dnsRecordXML, 'type')
-                    child.text = items.type
-                    child = SubElement(dnsRecordXML, 'name')
-                    child.text = items.name
-                    child = SubElement(dnsRecordXML, 'content')
-                    child.text = items.content
-                    child = SubElement(dnsRecordXML, 'priority')
-                    child.text = str(items.prio)
-
-                    dnsRecordsXML.append(dnsRecordXML)
-
-                metaFileXML.append(dnsRecordsXML)
-
+                dnsRecords = list(DNS.getDNSRecords(self.website.domain) or [])
+                dnsRecordsXML = build_dns_records_xml(dnsRecords)
             except BaseException as msg:
                 logging.statusWriter(self.statusPath, '%s. [158:prepMeta]' % (str(msg)), 1)
+            metaFileXML.append(dnsRecordsXML)
 
             ## Email accounts XML
 
+            emailRecordsXML = build_email_accounts_xml([])
             try:
-                emailRecordsXML = Element('emails')
-                eDomain = eDomains.objects.get(domain=self.website.domain)
-                emailAccounts = eDomain.eusers_set.all()
-
-                for items in emailAccounts:
-                    emailRecordXML = Element('emailAccount')
-
-                    child = SubElement(emailRecordXML, 'email')
-                    child.text = items.email
-                    child = SubElement(emailRecordXML, 'password')
-                    child.text = items.password
-
-                    emailRecordsXML.append(emailRecordXML)
-
-                metaFileXML.append(emailRecordsXML)
+                eDomain = eDomains.objects.filter(domain=self.website.domain).first()
+                if eDomain is not None:
+                    emailAccounts = list(eDomain.eusers_set.all())
+                    emailRecordsXML = build_email_accounts_xml(emailAccounts)
             except BaseException as msg:
                 logging.writeToFile(self.statusPath, '%s. [warning:179:prepMeta]' % (str(msg)), 1)
+            metaFileXML.append(emailRecordsXML)
 
             ## Email meta generated!
 
@@ -193,7 +172,7 @@ class IncJobs(multi.Thread):
 
             metaPath = '/home/cyberpanel/%s' % (str(randint(1000, 9999)))
 
-            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
+            xmlpretty = prettify(metaFileXML)
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty)
             metaFile.close()
