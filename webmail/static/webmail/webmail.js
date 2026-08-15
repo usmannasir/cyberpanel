@@ -142,6 +142,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
 
     // Settings
     $scope.wmSettings = {};
+    $scope.safeSignatureHtml = '';
 
     // Draft auto-save
     var draftTimer = null;
@@ -372,6 +373,15 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         });
     };
 
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // ── Compose ──────────────────────────────────────────────
     $scope.composeNew = function() {
         $scope.compose = {to: '', cc: '', bcc: '', subject: '', body: '', files: [], inReplyTo: '', references: ''};
@@ -382,8 +392,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
             if (editor) {
                 editor.innerHTML = '';
                 // Add signature if available
-                if ($scope.wmSettings.signatureHtml) {
-                    editor.innerHTML = '<br><br><div class="wm-signature">-- <br>' + $scope.wmSettings.signatureHtml + '</div>';
+                if ($scope.safeSignatureHtml) {
+                    editor.innerHTML = '<br><br><div class="wm-signature">-- <br>' + $scope.safeSignatureHtml + '</div>';
                 }
             }
         }, 100);
@@ -407,8 +417,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                var sig = $scope.wmSettings.signatureHtml ? '<br><br><div class="wm-signature">-- <br>' + $scope.wmSettings.signatureHtml + '</div>' : '';
-                editor.innerHTML = '<br>' + sig + '<br><div class="wm-quoted">On ' + $scope.openMsg.date + ', ' + $scope.openMsg.from + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || $scope.openMsg.body_text || '') + '</blockquote></div>';
+                var sig = $scope.safeSignatureHtml ? '<br><br><div class="wm-signature">-- <br>' + $scope.safeSignatureHtml + '</div>' : '';
+                editor.innerHTML = '<br>' + sig + '<br><div class="wm-quoted">On ' + escapeHtml($scope.openMsg.date) + ', ' + escapeHtml($scope.openMsg.from) + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</blockquote></div>';
             }
         }, 100);
         startDraftAutoSave();
@@ -433,7 +443,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                editor.innerHTML = '<br><br><div class="wm-quoted">On ' + ($scope.openMsg.date || '') + ', ' + ($scope.openMsg.from || '') + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || $scope.openMsg.body_text || '') + '</blockquote></div>';
+                editor.innerHTML = '<br><br><div class="wm-quoted">On ' + escapeHtml($scope.openMsg.date) + ', ' + escapeHtml($scope.openMsg.from) + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</blockquote></div>';
             }
         }, 100);
         startDraftAutoSave();
@@ -456,7 +466,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                editor.innerHTML = '<br><br><div class="wm-forwarded">---------- Forwarded message ----------<br>From: ' + $scope.openMsg.from + '<br>Date: ' + $scope.openMsg.date + '<br>Subject: ' + $scope.openMsg.subject + '<br>To: ' + $scope.openMsg.to + '<br><br>' + ($scope.openMsg.body_html || $scope.openMsg.body_text || '') + '</div>';
+                editor.innerHTML = '<br><br><div class="wm-forwarded">---------- Forwarded message ----------<br>From: ' + escapeHtml($scope.openMsg.from) + '<br>Date: ' + escapeHtml($scope.openMsg.date) + '<br>Subject: ' + escapeHtml($scope.openMsg.subject) + '<br>To: ' + escapeHtml($scope.openMsg.to) + '<br><br>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</div>';
             }
         }, 100);
         startDraftAutoSave();
@@ -737,8 +747,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
                 editor.innerHTML = '';
-                if ($scope.wmSettings.signatureHtml) {
-                    editor.innerHTML = '<br><br><div class="wm-signature">-- <br>' + $scope.wmSettings.signatureHtml + '</div>';
+                if ($scope.safeSignatureHtml) {
+                    editor.innerHTML = '<br><br><div class="wm-signature">-- <br>' + $scope.safeSignatureHtml + '</div>';
                 }
             }
         }, 100);
@@ -803,6 +813,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         apiCall('/webmail/api/getSettings', {}, function(data) {
             if (data.status === 1) {
                 $scope.wmSettings = data.settings;
+                $scope.safeSignatureHtml = data.settings.signatureHtml || '';
                 if ($scope.wmSettings.messagesPerPage) {
                     $scope.perPage = parseInt($scope.wmSettings.messagesPerPage);
                 }
@@ -813,6 +824,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     $scope.saveSettings = function() {
         apiCall('/webmail/api/saveSettings', $scope.wmSettings, function(data) {
             if (data.status === 1) {
+                $scope.wmSettings.signatureHtml = data.signatureHtml || '';
+                $scope.safeSignatureHtml = data.signatureHtml || '';
                 notify('Settings saved.');
                 if ($scope.wmSettings.messagesPerPage) {
                     $scope.perPage = parseInt($scope.wmSettings.messagesPerPage);

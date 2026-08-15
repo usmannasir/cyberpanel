@@ -1,6 +1,10 @@
 import email
+import base64
 import re
 from email.utils import parsedate_to_datetime
+from urllib.parse import urlsplit
+
+from bs4 import BeautifulSoup, Comment, Doctype
 
 from .mime_utils import decode_mime_bytes, decode_mime_header
 
@@ -19,20 +23,14 @@ class EmailParser:
     }
 
     SAFE_ATTRS = {
-        'href', 'src', 'alt', 'title', 'width', 'height', 'style',
-        'class', 'id', 'colspan', 'rowspan', 'cellpadding', 'cellspacing',
+        'href', 'src', 'alt', 'title', 'width', 'height',
+        'colspan', 'rowspan', 'cellpadding', 'cellspacing',
         'border', 'align', 'valign', 'bgcolor', 'color', 'size', 'face',
         'dir', 'lang', 'start', 'type', 'target', 'rel',
     }
 
-    DANGEROUS_CSS_PATTERNS = [
-        re.compile(r'expression\s*\(', re.IGNORECASE),
-        re.compile(r'javascript\s*:', re.IGNORECASE),
-        re.compile(r'vbscript\s*:', re.IGNORECASE),
-        re.compile(r'url\s*\(\s*["\']?\s*javascript:', re.IGNORECASE),
-        re.compile(r'-moz-binding', re.IGNORECASE),
-        re.compile(r'behavior\s*:', re.IGNORECASE),
-    ]
+    SAFE_HREF_SCHEMES = {'', 'http', 'https', 'mailto'}
+    SAFE_SRC_SCHEMES = {'cid'}
 
     @staticmethod
     def _decode_header_value(value):
@@ -129,47 +127,69 @@ class EmailParser:
 
     @classmethod
     def sanitize_html(cls, html):
-        """Whitelist-based HTML sanitization. Strips dangerous content."""
+        """Parse and sanitize an HTML email with a conservative allowlist."""
         if not html:
             return ''
 
-        # Remove script, style, iframe, object, embed, form tags and their content
-        for tag in ['script', 'style', 'iframe', 'object', 'embed', 'form', 'applet', 'base', 'link', 'meta']:
-            html = re.sub(r'<%s\b[^>]*>.*?</%s>' % (tag, tag), '', html, flags=re.IGNORECASE | re.DOTALL)
-            html = re.sub(r'<%s\b[^>]*/?\s*>' % tag, '', html, flags=re.IGNORECASE)
+        soup = BeautifulSoup(str(html), 'html.parser')
+        for node in soup.find_all(string=lambda value: isinstance(value, (Comment, Doctype))):
+            node.extract()
 
-        # Remove event handler attributes (on*)
-        html = re.sub(r'\s+on\w+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]+)', '', html, flags=re.IGNORECASE)
+        for tag in list(soup.find_all(True)):
+            name = str(tag.name or '').lower()
+            if name in ('html', 'body'):
+                tag.unwrap()
+                continue
+            if name not in cls.SAFE_TAGS:
+                tag.decompose()
+                continue
 
-        # Remove javascript: and data: URIs in href/src
-        html = re.sub(r'(href|src)\s*=\s*["\']?\s*javascript:[^"\'>\s]*["\']?', r'\1=""', html, flags=re.IGNORECASE)
-        html = re.sub(r'(href|src)\s*=\s*["\']?\s*data:[^"\'>\s]*["\']?', r'\1=""', html, flags=re.IGNORECASE)
-        html = re.sub(r'(href|src)\s*=\s*["\']?\s*vbscript:[^"\'>\s]*["\']?', r'\1=""', html, flags=re.IGNORECASE)
+            sanitized_attributes = {}
+            for raw_name, raw_value in list(tag.attrs.items()):
+                attribute = str(raw_name).lower()
+                if attribute not in cls.SAFE_ATTRS:
+                    continue
+                if isinstance(raw_value, (list, tuple)):
+                    value = ' '.join(str(item) for item in raw_value)
+                else:
+                    value = str(raw_value)
 
-        # Sanitize style attributes - remove dangerous CSS
-        def clean_style(match):
-            style = match.group(1)
-            for pattern in cls.DANGEROUS_CSS_PATTERNS:
-                if pattern.search(style):
-                    return 'style=""'
-            return match.group(0)
+                if attribute == 'href':
+                    value = cls._sanitize_url(value, cls.SAFE_HREF_SCHEMES)
+                elif attribute == 'src':
+                    value = cls._sanitize_image_source(value)
+                elif attribute == 'target':
+                    value = '_blank' if value.lower() == '_blank' else '_self'
+                sanitized_attributes[attribute] = value
 
-        html = re.sub(r'style\s*=\s*"([^"]*)"', clean_style, html, flags=re.IGNORECASE)
-        html = re.sub(r"style\s*=\s*'([^']*)'", clean_style, html, flags=re.IGNORECASE)
+            if name == 'a' and sanitized_attributes.get('target') == '_blank':
+                sanitized_attributes['rel'] = 'noopener noreferrer'
+            tag.attrs = sanitized_attributes
 
-        # Rewrite external image src to proxy endpoint
-        def proxy_image(match):
-            src = match.group(1)
-            if src.startswith(('http://', 'https://')):
-                from django.utils.http import urlencode
-                import base64
-                encoded_url = base64.urlsafe_b64encode(src.encode()).decode()
-                return 'src="/webmail/api/proxyImage?url=%s"' % encoded_url
-            return match.group(0)
+        return str(soup)
 
-        html = re.sub(r'src\s*=\s*"(https?://[^"]*)"', proxy_image, html, flags=re.IGNORECASE)
+    @staticmethod
+    def _sanitize_url(value, allowed_schemes):
+        value = ''.join(character for character in value.strip() if ord(character) >= 0x20)
+        try:
+            scheme = urlsplit(value).scheme.lower()
+        except ValueError:
+            return ''
+        return value if scheme in allowed_schemes else ''
 
-        return html
+    @classmethod
+    def _sanitize_image_source(cls, value):
+        value = ''.join(character for character in value.strip() if ord(character) >= 0x20)
+        if value.startswith('//'):
+            value = 'https:' + value
+        try:
+            scheme = urlsplit(value).scheme.lower()
+        except ValueError:
+            return ''
+        if scheme in ('http', 'https'):
+            encoded_url = base64.urlsafe_b64encode(value.encode('utf-8')).decode('ascii')
+            return '/webmail/api/proxyImage?url=%s' % encoded_url
+        return value if scheme in cls.SAFE_SRC_SCHEMES else ''
 
     @staticmethod
     def extract_preview(text, max_length=200):
