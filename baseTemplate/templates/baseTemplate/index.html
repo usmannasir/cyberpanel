@@ -29,6 +29,7 @@
     </style>
     
     <!-- Core Scripts -->
+    <style id="cp-ng-cloak-guard">[ng-cloak],[data-ng-cloak],.ng-cloak{display:none !important;}</style>
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <!-- Bootstrap JavaScript -->
@@ -199,8 +200,8 @@
                 <div class="info-line">
                     <strong>Uptime:</strong>
                     <span aria-live="polite">
-                        <span ng-show="!uptimeLoaded">{% trans "Loading..." %}</span>
-                        <span ng-show="uptimeLoaded">{$ uptime $}</span>
+                        <span ng-cloak ng-show="!uptimeLoaded">{% trans "Loading..." %}</span>
+                        <span ng-cloak ng-show="uptimeLoaded">{$ uptime $}</span>
                     </span>
                 </div>
             </div>
