@@ -4167,6 +4167,20 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            for path in ('/usr/local/CyberCP/.env', '/usr/local/CyberCP/secret_key'):
+                if os.path.exists(path):
+                    command = "chown root:cyberpanel %s" % path
+                    Upgrade.executioner(command, 'chown panel secrets', 0)
+                    command = "chmod 640 %s" % path
+                    Upgrade.executioner(command, 'chmod panel secrets', 0)
+
+            backup_env = '/usr/local/CyberCP/.env.backup'
+            if os.path.exists(backup_env):
+                command = "chown root:root %s" % backup_env
+                Upgrade.executioner(command, 'chown environment backup', 0)
+                command = "chmod 600 %s" % backup_env
+                Upgrade.executioner(command, 'chmod environment backup', 0)
+
             command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
             Upgrade.executioner(command, 'chmod CLPackages', 0)
 

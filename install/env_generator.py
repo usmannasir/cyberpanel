@@ -183,8 +183,16 @@ LOG_LEVEL=INFO
     with open(env_file_path, 'w') as f:
         f.write(env_content)
     
-    # Set secure permissions (owner read/write only)
-    os.chmod(env_file_path, 0o600)
+    # The panel worker needs the environment while credentials remain hidden
+    # from every unrelated system account.
+    os.chmod(env_file_path, 0o640)
+    try:
+        import shutil
+        shutil.chown(env_file_path, user='root', group='cyberpanel')
+    except (AttributeError, LookupError, OSError, PermissionError):
+        # Unit tests and non-root development environments may not provide the
+        # production service account.
+        pass
     
     print(f"✓ Generated secure .env file at: {env_file_path}")
     print(f"✓ MySQL Root Password: {mysql_root_password}")

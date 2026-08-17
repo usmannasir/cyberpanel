@@ -784,6 +784,22 @@ password="%s"
         command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        # The panel worker must read one shared environment and Django signing
+        # key, but no unrelated account should be able to read either file.
+        for path in ('/usr/local/CyberCP/.env', '/usr/local/CyberCP/secret_key'):
+            if os.path.exists(path):
+                command = "chown root:cyberpanel %s" % path
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = "chmod 640 %s" % path
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        backup_env = '/usr/local/CyberCP/.env.backup'
+        if os.path.exists(backup_env):
+            command = "chown root:root %s" % backup_env
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            command = "chmod 600 %s" % backup_env
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
                  '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                  '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',

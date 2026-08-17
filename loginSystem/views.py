@@ -101,6 +101,7 @@ def verifyLogin(request):
                     twoinit = request.session['twofa']
                 except:
                     request.session['twofa'] = 0
+                    request.session.save()
                     data = {'userID': admin.pk, 'loginStatus': 2, 'error_message': "None"}
                     json_data = json.dumps(data)
                     response.write(json_data)
@@ -114,8 +115,9 @@ def verifyLogin(request):
                         import pyotp
                         totp = pyotp.TOTP(admin.secretKey)
                         twofa_code = data.get('twofa', '')
-                        if not twofa_code or str(totp.now()) != str(twofa_code):
+                        if not twofa_code or not totp.verify(str(twofa_code).strip(), valid_window=1):
                             request.session['twofa'] = 0
+                            request.session.save()
                             data = {'userID': 0, 'loginStatus': 0, 'error_message': "Invalid verification code."}
                             json_data = json.dumps(data)
                             response.write(json_data)
@@ -123,6 +125,9 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
+                # Rotate a stale or pre-authentication session identifier before
+                # storing authenticated state.
+                request.session.cycle_key()
                 request.session['userID'] = admin.pk
 
                 ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
@@ -136,6 +141,9 @@ def verifyLogin(request):
                     request.session['ipAddr'] = ipAddr
 
                 request.session.set_expiry(43200)
+                # Persist before the browser follows the login response with a
+                # dashboard request.  This is important with multiple workers.
+                request.session.save()
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 response.write(json_data)
