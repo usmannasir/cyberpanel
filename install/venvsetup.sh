@@ -483,10 +483,13 @@ elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Ubuntu 26.04" ; then
+	echo -e "\nDetecting Ubuntu 26.04...\n"
+	SERVER_OS="Ubuntu"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 26.04, CentOS 7.x and CloudLinux 7.x...\n"
 	exit 1
 fi
 }
