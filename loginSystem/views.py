@@ -89,8 +89,6 @@ def verifyLogin(request):
                     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
 
             admin = Administrator.objects.get(userName=username)
-            print(f"Found admin user: {admin.userName}, password hash length: {len(admin.password) if admin.password else 0}")
-
             if admin.state == 'SUSPENDED':
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Account currently suspended.'}
                 json_data = json.dumps(data)
