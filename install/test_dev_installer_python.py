@@ -231,6 +231,47 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             2,
         )
 
+    def test_ubuntu_26_is_recognized_by_remaining_installer_scripts(self):
+        root = pathlib.Path(__file__).parents[1]
+        for relative_path in (
+            'CPScripts/mailscannerinstaller.sh',
+            'CPScripts/mailscanneruninstaller.sh',
+        ):
+            script = (root / relative_path).read_text(encoding='utf-8')
+            detection_line = next(
+                line for line in script.splitlines()
+                if 'Server_OS="Ubuntu"' in line
+            )
+            detection_index = script.splitlines().index(detection_line)
+            version_check = script.splitlines()[detection_index - 1]
+            for release in ('18.04', '20.04', '20.10', '22.04', '24.04', '26.04'):
+                self.assertIn('Ubuntu %s' % release, version_check)
+
+        developer_installer = (root / 'install/venvsetup.sh').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn(
+            'Ubuntu (18.04|20.04|22.04|24.04|26.04)',
+            developer_installer,
+        )
+
+    def test_panel_credentials_keep_worker_only_permissions(self):
+        root = pathlib.Path(__file__).parents[1]
+        generator = (root / 'install/env_generator.py').read_text(
+            encoding='utf-8'
+        )
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
+
+        self.assertIn('os.chmod(env_file_path, 0o640)', generator)
+        self.assertIn("group='cyberpanel'", generator)
+        for script in (installer, upgrader):
+            self.assertIn("'/usr/local/CyberCP/.env'", script)
+            self.assertIn("'/usr/local/CyberCP/secret_key'", script)
+            self.assertIn('chown root:cyberpanel %s', script)
+            self.assertIn("backup_env = '/usr/local/CyberCP/.env.backup'", script)
+            self.assertIn('chmod 600 %s', script)
+
     def test_php_symlink_fallback_uses_executable_commands(self):
         root = pathlib.Path(__file__).parents[1]
         installer = (root / 'install/install.py').read_text(encoding='utf-8')
