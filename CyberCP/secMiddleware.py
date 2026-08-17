@@ -139,7 +139,12 @@ class secMiddleware:
                 # validation -- the request still falls through to the response
                 # path below where the security headers (nosniff, X-Frame-Options,
                 # CSP, Referrer-Policy) are applied.
-                webmailRequest = pathActual.startswith('/webmail/')
+                # Login credentials are opaque values. Passwords commonly
+                # contain shell metacharacters, but they are passed to the
+                # password hash checker and never interpolated into a
+                # command. Scanning this endpoint rejects valid credentials
+                # before verifyLogin can authenticate them.
+                webmailRequest = pathActual.startswith('/webmail/') or pathActual == '/verifyLogin'
 
                 for key, value in ({} if webmailRequest else data).items():
                     valueAlreadyChecked = 0

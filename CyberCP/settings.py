@@ -44,7 +44,10 @@ if not SECRET_KEY:
         import secrets as _secrets
         SECRET_KEY = _secrets.token_urlsafe(50)
         try:
-            _fd = os.open(_secret_key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            # lscpd loads Django as the unprivileged cyberpanel user.  Keep the
+            # key private from other users while allowing that service account
+            # to read the same key across all workers.
+            _fd = os.open(_secret_key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
             with os.fdopen(_fd, 'w') as _skf:
                 _skf.write(SECRET_KEY)
         except FileExistsError:
@@ -63,6 +66,10 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Allow configuration via environment variable, with wildcard fallback for universal compatibility
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+
+# Avoid collisions with stale cookies or other applications using Django's
+# generic ``sessionid`` name on the same hostname.
+SESSION_COOKIE_NAME = 'cyberpanel_sessionid'
 
 # Application definition
 

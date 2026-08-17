@@ -183,8 +183,16 @@ LOG_LEVEL=INFO
     with open(env_file_path, 'w') as f:
         f.write(env_content)
     
-    # Set secure permissions (owner read/write only)
-    os.chmod(env_file_path, 0o600)
+    # lscpd runs as cyberpanel and must read the generated Django settings.
+    # Keep credentials inaccessible to other users while granting the service
+    # account group-read access.
+    os.chmod(env_file_path, 0o640)
+    try:
+        import shutil
+        shutil.chown(env_file_path, user='root', group='cyberpanel')
+    except (AttributeError, OSError, PermissionError):
+        # Non-root test/install environments may not have these accounts.
+        pass
     
     print(f"✓ Generated secure .env file at: {env_file_path}")
     print(f"✓ MySQL Root Password: {mysql_root_password}")
