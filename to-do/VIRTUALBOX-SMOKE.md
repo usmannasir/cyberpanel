@@ -1,5 +1,7 @@
 # VirtualBox smoke (Cursor Local on Windows)
 
+Full step-by-step (prereqs, clone, Cursor prompt, troubleshooting): `to-do/WINDOWS-CURSOR-SMOKE-PLAN.md`. Cursor plan copy: `.cursor/plans/windows-cursor-vbox-smoke.plan.md`.
+
 AlmaLinux VPS cannot run these VMs. Clone master3395/cyberpanel, open it in Cursor on Windows, then run from `Test/virtualbox`.
 
 ## Host needs
