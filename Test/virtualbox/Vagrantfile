@@ -1,0 +1,34 @@
+# Frozen-string-literal: true
+# VirtualBox smoke: AlmaLinux 9, one VM at a time (about 4 GB RAM each).
+# Run from this directory: vagrant up cp-fresh   or   vagrant up cp-upgrade
+
+Vagrant.configure('2') do |config|
+  config.vm.box = 'almalinux/9'
+  config.vm.box_check_update = false
+  config.ssh.insert_key = true
+
+  config.vm.provider 'virtualbox' do |vb|
+    vb.memory = 4096
+    vb.cpus = 2
+    vb.customize ['modifyvm', :id, '--ioapic', 'on']
+    vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+  end
+
+  config.vm.define 'cp-fresh', autostart: false do |fresh|
+    fresh.vm.hostname = 'cp-fresh.local'
+    fresh.vm.network 'forwarded_port', guest: 8090, host: 18090, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 80, host: 10080, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 443, host: 10443, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 22, host: 10022, id: 'ssh', auto_correct: true
+    fresh.vm.provision 'shell', path: 'provision-fresh.sh', privileged: true
+  end
+
+  config.vm.define 'cp-upgrade', autostart: false do |upg|
+    upg.vm.hostname = 'cp-upgrade.local'
+    upg.vm.network 'forwarded_port', guest: 8090, host: 28090, auto_correct: true
+    upg.vm.network 'forwarded_port', guest: 80, host: 20080, auto_correct: true
+    upg.vm.network 'forwarded_port', guest: 443, host: 20443, auto_correct: true
+    upg.vm.network 'forwarded_port', guest: 22, host: 20022, id: 'ssh', auto_correct: true
+    upg.vm.provision 'shell', path: 'provision-upgrade.sh', privileged: true
+  end
+end

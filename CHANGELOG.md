@@ -4,6 +4,19 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## Unreleased (v3.0.2-dev)
+
+Selective v2.5.5-dev / v3.0.1-dev parity on top of upstream v3.0.2. See
+`to-do/V255-DEV-TO-V302-PORT-CHECKLIST.md`. This is a fork branch, not a
+full `v2.5.5-dev` merge.
+
+- Installer `--repo` / `-r` clones a GitHub fork (same switch as upgrade).
+- `getPHPString` uses the #1834 major.minor regex so PHP 8.10 maps to `810`.
+- Modular `cyberpanel_upgrade.sh` plus `upgrade_modules/` kept; Ubuntu 26
+  detection and local DB credential repair stay in that path.
+- VirtualBox / Vagrant smoke helpers live under `Test/virtualbox/` for
+  Cursor Local on Windows.
+
 ## v3.0.2 (build 2) — 2026-08-18
 
 Adds Hermes Agent as a one-click Docker application and consolidates the fixes
