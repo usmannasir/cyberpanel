@@ -20,7 +20,7 @@ from subprocess import call, CalledProcessError
 from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
-from re import compile
+from re import compile, search
 
 class ACLManager:
 
@@ -665,10 +665,14 @@ class ACLManager:
         elif phpVersion == "PHP 8.5":
             php = "85"
         else:
-            # Future PHP versions: derive digits so UnboundLocalError cannot crash
-            # subdomain list and similar pages (#1726).
-            digits = ''.join(ch for ch in phpVersion if ch.isdigit())
-            php = digits[-2:] if len(digits) >= 2 else (digits or '84')
+            # Future PHP versions: derive major+minor digits so UnboundLocalError
+            # cannot crash subdomain list and similar pages (#1726 / #1834).
+            # PHP 8.10 must become 810, not the last two digits (10).
+            result = search(r"\d+\.\d+", phpVersion or "")
+            if result:
+                php = result.group(0).replace(".", "")
+            else:
+                php = "85"
 
         return php
 
