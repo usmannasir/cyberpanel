@@ -16,6 +16,15 @@ full `v2.5.5-dev` merge.
   detection and local DB credential repair stay in that path.
 - VirtualBox / Vagrant smoke helpers live under `Test/virtualbox/` for
   Cursor Local on Windows.
+- Restore `install/ols_binaries_config.py` and `install/ols_version_policy.py`
+  (required by `install.py` / `upgrade.py` OLS overlay).
+- Bring `install/install_utils.py` APIs from v2.5.5-dev (`debian12`, OLS/MariaDB
+  helpers) while honoring `CYBERPANEL_GIT_USER` for fork clones.
+- `Check_Root` now exits 1 when sudo is detected (no false install success).
+- `update_settings_file` rewrites only the top-level `SECRET_KEY =` assignment
+  so the env/file fallback block is not smashed.
+- Vagrant provisioners run via `su -` and fail if `lscpd` is not active.
+  Guest smoke strips CRLF so Windows checkouts still run.
 
 ## v3.0.2 (build 2) — 2026-08-18
 

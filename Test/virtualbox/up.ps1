@@ -27,11 +27,11 @@ switch ($Action) {
         vagrant up cp-upgrade --provider virtualbox
     }
     'smoke-fresh' {
-        vagrant ssh cp-fresh -c 'sudo bash /vagrant/smoke.sh'
+        vagrant ssh cp-fresh -c "tr -d '\r' < /vagrant/smoke.sh | sudo bash"
         Write-Host 'Panel URL: https://127.0.0.1:18090  password: TestPass12'
     }
     'smoke-upgrade' {
-        vagrant ssh cp-upgrade -c 'sudo bash /vagrant/smoke.sh'
+        vagrant ssh cp-upgrade -c "tr -d '\r' < /vagrant/smoke.sh | sudo bash"
         Write-Host 'Panel URL: https://127.0.0.1:28090  password: TestPass12'
     }
     'halt' {

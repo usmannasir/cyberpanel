@@ -463,7 +463,7 @@ log_info "Checking root privileges"
     echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
     log_error "Not running as root user - SUDO detected"
     log_function_end "Check_Root" 1
-    exit
+    exit 1
   fi
 
   if [[ $(id -u) != 0 ]] >/dev/null; then

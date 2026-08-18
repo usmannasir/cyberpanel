@@ -3245,12 +3245,16 @@ module cyberpanel_ols {
 
         in_default_db = False
         in_rootdb = False
+        secret_key_replaced = False
 
         for items in data:
-            # Handle SECRET_KEY generation
-            if items.find('SECRET_KEY') > -1:
+            # Only rewrite one top-level SECRET_KEY assignment. Matching any line that
+            # contains SECRET_KEY also replaced comments and indented statements in the
+            # env/file fallback block, which caused IndentationError on settings.py.
+            if items.startswith('SECRET_KEY =') and not secret_key_replaced:
                 SK = "SECRET_KEY = '%s'\n" % (install_utils.generate_pass(50))
                 writeDataToFile.writelines(SK)
+                secret_key_replaced = True
                 continue
 
             # Track which database section we're in - more robust detection
