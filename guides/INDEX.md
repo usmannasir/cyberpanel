@@ -10,6 +10,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 
 ### 🤖 AI & Security
 - **[AI Scanner Documentation](AIScannerDocs.md)** - Complete guide for CyberPanel's AI-powered security scanner
+- **[Hermes Agent Hosting Guide](HERMES_AGENT_GUIDE.md)** - Deploy Hermes Agent as a one-click Docker application on its own domain
 
 ### 📧 Email & Marketing
 - **[Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)** - Step-by-step guide for installing and configuring Mautic email marketing platform
@@ -30,6 +31,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **Installation & Setup**: [README](../README.md)
 - **Docker Features**: [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 - **Security Features**: [AI Scanner Documentation](AIScannerDocs.md)
+- **Hosting an AI agent**: [Hermes Agent Hosting Guide](HERMES_AGENT_GUIDE.md)
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
 - **Development**: [Contributing Guide](CONTRIBUTING.md)
 

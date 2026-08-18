@@ -88,7 +88,7 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual('3.0.1', result.stdout.strip())
+            self.assertEqual('3.0.2', result.stdout.strip())
 
     def test_upgrade_failure_banner_does_not_claim_the_old_build_is_running(self):
         root = pathlib.Path(__file__).parents[1]
