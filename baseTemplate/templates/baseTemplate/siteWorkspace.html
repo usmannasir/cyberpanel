@@ -120,6 +120,7 @@
                 {% if admin or suspendWebsite %}<a class="cp-tile" href="{% url 'siteState' %}"><span class="cp-tile-ic"><i class="fas fa-pause"></i></span><span><div class="cp-tile-title">{% trans "Suspend Website" %}</div><div class="cp-tile-sub">{% trans "Suspend or unsuspend this site" %}</div></span></a>{% endif %}
                 {% if admin or deleteWebsite %}<a class="cp-tile" href="{% url 'deleteWebsite' %}"><span class="cp-tile-ic"><i class="fas fa-trash"></i></span><span><div class="cp-tile-title">{% trans "Delete Website" %}</div><div class="cp-tile-sub">{% trans "Permanently remove this site" %}</div></span></a>{% endif %}
             </div>
+            {% if not cosmetic.HidePromotions %}
             <div class="cp-empty-nudge" style="margin-top:18px;">
                 <div class="cp-empty-ic"><i class="fas fa-rocket"></i></div>
                 <h3>{% trans "Want this site built or customized for you?" %}</h3>
@@ -128,6 +129,7 @@
                     <a class="cp-build-link" href="{% url 'buildServices' %}"><i class="fas fa-arrow-right"></i> {% trans "Explore Build Services" %}</a>
                 </div>
             </div>
+            {% endif %}
         </div>
 
     </div>

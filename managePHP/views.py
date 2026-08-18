@@ -11,6 +11,7 @@ from loginSystem.views import loadLoginPage
 from .models import PHP, installedPackages, ApachePHP, installedPackagesApache
 from django.http import HttpResponse
 import json
+import time
 from plogical.phpUtilities import phpUtilities
 import os
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -1314,72 +1315,89 @@ def getExtensionsInformation(request):
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.writeToFile(f'PHP Version apache {phpVers}')
 
-                # php = PHP.objects.get(phpVers=phpVers)
+                # Short-lived cache: package metadata listing is expensive on RHEL/Alma.
+                cache_dir = '/usr/local/CyberCP/tmp'
+                try:
+                    os.makedirs(cache_dir, mode=0o700, exist_ok=True)
+                except Exception:
+                    cache_dir = '/tmp'
+                cache_file = os.path.join(cache_dir, f'php_ext_list_{phpVers}.json')
+                cache_ttl = 300
+                try:
+                    if os.path.isfile(cache_file) and (time.time() - os.path.getmtime(cache_file)) < cache_ttl:
+                        with open(cache_file, 'r', encoding='utf-8') as cf:
+                            cached = cf.read()
+                        if cached:
+                            return HttpResponse(cached)
+                except Exception:
+                    pass
 
-                if os.path.exists('/etc/lsb-release'):
-                    command = f'apt list | grep {phpVers}'
-                else:
-                    command = 'yum list installed'
-                    resultInstalled = ProcessUtilities.outputExecutioner(command)
-
-                    command = f'yum list | grep ^{phpVers} | xargs -n3 | column -t'
-
-                result = ProcessUtilities.outputExecutioner(command).split('\n')
-
-                #records = php.installedpackages_set.all()
-
-                json_data = "["
-                checker = 0
-                counter = 1
-
-                for items in result:
-                    if os.path.exists('/etc/lsb-release'):
+                is_deb = os.path.exists('/etc/lsb-release')
+                rows = []
+                if is_deb:
+                    command = f'apt list 2>/dev/null | grep {shlex.quote(phpVers)}'
+                    result = ProcessUtilities.outputExecutioner(command).split('\n')
+                    for items in result:
                         if items.find(phpVers) > -1:
-                            if items.find('installed') == -1:
-                                status = "Not-Installed"
-                            else:
-                                status = "Installed"
+                            status = "Not-Installed" if items.find('installed') == -1 else "Installed"
+                            rows.append({
+                                'phpVers': phpVers,
+                                'extensionName': items.split('/')[0],
+                                'description': items,
+                                'status': status
+                            })
+                else:
+                    # Prefer rpm + dnf repoquery (seconds faster than `yum list` full metadata).
+                    installed_raw = ProcessUtilities.outputExecutioner(
+                        f"rpm -qa --qf '%{{NAME}}\\n' '{phpVers}*' 2>/dev/null"
+                    ) or ''
+                    installed_set = set([x.strip() for x in installed_raw.split('\n') if x.strip()])
+                    available_raw = ProcessUtilities.outputExecutioner(
+                        f"dnf -C repoquery --available --qf '%{{name}} %{{version}}-%{{release}}' '{phpVers}*' 2>/dev/null"
+                    )
+                    if not available_raw or 'No matching' in available_raw:
+                        available_raw = ProcessUtilities.outputExecutioner(
+                            f"yum -C list available '{phpVers}*' 2>/dev/null | grep '^{phpVers}'"
+                        ) or ''
+                    seen = set()
+                    for items in (available_raw or '').split('\n'):
+                        items = items.strip()
+                        if not items:
+                            continue
+                        extesnion = items.split()[0].split('.')[0] if items.split() else ''
+                        if not extesnion or phpVers not in extesnion or extesnion in seen:
+                            continue
+                        seen.add(extesnion)
+                        status = "Installed" if extesnion in installed_set else "Not-Installed"
+                        rows.append({
+                            'phpVers': phpVers,
+                            'extensionName': extesnion,
+                            'description': items,
+                            'status': status
+                        })
+                    # Include installed packages missing from available listing.
+                    for extesnion in sorted(installed_set):
+                        if extesnion in seen:
+                            continue
+                        rows.append({
+                            'phpVers': phpVers,
+                            'extensionName': extesnion,
+                            'description': extesnion,
+                            'status': 'Installed'
+                        })
 
-                            dic = {'id': counter,
-                                   'phpVers': phpVers,
-                                   'extensionName': items.split('/')[0],
-                                   'description': items,
-                                   'status': status
-                                   }
-
-                            if checker == 0:
-                                json_data = json_data + json.dumps(dic)
-                                checker = 1
-                            else:
-                                json_data = json_data + ',' + json.dumps(dic)
-                            counter += 1
-                    else:
-                        ResultExt = items.split(' ')
-                        extesnion = ResultExt[0]
-
-                        if extesnion.find(phpVers) > -1:
-                            if resultInstalled.find(extesnion) == -1:
-                                status = "Not-Installed"
-                            else:
-                                status = "Installed"
-
-                            dic = {'id': counter,
-                                   'phpVers': phpVers,
-                                   'extensionName': extesnion,
-                                   'description': items,
-                                   'status': status
-                                   }
-
-
-                            if checker == 0:
-                                json_data = json_data + json.dumps(dic)
-                                checker = 1
-                            else:
-                                json_data = json_data + ',' + json.dumps(dic)
-                            counter += 1
-
-                json_data = json_data + ']'
+                json_rows = []
+                for idx, dic in enumerate(rows, start=1):
+                    dic = dict(dic)
+                    dic['id'] = idx
+                    json_rows.append(dic)
+                json_data = json.dumps(json_rows)
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+                try:
+                    with open(cache_file, 'w', encoding='utf-8') as cf:
+                        cf.write(final_json)
+                except Exception:
+                    pass
                 return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -1416,6 +1434,19 @@ def submitExtensionRequest(request):
                     execPath = execPath + " unInstallPHPExtension --extension " + extensionName
 
                 ProcessUtilities.popenExecutioner(execPath)
+
+                # Bust extension list caches after install/uninstall requests.
+                try:
+                    cache_dir = '/usr/local/CyberCP/tmp'
+                    if os.path.isdir(cache_dir):
+                        for name in os.listdir(cache_dir):
+                            if name.startswith('php_ext_list_') and name.endswith('.json'):
+                                try:
+                                    os.remove(os.path.join(cache_dir, name))
+                                except Exception:
+                                    pass
+                except Exception:
+                    pass
 
                 final_json = json.dumps({'extensionRequestStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)

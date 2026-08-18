@@ -2,6 +2,19 @@
  * Created by usman on 7/26/17.
  */
 
+// Ensure app is available (get existing module or create reference)
+// This ensures compatibility with the global app variable from system-status.js
+if (typeof app === 'undefined') {
+    // First try to get window.app (set by system-status.js)
+    if (typeof window !== 'undefined' && typeof window.app !== 'undefined') {
+        app = window.app;
+    } else {
+        // If window.app doesn't exist, get the existing CyberCP module
+        // This works because system-status.js should have already created it
+        app = angular.module('CyberCP');
+    }
+}
+
 // Global function for deleting staging sites
 function deleteStagingGlobal(stagingId) {
     if (confirm("Are you sure you want to delete this staging site? This action cannot be undone.")) {
@@ -2741,6 +2754,45 @@ $("#listFail").hide();
 
 
 app.controller('listWebsites', function ($scope, $http, $window) {
+
+    function formatDiskLabel(val) {
+        if (val === null || val === undefined || val === '') {
+            return '0 MB';
+        }
+        var s = String(val).trim();
+        if (/^\d+(\.\d+)?\s*(B|KB|MB|GB|TB)$/i.test(s)) {
+            return s.replace(/(\d)([A-Za-z])/g, '$1 $2');
+        }
+        var m = s.match(/^(\d+(?:\.\d+)?)\s*MB$/i);
+        if (!m) {
+            return s;
+        }
+        var mb = parseFloat(m[1]);
+        if (!isFinite(mb) || mb < 0) {
+            return '0 MB';
+        }
+        var bytes = mb * 1024 * 1024;
+        if (bytes >= 1024 * 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + ' TB';
+        }
+        if (bytes >= 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+        if (bytes >= 1024 * 1024) {
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+        if (bytes >= 1024) {
+            return (bytes / 1024).toFixed(1) + ' KB';
+        }
+        return Math.round(bytes) + ' B';
+    }
+
+    function normalizeWebsiteRow(web) {
+        if (web && web.diskUsed) {
+            web.diskUsed = formatDiskLabel(web.diskUsed);
+        }
+        return web;
+    }
     $scope.web = {};
     $scope.WebSitesList = [];
     $scope.loading = true; // Add loading state
@@ -2779,6 +2831,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -2806,6 +2865,57 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         return tooltip;
     };
 
+    $scope.convertingToChild = {};
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
     // Initial fetch of websites
     $scope.getFurtherWebsitesFromDB = function () {
         $scope.loading = true; // Set loading to true when starting fetch
@@ -2824,7 +2934,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         $http.post(dataurl, data, config).then(function(response) {
             if (response.data.listWebSiteStatus === 1) {
-                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.WebSitesList = JSON.parse(response.data.data).map(normalizeWebsiteRow);
                 $scope.pagination = response.data.pagination;
                 $("#listFail").hide();
                 // Expand the first site by default
@@ -3211,8 +3321,21 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.cyberPanelLoading = true;
 
+    if (typeof $scope.issuingSSL === 'undefined') { $scope.issuingSSL = {}; }
+
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -3231,6 +3354,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -3249,6 +3373,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -6106,6 +6231,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -6131,6 +6263,57 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         
         return tooltip;
+    };
+
+    $scope.convertingToChild = {};
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
     };
 
     // Initial fetch of websites
@@ -6539,8 +6722,21 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.cyberPanelLoading = true;
 
+    if (typeof $scope.issuingSSL === 'undefined') { $scope.issuingSSL = {}; }
+
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -6559,6 +6755,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -6577,6 +6774,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -6734,8 +6932,21 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
     $scope.cyberPanelLoading = true;
 
+    if (typeof $scope.issuingSSL === 'undefined') { $scope.issuingSSL = {}; }
+
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -6754,6 +6965,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -6772,6 +6984,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -9777,6 +9990,13 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         if (!web.ssl) return '';
         
         var tooltip = '';
+        if (web.ssl.status === 'cloudflare') {
+            tooltip = 'Cloudflare proxy is active. Visitors get HTTPS at the edge.';
+            if (web.ssl.origin_status === 'expired' || web.ssl.origin_status === 'expiring' || web.ssl.origin_status === 'warning') {
+                tooltip += ' Renew the origin certificate on the server.';
+            }
+            return tooltip;
+        }
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
@@ -9802,6 +10022,57 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
         
         return tooltip;
+    };
+
+    $scope.convertingToChild = {};
+
+    $scope.convertToChildDomain = function(web) {
+        if (!web || !web.canConvertToChild) {
+            return;
+        }
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild[web.domain] = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function(response) {
+            $scope.convertingToChild[web.domain] = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion started.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function() {
+            $scope.convertingToChild[web.domain] = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
     };
 
     // Initial fetch of websites
@@ -10002,8 +10273,21 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.cyberPanelLoading = true;
 
+    if (typeof $scope.issuingSSL === 'undefined') { $scope.issuingSSL = {}; }
+
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -10022,6 +10306,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -10040,6 +10325,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -10337,8 +10623,21 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
     $scope.cyberPanelLoading = true;
 
+    if (typeof $scope.issuingSSL === 'undefined') { $scope.issuingSSL = {}; }
+
     $scope.issueSSL = function (virtualHost) {
+        if ($scope.issuingSSL[virtualHost]) {
+            return;
+        }
+        $scope.issuingSSL[virtualHost] = true;
         $scope.cyberPanelLoading = false;
+
+        new PNotify({
+            title: 'Issuing SSL',
+            text: 'SSL issuance has started. This can take a few minutes.',
+            type: 'info',
+            delay: 5000
+        });
 
         var url = "/manageSSL/issueSSL";
 
@@ -10357,6 +10656,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             if (response.data.SSL === 1) {
                 new PNotify({
@@ -10375,6 +10675,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.issuingSSL[virtualHost] = false;
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -10747,7 +11048,20 @@ $("#websiteSuccessfullyModified").hide();
 $("#modifyWebsiteLoading").hide();
 $("#modifyWebsiteButton").hide();
 
-app.controller('modifyWebsitesController', function ($scope, $http) {
+/** Angular filter: format bytes as human-readable size (used by modifyWebsite.html) */
+app.filter('filesize', [function () {
+    return function (bytes) {
+        if (bytes == null || isNaN(bytes)) return '-';
+        var n = Number(bytes);
+        if (n === 0) return '0 B';
+        var k = 1024;
+        var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        var i = Math.floor(Math.log(n) / Math.log(k));
+        return (n / Math.pow(k, i)).toFixed(2) + ' ' + sizes[Math.min(i, sizes.length - 1)];
+    };
+}]);
+
+app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope, $http) {
 
     $scope.fetchWebsites = function () {
 
@@ -10884,7 +11198,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
     };
 
-});
+}]);
 
 /* Java script code to Modify Pacakge ends here */
 
@@ -11034,6 +11348,62 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.installMauticURL = $("#domainNamePage").text() + "/installMautic";
     $scope.domainAliasURL = "/websites/" + $("#domainNamePage").text() + "/domainAlias";
     $scope.previewUrl = "/preview/" + $("#domainNamePage").text() + "/";
+
+    $scope.convertCurrentSiteToChild = function () {
+        if (!$scope.canConvertToChild || !$scope.convertMaster) {
+            return;
+        }
+        var domain = $("#domainNamePage").text();
+        var web = {
+            domain: domain,
+            canConvertToChild: true,
+            convertMaster: $scope.convertMaster,
+            hasChildDuplicate: $scope.hasChildDuplicate
+        };
+        var master = web.convertMaster;
+        var msg = 'Convert ' + web.domain + ' into a subdomain of ' + master + '?';
+        if (web.hasChildDuplicate) {
+            msg += ' The duplicate top-level panel entry will be removed. Existing child domain files will be kept.';
+        } else {
+            msg += ' Site files will move under the master domain home directory.';
+        }
+        if (!$window.confirm(msg)) {
+            return;
+        }
+        $scope.convertingToChild = true;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post('/websites/convertWebsiteToChildDomain', {
+            websiteName: web.domain,
+            masterDomain: master
+        }, config).then(function (response) {
+            $scope.convertingToChild = false;
+            if (response.data.convertStatus === 1 || response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: response.data.success || 'Conversion completed.',
+                    type: 'success'
+                });
+                $window.location.href = '/websites/' + master;
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: response.data.error_message || 'Conversion failed.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            $scope.convertingToChild = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
 
     var logType = 0;
     $scope.pageNumber = 1;
@@ -12964,7 +13334,7 @@ app.controller('suspendWebsiteControl', function ($scope, $http) {
 app.controller('manageCronController', function ($scope, $http) {
     $("#manageCronLoading").hide();
     $("#modifyCronForm").hide();
-    $("#cronTable").hide();
+    $("#cronListPanel").hide();
     $("#saveCronButton").hide();
     $("#addCronButton").hide();
 
@@ -12973,6 +13343,44 @@ app.controller('manageCronController', function ($scope, $http) {
     $("#fetchCronFailure").hide();
 
     $scope.websiteToBeModified = $("#domain").text();
+
+    function scrollCronFormIntoView() {
+        var formEl = document.getElementById('modifyCronForm');
+        if (formEl && formEl.scrollIntoView) {
+            formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function setCronFormMode(mode) {
+        if (mode === 'edit') {
+            $("#cronFormTitleAdd").hide();
+            $("#cronFormTitleEdit").show();
+        } else {
+            $("#cronFormTitleAdd").show();
+            $("#cronFormTitleEdit").hide();
+        }
+    }
+
+    $scope.cancelCronForm = function () {
+        $("#modifyCronForm").hide();
+        $("#saveCronButton").hide();
+        $("#addCronButton").hide();
+        $("#manageCronLoading").hide();
+        $("#addCronFailure").hide();
+        $("#fetchCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#cronListPanel").show();
+    };
+
+    $scope.openCronForm = function (mode) {
+        setCronFormMode(mode);
+        $("#cronListPanel").hide();
+        $("#modifyCronForm").show();
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        scrollCronFormIntoView();
+    };
 
     $scope.fetchWebsites = function () {
 
@@ -12999,7 +13407,7 @@ app.controller('manageCronController', function ($scope, $http) {
             if (response.data.getWebsiteCron === 0) {
                 console.log(response.data);
                 $scope.errorMessage = response.data.error_message;
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13008,7 +13416,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 console.log(response.data);
                 var finalData = response.data.crons;
                 $scope.cronList = finalData;
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
@@ -13018,7 +13426,7 @@ app.controller('manageCronController', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $("#manageCronLoading").hide();
-            $("#cronTable").hide();
+            $("#cronListPanel").hide();
             $("#fetchCronFailure").show();
             $("#addCronFailure").hide();
             $("#cronEditSuccess").hide();
@@ -13028,9 +13436,8 @@ app.controller('manageCronController', function ($scope, $http) {
 
     $scope.fetchCron = function (cronLine) {
 
-        $("#cronTable").show();
+        $scope.openCronForm('edit');
         $("#manageCronLoading").show();
-        $("#modifyCronForm").show();
         $("#saveCronButton").show();
         $("#addCronButton").hide();
 
@@ -13062,11 +13469,12 @@ app.controller('manageCronController', function ($scope, $http) {
             if (response.data.getWebsiteCron === 0) {
                 console.log(response.data);
                 $scope.errorMessage = response.data.error_message;
-                $("#cronTable").show();
+                $("#cronListPanel").show();
                 $("#manageCronLoading").hide();
                 $("#modifyCronForm").hide();
                 $("#saveCronButton").hide();
                 $("#addCronButton").hide();
+                $("#fetchCronFailure").show();
             } else {
                 console.log(response.data);
 
@@ -13078,11 +13486,13 @@ app.controller('manageCronController', function ($scope, $http) {
                 $scope.command = response.data.cron.command
                 $scope.line = response.data.line
 
-                $("#cronTable").show();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
-                $("#modifyCronForm").fadeIn();
+                $("#modifyCronForm").show();
                 $("#addCronButton").hide();
                 $("#saveCronButton").show();
+                setCronFormMode('edit');
+                scrollCronFormIntoView();
 
             }
         }
@@ -13115,9 +13525,8 @@ app.controller('manageCronController', function ($scope, $http) {
         } else {
             $scope.minute = $scope.hour = $scope.monthday = $scope.month = $scope.weekday = $scope.command = $scope.line = "";
 
-            $("#cronTable").hide();
+            $scope.openCronForm('add');
             $("#manageCronLoading").hide();
-            $("#modifyCronForm").show();
             $("#saveCronButton").hide()
             $("#addCronButton").show();
         }
@@ -13161,7 +13570,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#fetchCronFailure").hide();
                 $("#addCronFailure").show();
             } else {
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13210,7 +13619,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#fetchCronFailure").hide();
                 $("#addCronFailure").show();
             } else {
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13267,7 +13676,7 @@ app.controller('manageCronController', function ($scope, $http) {
                 $("#addCronFailure").show();
             } else {
                 console.log(response.data);
-                $("#cronTable").hide();
+                $("#cronListPanel").hide();
                 $("#manageCronLoading").hide();
                 $("#cronEditSuccess").show();
                 $("#fetchCronFailure").hide();
@@ -13296,7 +13705,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         e.preventDefault();
     });
 
-    var masterDomain = ($("#domainNamePage").text() || "").trim();
+    var masterDomain = "";
 
     $scope.aliasTable = false;
     $scope.addAliasButton = false;
@@ -13306,10 +13715,6 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.aliasCreated = true;
     $scope.manageAliasLoading = true;
     $scope.operationSuccess = true;
-
-    if (masterDomain) {
-        $scope.masterDomain = masterDomain;
-    }
 
     $scope.createAliasEnter = function ($event) {
         var keyCode = $event.which || $event.keyCode;
@@ -13483,13 +13888,6 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         }
 
 
-    };
-
-    $scope.confirmRemoveAlias = function (masterDomain, aliasDomain) {
-        var message = ($("#aliasDeleteConfirmation").text() || "").trim();
-        if ($window.confirm(message)) {
-            $scope.removeAlias(masterDomain, aliasDomain);
-        }
     };
 
     $scope.removeAlias = function (masterDomain, aliasDomain) {

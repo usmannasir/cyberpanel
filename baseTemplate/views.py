@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
 import json
 from loginSystem.views import loadLoginPage
-from .models import version
+from .models import version, UserNotificationPreferences
 import requests
 import subprocess
 import shlex
@@ -18,6 +18,7 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from plogical.processUtilities import ProcessUtilities
+from plogical.firewallUtilities import FirewallUtilities
 from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites, WPSites
 from databases.models import Databases
@@ -27,10 +28,65 @@ from loginSystem.models import Administrator
 from packages.models import Package
 from django.views.decorators.http import require_GET, require_POST
 import pwd
-from cyberpanel_version import BUILD, VERSION
+import re
 from plogical.securityUtils import is_safe_hostname, is_safe_system_user
 
 # Create your views here.
+
+try:
+    from cyberpanel_version import VERSION, BUILD
+except Exception:
+    VERSION = '3.0'
+    BUILD = 0
+
+
+def _version_compare(a, b):
+    """Return 1 if a > b, -1 if a < b, 0 if equal."""
+    def parse(v):
+        parts = []
+        for p in str(v).split('.'):
+            try:
+                parts.append(int(p))
+            except ValueError:
+                parts.append(0)
+        return parts
+    pa, pb = parse(a), parse(b)
+    for i in range(max(len(pa), len(pb))):
+        va = pa[i] if i < len(pa) else 0
+        vb = pb[i] if i < len(pb) else 0
+        if va > vb:
+            return 1
+        if va < vb:
+            return -1
+    return 0
+
+
+def _parse_github_origin(remote_out):
+    """Return (owner, repo) or (None, None) if unparseable."""
+    if not remote_out:
+        return None, None
+    m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', remote_out.strip())
+    if not m:
+        return None, None
+    owner, repo = m.group(1), m.group(2).rstrip('.git')
+    return owner, repo
+
+
+def _github_branch_tip_sha(owner, repo, branch_ref):
+    """First commit SHA on branch via GitHub API, or empty string on failure."""
+    try:
+        u = 'https://api.github.com/repos/%s/%s/commits?sha=%s' % (owner, repo, branch_ref)
+        r = requests.get(u, timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        if not data:
+            return ''
+        sha = data[0].get('sha', '') or ''
+        return sha
+    except (requests.RequestException, IndexError, KeyError, TypeError) as e:
+        logging.CyberCPLogFileWriter.writeToFile(
+            '[versionManagment] GitHub API %s/%s @%s failed: %s' % (owner, repo, branch_ref, str(e)))
+        return ''
 
 
 @ensure_csrf_cookie
@@ -45,35 +101,8 @@ def renderBase(request):
 
 @ensure_csrf_cookie
 def versionManagement(request):
-    getVersion = requests.get('https://cyberpanel.net/version.txt')
-    latest = getVersion.json()
-    latestVersion = latest['version']
-    latestBuild = latest['build']
-
-    currentVersion = VERSION
-    currentBuild = str(BUILD)
-
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
-    notechk = True
-
-    if Currentcomt == latestcomit:
-        notechk = False
-
-    template = 'baseTemplate/versionManagment.html'
-    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
-
-    proc = httpProc(request, template, finalData, 'versionManagement')
-    return proc.render()
+    """Legacy entrypoint; same UI as versionManagment (URLs use versionManagment)."""
+    return versionManagment(request)
 
 
 @ensure_csrf_cookie
@@ -130,6 +159,11 @@ def getAdminStatus(request):
 
 
 def getSystemStatus(request):
+    default_fallback = {
+        'cpuUsage': 0, 'ramUsage': 0, 'diskUsage': 0,
+        'cpuCores': 2, 'ramTotalMB': 4096, 'diskTotalGB': 100,
+        'diskFreeGB': 100, 'uptime': 'N/A'
+    }
     try:
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
@@ -137,13 +171,21 @@ def getSystemStatus(request):
         
         # Admin users get full system information
         if currentACL.get('admin', 0):
+            from django.core.cache import cache
+            cache_key = 'cp_admin_sysstatus'
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return HttpResponse(json.dumps(cached))
             HTTPData = SystemInformation.getSystemInformation()
+            try:
+                cache.set(cache_key, HTTPData, 45)
+            except Exception:
+                pass
             json_data = json.dumps(HTTPData)
             return HttpResponse(json_data)
         else:
             # Non-admin users get user-specific resource information.
-            # The disk-usage loop below spawns `du` per website, which is slow
-            # and was running on every dashboard poll — cache the result briefly.
+            # Cache briefly: per-site du is slow on every poll.
             from django.core.cache import cache
             cache_key = 'cp_user_sysstatus_%s' % val
             cached = cache.get(cache_key)
@@ -186,22 +228,27 @@ def getSystemStatus(request):
             total_disk_limit_gb = round(total_disk_limit / 1024, 2) if total_disk_limit > 0 else 100  # Default 100GB if no limit
             disk_free_gb = max(0, total_disk_limit_gb - total_disk_used_gb)
             disk_usage_percent = min(100, int((total_disk_used_gb / total_disk_limit_gb) * 100)) if total_disk_limit_gb > 0 else 0
-
-            # CPU and RAM are real server metrics (the user's sites run on this server);
-            # disk shown above is the user's own quota usage, not the whole server.
-            try:
-                import psutil
-                vm = psutil.virtual_memory()
-                cpu_usage = int(psutil.cpu_percent())
-                ram_usage = int(vm.percent)
-                cpu_cores = psutil.cpu_count() or 0
-                ram_total_mb = int(vm.total / (1024 * 1024))
-            except Exception:
-                cpu_usage = 0
-                ram_usage = 0
-                cpu_cores = 0
-                ram_total_mb = 0
-
+            
+            # Calculate bandwidth usage (simplified - you may want to implement actual bandwidth tracking)
+            bandwidth_used = 0
+            bandwidth_limit = 0
+            for website in user_websites:
+                if website.package:
+                    bandwidth_limit += website.package.bandwidth
+            
+            bandwidth_limit_gb = round(bandwidth_limit / 1024, 2) if bandwidth_limit > 0 else 1000  # Default 1000GB if no limit
+            bandwidth_usage_percent = 0  # You can implement actual bandwidth tracking here
+            
+            # Count resources
+            total_websites = user_websites.count()
+            total_databases = 0
+            total_emails = 0
+            
+            website_names = list(user_websites.values_list('domain', flat=True))
+            if website_names:
+                total_databases = Databases.objects.filter(website__domain__in=website_names).count()
+                total_emails = EUsers.objects.filter(emailOwner__domainOwner__domain__in=website_names).count()
+            
             # Prepare response data matching the expected format
             user_data = {
                 'cpuUsage': cpu_usage,
@@ -221,20 +268,16 @@ def getSystemStatus(request):
 
             json_data = json.dumps(user_data)
             return HttpResponse(json_data)
-
+            
+    except KeyError as e:
+        logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] KeyError - No session userID: {str(e)}')
+        return HttpResponse(json.dumps(default_fallback))
     except Exception as e:
-        # Return default values on error
-        default_data = {
-            'cpuUsage': 0,
-            'ramUsage': 0,
-            'diskUsage': 0,
-            'cpuCores': 2,
-            'ramTotalMB': 4096,
-            'diskTotalGB': 100,
-            'diskFreeGB': 100,
-            'uptime': 'N/A'
-        }
-        return HttpResponse(json.dumps(default_data))
+        logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] Exception: {str(e)}')
+        try:
+            return HttpResponse(json.dumps(default_fallback))
+        except Exception:
+            return HttpResponse('{"cpuUsage":0,"ramUsage":0,"diskUsage":0,"cpuCores":2,"ramTotalMB":4096,"diskTotalGB":100,"diskFreeGB":100,"uptime":"N/A"}', content_type='application/json')
 
 
 def getLoadAverage(request):
@@ -260,36 +303,172 @@ def getLoadAverage(request):
 
 @ensure_csrf_cookie
 def versionManagment(request):
-    ## Get latest version
-
-    getVersion = requests.get('https://cyberpanel.net/version.txt')
-    latest = getVersion.json()
-    latestVersion = latest['version']
-    latestBuild = latest['build']
-
-    ## Get local version
-
     currentVersion = VERSION
     currentBuild = str(BUILD)
 
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.CyberCPLogFileWriter.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
     notechk = True
+    Currentcomt = ''
+    latestcomit = ''
+    latestVersion = '0'
+    latestBuild = '0'
+    upstream_latest_sha = ''
+    fork_latest_sha = ''
+    show_fork_block = False
+    fork_display = ''
+    fork_commit_url = ''
+    upstream_commit_url = ''
+    fork_drift_upstream = False
 
-    if (Currentcomt == latestcomit):
+    on_dev_branch = (currentVersion == '2.5.5' and currentBuild == 'dev')
+
+    try:
+        getVersion = requests.get('https://cyberpanel.net/version.txt', timeout=10)
+        getVersion.raise_for_status()
+        latest = getVersion.json()
+        latestVersion = str(latest.get('version', '0'))
+        latestBuild = str(latest.get('build', '0'))
+    except (requests.RequestException, ValueError, KeyError) as e:
+        logging.CyberCPLogFileWriter.writeToFile('[versionManagment] cyberpanel.net/version.txt failed: %s' % str(e))
+        if on_dev_branch:
+            latestVersion, latestBuild = '2.5.5', 'dev'
+
+    if on_dev_branch:
+        branch_ref = 'v2.5.5-dev'
+        latestVersion, latestBuild = '2.5.5', 'dev'
+    else:
+        branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
+
+    head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
+    Currentcomt = (ProcessUtilities.outputExecutioner(head_cmd) or '').rstrip('\n')
+
+    local_branch_cmd = (
+        'git -C /usr/local/CyberCP rev-parse --abbrev-ref HEAD 2>/dev/null || true')
+    local_branch = (ProcessUtilities.outputExecutioner(local_branch_cmd) or '').rstrip('\n')
+    if local_branch in ('', 'HEAD'):
+        local_branch = ''
+
+    remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
+    remote_out = (ProcessUtilities.outputExecutioner(remote_cmd) or '')
+    origin_owner, origin_repo = _parse_github_origin(remote_out)
+    if origin_owner and origin_repo:
+        remote_display = '%s/%s' % (origin_owner, origin_repo)
+        is_official = (origin_owner.lower() == 'usmannasir' and origin_repo.lower() == 'cyberpanel')
+        show_fork_block = not is_official
+        if show_fork_block:
+            fork_display = remote_display
+    else:
+        remote_display = (remote_out.strip() or '-')
+        logging.CyberCPLogFileWriter.writeToFile(
+            '[versionManagment] Unparseable git origin, upstream-only UI: %s'
+            % (remote_out[:200] if remote_out else '(empty)'))
+        show_fork_block = False
+
+    # Published version.txt stays the tracking label. Fork installs also compare tip
+    # against the local/dev branch (prefer v3.0.0-dev) so Version Management matches
+    # master3395/cyberpanel rather than stale upstream v3.0.0-dev.
+    preferred_upgrade_branch = branch_ref
+    fork_tip_branch = branch_ref
+    branches_api_owner = 'usmannasir'
+    branches_api_repo = 'cyberpanel'
+    include_dev_branches = False
+    if show_fork_block and origin_owner and origin_repo:
+        branches_api_owner = origin_owner
+        branches_api_repo = origin_repo
+        include_dev_branches = True
+        preferred_upgrade_branch = 'v3.0.1-dev'
+        if local_branch.startswith('v') and local_branch.endswith('-dev'):
+            fork_tip_branch = local_branch
+            preferred_upgrade_branch = local_branch
+        else:
+            fork_tip_branch = 'v3.0.1-dev'
+
+    upstream_latest_sha = _github_branch_tip_sha('usmannasir', 'cyberpanel', branch_ref)
+    latestcomit = upstream_latest_sha
+    if upstream_latest_sha:
+        upstream_commit_url = 'https://github.com/usmannasir/cyberpanel/commit/%s' % upstream_latest_sha
+
+    if show_fork_block and origin_owner and origin_repo:
+        fork_latest_sha = _github_branch_tip_sha(origin_owner, origin_repo, fork_tip_branch)
+        if fork_latest_sha:
+            fork_commit_url = 'https://github.com/%s/%s/commit/%s' % (
+                origin_owner, origin_repo, fork_latest_sha)
+            latestcomit = fork_latest_sha
+
+    if (fork_latest_sha and upstream_latest_sha and fork_latest_sha != upstream_latest_sha):
+        fork_drift_upstream = True
+
+    if not on_dev_branch and notechk and _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
+    elif notechk:
+        cur = (Currentcomt or '').strip().lower()
+        if show_fork_block:
+            fk = (fork_latest_sha or '').strip().lower()
+            up = (upstream_latest_sha or '').strip().lower()
+            if fk:
+                notechk = not (bool(cur) and cur == fk)
+            elif up:
+                notechk = not (bool(cur) and cur == up)
+            else:
+                notechk = False
+        else:
+            up = (upstream_latest_sha or '').strip().lower()
+            if up:
+                notechk = not (bool(cur) and cur == up)
+            else:
+                notechk = False
+
+    is_usmannasir = not show_fork_block
+    fork_remote_commit = fork_latest_sha if show_fork_block else ''
+    upstream_commit = upstream_latest_sha
+    notecheck_compare_remote = fork_display if show_fork_block else 'usmannasir/cyberpanel'
+    local_behind_official = bool(
+        on_dev_branch and Currentcomt and upstream_commit and Currentcomt != upstream_commit)
+
+    def _short_sha(commit_hash):
+        if not commit_hash or len(commit_hash) < 7:
+            return commit_hash or ''
+        return commit_hash[:7]
 
     template = 'baseTemplate/versionManagment.html'
-    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
+    finalData = {
+        'build': currentBuild,
+        'currentVersion': currentVersion,
+        'latestVersion': latestVersion,
+        'latestBuild': latestBuild,
+        'latestcomit': latestcomit,
+        'Currentcomt': Currentcomt,
+        'Notecheck': notechk,
+        'show_fork_block': show_fork_block,
+        'tracking_branch': branch_ref,
+        'branch_ref': branch_ref,
+        'fork_display': fork_display,
+        'fork_latest_sha': fork_latest_sha,
+        'upstream_latest_sha': upstream_latest_sha,
+        'fork_commit_url': fork_commit_url,
+        'upstream_commit_url': upstream_commit_url,
+        'fork_drift_upstream': fork_drift_upstream,
+        'remote_display': remote_display,
+        'is_usmannasir': is_usmannasir,
+        'fork_remote_commit': fork_remote_commit,
+        'upstream_commit': upstream_commit,
+        'notecheck_compare_remote': notecheck_compare_remote,
+        'local_behind_official': local_behind_official,
+        'on_dev_branch': on_dev_branch,
+        'Currentcomt_short': _short_sha(Currentcomt),
+        'latestcomit_short': _short_sha(latestcomit),
+        'fork_remote_commit_short': _short_sha(fork_remote_commit),
+        'upstream_commit_short': _short_sha(upstream_commit),
+        'fork_latest_sha_short': _short_sha(fork_latest_sha),
+        'upstream_latest_sha_short': _short_sha(upstream_latest_sha),
+        'local_branch': local_branch,
+        'preferred_upgrade_branch': preferred_upgrade_branch,
+        'fork_tip_branch': fork_tip_branch,
+        'branches_api_url': 'https://api.github.com/repos/%s/%s/branches' % (
+            branches_api_owner, branches_api_repo),
+        'include_dev_branches': include_dev_branches,
+        'origin_owner': origin_owner or '',
+        'origin_repo': origin_repo or '',
+    }
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
@@ -314,7 +493,7 @@ def upgrade(request):
         background = ApplicationInstaller('UpgradeCP', extraArgs)
         background.start()
 
-        adminData = {"upgrade": 1}
+        adminData = {"upgrade": 1, "progress": 0}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
 
@@ -322,6 +501,21 @@ def upgrade(request):
         adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
+
+
+def _read_upgrade_progress_percent():
+    """Read JSON sidecar written by plogical.upgrade.Upgrade.write_upgrade_progress."""
+    try:
+        from plogical.upgrade import Upgrade
+        prog_path = getattr(Upgrade, 'ProgressPathNew', '/home/cyberpanel/upgrade_progress')
+        if os.path.isfile(prog_path):
+            with open(prog_path, 'r') as rf:
+                data = json.loads(rf.read())
+            v = int(data.get('pct', 0))
+            return max(0, min(100, v))
+    except (ValueError, TypeError, json.JSONDecodeError, OSError, KeyError):
+        pass
+    return 0
 
 
 def upgradeStatus(request):
@@ -338,28 +532,49 @@ def upgradeStatus(request):
                 from plogical.upgrade import Upgrade
 
                 path = Upgrade.LogPathNew
+                prog_path = getattr(Upgrade, 'ProgressPathNew', '/home/cyberpanel/upgrade_progress')
+                pct = _read_upgrade_progress_percent()
 
-                try:
-                    upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')
-                except:
+                upgradeLog = None
+                if os.path.isfile(path):
+                    try:
+                        upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')
+                    except BaseException:
+                        upgradeLog = None
+
+                if upgradeLog is None or not isinstance(upgradeLog, str):
+                    upgradeLog = None
+                elif upgradeLog.strip().startswith('cat:'):
+                    upgradeLog = None
+
+                if upgradeLog is None:
                     final_json = json.dumps({'finished': 0, 'upgradeStatus': 1,
                                              'error_message': "None",
-                                             'upgradeLog': "Upgrade Just started.."})
+                                             'upgradeLog': "Waiting for upgrade log…",
+                                             'progress': pct})
                     return HttpResponse(final_json)
 
                 if upgradeLog.find("Upgrade Completed") > -1:
 
                     command = f'rm -rf {path}'
                     ProcessUtilities.executioner(command)
+                    try:
+                        if os.path.isfile(prog_path):
+                            os.remove(prog_path)
+                    except OSError:
+                        pass
 
                     final_json = json.dumps({'finished': 1, 'upgradeStatus': 1,
                                              'error_message': "None",
-                                             'upgradeLog': upgradeLog})
+                                             'upgradeLog': upgradeLog,
+                                             'progress': 100})
                     return HttpResponse(final_json)
                 else:
+                    pct = _read_upgrade_progress_percent()
                     final_json = json.dumps({'finished': 0, 'upgradeStatus': 1,
                                              'error_message': "None",
-                                             'upgradeLog': upgradeLog})
+                                             'upgradeLog': upgradeLog,
+                                             'progress': pct})
                     return HttpResponse(final_json)
         except BaseException as msg:
             final_dic = {'upgradeStatus': 0, 'error_message': str(msg)}
@@ -409,6 +624,7 @@ def design(request):
     if request.method == 'POST':
         MainDashboardCSS = request.POST.get('MainDashboardCSS', '')
         cosmetic.MainDashboardCSS = MainDashboardCSS
+        cosmetic.HidePromotions = 1 if request.POST.get('HidePromotions') else 0
         cosmetic.save()
         finalData['saved'] = 1
 
@@ -573,12 +789,17 @@ def RestartCyberPanel(request):
 
 def getDashboardStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
         admin = Administrator.objects.get(pk=val)
         
         # Check if user is admin
-        if currentACL['admin'] == 1:
+        if currentACL.get('admin', 0) == 1:
             # Admin can see all resources
             total_users = Administrator.objects.count()
             total_sites = Websites.objects.count()
@@ -616,7 +837,6 @@ def getDashboardStats(request):
                 total_emails = EUsers.objects.filter(emailOwner__domainOwner__domain__in=website_names).count()
                 
                 # Count FTP users associated with user's domains
-                # FTPUsers.domain is a ForeignKey to Websites, so filter through the relation
                 total_ftp_users = FTPUsers.objects.filter(domain__domain__in=website_names).count()
             else:
                 total_wp_sites = 0
@@ -635,18 +855,24 @@ def getDashboardStats(request):
         }
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getDashboardStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load dashboard stats'}),
+            content_type='application/json'
+        )
 
 def getTrafficStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide network stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Get network stats from /proc/net/dev (Linux)
         rx = tx = 0
         with open('/proc/net/dev', 'r') as f:
             for line in f.readlines():
@@ -654,42 +880,49 @@ def getTrafficStats(request):
                     continue
                 if ':' in line:
                     parts = line.split()
-                    rx += int(parts[1])
-                    tx += int(parts[9])
-        data = {
-            'rx_bytes': rx,
-            'tx_bytes': tx,
-            'status': 1
-        }
+                    try:
+                        if len(parts) >= 10:
+                            rx += int(parts[1])
+                            tx += int(parts[9])
+                    except (ValueError, IndexError):
+                        continue
+        data = {'rx_bytes': rx, 'tx_bytes': tx, 'status': 1}
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getTrafficStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load traffic stats'}),
+            content_type='application/json'
+        )
 
 def getDiskIOStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide disk I/O stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/diskstats for all disks
         read_sectors = 0
         write_sectors = 0
-        sector_size = 512  # Most Linux systems use 512 bytes per sector
+        sector_size = 512
         with open('/proc/diskstats', 'r') as f:
             for line in f:
                 parts = line.split()
                 if len(parts) < 14:
                     continue
-                # parts[2] is device name, skip loopback/ram devices
                 dev = parts[2]
                 if dev.startswith('loop') or dev.startswith('ram'):
                     continue
-                # 6th and 10th columns: sectors read/written
-                read_sectors += int(parts[5])
-                write_sectors += int(parts[9])
+                try:
+                    read_sectors += int(parts[5])
+                    write_sectors += int(parts[9])
+                except (ValueError, IndexError):
+                    continue
         data = {
             'read_bytes': read_sectors * sector_size,
             'write_bytes': write_sectors * sector_size,
@@ -697,34 +930,42 @@ def getDiskIOStats(request):
         }
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getDiskIOStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load disk I/O stats'}),
+            content_type='application/json'
+        )
 
 def getCPULoadGraph(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide CPU stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/stat for the 'cpu' line
+        cpu_times = []
         with open('/proc/stat', 'r') as f:
             for line in f:
                 if line.startswith('cpu '):
                     parts = line.strip().split()
-                    # parts[1:] are user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice
-                    cpu_times = [float(x) for x in parts[1:]]
+                    try:
+                        cpu_times = [float(x) for x in parts[1:]]
+                    except (ValueError, IndexError):
+                        pass
                     break
-            else:
-                cpu_times = []
-        data = {
-            'cpu_times': cpu_times,
-            'status': 1
-        }
+        data = {'cpu_times': cpu_times, 'status': 1}
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getCPULoadGraph error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load CPU stats'}),
+            content_type='application/json'
+        )
 
 @csrf_exempt
 @require_GET
@@ -740,9 +981,19 @@ def getRecentSSHLogins(request):
         import re, time
         from collections import OrderedDict
 
-        # Run 'last -n 20' to get recent SSH logins
+        # Pagination params
         try:
-            output = ProcessUtilities.outputExecutioner('last -n 20')
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 20))))
+        except (ValueError, TypeError):
+            per_page = 20
+
+        # Run 'last -n 500' to get enough entries for pagination
+        try:
+            output = ProcessUtilities.outputExecutioner('last -n 500')
         except Exception as e:
             return HttpResponse(json.dumps({'error': 'Failed to run last: %s' % str(e)}), content_type='application/json', status=500)
 
@@ -764,25 +1015,57 @@ def getRecentSSHLogins(request):
             date_match = re.search(r'([A-Za-z]{3} [A-Za-z]{3} +\d+ [\d:]+)', line)
             date_str = date_match.group(1) if date_match else ''
             session_info = ''
-            if '-' in line:
-                # Session ended
-                session_info = line.split('-')[-1].strip()
-            elif 'still logged in' in line:
+            is_active = False
+            if 'still logged in' in line:
                 session_info = 'still logged in'
-            # GeoIP lookup (cache per request)
+                is_active = True
+            elif '-' in line:
+                # Session ended - parse the end time and duration
+                # Format: "Tue May 27 11:34 - 13:47  (02:13)" or "crash (00:40)"
+                end_part = line.split('-')[-1].strip()
+                # Check if it's a crash or normal logout
+                if 'crash' in end_part.lower():
+                    # Extract crash duration if available
+                    crash_match = re.search(r'crash\s*\(([^)]+)\)', end_part, re.IGNORECASE)
+                    if crash_match:
+                        session_info = f"crash ({crash_match.group(1)})"
+                    else:
+                        session_info = 'crash'
+                else:
+                    # Normal session end - try to extract duration
+                    duration_match = re.search(r'\(([^)]+)\)', end_part)
+                    if duration_match:
+                        session_info = f"ended ({duration_match.group(1)})"
+                    else:
+                        # Just show the end time
+                        time_match = re.search(r'([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+[\d:]+)', end_part)
+                        if time_match:
+                            session_info = f"ended at {time_match.group(1)}"
+                        else:
+                            session_info = 'ended'
+                is_active = False
+            # GeoIP lookup (cache per request) - support both IPv4 and IPv6
             country = flag = ''
-            if re.match(r'\d+\.\d+\.\d+\.\d+', ip) and ip != '127.0.0.1':
+            # Check if IP is IPv4
+            is_ipv4 = re.match(r'^\d+\.\d+\.\d+\.\d+$', ip)
+            # Check if IP is IPv6 (simplified check)
+            is_ipv6 = ':' in ip and not is_ipv4
+            
+            if is_ipv4 and ip != '127.0.0.1':
                 if ip in ip_cache:
                     country, flag = ip_cache[ip]
                 else:
                     try:
-                        geo = requests.get(f'http://ip-api.com/json/{ip}', timeout=2).json()
+                        geo = requests.get(f'http://ip-api.com/json/{ip}', timeout=1).json()
                         country = geo.get('countryCode', '')
                         flag = f"https://flagcdn.com/24x18/{country.lower()}.png" if country else ''
                         ip_cache[ip] = (country, flag)
                     except Exception:
                         country, flag = '', ''
-            elif ip == '127.0.0.1':
+            elif is_ipv6 and ip != '::1':
+                # IPv6 - set flag to indicate IPv6 (GeoIP API may not support IPv6 well)
+                country, flag = 'IPv6', ''
+            elif ip == '127.0.0.1' or ip == '::1':
                 country, flag = 'Local', ''
             logins.append({
                 'user': user,
@@ -791,9 +1074,22 @@ def getRecentSSHLogins(request):
                 'flag': flag,
                 'date': date_str,
                 'session': session_info,
+                'is_active': is_active,
                 'raw': line
             })
-        return HttpResponse(json.dumps({'logins': logins}), content_type='application/json')
+        total = len(logins)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logins = logins[start:end]
+        return HttpResponse(json.dumps({
+            'logins': paginated_logins,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -807,18 +1103,33 @@ def getRecentSSHLogs(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        # Pagination params
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 25))))
+        except (ValueError, TypeError):
+            per_page = 25
+
         from plogical.processUtilities import ProcessUtilities
+        import re
         distro = ProcessUtilities.decideDistro()
         if distro in [ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20]:
             log_path = '/var/log/auth.log'
         else:
             log_path = '/var/log/secure'
         try:
-            output = ProcessUtilities.outputExecutioner(f'tail -n 100 {log_path}')
+            output = ProcessUtilities.outputExecutioner(f'tail -n 500 {log_path}')
         except Exception as e:
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
         lines = output.split('\n')
         logs = []
+        # IP address regex patterns (IPv4)
+        ipv4_pattern = r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+        
         for line in lines:
             if not line.strip():
                 continue
@@ -829,8 +1140,41 @@ def getRecentSSHLogs(request):
             else:
                 timestamp = ''
                 message = line
-            logs.append({'timestamp': timestamp, 'message': message, 'raw': line})
-        return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
+            
+            # Extract IP address from the log line
+            ip_address = None
+            ip_matches = re.findall(ipv4_pattern, line)
+            if ip_matches:
+                # Filter out localhost and common non-external IPs
+                for ip in ip_matches:
+                    if ip not in ['127.0.0.1', '0.0.0.0', '::1'] and not ip.startswith('192.168.') and not ip.startswith('10.') and not ip.startswith('172.'):
+                        ip_address = ip
+                        break
+                # If no external IP found, use the first match anyway (might be needed for internal attacks)
+                if not ip_address and ip_matches:
+                    ip_address = ip_matches[0]
+            
+            logs.append({
+                'timestamp': timestamp, 
+                'message': message, 
+                'raw': line,
+                'ip_address': ip_address
+            })
+        # Reverse so newest logs appear first (page 1 = most recent)
+        logs.reverse()
+        total = len(logs)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logs = logs[start:end]
+        return HttpResponse(json.dumps({
+            'logs': paginated_logs,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -871,24 +1215,17 @@ def analyzeSSHSecurity(request):
         
         alerts = []
         
-        # Detect which firewall is in use
-        firewall_cmd = ''
+        # Use firewalld (CSF has been discontinued)
+        firewall_cmd = 'firewalld'
         try:
-            # Check for CSF
-            csf_check = ProcessUtilities.outputExecutioner('which csf')
-            if csf_check and '/csf' in csf_check:
-                firewall_cmd = 'csf'
+            # Verify firewalld is active
+            firewalld_check = ProcessUtilities.outputExecutioner('systemctl is-active firewalld')
+            if not (firewalld_check and 'active' in firewalld_check):
+                # Firewalld not active, but continue analysis with firewalld commands
+                pass
         except:
+            # Continue with firewalld as default
             pass
-        
-        if not firewall_cmd:
-            try:
-                # Check for firewalld
-                firewalld_check = ProcessUtilities.outputExecutioner('systemctl is-active firewalld')
-                if firewalld_check and 'active' in firewalld_check:
-                    firewall_cmd = 'firewalld'
-            except:
-                firewall_cmd = 'firewalld'  # Default to firewalld
         
         # Determine log path
         distro = ProcessUtilities.decideDistro()
@@ -992,10 +1329,7 @@ def analyzeSSHSecurity(request):
         # High severity: Brute force attacks
         for ip, count in failed_passwords.items():
             if count >= 10:
-                if firewall_cmd == 'csf':
-                    recommendation = f'Block this IP immediately:\ncsf -d {ip} "Brute force attack - {count} failed attempts"'
-                else:
-                    recommendation = f'Block this IP immediately:\nfirewall-cmd --permanent --add-rich-rule="rule family=ipv4 source address={ip} drop" && firewall-cmd --reload'
+                recommendation = f'Block this IP immediately:\nfirewall-cmd --permanent --add-rich-rule="rule family=ipv4 source address={ip} drop" && firewall-cmd --reload'
                 
                 alerts.append({
                     'title': 'Brute Force Attack Detected',
@@ -1160,6 +1494,209 @@ def analyzeSSHSecurity(request):
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
 @require_POST
+def blockIPAddress(request):
+    """
+    Block an IP address using the appropriate firewall (CSF or firewalld)
+    """
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        currentACL = ACLManager.loadedACL(user_id)
+        if not currentACL.get('admin', 0):
+            return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+        
+        # Check if user has CyberPanel addons
+        if not ACLManager.CheckForPremFeature('all'):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'Premium feature required'
+            }), content_type='application/json', status=403)
+        
+        # Parse request body - Django request.body is always bytes
+        try:
+            if not request.body:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            body_str = request.body.decode('utf-8')
+            if not body_str or body_str.strip() == '':
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            data = json.loads(body_str)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body[:200] if request.body else "empty"}')
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': f'Invalid request format: {str(e)}'
+            }), content_type='application/json', status=400)
+        
+        ip_address = data.get('ip_address', '').strip()
+        
+        if not ip_address:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'IP address is required'
+            }), content_type='application/json', status=400)
+        
+        # Validate IP address format and check for private/reserved ranges
+        import re
+        import ipaddress
+        ip_pattern = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        if not re.match(ip_pattern, ip_address):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'Invalid IP address format'
+            }), content_type='application/json', status=400)
+        
+        # Check for private/reserved IP ranges to prevent self-blocking
+        try:
+            ip_obj = ipaddress.ip_address(ip_address)
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_reserved:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Cannot block private, loopback, link-local, or reserved IP addresses'
+                }), content_type='application/json', status=400)
+            
+            # Additional check for common problematic ranges
+            if (ip_address.startswith('127.') or  # Loopback
+                ip_address.startswith('169.254.') or  # Link-local
+                ip_address.startswith('224.') or  # Multicast
+                ip_address.startswith('255.') or  # Broadcast
+                ip_address in ['0.0.0.0', '::1']):  # Invalid/loopback
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Cannot block system or reserved IP addresses'
+                }), content_type='application/json', status=400)
+                
+        except ValueError:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': 'Invalid IP address'
+            }), content_type='application/json', status=400)
+        
+        # Use FirewallUtilities so firewall-cmd runs with proper privileges (root/lscpd)
+        firewall_cmd = 'firewalld'
+        reason = data.get('reason', 'Security alert detected from dashboard')
+        try:
+            success, msg = FirewallUtilities.blockIP(ip_address, reason)
+        except Exception as e:
+            success = False
+            msg = str(e)
+        
+        if success:
+            # Add to banned IPs JSON file for consistency with firewall page
+            try:
+                import os
+                import time
+                primary_file = '/usr/local/CyberCP/data/banned_ips.json'
+                legacy_file = '/etc/cyberpanel/banned_ips.json'
+                banned_ips_file = primary_file if os.path.exists(primary_file) else legacy_file if os.path.exists(legacy_file) else primary_file
+                banned_ips = []
+                
+                if os.path.exists(banned_ips_file):
+                    try:
+                        with open(banned_ips_file, 'r') as f:
+                            banned_ips = json.load(f)
+                    except:
+                        banned_ips = []
+                
+                # Check if IP is already banned
+                ip_already_banned = False
+                for banned_ip in banned_ips:
+                    if banned_ip.get('ip') == ip_address and banned_ip.get('active', True):
+                        ip_already_banned = True
+                        break
+                
+                if not ip_already_banned:
+                    # Get reason from request data
+                    reason = data.get('reason', 'Security alert detected from dashboard')
+                    
+                    # Add new banned IP
+                    new_banned_ip = {
+                        'id': int(time.time()),
+                        'ip': ip_address,
+                        'reason': reason,
+                        'duration': 'permanent',
+                        'banned_on': time.time(),
+                        'expires': 'Never',
+                        'active': True
+                    }
+                    banned_ips.append(new_banned_ip)
+                    
+                    # Ensure directory exists
+                    os.makedirs(os.path.dirname(primary_file), exist_ok=True)
+                    
+                    # Save to file
+                    with open(primary_file, 'w') as f:
+                        json.dump(banned_ips, f, indent=2)
+                    
+                    # Also add to firewall DB so it shows on Firewall > Banned IPs
+                    try:
+                        from firewall.models import BannedIP
+                        from django.utils import timezone
+                        user_id = request.session.get('userID')
+                        if user_id:
+                            admin = Administrator.objects.get(pk=user_id)
+                            BannedIP.objects.get_or_create(
+                                ip_address=ip_address,
+                                defaults={
+                                    'reason': reason,
+                                    'duration': 'permanent',
+                                    'banned_on': timezone.now(),
+                                    'expires': None,
+                                    'active': True,
+                                    'admin': admin,
+                                }
+                            )
+                    except Exception as db_e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to add banned IP to firewall DB: {str(db_e)}')
+            except Exception as e:
+                # Log but don't fail the request if JSON update fails
+                import plogical.CyberCPLogFileWriter as logging
+                logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to update banned_ips.json: {str(e)}')
+            
+            # Log the action
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'IP address {ip_address} blocked via CyberPanel dashboard by user {user_id}')
+            
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'message': f'Successfully blocked IP address {ip_address}',
+                'firewall': firewall_cmd
+            }), content_type='application/json')
+        else:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': msg or 'Failed to block IP address'
+            }), content_type='application/json', status=500)
+        
+    except json.JSONDecodeError as e:
+        import plogical.CyberCPLogFileWriter as logging
+        logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body}')
+        return HttpResponse(json.dumps({
+            'status': 0,
+            'error': f'Invalid JSON in request: {str(e)}'
+        }), content_type='application/json', status=400)
+    except Exception as e:
+        import plogical.CyberCPLogFileWriter as logging
+        import traceback
+        error_trace = traceback.format_exc()
+        logging.CyberCPLogFileWriter.writeToFile(f'Error in blockIPAddress: {str(e)}\n{error_trace}')
+        return HttpResponse(json.dumps({
+            'status': 0,
+            'error': f'Server error: {str(e)}'
+        }), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
 def getSSHUserActivity(request):
     try:
         user_id = request.session.get('userID')
@@ -1177,146 +1714,66 @@ def getSSHUserActivity(request):
         if not is_safe_system_user(user):
             return HttpResponse(json.dumps({'error': 'Invalid user'}), content_type='application/json', status=400)
         try:
-            account = pwd.getpwnam(user)
+            pwd.getpwnam(user)
         except KeyError:
             return HttpResponse(json.dumps({'error': 'Unknown user'}), content_type='application/json', status=400)
-        # Get processes for the user
-        try:
-            result = subprocess.run(
-                ['ps', '-u', user, '-o', 'pid,ppid,tty,time,cmd', '--no-headers'],
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
-                timeout=10,
-                check=False,
-            )
-            ps_output = result.stdout if result.returncode == 0 else ''
-        except (OSError, subprocess.SubprocessError):
-            ps_output = ''
-        processes = []
-        pid_map = {}
-        if ps_output:
-            for line in ps_output.strip().split('\n'):
-                parts = line.split(None, 4)
-                if len(parts) == 5:
-                    pid, ppid, tty_val, time_val, cmd = parts
-                    if tty and tty not in tty_val:
-                        continue
-                    # Try to get CWD
-                    cwd = ''
-                    try:
-                        if not pid.isdigit():
-                            continue
-                        cwd_path = f"/proc/{pid}/cwd"
-                        if os.path.islink(cwd_path):
-                            cwd = os.readlink(cwd_path)
-                    except Exception:
-                        cwd = ''
-                    proc = {
-                        'pid': pid,
-                        'ppid': ppid,
-                        'tty': tty_val,
-                        'time': time_val,
-                        'cmd': cmd,
-                        'cwd': cwd
-                    }
-                    processes.append(proc)
-                    pid_map[pid] = proc
-        # Build process tree
-        tree = []
-        def build_tree(parent_pid, level=0):
-            for proc in processes:
-                if proc['ppid'] == parent_pid:
-                    proc_copy = proc.copy()
-                    proc_copy['level'] = level
-                    tree.append(proc_copy)
-                    build_tree(proc['pid'], level+1)
-        build_tree('1', 0)  # Start from init
-        # Find main shell process for history
-        shell_history = []
-        try:
-            try:
-                website = Websites.objects.get(externalApp=user)
-                shell_home = f'/home/{website.domain}'
-            except Exception:
-                shell_home = account.pw_dir
-        except Exception:
-            shell_home = account.pw_dir
-        history_file = ''
-        for shell in ['.bash_history', '.zsh_history']:
-            path = os.path.join(shell_home, shell)
-            if os.path.exists(path):
-                history_file = path
-                break
-        if history_file:
-            try:
-                with open(history_file, 'r') as f:
-                    lines = f.readlines()
-                    shell_history = [l.strip() for l in lines[-10:]]
-            except Exception:
-                shell_history = []
-        # Disk usage
-        disk_usage = ''
-        if os.path.exists(shell_home):
-            try:
-                result = subprocess.run(
-                    ['du', '-sh', '--', shell_home],
-                    capture_output=True,
-                    text=True,
-                    encoding='utf-8',
-                    errors='replace',
-                    timeout=15,
-                    check=False,
-                )
-                du_out = result.stdout if result.returncode == 0 else ''
-                disk_usage = du_out.strip().split('\t')[0] if du_out else ''
-            except (OSError, subprocess.SubprocessError):
-                disk_usage = ''
-        else:
-            disk_usage = 'Home directory does not exist'
-        # GeoIP details
-        geoip = {}
-        if login_ip and login_ip not in ['127.0.0.1', 'localhost']:
-            try:
-                normalized_ip = str(ipaddress.ip_address(login_ip))
-                geo = requests.get(f'http://ip-api.com/json/{normalized_ip}?fields=status,message,country,regionName,city,isp,org,as,query', timeout=2).json()
-                if geo.get('status') == 'success':
-                    geoip = {
-                        'country': geo.get('country'),
-                        'region': geo.get('regionName'),
-                        'city': geo.get('city'),
-                        'isp': geo.get('isp'),
-                        'org': geo.get('org'),
-                        'as': geo.get('as'),
-                        'ip': geo.get('query')
-                    }
-            except Exception:
-                geoip = {}
-        # Optionally, get 'w' output for more info
-        try:
-            result = subprocess.run(
-                ['w', '-h', user],
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
-                timeout=10,
-                check=False,
-            )
-            w_output = result.stdout if result.returncode == 0 else ''
-        except (OSError, subprocess.SubprocessError):
-            w_output = ''
+        # Get 'w' output first (fastest, most important for session status)
         w_lines = []
-        if w_output:
-            for line in w_output.strip().split('\n'):
-                w_lines.append(line)
+        try:
+            w_cmd = f"w -h {user} 2>/dev/null | head -10"
+            w_output = ProcessUtilities.outputExecutioner(w_cmd)
+            if w_output:
+                for line in w_output.strip().split('\n'):
+                    if line.strip():
+                        w_lines.append(line)
+        except Exception:
+            w_lines = []
+        
+        # Get processes for the user (limit to 50 for speed)
+        # If TTY is specified, filter by TTY; otherwise get all user processes
+        processes = []
+        try:
+            if tty:
+                # Filter by specific TTY
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | grep '{tty}' | head -50"
+            else:
+                # Get all processes for user
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | head -50"
+            ps_output = ProcessUtilities.outputExecutioner(ps_cmd)
+            if ps_output:
+                for line in ps_output.strip().split('\n'):
+                    if not line.strip():
+                        continue
+                    parts = line.split(None, 4)
+                    if len(parts) >= 5:
+                        pid, ppid, tty_val, time_val, cmd = parts[0], parts[1], parts[2], parts[3], parts[4]
+                        # Additional TTY check if tty was specified
+                        if tty and tty not in tty_val:
+                            continue
+                        # Skip CWD lookup for speed
+                        proc = {
+                            'pid': pid,
+                            'ppid': ppid,
+                            'tty': tty_val,
+                            'time': time_val,
+                            'cmd': cmd[:200] if len(cmd) > 200 else cmd,  # Limit command length
+                            'cwd': ''  # Skip for speed
+                        }
+                        processes.append(proc)
+        except Exception:
+            processes = []
+        
+        # Skip slow operations for fast response:
+        # - Process tree (can be computed client-side if needed)
+        # - Shell history (not critical for initial load)
+        # - Disk usage (not critical for initial load)
+        # - GeoIP (can be fetched async later if needed)
         return HttpResponse(json.dumps({
             'processes': processes,
-            'process_tree': tree,
-            'shell_history': shell_history,
-            'disk_usage': disk_usage,
-            'geoip': geoip,
+            'process_tree': [],  # Empty for speed
+            'shell_history': [],  # Empty for speed
+            'disk_usage': '',  # Empty for speed
+            'geoip': {},  # Empty for speed
             'w': w_lines
         }), content_type='application/json')
     except Exception as e:
@@ -1333,6 +1790,12 @@ def getTopProcesses(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        from django.core.cache import cache
+        cache_key = 'cp_top_processes'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return HttpResponse(json.dumps(cached), content_type='application/json')
         
         import subprocess
         import tempfile
@@ -1373,10 +1836,15 @@ def getTopProcesses(request):
                     }
                     processes.append(process)
             
-            return HttpResponse(json.dumps({
+            payload = {
                 'status': 1,
                 'processes': processes
-            }), content_type='application/json')
+            }
+            try:
+                cache.set(cache_key, payload, 8)
+            except Exception:
+                pass
+            return HttpResponse(json.dumps(payload), content_type='application/json')
             
         finally:
             # Clean up temporary file
@@ -1387,3 +1855,261 @@ def getTopProcesses(request):
                 
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def dismiss_backup_notification(request):
+    """API endpoint to permanently dismiss the backup notification for the current user"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get or create user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        preferences, created = UserNotificationPreferences.objects.get_or_create(
+            user=user,
+            defaults={
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }
+        )
+        
+        # Mark backup notification as dismissed
+        preferences.backup_notification_dismissed = True
+        preferences.save()
+        
+        return HttpResponse(json.dumps({'status': 1, 'message': 'Backup notification dismissed permanently'}), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def dismiss_ai_scanner_notification(request):
+    """API endpoint to permanently dismiss the AI scanner notification for the current user"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get or create user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        preferences, created = UserNotificationPreferences.objects.get_or_create(
+            user=user,
+            defaults={
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }
+        )
+        
+        # Mark AI scanner notification as dismissed
+        preferences.ai_scanner_notification_dismissed = True
+        preferences.save()
+        
+        return HttpResponse(json.dumps({'status': 1, 'message': 'AI scanner notification dismissed permanently'}), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_GET
+def get_notification_preferences(request):
+    """API endpoint to get current user's notification preferences"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        try:
+            preferences = UserNotificationPreferences.objects.get(user=user)
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'backup_notification_dismissed': preferences.backup_notification_dismissed,
+                'ai_scanner_notification_dismissed': preferences.ai_scanner_notification_dismissed
+            }), content_type='application/json')
+        except UserNotificationPreferences.DoesNotExist:
+            # Return default values if preferences don't exist yet
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+
+def _ssh_whitelist_admin_gate(request):
+    """Return (user_id, error_response). error_response is HttpResponse or None."""
+    user_id = request.session.get('userID')
+    if not user_id:
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Not logged in'}),
+            content_type='application/json',
+            status=403,
+        )
+    currentACL = ACLManager.loadedACL(user_id)
+    if not currentACL.get('admin', 0):
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Admin only'}),
+            content_type='application/json',
+            status=403,
+        )
+    return user_id, None
+
+
+def _ssh_whitelist_parse_body(request):
+    try:
+        if not request.body:
+            return {}, None
+        body_str = request.body.decode('utf-8')
+        if not body_str or not body_str.strip():
+            return {}, None
+        data = json.loads(body_str)
+        if not isinstance(data, dict):
+            return None, HttpResponse(
+                json.dumps({'status': 0, 'error': 'Invalid request format'}),
+                content_type='application/json',
+                status=400,
+            )
+        return data, None
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        return None, HttpResponse(
+            json.dumps({'status': 0, 'error': 'Invalid request format: %s' % str(e)}),
+            content_type='application/json',
+            status=400,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistList(request):
+    """List Trusted IPs (SSH security whitelist)."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        entries = SSHSecurityWhitelistUtilities.load_entries()
+        return HttpResponse(
+            json.dumps({'status': 1, 'entries': entries}, ensure_ascii=False),
+            content_type='application/json',
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistList: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not load trusted IPs'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistAdd(request):
+    """Add IP to Trusted IPs whitelist."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        label = (data.get('label') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result = SSHSecurityWhitelistUtilities.add_entry(ip, label)
+        if ok:
+            return HttpResponse(
+                json.dumps({'status': 1, 'ip': result}),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistAdd: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not add trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistRemove(request):
+    """Remove IP from Trusted IPs whitelist."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result = SSHSecurityWhitelistUtilities.remove_entry(ip)
+        if ok:
+            return HttpResponse(
+                json.dumps({'status': 1, 'ip': result}),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistRemove: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not remove trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )
+
+
+@require_POST
+def sshSecurityWhitelistUpdate(request):
+    """Update Trusted IP row (IP and/or label)."""
+    try:
+        _, err = _ssh_whitelist_admin_gate(request)
+        if err:
+            return err
+        data, perr = _ssh_whitelist_parse_body(request)
+        if perr:
+            return perr
+        ip = (data.get('ip') or '').strip()
+        new_ip = data.get('new_ip')
+        label = data.get('label')
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, result, unchanged = SSHSecurityWhitelistUtilities.update_entry(
+            ip,
+            new_ip=new_ip,
+            label=label,
+        )
+        if ok:
+            msg = 'No changes to save.' if unchanged else 'Entry updated'
+            return HttpResponse(
+                json.dumps({
+                    'status': 1,
+                    'ip': result,
+                    'unchanged': bool(unchanged),
+                    'message': msg,
+                }),
+                content_type='application/json',
+            )
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': result}),
+            content_type='application/json',
+            status=400,
+        )
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('sshSecurityWhitelistUpdate: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error': 'Could not update trusted IP'}),
+            content_type='application/json',
+            status=500,
+        )

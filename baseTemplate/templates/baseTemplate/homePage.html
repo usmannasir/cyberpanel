@@ -4,7 +4,7 @@
 {% block title %}{% trans "Dashboard - CyberPanel" %}{% endblock %}
 
 {% block header_scripts %}
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/dashboard.css' %}?v={{ CP_VERSION }}">
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/css/dashboard.css' %}?v={{ CP_VERSION }}&dash=2">
 {% endblock %}
 
 {# Dashboard uses controllers from system-status.js (loaded in head) — skip the 1.1MB module bundle #}
@@ -42,10 +42,12 @@
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Back Up" %}</span><span class="cp-qa-sub">{% trans "Protect your data" %}</span></span>
         </a>
         {% endif %}
+        {% if not cosmetic.HidePromotions %}
         <a class="cp-qa-card" href="{% url 'buildServices' %}">
             <span class="cp-qa-ic" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;"><i class="fas fa-rocket"></i></span>
             <span class="cp-qa-text"><span class="cp-qa-title">{% trans "Build Services" %}</span><span class="cp-qa-sub">{% trans "Let us build it" %}</span></span>
         </a>
+        {% endif %}
     </div>
 
     <!-- Onboarding checklist (shown when there are no websites yet) -->
@@ -87,6 +89,7 @@
         </div>
     </div>
 
+    {% if not cosmetic.HidePromotions %}
     <!-- Dismissible Build Services promo card -->
     <div class="cp-build-card" id="cp-build-card" hidden>
         <button class="cp-build-x" type="button" id="cp-build-card-x" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times"></i></button>
@@ -110,6 +113,7 @@
         } catch (e) {}
     })();
     </script>
+    {% endif %}
 
     <!-- Overview Section -->
     <div class="overview-section">
@@ -161,7 +165,8 @@
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="ramTotalMB === undefined" style="max-width:160px;" aria-hidden="true"></span>
-                    <span ng-if="ramTotalMB !== undefined">You've {$ ramTotalMB $} MB Memory.</span>
+                    <span ng-if="ramTotalLabel !== undefined">You've {$ ramTotalLabel $} Memory.</span>
+                    <span ng-if="ramTotalLabel === undefined && ramTotalMB !== undefined">You've {$ ramTotalMB $} MB Memory.</span>
                 </div>
             </div>
 
@@ -182,7 +187,8 @@
                 </div>
                 <div class="stat-card-info">
                     <span class="cp-skeleton cp-skeleton-line" ng-if="diskFreeGB === undefined" style="max-width:200px;" aria-hidden="true"></span>
-                    <span ng-if="diskFreeGB !== undefined">You've {$ diskFreeGB $} GB remaining out of {$ diskTotalGB $} GB.</span>
+                    <span ng-if="diskFreeLabel !== undefined">You've {$ diskFreeLabel $} remaining out of {$ diskTotalLabel $}.</span>
+                    <span ng-if="diskFreeLabel === undefined && diskFreeGB !== undefined">You've {$ diskFreeGB $} GB remaining out of {$ diskTotalGB $} GB.</span>
                 </div>
             </div>
         </div>

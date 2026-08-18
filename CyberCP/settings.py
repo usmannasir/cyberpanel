@@ -117,6 +117,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'CyberCP.originDedupeMiddleware.OriginDedupeMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -154,19 +155,19 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME', 'cyberpanel'),
-        'USER': os.getenv('DB_USER', 'cyberpanel'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'SLTUIUxqhulwsh'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '3306'),
+        'NAME': 'cyberpanel',
+        'USER': 'cyberpanel',
+        'PASSWORD': '0M0HDAb0PhCkXK',
+        'HOST': 'localhost',
+        'PORT':''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('ROOT_DB_NAME', 'mysql'),
-        'USER': os.getenv('ROOT_DB_USER', 'root'),
-        'PASSWORD': os.getenv('ROOT_DB_PASSWORD', 'SLTUIUxqhulwsh'),
-        'HOST': os.getenv('ROOT_DB_HOST', 'localhost'),
-        'PORT': os.getenv('ROOT_DB_PORT', '3306'),
+        'NAME': 'mysql',
+        'USER': 'root',
+        'PASSWORD': '0M0HDAb0PhCkXK',
+        'HOST': 'localhost',
+        'PORT': '',
     },
 }
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
@@ -206,6 +207,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+PUBLIC_ROOT = os.path.join(BASE_DIR, "public/")
 
 STATIC_URL = '/static/'
 
@@ -240,3 +242,30 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2147483648
 
 # Security settings
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Django 4.x sends Origin on HTTPS POSTs; without trusted origins CSRF returns 403 on login.
+# Defaults stay local/generic. Add extra origins via CSRF_TRUSTED_ORIGINS env or
+# /etc/cyberpanel/csrf_trusted_origins (one origin per line).
+_csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+_csrf_origins_list = [o.strip() for o in _csrf_origins_env.split(',') if o.strip()]
+_default_origins = [
+    'https://127.0.0.1:8090',
+    'http://127.0.0.1:8090',
+    'https://localhost:8090',
+    'http://localhost:8090',
+]
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins_list + _default_origins))
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+_csrf_trusted_origins_file = '/etc/cyberpanel/csrf_trusted_origins'
+if os.path.isfile(_csrf_trusted_origins_file):
+    try:
+        with open(_csrf_trusted_origins_file, 'r', encoding='utf-8', errors='replace') as _csrf_f:
+            for _csrf_line in _csrf_f:
+                _csrf_line = _csrf_line.strip()
+                if _csrf_line and not _csrf_line.startswith('#'):
+                    if _csrf_line not in CSRF_TRUSTED_ORIGINS:
+                        CSRF_TRUSTED_ORIGINS.append(_csrf_line)
+    except OSError:
+        pass

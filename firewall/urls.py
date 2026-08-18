@@ -3,10 +3,16 @@ from . import views
 
 urlpatterns = [
     path('securityHome', views.securityHome, name='securityHome'),
-    path('', views.firewallHome, name='firewallHome'),
+    path('firewall-rules/', views.firewallHome, name='firewallRules'),
+    path('firewall-rules', views.firewallHome, name='firewallRulesNoSlash'),
+    path('banned-ips/', views.firewallHome, name='firewallBannedIPs'),
+    path('banned-ips', views.firewallHome, name='firewallBannedIPsNoSlash'),
+    path('', views.firewallHome, name='firewallHome'),  # /firewall/ also serves the page so 404 is avoided
     path('getCurrentRules', views.getCurrentRules, name='getCurrentRules'),
     path('addRule', views.addRule, name='addRule'),
+    path('modifyRule', views.modifyRule, name='modifyRule'),
     path('deleteRule', views.deleteRule, name='deleteRule'),
+    path('reorderRules', views.reorderRules, name='reorderRules'),
 
     path('reloadFirewall', views.reloadFirewall, name='reloadFirewall'),
     path('stopFirewall', views.stopFirewall, name='stopFirewall'),
@@ -32,6 +38,15 @@ urlpatterns = [
     path('modSecRulesPacks', views.modSecRulesPacks, name='modSecRulesPacks'),
     path('getOWASPAndComodoStatus', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
     path('installModSecRulesPack', views.installModSecRulesPack, name='installModSecRulesPack'),
+    
+    # Banned IPs
+    path('getBannedIPs', views.getBannedIPs, name='getBannedIPs'),
+    path('addBannedIP', views.addBannedIP, name='addBannedIP'),
+    path('modifyBannedIP', views.modifyBannedIP, name='modifyBannedIP'),
+    path('removeBannedIP', views.removeBannedIP, name='removeBannedIP'),
+    path('deleteBannedIP', views.deleteBannedIP, name='deleteBannedIP'),
+    path('exportBannedIPs', views.exportBannedIPs, name='exportBannedIPs'),
+    path('importBannedIPs', views.importBannedIPs, name='importBannedIPs'),
     path('getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
     path('enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 
@@ -57,4 +72,8 @@ urlpatterns = [
     path('litespeed_ent_conf', views.litespeed_ent_conf, name='litespeed_ent_conf'),
     path('fetchlitespeed_conf', views.fetchlitespeed_conf, name='fetchlitespeed_conf'),
     path('saveLitespeed_conf', views.saveLitespeed_conf, name='saveLitespeed_conf'),
+    
+    # Firewall Export/Import
+    path('exportFirewallRules', views.exportFirewallRules, name='exportFirewallRules'),
+    path('importFirewallRules', views.importFirewallRules, name='importFirewallRules'),
 ]

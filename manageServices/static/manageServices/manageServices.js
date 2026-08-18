@@ -12,21 +12,21 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
     $scope.changesApplied = true;
     $scope.slaveIPs = true;
     $scope.masterServerHD = true;
+    $scope.pdnsEnabled = false;
+    if (!$scope.dnsMode) {
+        $scope.dnsMode = 'Default';
+    }
 
-    var pdnsStatus = false;
-
-
-    $('#pdnsStatus').change(function () {
-        pdnsStatus = $(this).prop('checked');
-    });
+    $scope.pdnsToggleChanged = function () {
+        // ng-model already synced; keep for future hooks
+    };
 
     fetchPDNSStatus('powerdns');
 
     function fetchPDNSStatus(service) {
 
         $scope.pdnsLoading = false;
-
-        $('#pdnsStatus').bootstrapToggle('off');
+        $scope.pdnsEnabled = false;
 
         url = "/manageservices/fetchStatus";
 
@@ -50,10 +50,11 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
 
             if (response.data.status === 1) {
 
-                if (response.data.installCheck === 1) {
-                    $('#pdnsStatus').bootstrapToggle('on');
+                $scope.pdnsEnabled = (response.data.installCheck === 1 || response.data.installCheck === '1' || response.data.installCheck === true);
+                if (response.data.dnsMode) {
+                    $scope.dnsMode = response.data.dnsMode;
                 }
-
+                $scope.modeChange();
                 $scope.slaveIPData = response.data.slaveIPData;
 
             } else {
@@ -88,7 +89,7 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
 
         if (service === 'powerdns') {
             var data = {
-                status: pdnsStatus,
+                status: !!$scope.pdnsEnabled,
                 service: service,
                 dnsMode: $scope.dnsMode,
                 slaveServerNS: $scope.slaveServerNS,
@@ -102,7 +103,7 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
             };
         } else {
             var data = {
-                status: pdnsStatus,
+                status: !!$scope.pdnsEnabled,
                 service: service
             };
         }

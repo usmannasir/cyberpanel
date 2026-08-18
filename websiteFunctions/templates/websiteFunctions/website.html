@@ -629,6 +629,121 @@
         }
     }
     
+    /* Additional mobile improvements */
+    @media (max-width: 768px) {
+        .cyberpanel-website-page {
+            padding: 10px;
+        }
+        
+        /* Improve table responsiveness (skip List Domains cards) */
+        .table-responsive {
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .cyberpanel-website-page .table:not(.ld-exempt) {
+            font-size: 14px !important;
+        }
+        
+        .cyberpanel-website-page .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .cyberpanel-website-page .table th,
+        .cyberpanel-website-page .table td {
+            padding: 8px 6px !important;
+            font-size: 13px !important;
+        }
+        
+        /* Hide less important columns on mobile */
+        .table .d-none-mobile {
+            display: none !important;
+        }
+        
+        /* Improve form layout on mobile */
+        .form-horizontal .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-horizontal .control-label {
+            text-align: left !important;
+            margin-bottom: 5px;
+        }
+        
+        .form-horizontal .col-sm-3,
+        .form-horizontal .col-sm-6,
+        .form-horizontal .col-sm-9 {
+            width: 100% !important;
+            float: none !important;
+        }
+        
+        /* Improve button layout */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        /* Improve modal on mobile */
+        .modal-dialog {
+            margin: 5px;
+            width: calc(100% - 10px);
+            max-width: none;
+        }
+        
+        .modal-content {
+            padding: 15px;
+        }
+        
+        /* Improve close button visibility */
+        .glyph-icon.icon-close {
+            font-size: 20px !important;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* SSL form close (X) button – centered in row and icon centered in button */
+        .ssl-form-close-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .ssl-form-close-btn i.fa-times {
+            line-height: 1;
+            display: block;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        /* Extra small devices */
+        .cyberpanel-website-page {
+            padding: 5px;
+        }
+        
+        .table th, .table td {
+            padding: 6px 4px !important;
+            font-size: 12px !important;
+        }
+        
+        /* Hide even more columns on very small screens */
+        .table .d-none-mobile-sm {
+            display: none !important;
+        }
+        
+        .btn {
+            font-size: 14px !important;
+            padding: 10px 15px !important;
+        }
+    }
+    
     /* Modal and Form Modal Styling for Rewrite Rules */
     .form-horizontal.bordered-row {
         background: var(--bg-secondary, white);
@@ -846,6 +961,42 @@
         color: #1e3c72;
     }
     
+    /* Convert to subdomain panel */
+    .convert-subdomain-panel {
+        background: var(--bg-secondary, white);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px var(--shadow-color, rgba(0,0,0,0.06));
+    }
+
+    .convert-subdomain-panel h3 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .convert-subdomain-panel p {
+        margin: 0 0 14px;
+        color: var(--text-muted, #6b7280);
+        line-height: 1.5;
+    }
+
+    .convert-subdomain-panel .convert-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .convert-subdomain-panel.info-only {
+        border-style: dashed;
+        background: var(--bg-tertiary, #f9fafb);
+    }
+
     /* Quick Actions Bar */
     .quick-actions {
         background: var(--bg-secondary, white);
@@ -1280,6 +1431,156 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* List Domains: card layout (full path + works in narrow content with sidebar) */
+    #listDomains {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        float: none !important;
+    }
+    #listDomains .ld-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        width: 100%;
+    }
+    #listDomains .ld-toolbar .form-control {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto !important;
+    }
+    #listDomains .ld-close {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e5e7eb);
+        color: var(--danger-color, #ef4444);
+        font-size: 22px;
+        line-height: 1;
+        text-decoration: none !important;
+        background: var(--bg-secondary, transparent);
+    }
+    #listDomains .ld-close:hover {
+        background: var(--bg-hover, rgba(239, 68, 68, 0.08));
+    }
+    #listDomains .ld-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    #listDomains .ld-card {
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 12px;
+        background: var(--bg-primary, #fff);
+        padding: 14px 16px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #listDomains .ld-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    #listDomains .ld-domain {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    #listDomains .ld-launch {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #e5e7eb);
+        color: var(--text-primary, #2f3640);
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    #listDomains .ld-launch img {
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
+    #listDomains .ld-path-block {
+        margin-bottom: 12px;
+    }
+    #listDomains .ld-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary, #8893a7);
+        margin-bottom: 4px;
+    }
+    #listDomains .ld-path {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary, #2f3640);
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal !important;
+        line-height: 1.45;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        background: var(--bg-muted, rgba(0,0,0,0.04));
+        border-radius: 8px;
+        padding: 8px 10px;
+        user-select: all;
+    }
+    #listDomains .ld-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px 12px;
+        align-items: end;
+    }
+    #listDomains .ld-field select.form-control {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 38px;
+        padding: 6px 28px 6px 10px !important;
+        color: var(--text-primary, #2f3640) !important;
+        background-color: var(--bg-primary, #fff) !important;
+        white-space: normal;
+    }
+    #listDomains .ld-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        grid-column: 1 / -1;
+    }
+    #listDomains .ld-actions .btn {
+        flex: 1 1 auto;
+        min-width: 7rem;
+    }
+    @media (max-width: 560px) {
+        #listDomains .ld-controls {
+            grid-template-columns: 1fr;
+        }
+        #listDomains .ld-actions .btn {
+            flex: 1 1 100%;
+        }
+    }
     
     </style>
 
@@ -1379,22 +1680,50 @@
                     <i class="fas fa-tachometer-alt"></i>
                     {% trans "Stress Test" %}
                 </a>
+                <button type="button"
+                        class="action-btn"
+                        ng-click="recreateWebsiteDNS()"
+                        ng-disabled="recreatingDNS"
+                        title="{% trans 'Re-apply DNS template and fix SPF for this domain and its subdomains' %}">
+                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': recreatingDNS}"></i>
+                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                    <span ng-show="recreatingDNS">{% trans "Recreating DNS..." %}</span>
+                </button>
             </div>
         </div>
 
-        <!-- Site management tabs (v2.4.8) -->
-        <div class="cp-tabs cp-wtabs" id="cp-wtabs" role="tablist">
-            <a class="cp-tab" data-wtab="overview"><i class="fas fa-grip"></i> {% trans "Overview" %}</a>
-            <a class="cp-tab" data-wtab="domains"><i class="fas fa-diagram-project"></i> {% trans "Domains" %}</a>
-            <a class="cp-tab" data-wtab="logs"><i class="fas fa-file-lines"></i> {% trans "Logs" %}</a>
-            <a class="cp-tab" data-wtab="config"><i class="fas fa-sliders"></i> {% trans "Config" %}</a>
-            <a class="cp-tab" data-wtab="ssl"><i class="fas fa-lock"></i> {% trans "SSL" %}</a>
-            <a class="cp-tab" data-wtab="files"><i class="fas fa-folder-open"></i> {% trans "Files" %}</a>
-            <a class="cp-tab" data-wtab="apps"><i class="fas fa-cubes"></i> {% trans "Apps" %}</a>
+        <div class="convert-subdomain-panel{% if not canConvertToChild %} info-only{% endif %}"
+             ng-init="convertMaster='{{ convertMaster|escapejs }}'; canConvertToChild={{ canConvertToChild|yesno:'true,false' }}; hasChildDuplicate={{ hasChildDuplicate|yesno:'true,false' }}; convertingToChild=false;">
+            <h3>
+                <i class="fas fa-sitemap"></i>
+                {% trans "Convert to subdomain" %}
+            </h3>
+            {% if canConvertToChild %}
+            <p>
+                {% blocktrans with master=convertMaster %}Move this top-level site under <strong>{{ master }}</strong> as a child domain. Files will be relocated under the parent home directory unless a child entry already exists.{% endblocktrans %}
+                {% if hasChildDuplicate %}
+                <br><strong>{% trans "Note:" %}</strong> {% trans "A child domain with this name already exists. Conversion will remove the duplicate top-level panel entry and keep existing child files." %}
+                {% endif %}
+            </p>
+            <div class="convert-actions">
+                <button type="button"
+                        class="hero-btn primary"
+                        ng-click="convertCurrentSiteToChild()"
+                        ng-disabled="convertingToChild">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span ng-hide="convertingToChild">{% trans "Convert to subdomain of" %} {{ convertMaster }}</span>
+                    <span ng-show="convertingToChild"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Converting..." %}</span>
+                </button>
+            </div>
+            {% elif convertHelp == 'apex' %}
+            <p>{% trans "This is an apex domain (for example example.com). Apex sites cannot be converted into subdomains. Use this tool on hostnames such as shop.example.com when example.com already exists as a website here." %}</p>
+            {% else %}
+            <p>{% trans "No matching parent website was found for this hostname. Create the parent apex site first (for example example.com), then convert hostnames like shop.example.com from List Websites or this page." %}</p>
+            {% endif %}
         </div>
 
         <!-- Modern Resource Cards Grid -->
-        <div class="resource-grid cp-wtab-panel" data-wtab="overview">
+        <div class="resource-grid">
             <!-- Disk Usage Card -->
             <div class="resource-card disk">
                 <div class="resource-icon">
@@ -1402,10 +1731,14 @@
                 </div>
                 <div class="resource-title">{% trans "Disk Usage" %}</div>
                 <div class="resource-value">{{ diskInMB }} MB</div>
+                {% if diskInMBTotal == 0 %}
+                <div class="resource-limit">{% trans "Unlimited" %}</div>
+                {% else %}
                 <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
+                {% endif %}
             </div>
             
             <!-- Bandwidth Card -->
@@ -1479,17 +1812,17 @@
                         <span style="background: #f0fdf4; color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-lock" style="margin-right: 5px;"></i>{% trans "Secure" %}
                         </span>
-                        <span style="color: #64748b;">• {% trans "Valid for" %} {{ days }} {% trans "days" %}</span>
+                        <span style="color: #64748b;">• {% trans "Valid for" %} {{ days }} {% trans "days" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% elif days|add:0 >= 7 %}
                         <span style="background: #fef3c7; color: #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-clock" style="margin-right: 5px;"></i>{% trans "Expiring Soon" %}
                         </span>
-                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}</span>
+                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% else %}
                         <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-exclamation" style="margin-right: 5px;"></i>{% trans "Critical" %}
                         </span>
-                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}</span>
+                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -1499,7 +1832,7 @@
 
         <!-- Resource Limits Section -->
         {% if resource_limits %}
-        <div class="cyber-card cp-wtab-panel" data-wtab="overview" style="margin-top: 25px;">
+        <div class="cyber-card" style="margin-top: 25px;">
             <div class="cyber-section-title" style="margin-bottom:20px;">
                 <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid #dbeafe;border-radius:8px;margin-right:12px;background:#f6faff;">
                     <i class="fas fa-sliders-h" style="color: #222b38; font-size: 18px;"></i>
@@ -1561,7 +1894,7 @@
         {% endif %}
 
         <!-- Add Resource Usage Graphs -->
-        <div class="cyber-card cp-wtab-panel" data-wtab="overview">
+        <div class="cyber-card">
             <div class="cyber-section-title" style="margin-bottom:28px;">
                 <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid #dbeafe;border-radius:8px;margin-right:12px;background:#f6faff;">
                     <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M3 3V21H23" stroke="#222b38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 16L9 10L13 14L23 4" stroke="#222b38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1583,7 +1916,7 @@
             </div>
         </div>
 
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="logs">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Logs" %} <img ng-hide="logFileLoading" src="/static/images/loading.gif">
@@ -1636,7 +1969,7 @@
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a ng-click="hidelogsbtn()" href="">
                                             <!--img src="/static/images/close-32.png"-->
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                     <div class="col-sm-12">
@@ -1681,7 +2014,7 @@
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a ng-click="hideErrorLogsbtn()" href="">
                                             <!--img src="/static/images/close-32.png"-->
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                     <div class="col-sm-12">
@@ -1696,7 +2029,7 @@
             </div>
         </div>
 
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="domains">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Domains" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
@@ -1745,7 +2078,7 @@
                                     </div>
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                 </div>
@@ -1771,7 +2104,7 @@
                                     </div>
                                 </div>
 
-                                <div ng-hide="installationDetailsForm" ng-hide="installationDetailsForm"
+                                <div ng-hide="installationDetailsForm"
                                      class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
                                     <div class="col-sm-9">
@@ -1892,70 +2225,57 @@
                                 </div>
 
 
-                                <div ng-hide="" class="form-group">
+                                <div class="ld-toolbar">
+                                    <input placeholder="{% trans 'Search Domain...' %}" ng-model="logSearch"
+                                           name="dom" type="search" class="form-control"
+                                           aria-label="{% trans 'Search Domain...' %}">
+                                    <a class="ld-close" title="{% trans 'Close' %}" ng-click="hideListDomains()" href=""
+                                       aria-label="{% trans 'Close' %}">&times;</a>
+                                </div>
 
-                                    <div class="col-sm-11">
-                                        <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
-                                               type="text" class="form-control" ng-model="domainNameCreate"
-                                               required>
-                                    </div>
-
-                                    <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                        <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
-                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                <div class="ld-list">
+                                    <div class="ld-card" ng-repeat="record in childDomains | filter:logSearch">
+                                        <div class="ld-card-top">
+                                            <div class="ld-domain" ng-bind="record.childDomain"></div>
+                                            <a class="ld-launch" href="{$ record.childLunch $}">
+                                                <img src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"
+                                                     alt="">
+                                                {% trans "Launch" %}
                                             </a>
                                         </div>
-
-
-                                    <div class="col-sm-12">
-                                        <table class="table cyber-table">
-                                            <thead>
-                                            <tr>
-                                                <th>Domain</th>
-                                                <th>Launch</th>
-                                                <th>Path</th>
-                                                <th>open_basedir</th>
-                                                <th>PHP</th>
-                                                <th>SSL</th>
-                                                <th>Delete</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr ng-repeat="record in childDomains | filter:logSearch">
-                                                <td ng-bind="record.childDomain"></td>
-                                                <td><a href="{$ record.childLunch $}"><img width="30px" height="30"
-                                                                                               class="center-block"
-                                                                                               src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
-                                                    </td>
-                                                    <td ng-bind="record.path"></td>
-                                                    <td>
-                                                        <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)"
-                                                                ng-model="childBaseDir" class="form-control">
-                                                            <option>Enable</option>
-                                                            <option>Disable</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <select ng-change="changePHP(record.childDomain,phpSelection)"
-                                                                ng-model="phpSelection" class="form-control">
-                                                            {% for php in phps %}
-                                                                <option>{{ php }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <button type="button"
-                                                                ng-click="issueSSL(record.childDomain,record.path)"
-                                                                class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
-                                                    </td>
-                                                    <td>
-                                                        <button type="button"
-                                                                ng-click="deleteChildDomain(record.childDomain)"
-                                                                class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <div class="ld-path-block">
+                                            <span class="ld-label">{% trans "Path" %}</span>
+                                            <code class="ld-path" title="{$ record.path $}" ng-bind="record.path"></code>
+                                        </div>
+                                        <div class="ld-controls">
+                                            <div class="ld-field">
+                                                <span class="ld-label">open_basedir</span>
+                                                <select ng-change="changeChildBaseDir(record.childDomain,record.childBaseDir)"
+                                                        ng-model="record.childBaseDir" class="form-control"
+                                                        aria-label="open_basedir">
+                                                    <option value="Enable" ng-value="'Enable'">Enable</option>
+                                                    <option value="Disable" ng-value="'Disable'">Disable</option>
+                                                </select>
+                                            </div>
+                                            <div class="ld-field">
+                                                <span class="ld-label">{% trans "PHP" %}</span>
+                                                <select ng-change="changePHP(record.childDomain,record.phpSelection)"
+                                                        ng-model="record.phpSelection" class="form-control"
+                                                        aria-label="PHP">
+                                                    {% for php in phps %}
+                                                        <option value="{{ php }}" ng-value="'{{ php }}'">{{ php }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="ld-actions">
+                                                <button type="button"
+                                                        ng-click="issueSSL(record.childDomain,record.path)"
+                                                        class="btn ra-50 btn-primary">{% trans "Issue SSL" %}</button>
+                                                <button type="button"
+                                                        ng-click="deleteChildDomain(record.childDomain)"
+                                                        class="btn ra-50 btn-danger">{% trans "Delete" %}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1970,7 +2290,7 @@
             </div>
         </div>
 
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="config">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Configurations" %} <img ng-hide="configFileLoading" src="/static/images/loading.gif">
@@ -2002,11 +2322,89 @@
                         </div>
 
                         <div class="col-md-3">
+                            <a href="#" ng-click="addSSL(); $event.preventDefault()" title="{% trans 'Add Your Own SSL' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Add SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="#" ng-click="issueSSL('{{ domain|escapejs }}'); $event.preventDefault()" title="{% trans 'Obtain or restore Let\'s Encrypt SSL (default)' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Issue SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="#" ng-click="recreateWebsiteDNS(); $event.preventDefault()"
+                               title="{% trans 'Re-apply DNS template and fix SPF (for domains created before DNS fixes)' %}">
+                                <img src="{% static 'images/icons/file.png' %}" width="65" class="mr-10">
+                                <span class="h4">
+                                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                                    <span ng-show="recreatingDNS"><i class="fas fa-circle-notch fa-spin"></i> {% trans "Recreating..." %}</span>
+                                </span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
                             <a href="#" ng-click="changePHPMaster(); $event.preventDefault()" title="{% trans 'Change PHP Version' %}">
                                 <img src="{% static 'images/icons/laptop.png' %}" width="65" class="mr-10">
                                 <span class="h4">{% trans "Change PHP" %}</span>
                             </a>
                         </div>
+
+                        <!---- HTML for main ssl file ---->
+
+                        <div class="col-md-12">
+
+                            <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
+
+                                <div ng-hide="sslSaved" class="alert alert-success">
+                                    <p>{% trans "SSL Saved" %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
+                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <div class="col-sm-12" style="margin-bottom: 15px; display: flex; justify-content: center; align-items: center;">
+                                        <button type="button" ng-click="hidesslbtn()" class="btn btn-link ssl-form-close-btn" style="color: var(--danger-color, #dc3545); padding: 8px 12px; min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                            <i class="fas fa-times" style="font-size: 24px;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="control-label">{% trans "Paste Your Cert" %}</label>
+                                        <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="control-label">{% trans "Paste Your Key" %}</label>
+                                        <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
+                                                  class="form-control"></textarea>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveSSL()"
+                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+                        <!----- HTML For SSL ---->
+
 
                         <!---- HTML for main conf file ---->
 
@@ -2136,7 +2534,7 @@
 
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
-                                           href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                           href=""><h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3></a>
                                     </div>
 
                                 </div>
@@ -2180,74 +2578,7 @@
         </div>
 
 
-        <!-- SSL Tab -->
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="ssl">
-            <div class="panel panel-body">
-                <h3 class="content-box-header">
-                    {% trans "SSL" %}
-                </h3>
-                <div class="content-box-wrapper">
-                    <div class="row mx-10">
-                        <div class="col-md-3">
-                            <a href="{% url 'manageSSL' %}" title="{% trans 'Issue or renew a free SSL certificate' %}">
-                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
-                                <span class="h4">{% trans "Issue / Renew SSL" %}</span>
-                            </a>
-                        </div>
-
-                        <div class="col-md-3">
-                            <a href="#" ng-click="addSSL(); $event.preventDefault()" title="{% trans 'Add Your Own SSL' %}">
-                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
-                                <span class="h4">{% trans "Add SSL" %}</span>
-                            </a>
-                        </div>
-
-                        <!---- HTML for main ssl file ---->
-                        <div class="col-md-12">
-                            <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
-
-                                <div ng-hide="sslSaved" class="alert alert-success">
-                                    <p>{% trans "SSL Saved" %}</p>
-                                </div>
-
-                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
-                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                </div>
-
-                                <div ng-hide="" class="form-group">
-                                    <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                        <a ng-click="hidesslbtn()" href=""><img
-                                                src="/static/images/close-32.png"></a>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
-                                                  class="form-control"></textarea>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
-                                                  class="form-control"></textarea>
-                                    </div>
-                                </div>
-
-                                <div ng-hide="" class="form-group">
-                                    <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-4">
-                                        <button type="button" ng-click="saveSSL()"
-                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="example-box-wrapper my-10 cp-wtab-panel" data-wtab="files">
+        <div class="example-box-wrapper my-10">
             <div class="panel panel-body">
                 <h3 class="content-box-header">
                     {% trans "Files" %}
@@ -2411,7 +2742,7 @@
         {% endif %}
 
         <!-- Creative Application Installer Section -->
-        <div class="app-installer-section cp-wtab-panel" data-wtab="apps">
+        <div class="app-installer-section">
             <div class="app-installer-header">
                 <h2 class="app-installer-title">
                     <i class="fas fa-magic" style="margin-right: 15px;"></i>
@@ -2518,8 +2849,9 @@
 {% block footer_scripts %}
 {{ block.super }}
 <!-- Add Chart.js and resource monitoring script -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}"></script>
+<!-- Note: Chart.js is already loaded in base template, but kept here for specific page functionality -->
+<script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}"></script>
+<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}?v={% now 'U' %}"></script>
 
 <!-- Fix modal functionality -->
 <script>
@@ -2682,22 +3014,5 @@ window.addEventListener('load', function() {
         console.error('Bootstrap modal not loaded properly');
     }
 });
-</script>
-<script>
-(function(){
-  var tabs=document.querySelectorAll('#cp-wtabs .cp-tab');
-  var panels=document.querySelectorAll('.cp-wtab-panel');
-  if(!tabs.length||!panels.length){return;}
-  var valid=["overview","domains","logs","config","ssl","files","apps"];
-  function activate(name){
-    tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-wtab')===name);});
-    panels.forEach(function(p){p.style.display=(p.getAttribute('data-wtab')===name)?'':'none';});
-    try{history.replaceState(null,'','#'+name);}catch(e){}
-    try{window.dispatchEvent(new Event('resize'));}catch(e){}
-  }
-  tabs.forEach(function(t){t.addEventListener('click',function(){activate(t.getAttribute('data-wtab'));});});
-  var h=(location.hash||'').replace('#','');
-  activate(valid.indexOf(h)>=0?h:"overview");
-})();
 </script>
 {% endblock %}

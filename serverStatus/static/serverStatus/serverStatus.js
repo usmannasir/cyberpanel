@@ -304,6 +304,32 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
 /* Java script code to start/stop litespeed */
 
+/** Navigate between Main / Access / Error / Email / FTP / ModSec log viewers. */
+window.CyberPanelLogSources = window.CyberPanelLogSources || {
+    routes: {
+        cyberpanel: '/serverstatus/cyberCPMainLogFile',
+        access: '/serverlogs/accessLogs',
+        error: '/serverlogs/errorLogs',
+        email: '/serverlogs/emaillogs',
+        ftp: '/serverlogs/ftplogs',
+        modSec: '/serverlogs/modSecAuditLogs'
+    },
+    bindScope: function ($scope, currentType) {
+        $scope.selectedLogSource = currentType || '';
+        $scope.changeLogSource = function () {
+            var key = $scope.selectedLogSource;
+            var dest = window.CyberPanelLogSources.routes[key];
+            if (!key || !dest) {
+                return;
+            }
+            if (window.location.pathname.replace(/\/$/, '') === dest.replace(/\/$/, '')) {
+                return;
+            }
+            window.location.href = dest;
+        };
+    }
+};
+
 /* Java script code to read log file */
 
 app.controller('readCyberCPLogFile', function ($scope, $http) {
@@ -311,6 +337,7 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'cyberpanel');
 
 
     var url = "/serverstatus/getFurtherDataFromLogFile";
@@ -930,14 +957,33 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     $scope.showUpdate = false;
     $scope.updateComplete = true;
     var globalType;
+    var packageCache = {};
+    var activeFetch = null;
 
-    $scope.fetchPackages = function (type = 'installed') {
+    $scope.fetchPackages = function (type) {
+        if (typeof type === 'undefined' || type === null || type === '') {
+            type = 'installed';
+        }
         $scope.cyberpanelLoading = false;
         if ($scope.currentTab !== type) {
             $scope.currentPage = 1;
         }
         $scope.currentTab = type;
         globalType = type;
+
+        // Serve cached tab data instantly (All Packages is expensive)
+        var cacheKey = type + '|' + $scope.currentPage + '|' + $scope.recordsToShow;
+        if (packageCache[cacheKey]) {
+            var cached = packageCache[cacheKey];
+            $scope.allPackages = cached.allPackages;
+            $scope.pagination = cached.pagination;
+            $scope.fetchedPackages = cached.fetchedPackages;
+            $scope.totalPackages = cached.totalPackages;
+            $scope.cyberpanelLoading = true;
+            return;
+        }
+
+        $scope.cyberpanelLoading = false;
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -951,16 +997,27 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         };
 
         dataurl = "/serverstatus/fetchPackages";
+        var fetchToken = {};
+        activeFetch = fetchToken;
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
+            if (activeFetch !== fetchToken) {
+                return; // stale response from another tab
+            }
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
                 $scope.allPackages = JSON.parse(response.data.packages);
                 $scope.pagination = response.data.pagination;
                 $scope.fetchedPackages = response.data.fetchedPackages;
                 $scope.totalPackages = response.data.totalPackages;
+                packageCache[cacheKey] = {
+                    allPackages: $scope.allPackages,
+                    pagination: $scope.pagination,
+                    fetchedPackages: $scope.fetchedPackages,
+                    totalPackages: $scope.totalPackages
+                };
             } else {
                 new PNotify({
                     title: 'Error!',
@@ -971,6 +1028,9 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialData(response) {
+            if (activeFetch !== fetchToken) {
+                return;
+            }
             $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -981,6 +1041,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 
     };
+    // Available Updates first; All Packages loads only when that tab is selected
     $scope.fetchPackages('upgrade');
 
     $scope.showPackageDetails = function (packageFetch) {

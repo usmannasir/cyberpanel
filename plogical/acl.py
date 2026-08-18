@@ -32,7 +32,7 @@ class ACLManager:
                '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
                '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
                ' "restoreBackup": 1, "addDeleteDestinations": 1, "scheduleBackups": 1, "remoteBackups": 1, "googleDriveBackups": 1, "manageSSL": 1, ' \
-               '"hostnameSSL": 1, "mailServerSSL": 1 }'
+               '"hostnameSSL": 1, "mailServerSSL": 1, "sslReconcile": 1 }'
 
     ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
                   '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -44,7 +44,7 @@ class ACLManager:
                   '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
-              '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
+              '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 0, "deleteWebsite": 1, ' \
               '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
               '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
@@ -73,27 +73,14 @@ class ACLManager:
 
     @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
-        # Both callers (issueAliasSSL / delateAlias) verify checkOwnership(master)
-        # before calling this, so the master domain is already known to belong to
-        # the user. Handle the orphaned-alias case (present in the server config
-        # but missing its aliasDomains row) gracefully instead of raising an
-        # uncaught DoesNotExist that surfaces as a 500 and blocks self-repair. #1738
+        # Orphaned alias (config present, DB row missing): allow self-heal. #1738
         try:
-            # NOTE: look up unscoped so an alias that belongs to a DIFFERENT
-            # master is still found here and correctly rejected below (return 0)
-            # for non-admins — scoping this query to `master` would hide it and
-            # wrongly fall into the orphan branch.
             aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
         except aliasDomains.DoesNotExist:
-            # Truly orphaned: the alias exists in the server config but has no
-            # aliasDomains row at all. Ownership of the master is already enforced
-            # by the caller, so allow the operation to proceed and self-heal
-            # (delete / re-issue SSL) rather than raising a 500. #1738
             return 1
         except aliasDomains.MultipleObjectsReturned:
-            # Duplicate rows for the same alias name: keep the one under this
-            # master if present, otherwise it belongs only to other masters.
-            aliasOBJ = aliasDomains.objects.filter(aliasDomain=aliasDomain, master__domain=master).first()
+            aliasOBJ = aliasDomains.objects.filter(
+                aliasDomain=aliasDomain, master__domain=master).first()
             if aliasOBJ is None:
                 return 0
 
@@ -143,13 +130,8 @@ class ACLManager:
 
     @staticmethod
     def fetchIP():
-        try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            return ipData.split('\n', 1)[0]
-        except BaseException:
-            return "192.168.100.1"
+        from plogical.machine_ip import read_machine_ip
+        return read_machine_ip("192.168.100.1")
 
     ## GitHub and GitLab allow dots in a repository name (repo.ltd), the default
     ## validateInput pattern does not, so attaching such a repo failed the security
@@ -182,6 +164,41 @@ class ACLManager:
                 return 0
         except BaseException as msg:
             logging.writeToFile('%s. [32:commandInjectionCheck]' % (str(msg)))
+
+    @staticmethod
+    def isPathInsideHome(path, home_path):
+        """
+        Check if path is inside the allowed home directory. Uses normpath to correctly
+        allow filenames like 'file..name.txt' while rejecting path traversal (e.g. ../../etc).
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            path = os.path.normpath(path)
+            if not os.path.isabs(path):
+                return False
+            base = os.path.realpath(home_path)
+            if base == '/':
+                return True
+            return path == base or path.startswith(base + os.sep)
+        except (OSError, TypeError) as msg:
+            logging.writeToFile('%s. [isPathInsideHome]' % (str(msg)))
+            return False
+
+    @staticmethod
+    def isFilePathSafeForShell(path):
+        """
+        Check if path is safe for shell when passed in single quotes. Only blocks
+        characters that break single-quoted strings: quote, null, newline.
+        Allows ( ) : & [ ] etc. since they are harmless inside single quotes.
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            return "'" not in path and '\0' not in path and '\n' not in path
+        except (TypeError, AttributeError) as msg:
+            logging.writeToFile('%s. [isFilePathSafeForShell]' % (str(msg)))
+            return False
 
     @staticmethod
     def loadedACL(val):
@@ -241,10 +258,10 @@ class ACLManager:
 
             ## DNS Management
 
-            finalResponse['createNameServer'] = config['createNameServer']
-            finalResponse['createDNSZone'] = config['createDNSZone']
-            finalResponse['deleteZone'] = config['deleteZone']
-            finalResponse['addDeleteRecords'] = config['addDeleteRecords']
+            finalResponse['createNameServer'] = config.get('createNameServer', 0)
+            finalResponse['createDNSZone'] = config.get('createDNSZone', 0)
+            finalResponse['deleteZone'] = config.get('deleteZone', 0)
+            finalResponse['addDeleteRecords'] = config.get('addDeleteRecords', 0)
 
             ## Email Management
 
@@ -275,6 +292,45 @@ class ACLManager:
             finalResponse['manageSSL'] = config['manageSSL']
             finalResponse['hostnameSSL'] = config['hostnameSSL']
             finalResponse['mailServerSSL'] = config['mailServerSSL']
+            finalResponse['sslReconcile'] = config.get('sslReconcile', 0)
+
+            ## Plugin management (granular: view / use / install)
+            # Three independent permissions, plus the legacy "managePlugins"
+            # flag which (for backward compatibility) implies all three.
+            #   - viewPlugins    : see the installed plugins list / plugin UI
+            #   - usePlugins     : open and use a plugin's settings/features
+            #   - installPlugins : install, upgrade, enable/disable, remove
+            # Derived "can*" keys apply the implication hierarchy and are what
+            # views/templates check (use/install both imply view).
+
+            def _aclFlag(_v):
+                if _v in (1, True, '1', 'true'):
+                    return 1
+                try:
+                    return 1 if int(_v) else 0
+                except (TypeError, ValueError):
+                    return 0
+
+            _manage_plugins = _aclFlag(config.get('managePlugins', 0))
+            _view_plugins = _aclFlag(config.get('viewPlugins', 0))
+            _use_plugins = _aclFlag(config.get('usePlugins', 0))
+            _install_plugins = _aclFlag(config.get('installPlugins', 0))
+
+            # Raw flags (persisted as-is on the ACL config).
+            finalResponse['managePlugins'] = _manage_plugins
+            finalResponse['viewPlugins'] = _view_plugins
+            finalResponse['usePlugins'] = _use_plugins
+            finalResponse['installPlugins'] = _install_plugins
+
+            # Effective flags (with implication) used for access decisions.
+            _eff_install = 1 if (_manage_plugins or _install_plugins) else 0
+            _eff_use = 1 if (_manage_plugins or _use_plugins) else 0
+            _eff_view = 1 if (
+                _manage_plugins or _view_plugins or _use_plugins or _install_plugins
+            ) else 0
+            finalResponse['canInstallPlugins'] = _eff_install
+            finalResponse['canUsePlugins'] = _eff_use
+            finalResponse['canViewPlugins'] = _eff_view
 
         return finalResponse
 
@@ -609,10 +665,10 @@ class ACLManager:
         elif phpVersion == "PHP 8.5":
             php = "85"
         else:
-            # Future-proof: derive the string from the version so a newly
-            # released PHP (8.6, 9.0, ...) never raises UnboundLocalError on
-            # pages like the subdomain list. (#1726)
-            php = phpVersion.replace("PHP", "").replace(".", "").strip()
+            # Future PHP versions: derive digits so UnboundLocalError cannot crash
+            # subdomain list and similar pages (#1726).
+            digits = ''.join(ch for ch in phpVersion if ch.isdigit())
+            php = digits[-2:] if len(digits) >= 2 else (digits or '84')
 
         return php
 
@@ -1081,10 +1137,46 @@ class ACLManager:
 
     @staticmethod
     def GetServerIP():
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        return ipData.split('\n', 1)[0]
+        from plogical.machine_ip import read_machine_ip
+        return read_machine_ip()
+
+    @staticmethod
+    def GetServerIPv6():
+        """
+        Get the server's primary IPv6 address (non-link-local, non-loopback)
+        Returns None if no IPv6 address is found
+        """
+        try:
+            import ipaddress
+            import subprocess
+            # Get IPv6 addresses and filter loopback/link-local with proper IP parsing.
+            result = subprocess.run(
+                ['ip', '-6', 'addr', 'show'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if 'inet6' not in line:
+                        continue
+                    # Expected format: "inet6 2a02:c207:2139:8929::1/64 scope global ..."
+                    parts = line.strip().split()
+                    if len(parts) < 2:
+                        continue
+                    ipv6 = parts[1].split('/')[0]
+                    try:
+                        ip_obj = ipaddress.ip_address(ipv6)
+                    except ValueError:
+                        continue
+                    if ip_obj.version == 6 and not ip_obj.is_loopback and not ip_obj.is_link_local:
+                        return str(ip_obj)
+        except Exception as e:
+            logging.writeToFile('Error getting IPv6 address: %s' % str(e))
+        
+        return None
 
     @staticmethod
     def CheckForPremFeature(feature):
@@ -1100,10 +1192,61 @@ class ACLManager:
             }
 
             import requests
-            response = requests.post(url, data=json.dumps(data))
+            response = requests.post(url, data=json.dumps(data), timeout=3)
             return response.json()['status']
         except:
             return 1
+
+    @staticmethod
+    def CachedAddonPermission(feature='all', cacheSeconds=3600, requestTimeout=1.5):
+        """
+        Cached Adonpermission lookup for page renders (Full Settings, etc.).
+        Avoids blocking up to several seconds on every website.html load.
+        """
+        try:
+            if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                return 1
+
+            import time
+            cacheDir = '/home/cyberpanel'
+            try:
+                os.makedirs(cacheDir, mode=0o700, exist_ok=True)
+            except OSError:
+                pass
+            safeFeature = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in str(feature))
+            cachePath = os.path.join(cacheDir, 'addon_permission_%s.cache' % safeFeature)
+            now = time.time()
+            if os.path.exists(cachePath):
+                try:
+                    with open(cachePath, 'r', encoding='utf-8', errors='replace') as cacheFile:
+                        raw = cacheFile.read().strip().split('|', 1)
+                    if len(raw) == 2:
+                        ts = float(raw[0])
+                        if (now - ts) < float(cacheSeconds):
+                            return int(raw[1])
+                except (OSError, ValueError):
+                    pass
+
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            payload = {
+                "name": feature,
+                "IP": ACLManager.GetServerIP()
+            }
+            import requests
+            response = requests.post(url, data=json.dumps(payload), timeout=requestTimeout)
+            status = int(response.json().get('status', 0))
+            try:
+                with open(cachePath, 'w', encoding='utf-8') as cacheFile:
+                    cacheFile.write('%s|%s' % (str(now), str(status)))
+                try:
+                    os.chmod(cachePath, 0o600)
+                except OSError:
+                    pass
+            except OSError:
+                pass
+            return status
+        except Exception:
+            return 0
 
     @staticmethod
     def CheckIPBackupObjectOwner(currentACL, backupobj, user):
@@ -1226,10 +1369,9 @@ class ACLManager:
 
             try:
                 def generate_pass(length=14):
-                    import secrets
                     chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
                     size = length
-                    return ''.join(secrets.choice(chars) for x in range(size))
+                    return ''.join(random.choice(chars) for x in range(size))
 
                 content = """<?php
 $_ENV['snappymail_INCLUDE_AS_API'] = true;
@@ -1274,13 +1416,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/CyberCP"
             ProcessUtilities.executioner(command, 'root', True)
 
-            terminalSecretPath = '/usr/local/CyberCP/terminal_jwt_secret'
-            if os.path.exists(terminalSecretPath):
-                command = "chown cyberpanel:cyberpanel %s" % terminalSecretPath
-                ProcessUtilities.executioner(command, 'root', True)
-                command = "chmod 600 %s" % terminalSecretPath
-                ProcessUtilities.executioner(command, 'root', True)
-
             ########### Fix LSCPD
 
             command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
@@ -1303,7 +1438,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail"
             ProcessUtilities.executioner(command, 'root', True)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -1418,7 +1553,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+            command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
             ProcessUtilities.executioner(command, 'root', True)
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
@@ -1471,4 +1606,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [fixPermissions]")
+
+
+
 

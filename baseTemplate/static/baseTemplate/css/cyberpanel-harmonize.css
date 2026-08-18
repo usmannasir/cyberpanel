@@ -131,15 +131,9 @@
 /* =====================================================================
    Shared "card surface" idiom classes (#1804)
    ---------------------------------------------------------------------
-   Many internal pages (email limits, backups, docker, git, onboarding…)
-   hardcode `background: white / #fff / #f8f9ff` on their hero card,
-   header, body and table chrome instead of going through the design
-   tokens. These class names are NOT in the vocabulary above, so in dark
-   mode they render as blinding white panels with dark text. These rules
-   route the most common surface idioms through tokens. In LIGHT mode the
-   tokens resolve to the same near-white values (--bg-secondary #ffffff,
-   --bg-muted #f6f7f9), so the look is unchanged; in DARK mode the panels
-   finally go dark and stay legible.
+   Many internal pages hardcode white/light backgrounds on hero cards,
+   headers, and table chrome. These rules route common surface idioms
+   through tokens so dark mode stays legible; light mode is unchanged.
    ===================================================================== */
 #main-content .main-card,
 #main-content .stats-card,
@@ -168,13 +162,11 @@
 #main-content .stats-table tbody tr:hover,
 #main-content .data-table tbody tr:hover { background: var(--bg-hover) !important; }
 
-/* Quiet "docs" pill that hardcodes white bg + lilac border ---------- */
 #main-content .docs-link {
     background: var(--bg-secondary) !important;
     border-color: var(--border-color) !important;
 }
 
-/* Inline code / token chips that hardcode a light grey fill --------- */
 #main-content .code-badge,
 #main-content .code-chip,
 #main-content .mono-badge {
@@ -183,13 +175,48 @@
     border-color: var(--border-color) !important;
 }
 
-/* Bootstrap modal close "×": a bare <button> with no background shows the
-   browser's light-grey UA default in dark mode. Keep it transparent. */
 [data-theme="dark"] #main-content .close,
 [data-theme="dark"] .modal .close {
     background: transparent !important;
     color: var(--text-secondary) !important;
     text-shadow: none !important;
+}
+
+/* Email list page: mail config sidebar, tables, disk usage badges */
+#main-content .info-card {
+    background: var(--bg-muted) !important;
+    color: var(--text-primary) !important;
+}
+#main-content .config-table td,
+#main-content .email-table td { color: var(--text-primary) !important; }
+#main-content .disk-usage-badge {
+    background: var(--bg-muted) !important;
+    color: var(--accent-color) !important;
+    min-width: 3.5rem;
+    text-align: center;
+    display: inline-block;
+}
+
+[data-theme="dark"] #main-content .disk-usage-badge {
+    background: var(--bg-hover) !important;
+    color: var(--text-heading) !important;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] #main-content select.form-control option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-container .select2-selection--single,
+[data-theme="dark"] .select2-dropdown,
+[data-theme="dark"] .select2-results__option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+[data-theme="dark"] .select2-results__option--highlighted {
+    background: var(--bg-hover) !important;
+    color: var(--text-heading) !important;
 }
 
 /* =====================================================================
@@ -230,3 +257,30 @@
 #main-content .cyberpanel-website-page .quick-actions { background: var(--bg-secondary) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 1px 2px var(--shadow-color) !important; }
 #main-content .cyberpanel-website-page .resource-progress { background: var(--bg-hover) !important; }
 #main-content .cyberpanel-website-page .resource-progress-bar { background: var(--accent-color) !important; }
+
+/* Dashboard eyebrow labels: ensure contrast in dark mode (regression fix) */
+[data-theme="dark"] #main-content .section-title,
+[data-theme="dark"] #main-content .dashboard-greeting h2 {
+    color: var(--text-secondary) !important;
+}
+[data-theme="dark"] #main-content .dashboard-greeting p {
+    color: var(--text-secondary) !important;
+}
+
+
+/* ---- Native <select> label visibility (List Websites / WP / Docker / etc.) ----
+   Bootstrap .form-control sets height:34px. Page styles often add padding:10-16px,
+   which clips the closed-select label ("10", "50 items", "Page 1") in half.
+   Use horizontal padding only and match line-height to height. */
+#main-content select.form-control,
+#main-content select.form-select,
+#main-content select.pagination-select {
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: none !important;
+    padding: 0 28px 0 12px !important;
+    line-height: 38px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+    vertical-align: middle;
+}

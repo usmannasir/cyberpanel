@@ -1,5 +1,6 @@
 import getpass
 import os
+import base64
 import shlex
 import sys
 
@@ -186,6 +187,61 @@ class FileManager:
         if '..' in str(path):
             return True
         return not self.pathInside(path, root)
+
+    def _moveViaPythonBase64(self, src_path, dest_path, user):
+        """Fallback: use helper script or Python to move when mv fails (handles special chars)."""
+        try:
+            import subprocess
+            s_b64 = base64.b64encode(src_path.encode('utf-8')).decode('ascii')
+            d_b64 = base64.b64encode(dest_path.encode('utf-8')).decode('ascii')
+            helper = '/usr/local/CyberCP/bin/safe-move-path'
+            if os.path.isfile(helper) and os.access(helper, os.X_OK):
+                cmd = [helper, s_b64, d_b64]
+                if os.getuid() != 0:
+                    cmd = ['sudo', '-n'] + cmd
+                try:
+                    res = subprocess.run(cmd, capture_output=True, timeout=30)
+                    if res.returncode == 0:
+                        return True
+                except Exception as e:
+                    logging.writeToFile(f"_moveViaPythonBase64 sudo helper failed: {str(e)}")
+                command = '%s %s %s' % (helper, s_b64, d_b64)
+            else:
+                code = "import shutil,base64,sys; s=base64.b64decode(sys.argv[1]).decode(); d=base64.b64decode(sys.argv[2]).decode(); shutil.move(s,d)"
+                command = "/usr/bin/python3 -c '%s' %s %s" % (code, s_b64, d_b64)
+            result = ProcessUtilities.executioner(command, user)
+            return result == 1
+        except Exception as e:
+            logging.writeToFile(f"_moveViaPythonBase64 failed: {str(e)}")
+            return False
+
+    def _deleteViaPythonBase64(self, path, user):
+        """Fallback: use helper script or Python to delete when rm fails (handles special chars)."""
+        try:
+            import subprocess
+            p_b64 = base64.b64encode(path.encode('utf-8')).decode('ascii')
+            helper = '/usr/local/CyberCP/bin/safe-delete-path'
+            if os.path.isfile(helper) and os.access(helper, os.X_OK):
+                cmd = [helper, p_b64]
+                if os.getuid() != 0:
+                    cmd = ['sudo', '-n'] + cmd
+                try:
+                    res = subprocess.run(cmd, capture_output=True, timeout=30)
+                    if res.returncode == 0:
+                        return True
+                except Exception as e:
+                    logging.writeToFile(f"_deleteViaPythonBase64 sudo helper failed: {str(e)}")
+            if os.path.isfile(helper) and os.access(helper, os.X_OK):
+                command = '%s %s' % (helper, p_b64)
+            else:
+                code = "import os,base64,sys,shutil; p=base64.b64decode(sys.argv[1]).decode(); (os.path.isfile(p) and os.remove(p)) or (os.path.isdir(p) and shutil.rmtree(p))"
+                command = "/usr/bin/python3 -c '%s' %s" % (code, p_b64)
+            result = ProcessUtilities.executioner(command, user)
+            return result == 1
+        except Exception as e:
+            logging.writeToFile(f"_deleteViaPythonBase64 failed: {str(e)}")
+            return False
+
 
     def changeOwner(self, path):
         try:
@@ -431,8 +487,11 @@ class FileManager:
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     if skipTrash:
-                        command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                        ProcessUtilities.executioner(command, website.externalApp)
+                        itemPath = self.data['path'] + '/' + item
+                        command = 'rm -rf ' + self.returnPathEnclosed(itemPath)
+                        result = ProcessUtilities.executioner(command, website.externalApp)
+                        if result != 1:
+                            self._deleteViaPythonBase64(itemPath, website.externalApp)
                     else:
                         trashPath = '%s/.trash' % (self.homePath)
 
@@ -442,10 +501,13 @@ class FileManager:
                         Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
                               fileName=self.returnPathEnclosed(item)).save()
 
+                        itemPath = self.data['path'] + '/' + item
                         command = 'mv %s %s' % (
-                            self.returnPathEnclosed(self.data['path'] + '/' + item),
+                            self.returnPathEnclosed(itemPath),
                             self.returnPathEnclosed(trashPath))
-                        ProcessUtilities.executioner(command, website.externalApp)
+                        result = ProcessUtilities.executioner(command, website.externalApp)
+                        if result != 1:
+                            self._moveViaPythonBase64(itemPath, trashPath + '/' + item, website.externalApp)
 
                 if RemoveOK == 0:
                     command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
@@ -480,8 +542,11 @@ class FileManager:
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                     if skipTrash:
-                        command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                        ProcessUtilities.executioner(command)
+                        itemPath = self.data['path'] + '/' + item
+                        command = 'rm -rf ' + self.returnPathEnclosed(itemPath)
+                        result = ProcessUtilities.executioner(command)
+                        if result != 1:
+                            self._deleteViaPythonBase64(itemPath, None)
 
 
                 if RemoveOK == 0:

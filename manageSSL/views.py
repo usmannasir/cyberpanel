@@ -193,13 +193,20 @@ def issueSSL(request):
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path + " --force 1"
-                output = ProcessUtilities.outputExecutioner(execPath)
+                output = ProcessUtilities.outputExecutioner(execPath) or ''
 
-                if output.find("1,None") > -1:
-                    pass
-                else:
+                # python-cloudflare 2.20.* may print PendingDeprecationWarning to stderr,
+                # which is merged into this string. Prefer an explicit success token.
+                ssl_ok = ('1,None' in output)
+                if not ssl_ok:
+                    cleaned = '\n'.join(
+                        line for line in output.splitlines()
+                        if 'PendingDeprecationWarning' not in line
+                        and 'Python package \'cloudflare\'' not in line
+                        and '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' not in line
+                    ).strip()
                     data_ret = {'status': 0, "SSL": 0,
-                                'error_message': output}
+                                'error_message': cleaned or output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 

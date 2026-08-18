@@ -35,7 +35,11 @@ from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
-from emailMarketing.emACL import emACL
+try:
+    from emailMarketing.emACL import emACL
+except ImportError:
+    # emailMarketing is an optional plugin (lives in cyberpanel-plugins); core panel must work without it.
+    emACL = None
 from plogical.processUtilities import ProcessUtilities
 from plogical.systemPassword import (
     consume_system_password_request,
@@ -149,11 +153,8 @@ class WebsiteManager:
         }
 
         import requests
-        try:
-            response = requests.post(url, data=json.dumps(data), timeout=10)
-            Status = response.json()['status']
-        except (requests.RequestException, ValueError, KeyError):
-            Status = 0
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
 
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
@@ -194,15 +195,8 @@ class WebsiteManager:
                             Data, 'createDatabase')
             return proc.render()
         else:
-            currentACL = ACLManager.loadedACL(userID)
-            websites = ACLManager.findAllSites(currentACL, userID)
-            proc = httpProc(
-                request,
-                'websiteFunctions/freeWordpressInstall.html',
-                {'websiteList': websites},
-                'createDatabase',
-            )
-            return proc.render()
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         import json
@@ -2619,7 +2613,13 @@ Require valid-user
 
         json_data = []
 
+        from websiteFunctions.models import ChildDomains
+        child_domain_names = set(ChildDomains.objects.values_list('domain', flat=True))
+
         for website in websites:
+            is_duplicate_top_level = website.domain in child_domain_names
+            if is_duplicate_top_level and not self._findConvertMasterCandidate(website.domain):
+                continue
             wp_sites = []
             try:
                 wp_sites = WPSites.objects.filter(owner=website)
@@ -2642,6 +2642,7 @@ Require valid-user
 
             # Get SSL status
             ssl_status = self.getSSLStatus(website.domain)
+            convert_master = self._findConvertMasterCandidate(website.domain)
 
             json_data.append({
                 'domain': website.domain,
@@ -2653,9 +2654,41 @@ Require valid-user
                 'admin': website.admin.userName,
                 'wp_sites': wp_sites,
                 'diskUsed': diskUsed,
-                'ssl': ssl_status
+                'ssl': ssl_status,
+                'convertMaster': convert_master or '',
+                'canConvertToChild': bool(convert_master),
+                'hasChildDuplicate': is_duplicate_top_level,
+                'duplicateTopLevel': is_duplicate_top_level,
             })
         return json.dumps(json_data)
+
+    def _findConvertMasterCandidate(self, domain):
+        try:
+            from plogical.convert_to_child import find_master_candidate
+            return find_master_candidate(domain)
+        except BaseException:
+            return None
+
+    def convertWebsiteToChildDomain(self, userID=None, data=None):
+        try:
+            from plogical.convert_to_child import convert_website_to_child_domain
+
+            website_name = data.get('websiteName', '')
+            master_domain = data.get('masterDomain', '')
+            status, message = convert_website_to_child_domain(
+                userID, website_name, master_domain or None)
+            return HttpResponse(json.dumps({
+                'status': status,
+                'convertStatus': status,
+                'error_message': message if status == 0 else 'None',
+                'success': message if status == 1 else None,
+            }))
+        except BaseException as msg:
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'convertStatus': 0,
+                'error_message': str(msg),
+            }))
 
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
@@ -2677,7 +2710,7 @@ Require valid-user
                         try:
                             x509 = OpenSSL.crypto.load_certificate(
                                 OpenSSL.crypto.FILETYPE_PEM,
-                                open(wildcard_path, 'rb').read()
+                                open(wildcard_path, 'r').read()
                             )
                             cn = None
                             for component in x509.get_subject().get_components():
@@ -2699,12 +2732,10 @@ Require valid-user
             else:
                 is_wildcard = False
             
-            # Load and analyze certificate. Read as bytes: installed certs have been seen
-            # with binary garbage appended after a valid PEM chain, and a text-mode read
-            # raises UnicodeDecodeError which reports a working SSL as "none".
+            # Load and analyze certificate
             x509 = OpenSSL.crypto.load_certificate(
                 OpenSSL.crypto.FILETYPE_PEM,
-                open(filePath, 'rb').read()
+                open(filePath, 'r').read()
             )
             
             # Get expiration date
@@ -2768,16 +2799,37 @@ Require valid-user
                 status = 'warning'
             else:
                 status = 'valid'
+
+            cloudflare_active = self._domainUsesCloudflare(domain)
+            if cloudflare_active and status in ('expired', 'expiring', 'warning', 'none', 'self-signed'):
+                return {
+                    'status': 'cloudflare',
+                    'days': days,
+                    'issuer': issuer_org,
+                    'is_wildcard': is_wildcard,
+                    'cloudflare': True,
+                    'origin_status': status,
+                }
             
             return {
                 'status': status,
                 'days': days,
                 'issuer': issuer_org,
-                'is_wildcard': is_wildcard
+                'is_wildcard': is_wildcard,
+                'cloudflare': cloudflare_active,
             }
             
         except Exception as e:
-            return {'status': 'none', 'days': 0, 'issuer': '', 'is_wildcard': False}
+            return {'status': 'none', 'days': 0, 'issuer': '', 'is_wildcard': False, 'cloudflare': False}
+
+    def _domainUsesCloudflare(self, domain):
+        """Return True when the apex zone is active in Cloudflare."""
+        try:
+            from plogical.ssl_cloudflare_dns import find_domain_in_cloudflare
+            cf_ok, _msg = find_domain_in_cloudflare(domain)
+            return bool(cf_ok)
+        except BaseException:
+            return False
 
 
     def findDockersitesListJson(self, Dockersite):
@@ -3570,7 +3622,7 @@ context /cyberpanel_suspension_page.html {
 
             from plogical.processUtilities import ProcessUtilities
 
-            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+            marketingStatus = emACL.checkIfEMEnabled(admin.userName) if emACL else 0
 
             Data['marketingStatus'] = marketingStatus
             Data['ftpTotal'] = website.package.ftpAccounts
@@ -3611,7 +3663,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(filePath, 'rb').read())
+                                                       open(filePath, 'r').read())
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
@@ -3645,7 +3697,7 @@ context /cyberpanel_suspension_page.html {
             import requests
             import json
             try:
-                response = requests.post(url, data=json.dumps(addon_data))
+                response = requests.post(url, data=json.dumps(addon_data), timeout=5)
                 Status = response.json().get('status', 0)
             except Exception:
                 Status = 0
@@ -3657,7 +3709,7 @@ context /cyberpanel_suspension_page.html {
             ssl_issue_link = '/manageSSL/sslForHostName'
             try:
                 import OpenSSL
-                with open(cert_path, 'rb') as f:
+                with open(cert_path, 'r') as f:
                     pem_data = f.read()
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, pem_data)
                 # Only check the first cert in the PEM
@@ -3692,13 +3744,28 @@ context /cyberpanel_suspension_page.html {
 
             Data['accessed_via_ip'] = bool(accessed_via_ip)
 
+            #### update jwt secret if needed
+
+            import secrets
+
+            fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
             try:
-                from plogical.securityUtils import get_terminal_jwt_secret
-                get_terminal_jwt_secret(create_if_missing=True)
-            except Exception as error:
-                CyberCPLogFileWriter.writeToFile(
-                    f"Failed to configure Web Terminal authentication: {error}"
-                )
+                
+                content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
+                if 'REPLACE_ME_WITH_INSTALLER' in content:
+                    new_secret = secrets.token_urlsafe(32)
+                    
+                    sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
+                    ProcessUtilities.outputExecutioner(sed_cmd)
+                    
+                    command = 'systemctl restart fastapi_ssh_server'
+                    ProcessUtilities.outputExecutioner(command)
+            except Exception:
+                CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
+                pass
+
+            #####
 
             #####
 
@@ -3706,28 +3773,36 @@ context /cyberpanel_suspension_page.html {
             # Ensure FastAPI SSH server systemd service file is in place
             try:
                 service_path = '/etc/systemd/system/fastapi_ssh_server.service'
-                local_service_path = 'fastapi_ssh_server.service'
-                check_service = ProcessUtilities.outputExecutioner(f'test -f {service_path} && echo exists || echo missing')
-                if 'missing' in check_service:
+                if not os.path.exists(service_path):
                     ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
                     ProcessUtilities.outputExecutioner('systemctl daemon-reload')
             except Exception as e:
-                CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+                CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
             
 
             #####
 
             # Ensure FastAPI SSH server is running using ProcessUtilities
             try:
-                ProcessUtilities.outputExecutioner('systemctl is-active --quiet fastapi_ssh_server')
-                ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
-                ProcessUtilities.outputExecutioner('systemctl start fastapi_ssh_server')
+                active = ProcessUtilities.outputExecutioner('systemctl is-active fastapi_ssh_server') or ''
+                if active.strip() != 'active':
+                    ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
 
                 csfPath = '/etc/csf'
 
                 sshPort = '8888'
 
                 if os.path.exists(csfPath):
+                    csf_needs_port = True
+                    try:
+                        with open('/etc/csf/csf.conf', 'r', encoding='utf-8', errors='replace') as csf_conf:
+                            for line in csf_conf:
+                                if line.startswith('TCP_IN'):
+                                    csf_needs_port = sshPort not in line
+                                    break
+                    except OSError:
+                        csf_needs_port = True
+                    if csf_needs_port:
                         dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
 
                         # self.modifyPorts is a method in the firewallManager.py file so how can we call it here?
@@ -3742,10 +3817,12 @@ context /cyberpanel_suspension_page.html {
                     from firewall.models import FirewallRules
                     try:
                         updateFW = FirewallRules.objects.get(name="WebTerminalPort")
-                        FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
-                        updateFW.port = sshPort
-                        updateFW.save()
-                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                        # Only re-apply the Web Terminal firewall rule if the port actually changed.
+                        if str(updateFW.port) != str(sshPort):
+                            FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                            updateFW.port = sshPort
+                            updateFW.save()
+                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
                     except:
                         try:
                             newFireWallRule = FirewallRules(name="WebTerminalPort", port=sshPort, proto="tcp")
@@ -3755,7 +3832,7 @@ context /cyberpanel_suspension_page.html {
                             CyberCPLogFileWriter.writeToFile(str(msg))
 
             except Exception as e:
-                CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
+                CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
             # Fetch actual resource limits from lscgctl command if they exist
             Data['resource_limits'] = None
@@ -3769,8 +3846,8 @@ context /cyberpanel_suspension_page.html {
                     # Run lscgctl list-user command
                     result = subprocess.run(
                         [lscgctl_path, 'list-user', username],
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                        universal_newlines=True,
+                        capture_output=True,
+                        text=True,
                         timeout=5
                     )
 
@@ -3861,7 +3938,7 @@ context /cyberpanel_suspension_page.html {
                 from datetime import datetime
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.childDomain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                       open(filePath, 'rb').read())
+                                                       open(filePath, 'r').read())
                 expireData = x509.get_notAfter().decode('ascii')
                 finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
 
@@ -4443,7 +4520,7 @@ context /cyberpanel_suspension_page.html {
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " saveCronChanges --externalApp " + website.externalApp + " --line " + str(
-                line) + " --finalCron " + shlex.quote(finalCron)
+                line) + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
             CronUtil.CronPrem(0)
 
@@ -4542,7 +4619,7 @@ context /cyberpanel_suspension_page.html {
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
-            execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron " + shlex.quote(finalCron)
+            execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
@@ -4647,31 +4724,11 @@ context /cyberpanel_suspension_page.html {
             ## Create Configurations
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            legacy_alias = ChildDomains.objects.filter(
-                master__domain=self.domain,
-                domain=aliasDomain,
-                alais=1,
-            ).first()
-            if legacy_alias:
-                execPath += " issueSSL --virtualHostName %s --path %s --administratorEmail %s --force 1" % (
-                    shlex.quote(aliasDomain),
-                    shlex.quote(legacy_alias.path),
-                    shlex.quote(legacy_alias.master.adminEmail),
-                )
-            else:
-                execPath += " issueAliasSSL --masterDomain %s --aliasDomain %s --sslPath %s --administratorEmail %s" % (
-                    shlex.quote(self.domain),
-                    shlex.quote(aliasDomain),
-                    shlex.quote(sslpath),
-                    shlex.quote(admin.email),
-                )
+            execPath = execPath + " issueAliasSSL --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
-                if legacy_alias:
-                    legacy_alias.ssl = 1
-                    legacy_alias.save(update_fields=['ssl'])
                 data_ret = {'sslStatus': 1, 'error_message': "None", "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -4707,18 +4764,7 @@ context /cyberpanel_suspension_page.html {
             ## Create Configurations
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            legacy_alias = ChildDomains.objects.filter(
-                master__domain=self.domain,
-                domain=aliasDomain,
-                alais=1,
-            ).first()
-            if legacy_alias:
-                execPath += " deleteDomain --virtualHostName %s --DeleteDocRoot 0" % shlex.quote(aliasDomain)
-            else:
-                execPath += " deleteAlias --masterDomain %s --aliasDomain %s" % (
-                    shlex.quote(self.domain),
-                    shlex.quote(aliasDomain),
-                )
+            execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
@@ -5663,30 +5709,6 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            # Security: phpPath is client-supplied and is later `sudo mv`'d as root
-            # (see below). Without containment an attacker could overwrite any file
-            # (e.g. /etc/ld.so.preload) as root. Require it to resolve to this
-            # domain's own PHP-FPM pool file inside a known pool directory.
-            expectedBasename = domainName + '.conf'
-            realPhpPath = os.path.realpath(phpPath)
-            allowedRoots = ('/etc/php/', '/etc/opt/remi/', '/opt/remi/')
-            poolFileOk = realPhpPath.endswith('/fpm/pool.d/' + expectedBasename) or \
-                         realPhpPath.endswith('/php-fpm.d/' + expectedBasename)
-            if '..' in phpPath or os.path.basename(realPhpPath) != expectedBasename \
-                    or not realPhpPath.startswith(allowedRoots) or not poolFileOk:
-                return ACLManager.loadErrorJson()
-            phpPath = realPhpPath
-
-            # Security: pm.* values are substituted verbatim into the pool config;
-            # force them to plain integers so no extra directives can be injected.
-            try:
-                pmMaxChildren = str(int(pmMaxChildren))
-                pmStartServers = str(int(pmStartServers))
-                pmMinSpareServers = str(int(pmMinSpareServers))
-                pmMaxSpareServers = str(int(pmMaxSpareServers))
-            except (ValueError, TypeError):
-                return ACLManager.loadErrorJson()
-
             if int(pmStartServers) < int(pmMinSpareServers) or int(pmStartServers) > int(pmMinSpareServers):
                 data_ret = {'status': 0,
                             'error_message': 'pm.start_servers must not be less than pm.min_spare_servers and not greater than pm.max_spare_servers.'}
@@ -5730,7 +5752,7 @@ StrictHostKeyChecking no
             writeToFile.writelines(phpFPMConf)
             writeToFile.close()
 
-            command = 'sudo mv %s %s' % (shlex.quote(tempStatusPath), shlex.quote(phpPath))
+            command = 'sudo mv %s %s' % (tempStatusPath, phpPath)
             ProcessUtilities.executioner(command)
 
             phpPath = phpPath.split('/')
@@ -5784,13 +5806,31 @@ StrictHostKeyChecking no
         website = Websites.objects.get(domain=self.domain)
         externalApp = website.externalApp
 
+        #### update jwt secret if needed
+
+        import secrets
+        import re
+        import os
+        from plogical.processUtilities import ProcessUtilities
+
+        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
         try:
-            from plogical.securityUtils import get_terminal_jwt_secret
-            get_terminal_jwt_secret(create_if_missing=True)
-        except Exception as error:
-            CyberCPLogFileWriter.writeToFile(
-                f"Failed to configure Web Terminal authentication: {error}"
-            )
+            
+            content = ProcessUtilities.outputExecutioner(f'cat {fastapi_file}')
+            if 'REPLACE_ME_WITH_INSTALLER' in content:
+                new_secret = secrets.token_urlsafe(32)
+                
+                sed_cmd = f"sed -i 's|JWT_SECRET = \"REPLACE_ME_WITH_INSTALLER\"|JWT_SECRET = \"{new_secret}\"|' '{fastapi_file}'"
+                ProcessUtilities.outputExecutioner(sed_cmd)
+                
+                command = 'systemctl restart fastapi_ssh_server'
+                ProcessUtilities.outputExecutioner(command)
+        except Exception:
+            CyberCPLogFileWriter.writeLog(f"Failed to update JWT secret: {e}")
+            pass
+
+        #####
 
         from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
         # Ensure FastAPI SSH server systemd service file is in place
@@ -5802,7 +5842,7 @@ StrictHostKeyChecking no
                 ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
                 ProcessUtilities.outputExecutioner('systemctl daemon-reload')
         except Exception as e:
-            CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+            CyberCPLogFileWriter.writeLog(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
 
         # Ensure FastAPI SSH server is running using ProcessUtilities
         try:
@@ -5842,7 +5882,7 @@ StrictHostKeyChecking no
                         CyberCPLogFileWriter.writeToFile(str(msg))
 
         except Exception as e:
-            CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
+            CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
         # Add-on check logic
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
@@ -8327,3 +8367,4 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
