@@ -224,6 +224,13 @@ class secMiddleware:
                         if key == 'content' or key == 'fileContent' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'contentNow' or key == 'emailMessage':
                             continue
 
+                        # Passwords are opaque credentials and may legitimately
+                        # contain shell metacharacters.  Only exempt the password
+                        # value on the exact login endpoint; usernames and every
+                        # other login field keep the normal validation below.
+                        if pathActual == '/verifyLogin' and key == 'password':
+                            continue
+
                         # For API endpoints, still check for the most dangerous command injection characters
                         if isinstance(value, (str, bytes)) and (value.find('- -') > -1 or value.find('\n') > -1 or value.find(';') > -1 or
                             value.find('&&') > -1 or value.find('||') > -1 or value.find('|') > -1 or

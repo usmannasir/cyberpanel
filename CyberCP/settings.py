@@ -44,7 +44,7 @@ if not SECRET_KEY:
         import secrets as _secrets
         SECRET_KEY = _secrets.token_urlsafe(50)
         try:
-            _fd = os.open(_secret_key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            _fd = os.open(_secret_key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
             with os.fdopen(_fd, 'w') as _skf:
                 _skf.write(SECRET_KEY)
         except FileExistsError:
@@ -63,6 +63,10 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Allow configuration via environment variable, with wildcard fallback for universal compatibility
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+
+# Do not share Django's generic cookie name with other applications that may
+# be served from the same panel hostname.
+SESSION_COOKIE_NAME = 'cyberpanel_sessionid'
 
 # Application definition
 
