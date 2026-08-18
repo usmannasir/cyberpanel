@@ -6484,7 +6484,8 @@ StrictHostKeyChecking no
                 if not validators.domain(self.gitHost):
                     return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
-            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame,
+                                                                              ACLManager.RepoNameRegex):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
@@ -6900,7 +6901,8 @@ StrictHostKeyChecking no
 
             ## Security check
 
-            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame,
+                                                                              ACLManager.RepoNameRegex):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')

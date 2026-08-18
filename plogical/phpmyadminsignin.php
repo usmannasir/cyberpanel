@@ -34,7 +34,10 @@ try {
         echo '</form>';
         echo '<script>document.getElementById("redirectForm").submit();</script>';
 
-    } else if (isset($_POST['logout'])) {
+    } else if (isset($_POST['logout']) || isset($_GET['logout'])) {
+        // phpMyAdmin is configured with LogoutURL = 'phpmyadminsignin.php?logout',
+        // which arrives as a GET. Checking only $_POST left the session alive and
+        // rendered a blank page.
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
         session_destroy();
