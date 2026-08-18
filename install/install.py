@@ -3298,10 +3298,11 @@ module cyberpanel_ols {
                 # Handle special MySQL Two configuration
                 writeDataToFile.writelines(items)
             else:
-                # Handle host/port replacements for standard MySQL
-                if items.find('127.0.0.1') > -1:
+                # Only rewrite MySQL HOST inside DATABASES. CSRF trusted origins also
+                # contain 127.0.0.1 and must stay valid URL strings.
+                if (in_default_db or in_rootdb) and '127.0.0.1' in items and 'HOST' in items:
                     writeDataToFile.writelines("        'HOST': 'localhost',\n")
-                elif items.find("'PORT':'3307'") > -1:
+                elif (in_default_db or in_rootdb) and items.find("'PORT':'3307'") > -1:
                     writeDataToFile.writelines("        'PORT': '',\n")
                 else:
                     writeDataToFile.writelines(items)

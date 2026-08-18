@@ -22,7 +22,8 @@ full `v2.5.5-dev` merge.
   helpers) while honoring `CYBERPANEL_GIT_USER` for fork clones.
 - `Check_Root` now exits 1 when sudo is detected (no false install success).
 - `update_settings_file` rewrites only the top-level `SECRET_KEY =` assignment
-  so the env/file fallback block is not smashed.
+  so the env/file fallback block is not smashed, and only DATABASES `HOST`
+  lines that contain `127.0.0.1` (CSRF origins stay as URLs).
 - Vagrant provisioners run via `su -` and fail if `lscpd` is not active.
   Guest smoke strips CRLF so Windows checkouts still run.
 
