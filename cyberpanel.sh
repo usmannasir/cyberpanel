@@ -186,6 +186,7 @@ Remote_MySQL="Off"
 Final_Flags=()
 
 Git_User=""
+Git_User_Override=""
 Git_Content_URL=""
 Git_Clone_URL=""
 
@@ -369,24 +370,28 @@ curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus"
 }
 
 Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
-  BEGIN {
-    print "num1", (num1 < num2 ? "<" : ">="), "num2"
-  }
-  ')
-  if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 1.9.4"
-    exit
-  else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
-  fi
+local raw="${1//[[:space:]]/}"
+# Accept v3.0.2, 3.0.2, v3.0.2-dev, and 3.0.2-dev without doubling the v prefix.
+if [[ "$raw" == v*.*.* ]]; then
+  Branch_Name="$raw"
+elif [[ "$raw" == *.*.* ]]; then
+  Branch_Name="v${raw}"
 else
-  echo -e "\nPlease input a valid format version number."
+  echo -e "\nPlease input a valid format version number (for example 3.0.2 or 3.0.2-dev)."
   exit
 fi
+local cmp="${Branch_Name#v}"
+cmp="${cmp%%-*}"
+Output=$(awk -v num1="$Base_Number" -v num2="$cmp" '
+BEGIN {
+  print "num1", (num1 < num2 ? "<" : ">="), "num2"
+}
+')
+if [[ $Output = *">="* ]]; then
+  echo -e "\nYou must use version number higher than 1.9.4"
+  exit
+fi
+echo -e "\nSet branch name to $Branch_Name..."
 }
 
 License_Check() {
@@ -718,6 +723,9 @@ echo -e "      \e[31m-m powerdns\e[39m will do minimal install also with PowerDN
 echo -e "      \e[31m-m postfix\e[39m powerdns will do minimal install also with Postfix and PowerDNS"
 echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
 echo -e "e.g.  \e[31m-b 2.0.2\e[39m will install 2.0.2 version"
+echo -e "      \e[31m-b 3.0.2-dev\e[39m will install the v3.0.2-dev branch (do not pass a second v prefix)"
+echo -e "\n\e[31m-r\e[39m or \e[31m--repo\e[39m : GitHub user that owns the cyberpanel repo (default usmannasir)"
+echo -e "e.g.  \e[31m--repo master3395\e[39m clones github.com/master3395/cyberpanel"
 echo -e "\n\e[31m--mirror\e[39m : this argument force to use mirror server for majority of repositories, only suggest to use for servers within China"
 echo -e "\nExample:"
 echo -e "\nsh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols --password random"
@@ -787,6 +795,15 @@ else
       -b | --branch)
       shift
         Branch_Check "${1}"
+      ;;
+      -r | --repo)
+      shift
+      if [[ "${1}" = "" ]]; then
+        Show_Help
+        exit
+      fi
+      Git_User_Override="${1}"
+      echo -e "\nUsing --repo: GitHub user ${Git_User_Override} for cyberpanel..."
       ;;
       -m | --minimal)
       if ! echo "$@" | grep -q -i "postfix\|pureftpd\|powerdns" ; then
@@ -1902,6 +1919,9 @@ if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
 
+export CYBERPANEL_BRANCH="${Branch_Name:-stable}"
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
+
 /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
 
 
@@ -2415,11 +2435,20 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 
 Pre_Install_Setup_Git_URL() {
 if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
+  if [[ -n "$Git_User_Override" ]]; then
+    Git_User="$Git_User_Override"
+    echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel\n"
+  else
+    Git_User="usmannasir"
+  fi
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
 else
-  Git_User="qtwrk"
+  if [[ -n "$Git_User_Override" ]]; then
+    Git_User="$Git_User_Override"
+  else
+    Git_User="qtwrk"
+  fi
   Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
   Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
 fi

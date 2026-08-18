@@ -436,3 +436,46 @@ def writeToFile(message):
     except ImportError:
         # If installLog module is not available, just print the message
         print(f"[LOG] {message}")
+
+
+def cyberpanel_github_owner():
+    """GitHub user that owns the cyberpanel repo (override with CYBERPANEL_GIT_USER)."""
+    owner = os.environ.get('CYBERPANEL_GIT_USER', 'usmannasir')
+    owner = (owner or 'usmannasir').strip()
+    return owner or 'usmannasir'
+
+
+def cyberpanel_github_owners_to_try():
+    """Preferred clone owner first, then upstream as fallback."""
+    owner = cyberpanel_github_owner()
+    owners = [owner]
+    if owner != 'usmannasir':
+        owners.append('usmannasir')
+    return owners
+
+
+def build_cyberpanel_clone_commands(branch_name):
+    """git clone command list for /usr/local/CyberCP (shallow first, then full)."""
+    quoted_branch = shlex.quote(str(branch_name))
+    commands = []
+    for owner in cyberpanel_github_owners_to_try():
+        url = 'https://github.com/%s/cyberpanel.git' % owner
+        commands.append(
+            'git clone -b %s --depth 1 %s /usr/local/CyberCP' % (quoted_branch, url)
+        )
+        commands.append(
+            'git clone -b %s %s /usr/local/CyberCP' % (quoted_branch, url)
+        )
+    return commands
+
+
+def build_cyberpanel_archive_download(branch_name, owner=None):
+    """Zipball URL and expected extract directory name for a GitHub branch."""
+    if owner is None:
+        owner = cyberpanel_github_owner()
+    branch = str(branch_name)
+    url = 'https://github.com/%s/cyberpanel/archive/refs/heads/%s.zip' % (
+        owner, branch
+    )
+    extract_dir = 'cyberpanel-%s' % branch.replace('/', '-')
+    return url, extract_dir
