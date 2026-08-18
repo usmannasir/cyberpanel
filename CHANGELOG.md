@@ -4,6 +4,56 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.2 (build 2) — 2026-08-18
+
+Adds Hermes Agent as a one-click Docker application and consolidates the fixes
+that landed on the `v3.0.1` branch after its initial build, which were never
+given their own changelog entry.
+
+### Applications
+- Hermes Agent can now be deployed from Docker Sites the same way as n8n: pick
+  the domain, the resources and the dashboard login, and the panel builds the
+  container, the reverse proxy and the SSL-terminated dashboard. The agent keeps
+  its state in its own data volume and needs no database container, and its
+  dashboard is reachable only through the domain, never on a public port. The
+  model provider API key is added from inside the dashboard, so no credential
+  for it is stored by the panel.
+- The application list, the resources shown for each application, and the
+  application recorded against a Docker site are now driven by one definition,
+  so every site is recorded as the application it actually runs. Previously
+  every Docker site was recorded as WordPress.
+
+### Fixes
+- Git repositories whose name contains a dot, such as `repo.ltd`, can be
+  attached again instead of being rejected as invalid input (#1716).
+- The Email Marketing page loads its application script, so the page renders
+  its lists instead of staying empty (#1707).
+- Logging out of phpMyAdmin now ends the session and returns to the panel
+  instead of leaving a blank page with the session still open (#1680).
+- Corrected a "Pleas wait" typo on the manage git page (#1752).
+- The Docker site form starts with valid owner, application and resource
+  values, and the selected entry in each dropdown is no longer clipped.
+
+### Consolidated from the v3.0.1 branch
+- Ubuntu 26 installer detection completed, and login sessions persist correctly
+  with tightened secret access.
+- Scheduled local backups validate their destination and apply retention;
+  backups of sites without DNS or mail records complete.
+- Downloads staged for the file manager use a private directory owned by the
+  service account instead of loosening permissions on the panel home (#1894).
+- Local database credentials are repaired during upgrade, and a failed upgrade
+  reports partial state instead of claiming the old build is still running
+  (#1891).
+- Webmail handles unknown MIME charsets, and webmail content and SSH password
+  changes are hardened.
+- WordPress installation fails safely, remote transfer error responses are
+  handled, self-hosted git deployment is restored, and Imunify installation and
+  panel integration are fixed.
+- Web Terminal keeps working after upgrades and runtime rebuilds, honours a
+  custom SSH port, and requires a one-time authorization.
+- Docker environment variable rows are indexed correctly, ACME logging exposure
+  is reduced, and the dashboard no longer renders a raw uptime placeholder.
+
 ## v3.0.0 (build 0) — 2026-08-09
 
 ### Platform support

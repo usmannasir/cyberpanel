@@ -17,6 +17,7 @@ Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting
 - 🔒 **Firewall** (FirewallD & ConfigServer Firewall Integration).
 - 📀 **One-click Backups and Restores**.
 - 🐳 **Docker Management** with command execution capabilities.
+- 🤖 **One-click applications** — n8n and [Hermes Agent](guides/HERMES_AGENT_GUIDE.md) on their own domain with SSL.
 - 🤖 **AI-Powered Security Scanner** for enhanced protection.
 - 📊 **Monthly Bandwidth Reset** - Automatic bandwidth usage reset (Fixed in latest version).
 
