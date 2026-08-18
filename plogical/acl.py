@@ -151,6 +151,12 @@ class ACLManager:
         except BaseException:
             return "192.168.100.1"
 
+    ## GitHub and GitLab allow dots in a repository name (repo.ltd), the default
+    ## validateInput pattern does not, so attaching such a repo failed the security
+    ## check. Dots are allowed between segments only, never leading and never doubled,
+    ## so the name can still not walk a path.
+    RepoNameRegex = compile(r'[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*')
+
     @staticmethod
     def validateInput(value, regex = None):
         if regex == None:
