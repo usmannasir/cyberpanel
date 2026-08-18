@@ -11,10 +11,22 @@
 
 $signin = __DIR__ . '/../plogical/phpmyadminsignin.php';
 
-$_GET['logout'] = '';
+// The signon file exits early when the visitor is not signed into CyberPanel, and an
+// exit() inside an include ends this script as well, which would read as a pass.
+// This shutdown guard turns that case into a failure instead.
+$GLOBALS['assertions_ran'] = false;
+register_shutdown_function(function () {
+    if (!$GLOBALS['assertions_ran']) {
+        fwrite(STDERR, "FAIL: the signon file ended the request before the logout branch was reached\n");
+        exit(1);
+    }
+});
+
 session_name('SignonSession');
 @session_start();
-$_SESSION['PMA_single_signon_user'] = 'someuser';
+$_SESSION['userID'] = 1;                            // signed into CyberPanel
+$_SESSION['PMA_single_signon_user'] = 'someuser';   // and into phpMyAdmin
+$_GET['logout'] = '';                               // what LogoutURL actually sends
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     fwrite(STDERR, "FAIL: could not start a session to test with\n");
@@ -24,6 +36,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 ob_start();
 include $signin;
 ob_end_clean();
+
+$GLOBALS['assertions_ran'] = true;
 
 $destroyed = (session_status() !== PHP_SESSION_ACTIVE) || empty($_SESSION);
 
