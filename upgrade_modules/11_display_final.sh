@@ -36,7 +36,13 @@ fi
 _b ""
 _bl
 
-Panel_Port=$(cat /usr/local/lscp/conf/bind.conf)
+Panel_Port="8090"
+if [[ -f /usr/local/lscp/conf/bind.conf ]]; then
+  _bind_raw=$(tr -d '\r\n' < /usr/local/lscp/conf/bind.conf)
+  if [[ "$_bind_raw" == '*:'* ]]; then
+    Panel_Port="${_bind_raw##*:}"
+  fi
+fi
 if [[ $Panel_Port = "" ]] ; then
   Panel_Port="8090"
 fi

@@ -240,8 +240,12 @@ CyberPanel_Final_Upgrade_Verification() {
   local errors=0
   local panel_port="8090"
   if [[ -f /usr/local/lscp/conf/bind.conf ]]; then
-    panel_port=$(tr -d '\r\n' < /usr/local/lscp/conf/bind.conf)
-    panel_port="${panel_port##*:}"
+    local bind_raw
+    bind_raw=$(tr -d '\r\n' < /usr/local/lscp/conf/bind.conf)
+    # Only *:PORT is the public panel port. 127.0.0.1:5003 is the WSGI backend.
+    if [[ "$bind_raw" == '*:'* ]]; then
+      panel_port="${bind_raw##*:}"
+    fi
   fi
   [[ -z "$panel_port" ]] && panel_port="8090"
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running post-upgrade verification..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -263,7 +267,7 @@ CyberPanel_Final_Upgrade_Verification() {
   code=$(curl -k -L -sS --max-time 30 -o /dev/null -w '%{http_code}' "https://127.0.0.1:${panel_port}/" 2>/dev/null || echo "000")
   # Accept any of 200/302/401/403: the panel is up and answering; 401/403 just means an auth gate
   # (commit e7635b0 upstream). Treating those as failures produced false "Seems something wrong" reports.
-  [[ "$code" =~ ^(200|302|401|403)$ ]] || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: panel HTTPS returned ${code}" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }
+  [[ "$code" =~ ^(200|301|302|303|401|403)$ ]] || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: panel HTTPS returned ${code}" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }
 
   if [[ -x /usr/local/CyberCP/bin/python ]]; then
     /usr/local/CyberCP/bin/python -c 'import django, MySQLdb, gunicorn; assert django.VERSION[0] >= 4' 2>/dev/null || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: CyberCP venv imports failed" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }

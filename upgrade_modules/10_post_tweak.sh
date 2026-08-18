@@ -580,6 +580,12 @@ if [[ -x "$UI_SYNC" ]]; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post-upgrade UI static sync completed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# OLS owns public :8090 and proxies to 127.0.0.1:5003. Stock bind.conf is *:8090,
+# which makes lscpd race OLS for the same socket after upgrade.
+if [[ -d /usr/local/lscp/conf ]]; then
+  echo '127.0.0.1:5003' > /usr/local/lscp/conf/bind.conf
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set lscpd bind.conf to 127.0.0.1:5003" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
 systemctl restart lscpd
 
 }

@@ -2187,7 +2187,7 @@ $cfg['Servers'][$i]['port'] = '3306';
 
         os.chdir('/usr/local/CyberCP')
         py = Upgrade._python_for_manage()
-        command = py + ' manage.py collectstatic --noinput --clear'
+        command = py + ' manage.py collectstatic --noinput --clear --verbosity 0'
         Upgrade.executioner(command, 'Remove old static content', 0)
 
         os.chdir(cwd)

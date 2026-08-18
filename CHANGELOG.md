@@ -26,6 +26,11 @@ full `v2.5.5-dev` merge.
   lines that contain `127.0.0.1` (CSRF origins stay as URLs).
 - Vagrant provisioners run via `su -` and fail if `lscpd` is not active.
   Guest smoke strips CRLF so Windows checkouts still run.
+- Fresh/upgrade: `lscpd` binds `127.0.0.1:5003` (WSGI backend). OLS keeps
+  public HTTPS `:8090` and proxies to that backend, so the two no longer
+  fight for the same socket (panel 503 / `lscpd` failed after install).
+- `collectstatic` during install/upgrade uses `--verbosity 0` so Vagrant SSH
+  does not drop on thousands of "Deleting" lines.
 
 ## v3.0.2 (build 2) — 2026-08-18
 

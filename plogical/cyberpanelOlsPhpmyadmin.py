@@ -133,10 +133,16 @@ def build_vhost_conf(php_version=None):
 
 
 def get_panel_port():
+    """Public panel port for the OLS listener.
+
+    bind.conf may be *:8090 (legacy public bind) or 127.0.0.1:5003 (lscpd
+    WSGI backend). Only *:PORT means the public HTTPS port. A loopback bind
+    is the backend; OLS stays on 8090.
+    """
     try:
         if os.path.isfile(BIND_CONF):
             line = open(BIND_CONF, 'r').read().strip()
-            if ':' in line:
+            if line.startswith('*:') and ':' in line:
                 port = line.split(':', 1)[1].strip().split()[0]
                 if port.isdigit():
                     return port

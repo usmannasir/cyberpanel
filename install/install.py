@@ -3650,7 +3650,7 @@ skip-ssl
         # Download CDN libraries before collectstatic runs
         self.downloadCDNLibraries()
 
-        command = f"{python_path} {manage_py} collectstatic --noinput --clear"
+        command = f"{python_path} {manage_py} collectstatic --noinput --clear --verbosity 0"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         ## Merge static content into public/static for LiteSpeed (mv fails if public/static exists)
@@ -5471,7 +5471,12 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             bindConfPath = "/usr/local/lscp/conf/bind.conf"
 
             writeToFile = open(bindConfPath, 'w')
-            writeToFile.write("*:" + self.port)
+            # lscpd is the WSGI backend. OpenLiteSpeed owns the public panel port
+            # (usually 8090) and proxies to 127.0.0.1:5003. Writing *:8090 here
+            # makes lscpd and OLS fight for the same socket, so lscpd fails and
+            # the panel returns HTTP 503.
+            backend_bind = "127.0.0.1:5003"
+            writeToFile.write(backend_bind)
             writeToFile.close()
 
         except:
@@ -5678,6 +5683,17 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             from plogical.cyberpanelOlsPhpmyadmin import ensure_cyberpanel_phpmyadmin_ols
             preFlightsChecks.stdOut("Configuring OpenLiteSpeed phpMyAdmin PHP contexts...", 1)
             ensure_cyberpanel_phpmyadmin_ols(restart=True, verify=True)
+            # OLS now owns :8090. Restart lscpd so it binds 127.0.0.1:5003
+            # instead of racing OLS for the public port.
+            preFlightsChecks.call(
+                'systemctl restart lscpd',
+                self.distro,
+                'systemctl restart lscpd',
+                'systemctl restart lscpd',
+                0,
+                0,
+                os.EX_OSERR,
+            )
             preFlightsChecks.stdOut("phpMyAdmin OLS configuration applied", 1)
             return True
         except Exception as e:
