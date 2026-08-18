@@ -27,6 +27,40 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import argparse
 import threading as multi
 
+## Registry of the one-click applications offered on the Docker Site creation page.
+##
+## siteType   -> value stored in DockerSites.SiteType so the panel can tell apps apart
+## requiresDB -> the app ships its own database container in the compose file
+## deploy     -> Docker_Sites function used to deploy the app
+## compose    -> Docker_Sites method that renders the compose file (None when the
+##               deployment function writes its own compose content inline)
+## minSiteRam -> minimum RAM (MB) the application container needs to run
+
+DOCKER_APPS = {
+    'WordPress': {
+        'siteType': 1,
+        'requiresDB': True,
+        'deploy': 'DeployWPContainer',
+        'compose': None,
+        'minSiteRam': 256,
+    },
+    'n8n': {
+        'siteType': 3,
+        'requiresDB': True,
+        'deploy': 'DeployN8NContainer',
+        'compose': 'generate_compose_config',
+        'minSiteRam': 256,
+    },
+    'Hermes': {
+        'siteType': 4,
+        'requiresDB': False,
+        'deploy': 'DeployHermesContainer',
+        'compose': 'generate_hermes_compose_config',
+        'minSiteRam': 2048,
+    },
+}
+
+
 class DockerDeploymentError(Exception):
     def __init__(self, message, error_code=None, recovery_possible=True):
         self.message = message
@@ -37,6 +71,8 @@ class DockerDeploymentError(Exception):
 class Docker_Sites(multi.Thread):
     Wordpress = 1
     Joomla = 2
+    N8N = 3
+    Hermes = 4
 
     # Error codes
     ERROR_DOCKER_NOT_INSTALLED = 'DOCKER_NOT_INSTALLED'
@@ -123,6 +159,8 @@ class Docker_Sites(multi.Thread):
                 self.SubmitDockersiteCreation()
             elif self.function_run == 'DeployN8NContainer':
                 self.DeployN8NContainer()
+            elif self.function_run == 'DeployHermesContainer':
+                self.DeployHermesContainer()
 
 
         except BaseException as msg:
@@ -291,7 +329,16 @@ extprocessor docker{port} {{
 
     @staticmethod
     def SetupN8NVhost(domain, port):
-        """Setup n8n vhost with proper proxy configuration for OpenLiteSpeed"""
+        """Backwards compatible name, kept because it is also called over the CLI."""
+        return Docker_Sites.SetupAppVhost(domain, port)
+
+    @staticmethod
+    def SetupAppVhost(domain, port):
+        """Point the domain vhost at the app container through the OpenLiteSpeed proxy.
+
+        Used by every proxied Docker app (n8n, Hermes), all of which need the same
+        websocket enabled proxy context and forwarded headers.
+        """
         try:
             vhost_path = f'/usr/local/lsws/conf/vhosts/{domain}/vhost.conf'
 
@@ -308,12 +355,12 @@ extprocessor docker{port} {{
                 logging.writeToFile("Context already exists, skipping...")
                 return True
 
-            # Add proxy context with proper headers for n8n
+            # Add proxy context with proper headers for the app container
             # NOTE: Do NOT include "RequestHeader set Origin" - OpenLiteSpeed cannot override
-            # browser Origin headers, which is why NODE_ENV=development is required
+            # browser Origin headers, which is why n8n needs NODE_ENV=development
             proxy_context = f'''
 
-# N8N Proxy Configuration
+# Docker App Proxy Configuration
 context / {{
   type                    proxy
   handler                 docker{port}
@@ -337,7 +384,7 @@ context / {{
             return True
             
         except Exception as e:
-            logging.writeToFile(f'Error setting up n8n vhost: {str(e)}')
+            logging.writeToFile(f'Error setting up app vhost: {str(e)}')
             return False
     
     @staticmethod
@@ -587,6 +634,13 @@ services:
             WPusername = self.data['WPusername']
             WPpasswd = self.data['WPpasswd']
             externalApp = self.data['externalApp']
+            App = self.data.get('App')
+
+            if App not in DOCKER_APPS:
+                logging.statusWriter(self.JobID, f'Unknown application: {App}. [404]')
+                return 0
+
+            AppMeta = DOCKER_APPS[App]
 
             currentTemp = tempStatusPath
 
@@ -682,25 +736,23 @@ services:
                 "adminEmail": WPemal,
                 "htaccessPath": f'/home/{Domain}/public_html/.htaccess',
                 "externalApp": webobj.externalApp,
-                "docRoot": f"/home/{Domain}"
+                "docRoot": f"/home/{Domain}",
+                "dashboardSecret": randomPassword.generate_pass(32),
+                "App": App
             }
 
             dockersiteobj = DockerSites(
                 admin=webobj, ComposePath=f"/home/{Domain}/docker-compose.yml",
                 SitePath=f'/home/{Domain}/public_html/wpdocker',
-                MySQLPath=f'/home/{Domain}/public_html/sqldocker', SiteType=Docker_Sites.Wordpress, MySQLDBName=dbname,
+                MySQLPath=f'/home/{Domain}/public_html/sqldocker', SiteType=AppMeta['siteType'], MySQLDBName=dbname,
                 MySQLDBNUser=dbusername, CPUsMySQL=MysqlCPU, MemoryMySQL=MYsqlRam, port=port, CPUsSite=SiteCPU,
                 MemorySite=SiteRam,
                 SiteName=sitename, finalURL=Domain, blogTitle=sitename, adminUser=WPusername, adminEmail=WPemal
             )
             dockersiteobj.save()
 
-            if self.data['App'] == 'WordPress':
-                background = Docker_Sites('DeployWPContainer', f_data)
-                background.start()
-            elif self.data['App'] == 'n8n':
-                background = Docker_Sites('DeployN8NContainer', f_data)
-                background.start()
+            background = Docker_Sites(AppMeta['deploy'], f_data)
+            background.start()
 
         except BaseException as msg:
             logging.writeToFile("Error Submit Docker site Creation ....... %s" % str(msg))
@@ -1107,17 +1159,17 @@ services:
             logging.writeToFile(f'Error finding container: {str(e)}')
             return None
 
-    def monitor_deployment(self):
+    def monitor_deployment(self, requiresDB=True):
         try:
             # Find containers dynamically using fuzzy matching
             n8n_container = self.find_container_by_service(self.data['ServiceName'])
-            db_container = self.find_container_by_service(f"{self.data['ServiceName']}-db")
+            db_container = self.find_container_by_service(f"{self.data['ServiceName']}-db") if requiresDB else None
 
-            if not n8n_container or not db_container:
-                raise DockerDeploymentError("Could not find n8n or database containers")
+            if not n8n_container or (requiresDB and not db_container):
+                raise DockerDeploymentError("Could not find app or database containers")
 
             n8n_container_name = n8n_container.name
-            db_container_name = db_container.name
+            db_container_name = db_container.name if db_container else ''
 
             logging.writeToFile(f'Monitoring containers: {n8n_container_name} and {db_container_name}')
 
@@ -1135,9 +1187,9 @@ services:
             # Wait for database to be ready
             max_retries = 30
             retry_count = 0
-            db_ready = False
+            db_ready = not requiresDB
 
-            while retry_count < max_retries:
+            while requiresDB and retry_count < max_retries:
                 # Check if database container is ready
                 command = f"docker exec {db_container_name} pg_isready -U postgres"
                 result, output = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -1258,9 +1310,16 @@ services:
                 logging.writeToFile(f'Error logging metrics: {str(e)}')
 
     def DeployN8NContainer(self):
+        return self.DeployComposeApp('n8n')
+
+    def DeployHermesContainer(self):
+        return self.DeployComposeApp('Hermes')
+
+    def DeployComposeApp(self, app='n8n'):
         """
-        Main deployment method with error handling
+        Main deployment method with error handling, shared by every compose based app
         """
+        meta = DOCKER_APPS[app]
         max_retries = 3
         current_try = 0
         
@@ -1296,7 +1355,7 @@ services:
 
                 # Generate and write docker-compose file
                 self.data['ServiceName'] = self.data["SiteName"].replace(' ', '-')
-                compose_config = self.generate_compose_config()
+                compose_config = getattr(self, meta['compose'])()
                 
                 TempCompose = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
                 with open(TempCompose, 'w') as f:
@@ -1325,8 +1384,9 @@ services:
 
                 # Wait for containers to be healthy
                 time.sleep(25)
-                if not self.check_container_health(f"{self.data['ServiceName']}-db") or \
-                   not self.check_container_health(self.data['ServiceName']):
+                if meta['requiresDB'] and not self.check_container_health(f"{self.data['ServiceName']}-db"):
+                    raise DockerDeploymentError("Containers failed to reach healthy state", self.ERROR_CONTAINER_FAILED)
+                if not self.check_container_health(self.data['ServiceName']):
                     raise DockerDeploymentError("Containers failed to reach healthy state", self.ERROR_CONTAINER_FAILED)
                 logging.statusWriter(self.JobID, 'Containers healthy...,70')
 
@@ -1336,18 +1396,18 @@ services:
                 ProcessUtilities.executioner(execPath)
                 logging.statusWriter(self.JobID, 'Proxy configured...,80')
 
-                # Setup n8n vhost configuration instead of htaccess
+                # Setup the app vhost configuration instead of htaccess
                 execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
-                execPath = execPath + f" SetupN8NVhost --domain {self.data['finalURL']} --port {self.data['port']}"
+                execPath = execPath + f" SetupAppVhost --domain {self.data['finalURL']} --port {self.data['port']}"
                 ProcessUtilities.executioner(execPath)
-                logging.statusWriter(self.JobID, 'N8N vhost configured...,90')
+                logging.statusWriter(self.JobID, f'{app} vhost configured...,90')
 
                 # Restart web server
                 from plogical.installUtilities import installUtilities
                 installUtilities.reStartLiteSpeedSocket()
 
                 # Monitor deployment
-                metrics = self.monitor_deployment()
+                metrics = self.monitor_deployment(meta['requiresDB'])
                 self.log_deployment_metrics(metrics)
 
                 logging.statusWriter(self.JobID, 'Deployment completed successfully. [200]')
@@ -1506,6 +1566,80 @@ networks:
     driver: bridge
     name: {self.data['ServiceName']}_network'''
 
+    def generate_hermes_compose_config(self):
+        """
+        Generate the docker-compose configuration for Hermes Agent.
+
+        Hermes keeps all of its state in /opt/data and needs no database container.
+        The dashboard is the only surface we expose, and it is published on loopback
+        only because OpenLiteSpeed reaches the container over 127.0.0.1 (see SetupProxy).
+        A non loopback bind inside the container engages the Hermes auth gate, so the
+        basic auth credentials below are mandatory, without them Hermes refuses to start.
+        """
+
+        hermes_config = {
+            'image': 'nousresearch/hermes-agent:latest',
+            'healthcheck': {
+                ## Rendered as a YAML block sequence below, the probe carries both quote
+                ## styles and would break a flow sequence.
+                'test': ["CMD-SHELL",
+                         "python3 -c \"import socket; socket.create_connection(('127.0.0.1', 9119), 5).close()\""],
+                'interval': '20s',
+                'timeout': '10s',
+                'retries': 3,
+                'start_period': '60s'
+            },
+            'environment': {
+                'HERMES_DASHBOARD': '1',
+                'HERMES_DASHBOARD_HOST': '0.0.0.0',
+                'HERMES_DASHBOARD_PORT': '9119',
+                'HERMES_DASHBOARD_PUBLIC_URL': f"https://{self.data['finalURL']}",
+                'HERMES_DASHBOARD_BASIC_AUTH_USERNAME': self.data['adminUser'],
+                'HERMES_DASHBOARD_BASIC_AUTH_PASSWORD': self.data['adminPassword'],
+                'HERMES_DASHBOARD_BASIC_AUTH_SECRET': self.data['dashboardSecret'],
+            }
+        }
+
+        return f'''version: '3.8'
+
+services:
+  '{self.data['ServiceName']}':
+    image: {hermes_config['image']}
+    restart: always
+    command: gateway run
+    healthcheck:
+      test:
+        - {hermes_config['healthcheck']['test'][0]}
+        - {hermes_config['healthcheck']['test'][1]}
+      interval: {hermes_config['healthcheck']['interval']}
+      timeout: {hermes_config['healthcheck']['timeout']}
+      retries: {hermes_config['healthcheck']['retries']}
+      start_period: {hermes_config['healthcheck']['start_period']}
+    environment:
+      - HERMES_DASHBOARD={hermes_config['environment']['HERMES_DASHBOARD']}
+      - HERMES_DASHBOARD_HOST={hermes_config['environment']['HERMES_DASHBOARD_HOST']}
+      - HERMES_DASHBOARD_PORT={hermes_config['environment']['HERMES_DASHBOARD_PORT']}
+      - HERMES_DASHBOARD_PUBLIC_URL={hermes_config['environment']['HERMES_DASHBOARD_PUBLIC_URL']}
+      - HERMES_DASHBOARD_BASIC_AUTH_USERNAME={hermes_config['environment']['HERMES_DASHBOARD_BASIC_AUTH_USERNAME']}
+      - HERMES_DASHBOARD_BASIC_AUTH_PASSWORD={hermes_config['environment']['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD']}
+      - HERMES_DASHBOARD_BASIC_AUTH_SECRET={hermes_config['environment']['HERMES_DASHBOARD_BASIC_AUTH_SECRET']}
+    ports:
+      - "127.0.0.1:{self.data['port']}:9119"
+    volumes:
+      - "/home/docker/{self.data['finalURL']}/data:/opt/data"
+    networks:
+      - hermes-network
+    deploy:
+      resources:
+        limits:
+          cpus: '{self.data["CPUsSite"]}'
+          memory: {self.data["MemorySite"]}M
+
+networks:
+  hermes-network:
+    driver: bridge
+    name: {self.data['ServiceName']}_network'''
+
 def Main():
     try:
 
@@ -1522,8 +1656,8 @@ def Main():
             Docker_Sites.SetupProxy(args.port)
         elif args.function == 'SetupHTAccess':
             Docker_Sites.SetupHTAccess(args.port, args.htaccess)
-        elif args.function == 'SetupN8NVhost':
-            Docker_Sites.SetupN8NVhost(args.domain, args.port)
+        elif args.function == 'SetupN8NVhost' or args.function == 'SetupAppVhost':
+            Docker_Sites.SetupAppVhost(args.domain, args.port)
         elif args.function == 'DeployWPDocker':
             # Takes
             # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,

@@ -6,7 +6,7 @@ import sys
 import django
 
 from databases.models import Databases
-from plogical.DockerSites import Docker_Sites
+from plogical.DockerSites import Docker_Sites, DOCKER_APPS
 from plogical.httpProc import httpProc
 
 sys.path.append('/usr/local/CyberCP')
@@ -7982,13 +7982,27 @@ StrictHostKeyChecking no
             WPemal = data['WPemal']
             WPpasswd = data['WPpasswd']
 
-            if int(MYsqlRam) < 256:
+            if App not in DOCKER_APPS:
+                final_dic = {'status': 0, 'error_message': f'Unknown application: {App}.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            AppMeta = DOCKER_APPS[App]
+
+            ## Apps without their own database container ignore the MySQL resources entirely.
+
+            if AppMeta['requiresDB'] and int(MYsqlRam) < 256:
                 final_dic = {'status': 0, 'error_message': 'Minimum MySQL ram should be 256MB.'}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-            if int(SiteRam) < 256:
-                final_dic = {'status': 0, 'error_message': 'Minimum site ram should be 256MB.'}
+            if not AppMeta['requiresDB']:
+                MysqlCPU = 0
+                MYsqlRam = 0
+
+            if int(SiteRam) < AppMeta['minSiteRam']:
+                final_dic = {'status': 0,
+                             'error_message': f"Minimum site ram for {App} should be {AppMeta['minSiteRam']}MB."}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 

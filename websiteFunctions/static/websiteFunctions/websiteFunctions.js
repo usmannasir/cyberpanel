@@ -17904,6 +17904,17 @@ app.controller('createDockerSite', function ($scope, $http, $timeout) {
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
+    $scope.App = 'n8n';
+    $scope.CPUMysql = 1;
+    $scope.rammysql = 512;
+    $scope.CPUSite = 1;
+    $scope.RamSite = 512;
+
+    // Hermes runs Python and Node inside one container and keeps long lived sessions,
+    // 512MB is not enough for it, so raise the default when it is picked.
+    $scope.appChanged = function () {
+        $scope.RamSite = $scope.App === 'Hermes' ? 2048 : 512;
+    };
 
     var statusFile;
 
