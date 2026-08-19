@@ -8,13 +8,15 @@ Vagrant.configure('2') do |config|
   config.ssh.insert_key = true
   config.ssh.keep_alive = true
   config.vm.boot_timeout = 900
+  config.vm.synced_folder '.', '/vagrant', disabled: true
 
   config.vm.provider 'hyperv' do |hv|
     hv.memory = 4096
     hv.cpus = 2
     hv.enable_virtualization_extensions = true
-    hv.switch_name = 'Default Switch'
   end
+
+  config.vm.network 'public_network', bridge: 'Default Switch'
 
   config.vm.define 'cp-fresh', autostart: false do |fresh|
     fresh.vm.hostname = 'cp-fresh-hv.local'

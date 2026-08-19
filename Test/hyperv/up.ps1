@@ -67,7 +67,8 @@ switch ($Action) {
     'smoke-fresh' {
         if ($Provider -eq 'vagrant') {
             $env:VAGRANT_CWD = $PSScriptRoot
-            vagrant ssh cp-fresh -c 'bash /vagrant/smoke.sh'
+            $smoke = Join-Path $PSScriptRoot 'smoke.sh'
+            Get-Content -Raw $smoke | vagrant ssh cp-fresh -c 'tr -d "\r" | bash'
             Write-Host 'Panel URL: https://127.0.0.1:18090  password: TestPass12'
             return
         }
@@ -81,7 +82,8 @@ switch ($Action) {
     'smoke-upgrade' {
         if ($Provider -eq 'vagrant') {
             $env:VAGRANT_CWD = $PSScriptRoot
-            vagrant ssh cp-upgrade -c 'bash /vagrant/smoke.sh'
+            $smoke = Join-Path $PSScriptRoot 'smoke.sh'
+            Get-Content -Raw $smoke | vagrant ssh cp-upgrade -c 'tr -d "\r" | bash'
             Write-Host 'Panel URL: https://127.0.0.1:28090  password: TestPass12'
             return
         }
