@@ -4,6 +4,24 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.3 (build 3) — 2026-08-20
+
+Security hotfix for API authentication and account authorization.
+
+### Security
+- Placeholder and empty API tokens are rejected across all token-authenticated
+  endpoints. API-created accounts now receive cryptographically random tokens,
+  and upgrade rotates invalid tokens on enabled accounts.
+- Cloud session access now uses uniform authentication failures, rejects
+  suspended accounts, rate-limits failed attempts, rotates the session key, and
+  prevents credentials from being forwarded in referrer headers.
+- API-created site owners and user-management flows now evaluate the effective
+  ACL configuration, preventing non-administrators from assigning an
+  administrator-level custom ACL. Existing custom ACL records are synchronized
+  during upgrade.
+- Debug logging for website-creation API calls no longer records request
+  payloads containing account credentials.
+
 ## v3.0.2 (build 2) — 2026-08-18
 
 Adds Hermes Agent as a one-click Docker application and consolidates the fixes
