@@ -13,7 +13,7 @@ AlmaLinux VPS cannot run these VMs. Clone master3395/cyberpanel, open it in Curs
 
 Default box is AlmaLinux 9 (`almalinux/9`). AlmaLinux 10 uses `-Os 10` (`almalinux/10`). Run one OS at a time. Destroy the other OS VMs first so the 4 GB RAM budget is free.
 
-AlmaLinux 10 and LiteSpeed `lsphp*.el10.x86_64` need x86-64-v3 (AVX2). On Windows, VirtualBox often runs under the Hypervisor (NEM, `unrestricted guest: no`) and masks AVX2. Then `almalinux/10` dies at `/init` with `CPU does not support x86-64-v3`. The v2 box (`almalinux/10-x86_64_v2`) boots, but `lsphp85` then fails with `CPU ISA level is lower than required`, so it is not a full panel smoke. Run AlmaLinux 10 smokes on KVM, a VPS, or VirtualBox with hardware VT-x (Hyper-V / Memory Integrity off).
+AlmaLinux 10 and LiteSpeed `lsphp*.el10.x86_64` need x86-64-v3 (AVX2). On Windows, VirtualBox often runs under the Hypervisor (NEM, `unrestricted guest: no`) and masks AVX2. Then `almalinux/10` dies at `/init` with `CPU does not support x86-64-v3`. The v2 box (`almalinux/10-x86_64_v2`) boots, but `lsphp85` then fails with `CPU ISA level is lower than required`, so it is not a full panel smoke. **Prefer Hyper-V native smoke:** `Test/hyperv/` and `to-do/HYPERV-SMOKE.md`. Or use KVM/VPS, or VirtualBox with Hyper-V / Memory Integrity off.
 
 ## Commands
 

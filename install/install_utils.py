@@ -963,6 +963,75 @@ def is_rhel_el10():
     return rhel_major_version() >= 10
 
 
+def cpu_supports_x86_64_v3():
+    """
+    True when the guest CPU exposes AVX2 (x86-64-v3 baseline for AlmaLinux 10
+    and LiteSpeed lsphp*.el10.x86_64).
+    """
+    try:
+        with open('/proc/cpuinfo', 'r') as f:
+            if 'avx2' in f.read().lower():
+                return True
+    except (OSError, IOError, UnicodeError):
+        pass
+    return False
+
+
+def el10_cpu_preflight(log=1, fatal=False):
+    """
+    Warn or abort when EL10 x86_64 lacks AVX2 (common under VirtualBox NEM).
+    Returns True when check passes or OS/arch does not require AVX2.
+    """
+    if not is_rhel_el10():
+        return True
+    try:
+        machine = subprocess.run(
+            ['uname', '-m'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        machine = ''
+    if machine == 'aarch64':
+        return True
+    if cpu_supports_x86_64_v3():
+        return True
+
+    message = (
+        'AlmaLinux/RHEL 10 and LiteSpeed lsphp*.el10 require x86-64-v3 (AVX2). '
+        'This CPU or hypervisor does not expose AVX2. Use KVM, a VPS, or disable '
+        'Windows Hyper-V / VirtualBox NEM so AVX2 reaches the guest.'
+    )
+    stdOut('[ERROR] ' + message, log)
+    if fatal:
+        sys.exit(os.EX_UNAVAILABLE)
+    return False
+
+
+def verify_lsphp_binary_runnable(php_path, log=1):
+    """Run php --version; detect ISA-level failures on EL10 lsphp binaries."""
+    if not php_path or not exists(php_path):
+        return False
+    try:
+        result = subprocess.run(
+            [php_path, '--version'],
+            capture_output=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if result.returncode == 0:
+        return True
+    try:
+        err = (result.stderr or b'').decode('utf-8', 'replace').lower()
+    except (UnicodeError, AttributeError):
+        err = ''
+    if 'isa level' in err or 'x86-64-v3' in err:
+        el10_cpu_preflight(log, fatal=False)
+    return False
+
+
 LITESPEED_REPO_RPM_URL = (
     'http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
 )
@@ -1648,3 +1717,83 @@ def ensure_mysqlclient_for_python(python_exe=None, log=1):
   if not ok:
     writeToFile('WARNING: mysqlclient still not importable for %s' % python_exe)
   return ok
+
+
+def is_container_runtime():
+  """True when CyberPanel runs inside Docker/Podman."""
+  if os.environ.get('CYBERPANEL_CONTAINER') == '1':
+    return True
+  for path in ('/run/.containerenv', '/.dockerenv'):
+    if os.path.isfile(path):
+      return True
+  return False
+
+
+def _env_truthy(name):
+  return os.environ.get(name, '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def resolve_install_mode_from_env():
+  """
+  Map CYBERPANEL_* env vars to installer ON/OFF flags.
+  Returns dict: postfix, powerdns, ftp (values ON or OFF), mode (full|minimal|partial).
+  """
+  if _env_truthy('CYBERPANEL_FULL_INSTALL'):
+    return {
+        'postfix': 'ON',
+        'powerdns': 'ON',
+        'ftp': 'ON',
+        'mode': 'full',
+    }
+
+  if _env_truthy('CYBERPANEL_MINIMAL'):
+    flags = {
+        'postfix': 'OFF',
+        'powerdns': 'OFF',
+        'ftp': 'OFF',
+        'mode': 'minimal',
+    }
+    if _env_truthy('CYBERPANEL_ENABLE_POSTFIX'):
+      flags['postfix'] = 'ON'
+    if _env_truthy('CYBERPANEL_ENABLE_POWERDNS'):
+      flags['powerdns'] = 'ON'
+    if _env_truthy('CYBERPANEL_ENABLE_PUREFTPD'):
+      flags['ftp'] = 'ON'
+    if flags['postfix'] == 'ON' or flags['powerdns'] == 'ON' or flags['ftp'] == 'ON':
+      flags['mode'] = 'partial'
+    return flags
+
+  return {
+      'postfix': 'ON',
+      'powerdns': 'ON',
+      'ftp': 'ON',
+      'mode': 'full',
+  }
+
+
+def container_prepare_dns(powerdns_on):
+  """Stop stub resolver when PowerDNS will bind port 53 in a container."""
+  if not is_container_runtime():
+    return
+  if str(powerdns_on).upper() != 'ON':
+    return
+  writeToFile('Container mode: preparing DNS (PowerDNS ON)')
+  for cmd in (
+      'systemctl stop systemd-resolved 2>/dev/null || true',
+      'systemctl disable systemd-resolved 2>/dev/null || true',
+      'mkdir -p /etc/systemd/resolved.conf.d',
+  ):
+    subprocess.run(cmd, shell=True, capture_output=True, timeout=60)
+  resolved_conf = '/etc/systemd/resolved.conf'
+  try:
+    with open(resolved_conf, 'w', encoding='utf-8') as fh:
+      fh.write('[Resolve]\nDNS=1.1.1.1 8.8.8.8\nFallbackDNS=1.1.1.1 8.8.8.8\nDNSStubListener=no\n')
+  except OSError as exc:
+    writeToFile('Container DNS prep warning: %s' % exc)
+
+
+def container_prepare_hostname(hostname):
+  if not is_container_runtime() or not hostname:
+    return
+  writeToFile('Container mode: setting hostname to %s' % hostname)
+  subprocess.run('hostnamectl set-hostname %s' % shlex.quote(hostname), shell=True, capture_output=True, timeout=30)

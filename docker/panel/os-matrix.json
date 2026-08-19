@@ -1,0 +1,17 @@
+[
+  {"tag": "almalinux8", "base": "almalinux:8", "family": "rhel"},
+  {"tag": "almalinux9", "base": "almalinux:9", "family": "rhel"},
+  {"tag": "almalinux10", "base": "almalinux:10", "family": "rhel"},
+  {"tag": "rockylinux8", "base": "rockylinux:8", "family": "rhel"},
+  {"tag": "rockylinux9", "base": "rockylinux:9", "family": "rhel"},
+  {"tag": "centos-stream9", "base": "quay.io/centos/centos:stream9", "family": "rhel"},
+  {"tag": "rhel8", "base": "registry.access.redhat.com/ubi8/ubi", "family": "rhel"},
+  {"tag": "rhel9", "base": "registry.access.redhat.com/ubi9/ubi", "family": "rhel"},
+  {"tag": "ubuntu2204", "base": "ubuntu:22.04", "family": "debian"},
+  {"tag": "ubuntu2404", "base": "ubuntu:24.04", "family": "debian"},
+  {"tag": "debian11", "base": "debian:11", "family": "debian"},
+  {"tag": "debian12", "base": "debian:12", "family": "debian"},
+  {"tag": "debian13", "base": "debian:13", "family": "debian"},
+  {"tag": "openeuler2003", "base": "openeuler/openeuler:20.03-lts-sp3", "family": "rhel"},
+  {"tag": "openeuler2203", "base": "openeuler/openeuler:22.03-lts-sp3", "family": "rhel"}
+]

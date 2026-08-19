@@ -1,0 +1,7 @@
+.git
+test/virtualbox/.vagrant
+**/__pycache__
+**/*.pyc
+*.log
+.env
+config.php

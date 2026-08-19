@@ -292,3 +292,16 @@ CyberPanel_Final_Upgrade_Verification() {
   fi
   export CYBERPANEL_UPGRADE_VERIFY_OK
 }
+
+is_container_upgrade() {
+  [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]] \
+    || [[ -f /run/.containerenv ]] \
+    || [[ -f /.dockerenv ]] \
+    || [[ -f /etc/cyberpanel/container.json ]]
+}
+
+container_upgrade_log() {
+  if is_container_upgrade; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Container upgrade mode active" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+}

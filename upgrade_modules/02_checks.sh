@@ -98,6 +98,15 @@ if [[ "$Server_OS_Version" = "7" ]]; then
   exit 1
 fi
 
+if [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
+  if ! grep -q avx2 /proc/cpuinfo 2>/dev/null; then
+    echo -e "\nAlmaLinux 10 and LiteSpeed lsphp*.el10 require x86-64-v3 (AVX2)."
+    echo -e "This CPU or hypervisor does not expose AVX2."
+    echo -e "Use KVM, a VPS, or disable Windows Hyper-V / VirtualBox NEM so AVX2 reaches the guest.\n"
+    exit 1
+  fi
+fi
+
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]]; then
   # Keep AlmaLinux9 separate for dnf package management
   if [[ "$Server_OS" != "AlmaLinux9" ]]; then

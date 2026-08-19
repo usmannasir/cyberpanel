@@ -239,14 +239,38 @@ CyberPanel_Print_MariaDB_Upgrade_Banner() {
   echo "+--------------------------------------------------------------+"
 }
 
-# EL8/EL9/EL10: full MariaDB upgrade path using MariaDB.org repo (called from Pre_Upgrade_Setup_Repository).
+# AlmaLinux/RHEL 10: AppStream MariaDB only (MariaDB.org el9 RPMs need RHEL 9 boost).
+CyberPanel_EL10_AppStream_MariaDB_Install() {
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/RHEL 10: using AppStream MariaDB (MariaDB.org el9 RPMs are incompatible)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Maybe_Backup_MariaDB_Before_Upgrade
+  CyberPanel_Print_MariaDB_Upgrade_Banner | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+  rm -f /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo 2>/dev/null || true
+
+  dnf install -y mariadb-server mariadb mariadb-backup mariadb-devel 2>/dev/null || \
+    dnf install -y --nobest mariadb-server mariadb mariadb-backup mariadb-devel
+
+  CyberPanel_Ensure_Local_Mariadb_Client_Cnf
+  CyberPanel_Post_Install_Mariadb_Upgrade_Tool
+
+  if [[ "$Migrate_MariaDB_To_UTF8_Requested" = "yes" ]]; then
+    Migrate_MariaDB_To_UTF8
+  fi
+}
+
+# EL8/EL9: full MariaDB upgrade path using MariaDB.org repo (called from Pre_Upgrade_Setup_Repository).
+# EL10 uses CyberPanel_EL10_AppStream_MariaDB_Install instead.
 CyberPanel_EL89_Apply_MariaDB_Repository_And_Packages() {
   local MARIADB_REPO=""
+  if [[ "$Server_OS_Version" = "10" ]]; then
+    CyberPanel_EL10_AppStream_MariaDB_Install
+    return 0
+  fi
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repository and upgrading MariaDB..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   Maybe_Backup_MariaDB_Before_Upgrade
   CyberPanel_Print_MariaDB_Upgrade_Banner | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-  if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+  if [[ "$Server_OS_Version" = "9" ]]; then
     MARIADB_REPO="rhel9-amd64"
   else
     MARIADB_REPO="rhel8-amd64"

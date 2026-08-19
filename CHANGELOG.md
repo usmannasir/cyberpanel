@@ -38,6 +38,15 @@ full `v2.5.5-dev` merge.
   MariaDB (not MariaDB.org el9 RPMs), and an EL10-safe LiteSpeed GPG import.
   Full AlmaLinux 10 panel smoke needs x86-64-v3 (LiteSpeed lsphp el10).
   Windows VirtualBox NEM masks AVX2, so that smoke belongs on KVM or a VPS.
+- **Docker panel image:** `docker/panel/` builds multi-OS images (`master3395/cyberpanel:<os>`)
+  with full or minimal install via `CYBERPANEL_MINIMAL=1`. Container mode in
+  `cyberpanel.sh`, `install/install_utils.py`, and `install/container.py`.
+  Docs: `to-do/DOCKER-PANEL.md`. Smoke harness: `Test/docker/`.
+- **Hyper-V smoke:** AlmaLinux 10 Generic Cloud harness under `test/hyperv/` for
+  Windows hosts with Hyper-V enabled (AVX2 available to the guest). See
+  `to-do/HYPERV-SMOKE.md`.
+- EL10 upgrade path: EPEL 10, remi-release-10, AppStream MariaDB (not MariaDB.org
+  el9 RPMs), AVX2 preflight in installer/upgrade, and runnable lsphp binary checks.
 - `cyberpanel_upgrade.sh` installed under `/usr/local` always downloads
   `upgrade_modules/` for the target branch instead of sourcing the old
   tree's modules (which skipped `upgrade.py` and left the stock build).

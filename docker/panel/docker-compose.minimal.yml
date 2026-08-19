@@ -1,0 +1,16 @@
+services:
+  cyberpanel:
+    extends:
+      file: docker-compose.yml
+      service: cyberpanel
+    environment:
+      CYBERPANEL_MINIMAL: "1"
+      CYBERPANEL_FULL_INSTALL: "0"
+      CYBERPANEL_ENABLE_POWERDNS: "0"
+      CYBERPANEL_ENABLE_POSTFIX: "0"
+      CYBERPANEL_ENABLE_PUREFTPD: "0"
+    ports:
+      - "8090:8090"
+      - "80:80"
+      - "443:443"
+      - "7080:7080"

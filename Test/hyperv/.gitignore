@@ -1,0 +1,7 @@
+.cache/
+tools/
+*.qcow2
+*.vhdx
+*.iso
+ssh/
+*.log

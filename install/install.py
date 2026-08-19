@@ -6170,6 +6170,11 @@ milter_default_action = accept
             for php_ver in php_versions:
                 candidate_path = f"/usr/local/lsws/lsphp{php_ver}/bin/php"
                 if os.path.exists(candidate_path):
+                    if not install_utils.verify_lsphp_binary_runnable(candidate_path, log=0):
+                        logging.InstallLog.writeToFile(
+                            f"[setupPHPSymlink] Skipping PHP {php_ver}: binary not runnable on this CPU ({candidate_path})"
+                        )
+                        continue
                     php_symlink_source = candidate_path
                     logging.InstallLog.writeToFile(f"[setupPHPSymlink] Found PHP {php_ver} binary: {candidate_path}")
                     break
@@ -6180,14 +6185,15 @@ milter_default_action = accept
                 logging.InstallLog.writeToFile(f"[setupPHPSymlink] PHP symlink updated to {php_symlink_source} successfully.")
                 
                 # Verify symlink works
-                verify_command = f'{php_symlink_source} --version'
-                result = preFlightsChecks.call(verify_command, self.distro, verify_command, verify_command, 1, 1, os.EX_OSERR)
-                if result == 1:
+                if install_utils.verify_lsphp_binary_runnable(php_symlink_source, log=1):
                     logging.InstallLog.writeToFile("[setupPHPSymlink] PHP symlink verification successful")
                 else:
-                    logging.InstallLog.writeToFile("[WARNING] PHP symlink verification failed")
+                    logging.InstallLog.writeToFile("[ERROR] PHP symlink verification failed (CPU may lack x86-64-v3 / AVX2 on AlmaLinux 10)")
+                    if install_utils.is_rhel_el10():
+                        install_utils.el10_cpu_preflight(log=1, fatal=False)
+                    return 0
             else:
-                logging.InstallLog.writeToFile("[ERROR] No PHP versions found for symlink creation")
+                logging.InstallLog.writeToFile("[ERROR] No runnable PHP versions found for symlink creation")
                 # List available PHP versions for debugging
                 command = 'find /usr/local/lsws -name "lsphp*" -type d 2>/dev/null || true'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -7149,6 +7155,7 @@ def main():
     parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 10.3-10.11, 11.0-11.8, 12.0-12.x (default 11.8)')
     parser.add_argument('--phpmyadmin-version', default='', help='phpMyAdmin version (e.g. 5.2.3); empty = latest from API')
     parser.add_argument('--snappymail-version', default='', help='SnappyMail version (e.g. 2.38.2); empty = latest from API')
+    parser.add_argument('--container', default='OFF', help='Container runtime install (ON/OFF).')
 
     args = parser.parse_args()
     # Normalize and validate MariaDB version choice (default 11.8)
@@ -7162,6 +7169,16 @@ def main():
 
     logging.InstallLog.ServerIP = args.publicip
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
+    if str(getattr(args, 'container', 'OFF')).upper() == 'ON' or install_utils.is_container_runtime():
+        os.environ['CYBERPANEL_CONTAINER'] = '1'
+        mode = install_utils.resolve_install_mode_from_env()
+        install_utils.container_prepare_hostname(os.environ.get('CYBERPANEL_HOSTNAME', ''))
+        install_utils.container_prepare_dns(mode.get('powerdns', 'ON'))
+        logging.InstallLog.writeToFile(
+            "Container install mode: %s (postfix=%s powerdns=%s ftp=%s)"
+            % (mode.get('mode'), mode.get('postfix'), mode.get('powerdns'), mode.get('ftp'))
+        )
+    install_utils.el10_cpu_preflight(log=1, fatal=True)
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
     # Initialize serial variable
@@ -7511,6 +7528,21 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     # Start services that were enabled but not started during installation
     # These services require database tables that are created by Django migrations
     checks.startDeferredServices()
+
+    if str(getattr(args, 'container', 'OFF')).upper() == 'ON' or install_utils.is_container_runtime():
+        try:
+            import container as container_mod
+            postfix_flag = (args.postfix or 'ON').upper()
+            powerdns_flag = (args.powerdns or 'ON').upper()
+            ftp_flag = (args.ftp or 'ON').upper()
+            container_mod.finalize_container_install(
+                postfix_flag,
+                powerdns_flag,
+                ftp_flag,
+                log_fn=lambda msg: logging.InstallLog.writeToFile(msg),
+            )
+        except Exception as exc:
+            logging.InstallLog.writeToFile('[WARN] container finalize: %s' % str(exc))
 
     # Installation summary
     show_installation_summary()

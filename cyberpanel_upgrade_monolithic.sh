@@ -685,7 +685,7 @@ EOF
       Check_Return "yum repo" "no_exit"
 
     # Determine appropriate MariaDB repository based on OS version
-    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
+    if [[ "$Server_OS_Version" = "9" ]] ; then
         MARIADB_REPO="rhel9-amd64"
     else
         MARIADB_REPO="centos7-amd64"
@@ -761,19 +761,39 @@ EOF
   fi
 
   dnf install epel-release -y 2>/dev/null || {
-    # Fallback when appstream was broken or epel-release not in repo (e.g. AlmaLinux 9)
     if [[ "$Server_OS_Version" = "9" ]]; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL 9 from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm 2>/dev/null || true
+    elif [[ "$Server_OS_Version" = "10" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL 10 from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm 2>/dev/null || true
     fi
   }
 
-  # MariaDB repo for EL8/EL9: any version (repo path uses major.minor: 10.11, 11.8, 12.1, 12.2, 12.3, etc.)
-  if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+  if [[ "$Server_OS_Version" = "10" ]]; then
+    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm 2>/dev/null || true
+  elif [[ "$Server_OS_Version" = "9" ]]; then
+    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm 2>/dev/null || true
+  fi
+
+  # MariaDB: MariaDB.org repo on EL8/EL9; AppStream on EL10.
+  if [[ "$Server_OS_Version" = "10" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/RHEL 10: using AppStream MariaDB (MariaDB.org el9 RPMs are incompatible)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    Maybe_Backup_MariaDB_Before_Upgrade
+    rm -f /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo 2>/dev/null || true
+    dnf install -y mariadb-server mariadb mariadb-backup mariadb-devel 2>/dev/null || \
+      dnf install -y --nobest mariadb-server mariadb mariadb-backup mariadb-devel
+    mkdir -p /etc/my.cnf.d
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    systemctl restart mariadb 2>/dev/null || true
+    if [[ "$Migrate_MariaDB_To_UTF8_Requested" = "yes" ]]; then
+      Migrate_MariaDB_To_UTF8
+    fi
+  elif [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repository and upgrading MariaDB..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     Maybe_Backup_MariaDB_Before_Upgrade
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Writing MariaDB $MARIADB_VER_REPO repo and installing/upgrading packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+    if [[ "$Server_OS_Version" = "9" ]]; then
       MARIADB_REPO="rhel9-amd64"
     else
       MARIADB_REPO="rhel8-amd64"
@@ -874,9 +894,9 @@ EOF
     fi
   fi
 
-  # AlmaLinux 9 specific package installation
+  # AlmaLinux 9/10 specific package installation
   if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages (Development Tools, PHP deps, MariaDB)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux ${Server_OS_Version} specific packages (Development Tools, PHP deps, MariaDB)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     
     # Install essential build tools
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: dnf groupinstall -y 'Development Tools' (may take a few minutes)..." | tee -a /var/log/cyberpanel_upgrade_debug.log

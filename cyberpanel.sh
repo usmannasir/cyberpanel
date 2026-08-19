@@ -589,6 +589,28 @@ fi
 log_function_end "Check_OS"
 }
 
+Check_CPU_ISA() {
+log_function_start "Check_CPU_ISA"
+if [[ "$Server_OS_Version" != "10" ]]; then
+  log_function_end "Check_CPU_ISA"
+  return 0
+fi
+if uname -m | grep -q 'aarch64'; then
+  log_function_end "Check_CPU_ISA"
+  return 0
+fi
+if grep -q avx2 /proc/cpuinfo 2>/dev/null; then
+  log_info "CPU exposes AVX2 (x86-64-v3); AlmaLinux 10 LiteSpeed PHP requirements met"
+  log_function_end "Check_CPU_ISA"
+  return 0
+fi
+log_error "AlmaLinux 10 and LiteSpeed lsphp*.el10 require x86-64-v3 (AVX2). This CPU or hypervisor does not expose AVX2."
+echo -e "\nAlmaLinux 10 and LiteSpeed lsphp require x86-64-v3 (AVX2).\n"
+echo -e "Use KVM, a VPS, or disable Windows Hyper-V / VirtualBox NEM so AVX2 reaches the guest.\n"
+log_function_end "Check_CPU_ISA" 1
+exit 1
+}
+
 Check_Virtualization() {
 log_function_start "Check_Virtualization"
 echo -e "Checking virtualization type..."
@@ -860,6 +882,64 @@ if [[ "$Debug" = "On" ]] ; then
 fi
 
 Debug_Log2 "Initialization completed..,2"
+}
+
+Apply_Container_Env() {
+log_function_start "Apply_Container_Env"
+if [[ -f /run/.containerenv ]] || [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]]; then
+  export CYBERPANEL_CONTAINER=1
+  Silent="On"
+  Server_Edition="OLS"
+  Memcached="Off"
+  Redis="Off"
+  Watchdog="On"
+
+  if [[ "${CYBERPANEL_FULL_INSTALL:-0}" = "1" ]]; then
+    CYBERPANEL_MINIMAL=0
+    Postfix_Switch="On"
+    PowerDNS_Switch="On"
+    PureFTPd_Switch="On"
+    log_info "Container full install mode (CYBERPANEL_FULL_INSTALL=1)"
+  elif [[ "${CYBERPANEL_MINIMAL:-0}" = "1" ]]; then
+    Postfix_Switch="Off"
+    PowerDNS_Switch="Off"
+    PureFTPd_Switch="Off"
+    if [[ "${CYBERPANEL_ENABLE_POSTFIX:-0}" = "1" ]]; then
+      Postfix_Switch="On"
+    fi
+    if [[ "${CYBERPANEL_ENABLE_POWERDNS:-0}" = "1" ]]; then
+      PowerDNS_Switch="On"
+    fi
+    if [[ "${CYBERPANEL_ENABLE_PUREFTPD:-0}" = "1" ]]; then
+      PureFTPd_Switch="On"
+    fi
+    log_info "Container minimal/partial mode (CYBERPANEL_MINIMAL=1)"
+  fi
+
+  if [[ -n "${CYBERPANEL_ADMIN_PASSWORD:-}" ]]; then
+    Admin_Pass="${CYBERPANEL_ADMIN_PASSWORD}"
+  fi
+
+  if [[ -n "${CYBERPANEL_BRANCH:-}" ]]; then
+    Branch_Name="${CYBERPANEL_BRANCH}"
+  fi
+
+  if [[ -n "${CYBERPANEL_REPO:-}" ]]; then
+    Git_User_Override="${CYBERPANEL_REPO}"
+  fi
+
+  if [[ -z "${Server_IP:-}" ]] || [[ "${Server_IP}" = "" ]]; then
+    Server_IP=$(curl -s --max-time 10 -4 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
+    Server_IP="${Server_IP:-127.0.0.1}"
+  fi
+
+  if [[ -n "${CYBERPANEL_HOSTNAME:-}" ]]; then
+    hostnamectl set-hostname "${CYBERPANEL_HOSTNAME}" 2>/dev/null || hostname "${CYBERPANEL_HOSTNAME}" 2>/dev/null || true
+  fi
+
+  log_info "Container runtime detected; silent install enabled"
+fi
+log_function_end "Apply_Container_Env" 0
 }
 
 Argument_Mode() {
@@ -1921,6 +2001,10 @@ if [[ "$Remote_MySQL" = "On" ]] ; then
 else
   Final_Flags+=(--remotemysql "${Remote_MySQL^^}")
 fi
+
+if [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]]; then
+  Final_Flags+=(--container ON)
+fi
   #form up the final agurment for install.py
 if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
@@ -2617,11 +2701,15 @@ fi
 
 Set_Default_Variables
 
+Apply_Container_Env
+
 Check_Root
 
 Check_Server_IP "$@"
 
 Check_OS
+
+Check_CPU_ISA
 
 Check_Virtualization
 

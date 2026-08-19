@@ -20,6 +20,7 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     ALMA_VER="${Server_OS_Version:-9}"
     ARCH="x86_64"
     ALMA_BASE="https://repo.almalinux.org/almalinux/${ALMA_VER}"
+    ALMA_GPG="file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-${ALMA_VER}"
     for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repo" ]] && continue
       if grep -q '^mirrorlist=' "$repo" 2>/dev/null; then
@@ -66,28 +67,28 @@ name=AlmaLinux ${ALMA_VER} - BaseOS
 baseurl=${ALMA_BASE}/BaseOS/${ARCH}/os/
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+gpgkey=${ALMA_GPG}
 
 [appstream]
 name=AlmaLinux ${ALMA_VER} - AppStream
 baseurl=${ALMA_BASE}/AppStream/${ARCH}/os/
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+gpgkey=${ALMA_GPG}
 
 [extras]
 name=AlmaLinux ${ALMA_VER} - Extras
 baseurl=${ALMA_BASE}/extras/${ARCH}/os/
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+gpgkey=${ALMA_GPG}
 
 [crb]
 name=AlmaLinux ${ALMA_VER} - CRB
 baseurl=${ALMA_BASE}/CRB/${ARCH}/os/
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+gpgkey=${ALMA_GPG}
 EOF
       dnf makecache --quiet 2>/dev/null || true
     fi
@@ -146,21 +147,31 @@ EOF
   fi
 
   dnf install epel-release -y 2>/dev/null || {
-    # Fallback when appstream was broken or epel-release not in repo (e.g. AlmaLinux 9)
     if [[ "$Server_OS_Version" = "9" ]]; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL 9 from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm 2>/dev/null || true
+    elif [[ "$Server_OS_Version" = "10" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL 10 from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm 2>/dev/null || true
     fi
   }
 
-  # MariaDB repo for EL8/EL9/EL10: MariaDB.org packages, DNF module handling, full RPM set (see 03_mariadb.sh).
-  if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
-    CyberPanel_EL89_Apply_MariaDB_Repository_And_Packages
+  if [[ "$Server_OS_Version" = "10" ]]; then
+    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm 2>/dev/null || true
+  elif [[ "$Server_OS_Version" = "9" ]]; then
+    dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm 2>/dev/null || true
   fi
 
-  # AlmaLinux 9 specific package installation (MariaDB handled above when Server_OS_Version is 9)
+  # MariaDB: MariaDB.org repo on EL8/EL9; AppStream on EL10 (see 03_mariadb.sh).
+  if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]]; then
+    CyberPanel_EL89_Apply_MariaDB_Repository_And_Packages
+  elif [[ "$Server_OS_Version" = "10" ]]; then
+    CyberPanel_EL10_AppStream_MariaDB_Install
+  fi
+
+  # AlmaLinux 9/10: Development Tools and PHP build deps
   if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages (Development Tools, PHP deps)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux ${Server_OS_Version} specific packages (Development Tools, PHP deps)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     
     # Install essential build tools
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: dnf groupinstall -y 'Development Tools' (may take a few minutes)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -179,7 +190,12 @@ EOF
   fi
 
   # Omit curl to avoid conflict with curl-minimal on AlmaLinux 9; curl-devel for build is separate
-  dnf install -y wget strace htop net-tools telnet which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils 2>/dev/null || dnf install -y --allowerasing wget strace htop net-tools telnet which bc htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
+  if [[ "$Server_OS_Version" = "10" ]]; then
+    dnf install -y wget strace net-tools telnet which bc libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils 2>/dev/null || dnf install -y --allowerasing wget strace net-tools telnet which bc libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
+    dnf install -y htop 2>/dev/null || true
+  else
+    dnf install -y wget strace htop net-tools telnet which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils 2>/dev/null || dnf install -y --allowerasing wget strace htop net-tools telnet which bc htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
+  fi
   dnf install gpgme-devel -y 2>/dev/null || true
   dnf install python3 -y
   fi
