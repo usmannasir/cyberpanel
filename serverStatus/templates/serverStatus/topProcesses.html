@@ -189,7 +189,9 @@
     .auto-refresh-indicator {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
         background: rgba(255, 255, 255, 0.2);
         padding: 0.5rem 1rem;
         border-radius: 20px;
@@ -203,6 +205,50 @@
         background: var(--success-accent);
         border-radius: 50%;
         animation: pulse 1.5s infinite;
+    }
+
+    .refresh-dot.paused {
+        background: #94a3b8;
+        animation: none;
+    }
+
+    .refresh-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .refresh-btn {
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        border-radius: 999px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .refresh-btn:hover {
+        background: rgba(255, 255, 255, 0.22);
+    }
+
+    .refresh-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .refresh-countdown {
+        font-weight: 800;
+        font-size: 1.05rem;
+        min-width: 1.5rem;
+        display: inline-block;
+        text-align: center;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 6px;
+        padding: 0.05rem 0.35rem;
+        line-height: 1.3;
     }
     
     .stats-grid {
@@ -619,14 +665,32 @@
                 {% trans "Real-time monitoring of system processes, CPU usage, memory consumption, and resource allocation" %}
             </p>
             <div class="auto-refresh-indicator">
-                <span class="refresh-dot"></span>
-                {% trans "Auto-refresh every 3 seconds" %}
+                <span class="refresh-dot" ng-class="{'paused': !autoRefreshEnabled}"></span>
+                <span class="refresh-status-text" ng-if="autoRefreshEnabled && !isRefreshing">
+                    {% trans "Auto-refresh every" %} {$ refreshIntervalSeconds $} {% trans "seconds" %}
+                    · {% trans "next in" %} <span class="refresh-countdown">{$ refreshCountdown $}</span> {% trans "s" %}
+                </span>
+                <span class="refresh-status-text" ng-if="!autoRefreshEnabled">
+                    {% trans "Auto-refresh paused" %}
+                </span>
+                <span class="refresh-status-text" ng-if="isRefreshing && !initialLoad">
+                    ({% trans "Updating..." %})
+                </span>
+                <div class="refresh-controls">
+                    <button type="button" class="refresh-btn" ng-click="toggleAutoRefresh()">
+                        <span ng-if="autoRefreshEnabled">{% trans "Pause" %}</span>
+                        <span ng-if="!autoRefreshEnabled">{% trans "Resume" %}</span>
+                    </button>
+                    <button type="button" class="refresh-btn" ng-click="refreshNow()" ng-disabled="isRefreshing">
+                        {% trans "Refresh now" %}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" ng-show="!cyberPanelLoading">
+    <!-- Loading Overlay (first load only) -->
+    <div class="loading-overlay" ng-show="initialLoad && !cyberPanelLoading">
         <div class="loading-spinner"></div>
     </div>
 
@@ -915,8 +979,4 @@
     </div>
 </div>
 
-{% endblock %}
-
-{% block footer_scripts %}
-<script src="{% static 'serverStatus/serverStatus.js' %}"></script>
 {% endblock %}

@@ -642,10 +642,10 @@ def topProcessesStatus(request):
 
         ## CPU Time spent
 
-        data['ioWait'] = loadNow[9] + '%'
-        data['idleTime'] = loadNow[7] + '%'
-        data['hwInterrupts'] = loadNow[11] + '%'
-        data['Softirqs'] = loadNow[13] + '%'
+        data['ioWait'] = loadNow[9]
+        data['idleTime'] = loadNow[7]
+        data['hwInterrupts'] = loadNow[11]
+        data['Softirqs'] = loadNow[13]
 
         ## Memory
 
@@ -654,46 +654,34 @@ def topProcessesStatus(request):
         memoryInf0[1] = list(filter(None, memoryInf0[1].split(' ')))
         memoryInf0[2] = list(filter(None, memoryInf0[2].split(' ')))
 
-        try:
-            data['totalMemory'] = '%sMB' % (memoryInf0[1][1])
-        except:
-            data['totalMemory'] = '%sMB' % ('0')
-        try:
-            data['usedMemory'] = '%sMB' % (memoryInf0[1][2])
-        except:
-            data['usedMemory'] = '%sMB' % ('0')
+        from plogical.humanSize import format_mb, size_mode_for_request
 
-        try:
-            data['freeMemory'] = '%sMB' % (memoryInf0[1][3])
-        except:
-            data['freeMemory'] = '%sMB' % ('0')
+        size_mode = size_mode_for_request(request)
 
+        def _format_memory_mb(raw):
+            try:
+                return format_mb(float(raw), size_mode)
+            except (TypeError, ValueError, IndexError):
+                return format_mb(0, size_mode)
+
+        data['sizeDisplayUnit'] = size_mode
+        data['totalMemory'] = _format_memory_mb(memoryInf0[1][1])
+        data['usedMemory'] = _format_memory_mb(memoryInf0[1][2])
+        data['freeMemory'] = _format_memory_mb(memoryInf0[1][3])
         try:
-            data['buffCache'] = '%sMB' % (memoryInf0[1][5])
-        except:
-            data['buffCache'] = '%sMB' % ('0')
+            data['buffCache'] = _format_memory_mb(memoryInf0[1][5])
+        except (TypeError, ValueError, IndexError):
+            data['buffCache'] = _format_memory_mb(0)
 
         ## Swap
 
+        data['swapTotalMemory'] = _format_memory_mb(memoryInf0[2][1])
+        data['swapUsedMemory'] = _format_memory_mb(memoryInf0[2][2])
+        data['swapFreeMemory'] = _format_memory_mb(memoryInf0[2][3])
         try:
-            data['swapTotalMemory'] = '%sMB' % (memoryInf0[2][1])
-        except:
-            data['swapTotalMemory'] = '%sMB' % ('0')
-
-        try:
-            data['swapUsedMemory'] = '%sMB' % (memoryInf0[2][2])
-        except:
-            data['swapUsedMemory'] = '%sMB' % ('0')
-
-        try:
-            data['swapFreeMemory'] = '%sMB' % (memoryInf0[2][3])
-        except:
-            data['swapFreeMemory'] = '%sMB' % ('0')
-
-        try:
-            data['swapBuffCache'] = '%sMB' % (memoryInf0[2][5])
-        except:
-            data['swapBuffCache'] = '%sMB' % ('0')
+            data['swapBuffCache'] = _format_memory_mb(memoryInf0[2][5])
+        except (TypeError, ValueError, IndexError):
+            data['swapBuffCache'] = _format_memory_mb(0)
 
         ## Processes
 
