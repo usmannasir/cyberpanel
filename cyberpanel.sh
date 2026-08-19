@@ -323,16 +323,9 @@ enabled=1
 gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
-        cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-enabled=1
-gpgcheck=1
-EOF
+        # MariaDB.org still ships el9 RPMs at rhel9-amd64; they need RHEL 9 boost
+        # and break dnf on AlmaLinux 10. AppStream / install_utils handles EL10.
+        rm -f /etc/yum.repos.d/MariaDB.repo
     fi
 }
 
@@ -1396,13 +1389,15 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
   elif [[ "$Server_OS_Version" = "8" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
-  elif [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
-
-    #!/bin/bash
-
-
+  elif [[ "$Server_OS_Version" = "9" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
       Check_Return
+    dnf install -y htop || true
+  elif [[ "$Server_OS_Version" = "10" ]] ; then
+    # AppStream MariaDB, not MariaDB.org el9 RPMs (those need libboost 1.75).
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet libevent-devel gcc libattr-devel xz-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
+      Check_Return
+    dnf install -y mariadb-devel || dnf install -y mariadb-connector-c-devel || true
     dnf install -y htop || true
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel

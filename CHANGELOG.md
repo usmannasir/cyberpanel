@@ -34,10 +34,10 @@ full `v2.5.5-dev` merge.
 - Upgrade from stock v3.0.2: stage `plogical/errorSanitizer.py` before
   `upgrade.py` runs, point git `origin` at `--repo` (not leftover usmannasir),
   and do not abort post-tweak when optional LSCPD sudo helpers are missing.
-- AlmaLinux 10 installer: EPEL 10, remi-release-10, optional htop, and an
-  EL10-safe LiteSpeed GPG import. VirtualBox smokes on Windows use
-  `almalinux/10-x86_64_v2` because default `almalinux/10` needs AVX2 that
-  VirtualBox NEM does not expose.
+- AlmaLinux 10 installer: EPEL 10, remi-release-10, optional htop, AppStream
+  MariaDB (not MariaDB.org el9 RPMs), and an EL10-safe LiteSpeed GPG import.
+  VirtualBox smokes on Windows use `almalinux/10-x86_64_v2` because default
+  `almalinux/10` needs AVX2 that VirtualBox NEM does not expose.
 - `cyberpanel_upgrade.sh` installed under `/usr/local` always downloads
   `upgrade_modules/` for the target branch instead of sourcing the old
   tree's modules (which skipped `upgrade.py` and left the stock build).
