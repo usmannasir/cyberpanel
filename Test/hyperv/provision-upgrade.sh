@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Stock usmannasir v3.0.2 install, then modular upgrade to master3395 v3.0.2-dev
 set -euo pipefail
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'provision-upgrade.sh must run as root'
+  exit 1
+fi
+unset SUDO_USER SUDO_UID SUDO_GID SUDO_COMMAND 2>/dev/null || true
+export DEBIAN_FRONTEND=noninteractive
 dnf -y install curl wget git tar unzip python3 || yum -y install curl wget git tar unzip python3
 
 curl -fsSL "https://raw.githubusercontent.com/usmannasir/cyberpanel/v3.0.2/cyberpanel.sh" \

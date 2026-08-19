@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Silent OLS install of master3395/cyberpanel v3.0.2-dev (Hyper-V smoke guest)
 set -euo pipefail
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'provision-fresh.sh must run as root'
+  exit 1
+fi
+unset SUDO_USER SUDO_UID SUDO_GID SUDO_COMMAND 2>/dev/null || true
 export DEBIAN_FRONTEND=noninteractive
 dnf -y install curl wget git tar unzip python3 || yum -y install curl wget git tar unzip python3
 
