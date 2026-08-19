@@ -79,6 +79,8 @@ Same as VirtualBox:
 
 Early check during SSH wait: script prints `AVX2_OK` when `/proc/cpuinfo` contains `avx2`.
 
+Guest static IPs on Default Switch NAT: `172.20.80.50` (fresh), `172.20.80.51` (upgrade). Cloud-init matches Hyper-V NIC via `driver: hv_netvsc`. Seed ISO must expose files named exactly `meta-data` and `user-data` (genisoimage `-graft-points`).
+
 ## How it works
 
 1. Downloads AlmaLinux 10 **Generic Cloud** qcow2 from repo.almalinux.org

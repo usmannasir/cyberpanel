@@ -91,3 +91,27 @@ cd Test/docker
 - [`docker/panel/Dockerfile`](../docker/panel/Dockerfile)
 - [`install/container.py`](../install/container.py)
 - [`install/install_utils.py`](../install/install_utils.py) (`is_container_runtime`, env mode resolver)
+
+## Docker Hub publish
+
+Images publish as **`master3395/cyberpanel:<os-tag>`** (`latest` = `almalinux10`). Mode (full/minimal) is runtime env on first boot, not a separate image tag.
+
+### GitHub Actions (recommended)
+
+1. Add repository secrets on `master3395/cyberpanel`:
+   - `DOCKERHUB_USERNAME` = `master3395`
+   - `DOCKERHUB_TOKEN` = Docker Hub access token (read/write on `cyberpanel` repo)
+2. Push to `v3.0.2-dev` or run workflow **Docker panel image** manually (`.github/workflows/docker-panel.yml`).
+3. Workflow builds all tags in `docker/panel/os-matrix.json` when login succeeds; without secrets it still validates Dockerfiles (build only).
+
+### Local publish
+
+```powershell
+docker login -u master3395
+cd docker\panel
+.\build-matrix.ps1 -Os almalinux10
+.\publish.ps1 -Os almalinux10
+.\publish.ps1 -Os all
+```
+
+Requires Docker Desktop or Docker Engine on the host. CI matrix covers 15 OS tags (AlmaLinux, Rocky, CentOS Stream, RHEL UBI, Ubuntu, Debian, openEuler).

@@ -18,20 +18,58 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - tag: almalinux10
-            base: almalinux:10
+          - tag: almalinux8
+            base: almalinux:8
             family: rhel
           - tag: almalinux9
             base: almalinux:9
             family: rhel
+          - tag: almalinux10
+            base: almalinux:10
+            family: rhel
+          - tag: rockylinux8
+            base: rockylinux:8
+            family: rhel
+          - tag: rockylinux9
+            base: rockylinux:9
+            family: rhel
+          - tag: centos-stream9
+            base: quay.io/centos/centos:stream9
+            family: rhel
+          - tag: rhel8
+            base: registry.access.redhat.com/ubi8/ubi
+            family: rhel
+          - tag: rhel9
+            base: registry.access.redhat.com/ubi9/ubi
+            family: rhel
+          - tag: ubuntu2204
+            base: ubuntu:22.04
+            family: debian
           - tag: ubuntu2404
             base: ubuntu:24.04
             family: debian
+          - tag: debian11
+            base: debian:11
+            family: debian
+          - tag: debian12
+            base: debian:12
+            family: debian
+          - tag: debian13
+            base: debian:13
+            family: debian
+          - tag: openeuler2003
+            base: openeuler/openeuler:20.03-lts-sp3
+            family: rhel
+          - tag: openeuler2203
+            base: openeuler/openeuler:22.03-lts-sp3
+            family: rhel
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - id: dockerhub-login
+        uses: docker/login-action@v3
         if: github.event_name != 'pull_request'
+        continue-on-error: true
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -40,7 +78,7 @@ jobs:
         with:
           context: .
           file: docker/panel/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' && steps.dockerhub-login.outcome == 'success' }}
           tags: |
             master3395/cyberpanel:${{ matrix.tag }}
             master3395/cyberpanel:latest

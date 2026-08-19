@@ -7,6 +7,7 @@ $Script:CacheRoot = Join-Path $env:LOCALAPPDATA 'CyberPanelHyperVSmoke'
 $Script:AlmaQcowUrl = 'https://repo.almalinux.org/almalinux/10/cloud/x86_64/images/AlmaLinux-10-GenericCloud-latest.x86_64.qcow2'
 $Script:QemuZipUrl = 'https://cloudbase.it/downloads/qemu-img-win-x64-2_3_0.zip'
 $Script:LabPassword = 'TestPass12'
+$Script:GuestSshUser = 'root'
 $Script:DefaultSwitchGateway = '172.20.80.1'
 $Script:GuestStaticIps = @{
     'fresh' = '172.20.80.50'
@@ -128,11 +129,88 @@ function Get-FreeDriveLetter {
     throw 'No free drive letter for cloud-init CIDATA disk.'
 }
 
+function Format-CpMacAddress {
+    param([Parameter(Mandatory)][string]$Mac)
+    $clean = ($Mac -replace '[^0-9a-fA-F]', '').ToLower()
+    if ($clean.Length -ne 12) { return $Mac.ToLower() }
+    return ($clean -replace '(.{2})(?=.)', '$1:')
+}
+
+function Get-CloudInitUserData {
+    param(
+        [Parameter(Mandatory)][string]$VmName,
+        [Parameter(Mandatory)][string]$PubKey,
+        [Parameter(Mandatory)][ValidateSet('fresh', 'upgrade')][string]$Profile,
+        [string]$MacAddress = ''
+    )
+    $staticIp = $Script:GuestStaticIps[$Profile]
+    $gw = $Script:DefaultSwitchGateway
+    $macLine = ''
+    if ($MacAddress) {
+        $macLine = @"
+      match:
+        macaddress: '$MacAddress'
+"@
+    }
+    else {
+        $macLine = @"
+      match:
+        driver: hv_netvsc
+"@
+    }
+    return @"
+#cloud-config
+datasource_list: [ NoCloud, ConfigDrive ]
+disable_root: false
+ssh_pwauth: true
+hostname: $VmName
+growpart:
+  mode: auto
+bootcmd:
+  - [ bash, -lc, "for d in /sys/class/net/*; do i=`$(basename `$d); [ `$i = lo ] && continue; ip link set `$i up; done" ]
+network:
+  version: 2
+  ethernets:
+    nic0:
+$macLine
+      dhcp4: true
+      dhcp6: false
+      addresses:
+        - ${staticIp}/20
+      routes:
+        - to: default
+          via: $gw
+      nameservers:
+        addresses: [$gw, 1.1.1.1]
+users:
+  - default
+  - name: root
+    lock_passwd: false
+    ssh_authorized_keys:
+      - $($PubKey.Trim())
+  - name: almalinux
+    groups: wheel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - $($PubKey.Trim())
+    lock_passwd: false
+    plain_text_passwd: vagrant
+chpasswd:
+  list: |
+    root:$($Script:LabPassword)
+  expire: false
+runcmd:
+  - [ bash, -lc, "sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config; systemctl restart sshd || systemctl restart ssh || true" ]
+"@
+}
+
 function New-CloudInitSeedIso {
     param(
         [Parameter(Mandatory)][string]$VmName,
         [Parameter(Mandatory)][string]$OutIso,
-        [Parameter(Mandatory)][ValidateSet('fresh', 'upgrade')][string]$Profile
+        [Parameter(Mandatory)][ValidateSet('fresh', 'upgrade')][string]$Profile,
+        [string]$MacAddress = ''
     )
     $seedDir = Join-Path $Script:CacheRoot "seed-$VmName"
     if (Test-Path $seedDir) { Remove-Item $seedDir -Recurse -Force }
@@ -143,36 +221,7 @@ instance-id: $VmName
 local-hostname: $VmName
 "@
     $pubKey = Get-Content -Raw "$(Get-SmokeSshKeyPath).pub"
-    $user = @"
-#cloud-config
-hostname: $VmName
-growpart:
-  mode: auto
-network:
-  version: 2
-  ethernets:
-    primary:
-      match:
-        name: en*
-      dhcp4: true
-users:
-  - default
-  - name: almalinux
-    groups: wheel
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
-    ssh_authorized_keys:
-      - $($pubKey.Trim())
-    lock_passwd: false
-    plain_text_passwd: vagrant
-ssh_pwauth: true
-chpasswd:
-  list: |
-    root:$($Script:LabPassword)
-  expire: false
-runcmd:
-  - [ bash, -lc, "sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config; systemctl restart sshd || true" ]
-"@
+    $user = Get-CloudInitUserData -VmName $VmName -PubKey $pubKey -Profile $Profile -MacAddress $MacAddress
     Set-Content -Path (Join-Path $seedDir 'meta-data') -Value $meta -NoNewline -Encoding ascii
     Set-Content -Path (Join-Path $seedDir 'user-data') -Value $user -Encoding ascii
 
@@ -188,11 +237,11 @@ runcmd:
     $wslIso = ConvertTo-WslPath $OutIso
     $geniso = $false
     if (Get-Command wsl -ErrorAction SilentlyContinue) {
-        wsl -u root bash -lc "genisoimage -output '$wslIso' -volid cidata -joliet -rock '$wslDir/meta-data' '$wslDir/user-data'"
+        wsl -u root bash -lc "command -v xorriso >/dev/null 2>&1 || dnf install -y xorriso >/dev/null 2>&1; xorriso -as mkisofs -output '$wslIso' -V cidata -r -J -graft-points '/meta-data=$wslDir/meta-data' '/user-data=$wslDir/user-data' >/dev/null 2>&1"
         if ($LASTEXITCODE -eq 0 -and (Test-Path $OutIso)) { $geniso = $true }
     }
     if (-not $geniso) {
-        throw 'Could not build cloud-init ISO (install WSL + genisoimage, or use Hyper-V with seed ISO support).'
+        throw 'Could not build cloud-init ISO (install WSL + xorriso).'
     }
     return $OutIso
 }
@@ -201,7 +250,8 @@ function New-CloudInitDataVhd {
     param(
         [Parameter(Mandatory)][string]$VmName,
         [Parameter(Mandatory)][string]$OutPath,
-        [Parameter(Mandatory)][ValidateSet('fresh', 'upgrade')][string]$Profile
+        [Parameter(Mandatory)][ValidateSet('fresh', 'upgrade')][string]$Profile,
+        [string]$MacAddress = ''
     )
     if (Test-Path $OutPath) { Remove-Item $OutPath -Force }
     $null = New-VHD -Path $OutPath -SizeBytes 64MB -Dynamic
@@ -215,7 +265,7 @@ function New-CloudInitDataVhd {
             $part = New-Partition -DiskNumber $disk.Number -UseMaximumSize
         }
         $vol = Get-Volume -Partition $part -ErrorAction SilentlyContinue
-        if (-not $vol -or -not $vol.DriveLetter) {
+        if (-not $vol -or -not $vol.FileSystemLabel) {
             Format-Volume -Partition $part -FileSystem FAT32 -NewFileSystemLabel cidata -Confirm:$false -Force -ErrorAction Stop | Out-Null
             Start-Sleep -Seconds 2
             $part = Get-Partition -DiskNumber $disk.Number | Select-Object -First 1
@@ -235,39 +285,7 @@ instance-id: $VmName
 local-hostname: $VmName
 "@
         $pubKey = Get-Content -Raw "$(Get-SmokeSshKeyPath).pub"
-        $staticIp = $Script:GuestStaticIps[$Profile]
-        $gw = $Script:DefaultSwitchGateway
-        $user = @"
-#cloud-config
-hostname: $VmName
-growpart:
-  mode: auto
-network:
-  version: 2
-  ethernets:
-    primary:
-      match:
-        name: en*
-      dhcp4: true
-      set-name: eth0
-users:
-  - default
-  - name: almalinux
-    groups: wheel
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
-    ssh_authorized_keys:
-      - $($pubKey.Trim())
-    lock_passwd: false
-    plain_text_passwd: vagrant
-ssh_pwauth: true
-chpasswd:
-  list: |
-    root:$($Script:LabPassword)
-  expire: false
-runcmd:
-  - [ bash, -lc, "sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config; systemctl restart sshd || true" ]
-"@
+        $user = Get-CloudInitUserData -VmName $VmName -PubKey $pubKey -Profile $Profile -MacAddress $MacAddress
         Set-Content -Path (Join-Path $root 'meta-data') -Value $meta -NoNewline -Encoding ascii
         Set-Content -Path (Join-Path $root 'user-data') -Value $user -Encoding ascii
     }
@@ -291,20 +309,21 @@ function New-CpHyperVVm {
     New-Item -ItemType Directory -Path $vmDir -Force | Out-Null
     $disk = Join-Path $vmDir 'os.vhdx'
     Copy-Item $template $disk -Force
-    $ciIso = Join-Path $vmDir 'cloud-init.iso'
-    $null = New-CloudInitSeedIso -VmName $vmName -OutIso $ciIso -Profile $Profile
     $switch = Get-VMSwitch -Name 'Default Switch' -ErrorAction Stop
     $vm = New-VM -Name $vmName -MemoryStartupBytes 4GB -Generation 2 -VHDPath $disk -SwitchName $switch.Name
+    $mac = Format-CpMacAddress -Mac (Get-VMNetworkAdapter -VM $vm | Select-Object -First 1 -ExpandProperty MacAddress)
+    Write-Host "Guest NIC MAC: $mac"
+    $ciVhd = Join-Path $vmDir 'cloud-init.vhdx'
+    New-CloudInitDataVhd -VmName $vmName -OutPath $ciVhd -Profile $Profile -MacAddress $mac
+    $ciIso = Join-Path $vmDir 'cloud-init.iso'
+    $null = New-CloudInitSeedIso -VmName $vmName -OutIso $ciIso -Profile $Profile -MacAddress $mac
+    Add-VMHardDiskDrive -VMName $vmName -Path $ciVhd | Out-Null
     Set-VMProcessor -VM $vm -Count 2 `
         -CompatibilityForMigrationEnabled $false `
         -CompatibilityForOlderOperatingSystemsEnabled $false
     Set-VMFirmware -VM $vm -EnableSecureBoot Off
     Add-VMDvdDrive -VMName $vmName | Out-Null
     Set-VMDvdDrive -VMName $vmName -Path $ciIso | Out-Null
-    $dvd = Get-VMDvdDrive -VMName $vmName | Select-Object -First 1
-    if ($dvd) {
-        Set-VMFirmware -VMName $vmName -FirstBootDevice $dvd | Out-Null
-    }
     Set-VMMemory -VM $vm -DynamicMemoryEnabled $false
     Get-VMIntegrationService -VM $vm | ForEach-Object {
         Enable-VMIntegrationService -VM $vm -Name $_.Name -ErrorAction SilentlyContinue
@@ -312,18 +331,33 @@ function New-CpHyperVVm {
     Set-VMNetworkAdapter -VM $vm -DhcpGuard Off -RouterGuard Off -ErrorAction SilentlyContinue
     Write-Host "Created $vmName on Default Switch. Starting..."
     Start-VM -Name $vmName | Out-Null
-    Write-Host 'Waiting 45s for guest boot...'
-    Start-Sleep -Seconds 45
+    Write-Host 'Waiting 90s for guest boot and cloud-init...'
+    Start-Sleep -Seconds 90
     return $vmName
+}
+
+function Test-CpGuestSshProbe {
+    param(
+        [Parameter(Mandatory)][string]$Ip
+    )
+    $key = Get-SmokeSshKeyPath
+    & ssh -i $key -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ConnectTimeout=2 -o BatchMode=yes `
+        "root@${Ip}" 'echo PROBE_OK' 2>$null
+    return ($LASTEXITCODE -eq 0)
 }
 
 function Discover-CpGuestIpViaProbe {
     param(
         [Parameter(Mandatory)][string]$VmName,
-        [string]$Prefix = '172.20.80'
+        [string]$Prefix = '172.20.80',
+        [Parameter()][ValidateSet('fresh', 'upgrade')][string]$Profile
     )
     $ErrorActionPreference = 'Continue'
     $key = Get-SmokeSshKeyPath
+    if ($Profile -and $Script:GuestStaticIps.ContainsKey($Profile)) {
+        $static = $Script:GuestStaticIps[$Profile]
+        if (Test-CpGuestSshProbe -Ip $static) { return $static }
+    }
     $mac = (Get-VMNetworkAdapter -VMName $VmName -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty MacAddress)
     if ($mac) {
         $macNorm = ($mac -replace '-', '').ToLower()
@@ -363,8 +397,12 @@ function Get-CpVmIpv4 {
             }
         }
         if ($ips.Count -gt 0) { return $ips[0] }
-        if (((Get-Date) - $probeStarted).TotalSeconds -ge 60) {
-            $probed = Discover-CpGuestIpViaProbe -VmName $VmName
+        if ($Profile -and $Script:GuestStaticIps.ContainsKey($Profile)) {
+            $static = $Script:GuestStaticIps[$Profile]
+            if (Test-CpGuestSshProbe -Ip $static) { return $static }
+        }
+        if (((Get-Date) - $probeStarted).TotalSeconds -ge 30) {
+            $probed = Discover-CpGuestIpViaProbe -VmName $VmName -Profile $Profile
             $probeStarted = Get-Date
             if ($probed) { return $probed }
         }
