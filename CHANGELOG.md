@@ -37,6 +37,8 @@ full `v2.5.5-dev` merge.
 - `cyberpanel_upgrade.sh` installed under `/usr/local` always downloads
   `upgrade_modules/` for the target branch instead of sourcing the old
   tree's modules (which skipped `upgrade.py` and left the stock build).
+- `upgrade.py` no longer requires Django-backed `errorSanitizer` at import
+  time, so it can start from `/root/cyberpanel_upgrade_tmp` on a stock tree.
 
 ## v3.0.2 (build 2) — 2026-08-18
 

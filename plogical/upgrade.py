@@ -14,8 +14,20 @@ if _install_dir not in sys.path:
 import ols_binaries_config
 import ols_version_policy
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-from plogical.errorSanitizer import ErrorSanitizer
-from plogical.installUtilities import installUtilities
+try:
+    from plogical.errorSanitizer import ErrorSanitizer
+except Exception:
+    class ErrorSanitizer(object):
+        @staticmethod
+        def log_error_securely(exc, context=''):
+            try:
+                print('%s: %s' % (context, exc))
+            except Exception:
+                pass
+try:
+    from plogical.installUtilities import installUtilities
+except Exception:
+    installUtilities = None
 import shlex
 import subprocess
 import shutil
