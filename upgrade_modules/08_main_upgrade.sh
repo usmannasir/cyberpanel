@@ -153,6 +153,7 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_N
 export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
 # Retry full /usr/local/CyberCP re-clone this many times if download/checkout fails (default 2)
 export CYBERPANEL_UPGRADE_CLONE_ATTEMPTS="${CYBERPANEL_UPGRADE_CLONE_ATTEMPTS:-2}"
+export PYTHONPATH="/usr/local/CyberCP${PYTHONPATH:+:$PYTHONPATH}"
 
 # Run from directory that contains upgrade.py (downloaded by Pre_Upgrade_Required_Components)
 for d in /root/cyberpanel_upgrade_tmp /usr/local/CyberCP; do

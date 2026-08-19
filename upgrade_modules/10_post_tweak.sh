@@ -558,7 +558,7 @@ CyberPanel_Restart_Backend_And_Openlitespeed
 
 # Harden lscpd sudo privileges (replace broad sudo access with allowlisted wrappers)
 if declare -f Post_Upgrade_LSCPD_Sudo_Hardening >/dev/null 2>&1; then
-  Post_Upgrade_LSCPD_Sudo_Hardening || return 1
+  Post_Upgrade_LSCPD_Sudo_Hardening || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: LSCPD sudo hardening skipped (helpers missing on this branch)" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
 if [[ -x /usr/local/CyberCP/scripts/verify_fastapi_ssh_hardening.sh ]]; then

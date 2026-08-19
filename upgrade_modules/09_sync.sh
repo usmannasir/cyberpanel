@@ -30,6 +30,12 @@ Sync_CyberCP_To_Latest() {
     return 1
   fi
 
+  # Stock installs use origin=usmannasir. --repo forks must fetch from Git_Clone_URL.
+  if [[ -n "${Git_Clone_URL:-}" ]]; then
+    git remote set-url origin "$Git_Clone_URL" 2>/dev/null || git remote add origin "$Git_Clone_URL" 2>/dev/null || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] origin set to $Git_Clone_URL" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+
   local remote_ref="origin/$Branch_Name"
   local fetch_rc sync_ok=0
 

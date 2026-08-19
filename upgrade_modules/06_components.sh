@@ -302,6 +302,16 @@ Download_Upgrade_Source() {
 
 Download_Upgrade_Source "plogical/upgrade.py" "upgrade.py" "^import " || exit 1
 Download_Upgrade_Source "cyberpanel_version.py" "cyberpanel_version.py" "^VERSION" || exit 1
+# upgrade.py imports plogical.errorSanitizer at import time. Stock v3.0.2 trees
+# do not ship that module, so stage it before Main_Upgrade runs.
+mkdir -p /usr/local/CyberCP/plogical /root/cyberpanel_upgrade_tmp/plogical
+if Download_Upgrade_Source "plogical/errorSanitizer.py" "/usr/local/CyberCP/plogical/errorSanitizer.py" "class ErrorSanitizer"; then
+  cp -f /usr/local/CyberCP/plogical/errorSanitizer.py /root/cyberpanel_upgrade_tmp/plogical/errorSanitizer.py 2>/dev/null || true
+  touch /root/cyberpanel_upgrade_tmp/plogical/__init__.py
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Staged plogical/errorSanitizer.py for upgrade.py import" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: could not stage errorSanitizer.py; upgrade.py may fail to import" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py
