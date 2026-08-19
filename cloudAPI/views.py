@@ -5,11 +5,47 @@ import json
 from loginSystem.models import Administrator
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import HttpResponse
+from django.core.cache import cache
+import hashlib
 try:
     from django.utils.http import url_has_allowed_host_and_scheme
 except ImportError:
     from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
 from plogical.securityUtils import api_token_matches
+
+
+CLOUD_ACCESS_FAILURE_LIMIT = 10
+CLOUD_ACCESS_FAILURE_WINDOW = 5 * 60
+
+
+def _access_cache_key(request):
+    remote_address = request.META.get('REMOTE_ADDR', '')
+    return 'cp_cloud_access_%s' % hashlib.sha256(remote_address.encode()).hexdigest()
+
+
+def _access_response(message, status):
+    response = HttpResponse(message, status=status)
+    response['Cache-Control'] = 'no-store'
+    response['Referrer-Policy'] = 'no-referrer'
+    return response
+
+
+def _record_access_failure(cache_key):
+    if cache.add(cache_key, 1, CLOUD_ACCESS_FAILURE_WINDOW):
+        return
+    try:
+        cache.incr(cache_key)
+    except ValueError:
+        cache.set(cache_key, 1, CLOUD_ACCESS_FAILURE_WINDOW)
+
+
+def _normalized_session_ip(request):
+    ip_address = request.META.get('HTTP_CF_CONNECTING_IP')
+    if ip_address is None:
+        ip_address = request.META.get('REMOTE_ADDR', '')
+    if ':' in ip_address:
+        return ':'.join(ip_address.split(':')[:3])
+    return ip_address
 
 @csrf_exempt
 def router(request):
@@ -26,8 +62,8 @@ def router(request):
         if serverUserName != 'admin':
             return cm.ajaxPre(0, 'Only administrator can access API.')
 
-        if admin.api == 0:
-            return cm.ajaxPre(0, 'API Access Disabled.')
+        if not admin.api or admin.state != 'ACTIVE':
+            return cm.ajaxPre(0, 'Could not authorize access to API.')
 
         try:
             if cm.verifyLogin(request)[0] == 1:
@@ -448,37 +484,43 @@ def router(request):
         return cm.ajaxPre(0, str(msg))
 
 def access(request):
+    serverUserName = request.GET.get('serverUserName', '')
+    token = request.GET.get('token') or request.META.get('HTTP_AUTHORIZATION')
+    redirectFinal = request.GET.get('redirect')
+    cache_key = _access_cache_key(request)
+
+    if cache.get(cache_key, 0) >= CLOUD_ACCESS_FAILURE_LIMIT:
+        return _access_response('Too many attempts. Try again later.', 429)
+
     try:
-        serverUserName = request.GET.get('serverUserName')
-        token = request.GET.get('token')
-        redirectFinal = request.GET.get('redirect')
-
         admin = Administrator.objects.get(userName=serverUserName)
+    except Exception:
+        _record_access_failure(cache_key)
+        return _access_response('Unauthorized access.', 401)
 
-        if admin.api == 0:
-            return HttpResponse('API Access Disabled.')
+    if not admin.api or admin.state != 'ACTIVE' or not api_token_matches(token, admin.token):
+        _record_access_failure(cache_key)
+        return _access_response('Unauthorized access.', 401)
 
-        if api_token_matches(token, admin.token):
-            try:
-                del request.session['userID']
-            except:
-                pass
-            request.session['userID'] = admin.pk
-            from django.shortcuts import redirect
-            from baseTemplate.views import renderBase
-            if redirectFinal == None:
-                return redirect(renderBase)
-            else:
-                from django.shortcuts import redirect
-                if not url_has_allowed_host_and_scheme(
-                        redirectFinal,
-                        allowed_hosts={request.get_host()},
-                        require_https=request.is_secure()):
-                    return HttpResponse('Invalid redirect target.')
-                return redirect(redirectFinal)
-        else:
-            return HttpResponse('Unauthorized access.')
+    if redirectFinal is not None and not url_has_allowed_host_and_scheme(
+            redirectFinal,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure()):
+        return _access_response('Invalid redirect target.', 400)
 
-    except BaseException as msg:
-        cm = CloudManager(None)
-        return cm.ajaxPre(0, str(msg))
+    cache.delete(cache_key)
+    request.session.cycle_key()
+    request.session['userID'] = admin.pk
+    request.session['ipAddr'] = _normalized_session_ip(request)
+    request.session.set_expiry(43200)
+    request.session.save()
+
+    from django.shortcuts import redirect
+    if redirectFinal is None:
+        from baseTemplate.views import renderBase
+        response = redirect(renderBase)
+    else:
+        response = redirect(redirectFinal)
+    response['Cache-Control'] = 'no-store'
+    response['Referrer-Policy'] = 'no-referrer'
+    return response

@@ -29,6 +29,7 @@ TERMINAL_REQUEST_MAX_AGE = 15 * 60
 SYSTEM_USER_RE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
 HOSTNAME_LABEL_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
 MYSQL_UPGRADE_STATUS_RE = re.compile(r"^mysql-upgrade-[A-Za-z0-9_.-]{1,80}$")
+INVALID_API_TOKEN_VALUES = frozenset(("", "none", "null", "undefined"))
 
 
 def constant_time_equal(left, right):
@@ -48,10 +49,27 @@ def normalize_api_token(token):
     return token
 
 
+def is_usable_api_token(token):
+    normalized = normalize_api_token(token).rstrip("=").strip().lower()
+    return normalized not in INVALID_API_TOKEN_VALUES
+
+
+def generate_api_token():
+    return "Basic %s" % secrets.token_urlsafe(48)
+
+
+def ensure_api_token(account):
+    if is_usable_api_token(account.token):
+        return False
+    account.token = generate_api_token()
+    account.save(update_fields=['token'])
+    return True
+
+
 def api_token_matches(provided, stored):
     provided_token = normalize_api_token(provided)
     stored_token = normalize_api_token(stored)
-    if not provided_token or not stored_token:
+    if not is_usable_api_token(provided_token) or not is_usable_api_token(stored_token):
         return False
     if constant_time_equal(provided_token, stored_token):
         return True

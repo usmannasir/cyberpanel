@@ -41,6 +41,7 @@ from plogical.systemPassword import (
     consume_system_password_request,
     create_system_password_request,
 )
+from plogical.securityUtils import generate_api_token
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.vhostConfs import vhostConfs
@@ -5387,12 +5388,29 @@ StrictHostKeyChecking no
                 if adminEmail is None:
                     data['adminEmail'] = "example@example.org"
 
+                acl = ACL.objects.get(name=apiACL)
+                currentACL = ACLManager.loadedACL(admin.pk)
+
+                if ACLManager.currentContextPermission(currentACL, 'createWebsite') != 1:
+                    return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+                if currentACL['admin'] != 1:
+                    if ACLManager.isAdminACL(acl):
+                        return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+                    if currentACL.get('changeUserACL', 0) != 1 and acl.name != 'user':
+                        return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+                if ACLManager.websitesLimitCheck(admin, int(websitesLimit)) == 0:
+                    data_ret = {'status': 0, 'createWebSiteStatus': 0,
+                                'error_message': "You've reached maximum websites limit as a reseller."}
+                    return HttpResponse(json.dumps(data_ret))
+
                 try:
-                    acl = ACL.objects.get(name=apiACL)
                     websiteOwn = Administrator(userName=websiteOwner,
                                                password=hashPassword.hash_password(ownerPassword),
                                                email=adminEmail, type=3, owner=admin.pk,
-                                               initWebsitesLimit=websitesLimit, acl=acl, api=1)
+                                               initWebsitesLimit=websitesLimit, acl=acl,
+                                               token=generate_api_token(), api=1)
                     websiteOwn.save()
                 except BaseException:
                     pass
