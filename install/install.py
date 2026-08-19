@@ -25,7 +25,6 @@ from stat import *
 import stat
 import secrets
 import install_utils
-
 VERSION = '2.5.5'
 BUILD = 'dev'
 
@@ -112,7 +111,6 @@ def setup_webmail_master_user():
     is missing from the bootstrap interpreter (common on WSL Ubuntu).
     """
     try:
-        import install_utils
         install_utils.ensure_mysqlclient_for_python(sys.executable, log=1)
     except Exception as exc:
         logging.InstallLog.writeToFile(
@@ -1853,7 +1851,6 @@ module cyberpanel_ols {
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
                     return False
                 try:
-                    import install_utils
                     install_utils.strip_mariadb_maxscale_apt_repos()
                 except Exception:
                     pass
@@ -1934,7 +1931,6 @@ module cyberpanel_ols {
                 if major_minor and major_minor != "unknown":
                     try:
                         major_ver = float(major_minor)
-                        import install_utils
                         if major_ver < 11.0 and not install_utils.is_rhel_el10():
                             should_try_upgrade = True
                             self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 11.8 LTS...", 1)
@@ -2008,7 +2004,6 @@ module cyberpanel_ols {
                 ) % mariadb_ver
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 try:
-                    import install_utils
                     install_utils.strip_mariadb_maxscale_apt_repos()
                 except Exception:
                     pass
@@ -3189,7 +3184,6 @@ module cyberpanel_ols {
                 os._exit(os.EX_SOFTWARE)
 
         elif self.distro in (centos, cent8):
-            import install_utils
             if not install_utils.install_litespeed_repo_rhel(self.distro, log=1):
                 logging.InstallLog.writeToFile(
                     "[ERROR] LiteSpeed repository setup failed during installCyberPanelRepo"
@@ -6097,7 +6091,6 @@ milter_default_action = accept
                     # Add LiteSpeed repository
                     # Use compatible repository version for RHEL-based systems
                     # AlmaLinux 9 is compatible with el8 repositories
-                    import install_utils
                     install_utils.install_litespeed_repo_rhel(self.distro, log=1)
             
             # Check if PHP 8.2 exists
@@ -6976,7 +6969,6 @@ vmail
                 
                 # Fix MySQL crypt method for Ubuntu 24.04 compatibility
             if self.distro == ubuntu:
-                import install_utils
                 try:
                     release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
                     if release and release >= 24.04:
