@@ -37,6 +37,20 @@ Get-VMSwitch -Name 'Default Switch'
 
 ## Commands (mirror VirtualBox smoke)
 
+**Recommended on Windows:** Vagrant Hyper-V provider (AVX2 visible, no Generic Cloud seed debugging):
+
+```powershell
+cd Test\hyperv
+.\up.ps1 fresh -Provider vagrant
+.\up.ps1 smoke-fresh -Provider vagrant
+.\up.ps1 halt -Profile fresh
+
+.\up.ps1 upgrade -Provider vagrant
+.\up.ps1 smoke-upgrade -Provider vagrant
+```
+
+Native Generic Cloud VM (no Vagrant):
+
 ```powershell
 cd Test\hyperv
 

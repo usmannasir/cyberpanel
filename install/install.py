@@ -7312,7 +7312,6 @@ def main():
 
     try:
         import mysqlUtilities
-        import install_utils
 
         # Generate cyberpanel database password using the same logic as download_install_CyberPanel
         if checks.distro == centos:
