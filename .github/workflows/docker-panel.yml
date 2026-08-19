@@ -81,7 +81,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' && steps.dockerhub-login.outcome == 'success' }}
           tags: |
             master3395/cyberpanel:${{ matrix.tag }}
-            master3395/cyberpanel:latest
+            ${{ matrix.tag == 'almalinux10' && 'master3395/cyberpanel:latest' || '' }}
           build-args: |
             BASE_IMAGE=${{ matrix.base }}
             OS_FAMILY=${{ matrix.family }}

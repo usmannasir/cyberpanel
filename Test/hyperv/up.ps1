@@ -5,7 +5,11 @@ param(
 
     [Parameter()]
     [ValidateSet('fresh', 'upgrade', 'all')]
-    [string]$Profile = 'fresh'
+    [string]$Profile = 'fresh',
+
+    [Parameter()]
+    [ValidateSet('native', 'vagrant')]
+    [string]$Provider = 'native'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,11 +24,20 @@ function Resolve-ProfileKey {
 
 switch ($Action) {
     'bootstrap' {
+        if ($Provider -eq 'vagrant') {
+            Write-Host 'Vagrant provider downloads almalinux/10 on first up.'
+            return
+        }
         Write-Host 'Caching AlmaLinux 10 VHDX template and tools (no VM created)...'
         $null = Get-AlmaTemplateVhdxPath
         Write-Host 'Bootstrap done.'
     }
     'fresh' {
+        if ($Provider -eq 'vagrant') {
+            vagrant up cp-fresh --provider=hyperv
+            Write-Host 'FRESH_INSTALL_DONE (vagrant)'
+            return
+        }
         $key = Resolve-ProfileKey $Profile
         if ($key -ne 'fresh') { throw 'Use -Profile fresh for fresh install.' }
         $vm = New-CpHyperVVm -Profile 'fresh'
@@ -37,6 +50,11 @@ switch ($Action) {
         Write-Host 'FRESH_INSTALL_DONE'
     }
     'upgrade' {
+        if ($Provider -eq 'vagrant') {
+            vagrant up cp-upgrade --provider=hyperv
+            Write-Host 'UPGRADE_DONE (vagrant)'
+            return
+        }
         $vm = New-CpHyperVVm -Profile 'upgrade'
         $ip = Get-CpVmIpv4 -VmName $vm -Profile 'upgrade'
         Write-Host "Guest IP: $ip"
@@ -47,6 +65,12 @@ switch ($Action) {
         Write-Host 'UPGRADE_DONE'
     }
     'smoke-fresh' {
+        if ($Provider -eq 'vagrant') {
+            $env:VAGRANT_CWD = $PSScriptRoot
+            vagrant ssh cp-fresh -c 'bash /vagrant/smoke.sh'
+            Write-Host 'Panel URL: https://127.0.0.1:18090  password: TestPass12'
+            return
+        }
         Import-HyperVSmokeModule
         $vm = 'cp-fresh-hv'
         if (-not (Get-VM -Name $vm -ErrorAction SilentlyContinue)) { throw "VM '$vm' missing. Run .\up.ps1 fresh first." }
@@ -55,6 +79,12 @@ switch ($Action) {
         Set-CpPanelPortProxy -Ip $ip -HostPort 18090
     }
     'smoke-upgrade' {
+        if ($Provider -eq 'vagrant') {
+            $env:VAGRANT_CWD = $PSScriptRoot
+            vagrant ssh cp-upgrade -c 'bash /vagrant/smoke.sh'
+            Write-Host 'Panel URL: https://127.0.0.1:28090  password: TestPass12'
+            return
+        }
         Import-HyperVSmokeModule
         $vm = 'cp-upgrade-hv'
         if (-not (Get-VM -Name $vm -ErrorAction SilentlyContinue)) { throw "VM '$vm' missing. Run .\up.ps1 upgrade first." }
@@ -72,6 +102,10 @@ switch ($Action) {
         }
     }
     'destroy' {
+        if ($Provider -eq 'vagrant') {
+            vagrant destroy -f cp-fresh cp-upgrade 2>$null
+            return
+        }
         Remove-CpHyperVVm -Profile $Profile
     }
     'status' {

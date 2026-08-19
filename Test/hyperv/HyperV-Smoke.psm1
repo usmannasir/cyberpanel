@@ -173,7 +173,7 @@ network:
   ethernets:
     nic0:
 $macLine
-      dhcp4: true
+      dhcp4: false
       dhcp6: false
       addresses:
         - ${staticIp}/20
