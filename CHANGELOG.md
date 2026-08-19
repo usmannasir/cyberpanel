@@ -36,8 +36,8 @@ full `v2.5.5-dev` merge.
   and do not abort post-tweak when optional LSCPD sudo helpers are missing.
 - AlmaLinux 10 installer: EPEL 10, remi-release-10, optional htop, AppStream
   MariaDB (not MariaDB.org el9 RPMs), and an EL10-safe LiteSpeed GPG import.
-  VirtualBox smokes on Windows use `almalinux/10-x86_64_v2` because default
-  `almalinux/10` needs AVX2 that VirtualBox NEM does not expose.
+  Full AlmaLinux 10 panel smoke needs x86-64-v3 (LiteSpeed lsphp el10).
+  Windows VirtualBox NEM masks AVX2, so that smoke belongs on KVM or a VPS.
 - `cyberpanel_upgrade.sh` installed under `/usr/local` always downloads
   `upgrade_modules/` for the target branch instead of sourcing the old
   tree's modules (which skipped `upgrade.py` and left the stock build).

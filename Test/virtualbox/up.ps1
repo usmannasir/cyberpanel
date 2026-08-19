@@ -12,9 +12,7 @@ $ErrorActionPreference = 'Stop'
 Set-Location -Path $PSScriptRoot
 
 if ($Os -eq '10') {
-    # VirtualBox on Windows Hypervisor masks AVX2, so the default
-    # almalinux/10 (x86-64-v3) dies at /init. Official v2 box still runs EL10.
-    $env:CYBERPANEL_BOX = 'almalinux/10-x86_64_v2'
+    $env:CYBERPANEL_BOX = 'almalinux/10'
 } else {
     $env:CYBERPANEL_BOX = 'almalinux/9'
 }
