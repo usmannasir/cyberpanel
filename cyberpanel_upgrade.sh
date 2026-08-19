@@ -33,10 +33,12 @@ UPGRADE_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-/usr/local/cyberpanel_upg
 [[ -z "$UPGRADE_SCRIPT_DIR" ]] && UPGRADE_SCRIPT_DIR="/usr/local"
 
 MOD_DIR=""
-if [[ -d "$UPGRADE_SCRIPT_DIR/upgrade_modules" ]]; then
+# A curl-installed loader lives in /usr/local and must not use stock
+# /usr/local/CyberCP/upgrade_modules (those are the OLD build). Always fetch
+# modules for the target branch so fork fixes (errorSanitizer, origin remap)
+# actually run.
+if [[ -d "$UPGRADE_SCRIPT_DIR/upgrade_modules" ]] && [[ "$UPGRADE_SCRIPT_DIR" != "/usr/local" ]]; then
   MOD_DIR="$UPGRADE_SCRIPT_DIR/upgrade_modules"
-elif [[ -d /usr/local/CyberCP/upgrade_modules ]]; then
-  MOD_DIR="/usr/local/CyberCP/upgrade_modules"
 else
   MOD_DIR="/tmp/cyberpanel_upgrade_modules_$$"
   mkdir -p "$MOD_DIR"
