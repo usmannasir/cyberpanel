@@ -96,6 +96,26 @@ class UpgradeDatabaseAccessTests(unittest.TestCase):
              if len(call.args) > 1],
         )
 
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.securityUtils.ensure_api_token', side_effect=(True, False))
+    @patch('loginSystem.models.Administrator.objects.exclude')
+    @patch('django.setup')
+    def test_upgrade_rotates_enabled_accounts_with_invalid_tokens(
+            self, django_setup, exclude, ensure_api_token, std_out):
+        invalid_account = MagicMock()
+        valid_account = MagicMock()
+        exclude.return_value.only.return_value = [invalid_account, valid_account]
+
+        Upgrade.rotateInvalidAPITokens()
+
+        exclude.assert_called_once_with(api=0)
+        exclude.return_value.only.assert_called_once_with('id', 'token')
+        self.assertEqual(
+            [invalid_account, valid_account],
+            [call.args[0] for call in ensure_api_token.call_args_list],
+        )
+        std_out.assert_called_once_with('Rotated 1 invalid API access token(s).', 0)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -53,6 +53,15 @@ class ACLManager:
               '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     @staticmethod
+    def isAdminACL(acl):
+        if int(getattr(acl, 'adminStatus', 0) or 0) == 1:
+            return True
+        try:
+            return int(json.loads(acl.config).get('adminStatus', 0) or 0) == 1
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
+            return False
+
+    @staticmethod
     def VerifySMTPHost(currentACL, owner, user):
         if currentACL['admin'] == 1:
             return 1
@@ -490,7 +499,7 @@ class ACLManager:
 
     @staticmethod
     def websitesLimitCheck(currentAdmin, websitesLimit, userToBeModified = None):
-        if currentAdmin.acl.adminStatus != 1:
+        if not ACLManager.isAdminACL(currentAdmin.acl):
 
             if currentAdmin.initWebsitesLimit != 0:
                 webLimits = 0
@@ -1471,4 +1480,3 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [fixPermissions]")
-
