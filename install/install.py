@@ -687,7 +687,10 @@ class preFlightsChecks:
                                     try:
                                         self.stdOut("Trying remi repository for uw-imap-devel...", 1)
                                         # Enable remi repository
-                                        self.call("dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm", self.distro, "Install remi repo", "Install remi repo", 1, 0, os.EX_OSERR)
+                                        self.call(
+                                            "dnf install -y https://rpms.remirepo.net/enterprise/remi-release-%s.rpm"
+                                            % ("10" if install_utils.is_rhel_el10() else "9"),
+                                            self.distro, "Install remi repo", "Install remi repo", 1, 0, os.EX_OSERR)
                                         # Try installing from remi
                                         remi_command = f"dnf install -y --enablerepo=remi {alt_package}"
                                         result = self.call(remi_command, self.distro, remi_command, remi_command, 1, 0, os.EX_OSERR)
@@ -795,7 +798,10 @@ class preFlightsChecks:
             # Method 3: Try remi repository
             try:
                 self.stdOut("Trying remi repository...", 1)
-                self.call("dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm", self.distro, "Install remi repo", "Install remi repo", 1, 0, os.EX_OSERR)
+                self.call(
+                    "dnf install -y https://rpms.remirepo.net/enterprise/remi-release-%s.rpm"
+                    % ("10" if install_utils.is_rhel_el10() else "9"),
+                    self.distro, "Install remi repo", "Install remi repo", 1, 0, os.EX_OSERR)
                 remi_command = f"dnf install -y --enablerepo=remi {package_name}"
                 result = self.call(remi_command, self.distro, remi_command, remi_command, 1, 0, os.EX_OSERR)
                 if result == 1:

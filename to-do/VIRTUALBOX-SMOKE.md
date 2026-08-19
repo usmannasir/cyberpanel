@@ -11,6 +11,10 @@ AlmaLinux VPS cannot run these VMs. Clone master3395/cyberpanel, open it in Curs
 - Git for Windows
 - About 4 GB RAM per VM. Run **one VM at a time**.
 
+Default box is AlmaLinux 9 (`almalinux/9`). AlmaLinux 10 uses `-Os 10` (`almalinux/10-x86_64_v2`). Run one OS at a time. Destroy the other OS VMs first so the 4 GB RAM budget is free.
+
+On Windows VirtualBox, the default `almalinux/10` (x86-64-v3) often dies at `/init` with `CPU does not support x86-64-v3` because the hypervisor masks AVX2. The official `almalinux/10-x86_64_v2` box is still AlmaLinux 10 and is the smoke target.
+
 ## Commands
 
 ```powershell
@@ -22,6 +26,14 @@ cd Test\virtualbox
 .\up.ps1 upgrade
 .\up.ps1 smoke-upgrade
 .\up.ps1 destroy
+
+# AlmaLinux 10 (same pass bar)
+.\up.ps1 destroy
+.\up.ps1 fresh -Os 10
+.\up.ps1 smoke-fresh -Os 10
+.\up.ps1 halt
+.\up.ps1 upgrade -Os 10
+.\up.ps1 smoke-upgrade -Os 10
 ```
 
 - Fresh panel: `https://127.0.0.1:18090`

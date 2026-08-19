@@ -7,15 +7,21 @@ curl -fsSL "https://raw.githubusercontent.com/usmannasir/cyberpanel/v3.0.2/cyber
   -o /tmp/cyberpanel.sh
 chmod 700 /tmp/cyberpanel.sh
 # Vagrant privileged:true leaves SUDO_* in the environment. Check_Root greps the output of set for SUDO.
-su - root -c 'bash /tmp/cyberpanel.sh -v ols -p TestPass12 -b 3.0.2'
+su - root -c 'bash /tmp/cyberpanel.sh -v ols -p TestPass12 -b 3.0.2' \
+  > /var/log/cp-vagrant-stock.log 2>&1
+tail -n 20 /var/log/cp-vagrant-stock.log || true
 
 # Prefer the fork upgrade loader once the stock panel is up.
 curl -fsSL "https://raw.githubusercontent.com/master3395/cyberpanel/v3.0.2-dev/cyberpanel_upgrade.sh" \
   -o /usr/local/cyberpanel_upgrade.sh
 chmod 700 /usr/local/cyberpanel_upgrade.sh
-su - root -c 'bash /usr/local/cyberpanel_upgrade.sh -b v3.0.2-dev --repo master3395 --mariadb-version 11.8'
+su - root -c 'bash /usr/local/cyberpanel_upgrade.sh -b v3.0.2-dev --repo master3395 --mariadb-version 11.8' \
+  > /var/log/cp-vagrant-upgrade.log 2>&1
+tail -n 40 /var/log/cp-vagrant-upgrade.log || true
 if ! systemctl is-active --quiet lscpd; then
   echo 'UPGRADE_FAILED lscpd not active'
+  echo '--- upgrade log tail ---'
+  tail -n 80 /var/log/cp-vagrant-upgrade.log || true
   exit 1
 fi
 echo "UPGRADE_DONE"
