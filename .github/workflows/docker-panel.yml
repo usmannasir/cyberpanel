@@ -1,0 +1,106 @@
+name: Docker panel image
+
+on:
+  push:
+    branches: [v3.0.2-dev]
+    tags: ['docker-panel-*']
+  workflow_dispatch:
+    inputs:
+      os_tag:
+        description: OS tag (almalinux10 or all)
+        required: false
+        default: almalinux10
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: almalinux8
+            base: almalinux:8
+            family: rhel
+          - tag: almalinux9
+            base: almalinux:9
+            family: rhel
+          - tag: almalinux10
+            base: almalinux:10
+            family: rhel
+          - tag: rockylinux8
+            base: rockylinux:8
+            family: rhel
+          - tag: rockylinux9
+            base: rockylinux:9
+            family: rhel
+          - tag: centos-stream9
+            base: quay.io/centos/centos:stream9
+            family: rhel
+          - tag: rhel8
+            base: registry.access.redhat.com/ubi8/ubi
+            family: rhel
+          - tag: rhel9
+            base: registry.access.redhat.com/ubi9/ubi
+            family: rhel
+          - tag: ubuntu2204
+            base: ubuntu:22.04
+            family: debian
+          - tag: ubuntu2404
+            base: ubuntu:24.04
+            family: debian
+          - tag: debian11
+            base: debian:11
+            family: debian
+          - tag: debian12
+            base: debian:12
+            family: debian
+          - tag: debian13
+            base: debian:13
+            family: debian
+          - tag: openeuler2003
+            base: openeuler/openeuler:20.03-lts-sp3
+            family: rhel
+          - tag: openeuler2203
+            base: openeuler/openeuler:22.03-lts-sp3
+            family: rhel
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v4
+
+      # Only login when Hub secrets exist. Empty secrets make login-action fail with
+      # "Username and password required" and mark the job failed even with
+      # continue-on-error on some runners.
+      - name: Detect Docker Hub credentials
+        id: hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Docker Hub secrets missing: build only (no push)."
+          fi
+
+      - name: Log in to Docker Hub
+        if: steps.hub.outputs.available == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/panel/Dockerfile
+          push: ${{ steps.hub.outputs.available == 'true' }}
+          tags: |
+            master3395/cyberpanel:${{ matrix.tag }}
+            ${{ matrix.tag == 'almalinux10' && format('master3395/cyberpanel:latest') || '' }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.base }}
+            OS_FAMILY=${{ matrix.family }}
+            OS_TAG=${{ matrix.tag }}

@@ -12,6 +12,7 @@ from plogical.httpProc import httpProc
 from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
+from plogical.securityUtils import ensure_api_token
 
 
 def loadUserHome(request):
@@ -98,6 +99,7 @@ def saveChangesAPIAccess(request):
             userAcct = Administrator.objects.get(userName=accountUsername)
 
             if access == "Enable":
+                ensure_api_token(userAcct)
                 userAcct.api = 1
             else:
                 userAcct.api = 0
@@ -158,7 +160,7 @@ def submitUserCreation(request):
 
             selectedACL = ACL.objects.get(name=selectedACL)
 
-            if selectedACL.adminStatus == 1:
+            if ACLManager.isAdminACL(selectedACL):
                 type = 1
             else:
                 type = 3
@@ -198,7 +200,7 @@ def submitUserCreation(request):
             elif currentACL['changeUserACL'] == 1:
 
                 # A non-admin must not be able to create an admin-level account.
-                if selectedACL.adminStatus == 1:
+                if ACLManager.isAdminACL(selectedACL):
                     data_ret = {'status': 0, 'createStatus': 0,
                                 'error_message': "You are not authorized to access this resource."}
 
@@ -309,6 +311,8 @@ def fetchUserDetails(request):
 
                 otpauth = pyotp.totp.TOTP(user.secretKey).provisioning_uri(email, issuer_name="CyberPanel")
 
+                from plogical.humanSize import get_admin_size_mode
+
                 userDetails = {
                     "id": user.id,
                     "firstName": firstName,
@@ -318,7 +322,8 @@ def fetchUserDetails(request):
                     "websitesLimit": websitesLimit,
                     "securityLevel": SecurityLevel(user.securityLevel).name,
                     "otpauth": otpauth,
-                    'twofa': user.twoFA
+                    'twofa': user.twoFA,
+                    "sizeDisplayUnit": get_admin_size_mode(user),
                 }
 
                 data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
@@ -403,6 +408,10 @@ def saveModifications(request):
                 user.securityLevel = secMiddleware.LOW
             else:
                 user.securityLevel = secMiddleware.HIGH
+
+            if isinstance(data, dict) and 'sizeDisplayUnit' in data:
+                from plogical.humanSize import set_admin_size_mode
+                set_admin_size_mode(user, data.get('sizeDisplayUnit'), save=False)
 
             user.save()
 
@@ -534,7 +543,8 @@ def createACLFunc(request):
             else:
                 data['adminStatus'] = 0
 
-            newACL = ACL(name=data['aclName'], config=json.dumps(data))
+            newACL = ACL(name=data['aclName'], adminStatus=data['adminStatus'],
+                         config=json.dumps(data))
             newACL.save()
 
             finalResponse = {'status': 1}
@@ -627,6 +637,7 @@ def submitACLModifications(request):
             ## Version Management
 
             acl = ACL.objects.get(name=data['aclToModify'])
+            acl.adminStatus = int(data['adminStatus'])
             acl.config = json.dumps(data)
             acl.save()
 
@@ -703,7 +714,8 @@ def changeACLFunc(request):
 
             # A non-admin may only re-ACL users they own, and may never assign an
             # admin-level ACL (that would escalate the target to super-admin).
-            if ACLManager.checkUserOwnerShip(currentACL, loggedUser, selectedUser) == 0 or selectedACL.adminStatus == 1:
+            if (ACLManager.checkUserOwnerShip(currentACL, loggedUser, selectedUser) == 0
+                    or ACLManager.isAdminACL(selectedACL)):
                 finalResponse = ACLManager.loadErrorJson()
             else:
                 selectedUser.acl = selectedACL

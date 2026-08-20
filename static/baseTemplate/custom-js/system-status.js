@@ -17,6 +17,15 @@ function getCookie(name) {
             }
         }
     }
+    // Fallback: CSRF seed form in base template (cookie may be missing briefly after login)
+    if (!cookieValue && name === 'csrftoken') {
+        try {
+            var el = document.querySelector('#cp-csrf-seed input[name="csrfmiddlewaretoken"], input[name="csrfmiddlewaretoken"]');
+            if (el && el.value) {
+                cookieValue = el.value;
+            }
+        } catch (e) {}
+    }
     return cookieValue;
 }
 

@@ -90,6 +90,8 @@ urlpatterns = [
     path('fetchDomains', views.fetchDomains, name='fetchDomains'),
     path('changePHP', views.changePHP, name='changePHP'),
     path('submitDomainDeletion', views.submitDomainDeletion, name='submitDomainDeletion'),
+    path('convertWebsiteToChildDomain', views.convertWebsiteToChildDomain, name='convertWebsiteToChildDomain'),
+    path('recreateWebsiteDNS', views.recreateWebsiteDNS, name='recreateWebsiteDNS'),
     path('searchChilds', views.searchChilds, name='searchChilds'),
 
     # Crons

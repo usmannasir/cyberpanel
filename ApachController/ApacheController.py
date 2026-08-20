@@ -263,10 +263,23 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
         # Version 5.4
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            if ProcessUtilities.alma9check == 1:
-                command = 'yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm'
-            else:
-                command = 'yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm'
+            remi_el = '8'
+            try:
+                if os.path.exists('/etc/os-release'):
+                    with open('/etc/os-release', 'r') as f:
+                        for line in f:
+                            if line.startswith('VERSION_ID='):
+                                vid = line.split('=', 1)[1].strip().strip('"').strip("'")
+                                major = int(vid.split('.')[0])
+                                if major >= 10:
+                                    remi_el = '10'
+                                elif major >= 9 or ProcessUtilities.alma9check == 1:
+                                    remi_el = '9'
+                                break
+            except (OSError, ValueError, IndexError):
+                if ProcessUtilities.alma9check == 1:
+                    remi_el = '9'
+            command = 'yum install -y https://rpms.remirepo.net/enterprise/remi-release-%s.rpm' % remi_el
             ApacheController.executioner(command)
 
             command = "yum install -y php?? php??-php-fpm  php??-php-mysql php??-php-curl php??-php-gd php??-php-mbstring php??-php-xml php??-php-zip php??-php-intl"

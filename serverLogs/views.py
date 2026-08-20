@@ -12,6 +12,35 @@ from plogical.processUtilities import ProcessUtilities
 import os
 # Create your views here.
 
+# cyberpanel_ols.so logs these as WARN on every gzip response; not app errors.
+_OLS_CONTENT_ENCODING_NOISE = 'Restored Content-Encoding:'
+_OLS_NOISE_TAG = '[CyberPanel-OLS]'
+
+
+def _is_ols_content_encoding_noise(line):
+    """True for benign cyberpanel_ols Content-Encoding restore WARN lines."""
+    if not line:
+        return False
+    return (_OLS_NOISE_TAG in line) and (_OLS_CONTENT_ENCODING_NOISE in line)
+
+
+def _filter_ols_error_log_noise(raw_text, keep_lines=50):
+    """
+    Drop CyberPanel-OLS Content-Encoding restore WARNs from OLS error.log text.
+    Those lines are middleware noise (gzip header restore), not PHP/site bugs.
+    """
+    if not raw_text or not isinstance(raw_text, str):
+        return raw_text
+    kept = []
+    for line in raw_text.splitlines():
+        if _is_ols_content_encoding_noise(line):
+            continue
+        kept.append(line)
+    if keep_lines and len(kept) > keep_lines:
+        kept = kept[-keep_lines:]
+    return '\n'.join(kept)
+
+
 def logsHome(request):
     proc = httpProc(request, 'serverLogs/index.html',
                     None, 'admin')
@@ -75,8 +104,16 @@ def getLogsFromFile(request):
             fileName = "/home/cyberpanel/error-logs.txt"
 
         try:
-            command = "sudo tail -50 " + fileName
+            # Error log: read a wider window so filtering Content-Encoding WARNs
+            # still leaves ~50 useful lines for the UI.
+            tail_lines = 400 if type == 'error' else 50
+            command = (
+                "sudo /usr/local/bin/cyberpanel-safe-tail --lines %s --file %s"
+                % (int(tail_lines), shlex.quote(fileName))
+            )
             fewLinesOfLogFile = ProcessUtilities.outputExecutioner(command)
+            if type == 'error':
+                fewLinesOfLogFile = _filter_ols_error_log_noise(fewLinesOfLogFile, keep_lines=50)
             status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
             final_json = json.dumps(status)
             return HttpResponse(final_json)

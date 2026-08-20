@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.emailMarketing, name='emailMarketing'),
+    path('settings/', views.emailMarketing, name='settings'),
     path('fetchUsers', views.fetchUsers, name='fetchUsers'),
     path('enableDisableMarketing', views.enableDisableMarketing, name='enableDisableMarketing'),
     path('saveConfigureVerify', views.saveConfigureVerify, name='saveConfigureVerify'),

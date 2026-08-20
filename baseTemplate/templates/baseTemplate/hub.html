@@ -12,6 +12,7 @@
 
     {# ============================ EMAIL ============================ #}
     {% if section == 'email' %}
+        {% if not cosmetic.HidePromotions %}
         <!-- Managed Email Delivery service promo -->
         <div class="cp-service-banner">
             <i class="fas fa-paper-plane cp-sb-deco" aria-hidden="true"></i>
@@ -24,6 +25,7 @@
                 <i class="fas fa-arrow-right" aria-hidden="true"></i> {% trans "Learn more" %}
             </a>
         </div>
+        {% endif %}
 
         <h2 class="section-title">{% trans "EMAIL" %}</h2>
         <div class="cp-tile-grid">
@@ -35,7 +37,8 @@
             {% if admin or emailForwarding %}<a class="cp-tile" href="{% url 'EmailLimits' %}"><span class="cp-tile-ic"><i class="fas fa-gauge"></i></span><span><div class="cp-tile-title">{% trans "Email Limits" %}</div><div class="cp-tile-sub">{% trans "Sending limits" %}</div></span></a>{% endif %}
             {% if admin or changeEmailPassword %}<a class="cp-tile" href="{% url 'changeEmailAccountPassword' %}"><span class="cp-tile-ic"><i class="fas fa-key"></i></span><span><div class="cp-tile-title">{% trans "Change Password" %}</div><div class="cp-tile-sub">{% trans "Reset mailbox password" %}</div></span></a>{% endif %}
             {% if admin or dkimManager %}<a class="cp-tile" href="{% url 'dkimManager' %}"><span class="cp-tile-ic"><i class="fas fa-signature"></i></span><span><div class="cp-tile-title">{% trans "DKIM Manager" %}</div><div class="cp-tile-sub">{% trans "Email signing keys" %}</div></span></a>{% endif %}
-            {% if admin or createEmail %}<a class="cp-tile" href="/webmail/"><span class="cp-tile-ic"><i class="fas fa-envelope-open-text"></i></span><span><div class="cp-tile-title">{% trans "Webmail" %}</div><div class="cp-tile-sub">{% trans "Open webmail" %}</div></span></a>{% endif %}
+            {% if admin or createEmail %}<a class="cp-tile" href="/webmail/"><span class="cp-tile-ic"><i class="fas fa-envelope-open-text"></i></span><span><div class="cp-tile-title">{% trans "Webmail" %}</div><div class="cp-tile-sub">{% trans "Integrated CyberPanel webmail" %}</div></span></a>{% endif %}
+            {% if admin %}<a class="cp-tile" href="/snappymail/" target="_blank" rel="noopener noreferrer"><span class="cp-tile-ic"><i class="fas fa-envelope"></i></span><span><div class="cp-tile-title">{% trans "SnappyMail" %}</div><div class="cp-tile-sub">{% trans "Open SnappyMail client" %}</div></span></a>{% endif %}
         </div>
         {% if admin %}
         <h2 class="section-title" style="margin-top:26px;">{% trans "DELIVERABILITY & ANTI-SPAM" %}</h2>
@@ -57,7 +60,6 @@
         <div class="cp-tile-grid">
             {% if admin or listDatabases %}<a class="cp-tile" href="{% url 'listDBs' %}"><span class="cp-tile-ic"><i class="fas fa-database"></i></span><span><div class="cp-tile-title">{% trans "All Databases" %}</div><div class="cp-tile-sub">{% trans "View databases" %}</div></span></a>{% endif %}
             {% if admin or createDatabase %}<a class="cp-tile" href="{% url 'createDatabase' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create Database" %}</div><div class="cp-tile-sub">{% trans "Add a database" %}</div></span></a>{% endif %}
-            {% if admin or deleteDatabase %}<a class="cp-tile" href="{% url 'deleteDatabase' %}"><span class="cp-tile-ic"><i class="fas fa-trash"></i></span><span><div class="cp-tile-title">{% trans "Delete Database" %}</div><div class="cp-tile-sub">{% trans "Remove a database" %}</div></span></a>{% endif %}
             {% if admin or createDatabase %}<a class="cp-tile" href="{% url 'phpMyAdmin' %}" target="_blank" rel="noopener"><span class="cp-tile-ic"><i class="fas fa-table"></i></span><span><div class="cp-tile-title">{% trans "phpMyAdmin" %}</div><div class="cp-tile-sub">{% trans "Open phpMyAdmin" %}</div></span></a>{% endif %}
             {% if admin %}<a class="cp-tile" href="{% url 'MysqlManager' %}"><span class="cp-tile-ic"><i class="fas fa-sliders"></i></span><span><div class="cp-tile-title">{% trans "MySQL Manager" %}</div><div class="cp-tile-sub">{% trans "Tune & monitor MySQL" %}</div></span></a>{% endif %}
         </div>
@@ -65,7 +67,6 @@
         <div class="cp-tile-grid">
             {% if admin or listFTPAccounts %}<a class="cp-tile" href="{% url 'listFTPAccounts' %}"><span class="cp-tile-ic"><i class="fas fa-folder"></i></span><span><div class="cp-tile-title">{% trans "FTP Accounts" %}</div><div class="cp-tile-sub">{% trans "View FTP users" %}</div></span></a>{% endif %}
             {% if admin or createFTPAccount %}<a class="cp-tile" href="{% url 'createFTPAccount' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create FTP Account" %}</div><div class="cp-tile-sub">{% trans "Add an FTP user" %}</div></span></a>{% endif %}
-            {% if admin or deleteFTPAccount %}<a class="cp-tile" href="{% url 'deleteFTPAccount' %}"><span class="cp-tile-ic"><i class="fas fa-trash"></i></span><span><div class="cp-tile-title">{% trans "Delete FTP Account" %}</div><div class="cp-tile-sub">{% trans "Remove an FTP user" %}</div></span></a>{% endif %}
             {% if admin or listFTPAccounts %}<a class="cp-tile" href="{% url 'ResetFTPConfigurations' %}"><span class="cp-tile-ic"><i class="fas fa-rotate"></i></span><span><div class="cp-tile-title">{% trans "Reset FTP" %}</div><div class="cp-tile-sub">{% trans "Reset configuration" %}</div></span></a>{% endif %}
         </div>
 
@@ -100,13 +101,13 @@
             {% if admin or createPackage %}<a class="cp-tile" href="{% url 'createPackage' %}"><span class="cp-tile-ic"><i class="fas fa-circle-plus"></i></span><span><div class="cp-tile-title">{% trans "Create Package" %}</div><div class="cp-tile-sub">{% trans "Add a plan" %}</div></span></a>{% endif %}
             {% if admin or modifyPackage %}<a class="cp-tile" href="{% url 'modifyPackage' %}"><span class="cp-tile-ic"><i class="fas fa-pen"></i></span><span><div class="cp-tile-title">{% trans "Modify Package" %}</div><div class="cp-tile-sub">{% trans "Edit a plan" %}</div></span></a>{% endif %}
         </div>
-        {% if admin %}
+        {% if admin or canViewPlugins %}
         <h2 class="section-title" style="margin-top:26px;">{% trans "ADMIN" %}</h2>
         <div class="cp-tile-grid">
-            <a class="cp-tile" href="{% url 'createNewACL' %}"><span class="cp-tile-ic"><i class="fas fa-user-shield"></i></span><span><div class="cp-tile-title">{% trans "Create ACL" %}</div><div class="cp-tile-sub">{% trans "Permission profiles" %}</div></span></a>
-            <a class="cp-tile" href="{% url 'modifyACL' %}"><span class="cp-tile-ic"><i class="fas fa-user-gear"></i></span><span><div class="cp-tile-title">{% trans "Modify ACL" %}</div><div class="cp-tile-sub">{% trans "Edit permissions" %}</div></span></a>
-            <a class="cp-tile" href="{% url 'apiAccess' %}"><span class="cp-tile-ic"><i class="fas fa-plug"></i></span><span><div class="cp-tile-title">{% trans "API Access" %}</div><div class="cp-tile-sub">{% trans "API tokens" %}</div></span></a>
-            <a class="cp-tile" href="{% url 'installed' %}"><span class="cp-tile-ic"><i class="fas fa-puzzle-piece"></i></span><span><div class="cp-tile-title">{% trans "Plugins" %}</div><div class="cp-tile-sub">{% trans "Installed plugins" %}</div></span></a>
+            {% if admin %}<a class="cp-tile" href="{% url 'createNewACL' %}"><span class="cp-tile-ic"><i class="fas fa-user-shield"></i></span><span><div class="cp-tile-title">{% trans "Create ACL" %}</div><div class="cp-tile-sub">{% trans "Permission profiles" %}</div></span></a>{% endif %}
+            {% if admin %}<a class="cp-tile" href="{% url 'modifyACL' %}"><span class="cp-tile-ic"><i class="fas fa-user-gear"></i></span><span><div class="cp-tile-title">{% trans "Modify ACL" %}</div><div class="cp-tile-sub">{% trans "Edit permissions" %}</div></span></a>{% endif %}
+            {% if admin %}<a class="cp-tile" href="{% url 'apiAccess' %}"><span class="cp-tile-ic"><i class="fas fa-plug"></i></span><span><div class="cp-tile-title">{% trans "API Access" %}</div><div class="cp-tile-sub">{% trans "API tokens" %}</div></span></a>{% endif %}
+            {% if admin or canViewPlugins %}<a class="cp-tile" href="{% url 'installed' %}"><span class="cp-tile-ic"><i class="fas fa-puzzle-piece"></i></span><span><div class="cp-tile-title">{% trans "Plugins" %}</div><div class="cp-tile-sub">{% trans "Installed plugins" %}</div></span></a>{% endif %}
         </div>
         {% endif %}
 
@@ -143,6 +144,10 @@
         <div class="cp-tile-grid">
             <a class="cp-tile" href="{% url 'Filemanager' %}"><span class="cp-tile-ic"><i class="fas fa-folder-open"></i></span><span><div class="cp-tile-title">{% trans "Root File Manager" %}</div><div class="cp-tile-sub">{% trans "Server files" %}</div></span></a>
             <a class="cp-tile" href="{% url 'MysqlManager' %}"><span class="cp-tile-ic"><i class="fas fa-database"></i></span><span><div class="cp-tile-title">{% trans "MySQL Manager" %}</div><div class="cp-tile-sub">{% trans "Tune MySQL" %}</div></span></a>
+            {% if admin or addDeleteRecords %}
+            <a class="cp-tile" href="{% url 'addDeleteDNSRecords' %}"><span class="cp-tile-ic"><i class="fas fa-list"></i></span><span><div class="cp-tile-title">{% trans "DNS Records" %}</div><div class="cp-tile-sub">{% trans "Add, edit & delete records" %}</div></span></a>
+            <a class="cp-tile" href="{% url 'addDeleteDNSRecordsCloudFlare' %}"><span class="cp-tile-ic"><i class="fas fa-cloud"></i></span><span><div class="cp-tile-title">{% trans "Cloudflare" %}</div><div class="cp-tile-sub">{% trans "Manage Cloudflare DNS" %}</div></span></a>
+            {% endif %}
             <a class="cp-tile" href="{% url 'createDNSZone' %}"><span class="cp-tile-ic"><i class="fas fa-sitemap"></i></span><span><div class="cp-tile-title">{% trans "DNS Zones" %}</div><div class="cp-tile-sub">{% trans "Create zones" %}</div></span></a>
             <a class="cp-tile" href="{% url 'createNameserver' %}"><span class="cp-tile-ic"><i class="fas fa-server"></i></span><span><div class="cp-tile-title">{% trans "Nameservers" %}</div><div class="cp-tile-sub">{% trans "Create nameservers" %}</div></span></a>
             <a class="cp-tile" href="{% url 'configureDefaultNameServers' %}"><span class="cp-tile-ic"><i class="fas fa-gear"></i></span><span><div class="cp-tile-title">{% trans "Default Nameservers" %}</div><div class="cp-tile-sub">{% trans "Configure defaults" %}</div></span></a>
@@ -172,7 +177,7 @@
         </div>
         <h2 class="section-title" style="margin-top:26px;">{% trans "SSL CERTIFICATES" %}</h2>
         <div class="cp-tile-grid">
-            <a class="cp-tile" href="{% url 'manageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Site certificates" %}</div></span></a>
+            <a class="cp-tile" href="{% url 'v2ManageSSL' %}"><span class="cp-tile-ic"><i class="fas fa-lock"></i></span><span><div class="cp-tile-title">{% trans "Manage SSL" %}</div><div class="cp-tile-sub">{% trans "Site certificates" %}</div></span></a>
             <a class="cp-tile" href="{% url 'sslForHostName' %}"><span class="cp-tile-ic"><i class="fas fa-server"></i></span><span><div class="cp-tile-title">{% trans "Hostname SSL" %}</div><div class="cp-tile-sub">{% trans "Panel hostname cert" %}</div></span></a>
             <a class="cp-tile" href="{% url 'sslForMailServer' %}"><span class="cp-tile-ic"><i class="fas fa-envelope"></i></span><span><div class="cp-tile-title">{% trans "Mail Server SSL" %}</div><div class="cp-tile-sub">{% trans "Mail cert" %}</div></span></a>
         </div>

@@ -1,0 +1,14 @@
+[Unit]
+Description=CyberPanel Docker first-boot install
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/etc/cyberpanel/.docker-initialized
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/cyberpanel-docker/first-boot.sh
+RemainAfterExit=yes
+TimeoutStartSec=7200
+
+[Install]
+WantedBy=multi-user.target

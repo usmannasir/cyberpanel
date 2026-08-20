@@ -1,12 +1,34 @@
 class vhostConfs:
 
-    olsSensitiveFileDenyRules = """# BEGIN CyberPanel sensitive-file denials
+    # Shared OLS rewrite rules: forbid direct HTTP access to common secret paths (#1859).
+    # Must live inside `rules <<<END_rules` ... END_rules (OLS ignores RewriteRule outside that block).
+    olsSensitiveFileDenyRules = """# BEGIN CyberPanel sensitive-file denials (#1859)
 RewriteRule (^|/)\\.env - [F,L]
 RewriteRule (^|/)\\.git(/|$) - [F,L]
 RewriteRule (^|/)\\.htpasswd$ - [F,L]
 RewriteRule (^|/)\\.user\\.ini$ - [F,L]
 RewriteRule (^|/)\\.htaccess$ - [F,L]
-# END CyberPanel sensitive-file denials
+# END CyberPanel sensitive-file denials (#1859)
+"""
+
+    # Apache / LiteSpeed Enterprise VirtualHost snippet (httpd style).
+    apacheSensitiveFileDeny = """
+    # BEGIN CyberPanel sensitive-file denials (#1859)
+    <IfModule mod_rewrite.c>
+        RewriteEngine On
+        RewriteRule (^|/)\\.env - [F,L]
+        RewriteRule (^|/)\\.git(/|$) - [F,L]
+        RewriteRule (^|/)\\.htpasswd$ - [F,L]
+        RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+        RewriteRule (^|/)\\.htaccess$ - [F,L]
+    </IfModule>
+    <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
+        Require all denied
+    </FilesMatch>
+    <DirectoryMatch "/\\.git">
+        Require all denied
+    </DirectoryMatch>
+    # END CyberPanel sensitive-file denials (#1859)
 """
 
     olsMasterMainConf = """virtualHost {virtualHostName} {
@@ -81,13 +103,13 @@ rewrite  {
   enable                  1
   autoLoadHtaccess        1
   rules                   <<<END_rules
-# BEGIN CyberPanel sensitive-file denials
+# BEGIN CyberPanel sensitive-file denials (#1859)
 RewriteRule (^|/)\\.env - [F,L]
 RewriteRule (^|/)\\.git(/|$) - [F,L]
 RewriteRule (^|/)\\.htpasswd$ - [F,L]
 RewriteRule (^|/)\\.user\\.ini$ - [F,L]
 RewriteRule (^|/)\\.htaccess$ - [F,L]
-# END CyberPanel sensitive-file denials
+# END CyberPanel sensitive-file denials (#1859)
   END_rules
 }
 
@@ -128,13 +150,13 @@ index  {
   indexFiles              index.php, index.html
 }
 
-errorlog $VH_ROOT/logs/{masterDomain}.error_log {
+errorlog $VH_ROOT/logs/{virtualHostName}.error_log {
   useServer               0
   logLevel                WARN
   rollingSize             10M
 }
 
-accesslog $VH_ROOT/logs/{masterDomain}.access_log {
+accesslog $VH_ROOT/logs/{virtualHostName}.access_log {
   useServer               0
   logFormat               "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   logHeaders              5
@@ -179,13 +201,13 @@ rewrite  {
   enable                  1
   autoLoadHtaccess        1
   rules                   <<<END_rules
-# BEGIN CyberPanel sensitive-file denials
+# BEGIN CyberPanel sensitive-file denials (#1859)
 RewriteRule (^|/)\\.env - [F,L]
 RewriteRule (^|/)\\.git(/|$) - [F,L]
 RewriteRule (^|/)\\.htpasswd$ - [F,L]
 RewriteRule (^|/)\\.user\\.ini$ - [F,L]
 RewriteRule (^|/)\\.htaccess$ - [F,L]
-# END CyberPanel sensitive-file denials
+# END CyberPanel sensitive-file denials (#1859)
   END_rules
 }
 
@@ -194,7 +216,7 @@ context /.well-known/acme-challenge {
   allowBrowse             1
 
   rewrite  {
-    enable                  0
+     enable                  0
   }
   addDefaultCharset       off
 
@@ -219,7 +241,7 @@ context /.well-known/acme-challenge {
         CacheRoot lscache
         CacheLookup on
     </IfModule>
-    # BEGIN CyberPanel sensitive-file denials
+    # BEGIN CyberPanel sensitive-file denials (#1859)
     <IfModule mod_rewrite.c>
         RewriteEngine On
         RewriteRule (^|/)\\.env - [F,L]
@@ -234,7 +256,7 @@ context /.well-known/acme-challenge {
     <DirectoryMatch "/\\.git">
         Require all denied
     </DirectoryMatch>
-    # END CyberPanel sensitive-file denials
+    # END CyberPanel sensitive-file denials (#1859)
 
 </VirtualHost>
 """
@@ -247,13 +269,13 @@ context /.well-known/acme-challenge {
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot {path}
     Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
-    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    CustomLog /home/{masterDomain}/logs/{virtualHostName}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
         CacheRoot lscache
         CacheLookup on
     </IfModule>
-    # BEGIN CyberPanel sensitive-file denials
+    # BEGIN CyberPanel sensitive-file denials (#1859)
     <IfModule mod_rewrite.c>
         RewriteEngine On
         RewriteRule (^|/)\\.env - [F,L]
@@ -268,7 +290,7 @@ context /.well-known/acme-challenge {
     <DirectoryMatch "/\\.git">
         Require all denied
     </DirectoryMatch>
-    # END CyberPanel sensitive-file denials
+    # END CyberPanel sensitive-file denials (#1859)
 
 </VirtualHost>"""
 
@@ -279,7 +301,7 @@ context /.well-known/acme-challenge {
         ServerAdmin {administratorEmail}
         SuexecUserGroup {externalApp} {externalApp}
         DocumentRoot /home/{virtualHostName}/public_html/
-        Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
+        Alias /.well-known/acme-challenge /home/{virtualHostName}/public_html/.well-known/acme-challenge
         <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
         ProxySet disablereuse=off
         </proxy>
@@ -295,14 +317,22 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
         </Directory>
-        # BEGIN CyberPanel sensitive-file denials
+        # BEGIN CyberPanel sensitive-file denials (#1859)
+        <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteRule (^|/)\\.env - [F,L]
+            RewriteRule (^|/)\\.git(/|$) - [F,L]
+            RewriteRule (^|/)\\.htpasswd$ - [F,L]
+            RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+            RewriteRule (^|/)\\.htaccess$ - [F,L]
+        </IfModule>
         <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
             Require all denied
         </FilesMatch>
         <DirectoryMatch "/\\.git">
             Require all denied
         </DirectoryMatch>
-        # END CyberPanel sensitive-file denials
+        # END CyberPanel sensitive-file denials (#1859)
 
 </VirtualHost>
 """
@@ -328,14 +358,22 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
          </Directory>
-         # BEGIN CyberPanel sensitive-file denials
+         # BEGIN CyberPanel sensitive-file denials (#1859)
+         <IfModule mod_rewrite.c>
+             RewriteEngine On
+             RewriteRule (^|/)\\.env - [F,L]
+             RewriteRule (^|/)\\.git(/|$) - [F,L]
+             RewriteRule (^|/)\\.htpasswd$ - [F,L]
+             RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+             RewriteRule (^|/)\\.htaccess$ - [F,L]
+         </IfModule>
          <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
              Require all denied
          </FilesMatch>
          <DirectoryMatch "/\\.git">
              Require all denied
          </DirectoryMatch>
-         # END CyberPanel sensitive-file denials
+         # END CyberPanel sensitive-file denials (#1859)
 
          SSLEngine on
          SSLVerifyClient none
@@ -366,14 +404,22 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
         </Directory>
-        # BEGIN CyberPanel sensitive-file denials
+        # BEGIN CyberPanel sensitive-file denials (#1859)
+        <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteRule (^|/)\\.env - [F,L]
+            RewriteRule (^|/)\\.git(/|$) - [F,L]
+            RewriteRule (^|/)\\.htpasswd$ - [F,L]
+            RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+            RewriteRule (^|/)\\.htaccess$ - [F,L]
+        </IfModule>
         <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
             Require all denied
         </FilesMatch>
         <DirectoryMatch "/\\.git">
             Require all denied
         </DirectoryMatch>
-        # END CyberPanel sensitive-file denials
+        # END CyberPanel sensitive-file denials (#1859)
 
 </VirtualHost>
 """
@@ -399,14 +445,22 @@ context /.well-known/acme-challenge {
             Require all granted
             DirectoryIndex index.html index.php
         </Directory>
-        # BEGIN CyberPanel sensitive-file denials
+        # BEGIN CyberPanel sensitive-file denials (#1859)
+        <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteRule (^|/)\\.env - [F,L]
+            RewriteRule (^|/)\\.git(/|$) - [F,L]
+            RewriteRule (^|/)\\.htpasswd$ - [F,L]
+            RewriteRule (^|/)\\.user\\.ini$ - [F,L]
+            RewriteRule (^|/)\\.htaccess$ - [F,L]
+        </IfModule>
         <FilesMatch "(^|/)(\\.env|\\.htpasswd|\\.htaccess|\\.user\\.ini)">
             Require all denied
         </FilesMatch>
         <DirectoryMatch "/\\.git">
             Require all denied
         </DirectoryMatch>
-        # END CyberPanel sensitive-file denials
+        # END CyberPanel sensitive-file denials (#1859)
         SSLEngine on
         SSLVerifyClient none
         SSLCertificateFile {SSLBase}.fullchain.pem
@@ -434,7 +488,7 @@ retryTimeout            0
 respBuffer              0
 }
 """
-    OLSLBConf = """docRoot                   $VH_ROOT/public_html
+    OLSLBConf = """docRoot                   {olsDocRoot}
 vhDomain                  $VH_NAME
 vhAliases                 www.$VH_NAME
 adminEmails               {adminEmails}
@@ -462,11 +516,11 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
 }
 
 context /.well-known/acme-challenge {
-  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  location                {olsAcmeChallengeRoot}
   allowBrowse             1
 
   rewrite  {
-    enable                  0
+     enable                  0
   }
   addDefaultCharset       off
 
@@ -565,7 +619,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "phpVersion": {php},
     "custom_conf": {
     ServerAdmin {administratorEmail}
-    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    CustomLog /home/{masterDomain}/logs/{virtualHostName}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot /home/{masterDomain}/lscache
     </IfModule>
@@ -580,7 +634,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "phpVersion": {php},
     "custom_conf": {
     ServerAdmin {administratorEmail}
-    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    CustomLog /home/{masterDomain}/logs/{virtualHostName}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot /home/{masterDomain}/lscache
     </IfModule>

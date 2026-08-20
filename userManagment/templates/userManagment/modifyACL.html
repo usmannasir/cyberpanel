@@ -374,6 +374,18 @@
                             <input ng-model="versionManagement" type="checkbox" id="versionManagement">
                             <label for="versionManagement" class="checkbox-label">{% trans "Version Management" %}</label>
                         </div>
+                        <div class="checkbox-wrapper">
+                            <input ng-model="viewPlugins" type="checkbox" id="viewPlugins">
+                            <label for="viewPlugins" class="checkbox-label">{% trans "View Plugins" %} ({% trans "see the installed plugins list" %})</label>
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input ng-model="usePlugins" type="checkbox" id="usePlugins">
+                            <label for="usePlugins" class="checkbox-label">{% trans "Use Plugins" %} ({% trans "open and use plugin settings/features" %})</label>
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input ng-model="installPlugins" type="checkbox" id="installPlugins">
+                            <label for="installPlugins" class="checkbox-label">{% trans "Install Plugins" %} ({% trans "install, upgrade, enable/disable, remove" %})</label>
+                        </div>
                     </div>
                 </div>
 

@@ -1,0 +1,82 @@
+{# Shared log-source switcher for Server Log viewers. Expects selectedLogSource + changeLogSource on the Angular scope. #}
+{% load i18n %}
+<style>
+    .log-source-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .log-source-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--text-muted, #94a3b8);
+        white-space: nowrap;
+    }
+    .log-source-label .req {
+        color: #f87171;
+        margin-left: 2px;
+    }
+    .log-source-select {
+        min-width: 220px;
+        max-width: 100%;
+        padding: 0.45rem 2rem 0.45rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid var(--console-border, #334155);
+        background: var(--bg-hover, #334155);
+        color: var(--console-text, #e2e8f0);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%94a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.65rem center;
+    }
+    .log-source-select:focus {
+        outline: none;
+        border-color: var(--accent-color, #667eea);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+    }
+    .log-source-bar {
+        background: var(--bg-light, #f8f9ff);
+        padding: 0.85rem 1.5rem;
+        border-bottom: 1px solid var(--border-light, #e8e9ff);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .log-source-bar .log-source-label {
+        color: var(--text-primary, #334155);
+    }
+    .log-source-bar .log-source-select {
+        background-color: var(--bg-secondary, #fff);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%64748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        color: var(--text-primary, #1e293b);
+        border-color: var(--border-light, #e8e9ff);
+    }
+</style>
+<div class="log-source-bar">
+    <div class="log-source-wrap">
+        <label class="log-source-label" for="cyberpanelLogSource">
+            {% trans "Log source" %}<span class="req">*</span>
+        </label>
+        <select id="cyberpanelLogSource"
+                class="log-source-select"
+                ng-model="selectedLogSource"
+                ng-change="changeLogSource()">
+            <option value="">{% trans "-- Please select --" %}</option>
+            <option value="cyberpanel">{% trans "Main Log" %} ({% trans "CyberPanel log" %})</option>
+            <option value="access">{% trans "Access Logs" %} ({% trans "Web access" %})</option>
+            <option value="error">{% trans "Error Logs" %} ({% trans "Web errors" %})</option>
+            <option value="email">{% trans "Email Log" %} ({% trans "Mail log" %})</option>
+            <option value="ftp">{% trans "FTP Logs" %} ({% trans "FTP log" %})</option>
+            <option value="modSec">{% trans "ModSec Audit" %} ({% trans "WAF audit log" %})</option>
+        </select>
+    </div>
+    <div class="stat-item" style="font-size:0.8125rem;color:var(--text-muted,#64748b);">
+        {% trans "Switch without returning to the Logs hub." %}
+    </div>
+</div>

@@ -304,6 +304,32 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
 /* Java script code to start/stop litespeed */
 
+/** Navigate between Main / Access / Error / Email / FTP / ModSec log viewers. */
+window.CyberPanelLogSources = window.CyberPanelLogSources || {
+    routes: {
+        cyberpanel: '/serverstatus/cyberCPMainLogFile',
+        access: '/serverlogs/accessLogs',
+        error: '/serverlogs/errorLogs',
+        email: '/serverlogs/emaillogs',
+        ftp: '/serverlogs/ftplogs',
+        modSec: '/serverlogs/modSecAuditLogs'
+    },
+    bindScope: function ($scope, currentType) {
+        $scope.selectedLogSource = currentType || '';
+        $scope.changeLogSource = function () {
+            var key = $scope.selectedLogSource;
+            var dest = window.CyberPanelLogSources.routes[key];
+            if (!key || !dest) {
+                return;
+            }
+            if (window.location.pathname.replace(/\/$/, '') === dest.replace(/\/$/, '')) {
+                return;
+            }
+            window.location.href = dest;
+        };
+    }
+};
+
 /* Java script code to read log file */
 
 app.controller('readCyberCPLogFile', function ($scope, $http) {
@@ -311,6 +337,7 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
     $scope.logFileLoading = false;
     $scope.logsFeteched = true;
     $scope.couldNotFetchLogs = true;
+    CyberPanelLogSources.bindScope($scope, 'cyberpanel');
 
 
     var url = "/serverstatus/getFurtherDataFromLogFile";
@@ -778,13 +805,165 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
 
 });
 
-app.controller('topProcesses', function ($scope, $http, $timeout) {
+function cpGroupInt(n) {
+    n = Math.round(Number(n) || 0);
+    var sign = n < 0 ? '-' : '';
+    var s = String(Math.abs(n));
+    var parts = [];
+    while (s.length > 3) {
+        parts.unshift(s.slice(-3));
+        s = s.slice(0, -3);
+    }
+    if (s) {
+        parts.unshift(s);
+    }
+    return sign + parts.join(' ');
+}
+
+function cpFormatMbLabel(val) {
+    if (val === null || val === undefined || val === '') {
+        return '0 MB';
+    }
+    var mode = (window.CPSizeDisplayUnit || 'auto');
+    var s = String(val).trim();
+    if (/^\d+(\.\d+)?\s*(B|KB|MB|GB|TB)$/i.test(s)) {
+        return s.replace(/(\d)([A-Za-z])/g, '$1 $2');
+    }
+    var m = s.match(/^(\d+(?:\.\d+)?)\s*MB$/i);
+    var mb;
+    if (m) {
+        mb = parseFloat(m[1]);
+    } else if (/^\d+(\.\d+)?$/.test(s)) {
+        mb = parseFloat(s);
+    } else {
+        return s;
+    }
+    if (!isFinite(mb) || mb < 0) {
+        return '0 MB';
+    }
+    if (mode === 'MB') {
+        return cpGroupInt(mb) + ' MB';
+    }
+    if (mode === 'GB') {
+        var gbFixed = mb / 1024;
+        if (Math.abs(gbFixed - Math.round(gbFixed)) < 0.005 && Math.abs(gbFixed) >= 10) {
+            return cpGroupInt(Math.round(gbFixed)) + ' GB';
+        }
+        return gbFixed.toFixed(2) + ' GB';
+    }
+    var bytes = mb * 1024 * 1024;
+    if (bytes >= 1024 * 1024 * 1024 * 1024) {
+        return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + ' TB';
+    }
+    if (bytes >= 1024 * 1024 * 1024) {
+        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    }
+    if (bytes >= 1024 * 1024) {
+        if (mb >= 1000) {
+            return cpGroupInt(mb) + ' MB';
+        }
+        return (Math.abs(mb - Math.round(mb)) < 0.005 ? cpGroupInt(Math.round(mb)) : mb.toFixed(2)) + ' MB';
+    }
+    if (bytes >= 1024) {
+        return (bytes / 1024).toFixed(1) + ' KB';
+    }
+    return cpGroupInt(bytes) + ' B';
+}
+
+app.controller('topProcesses', function ($scope, $http, $timeout, $interval) {
+
+    var refreshTimeoutPromise = null;
+    var countdownPromise = null;
+    var REFRESH_INTERVAL_MS = 10000;
 
     $scope.cyberPanelLoading = true;
+    $scope.initialLoad = true;
+    $scope.autoRefreshEnabled = true;
+    $scope.isRefreshing = false;
+    $scope.refreshIntervalSeconds = REFRESH_INTERVAL_MS / 1000;
+    $scope.refreshCountdown = 0;
+
+    function stopCountdown() {
+        if (countdownPromise) {
+            $interval.cancel(countdownPromise);
+            countdownPromise = null;
+        }
+    }
+
+    function startCountdown() {
+        stopCountdown();
+        if (!$scope.autoRefreshEnabled) {
+            $scope.refreshCountdown = 0;
+            return;
+        }
+        $scope.refreshCountdown = REFRESH_INTERVAL_MS / 1000;
+        countdownPromise = $interval(function () {
+            if ($scope.refreshCountdown > 0) {
+                $scope.refreshCountdown -= 1;
+            }
+        }, 1000);
+    }
+
+    function scheduleRefresh() {
+        if (refreshTimeoutPromise) {
+            $timeout.cancel(refreshTimeoutPromise);
+            refreshTimeoutPromise = null;
+        }
+        stopCountdown();
+        if ($scope.autoRefreshEnabled) {
+            startCountdown();
+            refreshTimeoutPromise = $timeout($scope.topProcessesStatus, REFRESH_INTERVAL_MS);
+        } else {
+            $scope.refreshCountdown = 0;
+        }
+    }
+
+    $scope.toggleAutoRefresh = function () {
+        $scope.autoRefreshEnabled = !$scope.autoRefreshEnabled;
+        if ($scope.autoRefreshEnabled) {
+            scheduleRefresh();
+        } else {
+            if (refreshTimeoutPromise) {
+                $timeout.cancel(refreshTimeoutPromise);
+                refreshTimeoutPromise = null;
+            }
+            stopCountdown();
+            $scope.refreshCountdown = 0;
+        }
+    };
+
+    $scope.refreshNow = function () {
+        if ($scope.isRefreshing) {
+            return;
+        }
+        if (refreshTimeoutPromise) {
+            $timeout.cancel(refreshTimeoutPromise);
+            refreshTimeoutPromise = null;
+        }
+        stopCountdown();
+        $scope.refreshCountdown = 0;
+        $scope.topProcessesStatus();
+    };
+
+    $scope.$on('$destroy', function () {
+        if (refreshTimeoutPromise) {
+            $timeout.cancel(refreshTimeoutPromise);
+        }
+        stopCountdown();
+    });
 
     $scope.topProcessesStatus = function () {
 
-        $scope.cyberPanelLoading = false;
+        if ($scope.isRefreshing) {
+            return;
+        }
+
+        $scope.isRefreshing = true;
+        stopCountdown();
+        $scope.refreshCountdown = 0;
+        if ($scope.initialLoad) {
+            $scope.cyberPanelLoading = false;
+        }
 
         url = "/serverstatus/topProcessesStatus";
 
@@ -801,8 +980,16 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
 
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = true;
+            $scope.isRefreshing = false;
+            $scope.initialLoad = false;
             if (response.data.status === 1) {
                 $scope.processes = JSON.parse(response.data.data);
+
+                if (response.data.sizeDisplayUnit) {
+                    try {
+                        window.CPSizeDisplayUnit = response.data.sizeDisplayUnit;
+                    } catch (e) {}
+                }
 
                 //CPU Details
                 $scope.cores = response.data.cores;
@@ -823,16 +1010,16 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                 $scope.Softirqs = response.data.Softirqs;
 
                 //Memory
-                $scope.totalMemory = response.data.totalMemory;
-                $scope.freeMemory = response.data.freeMemory;
-                $scope.usedMemory = response.data.usedMemory;
-                $scope.buffCache = response.data.buffCache;
+                $scope.totalMemory = cpFormatMbLabel(response.data.totalMemory);
+                $scope.freeMemory = cpFormatMbLabel(response.data.freeMemory);
+                $scope.usedMemory = cpFormatMbLabel(response.data.usedMemory);
+                $scope.buffCache = cpFormatMbLabel(response.data.buffCache);
 
                 //Swap
-                $scope.swapTotalMemory = response.data.swapTotalMemory;
-                $scope.swapFreeMemory = response.data.swapFreeMemory;
-                $scope.swapUsedMemory = response.data.swapUsedMemory;
-                $scope.swapBuffCache = response.data.swapBuffCache;
+                $scope.swapTotalMemory = cpFormatMbLabel(response.data.swapTotalMemory);
+                $scope.swapFreeMemory = cpFormatMbLabel(response.data.swapFreeMemory);
+                $scope.swapUsedMemory = cpFormatMbLabel(response.data.swapUsedMemory);
+                $scope.swapBuffCache = cpFormatMbLabel(response.data.swapBuffCache);
 
                 //Processes
                 $scope.totalProcesses = response.data.totalProcesses;
@@ -841,32 +1028,33 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                 $scope.stoppedProcesses = response.data.stoppedProcesses;
                 $scope.zombieProcesses = response.data.zombieProcesses;
 
-                $timeout($scope.topProcessesStatus, 3000);
+                scheduleRefresh();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
                     type: 'error'
                 });
+                scheduleRefresh();
             }
 
         }
 
         function cantLoadInitialDatas(response) {
             $scope.cyberPanelLoading = true;
+            $scope.isRefreshing = false;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
+            scheduleRefresh();
         }
 
     };
     $scope.topProcessesStatus();
 
     $scope.killProcess = function (pid) {
-
-        $scope.cyberPanelLoading = false;
 
         url = "/serverstatus/killProcess";
 
@@ -925,19 +1113,30 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
     $scope.currentTab = 'upgrade';
-    $scope.allPackages = [];
-    $scope.showDetails = false;
-    $scope.showUpdate = false;
-    $scope.updateComplete = true;
     var globalType;
+    var packageCache = {};
+    var activeFetch = null;
 
-    $scope.fetchPackages = function (type = 'installed') {
-        $scope.cyberpanelLoading = false;
-        if ($scope.currentTab !== type) {
-            $scope.currentPage = 1;
+    $scope.fetchPackages = function (type) {
+        if (typeof type === 'undefined' || type === null || type === '') {
+            type = 'installed';
         }
         $scope.currentTab = type;
         globalType = type;
+
+        // Serve cached tab data instantly (All Packages is expensive)
+        var cacheKey = type + '|' + $scope.currentPage + '|' + $scope.recordsToShow;
+        if (packageCache[cacheKey]) {
+            var cached = packageCache[cacheKey];
+            $scope.allPackages = cached.allPackages;
+            $scope.pagination = cached.pagination;
+            $scope.fetchedPackages = cached.fetchedPackages;
+            $scope.totalPackages = cached.totalPackages;
+            $scope.cyberpanelLoading = true;
+            return;
+        }
+
+        $scope.cyberpanelLoading = false;
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -951,16 +1150,27 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         };
 
         dataurl = "/serverstatus/fetchPackages";
+        var fetchToken = {};
+        activeFetch = fetchToken;
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
+            if (activeFetch !== fetchToken) {
+                return; // stale response from another tab
+            }
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
                 $scope.allPackages = JSON.parse(response.data.packages);
                 $scope.pagination = response.data.pagination;
                 $scope.fetchedPackages = response.data.fetchedPackages;
                 $scope.totalPackages = response.data.totalPackages;
+                packageCache[cacheKey] = {
+                    allPackages: $scope.allPackages,
+                    pagination: $scope.pagination,
+                    fetchedPackages: $scope.fetchedPackages,
+                    totalPackages: $scope.totalPackages
+                };
             } else {
                 new PNotify({
                     title: 'Error!',
@@ -971,6 +1181,9 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialData(response) {
+            if (activeFetch !== fetchToken) {
+                return;
+            }
             $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -981,18 +1194,8 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 
     };
+    // Available Updates first; All Packages loads only when that tab is selected
     $scope.fetchPackages('upgrade');
-
-    $scope.showPackageDetails = function (packageFetch) {
-        $scope.selectedPackage = packageFetch;
-        $scope.packageDetails = '';
-        $scope.showDetails = true;
-        $scope.fetchPackageDetails(packageFetch);
-    };
-
-    $scope.closeDetails = function () {
-        $scope.showDetails = false;
-    };
 
     $scope.fetchPackageDetails = function (packageFetch) {
         $scope.cyberpanelLoading = false;
@@ -1037,28 +1240,6 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     };
 
-    $scope.showUpdateModal = function (packageToUpgrade) {
-        $scope.updatingPackage = packageToUpgrade;
-        $scope.requestData = '';
-        $scope.updateComplete = false;
-        $scope.showUpdate = true;
-        $scope.updatePackage(packageToUpgrade);
-    };
-
-    $scope.closeUpdate = function () {
-        if ($scope.updateComplete) {
-            $scope.showUpdate = false;
-        }
-    };
-
-    $scope.closeModal = function (event) {
-        if (event.target !== event.currentTarget) {
-            return;
-        }
-        $scope.closeDetails();
-        $scope.closeUpdate();
-    };
-
     $scope.updatePackage = function (packageToUpgrade = 'all') {
         $scope.cyberpanelLoading = false;
         $scope.package = packageToUpgrade;
@@ -1082,7 +1263,6 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
             if (response.data.status === 1) {
                 getRequestStatus();
             } else {
-                $scope.updateComplete = true;
                 new PNotify({
                     title: 'Error!',
                     text: response.data.error_message,
@@ -1093,7 +1273,6 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
-            $scope.updateComplete = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
@@ -1127,18 +1306,15 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 $scope.requestData = response.data.requestStatus;
                 $timeout(getRequestStatus, 1000);
             } else {
+                // Notifications
+                $timeout.cancel();
                 $scope.cyberpanelLoading = true;
                 $scope.requestData = response.data.requestStatus;
-                $scope.updateComplete = true;
-                if (response.data.installed === 1) {
-                    $scope.fetchPackages($scope.currentTab);
-                }
             }
         }
 
         function cantLoadInitialDatas(response) {
             $scope.cyberpanelLoading = true;
-            $scope.updateComplete = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',

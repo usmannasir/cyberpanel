@@ -82,7 +82,7 @@ class Administrator(models.Model):
     email = models.CharField(max_length=50)
     type = models.IntegerField()
     owner = models.IntegerField(default=1)
-    token = models.CharField(max_length=500, default='None')
+    token = models.CharField(max_length=500, default='')
     api = models.IntegerField(default=0)
     securityLevel = models.IntegerField(default=0, choices=[(tag, tag.value) for tag in SecurityLevel])
     state = models.CharField(max_length=10, default='ACTIVE')

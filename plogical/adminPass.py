@@ -12,6 +12,7 @@ from plogical.acl import ACLManager
 from packages.models import Package
 from baseTemplate.models import version
 from cyberpanel_version import BUILD, VERSION
+from plogical.securityUtils import ensure_api_token
 
 if not os.geteuid() == 0:
     sys.exit("\nOnly root can run this script\n")
@@ -26,6 +27,7 @@ def main():
     if args.api != None:
         if args.api == '1':
             admin = Administrator.objects.get(userName="admin")
+            ensure_api_token(admin)
             admin.api = 1
             admin.save()
             print("API Enabled.")

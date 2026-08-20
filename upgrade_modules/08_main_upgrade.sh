@@ -1,0 +1,529 @@
+#!/usr/bin/env bash
+# CyberPanel upgrade – main upgrade (Python, upgrade.py, venv, WSGI). Sourced by cyberpanel_upgrade.sh.
+# CyberCP_Upgrade_Select_VenvBootstrapPython / CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps live in 00_common.sh (used from 06_components.sh).
+
+CyberCP_Verify_Cybercp_Venv_Or_Exit() {
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Verifying CyberCP venv imports (django, MySQLdb, gunicorn)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if ! /usr/local/CyberCP/bin/python -c "import django, MySQLdb, gunicorn; assert django.VERSION[0] >= 4" 2>/dev/null; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: CyberCP venv is incomplete. Fix build deps and run: /usr/local/CyberCP/bin/pip install -r /usr/local/requirments.txt" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    exit 1
+  fi
+}
+
+# lswsgi/lscpd loads Django with PYTHONHOME=/usr on several OS versions. Packages installed only into
+# /usr/local/CyberCP (venv) are invisible to that runtime; mirror the requirements into system Python.
+# Ported from upstream usmannasir/cyberpanel 883054ec into modular upgrade_modules.
+Install_CyberCP_Runtime_Python_Requirements() {
+  local req_hint="${1:-}"
+  local log=/var/log/cyberpanel_upgrade_debug.log
+  _rt_log() { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] $*" | tee -a "$log"; }
+
+  local py_cmd=""
+  if declare -F CyberCP_Detect_Lswsgi_Python >/dev/null 2>&1; then
+    CyberCP_Detect_Lswsgi_Python
+    py_cmd="${CYBERCP_LSWGI_PYTHON:-}"
+  fi
+  if [[ -z "$py_cmd" ]]; then
+    for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3; do
+      [[ -x "$p" ]] && py_cmd="$p" && break
+    done
+  fi
+  if [[ -z "$py_cmd" ]] && command -v python3 >/dev/null 2>&1; then
+    py_cmd="$(command -v python3)"
+  elif [[ -z "$py_cmd" && -x /usr/bin/python3 ]]; then
+    py_cmd=/usr/bin/python3
+  else
+    for p in /usr/bin/python3.10 /usr/local/bin/python3; do
+      [[ -x "$p" ]] && py_cmd="$p" && break
+    done
+  fi
+  if [[ -z "$py_cmd" ]]; then
+    _rt_log "Runtime pip: no python3 found; skipping system-site copy (install python3)."
+    return 0
+  fi
+  _rt_log "Runtime pip: selected interpreter: $py_cmd"
+
+  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
+    _rt_log "Runtime pip: pip module missing; trying ensurepip (stdlib)..."
+    "$py_cmd" -m ensurepip --upgrade >/dev/null 2>&1 || true
+  fi
+  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
+    _rt_log "Runtime pip: WARNING: pip still not available after ensurepip. On Debian/Ubuntu install python3-pip; on RHEL use python3-pip."
+  fi
+
+  local req_file=""
+  if [[ -n "$req_hint" && -f "$req_hint" ]] && grep -q "Django==" "$req_hint" 2>/dev/null; then
+    req_file="$req_hint"
+  elif [[ -f /etc/cyberpanel/cyberpanel-requirments-runtime.txt ]] && grep -q "Django==" /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then
+    req_file="/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+  elif [[ -f /usr/local/requirments.txt ]] && grep -q "Django==" /usr/local/requirments.txt 2>/dev/null; then
+    req_file="/usr/local/requirments.txt"
+  else
+    local tdir="/tmp/cyberpanel-req-runtime.$$"
+    mkdir -p "$tdir" || tdir="/tmp"
+    if [[ -n "${Git_Content_URL:-}" && -n "${Branch_Name:-}" ]]; then
+      if wget -q -O "$tdir/req-dl.txt" "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>/dev/null && grep -q "Django==" "$tdir/req-dl.txt" 2>/dev/null; then
+        req_file="$tdir/req-dl.txt"
+      elif wget -q -O "$tdir/req-dl.txt" "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>/dev/null && grep -q "Django==" "$tdir/req-dl.txt" 2>/dev/null; then
+        req_file="$tdir/req-dl.txt"
+      fi
+    fi
+    if [[ -z "$req_file" ]] && wget -q -O "$tdir/req-dev.txt" "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/requirments.txt" 2>/dev/null \
+      && grep -q "Django==" "$tdir/req-dev.txt" 2>/dev/null; then
+      req_file="$tdir/req-dev.txt"
+    fi
+  fi
+
+  if [[ -z "$req_file" || ! -f "$req_file" ]]; then
+    _rt_log "Runtime pip: could not locate a valid requirements file (hint: ${req_hint:-none}); skipping system install."
+    return 0
+  fi
+  _rt_log "Runtime pip: using requirements file: $req_file"
+
+  local -a PIP_EXTRA=()
+  if compgen -G "/usr/lib/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1 \
+    || compgen -G "/usr/lib64/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1; then
+    PIP_EXTRA+=(--break-system-packages)
+  fi
+
+  local pepmsg="none"
+  ((${#PIP_EXTRA[@]})) && pepmsg="${PIP_EXTRA[*]}"
+  _rt_log "Runtime pip: installing for lswsgi (PYTHONHOME=/usr). PEP 668 overrides: $pepmsg"
+
+  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --upgrade pip setuptools wheel packaging "${PIP_EXTRA[@]}" 2>&1 | tee -a "$log" || true
+
+  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file" 2>&1 | tee -a "$log"
+  local rt=${PIPESTATUS[0]}
+
+  if [[ $rt -ne 0 ]]; then
+    _rt_log "Runtime pip: first attempt exit $rt (often PEP 668); retrying with PIP_BREAK_SYSTEM_PACKAGES=1 ..."
+    PIP_EXTRA=(--break-system-packages)
+    env PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_BREAK_SYSTEM_PACKAGES=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file" 2>&1 | tee -a "$log"
+    rt=${PIPESTATUS[0]}
+  fi
+
+  if [[ $rt -ne 0 ]]; then
+    _rt_log "Runtime pip: ERROR: system pip install failed with exit $rt — lscpd may not start until: $py_cmd -m pip install -r $req_file --break-system-packages"
+    return 0
+  fi
+
+  if env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django, MySQLdb, docker" 2>/dev/null; then
+    _rt_log "Runtime pip: verify OK (django, MySQLdb, docker) with PYTHONHOME=/usr."
+  else
+    _rt_log "Runtime pip: WARNING: django/MySQLdb/docker not importable under PYTHONHOME=/usr with $py_cmd."
+  fi
+  if ! env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import CloudFlare" 2>/dev/null; then
+    _rt_log "Runtime pip: WARNING: CloudFlare SDK not importable (expect cloudflare 2.x / import CloudFlare)."
+  fi
+}
+
+Main_Upgrade() {
+echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Resolve Python for upgrade (avoid FileNotFoundError when /usr/local/CyberPanel/bin/python missing)
+CP_PYTHON=""
+for py in /usr/local/CyberPanel/bin/python /usr/local/CyberCP/bin/python /usr/bin/python3 /usr/local/bin/python3; do
+  if [[ -x "$py" ]]; then CP_PYTHON="$py"; break; fi
+done
+if [[ -z "$CP_PYTHON" ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No Python found for upgrade (tried CyberPanel, CyberCP, python3)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  exit 1
+fi
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python: $CP_PYTHON" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Ensure ols_binaries_config and ols_version_policy exist (both required by upgrade.py imports;
+# may be missing when upgrading from older versions). upgrade.py inserts /usr/local/CyberCP/install
+# on sys.path and imports both at module load, so they must exist BEFORE it runs (it cannot self-heal
+# via its own fresh clone because the import happens first).
+mkdir -p /usr/local/CyberCP/install
+for _ols_mod in ols_binaries_config ols_version_policy; do
+  if [[ ! -f "/usr/local/CyberCP/install/${_ols_mod}.py" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading ${_ols_mod}.py (required for upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    wget -q -O "/usr/local/CyberCP/install/${_ols_mod}.py" "${Git_Content_URL}/${Branch_Name}/install/${_ols_mod}.py" 2>/dev/null || \
+    curl -sL -o "/usr/local/CyberCP/install/${_ols_mod}.py" "${Git_Content_URL}/${Branch_Name}/install/${_ols_mod}.py" 2>/dev/null || true
+  fi
+  if [[ ! -f "/usr/local/CyberCP/install/${_ols_mod}.py" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: ${_ols_mod}.py not found; upgrade.py may fail with ModuleNotFoundError" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+done
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Export Git user so upgrade.py clones from the same repo (master3395 or --repo override)
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
+# Retry full /usr/local/CyberCP re-clone this many times if download/checkout fails (default 2)
+export CYBERPANEL_UPGRADE_CLONE_ATTEMPTS="${CYBERPANEL_UPGRADE_CLONE_ATTEMPTS:-2}"
+export PYTHONPATH="/usr/local/CyberCP${PYTHONPATH:+:$PYTHONPATH}"
+
+# Run from directory that contains upgrade.py (downloaded by Pre_Upgrade_Required_Components)
+for d in /root/cyberpanel_upgrade_tmp /usr/local/CyberCP; do
+  if [[ -f "$d/upgrade.py" ]]; then
+    cd "$d" || true
+    break
+  fi
+done
+
+# Run upgrade.py and capture output
+upgrade_output=$("$CP_PYTHON" upgrade.py "$Branch_Name" 2>&1)
+RETURN_CODE=$?
+echo "$upgrade_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Check for TypeError specifically
+if echo "$upgrade_output" | grep -q "TypeError: expected string or bytes-like object"; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: TypeError detected in upgrade.py, but continuing..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    # Check if upgrade actually completed despite the error
+    if echo "$upgrade_output" | grep -q "Upgrade Completed"; then
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrade completed despite TypeError" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        RETURN_CODE=0
+    fi
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Python upgrade.py returned code: $RETURN_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Check if the command was successful (return code 0)
+if [ $RETURN_CODE -eq 0 ]; then
+    echo "Upgrade successful."
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt successful" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    UPGRADE_FAILED=0
+else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt failed with code $RETURN_CODE, starting fallback..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+
+    if [ -e /usr/bin/pip3 ]; then
+    PIP3="/usr/bin/pip3"
+  else
+    PIP3="pip3.6"
+  fi
+
+  rm -rf /usr/local/CyberPanelTemp
+  
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating temporary virtual environment for fallback upgrade..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+  CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps
+  CyberCP_Upgrade_Select_VenvBootstrapPython
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary venv bootstrap Python: $CYBERCP_UPGRADE_VENV_PY" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  
+  # Try python -m venv first (more reliable on Ubuntu 22.04)
+  if "$CYBERCP_UPGRADE_VENV_PY" -m venv --system-site-packages /usr/local/CyberPanelTemp 2>/dev/null; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary virtualenv created with $CYBERCP_UPGRADE_VENV_PY -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  else
+    # Fallback to virtualenv command
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Trying virtualenv command for temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    virtualenv -p "$CYBERCP_UPGRADE_VENV_PY" --system-site-packages /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+
+# shellcheck disable=SC1091
+. /usr/local/CyberPanelTemp/bin/activate
+
+wget -O /usr/local/requirments-old.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+
+    if [[ "$Server_OS" = "CentOS" ]] ; then
+#  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
+  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+    Check_Return
+elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+  # shellcheck disable=SC1091
+  . /usr/local/CyberPanelTemp/bin/activate
+    Check_Return
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+    Check_Return
+elif [[ "$Server_OS" = "openEuler" ]] ; then
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+    Check_Return
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
+/usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+# upgrade.py is piped into tee, so $? is tee's status (always 0) - read the real
+# exit code of upgrade.py from PIPESTATUS or a failed upgrade looks like a success. (#1853)
+FALLBACK_CODE=${PIPESTATUS[0]}
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [ "$FALLBACK_CODE" -ne 0 ]; then
+  UPGRADE_FAILED=1
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback upgrade.py also failed with code $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  UPGRADE_FAILED=0
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+rm -rf /usr/local/CyberPanelTemp
+
+fi
+
+echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting post-upgrade cleanup..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Check if we need to recreate due to Python 2
+NEEDS_RECREATE=0
+if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Found Python 2 in CyberCP, will recreate with Python 3..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  NEEDS_RECREATE=1
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old CyberCP virtual environment directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+rm -rf /usr/local/CyberCP/bin
+rm -rf /usr/local/CyberCP/lib
+rm -rf /usr/local/CyberCP/lib64
+rm -rf /usr/local/CyberCP/pyvenv.cfg
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP virtual environment status after cleanup..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# After removing directories, we always need to recreate
+if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating/recreating CyberCP virtual environment with Python 3..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  
+  # First ensure the directory exists
+  mkdir -p /usr/local/CyberCP
+
+  if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
+    DEBIAN_FRONTEND=noninteractive apt-get update -y 2>/dev/null || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python3-dev python3-venv pkg-config build-essential \
+      libmariadb-dev libmariadb-dev-compat 2>/dev/null || true
+  fi
+
+  CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps
+  # For Ubuntu 22.04+, we need to handle virtualenv differently
+  VENV_SUCCESS=0
+  
+  CyberCP_Upgrade_Select_VenvBootstrapPython
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] CyberCP venv bootstrap Python: $CYBERCP_UPGRADE_VENV_PY" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+  # First try using python -m venv (more reliable on Ubuntu 22.04)
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Attempting to create virtual environment using $CYBERCP_UPGRADE_VENV_PY -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  virtualenv_output=$("$CYBERCP_UPGRADE_VENV_PY" -m venv --system-site-packages /usr/local/CyberCP 2>&1)
+  VENV_CODE=$?
+  echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  
+  if [[ $VENV_CODE -eq 0 ]] && [[ -f /usr/local/CyberCP/bin/activate ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Virtual environment created successfully using python3 -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    VENV_SUCCESS=1
+  else
+    # If that fails, try virtualenv command
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] python3 -m venv failed, trying virtualenv command..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # On Ubuntu 22.04, we need to ensure proper virtualenv installation
+    if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu 22.04 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/Rocky Linux 9/10 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  elif [[ "$Server_OS" = "AlmaLinux9" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux 9 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+    
+    # Find the correct python path (prefer 3.11+ from CyberCP_Upgrade_Select_VenvBootstrapPython)
+    if [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
+      PYTHON_PATH=$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || command -v python3.9 2>/dev/null || echo "/usr/bin/python3")
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
+    elif [[ "$Server_OS" = "AlmaLinux9" ]]; then
+      PYTHON_PATH=$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || command -v python3.9 2>/dev/null || echo "/usr/bin/python3")
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux 9 - Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
+    else
+      virtualenv_output=$(virtualenv -p "$CYBERCP_UPGRADE_VENV_PY" /usr/local/CyberCP 2>&1)
+    fi
+    VENV_CODE=$?
+    echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Check if TypeError occurred (common on Ubuntu 22.04)
+    if echo "$virtualenv_output" | grep -q "TypeError"; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: TypeError detected, attempting workaround..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      
+      # Try alternative method using explicit system-site-packages
+      virtualenv_output=$(virtualenv --python="$CYBERCP_UPGRADE_VENV_PY" --system-site-packages /usr/local/CyberCP 2>&1)
+      VENV_CODE=$?
+      echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+    
+    if [[ -f /usr/local/CyberCP/bin/activate ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Virtual environment created successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      VENV_SUCCESS=1
+      VENV_CODE=0
+    fi
+  fi
+  
+  if [[ $VENV_SUCCESS -eq 0 ]]; then
+    VENV_CODE=1
+  fi
+  
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Virtualenv creation returned code: $VENV_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  
+  if [[ $VENV_CODE -ne 0 ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Virtualenv creation failed with code $VENV_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "Virtualenv creation failed. Please check the logs at /var/log/cyberpanel_upgrade_debug.log"
+    exit $VENV_CODE
+  fi
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] CyberCP virtualenv already exists, skipping recreation" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  echo -e "\nNo need to re-setup virtualenv at /usr/local/CyberCP...\n"
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Preserving previous requirements file if present..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ -f /usr/local/requirments.txt ]]; then
+  cp -f /usr/local/requirments.txt "/usr/local/requirments.txt.last_upgrade.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading new requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+Download_Requirement
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing Python packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [ "$Server_OS" = "Ubuntu" ]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu detected, activating virtual environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  # shellcheck disable=SC1091
+  . /usr/local/CyberCP/bin/activate 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  ACTIVATE_CODE=$?
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Activate returned code: $ACTIVATE_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Check_Return
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrading setuptools and packaging..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  pip install --upgrade setuptools packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  PIP_CODE=$?
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Check_Return
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Non-Ubuntu OS, activating virtual environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  # shellcheck disable=SC1091
+  source /usr/local/CyberCP/bin/activate 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  ACTIVATE_CODE=$?
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Activate returned code: $ACTIVATE_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Check_Return
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  /usr/local/CyberCP/bin/pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  PIP_CODE=$?
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Check_Return
+fi
+
+if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /usr/local/lscp/conf/pythonenv.conf 2>/dev/null; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] PYTHONHOME=/usr: mirroring requirements to system Python for lswsgi..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Install_CyberCP_Runtime_Python_Requirements "/usr/local/requirments.txt" || true
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Verifying Django installation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+# Test if Django is installed
+if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Django not found, installing requirements again..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  
+  # Re-activate virtual environment
+  source /usr/local/CyberCP/bin/activate
+  
+  # Install MySQL/MariaDB development headers for mysqlclient Python package
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing MySQL/MariaDB development headers..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
+    # Ubuntu/Debian
+    apt-get update -y
+    apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential
+  elif [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]] || [[ "$Server_OS" = "CloudLinux" ]]; then
+    # RHEL-based systems
+    if command -v dnf >/dev/null 2>&1; then
+      dnf install -y MariaDB-devel pkgconfig gcc gcc-c++ openssl-devel libffi-devel zlib-devel make python3-devel 2>/dev/null || true
+    else
+      yum install -y mariadb-devel pkgconfig gcc python3-devel
+    fi
+  fi
+
+  # Check if mysql.h is available and create symlink if needed
+  if [[ ! -f "/usr/include/mysql/mysql.h" ]] && [[ -f "/usr/include/mariadb/mysql.h" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating mysql.h symlink for compatibility..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    mkdir -p /usr/include/mysql
+    ln -sf /usr/include/mariadb/mysql.h /usr/include/mysql/mysql.h
+  fi
+  
+  # Re-install requirements
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-installing Python requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  /usr/local/CyberCP/bin/pip3 install --no-cache-dir 'gunicorn>=21,<24' 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Django is properly installed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ensuring gunicorn in CyberCP venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+/usr/local/CyberCP/bin/pip3 install --no-cache-dir 'gunicorn>=21,<24' 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+CyberCP_Verify_Cybercp_Venv_Or_Exit
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing WSGI-LSAPI with optimized compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Save current directory
+UPGRADE_CWD=$(pwd)
+
+cd /tmp || exit
+rm -rf wsgi-lsapi-2.1*
+
+wget -q https://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+tar xf wsgi-lsapi-2.1.tgz
+cd wsgi-lsapi-2.1 || exit
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring WSGI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+CyberCP_Upgrade_Select_VenvBootstrapPython
+PYTHON_CFG="${CYBERCP_UPGRADE_VENV_PY:-/usr/bin/python3.11}"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="/usr/bin/python3.11"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="${CP_PYTHON:-/usr/bin/python3}"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="/usr/bin/python3"
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WSGI configure Python: $PYTHON_CFG" | tee -a /var/log/cyberpanel_upgrade_debug.log
+"$PYTHON_CFG" ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Optimizing Makefile for proper compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ -f Makefile ]]; then
+    # Replace -O0 -g3 with -O2 -g to satisfy _FORTIFY_SOURCE
+    sed -i 's/-O0 -g3/-O2 -g/g' Makefile
+    sed -i 's/-O0\b/-O2/g' Makefile
+    # Ensure we have proper optimization flags
+    if grep -q "CFLAGS" Makefile && ! grep -qF '-O2' Makefile; then
+        sed -i 's/CFLAGS =/CFLAGS = -O2/' Makefile
+    fi
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Makefile optimized for proper compilation" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+if [[ -f Makefile.in ]]; then
+    sed -i 's/-O0\b/-O2/g' Makefile.in
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Compiling WSGI with optimized flags..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] (Upstream WSGI source may show harmless strncpy/gstate warnings; build can still succeed.)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+make clean 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+make 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing lswsgi binary..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+rm -f /usr/local/CyberCP/bin/lswsgi
+cp lswsgi /usr/local/CyberCP/bin/
+chmod +x /usr/local/CyberCP/bin/lswsgi
+
+if declare -F Install_CyberCP_Runtime_Python_Requirements >/dev/null 2>&1; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-syncing runtime pip to lswsgi-linked Python after WSGI build..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Install_CyberCP_Runtime_Python_Requirements "/usr/local/requirments.txt" || true
+fi
+if declare -F CyberCP_Write_Lscp_Pythonenv_Conf >/dev/null 2>&1; then
+  CyberCP_Write_Lscp_Pythonenv_Conf
+fi
+
+# Return to original directory
+cd "$UPGRADE_CWD" || cd /root
+
+# Final verification
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running final verification..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null && [[ -f /usr/local/CyberCP/bin/lswsgi ]]; then
+  if declare -F CyberCP_Detect_Lswsgi_Python >/dev/null 2>&1; then
+    CyberCP_Detect_Lswsgi_Python
+    if [[ -n "${CYBERCP_LSWGI_PYTHON:-}" ]] && env PYTHONHOME=/usr PYTHONPATH= "$CYBERCP_LSWGI_PYTHON" -c "import django, MySQLdb" 2>/dev/null; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] All components successfully installed!" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lswsgi runtime Python cannot import django/MySQLdb (check pythonenv.conf and runtime pip)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] All components successfully installed!" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Some components may be missing, check logs" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Main_Upgrade function completed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+}
+
+# Sync /usr/local/CyberCP to the latest commit of the upgrade branch so Version Management
+# page shows Current commit matching Latest (avoids "please upgrade" when upgrade already ran).
+# Backs up and restores CyberCP/settings.py so production DB/config are not overwritten by the repo.

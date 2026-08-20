@@ -186,6 +186,7 @@ Remote_MySQL="Off"
 Final_Flags=()
 
 Git_User=""
+Git_User_Override=""
 Git_Content_URL=""
 Git_Clone_URL=""
 
@@ -279,6 +280,11 @@ setup_epel_repo() {
             yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
             Check_Return "yum repo" "no_exit"
             ;;
+        "10")
+            yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm \
+              || yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+            Check_Return "yum repo" "no_exit"
+            ;;
     esac
 }
 
@@ -317,16 +323,9 @@ enabled=1
 gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
-        cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-enabled=1
-gpgcheck=1
-EOF
+        # MariaDB.org still ships el9 RPMs at rhel9-amd64; they need RHEL 9 boost
+        # and break dnf on AlmaLinux 10. AppStream / install_utils handles EL10.
+        rm -f /etc/yum.repos.d/MariaDB.repo
     fi
 }
 
@@ -369,24 +368,28 @@ curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus"
 }
 
 Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
-  BEGIN {
-    print "num1", (num1 < num2 ? "<" : ">="), "num2"
-  }
-  ')
-  if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 1.9.4"
-    exit
-  else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
-  fi
+local raw="${1//[[:space:]]/}"
+# Accept v3.0.2, 3.0.2, v3.0.2-dev, and 3.0.2-dev without doubling the v prefix.
+if [[ "$raw" == v*.*.* ]]; then
+  Branch_Name="$raw"
+elif [[ "$raw" == *.*.* ]]; then
+  Branch_Name="v${raw}"
 else
-  echo -e "\nPlease input a valid format version number."
+  echo -e "\nPlease input a valid format version number (for example 3.0.2 or 3.0.2-dev)."
   exit
 fi
+local cmp="${Branch_Name#v}"
+cmp="${cmp%%-*}"
+Output=$(awk -v num1="$Base_Number" -v num2="$cmp" '
+BEGIN {
+  print "num1", (num1 < num2 ? "<" : ">="), "num2"
+}
+')
+if [[ $Output = *">="* ]]; then
+  echo -e "\nYou must use version number higher than 1.9.4"
+  exit
+fi
+echo -e "\nSet branch name to $Branch_Name..."
 }
 
 License_Check() {
@@ -458,7 +461,7 @@ log_info "Checking root privileges"
     echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
     log_error "Not running as root user - SUDO detected"
     log_function_end "Check_Root" 1
-    exit
+    exit 1
   fi
 
   if [[ $(id -u) != 0 ]] >/dev/null; then
@@ -584,6 +587,28 @@ if [[ "$Debug" = "On" ]] ; then
 fi
 
 log_function_end "Check_OS"
+}
+
+Check_CPU_ISA() {
+log_function_start "Check_CPU_ISA"
+if [[ "$Server_OS_Version" != "10" ]]; then
+  log_function_end "Check_CPU_ISA"
+  return 0
+fi
+if uname -m | grep -q 'aarch64'; then
+  log_function_end "Check_CPU_ISA"
+  return 0
+fi
+if grep -q avx2 /proc/cpuinfo 2>/dev/null; then
+  log_info "CPU exposes AVX2 (x86-64-v3); AlmaLinux 10 LiteSpeed PHP requirements met"
+  log_function_end "Check_CPU_ISA"
+  return 0
+fi
+log_error "AlmaLinux 10 and LiteSpeed lsphp*.el10 require x86-64-v3 (AVX2). This CPU or hypervisor does not expose AVX2."
+echo -e "\nAlmaLinux 10 and LiteSpeed lsphp require x86-64-v3 (AVX2).\n"
+echo -e "Use KVM, a VPS, or disable Windows Hyper-V / VirtualBox NEM so AVX2 reaches the guest.\n"
+log_function_end "Check_CPU_ISA" 1
+exit 1
 }
 
 Check_Virtualization() {
@@ -718,6 +743,9 @@ echo -e "      \e[31m-m powerdns\e[39m will do minimal install also with PowerDN
 echo -e "      \e[31m-m postfix\e[39m powerdns will do minimal install also with Postfix and PowerDNS"
 echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
 echo -e "e.g.  \e[31m-b 2.0.2\e[39m will install 2.0.2 version"
+echo -e "      \e[31m-b 3.0.2-dev\e[39m will install the v3.0.2-dev branch (do not pass a second v prefix)"
+echo -e "\n\e[31m-r\e[39m or \e[31m--repo\e[39m : GitHub user that owns the cyberpanel repo (default usmannasir)"
+echo -e "e.g.  \e[31m--repo master3395\e[39m clones github.com/master3395/cyberpanel"
 echo -e "\n\e[31m--mirror\e[39m : this argument force to use mirror server for majority of repositories, only suggest to use for servers within China"
 echo -e "\nExample:"
 echo -e "\nsh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols --password random"
@@ -788,6 +816,15 @@ else
       shift
         Branch_Check "${1}"
       ;;
+      -r | --repo)
+      shift
+      if [[ "${1}" = "" ]]; then
+        Show_Help
+        exit
+      fi
+      Git_User_Override="${1}"
+      echo -e "\nUsing --repo: GitHub user ${Git_User_Override} for cyberpanel..."
+      ;;
       -m | --minimal)
       if ! echo "$@" | grep -q -i "postfix\|pureftpd\|powerdns" ; then
         Postfix_Switch="Off"
@@ -845,6 +882,64 @@ if [[ "$Debug" = "On" ]] ; then
 fi
 
 Debug_Log2 "Initialization completed..,2"
+}
+
+Apply_Container_Env() {
+log_function_start "Apply_Container_Env"
+if [[ -f /run/.containerenv ]] || [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]]; then
+  export CYBERPANEL_CONTAINER=1
+  Silent="On"
+  Server_Edition="OLS"
+  Memcached="Off"
+  Redis="Off"
+  Watchdog="On"
+
+  if [[ "${CYBERPANEL_FULL_INSTALL:-0}" = "1" ]]; then
+    CYBERPANEL_MINIMAL=0
+    Postfix_Switch="On"
+    PowerDNS_Switch="On"
+    PureFTPd_Switch="On"
+    log_info "Container full install mode (CYBERPANEL_FULL_INSTALL=1)"
+  elif [[ "${CYBERPANEL_MINIMAL:-0}" = "1" ]]; then
+    Postfix_Switch="Off"
+    PowerDNS_Switch="Off"
+    PureFTPd_Switch="Off"
+    if [[ "${CYBERPANEL_ENABLE_POSTFIX:-0}" = "1" ]]; then
+      Postfix_Switch="On"
+    fi
+    if [[ "${CYBERPANEL_ENABLE_POWERDNS:-0}" = "1" ]]; then
+      PowerDNS_Switch="On"
+    fi
+    if [[ "${CYBERPANEL_ENABLE_PUREFTPD:-0}" = "1" ]]; then
+      PureFTPd_Switch="On"
+    fi
+    log_info "Container minimal/partial mode (CYBERPANEL_MINIMAL=1)"
+  fi
+
+  if [[ -n "${CYBERPANEL_ADMIN_PASSWORD:-}" ]]; then
+    Admin_Pass="${CYBERPANEL_ADMIN_PASSWORD}"
+  fi
+
+  if [[ -n "${CYBERPANEL_BRANCH:-}" ]]; then
+    Branch_Name="${CYBERPANEL_BRANCH}"
+  fi
+
+  if [[ -n "${CYBERPANEL_REPO:-}" ]]; then
+    Git_User_Override="${CYBERPANEL_REPO}"
+  fi
+
+  if [[ -z "${Server_IP:-}" ]] || [[ "${Server_IP}" = "" ]]; then
+    Server_IP=$(curl -s --max-time 10 -4 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
+    Server_IP="${Server_IP:-127.0.0.1}"
+  fi
+
+  if [[ -n "${CYBERPANEL_HOSTNAME:-}" ]]; then
+    hostnamectl set-hostname "${CYBERPANEL_HOSTNAME}" 2>/dev/null || hostname "${CYBERPANEL_HOSTNAME}" 2>/dev/null || true
+  fi
+
+  log_info "Container runtime detected; silent install enabled"
+fi
+log_function_end "Apply_Container_Env" 0
 }
 
 Argument_Mode() {
@@ -1121,8 +1216,10 @@ log_function_start "Pre_Install_Setup_Repository"
 log_info "Setting up package repositories for $Server_OS $Server_OS_Version"
 if [[ $Server_OS = "CentOS" ]] ; then
   log_debug "Importing LiteSpeed GPG key"
-  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
-  #import the LiteSpeed GPG key
+  if ! rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed 2>/dev/null; then
+    # EL10 rpm rejects keys without a binding signature at import time.
+    rpm --import --nosignature https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed 2>/dev/null || true
+  fi
 
   yum clean all
   yum autoremove -y epel-release
@@ -1155,7 +1252,11 @@ if [[ $Server_OS = "CentOS" ]] ; then
       dnf config-manager --set-enabled crb
     fi
 
-    yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    if [[ "$Server_OS_Version" = "10" ]]; then
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm
+    else
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    fi
       Check_Return "yum repo" "no_exit"
   fi
 
@@ -1368,13 +1469,16 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
   elif [[ "$Server_OS_Version" = "8" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
-  elif [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
-
-    #!/bin/bash
-
-
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
+  elif [[ "$Server_OS_Version" = "9" ]] ; then
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
       Check_Return
+    dnf install -y htop || true
+  elif [[ "$Server_OS_Version" = "10" ]] ; then
+    # AppStream MariaDB, not MariaDB.org el9 RPMs (those need libboost 1.75).
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet libevent-devel gcc libattr-devel xz-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
+      Check_Return
+    dnf install -y mariadb-devel || dnf install -y mariadb-connector-c-devel || true
+    dnf install -y htop || true
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
@@ -1897,10 +2001,17 @@ if [[ "$Remote_MySQL" = "On" ]] ; then
 else
   Final_Flags+=(--remotemysql "${Remote_MySQL^^}")
 fi
+
+if [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]]; then
+  Final_Flags+=(--container ON)
+fi
   #form up the final agurment for install.py
 if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
+
+export CYBERPANEL_BRANCH="${Branch_Name:-stable}"
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
 
 /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
 
@@ -2415,11 +2526,20 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 
 Pre_Install_Setup_Git_URL() {
 if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
+  if [[ -n "$Git_User_Override" ]]; then
+    Git_User="$Git_User_Override"
+    echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel\n"
+  else
+    Git_User="usmannasir"
+  fi
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
 else
-  Git_User="qtwrk"
+  if [[ -n "$Git_User_Override" ]]; then
+    Git_User="$Git_User_Override"
+  else
+    Git_User="qtwrk"
+  fi
   Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
   Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
 fi
@@ -2581,11 +2701,15 @@ fi
 
 Set_Default_Variables
 
+Apply_Container_Env
+
 Check_Root
 
 Check_Server_IP "$@"
 
 Check_OS
+
+Check_CPU_ISA
 
 Check_Virtualization
 

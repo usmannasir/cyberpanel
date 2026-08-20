@@ -8,8 +8,8 @@
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 <style>
-    /* CSS Variables for Dark Mode Support */
-    :root {
+    /* CSS Variables for Dark Mode Support (scoped to page container) */
+    .modern-container {
         /* Text colors */
         --text-primary: #1e293b;
         --text-secondary: #475569;
@@ -76,7 +76,7 @@
         --empty-icon-bg: #f3f4f6;
     }
     
-    [data-theme="dark"] {
+    [data-theme="dark"] .modern-container {
         /* Dark mode overrides */
         --text-primary: #e4e4e7;
         --text-secondary: #9ca3af;
@@ -134,10 +134,50 @@
         --lock-hover-bg: #252550;
         --empty-icon-bg: #252550;
     }
+
+    [data-theme="dark"] .modern-container .stat-pill,
+    [data-theme="dark"] .modern-container .version-badge,
+    [data-theme="dark"] .modern-container .package-type,
+    [data-theme="dark"] .modern-container .count-badge,
+    [data-theme="dark"] .modern-container .status-pill {
+        color: #f4f4f5 !important;
+    }
+
+    [data-theme="dark"] .modern-container .page-header,
+    [data-theme="dark"] .modern-container .page-header h1,
+    [data-theme="dark"] .modern-container .page-header p {
+        color: #fff !important;
+    }
+
     .modern-container {
         max-width: 1400px;
         margin: 0 auto;
         padding: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .modern-container {
+            padding: 1rem;
+        }
+        .page-header {
+            padding: 1.5rem 1rem !important;
+            margin-bottom: 1.5rem !important;
+        }
+        .tab-navigation, .tabs-container, .package-tabs {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .tab-item {
+            width: 100%;
+            justify-content: center;
+        }
+        .table-responsive, .packages-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            min-width: 640px;
+        }
     }
     
     .page-header {

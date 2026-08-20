@@ -1,0 +1,237 @@
+/* File Manager dark theme (pairs with cyberPanelTheme localStorage). */
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+    background: #0f1220;
+    color: #e8eaf6;
+}
+
+html[data-theme="dark"] #navBar,
+html[data-theme="dark"] #navBar.bg-light,
+html[data-theme="dark"] #navBar.navbar-light {
+    background: #171a2b !important;
+    border-bottom-color: #2a2f45;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .table,
+html[data-theme="dark"] .table tbody,
+html[data-theme="dark"] .table tbody tr,
+html[data-theme="dark"] .table tbody td,
+html[data-theme="dark"] #tableBodyFiles,
+html[data-theme="dark"] #tableBodyFiles tr,
+html[data-theme="dark"] #tableBodyFiles td {
+    background-color: #171a2b !important;
+    color: #e8eaf6 !important;
+    border-color: #2a2f45 !important;
+}
+
+html[data-theme="dark"] .col-sm-9 > div,
+html[data-theme="dark"] .col-sm-9 .mb-3,
+html[data-theme="dark"] .col-sm-9 .mt-30 {
+    background: #171a2b !important;
+    color: #e8eaf6;
+}
+
+html[data-theme="dark"] .list-group-item {
+    background: #171a2b !important;
+    color: #e8eaf6 !important;
+    border-color: #2a2f45 !important;
+}
+
+html[data-theme="dark"] .list-group-item a {
+    color: #c5c8ff !important;
+}
+
+html[data-theme="dark"] .header-logo .logo-text .brand {
+    color: #f4f5fb;
+}
+
+html[data-theme="dark"] .header-logo .logo-text .domain {
+    color: #9aa3c7;
+}
+
+html[data-theme="dark"] .header-logo .logo-icon {
+    background: #1f2438;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] a.nav-link {
+    color: #b6bdd9 !important;
+}
+
+html[data-theme="dark"] a.nav-link:hover {
+    color: #c5c8ff !important;
+    background: rgba(124, 127, 243, 0.16);
+}
+
+html[data-theme="dark"] .col-sm-9 .nav {
+    background: #171a2b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="dark"] .col-sm-9 .nav-item a {
+    color: #b6bdd9 !important;
+}
+
+html[data-theme="dark"] .col-sm-9 .nav-item a:hover {
+    color: #c5c8ff !important;
+    background: rgba(124, 127, 243, 0.16);
+}
+
+html[data-theme="dark"] #treeView .content-box,
+html[data-theme="dark"] .col-sm-9 > div,
+html[data-theme="dark"] .content-box,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .modal-content {
+    background: #171a2b !important;
+    color: #e8eaf6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="dark"] #treeView .card-header,
+html[data-theme="dark"] .card-header,
+html[data-theme="dark"] .modal-header,
+html[data-theme="dark"] .modal-footer {
+    background: #171a2b !important;
+    border-color: #2a2f45 !important;
+    color: #e8eaf6 !important;
+}
+
+/* .modal-body is hard-coded white in fileManager.css; force dark + readable text */
+html[data-theme="dark"] .modal-body,
+html[data-theme="dark"] #showCopy .modal-body,
+html[data-theme="dark"] #showMove .modal-body,
+html[data-theme="dark"] #uploadBox .modal-body {
+    background: #171a2b !important;
+    color: #e8eaf6 !important;
+}
+
+html[data-theme="dark"] .modal-body label,
+html[data-theme="dark"] .modal-body .form-group,
+html[data-theme="dark"] .modal-body p,
+html[data-theme="dark"] .modal-body small,
+html[data-theme="dark"] .modal-body .help-block,
+html[data-theme="dark"] .modal-body .text-muted,
+html[data-theme="dark"] .modal-body h3,
+html[data-theme="dark"] .modal-body h4,
+html[data-theme="dark"] .modal-body h5,
+html[data-theme="dark"] #uploadBox h3,
+html[data-theme="dark"] #uploadBox p {
+    color: #e8eaf6 !important;
+}
+
+html[data-theme="dark"] .modal-body .table,
+html[data-theme="dark"] .modal-body .table tbody,
+html[data-theme="dark"] .modal-body .table td,
+html[data-theme="dark"] .modal-body .table th {
+    background-color: #121526 !important;
+    color: #e8eaf6 !important;
+    border-color: #2a2f45 !important;
+}
+
+html[data-theme="dark"] #treeView label,
+html[data-theme="dark"] label,
+html[data-theme="dark"] .modal-title {
+    color: #e8eaf6 !important;
+}
+
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    background: #121526 !important;
+    border-color: #2a2f45 !important;
+    color: #e8eaf6 !important;
+}
+
+html[data-theme="dark"] .form-control:focus {
+    border-color: #7c7ff3 !important;
+    box-shadow: 0 0 0 3px rgba(124, 127, 243, 0.2);
+}
+
+html[data-theme="dark"] .bg-lightgray,
+html[data-theme="dark"] .bg-light {
+    background: #1a1e30 !important;
+}
+
+html[data-theme="dark"] table,
+html[data-theme="dark"] .table {
+    color: #e8eaf6;
+}
+
+html[data-theme="dark"] .table thead th,
+html[data-theme="dark"] table thead th {
+    background: #1f2438 !important;
+    color: #c5c8ff !important;
+    border-color: #2a2f45 !important;
+}
+
+html[data-theme="dark"] .table td,
+html[data-theme="dark"] .table th,
+html[data-theme="dark"] table td,
+html[data-theme="dark"] table th {
+    border-color: #2a2f45 !important;
+}
+
+html[data-theme="dark"] .table-hover tbody tr:hover,
+html[data-theme="dark"] table tbody tr:hover {
+    background: rgba(124, 127, 243, 0.1) !important;
+}
+
+html[data-theme="dark"] #treeView i.fa.fa-file,
+html[data-theme="dark"] #treeView i.fa.fa-folder,
+html[data-theme="dark"] #treeView i.fa.fa-folder-open,
+html[data-theme="dark"] table i.fa.fa-file,
+html[data-theme="dark"] table i.fa.fa-folder,
+html[data-theme="dark"] table i.fa.fa-folder-open {
+    color: #9ea2ff !important;
+}
+
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .progress-bar {
+    background: #7c7ff3;
+    border-color: #7c7ff3;
+}
+
+html[data-theme="dark"] .btn-secondary,
+html[data-theme="dark"] .btn-light {
+    background: #2a2f45;
+    border-color: #2a2f45;
+    color: #e8eaf6;
+}
+
+html[data-theme="dark"] .fm-theme-toggle {
+    color: #c5c8ff;
+    border-color: #2a2f45;
+    background: #1f2438;
+}
+
+html[data-theme="dark"] .fm-theme-toggle:hover {
+    background: #7c7ff3;
+    color: #fff;
+    border-color: #7c7ff3;
+}
+
+html[data-theme="dark"] .angular-ui-tree-handle,
+html[data-theme="dark"] .list-group-item {
+    background: transparent;
+    color: #e8eaf6;
+    border-color: #2a2f45;
+}
+
+html[data-theme="dark"] .alert-info {
+    background: rgba(124, 127, 243, 0.14);
+    border-color: #2a2f45;
+    color: #d7dbff;
+}
+
+html[data-theme="dark"] .close {
+    color: #e8eaf6;
+    text-shadow: none;
+    opacity: 0.8;
+}

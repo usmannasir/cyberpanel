@@ -855,6 +855,15 @@
                     <i class="fas fa-tachometer-alt"></i>
                     {% trans "Stress Test" %}
                 </a>
+                <button type="button"
+                        class="action-btn"
+                        ng-click="recreateWebsiteDNS()"
+                        ng-disabled="recreatingDNS"
+                        title="{% trans 'Re-apply DNS template and fix SPF for this subdomain' %}">
+                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': recreatingDNS}"></i>
+                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                    <span ng-show="recreatingDNS">{% trans "Recreating DNS..." %}</span>
+                </button>
             </div>
         </div>
 
@@ -866,11 +875,15 @@
                     <i class="fas fa-hdd"></i>
                 </div>
                 <div class="resource-title">{% trans "Disk Usage" %}</div>
-                <div class="resource-value">{{ diskInMB }} MB</div>
-                <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
+                <div class="resource-value">{{ diskUsedLabel|default:diskInMB }}{% if not diskUsedLabel %} MB{% endif %}</div>
+                {% if diskUnlimited or diskInMBTotal == 0 %}
+                <div class="resource-limit">{% trans "Unlimited" %}</div>
+                {% else %}
+                <div class="resource-limit">{% trans "of" %} {{ diskTotalLabel|default:diskInMBTotal }}{% if not diskTotalLabel %} MB{% endif %}</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Bandwidth Card -->
@@ -879,11 +892,15 @@
                     <i class="fas fa-wifi"></i>
                 </div>
                 <div class="resource-title">{% trans "Bandwidth Usage" %}</div>
-                <div class="resource-value">{{ bwInMB }} MB</div>
-                <div class="resource-limit">{% trans "of" %} {{ bwInMBTotal }} MB</div>
+                <div class="resource-value">{{ bwUsedLabel|default:bwInMB }}{% if not bwUsedLabel %} MB{% endif %}</div>
+                {% if bwUnlimited or bwInMBTotal == 0 %}
+                <div class="resource-limit">{% trans "Unlimited" %}</div>
+                {% else %}
+                <div class="resource-limit">{% trans "of" %} {{ bwTotalLabel|default:bwInMBTotal }}{% if not bwTotalLabel %} MB{% endif %}</div>
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ bwUsage }}%;"></div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Database Card -->
@@ -1097,6 +1114,18 @@
                             <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
                                 <i class="fab fa-php" style="font-size: 45px; color: var(--info-color, #3b82f6);"></i>
                                 <span class="h4">{% trans "Change PHP" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <a href="" ng-click="recreateWebsiteDNS(); $event.preventDefault()"
+                               title="{% trans 'Re-apply DNS template and fix SPF for this subdomain' %}">
+                                <i class="fas fa-sync-alt" style="font-size: 45px; color: var(--primary-color, #6366f1);"
+                                   ng-class="{'fa-spin': recreatingDNS}"></i>
+                                <span class="h4">
+                                    <span ng-hide="recreatingDNS">{% trans "Recreate DNS" %}</span>
+                                    <span ng-show="recreatingDNS">{% trans "Recreating..." %}</span>
+                                </span>
                             </a>
                         </div>
                     </div>

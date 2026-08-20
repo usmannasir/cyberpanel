@@ -757,11 +757,13 @@
                 </div>
                 
                 <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin: 1.5rem 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em;">
-                    {{ modules }}
+                    {% trans "Module versions" %}
                 </h4>
                 <div class="module-list">
                     {% for item in loadedModules %}
+                        {% if item %}
                         <div class="module-item">{{ item }}</div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

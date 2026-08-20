@@ -92,6 +92,9 @@ body {
     top: 0;
     z-index: 1000;
     min-height: 70px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
 }
 .navbar-brand {
     margin: 0 1rem;
@@ -235,22 +238,62 @@ body {
 .header-logo .logo-icon {
     width: 45px;
     height: 45px;
-    background: linear-gradient(135deg, #5856d6 0%, #4644c0 100%);
+    background: #fff;
+    border: 1px solid #e8e6ff;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    overflow: hidden;
+    color: #5856d6;
     font-size: 20px;
-    box-shadow: 0 4px 12px rgba(88, 86, 214, 0.3);
+    box-shadow: 0 2px 8px rgba(88, 86, 214, 0.16);
     transition: all 0.3s ease;
+}
+
+.header-logo .logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* Folder glyphs in the brand tile must stay readable (global FA purple rule used !important). */
+.header-logo .logo-icon i.fa {
+    color: #5856d6 !important;
 }
 
 .header-logo:hover .logo-icon {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(88, 86, 214, 0.4);
+    box-shadow: 0 6px 16px rgba(88, 86, 214, 0.28);
 }
 
+/* Theme toggle (File Manager uses same cyberPanelTheme key as the main shell). */
+.fm-theme-toggle {
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    margin-right: 1rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #e8e6ff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.fm-theme-toggle:hover {
+    background: #5856d6;
+    color: #fff;
+    border-color: #5856d6;
+}
+
+/* Light defaults for theme assets also used on dark page load */
 .header-logo .logo-text {
     display: flex;
     flex-direction: column;
@@ -360,11 +403,18 @@ a:hover {
     background-color: #f3f1ff;
 }
 
-i.fa.fa-file,
-i.fa.fa-minus,
-i.fa.fa-plus,
-i.fa.fa-folder,
-i.fa.fa-folder-open {
+/* Scope accent icons to file/tree UI so the header brand logo is not purple-on-purple. */
+#treeView i.fa.fa-file,
+#treeView i.fa.fa-minus,
+#treeView i.fa.fa-plus,
+#treeView i.fa.fa-folder,
+#treeView i.fa.fa-folder-open,
+#tableBodyFiles i.fa.fa-file,
+#tableBodyFiles i.fa.fa-folder,
+#tableBodyFiles i.fa.fa-folder-open,
+table.table i.fa.fa-file,
+table.table i.fa.fa-folder,
+table.table i.fa.fa-folder-open {
     color: #5856d6 !important;
 }
 

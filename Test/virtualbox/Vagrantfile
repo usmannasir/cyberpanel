@@ -1,0 +1,49 @@
+# Frozen-string-literal: true
+# VirtualBox smoke: AlmaLinux 9 or 10, one VM at a time (about 4 GB RAM each).
+# Box: CYBERPANEL_BOX=almalinux/10 or: .\up.ps1 fresh -Os 10
+# Run from this directory: vagrant up cp-fresh   or   vagrant up cp-upgrade
+#
+# AlmaLinux 10 (default almalinux/10) needs x86-64-v3 / AVX2. LiteSpeed
+# lsphp el10.x86_64 is also v3. VirtualBox on Windows Hypervisor (NEM,
+# unrestricted guest = no) masks AVX2, so glibc dies at /init. Do not
+# treat almalinux/10-x86_64_v2 as a full panel smoke: lsphp then fails
+# with "CPU ISA level is lower than required".
+
+Vagrant.configure('2') do |config|
+  config.vm.box = ENV.fetch('CYBERPANEL_BOX', 'almalinux/9')
+  config.vm.box_check_update = false
+  config.ssh.insert_key = true
+  config.ssh.keep_alive = true
+  config.vm.boot_timeout = 900
+
+  config.vm.provider 'virtualbox' do |vb|
+    vb.memory = 4096
+    vb.cpus = 2
+    vb.customize ['modifyvm', :id, '--ioapic', 'on']
+    vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+    vb.customize ['modifyvm', :id, '--nat-localhostreachable1', 'on']
+    vb.customize ['modifyvm', :id, '--cpu-profile', 'host']
+    # Serial must not land in OneDrive; a synced uart file stalls the guest.
+    serial_log = File.join((ENV['TEMP'] || ENV['TMP'] || Dir.pwd), 'cyberpanel-guest-serial.log')
+    vb.customize ['modifyvm', :id, '--uart1', '0x3F8', '4']
+    vb.customize ['modifyvm', :id, '--uartmode1', 'file', serial_log]
+  end
+
+  config.vm.define 'cp-fresh', autostart: false do |fresh|
+    fresh.vm.hostname = 'cp-fresh.local'
+    fresh.vm.network 'forwarded_port', guest: 8090, host: 18090, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 80, host: 10080, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 443, host: 10443, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 22, host: 10022, id: 'ssh', auto_correct: true
+    fresh.vm.provision 'shell', path: 'provision-fresh.sh', privileged: true
+  end
+
+  config.vm.define 'cp-upgrade', autostart: false do |upg|
+    upg.vm.hostname = 'cp-upgrade.local'
+    upg.vm.network 'forwarded_port', guest: 8090, host: 28090, auto_correct: true
+    upg.vm.network 'forwarded_port', guest: 80, host: 20080, auto_correct: true
+    upg.vm.network 'forwarded_port', guest: 443, host: 20443, auto_correct: true
+    upg.vm.network 'forwarded_port', guest: 22, host: 20022, id: 'ssh', auto_correct: true
+    upg.vm.provision 'shell', path: 'provision-upgrade.sh', privileged: true
+  end
+end

@@ -198,9 +198,15 @@ class vhost:
             command = 'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
             ProcessUtilities.normalExecutioner(command)
 
-        path = "/home/" + virtualHostName
-        pathHTML = "/home/" + virtualHostName + "/public_html"
-        pathLogs = "/home/" + virtualHostName + "/logs"
+        # Get user's home directory dynamically
+        from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+        home_path = HomeDirectoryUtils.getUserHomeDirectory(virtualHostUser)
+        if not home_path:
+            home_path = "/home"  # Fallback to default
+        
+        path = os.path.join(home_path, virtualHostName)
+        pathHTML = os.path.join(home_path, virtualHostName, "public_html")
+        pathLogs = os.path.join(home_path, virtualHostName, "logs")
         confPath = vhost.Server_root + "/conf/vhosts/"+virtualHostName
         completePathToConfigFile = confPath +"/vhost.conf"
 
@@ -327,42 +333,74 @@ class vhost:
 
     @staticmethod
     def createNONSSLMapEntry(virtualHostName):
+        """Add NON-SSL map entry for virtualHostName in OLS httpd_config.conf.
+        Returns (1, None) on success, (0, error_message) on failure.
+        """
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
+            def modify_config(lines):
+                map_entry = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+                modified = []
+                mapchecker = 1
+                in_default_listener = False
+                map_exists = False
+                for line in lines:
+                    line_stripped = line.strip().lower()
+                    if mapchecker == 1 and line_stripped.startswith('listener') and 'default' in line_stripped and '{' in line_stripped and 'ssl' not in line_stripped:
+                        in_default_listener = True
+                        modified.append(line)
+                        continue
+                    if in_default_listener and line_stripped.startswith('map') and virtualHostName.lower() in line_stripped:
+                        map_exists = True
+                    if in_default_listener and line_stripped.startswith('address'):
+                        modified.append(line)
+                        if not map_exists:
+                            modified.append(map_entry)
+                        mapchecker = 0
+                        in_default_listener = False
+                        continue
+                    if in_default_listener and line_stripped == '}':
+                        if not map_exists:
+                            modified.append(map_entry)
+                        mapchecker = 0
+                        in_default_listener = False
+                    modified.append(line)
+                if mapchecker != 0:
+                    raise ValueError(
+                        "Could not find Default listener block in /usr/local/lsws/conf/httpd_config.conf. "
+                        "Ensure the file contains a line like 'listener Default {'."
+                    )
+                return modified
 
-            map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+            success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                modify_config,
+                f"Add NON-SSL map entry for {virtualHostName}"
+            )
 
-            mapchecker = 1
+            if not success:
+                error_msg = error if error else "Unknown error"
+                logging.CyberCPLogFileWriter.writeToFile(f"[createNONSSLMapEntry] Failed: {error_msg}")
+                return 0, error_msg
 
-            for items in data:
-                if (mapchecker == 1 and (items.find("listener") > -1 and items.find("Default") > -1)):
-                    writeDataToFile.writelines(items)
-                    writeDataToFile.writelines(map)
-                    mapchecker = 0
-                else:
-                    writeDataToFile.writelines(items)
-
-            return 1
+            return 1, None
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createNONSSLMapEntry]")
+            return 0, str(msg)
 
     @staticmethod
     def createConfigInMainVirtualHostFile(virtualHostName):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-
-                if vhost.createNONSSLMapEntry(virtualHostName) == 0:
-                    return [0, "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"]
-
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
+                success, error_msg = vhost.createNONSSLMapEntry(virtualHostName)
+                if success != 1:
+                    display_msg = error_msg or "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"
+                    return [0, display_msg]
 
                 currentConf = vhostConfs.olsMasterMainConf
                 currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
-                writeDataToFile.write(currentConf)
-
-                writeDataToFile.close()
+                ok, err = installUtilities.installUtilities.appendProtectedHttpdConfigBlock(
+                    currentConf, 'Append master vhost block for %s' % virtualHostName)
+                if not ok:
+                    return [0, err or 'Failed to append master vhost block to httpd_config.conf']
 
                 return [1,"None"]
             except BaseException as msg:
@@ -394,6 +432,12 @@ class vhost:
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
 
+                # Get admin user name for CloudFlare cleanup
+                adminUserName = None
+                try:
+                    adminUserName = delWebsite.admin.userName
+                except:
+                    pass
 
                 ##
 
@@ -405,9 +449,15 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
-                    vhost.deleteCoreConf(items.domain, numberOfSites)
 
-                    ### Delete ACME Folder
+                    # Delete CloudFlare and local DNS records for child domain
+                    try:
+                        DNS.cleanupHostDNSRecords(items.domain, adminUserName)
+                    except Exception as cfError:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'CloudFlare DNS deletion failed for child domain {items.domain}: {str(cfError)}')
+
+                    vhost.deleteCoreConf(items.domain, numberOfSites, docRoot=items.path, removeDocRoot=True)
 
                     if os.path.exists('/root/.acme.sh/%s' % (items.domain)):
                         shutil.rmtree('/root/.acme.sh/%s' % (items.domain))
@@ -450,6 +500,14 @@ class vhost:
 
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+
+                    # Delete CloudFlare and local DNS records for main domain before deletion
+                    try:
+                        DNS.cleanupHostDNSRecords(virtualHostName, adminUserName)
+                    except Exception as cfError:
+                        # Log error but don't fail deletion if CloudFlare deletion fails
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'CloudFlare DNS deletion failed for {virtualHostName}: {str(cfError)}')
 
                     delWebsite.delete()
 
@@ -511,6 +569,13 @@ class vhost:
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
 
+                # Get admin user name for CloudFlare / DNS cleanup (parity with OLS path)
+                adminUserName = None
+                try:
+                    adminUserName = delWebsite.admin.userName
+                except:
+                    pass
+
                 ## Cagefs
 
                 command = '/usr/sbin/cagefsctl --disable %s' % (delWebsite.externalApp)
@@ -524,7 +589,16 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
-                    vhost.deleteCoreConf(items.domain, numberOfSites)
+
+                    # Delete CloudFlare and local DNS records for child domain
+                    try:
+                        DNS.cleanupHostDNSRecords(items.domain, adminUserName)
+                    except Exception as cfError:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'CloudFlare DNS deletion failed for child domain %s: %s' % (items.domain, str(cfError)))
+
+                    vhost.deleteCoreConf(
+                        items.domain, numberOfSites, docRoot=items.path, removeDocRoot=True)
 
 
                 ## child check to make sure no database entires are being deleted from child server
@@ -547,6 +621,13 @@ class vhost:
 
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+
+                    # Delete CloudFlare and local DNS records for main domain before deletion
+                    try:
+                        DNS.cleanupHostDNSRecords(virtualHostName, adminUserName)
+                    except Exception as cfError:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'CloudFlare DNS deletion failed for %s: %s' % (virtualHostName, str(cfError)))
 
                     delWebsite.delete()
 
@@ -581,47 +662,150 @@ class vhost:
             return 1
 
     @staticmethod
-    def deleteCoreConf(virtualHostName, numberOfSites):
+    def _resolveDocRootCandidates(virtualHostName, docRoot=None):
+        candidates = []
+        if docRoot:
+            candidates.append(docRoot.rstrip('/'))
+
+        legacy_home = '/home/' + virtualHostName
+        if legacy_home not in candidates:
+            candidates.append(legacy_home)
+
+        try:
+            child = ChildDomains.objects.get(domain=virtualHostName)
+            child_path = (child.path or '').rstrip('/')
+            if child_path and child_path not in candidates:
+                candidates.append(child_path)
+            master_domain = child.master.domain
+            default_child = '/home/%s/%s' % (master_domain, virtualHostName)
+            if default_child not in candidates:
+                candidates.append(default_child)
+        except Exception:
+            if '.' in virtualHostName:
+                master_guess = virtualHostName.split('.', 1)[1]
+                default_child = '/home/%s/%s' % (master_guess, virtualHostName)
+                if default_child not in candidates:
+                    candidates.append(default_child)
+
+        return candidates
+
+    @staticmethod
+    def removeDocRootPaths(virtualHostName, docRoot=None):
+        removed = []
+        for candidate in vhost._resolveDocRootCandidates(virtualHostName, docRoot):
+            if not candidate or not os.path.exists(candidate):
+                continue
+            cmd = 'rm -rf %s' % shlex.quote(candidate)
+            if ProcessUtilities.executioner(cmd, None, True) == 1 or not os.path.exists(candidate):
+                removed.append(candidate)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Removed document root: %s' % candidate, 0)
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Failed to remove document root: %s [removeDocRootPaths]' % candidate)
+        return removed
+
+    @staticmethod
+    def purgeOrphanChildDocRoots(masterDomain):
+        """Remove child-domain folders under a master home that are not in CyberPanel."""
+        removed = []
+        try:
+            active = set(
+                ChildDomains.objects.filter(master__domain=masterDomain).values_list('domain', flat=True)
+            )
+            home = '/home/%s' % masterDomain
+            if not os.path.isdir(home):
+                return removed
+
+            reserved = set(['public_html', 'logs', 'mail', 'backup', 'docker'])
+            for entry in os.listdir(home):
+                full_path = os.path.join(home, entry)
+                if not os.path.isdir(full_path):
+                    continue
+                if entry in reserved:
+                    continue
+                if not entry.endswith('.' + masterDomain):
+                    continue
+                if entry in active:
+                    continue
+                vhost.removeDocRootPaths(entry, full_path)
+                vhost.removeVhostConfigDirectory(entry)
+                removed.append(full_path)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Purged orphan child docroot: %s' % full_path, 0)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'purgeOrphanChildDocRoots failed for %s: %s' % (masterDomain, str(msg)))
+        return removed
+
+    @staticmethod
+    def removeVhostConfigDirectory(virtualHostName):
+        conf_path = vhost.Server_root + '/conf/vhosts/' + virtualHostName
+        if not os.path.exists(conf_path):
+            return True
+        cmd = 'rm -rf %s' % shlex.quote(conf_path)
+        if ProcessUtilities.executioner(cmd, None, True) == 1 or not os.path.exists(conf_path):
+            return True
+        logging.CyberCPLogFileWriter.writeToFile(
+            'Failed to remove vhost config directory: %s [removeVhostConfigDirectory]' % conf_path)
+        return False
+
+    @staticmethod
+    def deleteCoreConf(virtualHostName, numberOfSites, docRoot=None, removeDocRoot=False):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
 
-                virtualHostPath = "/home/" + virtualHostName
-                if os.path.exists(virtualHostPath):
-                    shutil.rmtree(virtualHostPath)
+                if removeDocRoot:
+                    vhost.removeDocRootPaths(virtualHostName, docRoot)
+                else:
+                    virtualHostPath = "/home/" + virtualHostName
+                    if os.path.exists(virtualHostPath):
+                        shutil.rmtree(virtualHostPath)
 
-                confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
-                if os.path.exists(confPath):
-                    shutil.rmtree(confPath)
+                vhost.removeVhostConfigDirectory(virtualHostName)
 
-                data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+                def modify_config(lines):
+                    """Remove virtual host entries from config"""
+                    modified = []
+                    check = 1
+                    sslCheck = 1
 
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-
-                check = 1
-                sslCheck = 1
-
-                for items in data:
-                    if numberOfSites == 1:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
-                            continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
-                            check = 0
-                        if items.find("listener") > -1 and items.find("SSL") > -1:
-                            sslCheck = 0
-                        if (check == 1 and sslCheck == 1):
-                            writeDataToFile.writelines(items)
-                        if (items.find("}") > -1 and (check == 0 or sslCheck == 0)):
-                            check = 1
-                            sslCheck = 1
-                    else:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
-                            continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
-                            check = 0
-                        if (check == 1):
-                            writeDataToFile.writelines(items)
-                        if (items.find("}") > -1 and check == 0):
-                            check = 1
+                    for line in lines:
+                        if numberOfSites == 1:
+                            if (line.find(' ' + virtualHostName) > -1 and line.find("  map                     " + virtualHostName) > -1):
+                                continue
+                            if (line.find(' ' + virtualHostName) > -1 and (line.find("virtualHost") > -1 or line.find("virtualhost") > -1)):
+                                check = 0
+                            if line.find("listener") > -1 and line.find("SSL") > -1:
+                                sslCheck = 0
+                            if (check == 1 and sslCheck == 1):
+                                modified.append(line)
+                            if (line.find("}") > -1 and (check == 0 or sslCheck == 0)):
+                                check = 1
+                                sslCheck = 1
+                        else:
+                            if (line.find(' ' + virtualHostName) > -1 and line.find("  map                     " + virtualHostName) > -1):
+                                continue
+                            if (line.find(' ' + virtualHostName) > -1 and (line.find("virtualHost") > -1 or line.find("virtualhost") > -1)):
+                                check = 0
+                            if (check == 1):
+                                modified.append(line)
+                            if (line.find("}") > -1 and check == 0):
+                                check = 1
+                    
+                    return modified
+                
+                # Use safe modification with backup and validation
+                success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                    modify_config,
+                    f"Remove virtual host {virtualHostName} from config"
+                )
+                
+                if not success:
+                    error_msg = error if error else "Unknown error"
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        '[deleteCoreConf] Failed to remove vhost config: %s' % error_msg)
+                    raise BaseException('Failed to remove vhost config: %s' % error_msg)
 
                 ## Delete Apache Conf
 
@@ -678,6 +862,24 @@ class vhost:
         if os.path.exists("/home/" + virtualHostName):
             return 1
         return 0
+
+    @staticmethod
+    def _persistPHPSelection(domain, phpVersion):
+        """Keep CyberPanel DB phpSelection in sync with the OLS/LSWS vhost handler."""
+        try:
+            if Websites.objects.filter(domain=domain).exists():
+                website = Websites.objects.get(domain=domain)
+                if website.phpSelection != phpVersion:
+                    website.phpSelection = phpVersion
+                    website.save()
+                return
+            child = ChildDomains.objects.filter(domain=domain).first()
+            if child is not None and child.phpSelection != phpVersion:
+                child.phpSelection = phpVersion
+                child.save()
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Failed to persist phpSelection for %s: %s' % (domain, str(msg)))
 
     @staticmethod
     def changePHP(vhFile, phpVersion):
@@ -745,6 +947,7 @@ class vhost:
                     command = f"systemctl restart {phpService}"
                     ProcessUtilities.normalExecutioner(command)
 
+                vhost._persistPHPSelection(domain, phpVersion)
                 print("1,None")
                 return 1,'None'
             except BaseException as msg:
@@ -794,6 +997,7 @@ class vhost:
                     ProcessUtilities.executioner(command)
 
 
+                vhost._persistPHPSelection(domain, phpVersion)
                 print("1,None")
                 return 1, 'None'
             except BaseException as msg:
@@ -814,12 +1018,85 @@ class vhost:
 
     @staticmethod
     def ensureSensitiveFileDenials(vhFile):
+        """
+        Inject CyberPanel default sensitive-file deny rules into an existing
+        OpenLiteSpeed vhost.conf (issue #1859). Idempotent via BEGIN/END markers.
+
+        Returns:
+            1 if the file was modified, 0 if unchanged or not applicable, -1 on error.
+        """
+        begin_marker = '# BEGIN CyberPanel sensitive-file denials (#1859)'
+        deny_block = vhostConfs.olsSensitiveFileDenyRules.rstrip('\n')
+
         try:
-            from plogical.sensitiveFileProtection import protect_vhost_file
-            return protect_vhost_file(vhFile)
+            if not vhFile or not os.path.exists(vhFile):
+                return 0
+
+            with open(vhFile, 'r') as fh:
+                content = fh.read()
+
+            if begin_marker in content:
+                return 0
+
+            # Prefer inserting at the start of an existing OLS rules heredoc so
+            # denials run before site-specific rewrites (front controllers, etc.).
+            rules_token = 'rules                   <<<END_rules'
+            if rules_token in content:
+                content = content.replace(
+                    rules_token,
+                    rules_token + '\n' + deny_block,
+                    1
+                )
+            else:
+                # Replace a bare rewrite { enable / autoLoadHtaccess } block.
+                bare = (
+                    'rewrite  {\n'
+                    ' enable                  1\n'
+                    '  autoLoadHtaccess        1\n'
+                    '}'
+                )
+                bare_alt = (
+                    'rewrite  {\n'
+                    '  enable                  1\n'
+                    '  autoLoadHtaccess        1\n'
+                    '}'
+                )
+                replacement = (
+                    'rewrite  {\n'
+                    '  enable                  1\n'
+                    '  autoLoadHtaccess        1\n'
+                    '  rules                   <<<END_rules\n'
+                    + deny_block + '\n'
+                    '  END_rules\n'
+                    '}'
+                )
+                if bare in content:
+                    content = content.replace(bare, replacement, 1)
+                elif bare_alt in content:
+                    content = content.replace(bare_alt, replacement, 1)
+                else:
+                    # Append a dedicated rewrite block before vhssl if present.
+                    append_block = (
+                        '\nrewrite  {\n'
+                        '  enable                  1\n'
+                        '  autoLoadHtaccess        1\n'
+                        '  rules                   <<<END_rules\n'
+                        + deny_block + '\n'
+                        '  END_rules\n'
+                        '}\n'
+                    )
+                    if 'vhssl' in content:
+                        content = content.replace('vhssl', append_block + 'vhssl', 1)
+                    else:
+                        content = content.rstrip() + append_block
+
+            with open(vhFile, 'w') as fh:
+                fh.write(content)
+
+            return 1
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [ensureSensitiveFileDenials]")
+                str(msg) + ' [ensureSensitiveFileDenials]')
             return -1
 
     @staticmethod
@@ -956,33 +1233,50 @@ class vhost:
     ## Child Domain Functions
 
     @staticmethod
+    def ensureDefaultIndexFile(path, virtualHostUser):
+        """Place CyberPanel default index.html in a site path if missing."""
+        try:
+            index_dst = path.rstrip('/') + '/index.html'
+            if os.path.exists(index_dst):
+                return True
+
+            index_src = '/usr/local/CyberCP/index.html'
+            if not os.path.exists(index_src):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Default index template missing: %s [ensureDefaultIndexFile]' % (index_src))
+                return False
+
+            cmd = 'cp %s %s && chown %s:%s %s && chmod 644 %s' % (
+                shlex.quote(index_src),
+                shlex.quote(index_dst),
+                shlex.quote(virtualHostUser),
+                shlex.quote(virtualHostUser),
+                shlex.quote(index_dst),
+                shlex.quote(index_dst),
+            )
+            if ProcessUtilities.executioner(cmd, None, True) == 1:
+                return os.path.exists(index_dst)
+
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Failed to create default index.html in %s [ensureDefaultIndexFile]' % (path))
+            return False
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ensureDefaultIndexFile]')
+            return False
+
+    @staticmethod
     def finalizeDomainCreation(virtualHostUser, path):
         try:
 
             ACLManager.CreateSecureDir()
 
-            RanddomFileName = str(randint(1000, 9999))
-
-            FullPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RanddomFileName)
-
-            FNULL = open(os.devnull, 'w')
-
-            #shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
-
-            shutil.copy("/usr/local/CyberCP/index.html", FullPath)
-
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + FullPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = 'sudo -u %s cp %s %s/index.html' % (virtualHostUser, FullPath, path)
-            ProcessUtilities.normalExecutioner(command)
-
-            os.remove(FullPath)
+            if not vhost.ensureDefaultIndexFile(path, virtualHostUser):
+                raise OSError('Could not create default index.html in %s' % (path))
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
             cmd = shlex.split(command)
+            FNULL = open(os.devnull, 'w')
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException as msg:
@@ -1000,50 +1294,60 @@ class vhost:
 
         try:
 
-            command = 'sudo -u %s mkdir %s' % (virtualHostUser, path)
-            ProcessUtilities.normalExecutioner(command)
+            command = 'mkdir -p %s' % shlex.quote(path)
+            ProcessUtilities.executioner(command, None, True)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
 
-            command = 'sudo -g %s -u %s chown %s:%s %s' % (groupName, virtualHostUser, virtualHostUser, groupName, path)
-            ProcessUtilities.normalExecutioner(command)
+            command = 'chown %s:%s %s' % (virtualHostUser, groupName, shlex.quote(path))
+            ProcessUtilities.executioner(command, None, True)
 
+            command = "chmod 750 %s" % shlex.quote(path)
+            ProcessUtilities.executioner(command, None, True)
 
-            command = "sudo -u %s chmod 750 %s" % (virtualHostUser, path)
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            logs_dir = '/home/%s/logs' % masterDomain
+            command = 'mkdir -p %s && chown %s:%s %s && chmod 750 %s' % (
+                shlex.quote(logs_dir),
+                shlex.quote(virtualHostUser),
+                shlex.quote(groupName),
+                shlex.quote(logs_dir),
+                shlex.quote(logs_dir),
+            )
+            ProcessUtilities.executioner(command, None, True)
+
+            vhost.ensureDefaultIndexFile(path, virtualHostUser)
+
+            # Create .well-known/acme-challenge so LiteSpeed config validation does not fail (path must exist)
+            acme_path = path.rstrip('/') + '/.well-known/acme-challenge'
+            try:
+                command = 'mkdir -p %s' % shlex.quote(acme_path)
+                ProcessUtilities.executioner(command, None, True)
+                command = "chmod 755 %s" % shlex.quote(acme_path)
+                ProcessUtilities.executioner(command, None, True)
+            except Exception as acme_err:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(acme_err) + " [createDirectoryForDomain acme-challenge]")
 
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")
+            return [0, str(msg)]
 
-        try:
-            ## For configuration files permissions will be changed later globally.
-            os.makedirs(confPath)
-        except OSError as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "335 [Not able to create directories for virtual host [createDirectoryForDomain]]")
-            #return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
-
-        try:
-            ## For configuration files permissions will be changed later globally.
-            file = open(completePathToConfigFile, "w+")
-        except IOError as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
-            #return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
+        command = 'mkdir -p %s' % shlex.quote(confPath)
+        if ProcessUtilities.executioner(command, None, True) != 1:
+            err_msg = 'Could not create vhost config directory: %s' % confPath
+            logging.CyberCPLogFileWriter.writeToFile(err_msg + ' [createDirectoryForDomain]')
+            return [0, err_msg]
 
         if vhost.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
                                    administratorEmail, phpVersion, virtualHostUser, openBasedir,
                                    memSoftLimit, memHardLimit, maxConnections, procSoftLimit, procHardLimit) == 1:
             return [1, "None"]
-        else:
-            pass
-            #return [0, "[359 Not able to create per host virtual configurations [createDirectoryForDomain]"]
 
-        return [1, "None"]
+        return [0, 'Could not create per-host virtual host configuration [createDirectoryForDomain]']
 
     @staticmethod
     def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion, virtualHostUser, openBasedir,
@@ -1057,6 +1361,7 @@ class vhost:
                 currentConf = vhostConfs.olsChildConf
                 currentConf = currentConf.replace('{path}', path)
                 currentConf = currentConf.replace('{masterDomain}', masterDomain)
+                currentConf = currentConf.replace('{virtualHostName}', domain)
                 currentConf = currentConf.replace('{adminEmails}', administratorEmail)
                 currentConf = currentConf.replace('{externalApp}', externalApp)
                 currentConf = currentConf.replace('{externalAppMaster}', virtualHostUser)
@@ -1075,10 +1380,36 @@ class vhost:
                     currentConf = currentConf.replace('{open_basedir}', 'php_admin_value open_basedir "/tmp:$VH_ROOT"')
                 else:
                     currentConf = currentConf.replace('{open_basedir}', '')
+                
+                # Ensure log directory exists in master domain's home directory
+                masterLogDir = f"/home/{masterDomain}/logs"
+                try:
+                    if not os.path.exists(masterLogDir):
+                        ProcessUtilities.executioner('mkdir -p %s' % shlex.quote(masterLogDir), None, True)
+                        command = f"chown -R {virtualHostUser}:{virtualHostUser} {shlex.quote(masterLogDir)}"
+                        ProcessUtilities.executioner(command, None, True)
+                    
+                    # Create empty log files for the child domain
+                    error_log_path = f"{masterLogDir}/{domain}.error_log"
+                    access_log_path = f"{masterLogDir}/{domain}.access_log"
+                    
+                    for log_path in [error_log_path, access_log_path]:
+                        if not os.path.exists(log_path):
+                            ProcessUtilities.executioner('touch %s' % shlex.quote(log_path), None, True)
+                            command = f"chown {virtualHostUser}:{virtualHostUser} {shlex.quote(log_path)}"
+                            ProcessUtilities.executioner(command, None, True)
+                            command = f"chmod 644 {shlex.quote(log_path)}"
+                            ProcessUtilities.executioner(command, None, True)
+                except Exception as logErr:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'Error creating log files for child domain {domain}: {str(logErr)}')
 
-                confFile = open(vhFile, "w+")
-                confFile.write(currentConf)
-                confFile.close()
+                conf_lines = [currentConf if currentConf.endswith('\n') else currentConf + '\n']
+                ok, err = installUtilities.installUtilities._writeProtectedConfigLines(vhFile, conf_lines)
+                if not ok:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        '%s [IO Error with per host config file [perHostDomainConf]]' % (err or 'write failed'))
+                    return 0
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
@@ -1104,6 +1435,30 @@ class vhost:
                     confFile.write(currentConf)
 
                     confFile.close()
+                    
+                    # Ensure log directory exists in master domain's home directory and create log files
+                    masterLogDir = f"/home/{masterDomain}/logs"
+                    try:
+                        if not os.path.exists(masterLogDir):
+                            os.makedirs(masterLogDir, exist_ok=True)
+                            command = f"chown -R {virtualHostUser}:{virtualHostUser} {masterLogDir}"
+                            ProcessUtilities.executioner(command)
+                        
+                        # Create empty log files for the child domain
+                        error_log_path = f"{masterLogDir}/{domain}.error_log"
+                        access_log_path = f"{masterLogDir}/{domain}.access_log"
+                        
+                        for log_path in [error_log_path, access_log_path]:
+                            if not os.path.exists(log_path):
+                                with open(log_path, 'w') as f:
+                                    f.write('')
+                                command = f"chown {virtualHostUser}:{virtualHostUser} {log_path}"
+                                ProcessUtilities.executioner(command)
+                                command = f"chmod 644 {log_path}"
+                                ProcessUtilities.executioner(command)
+                    except Exception as logErr:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'Error creating log files for child domain {domain}: {str(logErr)}')
 
                 else:
 
@@ -1122,6 +1477,28 @@ class vhost:
 
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
+                    
+                    # Ensure log directory exists in master domain's home directory and create log files
+                    masterLogDir = f"/home/{masterDomain}/logs"
+                    try:
+                        if not os.path.exists(masterLogDir):
+                            os.makedirs(masterLogDir, exist_ok=True)
+                            command = f"chown -R {virtualHostUser}:{virtualHostUser} {masterLogDir}"
+                            ProcessUtilities.executioner(command)
+                        
+                        # Create empty log files for the child domain (non-www)
+                        access_log_path = f"{masterLogDir}/{domain}.access_log"
+                        
+                        if not os.path.exists(access_log_path):
+                            with open(access_log_path, 'w') as f:
+                                f.write('')
+                            command = f"chown {virtualHostUser}:{virtualHostUser} {access_log_path}"
+                            ProcessUtilities.executioner(command)
+                            command = f"chmod 644 {access_log_path}"
+                            ProcessUtilities.executioner(command)
+                    except Exception as logErr:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'Error creating log files for child domain {domain} (redis non-www): {str(logErr)}')
 
                     ## www
 
@@ -1138,6 +1515,9 @@ class vhost:
 
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
+                    
+                    # Note: Log files already created for non-www version above
+                    # The www version shares the same log files
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
@@ -1150,18 +1530,18 @@ class vhost:
     def createConfigInMainDomainHostFile(domain, masterDomain):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-
-                if vhost.createNONSSLMapEntry(domain) == 0:
-                    return [0, "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"]
-
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
+                success, error_msg = vhost.createNONSSLMapEntry(domain)
+                if success != 1:
+                    display_msg = error_msg or "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"
+                    return [0, display_msg]
 
                 currentConf = vhostConfs.olsChildMainConf
                 currentConf = currentConf.replace('{virtualHostName}', domain)
                 currentConf = currentConf.replace('{masterDomain}', masterDomain)
-                writeDataToFile.write(currentConf)
-
-                writeDataToFile.close()
+                ok, err = installUtilities.installUtilities.appendProtectedHttpdConfigBlock(
+                    currentConf, 'Append child vhost block for %s' % domain)
+                if not ok:
+                    return [0, err or 'Failed to append child vhost block to httpd_config.conf']
 
                 return [1, "None"]
 

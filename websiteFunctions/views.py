@@ -1024,6 +1024,24 @@ def convertDomainToSite(request):
         return redirect(loadLoginPage)
 
 
+def convertWebsiteToChildDomain(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.convertWebsiteToChildDomain(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def recreateWebsiteDNS(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.recreateWebsiteDNS(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def submitWebsiteStatus(request):
     try:
 
@@ -2133,8 +2151,12 @@ def get_website_resources(request):
         else:
             return ACLManager.loadError()
 
-        # Get resource usage data using externalApp
-        resource_data = get_website_resource_usage(website.externalApp)
+        # Get resource usage data using domain path and package limits
+        resource_data = get_website_resource_usage(
+            website.externalApp,
+            domain=website.domain,
+            package=website.package,
+        )
         if resource_data['status'] == 0:
             return JsonResponse(resource_data)
 

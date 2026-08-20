@@ -122,3 +122,6 @@ mysql_password.txt
 # Documentation files (local reference only)
 CHANGES_SUMMARY.md
 RESOURCE_LIMITS_IMPLEMENTATION.md
+
+# VirtualBox smoke local state
+Test/virtualbox/.vagrant/
