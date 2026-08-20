@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Ensure CyberPanel :8090 OpenLiteSpeed vhost executes /phpmyadmin/ and /snappymail/
-via lsphp (lscpd). Without explicit OLS contexts + scripthandler, Django proxy
-serves .php as static downloads (5804-byte phpmyadminsignin.php).
+Ensure CyberPanel OpenLiteSpeed vhost executes /phpmyadmin/ and /snappymail/
+via lsphp. Without explicit OLS contexts + scripthandler, Django proxy serves
+.php as static downloads. Also keeps public/snappymail as a real tree under
+CyberCP vhRoot (restrained=1 rejects symlinks into /usr/local/lscp).
 """
 from __future__ import print_function
 
 import os
 import re
 import subprocess
+
+from plogical.cyberpanelOlsSnappymail import SNAPPY_PUBLIC, ensure_snappymail_public_tree
 
 LSWS_ROOT = '/usr/local/lsws'
 VHOST_DIR = os.path.join(LSWS_ROOT, 'conf', 'vhosts', 'CyberPanel')
@@ -88,7 +91,8 @@ def build_vhost_conf(php_version=None):
         '',
         'extprocessor cyberpanel {',
         '  type                    proxy',
-        '  address                 127.0.0.1:5003',
+        # HTTPS: lscpd on 5003 redirects plain HTTP to HTTPS (OLS proxy loop if http://).
+        '  address                 https://127.0.0.1:5003',
         '  maxConns                100',
         '  pcKeepAliveTimeout      60',
         '  initTimeout             60',
@@ -211,20 +215,9 @@ listener CyberPanel {
     return True
 
 
-def patch_hostname_vhost_php_contexts(vhost_path):
-    """Add scripthandler to /phpmyadmin/ and /snappymail/ on hostname vhosts that proxy CyberPanel."""
-    if not os.path.isfile(vhost_path):
-        return False
-    try:
-        content = open(vhost_path, 'r').read()
-    except Exception:
-        return False
-    if 'context /phpmyadmin/' not in content:
-        return False
-    if 'lsapi:cyberpanelphp php' in content:
-        return True
-    php_ver = detect_lsphp_version()
-    ext_block = """
+def _cyberpanelphp_ext_block(php_ver=None):
+    php_ver = php_ver or detect_lsphp_version()
+    return """
 extprocessor cyberpanelphp {
   type                    lsapi
   address                 UDS://tmp/lshttpd/cyberpanelphp.sock
@@ -244,22 +237,88 @@ extprocessor cyberpanelphp {
   procHardLimit           500
 }
 """ % php_ver
+
+
+def _php_app_context(path_prefix, location):
+    return """
+context %s {
+  location                %s
+  allowBrowse             1
+  indexFiles              index.php
+  addDefaultCharset       off
+  scripthandler  {
+    add                     lsapi:cyberpanelphp php
+  }
+}
+""" % (path_prefix, location)
+
+
+
+def patch_hostname_vhost_php_contexts(vhost_path):
+    """Serve /phpmyadmin/ and /snappymail/ with local lsphp on hostname panel proxies."""
+    if not os.path.isfile(vhost_path):
+        return False
+    try:
+        content = open(vhost_path, 'r').read()
+    except Exception:
+        return False
+
+    # Skip non-panel vhosts (site docroots) that never proxy the panel.
+    if 'extprocessor panelbackend' not in content and 'panel_proxy' not in content:
+        if 'context /phpmyadmin/' not in content and 'context /snappymail/' not in content:
+            return False
+
+    changed = False
+    php_ver = detect_lsphp_version()
+    ext_block = _cyberpanelphp_ext_block(php_ver)
+
     if 'extprocessor cyberpanelphp' not in content:
-        content = content.replace('context /phpmyadmin/', ext_block + '\ncontext /phpmyadmin/', 1)
-    content = re.sub(
-        r'(context /phpmyadmin/ \{[^}]*?addDefaultCharset\s+off)\s*\n(\})',
-        r'\1\n  scripthandler  {\n    add                     lsapi:cyberpanelphp php\n  }\n\2',
-        content,
-        count=1,
-        flags=re.DOTALL,
-    )
-    content = re.sub(
-        r'(context /snappymail/ \{[^}]*?addDefaultCharset\s+off)\s*\n(\})',
-        r'\1\n  scripthandler  {\n    add                     lsapi:cyberpanelphp php\n  }\n\2',
-        content,
-        count=1,
-        flags=re.DOTALL,
-    )
+        if 'extprocessor panelbackend' in content:
+            content = content.replace('extprocessor panelbackend', ext_block + '\nextprocessor panelbackend', 1)
+        elif 'context /phpmyadmin/' in content:
+            content = content.replace('context /phpmyadmin/', ext_block + '\ncontext /phpmyadmin/', 1)
+        else:
+            content = ext_block + '\n' + content
+        changed = True
+
+    if 'context /snappymail/' not in content or 'context /phpmyadmin/' not in content:
+        insert = ''
+        if 'context /snappymail/' not in content:
+            insert += _php_app_context('/snappymail/', SNAPPY_PUBLIC + '/')
+        if 'context /phpmyadmin/' not in content:
+            insert += _php_app_context('/phpmyadmin/', '/usr/local/CyberCP/public/phpmyadmin/')
+        if 'extprocessor panelbackend' in content:
+            content = content.replace('extprocessor panelbackend', insert + '\nextprocessor panelbackend', 1)
+        elif 'context /.well-known/acme-challenge' in content:
+            content = content.replace(
+                'context /.well-known/acme-challenge',
+                insert + '\ncontext /.well-known/acme-challenge',
+                1,
+            )
+        else:
+            content = insert + '\n' + content
+        changed = True
+    else:
+        for pattern in (
+            r'(context /phpmyadmin/ \{[^}]*?addDefaultCharset\s+off)\s*\n(\})',
+            r'(context /snappymail/ \{[^}]*?addDefaultCharset\s+off)\s*\n(\})',
+        ):
+            new_content, n = re.subn(
+                pattern,
+                r'\1\n  scripthandler  {\n    add                     lsapi:cyberpanelphp php\n  }\n\2',
+                content,
+                count=1,
+                flags=re.DOTALL,
+            )
+            if n:
+                content = new_content
+                changed = True
+
+    if not changed and 'lsapi:cyberpanelphp php' in content:
+        return True
+    if not changed:
+        return False
+
     with open(vhost_path, 'w') as f:
         f.write(content)
     _log('Patched hostname vhost PHP contexts: %s' % vhost_path)
@@ -315,9 +374,38 @@ def verify_phpmyadmin_ols(port=None):
         return False, str(e)
 
 
+def verify_snappymail_ols(port=None):
+    port = port or get_panel_port()
+    url = 'https://127.0.0.1:%s/snappymail/index.php' % port
+    try:
+        r = subprocess.run(
+            ['curl', '-sk', '-o', '/tmp/cp_snappy_verify.out', '-w', '%{http_code}', url],
+            capture_output=True, text=True, timeout=30,
+        )
+        if r.returncode != 0:
+            return False, 'curl failed'
+        code = (r.stdout or '').strip()
+        body = ''
+        try:
+            body = open('/tmp/cp_snappy_verify.out', 'r', errors='replace').read(400)
+        except Exception:
+            pass
+        if code != '200':
+            return False, 'HTTP %s' % code
+        low = body.lower()
+        if 'not found' in low and 'snappymail' not in low and 'rainloop' not in low:
+            return False, 'Django/OLS 404 body'
+        if '<html' not in low and 'doctype' not in low:
+            return False, 'unexpected body'
+        return True, 'OK (HTTP %s)' % code
+    except Exception as e:
+        return False, str(e)
+
+
 def ensure_cyberpanel_phpmyadmin_ols(reload=True, restart=False, verify=True):
     """Idempotent: write OLS vhost, patch httpd_config, reload LiteSpeed, optional self-test."""
     try:
+        ensure_snappymail_public_tree()
         content = build_vhost_conf()
         _write_vhost_files(content)
         ensure_httpd_cyberpanel_blocks()
@@ -334,6 +422,11 @@ def ensure_cyberpanel_phpmyadmin_ols(reload=True, restart=False, verify=True):
                     reload_lsws(restart=True)
                     ok2, detail2 = verify_phpmyadmin_ols()
                     _log('After restart: ' + (detail2 if ok2 else 'STILL FAILING: ' + detail2))
+            sok, sdetail = verify_snappymail_ols()
+            if sok:
+                _log('Verified SnappyMail OLS: ' + sdetail)
+            else:
+                _log('WARNING: SnappyMail OLS verify failed: ' + sdetail)
         return True
     except Exception as e:
         _log('ERROR: ' + str(e))
