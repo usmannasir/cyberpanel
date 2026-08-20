@@ -2238,6 +2238,24 @@ $cfg['Servers'][$i]['port'] = '3306';
             pass
 
     @staticmethod
+    def rotateInvalidAPITokens():
+        try:
+            import django
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+            django.setup()
+            from loginSystem.models import Administrator
+            from plogical.securityUtils import ensure_api_token
+
+            rotated = 0
+            for account in Administrator.objects.exclude(api=0).only('id', 'token'):
+                if ensure_api_token(account):
+                    rotated += 1
+            if rotated:
+                Upgrade.stdOut('Rotated %s invalid API access token(s).' % rotated, 0)
+        except Exception as msg:
+            Upgrade.stdOut('Unable to rotate invalid API access tokens: %s' % msg, 0)
+
+    @staticmethod
     def setupConnection(db=None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
@@ -6915,7 +6933,13 @@ vmail
                                 str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations),
                                 str(acl.scheduleBackups), str(acl.remoteBackups), '1',
                                 str(acl.manageSSL), str(acl.hostnameSSL), str(acl.mailServerSSL))
-                acl.save()
+            try:
+                effective_admin_status = int(json.loads(acl.config).get('adminStatus', 0) or 0)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                effective_admin_status = 0
+            if acl.adminStatus != effective_admin_status:
+                acl.adminStatus = effective_admin_status
+            acl.save()
 
     @staticmethod
     def CreateMissingPoolsforFPM():
@@ -7294,6 +7318,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
 
         Upgrade.applyLoginSystemMigrations()
         Upgrade.homeDirectoryMigrations()
+        Upgrade.rotateInvalidAPITokens()
 
         ## Put function here to update custom ACLs
 

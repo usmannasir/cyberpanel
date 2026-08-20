@@ -1,12 +1,15 @@
 import os
 import tempfile
 from types import SimpleNamespace
+from unittest import mock
 from unittest.mock import patch
 
-from django.test import SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase
 
 from plogical.securityUtils import (
     api_token_matches,
+    ensure_api_token,
+    generate_api_token,
     get_remote_transfer_dir_path,
     get_remote_transfer_log_path,
     get_remote_transfer_pid_path,
@@ -19,7 +22,9 @@ from plogical.securityUtils import (
     is_safe_remote_host,
     is_safe_system_user,
 )
-from api.views import can_change_api_account_password, can_change_api_website_package
+from api.views import can_change_api_account_password, can_change_api_website_package, get_api_admin
+from loginSystem.models import Administrator
+from plogical.acl import ACLManager
 
 
 class SecurityUtilsTests(SimpleTestCase):
@@ -28,6 +33,71 @@ class SecurityUtilsTests(SimpleTestCase):
         self.assertTrue(api_token_matches("abc123", "Basic abc123"))
         self.assertTrue(api_token_matches("abc123", "Basic abc123="))
         self.assertFalse(api_token_matches("Bearer abc123", "Basic different"))
+
+    def test_api_token_matches_rejects_placeholder_values(self):
+        for placeholder in ('None', 'none', 'NULL', 'undefined', 'Basic None', 'Bearer null', '='):
+            with self.subTest(placeholder=placeholder):
+                self.assertFalse(api_token_matches(placeholder, placeholder))
+
+        self.assertFalse(api_token_matches('Bearer None', 'Basic None'))
+
+    def test_generated_api_tokens_are_random_and_usable(self):
+        first = generate_api_token()
+        second = generate_api_token()
+
+        self.assertTrue(first.startswith('Basic '))
+        self.assertNotEqual(first, second)
+        self.assertTrue(api_token_matches(first, first))
+
+    def test_ensure_api_token_only_rotates_invalid_tokens(self):
+        invalid_account = SimpleNamespace(token='None', save=mock.Mock())
+        valid_account = SimpleNamespace(token='Basic existing-token', save=mock.Mock())
+
+        self.assertTrue(ensure_api_token(invalid_account))
+        self.assertTrue(api_token_matches(invalid_account.token, invalid_account.token))
+        invalid_account.save.assert_called_once_with(update_fields=['token'])
+
+        self.assertFalse(ensure_api_token(valid_account))
+        self.assertEqual(valid_account.token, 'Basic existing-token')
+        valid_account.save.assert_not_called()
+
+    def test_administrator_model_has_no_placeholder_token_default(self):
+        token_field = Administrator._meta.get_field('token')
+        self.assertEqual(token_field.default, '')
+
+    def test_admin_acl_detection_uses_the_effective_acl_config(self):
+        custom_admin_acl = SimpleNamespace(
+            adminStatus=0,
+            config='{"adminStatus": 1}',
+        )
+        regular_acl = SimpleNamespace(
+            adminStatus=0,
+            config='{"adminStatus": 0}',
+        )
+
+        self.assertTrue(ACLManager.isAdminACL(custom_admin_acl))
+        self.assertFalse(ACLManager.isAdminACL(regular_acl))
+
+    @patch('api.views.Administrator.objects.get')
+    def test_suspended_account_cannot_authenticate_to_api(self, get_admin):
+        get_admin.return_value = SimpleNamespace(
+            api=1,
+            state='SUSPENDED',
+            token='Basic valid-token',
+            password='stored-password',
+        )
+        request = RequestFactory().post(
+            '/api/listPackage',
+            HTTP_AUTHORIZATION='Bearer valid-token',
+        )
+
+        admin, response = get_api_admin(
+            request,
+            {'adminUser': 'suspended-user'},
+        )
+
+        self.assertIsNone(admin)
+        self.assertEqual(response.status_code, 401)
 
     def test_terminal_secret_prefers_secret_file(self):
         expected_secret = "file-secret-which-is-long-enough-for-hs256"
