@@ -35,6 +35,7 @@ switch ($Action) {
     'fresh' {
         if ($Provider -eq 'vagrant') {
             vagrant up cp-fresh --provider=hyperv
+            if ($LASTEXITCODE -ne 0) { throw "vagrant up cp-fresh failed with exit code $LASTEXITCODE" }
             Write-Host 'FRESH_INSTALL_DONE (vagrant)'
             return
         }
@@ -52,6 +53,7 @@ switch ($Action) {
     'upgrade' {
         if ($Provider -eq 'vagrant') {
             vagrant up cp-upgrade --provider=hyperv
+            if ($LASTEXITCODE -ne 0) { throw "vagrant up cp-upgrade failed with exit code $LASTEXITCODE" }
             Write-Host 'UPGRADE_DONE (vagrant)'
             return
         }
