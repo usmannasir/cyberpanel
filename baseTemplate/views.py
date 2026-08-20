@@ -872,6 +872,12 @@ def getTrafficStats(request):
         currentACL = ACLManager.loadedACL(val)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
+
+        from django.core.cache import cache
+        _ck = 'cp_traffic_stats'
+        _cached = cache.get(_ck)
+        if _cached is not None:
+            return HttpResponse(json.dumps(_cached), content_type='application/json')
         
         rx = tx = 0
         with open('/proc/net/dev', 'r') as f:
@@ -887,6 +893,10 @@ def getTrafficStats(request):
                     except (ValueError, IndexError):
                         continue
         data = {'rx_bytes': rx, 'tx_bytes': tx, 'status': 1}
+        try:
+            cache.set(_ck, data, 1)
+        except Exception:
+            pass
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
         logging.writeToFile('getTrafficStats error: %s' % str(e))
@@ -906,6 +916,12 @@ def getDiskIOStats(request):
         currentACL = ACLManager.loadedACL(val)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
+
+        from django.core.cache import cache
+        _ck = 'cp_diskio_stats'
+        _cached = cache.get(_ck)
+        if _cached is not None:
+            return HttpResponse(json.dumps(_cached), content_type='application/json')
         
         read_sectors = 0
         write_sectors = 0
@@ -928,6 +944,10 @@ def getDiskIOStats(request):
             'write_bytes': write_sectors * sector_size,
             'status': 1
         }
+        try:
+            cache.set(_ck, data, 1)
+        except Exception:
+            pass
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
         logging.writeToFile('getDiskIOStats error: %s' % str(e))
@@ -947,6 +967,12 @@ def getCPULoadGraph(request):
         currentACL = ACLManager.loadedACL(val)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
+
+        from django.core.cache import cache
+        _ck = 'cp_cpu_graph'
+        _cached = cache.get(_ck)
+        if _cached is not None:
+            return HttpResponse(json.dumps(_cached), content_type='application/json')
         
         cpu_times = []
         with open('/proc/stat', 'r') as f:
@@ -959,6 +985,10 @@ def getCPULoadGraph(request):
                         pass
                     break
         data = {'cpu_times': cpu_times, 'status': 1}
+        try:
+            cache.set(_ck, data, 1)
+        except Exception:
+            pass
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
         logging.writeToFile('getCPULoadGraph error: %s' % str(e))
@@ -1841,7 +1871,7 @@ def getTopProcesses(request):
                 'processes': processes
             }
             try:
-                cache.set(cache_key, payload, 8)
+                cache.set(cache_key, payload, 20)
             except Exception:
                 pass
             return HttpResponse(json.dumps(payload), content_type='application/json')
