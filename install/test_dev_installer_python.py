@@ -100,6 +100,45 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         self.assertIn('may be partially updated', upgrade_script)
         self.assertNotIn('STILL RUNNING THE OLD BUILD', upgrade_script)
 
+    def test_upgrade_virtualenv_uses_matching_branch_requirements(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrade_script = (root / 'cyberpanel_upgrade.sh').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertIn('Validate_Python_Requirements()', upgrade_script)
+        self.assertIn(
+            'Validate_Python_Requirements /usr/local/CyberPanel/bin/python '
+            '/usr/local/requirments.txt',
+            upgrade_script,
+        )
+        self.assertIn(
+            'Validate_Python_Requirements /usr/local/CyberPanelTemp/bin/python '
+            '/usr/local/requirments.txt',
+            upgrade_script,
+        )
+        fallback_start = upgrade_script.index(
+            'Creating temporary virtual environment for fallback upgrade'
+        )
+        fallback_end = upgrade_script.index(
+            'Starting post-upgrade cleanup', fallback_start
+        )
+        fallback = upgrade_script[fallback_start:fallback_end]
+        self.assertNotIn('requirments-old.txt', fallback)
+        self.assertNotIn('--system-site-packages', fallback)
+        self.assertNotIn('$PIP3 install', fallback)
+
+    def test_upgrade_stops_when_source_preparation_fails(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
+
+        self.assertIn(
+            'download_status, download_error = Upgrade.downloadAndUpgrade(',
+            upgrader,
+        )
+        self.assertIn('if download_status != 1:', upgrader)
+        self.assertIn('if Upgrade.waitForDatabaseReady() != 1:', upgrader)
+
     def test_ubuntu_24_lscpd_keeps_virtualenv_packages_visible(self):
         root = pathlib.Path(__file__).parents[1]
         script = (root / 'cyberpanel_upgrade.sh').read_text(encoding='utf-8')

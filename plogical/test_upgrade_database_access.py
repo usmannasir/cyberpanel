@@ -96,6 +96,41 @@ class UpgradeDatabaseAccessTests(unittest.TestCase):
              if len(call.args) > 1],
         )
 
+    @patch('plogical.upgrade.time.sleep')
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.Upgrade.setupConnection')
+    def test_database_readiness_retries_transient_failure(
+            self, setup_connection, std_out, sleep):
+        connection = MagicMock()
+        cursor = MagicMock()
+        setup_connection.side_effect = [(0, 0), (connection, cursor)]
+
+        self.assertEqual(1, Upgrade.waitForDatabaseReady(attempts=3, delay=2))
+
+        self.assertEqual(2, setup_connection.call_count)
+        sleep.assert_called_once_with(2)
+        cursor.execute.assert_called_once_with('SELECT 1')
+        cursor.fetchone.assert_called_once_with()
+        cursor.close.assert_called_once_with()
+        connection.close.assert_called_once_with()
+
+    @patch('plogical.upgrade.time.sleep')
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.Upgrade.setupConnection', return_value=(0, 0))
+    def test_database_readiness_fails_after_bounded_retries(
+            self, setup_connection, std_out, sleep):
+        self.assertEqual(0, Upgrade.waitForDatabaseReady(attempts=3, delay=2))
+
+        self.assertEqual(3, setup_connection.call_count)
+        self.assertEqual(2, sleep.call_count)
+        self.assertIn(
+            unittest.mock.call(
+                'MariaDB did not become ready; post-upgrade migrations were not run.',
+                0,
+            ),
+            std_out.call_args_list,
+        )
+
     @patch('plogical.upgrade.Upgrade.stdOut')
     @patch('plogical.securityUtils.ensure_api_token', side_effect=(True, False))
     @patch('loginSystem.models.Administrator.objects.exclude')
