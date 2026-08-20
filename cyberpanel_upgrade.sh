@@ -619,6 +619,30 @@ done
 #special made function for Gitee.com, for whatever reason sometimes it fails to download this file
 }
 
+Validate_Python_Requirements() {
+  local runtime_python="$1"
+  local requirements_file="$2"
+  local expected_django
+  local actual_django
+
+  expected_django=$(sed -n 's/^Django==\([^[:space:]]*\).*$/\1/p' "$requirements_file" | head -n 1)
+  if [[ -z "$expected_django" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No pinned Django version found in $requirements_file" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    return 1
+  fi
+
+  actual_django=$(
+    "$runtime_python" -c 'import django; print(django.get_version())' 2>/dev/null
+  )
+  if [[ "$actual_django" != "$expected_django" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: $runtime_python loaded Django ${actual_django:-unavailable}; expected $expected_django" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    return 1
+  fi
+
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Verified Django $actual_django in $runtime_python" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  return 0
+}
+
 # lswsgi/lscpd loads Django with PYTHONHOME=/usr on several OS versions. Packages installed only into
 # /usr/local/CyberCP (venv) are invisible to that runtime; mirror the requirements into system Python.
 # See PEP 668 (https://peps.python.org/pep-0668/) — Debian/Ubuntu and others ship EXTERNALLY-MANAGED;
@@ -856,7 +880,7 @@ if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
     "$CyberPanel_Python" -m venv /usr/local/CyberPanel
   elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
     PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-    virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+    virtualenv -p "$PYTHON_PATH" /usr/local/CyberPanel
   else
     virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
   fi
@@ -874,7 +898,7 @@ if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$S
   "$CyberPanel_Python" -m venv /usr/local/CyberPanel
 elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
   PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-  virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+  virtualenv -p "$PYTHON_PATH" /usr/local/CyberPanel
 else
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 fi
@@ -909,7 +933,7 @@ if [ $? -ne 0 ]; then
                         "$CyberPanel_Python" -m venv /usr/local/CyberPanel
                     elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
                         PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-                        virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+                        virtualenv -p "$PYTHON_PATH" /usr/local/CyberPanel
                     else
                         virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
                     fi
@@ -932,28 +956,21 @@ fi
 
 # shellcheck disable=SC1091
 . /usr/local/CyberPanel/bin/activate
-pip install --upgrade setuptools packaging
+if ! /usr/local/CyberPanel/bin/python -m pip install --upgrade setuptools packaging; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Unable to prepare the CyberPanel upgrade environment" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  exit 1
+fi
 
 Download_Requirement
 
-if [[ "$Server_OS" = "CentOS" ]] ; then
-#  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
-#    Check_Return
-  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
-    Check_Return
-elif [[ "$Server_OS" = "Ubuntu" ]] ; then
-  # shellcheck disable=SC1091
-  . /usr/local/CyberPanel/bin/activate
-    Check_Return
-#  pip3 install --default-timeout=3600 virtualenv==16.7.9
-#    Check_Return
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
-    Check_Return
-elif [[ "$Server_OS" = "openEuler" ]] ; then
-#  pip3 install --default-timeout=3600 virtualenv==16.7.9
-#    Check_Return
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
-    Check_Return
+if ! /usr/local/CyberPanel/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Unable to install CyberPanel upgrade requirements" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  exit 1
+fi
+
+if ! Validate_Python_Requirements /usr/local/CyberPanel/bin/python /usr/local/requirments.txt; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: CyberPanel upgrade environment failed validation" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  exit 1
 fi
 
 #virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
@@ -1056,51 +1073,36 @@ else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt failed with code $RETURN_CODE, starting fallback..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 
-    if [ -e /usr/bin/pip3 ]; then
-    PIP3="/usr/bin/pip3"
-  else
-    PIP3="pip3.6"
-  fi
-
   rm -rf /usr/local/CyberPanelTemp
   
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating temporary virtual environment for fallback upgrade..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   
-  # Try python3 -m venv first (more reliable on Ubuntu 22.04)
-  if "$CyberPanel_Python" -m venv --system-site-packages /usr/local/CyberPanelTemp 2>/dev/null; then
+  # Keep fallback dependencies isolated from incompatible system Python packages.
+  if "$CyberPanel_Python" -m venv /usr/local/CyberPanelTemp 2>/dev/null; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary virtualenv created with $CyberPanel_Python -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
     # Fallback to virtualenv command
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Trying virtualenv command for temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    virtualenv -p "$CyberPanel_Python" --system-site-packages /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    virtualenv -p "$CyberPanel_Python" /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 
-# shellcheck disable=SC1091
-. /usr/local/CyberPanelTemp/bin/activate
+FALLBACK_CODE=1
+if [[ ! -x /usr/local/CyberPanelTemp/bin/python ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Unable to create the isolated fallback environment" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  Download_Requirement
 
-wget -O /usr/local/requirments-old.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
-
-    if [[ "$Server_OS" = "CentOS" ]] ; then
-#  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
-#    Check_Return
-  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
-    Check_Return
-elif [[ "$Server_OS" = "Ubuntu" ]] ; then
-  # shellcheck disable=SC1091
-  . /usr/local/CyberPanelTemp/bin/activate
-    Check_Return
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
-    Check_Return
-elif [[ "$Server_OS" = "openEuler" ]] ; then
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
-    Check_Return
+  if /usr/local/CyberPanelTemp/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt \
+      && Validate_Python_Requirements /usr/local/CyberPanelTemp/bin/python /usr/local/requirments.txt; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    # upgrade.py is piped into tee, so read its status from PIPESTATUS.
+    FALLBACK_CODE=${PIPESTATUS[0]}
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback requirements could not be installed and validated" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
-/usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-# upgrade.py is piped into tee, so $? is tee's status (always 0) — read the real
-# exit code of upgrade.py from PIPESTATUS or a failed upgrade looks like a success.
-FALLBACK_CODE=${PIPESTATUS[0]}
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
 if [ "$FALLBACK_CODE" -ne 0 ]; then
   UPGRADE_FAILED=1

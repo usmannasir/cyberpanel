@@ -1747,6 +1747,45 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 0, 0
 
     @staticmethod
+    def waitForDatabaseReady(attempts=30, delay=2):
+        """Wait for MariaDB before running post-upgrade database migrations."""
+        for attempt in range(attempts):
+            connection = None
+            cursor = None
+
+            try:
+                connection, cursor = Upgrade.setupConnection()
+                if connection != 0:
+                    cursor.execute('SELECT 1')
+                    cursor.fetchone()
+                    Upgrade.stdOut('MariaDB is ready for post-upgrade migrations.', 0)
+                    return 1
+            except Exception:
+                pass
+            finally:
+                if cursor not in (None, 0):
+                    try:
+                        cursor.close()
+                    except Exception:
+                        pass
+                if connection not in (None, 0):
+                    try:
+                        connection.close()
+                    except Exception:
+                        pass
+
+            if attempt + 1 < attempts:
+                if attempt == 0:
+                    Upgrade.stdOut('Waiting for MariaDB to accept connections...', 0)
+                time.sleep(delay)
+
+        Upgrade.stdOut(
+            'MariaDB did not become ready; post-upgrade migrations were not run.',
+            0,
+        )
+        return 0
+
+    @staticmethod
     def getMachineIP():
         try:
             with open('/etc/cyberpanel/machineIP', 'r') as ip_file:
@@ -5484,7 +5523,20 @@ pm.max_spare_servers = 3
 
         Upgrade.repairLocalCyberPanelDatabaseAccess()
 
-        Upgrade.downloadAndUpgrade(versionNumbring, branch)
+        download_status, download_error = Upgrade.downloadAndUpgrade(
+            versionNumbring, branch,
+        )
+        if download_status != 1:
+            raise RuntimeError(
+                'Unable to prepare upgraded CyberPanel source: %s' %
+                (download_error or 'unknown error')
+            )
+
+        if Upgrade.waitForDatabaseReady() != 1:
+            raise RuntimeError(
+                'MariaDB is unavailable; refusing to run post-upgrade migrations.'
+            )
+
         versionNumbring = Upgrade.downloadLink()
         Upgrade.download_install_phpmyadmin()
         Upgrade.downoad_and_install_raindloop()
