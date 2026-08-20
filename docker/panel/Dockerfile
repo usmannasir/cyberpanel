@@ -8,6 +8,10 @@ ARG OS_TAG=almalinux10
 
 FROM ${BASE_IMAGE}
 
+# Re-declare build args after FROM (pre-FROM ARGs do not persist into the image stage).
+ARG OS_FAMILY=rhel
+ARG OS_TAG=almalinux10
+
 LABEL org.opencontainers.image.title="CyberPanel"
 LABEL org.opencontainers.image.vendor="News Targeted"
 LABEL org.opencontainers.image.source="https://github.com/master3395/cyberpanel"
@@ -17,6 +21,7 @@ ENV container=docker
 ENV CYBERPANEL_CONTAINER=1
 ENV CYBERPANEL_OS_TAG=${OS_TAG}
 ENV LANG=C.UTF-8
+ENV OS_FAMILY=${OS_FAMILY}
 
 STOPSIGNAL SIGRTMIN+3
 
