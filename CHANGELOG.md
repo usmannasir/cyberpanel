@@ -10,6 +10,14 @@ Selective v2.5.5-dev / v3.0.1-dev parity on top of upstream v3.0.2. See
 `to-do/V255-DEV-TO-V302-PORT-CHECKLIST.md`. This is a fork branch, not a
 full `v2.5.5-dev` merge.
 
+### Fixes
+- SnappyMail on the panel port (`/snappymail/`): replace `public/snappymail`
+  symlinks that point outside CyberCP `vhRoot` (OLS `restrained=1` / Django
+  404), keep app files under `public/` with data in
+  `/usr/local/lscp/cyberpanel/snappymail/data`, and add local lsphp contexts
+  on hostname panel proxies. Repair via
+  `scripts/utils/fix-snappymail.sh`.
+
 - Installer `--repo` / `-r` clones a GitHub fork (same switch as upgrade).
 - `getPHPString` uses the #1834 major.minor regex so PHP 8.10 maps to `810`.
 - Modular `cyberpanel_upgrade.sh` plus `upgrade_modules/` kept; Ubuntu 26

@@ -1769,9 +1769,15 @@ $cfg['Servers'][$i]['port'] = '3306';
 
             count = 0
 
-            # Replace only app tree; data dirs (/usr/local/lscp/cyberpanel/snappymail/data, etc.) are preserved
-            if os.path.exists('/usr/local/CyberCP/public/snappymail'):
-                shutil.rmtree('/usr/local/CyberCP/public/snappymail')
+            # Replace only app tree; data dirs (/usr/local/lscp/cyberpanel/snappymail/data, etc.) are preserved.
+            # Symlinks to lscp must be unlinked (not rmtree) so restrained vhRoot stays valid.
+            _sm_public = '/usr/local/CyberCP/public/snappymail'
+            if os.path.islink(_sm_public):
+                os.unlink(_sm_public)
+            elif os.path.isdir(_sm_public):
+                shutil.rmtree(_sm_public)
+            elif os.path.exists(_sm_public):
+                os.remove(_sm_public)
 
             while (1):
                 command = 'unzip -q snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (snappy_version,)
