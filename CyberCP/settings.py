@@ -209,6 +209,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 STATIC_URL = '/static/'
 
+# Keep collected assets readable by LSCPD even if an upgrade is interrupted
+# before the final permission repair runs.
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
 )

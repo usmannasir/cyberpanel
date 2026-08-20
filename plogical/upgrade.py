@@ -17,6 +17,7 @@ import MySQLdb as mysql
 import random
 import secrets
 import string
+import tempfile
 from cyberpanel_version import BUILD, VERSION
 
 def update_all_config_files_with_password(new_password):
@@ -1570,11 +1571,111 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         os.chdir('/usr/local/CyberCP')
 
         command = '/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear'
-        Upgrade.executioner(command, 'Remove old static content', 0)
+        if not Upgrade.executioner(command, 'Collect static content', 0):
+            os.chdir(cwd)
+            raise RuntimeError('Unable to collect static content')
 
         os.chdir(cwd)
 
         shutil.move("/usr/local/CyberCP/static", "/usr/local/CyberCP/public/")
+        Upgrade.normalizeStaticPermissions('/usr/local/CyberCP/public/static')
+
+    @staticmethod
+    def normalizeStaticPermissions(static_root):
+        """Make collected assets readable before the final upgrade repair."""
+        if not os.path.isdir(static_root):
+            raise RuntimeError('Static content directory is missing: %s' % static_root)
+
+        for current_root, directories, files in os.walk(static_root):
+            if not os.path.islink(current_root):
+                os.chmod(current_root, 0o755)
+
+            for directory in directories:
+                path = os.path.join(current_root, directory)
+                if not os.path.islink(path):
+                    os.chmod(path, 0o755)
+
+            for filename in files:
+                path = os.path.join(current_root, filename)
+                if not os.path.islink(path):
+                    os.chmod(path, 0o644)
+
+    @staticmethod
+    def addPostfixLoopbackNetworks(config):
+        """Add missing IPv6 loopbacks to an explicit Postfix mynetworks line."""
+        required_networks = ('[::ffff:127.0.0.0]/104', '[::1]/128')
+        updated_lines = []
+        changed = False
+
+        for line in config.splitlines(True):
+            match = re.match(r'^(\s*mynetworks\s*=\s*)([^\r\n]*)(\r?\n)?$', line, re.IGNORECASE)
+            if not match or match.group(1).lstrip().startswith('#'):
+                updated_lines.append(line)
+                continue
+
+            value = match.group(2)
+            setting_value, comment_marker, comment = value.partition('#')
+            configured_networks = set(filter(None, re.split(r'[\s,]+', setting_value.strip())))
+            missing_networks = [network for network in required_networks if network not in configured_networks]
+
+            if missing_networks:
+                trailing_space = setting_value[len(setting_value.rstrip()):]
+                setting_value = setting_value.rstrip()
+                separator = '' if not setting_value or setting_value.endswith(',') else ' '
+                setting_value = setting_value + separator + ' '.join(missing_networks) + trailing_space
+                value = setting_value + (comment_marker + comment if comment_marker else '')
+                changed = True
+
+            updated_lines.append(match.group(1) + value + (match.group(3) or ''))
+
+        return ''.join(updated_lines), changed
+
+    @staticmethod
+    def _atomicConfigWrite(path, content, metadata):
+        directory = os.path.dirname(path)
+        descriptor, temporary_path = tempfile.mkstemp(prefix='.%s.' % os.path.basename(path), dir=directory)
+        try:
+            with os.fdopen(descriptor, 'w') as temporary_file:
+                temporary_file.write(content)
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            os.chmod(temporary_path, metadata.st_mode & 0o7777)
+            os.chown(temporary_path, metadata.st_uid, metadata.st_gid)
+            os.replace(temporary_path, path)
+        finally:
+            if os.path.exists(temporary_path):
+                os.remove(temporary_path)
+
+    @staticmethod
+    def ensurePostfixLoopbackNetworks(path='/etc/postfix/main.cf'):
+        """Safely repair upgraded Postfix configs that trust IPv4 loopback only."""
+        if not os.path.exists(path):
+            return 1
+
+        try:
+            metadata = os.stat(path)
+            with open(path, 'r') as postfix_config:
+                original_content = postfix_config.read()
+
+            updated_content, changed = Upgrade.addPostfixLoopbackNetworks(original_content)
+            if not changed:
+                return 1
+
+            Upgrade._atomicConfigWrite(path, updated_content, metadata)
+
+            if subprocess.call(['postfix', 'check']) != 0:
+                Upgrade._atomicConfigWrite(path, original_content, metadata)
+                Upgrade.stdOut('Postfix loopback update failed validation and was reverted.', 0)
+                return 0
+
+            if subprocess.call(['systemctl', 'is-active', '--quiet', 'postfix']) == 0:
+                subprocess.call(['systemctl', 'reload', 'postfix'])
+
+            Upgrade.stdOut('Postfix IPv6 loopback trust is configured.', 0)
+            return 1
+        except Exception as msg:
+            Upgrade.stdOut('Unable to update Postfix loopback trust: %s' % msg, 0)
+            return 0
 
     @staticmethod
     def upgradeVersion():
@@ -3936,6 +4037,8 @@ passdb {
             Upgrade.stdOut('Settings file updated with database credentials while preserving new INSTALLED_APPS!')
 
             Upgrade.staticContent()
+
+            Upgrade.ensurePostfixLoopbackNetworks()
 
             # Restore Imunify360 after upgrade
             Upgrade.restoreImunify360()
