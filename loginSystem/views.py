@@ -96,8 +96,18 @@ def verifyLogin(request):
 
             from plogical.usernameUtils import resolve_administrator_by_login_name, GENERIC_AUTH_FAIL
             admin, exact_match = resolve_administrator_by_login_name(username)
-            if not admin or not exact_match:
+            if not admin:
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': GENERIC_AUTH_FAIL}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+            # Username match is case-sensitive (Admin != admin). Give a clear hint
+            # when the account exists under a different capitalisation.
+            if not exact_match:
+                data = {
+                    'userID': 0,
+                    'loginStatus': 0,
+                    'error_message': 'Username is case-sensitive. Check capitalisation (e.g. Admin).',
+                }
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
 

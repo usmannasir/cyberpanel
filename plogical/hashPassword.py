@@ -41,3 +41,18 @@ def generateToken(username, password):
     hashed_credentials = hashlib.sha256(credentials).hexdigest()
 
     return 'Basic {0}'.format(hashed_credentials)
+
+def needs_password_rehash(hashed_password):
+    """True when stored hash should be upgraded (legacy SHA-256:salt, or weak bcrypt cost)."""
+    try:
+        if not hashed_password:
+            return True
+        if not str(hashed_password).startswith('$2'):
+            return True
+        # bcrypt: $2b$12$... — rehash if cost factor below 12
+        parts = str(hashed_password).split('$')
+        if len(parts) >= 3 and parts[2].isdigit() and int(parts[2]) < 12:
+            return True
+        return False
+    except Exception:
+        return False

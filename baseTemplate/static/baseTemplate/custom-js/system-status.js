@@ -948,7 +948,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.errorTopProcesses = '';
     $scope.refreshTopProcesses = function() {
         $scope.loadingTopProcesses = true;
-        $http.get('/base/getTopProcesses').then(function (response) {
+        return $http.get('/base/getTopProcesses').then(function (response) {
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
@@ -1185,12 +1185,19 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
-    var pollInterval = 2000; // ms
+    // Keep polls sparse: lscpd WSGI pool is small (often 5). Overlapping 2s
+    // polls of traffic/disk/cpu/top saturate workers and cause OLS 503 HTML.
+    var pollInterval = 5000; // ms
+    var topProcessesEvery = 3; // every N chart polls
+    var pollAllTicks = 0;
     var maxPoints = 30;
+    var pollInFlight = false;
+    var pollBackoffMs = 0;
+    var pollTimer = null;
 
     function pollDashboardStats() {
-        $http.get('/base/getDashboardStats').then(function(response) {
-            if (response.data.status === 1) {
+        return $http.get('/base/getDashboardStats').then(function(response) {
+            if (response.data && response.data.status === 1) {
                 $scope.totalUsers = response.data.total_users;
                 $scope.totalSites = response.data.total_sites;
                 $scope.totalWPSites = response.data.total_wp_sites;
@@ -1199,14 +1206,15 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 $scope.totalFTPUsers = response.data.total_ftp_users;
                 $scope.statsLoaded = true;
             }
-        });
+        }, function() { /* ignore transient errors */ });
     }
 
     function pollTraffic() {
-        console.log('pollTraffic called');
-        $http.get('/base/getTrafficStats').then(function(response) {
+        return $http.get('/base/getTrafficStats').then(function(response) {
+            if (!response.data || typeof response.data !== 'object') {
+                return;
+            }
             if (response.data.admin_only) {
-                // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
                 return;
             }
@@ -1228,10 +1236,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         trafficChart.data.datasets[0].data = rxData.slice();
                         trafficChart.data.datasets[1].data = txData.slice();
                         trafficChart.update();
-                        console.log('trafficChart updated:', trafficChart.data.labels, trafficChart.data.datasets[0].data, trafficChart.data.datasets[1].data);
                     }
                 } else {
-                    // First poll, push zero data point
                     trafficLabels.push(now.toLocaleTimeString());
                     rxData.push(0);
                     txData.push(0);
@@ -1240,27 +1246,25 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         trafficChart.data.datasets[0].data = rxData.slice();
                         trafficChart.data.datasets[1].data = txData.slice();
                         trafficChart.update();
-                        console.log('trafficChart first update:', trafficChart.data.labels, trafficChart.data.datasets[0].data, trafficChart.data.datasets[1].data);
                         setTimeout(function() {
                             if (window.trafficChart) {
                                 window.trafficChart.resize();
                                 window.trafficChart.update();
-                                console.log('trafficChart forced resize/update after first poll.');
                             }
                         }, 1000);
                     }
                 }
                 lastRx = rx; lastTx = tx;
-            } else {
-                console.log('pollTraffic error or no data:', response);
             }
-        });
+        }, function() { /* ignore 503/HTML */ });
     }
 
     function pollDiskIO() {
-        $http.get('/base/getDiskIOStats').then(function(response) {
+        return $http.get('/base/getDiskIOStats').then(function(response) {
+            if (!response.data || typeof response.data !== 'object') {
+                return;
+            }
             if (response.data.admin_only) {
-                // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
                 return;
             }
@@ -1284,7 +1288,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         diskIOChart.update();
                     }
                 } else {
-                    // First poll, push zero data point
                     diskLabels.push(now.toLocaleTimeString());
                     readData.push(0);
                     writeData.push(0);
@@ -1297,13 +1300,15 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastDiskRead = read; lastDiskWrite = write;
             }
-        });
+        }, function() { /* ignore 503/HTML */ });
     }
 
     function pollCPU() {
-        $http.get('/base/getCPULoadGraph').then(function(response) {
+        return $http.get('/base/getCPULoadGraph').then(function(response) {
+            if (!response.data || typeof response.data !== 'object') {
+                return;
+            }
             if (response.data.admin_only) {
-                // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
                 return;
             }
@@ -1329,7 +1334,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         cpuChart.update();
                     }
                 } else {
-                    // First poll, push zero data point
                     cpuLabels.push(now.toLocaleTimeString());
                     cpuUsageData.push(0);
                     if (cpuChart) {
@@ -1340,11 +1344,10 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastCPUTimes = cpuTimes;
             }
-        });
+        }, function() { /* ignore 503/HTML */ });
     }
 
     function setupCharts() {
-        console.log('setupCharts called, initializing charts...');
         var trafficCtx = document.getElementById('trafficChart').getContext('2d');
         trafficChart = new Chart(trafficCtx, {
             type: 'line',
@@ -1635,19 +1638,41 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.hideSystemCharts = true;
         });
         
-        // Immediately poll once so stats are updated on first load
-        pollDashboardStats();
-        pollTraffic();
-        pollDiskIO();
-        pollCPU();
-        // Start polling
+        // Start a single non-overlapping poll loop (avoid stacking $timeout storms).
+        function scheduleNextPoll(delay) {
+            if (pollTimer) {
+                $timeout.cancel(pollTimer);
+            }
+            pollTimer = $timeout(pollAll, delay || pollInterval);
+        }
+
         function pollAll() {
-            pollDashboardStats();
-            pollTraffic();
-            pollDiskIO();
-            pollCPU();
-            $scope.refreshTopProcesses();
-            $timeout(pollAll, pollInterval);
+            if (pollInFlight) {
+                scheduleNextPoll(pollInterval);
+                return;
+            }
+            pollInFlight = true;
+            pollAllTicks += 1;
+            var jobs = [
+                pollDashboardStats(),
+                pollTraffic(),
+                pollDiskIO(),
+                pollCPU()
+            ];
+            if (pollAllTicks === 1 || (pollAllTicks % topProcessesEvery) === 0) {
+                jobs.push($scope.refreshTopProcesses());
+            }
+            Promise.all(jobs.map(function(p) {
+                return Promise.resolve(p).catch(function() { return null; });
+            })).then(function() {
+                pollInFlight = false;
+                pollBackoffMs = 0;
+                scheduleNextPoll(pollInterval);
+            }, function() {
+                pollInFlight = false;
+                pollBackoffMs = Math.min((pollBackoffMs || pollInterval) * 2, 30000);
+                scheduleNextPoll(pollBackoffMs);
+            });
         }
         pollAll();
     }, 500);
