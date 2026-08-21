@@ -1027,7 +1027,23 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                                       f' --key-file {certPath}/privkey.pem' \
                                       f' --fullchain-file {certPath}/fullchain.pem' \
                                       f' --reloadcmd "{sslUtilities.lswsReloadCmd}"'
-                    subprocess.call(install_command, shell=True)
+                    install_result = subprocess.run(install_command, stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    universal_newlines=True, shell=True)
+
+                    # A renew that acme.sh completed but could not deploy leaves the
+                    # served files in /etc/letsencrypt/live untouched, which is the
+                    # original #1676 symptom: the site keeps presenting the old, soon
+                    # expired certificate. Reporting success here would hide exactly
+                    # the failure this path exists to prevent.
+                    if install_result.returncode != 0:
+                        install_output = install_result.stderr or install_result.stdout
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f"Renewed certificate for {domain} could not be deployed to "
+                            f"{certPath}; the site is still serving the previous "
+                            f"certificate. acme.sh --install-cert exit "
+                            f"{install_result.returncode}: {install_output}")
+                        return [0, "SSL renewed but deployment to the live path failed"]
 
                     if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                         return [1, "SSL successfully renewed"]
