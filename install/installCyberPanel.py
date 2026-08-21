@@ -1649,7 +1649,19 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
         if distro == ubuntu:
             installer.fixMariaDB()
 
-    mysqlUtilities.createDatabase("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, publicip)
+    # Stop here if the database could not be prepared. Continuing produced an
+    # installation that failed several steps later at `manage.py migrate`
+    # against an application account that had never been created, with nothing
+    # in the log about the administrative connection that actually failed.
+    if mysqlUtilities.createDatabase("cyberpanel", "cyberpanel",
+                                     InstallCyberPanel.mysqlPassword,
+                                     publicip) != 1:
+        logging.InstallLog.writeToFile(
+            "[ERROR] Could not create the CyberPanel database or its "
+            "application account. For a remote installation, check that the "
+            "host, port, administrative user and password are correct and "
+            "that this server is allowed to connect. Aborting.")
+        os._exit(os.EX_SOFTWARE)
 
     if ftp is None:
         installer.installPureFTPD()
