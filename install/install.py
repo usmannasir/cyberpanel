@@ -3081,8 +3081,13 @@ def main():
         mysqldb = args.mysqldb
 
         if preFlightsChecks.debug:
+            # debug is on for every installation and this output lands in
+            # /root/install.log, which is what people paste into support
+            # threads. Print what is needed to diagnose a connection problem
+            # and never the password itself.
             print('mysqlhost: %s, mysqldb: %s,  mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (
-                mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport))
+                mysqlhost, mysqldb, mysqluser,
+                '<set>' if mysqlpassword else '<empty>', mysqlport))
             time.sleep(10)
 
     else:

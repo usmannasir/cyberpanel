@@ -1600,7 +1600,11 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
         writeToFile.close()
 
         if install.preFlightsChecks.debug:
-            print(open(file_name, 'r').read())
+            # The file holds the remote administrative password; echoing it
+            # would copy the credential into /root/install.log.
+            print('Wrote remote MySQL connection details to %s '
+                  '(host %s, port %s, user %s, password <set>)'
+                  % (file_name, mysqlhost, mysqlport, mysqluser))
             time.sleep(10)
 
     try:
