@@ -50,18 +50,17 @@ class pluginInstaller:
         writeToFile.close()
 
     @staticmethod
-    def upgradingURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+    def upgradingURLs(pluginName, urlsPath="/usr/local/CyberCP/CyberCP/urls.py"):
+        with open(urlsPath, 'r') as urlsFile:
+            data = urlsFile.readlines()
 
-        for items in data:
-            if items.find("manageservices") > -1:
-                writeToFile.writelines(items)
-                writeToFile.writelines("    url(r'^" + pluginName + "/',include('" + pluginName + ".urls')),\n")
-            else:
-                writeToFile.writelines(items)
-
-        writeToFile.close()
+        with open(urlsPath, 'w') as writeToFile:
+            for items in data:
+                if items.find("manageservices") > -1:
+                    writeToFile.writelines(items)
+                    writeToFile.writelines("    path('" + pluginName + "/', include('" + pluginName + ".urls')),\n")
+                else:
+                    writeToFile.writelines(items)
 
     @staticmethod
     def informCyberPanel(pluginName):
