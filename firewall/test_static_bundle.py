@@ -7,7 +7,14 @@ class FirewallStaticBundleTests(unittest.TestCase):
     def test_collected_bundle_matches_application_source(self):
         root = os.path.dirname(os.path.dirname(__file__))
         source = os.path.join(root, 'firewall', 'static', 'firewall', 'firewall.js')
-        collected = os.path.join(root, 'static', 'firewall', 'firewall.js')
+        collected_candidates = (
+            os.path.join(root, 'static', 'firewall', 'firewall.js'),
+            os.path.join(root, 'public', 'static', 'firewall', 'firewall.js'),
+        )
+        collected = next(
+            (path for path in collected_candidates if os.path.isfile(path)),
+            collected_candidates[0],
+        )
         with open(source, 'rb') as source_file, open(collected, 'rb') as collected_file:
             self.assertEqual(source_file.read(), collected_file.read())
 
