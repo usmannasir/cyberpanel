@@ -614,21 +614,42 @@ class preFlightsChecks:
         """
         logging.InstallLog.writeToFile("Using fallback method for settings.py update")
 
-        try:
-            sys.path.append(os.path.join(self.cyberPanelPath, 'install'))
-            from env_generator import build_database_config
-            db = build_database_config(
-                remote=(self.remotemysql == 'ON'),
-                host=getattr(self, 'mysqlhost', None),
-                port=getattr(self, 'mysqlport', None),
-                root_db=getattr(self, 'mysqldb', None),
-                root_user=getattr(self, 'mysqluser', None),
-            )
-        except Exception as endpoint_error:
-            logging.InstallLog.writeToFile(
-                "[ERROR] Could not resolve the database endpoint for the "
-                "fallback settings update: %s" % str(endpoint_error))
-            raise
+        remote = (self.remotemysql == 'ON')
+
+        # This runs because environment generation already failed, so it must
+        # not depend on env_generator being importable. The local values are
+        # inlined; the helper is only consulted to validate a remote endpoint.
+        db = {
+            'db_name': 'cyberpanel',
+            'db_user': 'cyberpanel',
+            'db_host': 'localhost',
+            'db_port': '3306',
+            'root_db_name': 'mysql',
+            'root_db_user': 'root',
+            'root_db_host': 'localhost',
+            'root_db_port': '3306',
+        }
+
+        if remote:
+            try:
+                sys.path.append(os.path.join(self.cyberPanelPath, 'install'))
+                from env_generator import build_database_config
+                db = build_database_config(
+                    remote=True,
+                    host=getattr(self, 'mysqlhost', None),
+                    port=getattr(self, 'mysqlport', None),
+                    root_db=getattr(self, 'mysqldb', None),
+                    root_user=getattr(self, 'mysqluser', None),
+                )
+            except Exception as endpoint_error:
+                # Writing the local defaults for a remote installation would
+                # point every connection at a database that is not there, and
+                # the installation would fail later with a confusing error.
+                logging.InstallLog.writeToFile(
+                    "[ERROR] Could not resolve the remote database endpoint "
+                    "for the fallback settings update: %s"
+                    % str(endpoint_error))
+                raise
 
         path = self.cyberPanelPath + "/CyberCP/settings.py"
         data = open(path, "r").readlines()
