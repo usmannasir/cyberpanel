@@ -37,6 +37,7 @@ from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
 from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
+from plogical.sshKeyUtilities import authorized_key_records
 from plogical.systemPassword import (
     consume_system_password_request,
     create_system_password_request,
@@ -7583,34 +7584,7 @@ StrictHostKeyChecking no
             cat = "cat " + pathToKeyFile
             data = ProcessUtilities.outputExecutioner(cat, website.externalApp).split('\n')
 
-            json_data = "["
-            checker = 0
-
-            for items in data:
-                if items.find("ssh-rsa") > -1:
-                    keydata = items.split(" ")
-
-                    try:
-                        key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
-                        try:
-                            userName = keydata[2][:keydata[2].index("@")]
-                        except:
-                            userName = keydata[2]
-                    except:
-                        key = "ssh-rsa " + keydata[1][:50]
-                        userName = ''
-
-                    dic = {'userName': userName,
-                           'key': key,
-                           }
-
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
-
-            json_data = json_data + ']'
+            json_data = json.dumps(authorized_key_records(data))
 
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
@@ -7641,7 +7615,10 @@ StrictHostKeyChecking no
             ProcessUtilities.outputExecutioner(command)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-            execPath = execPath + " deleteSSHKey --key '%s' --path %s" % (key, pathToKeyFile)
+            execPath = execPath + " deleteSSHKey --key %s --path %s" % (
+                shlex.quote(key),
+                shlex.quote(pathToKeyFile),
+            )
 
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
@@ -7650,12 +7627,16 @@ StrictHostKeyChecking no
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
-                final_dic = {'status': 1, 'delete_status': 1, "error_mssage": output}
+                final_dic = {
+                    'status': 0,
+                    'delete_status': 0,
+                    'error_message': output,
+                }
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'status': 0, 'delete_status': 0, 'error_mssage': str(msg)}
+            final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 

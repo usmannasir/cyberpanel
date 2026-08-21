@@ -680,14 +680,14 @@ app.controller('secureSSHCTRL', function ($scope, $http) {
 
     }
 
-    $scope.deleteKey = function (key) {
+    $scope.deleteKey = function (keyId) {
 
         $scope.secureSSHLoading = false;
 
         url = "/firewall/deleteSSHKey";
 
         var data = {
-            key: key,
+            key: keyId,
         };
 
         var config = {

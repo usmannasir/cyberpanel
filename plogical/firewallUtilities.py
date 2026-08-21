@@ -16,6 +16,7 @@ import argparse
 import re
 import ipaddress
 from plogical.processUtilities import ProcessUtilities
+from plogical.sshKeyUtilities import delete_authorized_key
 
 # firewalld rich-rule values are embedded inside a single-quoted shell argument,
 # so they cannot be passed through shlex.quote. Validate them against strict
@@ -223,26 +224,15 @@ class FirewallUtilities:
     @staticmethod
     def deleteSSHKey(key, path=None):
         try:
-            keyPart = key.split(" ")[1]
-
             if path == None:
                 pathToSSH = "/root/.ssh/authorized_keys"
             else:
                 pathToSSH = path
 
-            data = open(pathToSSH, 'r').readlines()
-
-            writeToFile = open(pathToSSH, "w")
-
-            for items in data:
-                if items.find("ssh-rsa") > -1 and items.find(keyPart) > -1:
-                    continue
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            print("1,None")
+            if delete_authorized_key(pathToSSH, key):
+                print("1,None")
+            else:
+                print("0,SSH key not found.")
 
         except BaseException as msg:
             print("0," + str(msg))
