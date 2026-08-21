@@ -4,6 +4,7 @@ import subprocess
 import shlex
 import argparse
 import os
+import re
 import shutil
 import time
 from plogical.processUtilities import ProcessUtilities
@@ -244,17 +245,34 @@ class pluginInstaller:
         writeToFile.close()
 
     @staticmethod
-    def removeFromURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+    def removeFromURLs(pluginName, urlsPath="/usr/local/CyberCP/CyberCP/urls.py"):
+        if not isinstance(pluginName, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', pluginName):
+            return False
 
+        escapedName = re.escape(pluginName)
+        routePattern = re.compile(
+            r'^\s*(?:path|url)\(\s*r?([\'\"])\^?%s/(?:\$)?\1\s*,\s*'
+            r'include\(\s*([\'\"])%s\.urls\2\s*\)\s*\)\s*,?\s*$'
+            % (escapedName, escapedName)
+        )
+
+        with open(urlsPath, 'r') as urlsFile:
+            data = urlsFile.readlines()
+
+        retainedLines = []
+        removed = False
         for items in data:
-            if items.find(pluginName) > -1:
+            if routePattern.match(items):
+                removed = True
                 continue
-            else:
-                writeToFile.writelines(items)
+            retainedLines.append(items)
 
-        writeToFile.close()
+        if not removed:
+            return False
+
+        with open(urlsPath, 'w') as writeToFile:
+            writeToFile.writelines(retainedLines)
+        return True
 
     @staticmethod
     def informCyberPanelRemoval(pluginName):
