@@ -566,13 +566,27 @@ class preFlightsChecks:
             
             # Import the environment generator
             sys.path.append(os.path.join(self.cyberPanelPath, 'install'))
-            from env_generator import create_env_file, create_env_backup
-            
+            from env_generator import (create_env_file, create_env_backup,
+                                       build_database_config)
+
+            # A remote installation moves both the application connection and
+            # the administrative connection to --mysqlhost:--mysqlport. This
+            # validates the endpoint and raises before anything is written if
+            # a required value is missing.
+            database_config = build_database_config(
+                remote=(self.remotemysql == 'ON'),
+                host=getattr(self, 'mysqlhost', None),
+                port=getattr(self, 'mysqlport', None),
+                root_db=getattr(self, 'mysqldb', None),
+                root_user=getattr(self, 'mysqluser', None),
+            )
+
             # Generate secure credentials
             credentials = create_env_file(
-                self.cyberPanelPath, 
-                mysql_root_password, 
-                cyberpanel_db_password
+                self.cyberPanelPath,
+                mysql_root_password,
+                cyberpanel_db_password,
+                database_config=database_config
             )
             
             # Create backup for recovery
@@ -588,16 +602,39 @@ class preFlightsChecks:
             # Fallback to original method if environment generation fails
             self.fallback_settings_update(mysql_root_password, cyberpanel_db_password)
 
-    def fallback_settings_update(self, mysqlPassword, password):
+    def fallback_settings_update(self, mysql_root_password, cyberpanel_db_password):
         """
         Fallback method to update settings.py directly if environment generation fails
+
+        DATABASES declares 'default' (the cyberpanel application user) before
+        'rootdb' (the administrative user), so the first 'PASSWORD:' line
+        encountered belongs to the application connection. The previous
+        ordering wrote the administrative password there and the application
+        password into rootdb, leaving both connections wrong.
         """
         logging.InstallLog.writeToFile("Using fallback method for settings.py update")
-        
+
+        try:
+            sys.path.append(os.path.join(self.cyberPanelPath, 'install'))
+            from env_generator import build_database_config
+            db = build_database_config(
+                remote=(self.remotemysql == 'ON'),
+                host=getattr(self, 'mysqlhost', None),
+                port=getattr(self, 'mysqlport', None),
+                root_db=getattr(self, 'mysqldb', None),
+                root_user=getattr(self, 'mysqluser', None),
+            )
+        except Exception as endpoint_error:
+            logging.InstallLog.writeToFile(
+                "[ERROR] Could not resolve the database endpoint for the "
+                "fallback settings update: %s" % str(endpoint_error))
+            raise
+
         path = self.cyberPanelPath + "/CyberCP/settings.py"
         data = open(path, "r").readlines()
         writeDataToFile = open(path, "w")
-        counter = 0
+        # 0 = still inside 'default', 1 = inside 'rootdb'.
+        block = 0
 
         for items in data:
             if items.find('SECRET_KEY') > -1:
@@ -606,15 +643,26 @@ class preFlightsChecks:
                 continue
 
             if items.find("'PASSWORD':") > -1:
-                if counter == 0:
-                    writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
-                    counter = counter + 1
+                if block == 0:
+                    writeDataToFile.writelines(
+                        "        'PASSWORD': '" + cyberpanel_db_password + "',\n")
                 else:
-                    writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
-            elif items.find('127.0.0.1') > -1:
-                writeDataToFile.writelines("        'HOST': 'localhost',\n")
-            elif items.find("'PORT':'3307'") > -1:
-                writeDataToFile.writelines("        'PORT': '',\n")
+                    writeDataToFile.writelines(
+                        "        'PASSWORD': '" + mysql_root_password + "',\n")
+            elif items.find("'HOST':") > -1:
+                host = db['db_host'] if block == 0 else db['root_db_host']
+                writeDataToFile.writelines("        'HOST': '" + host + "',\n")
+            elif items.find("'PORT':") > -1:
+                port = db['db_port'] if block == 0 else db['root_db_port']
+                writeDataToFile.writelines("        'PORT': '" + port + "',\n")
+                # PORT is the last entry of each database block.
+                block = block + 1
+            elif items.find("'USER':") > -1 and block == 1:
+                writeDataToFile.writelines(
+                    "        'USER': '" + db['root_db_user'] + "',\n")
+            elif items.find("'NAME':") > -1 and block == 1:
+                writeDataToFile.writelines(
+                    "        'NAME': '" + db['root_db_name'] + "',\n")
             else:
                 writeDataToFile.writelines(items)
 
@@ -672,24 +720,15 @@ password="%s"
 
         # Generate secure environment file instead of hardcoding passwords
         # Note: password = MySQL root password, mysqlPassword = CyberPanel DB password
+        # The remote endpoint is now part of the generated environment rather
+        # than something patched into settings.py afterwards. Three text
+        # substitutions used to run here against an undefined `path`, which
+        # raised before migrations on every remote installation; even with the
+        # name defined they edited settings.py, whose database values are only
+        # fallbacks — .env is what Django actually reads.
         self.generate_secure_env_file(password, mysqlPassword)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
-
-        if self.remotemysql == 'ON':
-            command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            # command = "sed -i 's|'mysql'|'%s'|g' %s" % (self.mysqldb, path)
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            command = "sed -i 's|root|%s|g' %s" % (self.mysqluser, path)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            command = "sed -i \"s|'PORT': ''|'PORT':'%s'|g\" %s" % (self.mysqlport, path)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        logging.InstallLog.writeToFile("settings.py updated!")
 
         # self.setupVirtualEnv(self.distro)
 
