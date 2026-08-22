@@ -1,3 +1,4 @@
+import os
 import re
 import shlex
 
@@ -14,6 +15,13 @@ def select_wordpress_version(offers):
         if WORDPRESS_VERSION.fullmatch(version):
             return version
     raise ValueError('The WordPress API did not return a valid release.')
+
+
+def wordpress_php_change_required(current_binary, required_binary):
+    """Avoid restarting the web server when WordPress already uses the target PHP."""
+    current = os.path.normpath(str(current_binary or ''))
+    required = os.path.normpath(str(required_binary or ''))
+    return not current or current != required
 
 
 def build_directory_probe(path):

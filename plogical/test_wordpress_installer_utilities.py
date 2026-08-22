@@ -6,6 +6,7 @@ from plogical.wordpressInstallerUtilities import (
     build_wordpress_core_install_command,
     directory_allows_install,
     select_wordpress_version,
+    wordpress_php_change_required,
 )
 
 
@@ -62,6 +63,16 @@ class WordPressInstallerUtilitiesTests(unittest.TestCase):
     def test_wordpress_api_version_requires_a_valid_release(self):
         with self.assertRaisesRegex(ValueError, 'valid release'):
             select_wordpress_version([{}, {'current': 'latest'}])
+
+    def test_matching_wordpress_php_does_not_require_a_web_server_restart(self):
+        php = '/usr/local/lsws/lsphp83/bin/php'
+
+        self.assertFalse(wordpress_php_change_required(php, php))
+        self.assertTrue(
+            wordpress_php_change_required(
+                '/usr/local/lsws/lsphp82/bin/php', php,
+            )
+        )
 
 
 if __name__ == '__main__':
