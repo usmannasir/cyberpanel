@@ -15,6 +15,7 @@ No certificate authority is contacted; every process call is mocked.
 
 import unittest
 from unittest import mock
+import os
 
 from plogical import sslUtilities as ssl_module
 from plogical.sslUtilities import issueSSLForDomain, sslUtilities
@@ -38,7 +39,9 @@ class CompletedProcess(object):
 class RenewalDeploymentTests(unittest.TestCase):
     def setUp(self):
         self.run_calls = []
+        self.run_kwargs = []
         self.call_calls = []
+        self.call_kwargs = []
 
         # Every path the renewal branch probes exists: the current certificate
         # and the acme.sh client.
@@ -81,6 +84,7 @@ class RenewalDeploymentTests(unittest.TestCase):
 
     def _record_call(self, command, **kwargs):
         self.call_calls.append(command)
+        self.call_kwargs.append(kwargs)
         return 0
 
     def _run_with(self, renew_rc=0, install_rc=0):
@@ -88,6 +92,7 @@ class RenewalDeploymentTests(unittest.TestCase):
 
         def fake_run(command, **kwargs):
             self.run_calls.append(command)
+            self.run_kwargs.append(kwargs)
             if '--install-cert' in command:
                 return CompletedProcess(install_rc, 'install out', 'install err')
             return CompletedProcess(renew_rc, 'renew out', 'renew err')
@@ -143,6 +148,24 @@ class RenewalDeploymentTests(unittest.TestCase):
     def test_reload_command_is_the_graceful_litespeed_reload(self):
         self.assertEqual(sslUtilities.lswsReloadCmd,
                          '/usr/local/lsws/bin/lswsctrl reload')
+
+    def test_acme_processes_do_not_inherit_django_log_controls(self):
+        with mock.patch.dict(os.environ, {
+                'DEBUG': 'False', 'LOG_LEVEL': 'INFO',
+                'CYBERPANEL_TEST_VALUE': 'preserved'}, clear=True):
+            environment = sslUtilities.acmeEnvironment()
+
+        self.assertNotIn('DEBUG', environment)
+        self.assertNotIn('LOG_LEVEL', environment)
+        self.assertEqual('preserved', environment['CYBERPANEL_TEST_VALUE'])
+
+        with mock.patch.dict(os.environ, {
+                'DEBUG': 'False', 'LOG_LEVEL': 'INFO'}, clear=False):
+            self._run_with()
+
+        for kwargs in self.call_kwargs + self.run_kwargs:
+            self.assertNotIn('DEBUG', kwargs['env'])
+            self.assertNotIn('LOG_LEVEL', kwargs['env'])
 
     # --- failure behaviour ----------------------------------------------
 

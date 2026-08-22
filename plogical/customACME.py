@@ -322,10 +322,9 @@ class CustomACME:
             logging.CyberCPLogFileWriter.writeToFile(f'Account creation response status: {response.status_code}')
             logging.CyberCPLogFileWriter.writeToFile('Account creation response received')
 
-            if response.status_code == 201:
+            if response.status_code in (200, 201):
                 self.account_url = response.headers['Location']
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f'Successfully created account. Account URL: {self.account_url}')
+                logging.CyberCPLogFileWriter.writeToFile('Successfully registered ACME account')
                 # Save the account key for future use
                 self._save_account_key()
                 return True
@@ -461,9 +460,8 @@ class CustomACME:
                 self.order_url = response.headers['Location']
                 self.authorizations = response.json()['authorizations']
                 self.finalize_url = response.json()['finalize']
-                logging.CyberCPLogFileWriter.writeToFile(f'Successfully created order. Order URL: {self.order_url}')
+                logging.CyberCPLogFileWriter.writeToFile('Successfully created order')
                 logging.CyberCPLogFileWriter.writeToFile('ACME authorizations received')
-                logging.CyberCPLogFileWriter.writeToFile(f'Finalize URL: {self.finalize_url}')
                 return True
             return False
         except Exception as e:
@@ -678,7 +676,7 @@ class CustomACME:
                         if order_status == 'valid':
                             self.certificate_url = response.json().get('certificate')
                             logging.CyberCPLogFileWriter.writeToFile(
-                                f'Successfully finalized order. Certificate URL: {self.certificate_url}')
+                                'Successfully finalized order')
                             return True
                         elif order_status == 'invalid':
                             logging.CyberCPLogFileWriter.writeToFile('Order validation failed')
@@ -704,7 +702,6 @@ class CustomACME:
         """Download certificate from ACME server"""
         try:
             logging.CyberCPLogFileWriter.writeToFile('Downloading certificate...')
-            logging.CyberCPLogFileWriter.writeToFile(f'Certificate URL: {self.certificate_url}')
 
             # Get a fresh nonce for the request
             if not self._get_nonce():
@@ -722,7 +719,6 @@ class CustomACME:
             }
             response = requests.post(self.certificate_url, data=jws, headers=headers)
             logging.CyberCPLogFileWriter.writeToFile(f'Certificate download response status: {response.status_code}')
-            logging.CyberCPLogFileWriter.writeToFile(f'Certificate download response headers: {response.headers}')
 
             if response.status_code == 200:
                 logging.CyberCPLogFileWriter.writeToFile('Successfully downloaded certificate')
@@ -998,7 +994,8 @@ class CustomACME:
                 f'Starting certificate issuance for domains: {domains}, use_dns: {use_dns}')
 
             # Try to load existing account key first
-            if self._load_account_key():
+            account_key_loaded = self._load_account_key()
+            if account_key_loaded:
                 logging.CyberCPLogFileWriter.writeToFile('Using existing account key')
             else:
                 logging.CyberCPLogFileWriter.writeToFile('No existing account key found, will create new one')
@@ -1016,10 +1013,11 @@ class CustomACME:
                 return False
 
             # Initialize ACME
-            logging.CyberCPLogFileWriter.writeToFile('Step 1: Generating account key')
-            if not self._generate_account_key():
-                logging.CyberCPLogFileWriter.writeToFile('Failed to generate account key')
-                return False
+            logging.CyberCPLogFileWriter.writeToFile('Step 1: Preparing account key')
+            if not account_key_loaded:
+                if not self._generate_account_key():
+                    logging.CyberCPLogFileWriter.writeToFile('Failed to generate account key')
+                    return False
 
             logging.CyberCPLogFileWriter.writeToFile('Step 2: Getting ACME directory')
             if not self._get_directory():
