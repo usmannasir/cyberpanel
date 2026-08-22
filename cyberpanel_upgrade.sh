@@ -1333,8 +1333,9 @@ Post_Upgrade_System_Tweak() {
 
   if [[ "$Server_OS" = "Ubuntu" ]] ; then
 
-  if ! dpkg -l lsphp74-dev >/dev/null 2>&1 ; then
-    apt install -y lsphp74-dev
+  if apt-cache show lsphp74-dev >/dev/null 2>&1 \
+     && ! dpkg-query -W -f='${db:Status-Status}' lsphp74-dev 2>/dev/null | grep -qx installed ; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y lsphp74-dev
   fi
 
     if [[ ! -f /usr/sbin/ipset ]] ; then

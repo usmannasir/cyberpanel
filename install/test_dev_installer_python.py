@@ -76,6 +76,25 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             active_sources,
         )
 
+    def test_upgrade_skips_unavailable_legacy_php_development_package(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrade_script = (root / 'cyberpanel_upgrade.sh').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertIn(
+            'if apt-cache show lsphp74-dev >/dev/null 2>&1',
+            upgrade_script,
+        )
+        self.assertIn(
+            "dpkg-query -W -f='${db:Status-Status}' lsphp74-dev",
+            upgrade_script,
+        )
+        self.assertNotIn(
+            'if ! dpkg -l lsphp74-dev',
+            upgrade_script,
+        )
+
     def test_version_parsers_do_not_depend_on_fixed_json_offsets(self):
         root = pathlib.Path(__file__).parents[1]
         for script_path in (root / 'cyberpanel.sh', root / 'cyberpanel_upgrade.sh'):
