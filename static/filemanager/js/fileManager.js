@@ -1584,16 +1584,22 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     // Download files
 
+    // The path and domain must be percent-encoded. The server reads them with
+    // unquote(), and without encoding a name containing '#' is cut off as a URL
+    // fragment, '&' starts a new query parameter, and '+' arrives as a space -
+    // each producing a different path than the one clicked, so the download is
+    // refused as "Unauthorized access". Issue #1902.
     $scope.downloadFile = function () {
         url = "/filemanager/downloadFile";
         var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
-        window.location.href = url + '?domainName=' + domainName + '&fileToDownload=' + downloadURL;
+        window.location.href = url + '?domainName=' + encodeURIComponent(domainName) +
+            '&fileToDownload=' + encodeURIComponent(downloadURL);
     };
 
     $scope.RootDownloadFile = function () {
         url = "/filemanager/RootDownloadFile";
         var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
-        window.location.href = url + '?fileToDownload=' + downloadURL;
+        window.location.href = url + '?fileToDownload=' + encodeURIComponent(downloadURL);
     };
 
 
