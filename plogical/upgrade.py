@@ -1719,28 +1719,47 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+            with open(passFile) as password_file:
+                data = password_file.read()
 
-            if db == None:
-                conn = mysql.connect(user='root', passwd=password)
+            try:
+                admin_connection = json.loads(data)
+            except (TypeError, ValueError):
+                admin_connection = None
+
+            if isinstance(admin_connection, dict):
+                connection_options = {
+                    'host': admin_connection['mysqlhost'],
+                    'port': int(admin_connection.get('mysqlport') or 3306),
+                    'user': admin_connection['mysqluser'],
+                    'passwd': admin_connection['mysqlpassword'],
+                }
+                if db is not None:
+                    connection_options['db'] = db
+                conn = mysql.connect(**connection_options)
             else:
-                try:
-                    conn = mysql.connect(db=db, user='root', passwd=password)
-                except:
-                    try:
-                        conn = mysql.connect(host='127.0.0.1', port=3307, db=db, user='root', passwd=password)
-                    except:
-                        dbUser = settings.DATABASES['default']['USER']
-                        password = settings.DATABASES['default']['PASSWORD']
-                        host = settings.DATABASES['default']['HOST']
-                        port = settings.DATABASES['default']['PORT']
+                # Preserve the legacy local-database connection order for
+                # existing installations whose password file is plain text.
+                password = data.split('\n', 1)[0]
 
-                        if port == '':
-                            conn = mysql.connect(host=host, port=3306, db=db, user=dbUser, passwd=password)
-                        else:
-                            conn = mysql.connect(host=host, port=int(port), db=db, user=dbUser, passwd=password)
+                if db == None:
+                    conn = mysql.connect(user='root', passwd=password)
+                else:
+                    try:
+                        conn = mysql.connect(db=db, user='root', passwd=password)
+                    except:
+                        try:
+                            conn = mysql.connect(host='127.0.0.1', port=3307, db=db, user='root', passwd=password)
+                        except:
+                            dbUser = settings.DATABASES['default']['USER']
+                            password = settings.DATABASES['default']['PASSWORD']
+                            host = settings.DATABASES['default']['HOST']
+                            port = settings.DATABASES['default']['PORT']
+
+                            if port == '':
+                                conn = mysql.connect(host=host, port=3306, db=db, user=dbUser, passwd=password)
+                            else:
+                                conn = mysql.connect(host=host, port=int(port), db=db, user=dbUser, passwd=password)
 
             cursor = conn.cursor()
             return conn, cursor
