@@ -40,6 +40,7 @@ except:
 import re
 import os
 from plogical.processUtilities import ProcessUtilities
+from plogical.legacyWebmail import legacy_data_permission_commands
 import bcrypt
 import threading as multi
 import argparse
@@ -1587,47 +1588,8 @@ milter_default_action = accept
         command = "chown -R root:root /usr/local/lscp"
         ProcessUtilities.executioner(command)
 
-        # Ensure SnappyMail directories exist before setting permissions
-        command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
-        ProcessUtilities.executioner(command)
-
-        command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/"
-        ProcessUtilities.executioner(command)
-
-        command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/"
-        ProcessUtilities.executioner(command)
-
-        command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/"
-        ProcessUtilities.executioner(command)
-
-        command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/"
-        ProcessUtilities.executioner(command)
-
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-        ProcessUtilities.executioner(command)
-
-        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
-        ProcessUtilities.executioner(command)
-
-        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
-        ProcessUtilities.executioner(command)
-
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        ProcessUtilities.executioner(command)
-
-        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
-        ProcessUtilities.executioner(command)
-
-        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
-        ProcessUtilities.executioner(command)
-
-        # Ensure web server users are in the lscpd group for access
-        command = "usermod -a -G lscpd nobody 2>/dev/null || true"
-        ProcessUtilities.executioner(command)
-
-        # Fix SnappyMail public directory ownership (critical fix)
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
-        ProcessUtilities.executioner(command)
+        for command in legacy_data_permission_commands():
+            ProcessUtilities.executioner(command)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
         ProcessUtilities.executioner(command)

@@ -8,13 +8,11 @@ import re
 import shlex
 from firewallUtilities import FirewallUtilities
 import time
-import string
 import random
 import socket
 from os.path import *
 from stat import *
 import stat
-import secrets
 import install_utils
 import json
 
@@ -25,6 +23,7 @@ from database_consumers import (
     dovecot_connect_line,
 )
 from env_generator import DatabaseConfigError, build_database_config
+from plogical.legacyWebmail import legacy_data_permission_commands
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -64,7 +63,6 @@ class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
-    SnappyVersion = '2.38.2'
     apt_updated = False  # Track if apt update has been run
     
     def install_package(self, package_name, options="", silent=False):
@@ -112,22 +110,6 @@ class preFlightsChecks:
         ).returncode == 0
         if not user_exists:
             command = 'useradd -g lscpd -M -d /usr/local/lscp lscpd'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-    def addWebServerUserToLSCPDGroup(self):
-        """Allow the web-server account to access panel-owned webmail data."""
-        user_exists = subprocess.run(
-            ['id', '-u', 'nobody'],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        ).returncode == 0
-        group_exists = subprocess.run(
-            ['getent', 'group', 'lscpd'],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        ).returncode == 0
-        if user_exists and group_exists:
-            command = 'usermod -a -G lscpd nobody'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
@@ -836,8 +818,8 @@ class preFlightsChecks:
         command = "chown -R root:root /usr/local/lscp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        for command in legacy_data_permission_commands():
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -965,47 +947,6 @@ class preFlightsChecks:
         if os.path.exists('/usr/local/lscp/cyberpanel/logs/access.log'):
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # Create complete SnappyMail directory structure early in installation
-        command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # Set proper ownership early
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # Ensure the web server user (nobody) can access the directories
-        # Note: lscpd is already added to nobody group earlier in the installation
-        self.addWebServerUserToLSCPDGroup()
-
-        # Fix SnappyMail public directory ownership early
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        snappymailinipath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
-
-        command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        ###
 
         WriteToFile = open('/etc/fstab', 'a')
         WriteToFile.write('proc    /proc        proc        defaults,hidepid=2    0 0\n')
@@ -1644,200 +1585,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_dovecot_config]")
-            return 0
-
-        return 1
-
-    def downoad_and_install_raindloop(self):
-        try:
-            #######
-
-            if not os.path.exists("/usr/local/CyberCP/public"):
-                os.mkdir("/usr/local/CyberCP/public")
-
-            if os.path.exists("/usr/local/CyberCP/public/snappymail"):
-                return 0
-
-            os.chdir("/usr/local/CyberCP/public")
-
-            command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            #############
-
-            command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (preFlightsChecks.SnappyVersion)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            try:
-                os.remove("snappymail-%s.zip" % (preFlightsChecks.SnappyVersion))
-            except:
-                pass
-
-            #######
-
-            os.chdir("/usr/local/CyberCP/public/snappymail")
-
-            command = 'find . -type d -exec chmod 755 {} \;'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            #############
-
-            command = 'find . -type f -exec chmod 644 {} \;'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ######
-
-            # Create SnappyMail data directories with proper structure
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # Set proper ownership for SnappyMail data directories
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # Ensure web server users are in the lscpd group for access
-            self.addWebServerUserToLSCPDGroup()
-
-            # Fix SnappyMail public directory ownership immediately after creation
-            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ### Enable sub-folders
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-#             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
-#
-#             labsData = """[labs]
-# imap_folder_list_limit = 0
-# autocreate_system_folders = On
-# """
-#
-#             # writeToFile = open(labsPath, 'a')
-#             # writeToFile.write(labsData)
-#             # writeToFile.close()
-#
-#             iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
-#
-#             path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-#
-#             data = open(path, 'r').readlines()
-#             writeToFile = open(path, 'w')
-#
-#             for items in data:
-#                 if items.find("$sCustomDataPath = '';") > -1:
-#                     writeToFile.writelines(
-#                         "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-#                 else:
-#                     writeToFile.writelines(items)
-#
-#             writeToFile.close()
-#
-#             includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
-#             includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
-#
-#             if os.path.exists(includeFileOldPath):
-#                 writeToFile = open(includeFileOldPath, 'a')
-#                 writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
-#                 writeToFile.close()
-#
-#             command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             #command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
-#             command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             ### now download and install actual plugin
-#
-#             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             ### Enable plugins and enable mailbox creation plugin
-#
-#             labsDataLines = open(labsPath, 'r').readlines()
-#             PluginsActivator = 0
-#             WriteToFile = open(labsPath, 'w')
-#             for lines in labsDataLines:
-#                 if lines.find('[plugins]') > -1:
-#                     PluginsActivator = 1
-#                     WriteToFile.write(lines)
-#                 elif PluginsActivator and lines.find('enable = ') > -1:
-#                     WriteToFile.write(f'enable = On\n')
-#                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
-#                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-#                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-#                     PluginsActivator = 0
-#                     WriteToFile.write(lines)
-#                 else:
-#                     WriteToFile.write(lines)
-#             WriteToFile.close()
-#
-#             ## enable auto create in the enabled plugin
-#             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-#
-#             WriteToFile = open(PluginsFilePath, 'w')
-#             WriteToFile.write("""{
-#     "plugin": {
-#         "autocreate_system_folders": true
-#     }
-# }
-# """)
-#             WriteToFile.close()
-#
-#             command = f'chown lscpd:lscpd {PluginsFilePath}'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-#
-#             command = f'chmod 600 {PluginsFilePath}'
-#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-
-        except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_snappymail]")
             return 0
 
         return 1
@@ -3190,7 +2937,6 @@ def main():
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-    checks.downoad_and_install_raindloop()
     checks.download_install_phpmyadmin()
     checks.setupCLI()
     checks.setup_cron()
@@ -3237,73 +2983,6 @@ def main():
 
     checks.installCLScripts()
     # checks.disablePackegeUpdates()
-
-    try:
-        # command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/data/default/configs/'
-        # subprocess.call(shlex.split(command))
-
-        # Generate a strong, unique SnappyMail admin password instead of a
-        # well-known default. The same value is applied via SetPassword() below,
-        # so the password recovery in cyberpanel.sh continues to work while no
-        # install ever ships with predictable webmail admin credentials.
-        snappymailAdminPassword = generate_pass()
-
-        writeToFile = open('/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini', 'a')
-
-        writeToFile.write("""
-[security]
-admin_login = "admin"
-admin_password = "%s"
-""" % (snappymailAdminPassword))
-        writeToFile.close()
-
-        content = """<?php
-
-$_ENV['snappymail_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/snappymail/index.php';
-
-$oConfig = \snappymail\Api::Config();
-$oConfig->SetPassword('%s');
-echo $oConfig->Save() ? 'Done' : 'Error';
-
-?>""" % (snappymailAdminPassword)
-
-        writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
-        writeToFile.write(content)
-        writeToFile.close()
-
-        command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
-        subprocess.call(shlex.split(command))
-
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-        subprocess.call(shlex.split(command))
-
-        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
-        subprocess.call(shlex.split(command))
-
-        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
-        subprocess.call(shlex.split(command))
-
-        # The integration keeps backward-compatible data under the rainloop
-        # path and creates its private files as the installer user.
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        subprocess.call(shlex.split(command))
-
-        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
-        subprocess.call(shlex.split(command))
-
-        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
-        subprocess.call(shlex.split(command))
-
-        # Ensure web server users are in the lscpd group
-        checks.addWebServerUserToLSCPDGroup()
-
-        # Fix SnappyMail public directory ownership (critical fix)
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data"
-        subprocess.call(shlex.split(command))
-    except:
-        pass
-
     checks.fixCyberPanelPermissions()
     configure_jwt_secret()
 

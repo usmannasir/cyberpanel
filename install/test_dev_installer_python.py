@@ -44,37 +44,16 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             subprocess.run(['bash', '-c', harness], check=True, env=environment)
             self.assertEqual(php80, php_link.resolve())
 
-    def test_snappymail_commands_use_the_configured_php_cli(self):
+    def test_install_and_upgrade_use_native_webmail_setup(self):
         root = pathlib.Path(__file__).parents[1]
-        expected_commands = {
-            'install/install.py': (
-                '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php',
-                '/usr/bin/php /usr/local/CyberCP/public/snappymail.php',
-            ),
-            'plogical/upgrade.py': (
-                '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php',
-                '/usr/bin/php /usr/local/CyberCP/public/snappymail.php',
-            ),
-            'plogical/acl.py': (
-                '/usr/bin/php /usr/local/CyberCP/public/snappymail.php',
-            ),
-        }
-        for relative_path, commands in expected_commands.items():
-            source = (root / relative_path).read_text(encoding='utf-8')
-            for command in commands:
-                self.assertIn(command, source)
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        upgrade = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
 
-        active_sources = '\n'.join(
-            (root / relative_path).read_text(encoding='utf-8')
-            for relative_path in expected_commands
+        self.assertIn(
+            'installCyberPanel.InstallCyberPanel.setupWebmail()', installer
         )
-        self.assertNotIn(
-            '/lsphp80/bin/php /usr/local/CyberCP/snappymail', active_sources
-        )
-        self.assertNotIn(
-            '/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php',
-            active_sources,
-        )
+        self.assertIn('Upgrade.setupWebmail()', upgrade)
+        self.assertNotIn('snappymail_cyberpanel.php', installer + upgrade)
 
     def test_upgrade_skips_unavailable_legacy_php_development_package(self):
         root = pathlib.Path(__file__).parents[1]

@@ -20,6 +20,7 @@ import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
 from install.database_consumers import configure_phpmyadmin_signon
+from plogical.legacyWebmail import legacy_data_permission_commands
 
 def update_all_config_files_with_password(new_password):
     """
@@ -315,7 +316,6 @@ class Upgrade:
     UbuntuPath = '/etc/lsb-release'
     openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
-    SnappyVersion = '2.38.2'
     LogPathNew = '/home/cyberpanel/upgrade_logs'
     SoftUpgrade = 0
 
@@ -1258,271 +1258,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
         command = "./composer.sh"
         Upgrade.executioner(command, 0)
-
-    @staticmethod
-    def downoad_and_install_raindloop():
-        try:
-            #######
-
-            # if os.path.exists("/usr/local/CyberCP/public/rainloop"):
-            #
-            #     if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
-            #         pass
-            #     else:
-            #         command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
-            #         Upgrade.executioner(command, 0)
-            #
-            #         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-            #         Upgrade.executioner(command, 0)
-            #
-            #     iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
-            #
-            #     path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-            #
-            #     data = open(path, 'r').readlines()
-            #     writeToFile = open(path, 'w')
-            #
-            #     for items in data:
-            #         if items.find("$sCustomDataPath = '';") > -1:
-            #             writeToFile.writelines(
-            #                 "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-            #         else:
-            #             writeToFile.writelines(items)
-            #
-            #     writeToFile.close()
-            #     return 0
-
-            cwd = os.getcwd()
-
-            if not os.path.exists("/usr/local/CyberCP/public"):
-                os.mkdir("/usr/local/CyberCP/public")
-
-            os.chdir("/usr/local/CyberCP/public")
-
-            count = 1
-
-            Upgrade.stdOut("Installing SnappyMail...", 0)
-            
-            while (1):
-                command = 'wget -q https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (
-                    Upgrade.SnappyVersion, Upgrade.SnappyVersion)
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-
-            #############
-
-            count = 0
-
-            if os.path.exists('/usr/local/CyberCP/public/snappymail'):
-                shutil.rmtree('/usr/local/CyberCP/public/snappymail')
-
-            while (1):
-                command = 'unzip -q snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (Upgrade.SnappyVersion)
-
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-            try:
-                os.remove("snappymail-%s.zip" % (Upgrade.SnappyVersion))
-            except:
-                pass
-
-            #######
-
-            os.chdir("/usr/local/CyberCP/public/snappymail")
-
-            count = 0
-
-            while (1):
-                command = 'find . -type d -exec chmod 755 {} \;'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-
-            #############
-
-            count = 0
-
-            while (1):
-                command = 'find . -type f -exec chmod 644 {} \;'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-            ######
-
-            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
-
-            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-
-            data = open(path, 'r').readlines()
-            writeToFile = open(path, 'w')
-
-            for items in data:
-                if items.find("$sCustomDataPath = '';") > -1:
-                    writeToFile.writelines(
-                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            Upgrade.executioner_silent(command, 'mkdir snappymail configs', 0)
-
-            command = f'wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
-            Upgrade.executioner_silent(command, 'verify certificate', 0)
-
-            command = '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
-            Upgrade.executioner_silent(command, 'verify certificate', 0)
-
-            # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
-
-            #             labsData = """[labs]
-            # imap_folder_list_limit = 0
-            # autocreate_system_folders = On
-            # """
-            #
-            #             writeToFile = open(labsPath, 'a')
-            #             writeToFile.write(labsData)
-            #             writeToFile.close()
-
-            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
-            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
-
-            # if os.path.exists(includeFileOldPath):
-            #     writeToFile = open(includeFileOldPath, 'a')
-            #     writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
-            #     writeToFile.close()
-
-            # command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
-            # Upgrade.executioner(command, 'mkdir snappymail configs', 0)
-
-            ## take care of auto create folders
-
-            ## Disable local cert verification
-
-            # command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
-            # Upgrade.executioner(command, 'verify certificate', 0)
-
-            # labsData = open(labsPath, 'r').read()
-            # labsDataLines = open(labsPath, 'r').readlines()
-            #
-            # if labsData.find('autocreate_system_folders') > -1:
-            #     command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
-            #     Upgrade.executioner(command, 'mkdir snappymail configs', 0)
-            # else:
-            #     WriteToFile = open(labsPath, 'w')
-            #     for lines in labsDataLines:
-            #         if lines.find('[labs]') > -1:
-            #             WriteToFile.write(lines)
-            #             WriteToFile.write(f'autocreate_system_folders = On\n')
-            #         else:
-            #             WriteToFile.write(lines)
-            #     WriteToFile.close()
-
-            ##take care of imap_folder_list_limit
-
-            # labsDataLines = open(labsPath, 'r').readlines()
-            #
-            # if labsData.find('imap_folder_list_limit') == -1:
-            #     WriteToFile = open(labsPath, 'w')
-            #     for lines in labsDataLines:
-            #         if lines.find('[labs]') > -1:
-            #             WriteToFile.write(lines)
-            #             WriteToFile.write(f'imap_folder_list_limit = 0\n')
-            #         else:
-            #             WriteToFile.write(lines)
-            #     WriteToFile.close()
-
-            ### now download and install actual plugin
-
-            #             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             ### Enable plugins and enable mailbox creation plugin
-            #
-            #             labsDataLines = open(labsPath, 'r').readlines()
-            #             PluginsActivator = 0
-            #             WriteToFile = open(labsPath, 'w')
-            #
-            #
-            #             for lines in labsDataLines:
-            #                 if lines.find('[plugins]') > -1:
-            #                     PluginsActivator = 1
-            #                     WriteToFile.write(lines)
-            #                 elif PluginsActivator and lines.find('enable = ') > -1:
-            #                     WriteToFile.write(f'enable = On\n')
-            #                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
-            #                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-            #                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-            #                     PluginsActivator = 0
-            #                     WriteToFile.write(lines)
-            #                 else:
-            #                     WriteToFile.write(lines)
-            #             WriteToFile.close()
-            #
-            #             ## enable auto create in the enabled plugin
-            #             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-            #
-            #             WriteToFile = open(PluginsFilePath, 'w')
-            #             WriteToFile.write("""{
-            #     "plugin": {
-            #         "autocreate_system_folders": true
-            #     }
-            # }
-            # """)
-            #             WriteToFile.close()
-            #
-            #             command = f'chown lscpd:lscpd {PluginsFilePath}'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chmod 600 {PluginsFilePath}'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-
-            os.chdir(cwd)
-            
-            Upgrade.stdOut("SnappyMail installation completed.", 0)
-
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
-
-        return 1
 
     @staticmethod
     def downloadLink():
@@ -4255,35 +3990,6 @@ milter_default_action = accept
     def fixPermissions():
         try:
 
-            try:
-                def generate_pass(length=14):
-                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-                    size = length
-                    return ''.join(secrets.choice(chars) for x in range(size))
-
-                content = """<?php
-$_ENV['snappymail_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/snappymail/index.php';
-
-$oConfig = \snappymail\Api::Config();
-$oConfig->SetPassword('%s');
-echo $oConfig->Save() ? 'Done' : 'Error';
-
-?>""" % (generate_pass())
-
-                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
-                writeToFile.write(content)
-                writeToFile.close()
-
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-                subprocess.call(shlex.split(command))
-
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-                subprocess.call(shlex.split(command))
-
-            except:
-                pass
-
             Upgrade.stdOut("Fixing permissions..")
 
             command = "usermod -G lscpd,lsadm,nobody lscpd"
@@ -4337,23 +4043,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-            Upgrade.executioner(command, 'chown snappymail data', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail directories', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail files', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail directories', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail files', 0)
+            for command in legacy_data_permission_commands():
+                Upgrade.executioner(command, 'protect legacy webmail data', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'chown core code', 0)
@@ -4479,30 +4170,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
-
-            command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
-            Upgrade.executioner_silent(command, 'Configure SnappyMail')
-
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-            Upgrade.executioner(command, 'chown snappymail data', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail directories', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail files', 0)
-
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-            Upgrade.executioner(command, 'chown snappymail data', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail directories', 0)
-
-            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
-            Upgrade.executioner(command, 'chmod snappymail files', 0)
-
-            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
-            Upgrade.executioner_silent(command, 'Secure SnappyMail config')
 
             ###
 
@@ -5600,7 +5267,6 @@ pm.max_spare_servers = 3
 
         versionNumbring = Upgrade.downloadLink()
         Upgrade.download_install_phpmyadmin()
-        Upgrade.downoad_and_install_raindloop()
 
         ##
 
