@@ -166,6 +166,18 @@ class secMiddleware:
                     elif key == 'ports':
                         # For other endpoints, ports key continues to skip validation
                         continue
+
+                    # Database passwords are opaque credentials.  The database
+                    # layer binds these values as SQL parameters, so rejecting
+                    # characters such as $, &, quotes, or semicolons only makes
+                    # strong generated passwords unusable.  Keep the exemption
+                    # limited to the password field on the two endpoints that
+                    # create or update a database account.
+                    if key == 'dbPassword' and pathActual in (
+                        '/dataBases/submitDBCreation',
+                        '/dataBases/changePassword',
+                    ):
+                        continue
                     
                     # Allow protocol parameter for CSF modifyPorts endpoint
                     if key == 'protocol' and pathActual == '/firewall/modifyPorts':
