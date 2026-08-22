@@ -85,6 +85,7 @@ if echo "$OUTPUT" | grep -q "Ubuntu 26.04" ; then
 
         case "$INSTALL_BRANCH" in
                 ""|*[!A-Za-z0-9._/-]*) INSTALL_BRANCH="stable" ;;
+                [0-9]*) INSTALL_BRANCH="v$INSTALL_BRANCH" ;;
         esac
 
         INSTALLER_URL="https://raw.githubusercontent.com/usmannasir/cyberpanel/$INSTALL_BRANCH/cyberpanel.sh"

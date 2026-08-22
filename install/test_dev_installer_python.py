@@ -511,6 +511,10 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         self.assertIn('if echo "$OUTPUT" | grep -q "Ubuntu 26.04"', bootstrap)
         self.assertIn('elif [ "$argument" = "-b" ]', bootstrap)
         self.assertIn(
+            '[0-9]*) INSTALL_BRANCH="v$INSTALL_BRANCH"',
+            bootstrap,
+        )
+        self.assertIn(
             'raw.githubusercontent.com/usmannasir/cyberpanel/'
             '$INSTALL_BRANCH/cyberpanel.sh',
             bootstrap,
