@@ -505,6 +505,22 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         self.assertIn('Ping_Package="iputils-ping"', installer)
         self.assertIn('cron "$Ping_Package"', installer)
 
+    def test_ubuntu_26_bootstrap_uses_requested_release_branch(self):
+        root = pathlib.Path(__file__).parents[1]
+        bootstrap = (root / 'install.sh').read_text(encoding='utf-8')
+        self.assertIn('if echo "$OUTPUT" | grep -q "Ubuntu 26.04"', bootstrap)
+        self.assertIn('elif [ "$argument" = "-b" ]', bootstrap)
+        self.assertIn(
+            'raw.githubusercontent.com/usmannasir/cyberpanel/'
+            '$INSTALL_BRANCH/cyberpanel.sh',
+            bootstrap,
+        )
+        self.assertIn(
+            'else\n        curl --silent -o cyberpanel.sh '
+            '"https://cyberpanel.sh/?dl&$SERVER_OS"',
+            bootstrap,
+        )
+
     def test_ubuntu_26_opendkim_config_is_complete_and_unambiguous(self):
         root = pathlib.Path(__file__).parents[1]
         installer = (root / 'install/install.py').read_text(encoding='utf-8')
