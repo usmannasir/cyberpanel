@@ -16,6 +16,29 @@ import OpenSSL
 from plogical import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 import socket
+import tempfile
+
+
+def _atomic_write(path, content, mode):
+    """Replace a certificate file atomically with an explicit final mode."""
+    directory = os.path.dirname(path)
+    descriptor, temporary_path = tempfile.mkstemp(
+        dir=directory, prefix='.%s-' % os.path.basename(path))
+    try:
+        os.fchmod(descriptor, mode)
+        with os.fdopen(descriptor, 'wb') as output:
+            descriptor = None
+            output.write(content)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary_path, path)
+        temporary_path = None
+        os.chmod(path, mode)
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        if temporary_path and os.path.exists(temporary_path):
+            os.unlink(temporary_path)
 
 
 class CustomACME:
@@ -61,7 +84,8 @@ class CustomACME:
             f'Certificate path: {self.cert_path}, Challenge path: {self.challenge_path}')
 
         # Create accounts directory if it doesn't exist
-        os.makedirs('/etc/letsencrypt/accounts', exist_ok=True)
+        os.makedirs('/etc/letsencrypt/accounts', mode=0o700, exist_ok=True)
+        os.chmod('/etc/letsencrypt/accounts', 0o700)
 
     def _generate_account_key(self):
         """Generate RSA account key"""
@@ -218,6 +242,9 @@ class CustomACME:
         """Load existing account key if available"""
         try:
             if os.path.exists(self.account_key_path):
+                if os.path.islink(self.account_key_path):
+                    raise ValueError('ACME account key must not be a symbolic link')
+                os.chmod(self.account_key_path, 0o600)
                 logging.CyberCPLogFileWriter.writeToFile('Loading existing account key...')
                 with open(self.account_key_path, 'rb') as f:
                     key_data = f.read()
@@ -242,8 +269,7 @@ class CustomACME:
                 format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption()
             )
-            with open(self.account_key_path, 'wb') as f:
-                f.write(key_data)
+            _atomic_write(self.account_key_path, key_data, 0o600)
             logging.CyberCPLogFileWriter.writeToFile('Successfully saved account key')
             return True
         except Exception as e:
@@ -1141,25 +1167,21 @@ class CustomACME:
             cert_file = os.path.join(self.cert_path, 'fullchain.pem')
             key_file = os.path.join(self.cert_path, 'privkey.pem')
 
-            # Write to a temp file and rename so an interrupted write can never leave a
-            # half-written or trailing-garbage fullchain.pem behind.
+            # Atomic replacement prevents a partial certificate while explicit
+            # modes keep the private key readable only by its service account.
             logging.CyberCPLogFileWriter.writeToFile(f'Saving certificate to: {cert_file}')
-            with open(cert_file + '.tmp', 'wb') as f:
-                f.write(certificate)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(cert_file + '.tmp', cert_file)
+            _atomic_write(cert_file, certificate, 0o644)
 
             logging.CyberCPLogFileWriter.writeToFile(f'Saving private key to: {key_file}')
-            with open(key_file + '.tmp', 'wb') as f:
-                f.write(key.private_bytes(
+            _atomic_write(
+                key_file,
+                key.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.PKCS8,
-                    encryption_algorithm=serialization.NoEncryption()
-                ))
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(key_file + '.tmp', key_file)
+                    encryption_algorithm=serialization.NoEncryption(),
+                ),
+                0o600,
+            )
 
             logging.CyberCPLogFileWriter.writeToFile('Successfully completed certificate issuance')
             return True
