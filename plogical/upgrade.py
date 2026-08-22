@@ -3911,6 +3911,9 @@ passdb {
         critical_files = [
             '/usr/local/CyberCP/CyberCP/settings.py',
             '/usr/local/CyberCP/.git/config',  # Git configuration
+            '/usr/local/CyberCP/.env',
+            '/usr/local/CyberCP/.env.backup',
+            '/usr/local/CyberCP/secret_key',
         ]
         
         # Also backup any custom configurations

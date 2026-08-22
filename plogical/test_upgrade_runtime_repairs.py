@@ -2,12 +2,38 @@ import os
 import stat
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from plogical.upgrade import Upgrade
 
 
 class UpgradeRuntimeRepairTests(unittest.TestCase):
+
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.shutil.copy2')
+    @patch('plogical.upgrade.tempfile.mkdtemp', return_value='/tmp/cyberpanel-backup')
+    def test_upgrade_backs_up_environment_and_secret_files(
+            self, mkdtemp, copy2, std_out):
+        protected_files = {
+            '/usr/local/CyberCP/.env',
+            '/usr/local/CyberCP/.env.backup',
+            '/usr/local/CyberCP/secret_key',
+        }
+
+        with patch('plogical.upgrade.os.path.exists',
+                   side_effect=lambda path: path in protected_files):
+            backup_dir, backed_up_files = Upgrade.backupCriticalFiles()
+
+        self.assertEqual('/tmp/cyberpanel-backup', backup_dir)
+        self.assertEqual(protected_files, set(backed_up_files))
+        self.assertEqual(
+            [
+                call('/usr/local/CyberCP/.env', '/tmp/cyberpanel-backup/.env'),
+                call('/usr/local/CyberCP/.env.backup', '/tmp/cyberpanel-backup/.env.backup'),
+                call('/usr/local/CyberCP/secret_key', '/tmp/cyberpanel-backup/secret_key'),
+            ],
+            copy2.call_args_list,
+        )
 
     def test_static_permissions_are_normalized(self):
         with tempfile.TemporaryDirectory() as static_root:
