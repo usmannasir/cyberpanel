@@ -51,6 +51,8 @@ from .StagingSetup import StagingSetup
 import validators
 from django.http import JsonResponse
 import ipaddress
+import requests
+from plogical.wordpressInstallerUtilities import select_wordpress_version
 
 
 def get_wordpress_version(output):
@@ -4800,6 +4802,24 @@ context /cyberpanel_suspension_page.html {
             extraArgs['adminPassword'] = data['passwordByPass']
             extraArgs['adminEmail'] = data['adminEmail']
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            try:
+                version_response = requests.get(
+                    'https://api.wordpress.org/core/version-check/1.7/',
+                    timeout=15,
+                )
+                version_response.raise_for_status()
+                version_data = version_response.json()
+                if not isinstance(version_data, dict):
+                    raise ValueError('Invalid WordPress API response.')
+                extraArgs['WPVersion'] = select_wordpress_version(
+                    version_data.get('offers', [])
+                )
+            except (requests.RequestException, TypeError, ValueError):
+                raise BaseException(
+                    'Could not determine the current WordPress version. '
+                    'Please try the installation again.'
+                )
 
             if data['home'] == '0':
                 extraArgs['path'] = data['path']

@@ -5,6 +5,7 @@ from plogical.wordpressInstallerUtilities import (
     build_directory_probe,
     build_wordpress_core_install_command,
     directory_allows_install,
+    select_wordpress_version,
 )
 
 
@@ -48,6 +49,19 @@ class WordPressInstallerUtilitiesTests(unittest.TestCase):
                     build_wordpress_core_install_command(
                         version, '/home/example.com/public_html/', '/usr/bin/php',
                     )
+
+    def test_wordpress_api_version_skips_invalid_offers(self):
+        offers = [
+            {'current': '7.0.2;id'},
+            {'current': '7.0.2'},
+            {'current': '6.9.1'},
+        ]
+
+        self.assertEqual('7.0.2', select_wordpress_version(offers))
+
+    def test_wordpress_api_version_requires_a_valid_release(self):
+        with self.assertRaisesRegex(ValueError, 'valid release'):
+            select_wordpress_version([{}, {'current': 'latest'}])
 
 
 if __name__ == '__main__':

@@ -5,6 +5,17 @@ import shlex
 WORDPRESS_VERSION = re.compile(r'^\d+\.\d+(?:\.\d+)?$')
 
 
+def select_wordpress_version(offers):
+    """Return the first valid release advertised by the WordPress API."""
+    for offer in offers or ():
+        if not isinstance(offer, dict):
+            continue
+        version = str(offer.get('current', '')).strip()
+        if WORDPRESS_VERSION.fullmatch(version):
+            return version
+    raise ValueError('The WordPress API did not return a valid release.')
+
+
 def build_directory_probe(path):
     """Build a bounded probe that emits one byte per top-level entry."""
     return (
