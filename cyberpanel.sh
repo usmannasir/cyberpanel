@@ -368,6 +368,40 @@ echo -e "\n${1}" >> /var/log/installLogs.txt
 curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
 }
 
+Validate_Remote_MySQL() {
+  if [[ "$Remote_MySQL" != "On" ]] ; then
+    return 0
+  fi
+
+  local -a Missing_Fields=()
+  [[ -z "$MySQL_Host" ]] && Missing_Fields+=(host)
+  [[ -z "$MySQL_DB" ]] && Missing_Fields+=(database)
+  [[ -z "$MySQL_User" ]] && Missing_Fields+=(user)
+  [[ -z "$MySQL_Password" ]] && Missing_Fields+=(password)
+  [[ -z "$MySQL_Port" ]] && Missing_Fields+=(port)
+
+  if [[ ${#Missing_Fields[@]} -gt 0 ]] ; then
+    echo -e "\nERROR: Remote MySQL requires: ${Missing_Fields[*]}.\n" >&2
+    log_error "Remote MySQL configuration is missing required fields: ${Missing_Fields[*]}"
+    return 1
+  fi
+
+  if [[ "$MySQL_Host" =~ [[:space:]] ]] ; then
+    echo -e "\nERROR: Remote MySQL hostname cannot contain whitespace.\n" >&2
+    log_error "Remote MySQL hostname contains whitespace"
+    return 1
+  fi
+
+  if [[ ! "$MySQL_Port" =~ ^[0-9]{1,5}$ ]] \
+    || (( 10#$MySQL_Port < 1 || 10#$MySQL_Port > 65535 )); then
+    echo -e "\nERROR: Remote MySQL port must be between 1 and 65535.\n" >&2
+    log_error "Remote MySQL port is outside the valid TCP range"
+    return 1
+  fi
+
+  return 0
+}
+
 Branch_Check() {
 if [[ "$1" = *.*.* ]]; then
   #check input if it's valid format as X.Y.Z
@@ -2607,6 +2641,8 @@ if [[ $Silent = "On" ]]; then
 else
   Interactive_Mode
 fi
+
+Validate_Remote_MySQL || exit 1
 
 Time_Count="0"
 

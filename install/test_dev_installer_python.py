@@ -112,6 +112,50 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         self.assertIn('os.environ.pop(', python_installer)
         self.assertIn("'CP_INSTALL_MYSQL_PASSWORD', None", python_installer)
 
+    def test_remote_mysql_answers_are_validated_before_package_setup(self):
+        root = pathlib.Path(__file__).parents[1]
+        shell_installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+
+        function_start = shell_installer.index('Validate_Remote_MySQL()')
+        function_end = shell_installer.index('\n}\n', function_start) + 3
+        validator = shell_installer[function_start:function_end]
+        harness = (
+            'log_error() { :; }\n' + validator + '\n'
+            'Validate_Remote_MySQL'
+        )
+        base_env = {
+            'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+            'Remote_MySQL': 'On',
+            'MySQL_Host': 'db.example.com',
+            'MySQL_DB': 'mysql',
+            'MySQL_User': 'cpadmin',
+            'MySQL_Password': 'secret',
+            'MySQL_Port': '3307',
+        }
+
+        valid = subprocess.run(['bash', '-c', harness], env=base_env)
+        self.assertEqual(0, valid.returncode)
+        for field, value in (
+            ('MySQL_Host', ''),
+            ('MySQL_DB', ''),
+            ('MySQL_User', ''),
+            ('MySQL_Password', ''),
+            ('MySQL_Port', '70000'),
+            ('MySQL_Port', 'not-a-port'),
+        ):
+            invalid = subprocess.run(
+                ['bash', '-c', harness], env=dict(base_env, **{field: value}),
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(0, invalid.returncode, field)
+            self.assertNotIn('secret', invalid.stdout + invalid.stderr)
+
+        validation_call = shell_installer.rindex(
+            '\nValidate_Remote_MySQL || exit 1\n'
+        )
+        package_setup = shell_installer.rindex('\nPre_Install_Setup_Repository\n')
+        self.assertLess(validation_call, package_setup)
+
     def test_settings_fallback_uses_python_literals_for_database_values(self):
         root = pathlib.Path(__file__).parents[1]
         installer = (root / 'install/install.py').read_text(encoding='utf-8')
