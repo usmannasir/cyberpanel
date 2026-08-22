@@ -9,7 +9,9 @@ app.controller('createDatabase', function ($scope, $http) {
     $(document).ready(function () {
         $(".dbDetails").hide();
         $(".generatedPasswordDetails").hide();
-        $('#create-database-select').select2();
+        if ($.fn.select2) {
+            $('#create-database-select').select2();
+        }
         
         // Initialize preview if website is already selected
         setTimeout(function() {
@@ -37,19 +39,21 @@ app.controller('createDatabase', function ($scope, $http) {
         return webName;
     };
 
-    $('#create-database-select').on('select2:select', function (e) {
-        var data = e.params.data;
-        $scope.databaseWebsite = data.text;
-        $(".dbDetails").show();
-        
-        // Use local truncation function to ensure consistency
-        var truncatedName = $scope.getTruncatedWebName(data.text);
-        $("#domainDatabase").text(truncatedName);
-        $("#domainUsername").text(truncatedName);
-        
-        // Apply scope to update Angular bindings
-        $scope.$apply();
-    });
+    if ($.fn.select2) {
+        $('#create-database-select').on('select2:select', function (e) {
+            var data = e.params.data;
+            $scope.databaseWebsite = data.text;
+            $(".dbDetails").show();
+
+            // Use local truncation function to ensure consistency
+            var truncatedName = $scope.getTruncatedWebName(data.text);
+            $("#domainDatabase").text(truncatedName);
+            $("#domainUsername").text(truncatedName);
+
+            // Apply scope to update Angular bindings
+            $scope.$apply();
+        });
+    }
 
 
     $scope.showDetailsBoxes = function () {
