@@ -4,6 +4,47 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.4 (build 4) — 2026-08-23
+
+Reliability release for installation, upgrades, remote databases, SSL,
+WordPress, file management, and native webmail.
+
+### Installation and upgrades
+- Remote MySQL installations now configure every database consumer for the
+  selected host and port, validate the endpoint before package setup, fail
+  early when the CyberPanel database cannot be prepared, and keep database
+  passwords out of installation logs and process arguments.
+- Remote database settings, the Django secret, and other private configuration
+  survive upgrades. Upgrade helpers load only after the new source is staged,
+  preserving compatibility with older installed launchers.
+- Interrupted upgrades report partial state safely, deployed firewall assets
+  are validated, and unavailable legacy PHP development packages are skipped.
+
+### Mail and webmail
+- CyberPanel's integrated webmail is now the supported mail interface. Fresh
+  installations no longer provision the retired RainLoop or SnappyMail clients;
+  upgrades preserve and protect existing legacy data without exposing it.
+- Postfix domain lookups work with MariaDB 11.8, and Dovecot 2.4 local delivery
+  can read its protected SQL configuration without weakening file permissions.
+- Generated Sieve redirect rules are valid and mailbox delivery was verified
+  end to end through the integrated client.
+
+### Websites and files
+- WordPress can be installed on an existing website, uses an available PHP CLI,
+  avoids an unnecessary PHP restart, and is registered correctly in WordPress
+  Manager.
+- File Manager downloads preserve filenames containing spaces, `#`, `&`, `+`,
+  or `%` while retaining path traversal protection (#1902).
+- Plugin routes and OpenSSH authorized-key deletion now match only the intended
+  entry.
+
+### SSL and security
+- SSL renewal is reported as successful only after the renewed certificate is
+  deployed. ACME account state is preserved, private keys retain owner-only
+  permissions, and sensitive ACME response metadata is not logged.
+- Strong database-account passwords containing shell, SQL, whitespace, and
+  environment-file metacharacters are handled without interpolation.
+
 ## v3.0.3 (build 3) — 2026-08-20
 
 Security hotfix for API authentication and account authorization.
