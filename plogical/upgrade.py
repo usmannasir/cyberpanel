@@ -1378,6 +1378,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         return re.subn(pattern, replacement, config, flags=re.IGNORECASE | re.MULTILINE)
 
     @staticmethod
+    def normalizeDovecot24SqlInclude(config):
+        """Allow an unprivileged LDA to skip the protected SQL settings."""
+        pattern = (
+            r'^([ \t]*)!include[ \t]+'
+            r'/etc/dovecot/dovecot-sql-2\.4\.conf[ \t]*$'
+        )
+        replacement = (
+            r'\1!include_try /etc/dovecot/dovecot-sql-2.4.conf'
+        )
+        return re.subn(pattern, replacement, config, flags=re.MULTILINE)
+
+    @staticmethod
     def _atomicConfigWrite(path, content, metadata):
         directory = os.path.dirname(path)
         descriptor, temporary_path = tempfile.mkstemp(prefix='.%s.' % os.path.basename(path), dir=directory)
@@ -1470,6 +1482,56 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 1
         except Exception as msg:
             Upgrade.stdOut('Unable to update Postfix domain lookup: %s' % msg, 0)
+            return 0
+
+    @staticmethod
+    def ensureDovecot24LdaConfig(path='/etc/dovecot/dovecot.conf'):
+        """Keep SQL credentials protected while permitting Dovecot LDA startup."""
+        if not os.path.exists(path):
+            return 1
+
+        try:
+            if os.path.islink(path):
+                raise RuntimeError('refusing to replace a symbolic link')
+
+            metadata = os.stat(path)
+            with open(path, 'r') as dovecot_config:
+                original_content = dovecot_config.read()
+
+            updated_content, replacements = Upgrade.normalizeDovecot24SqlInclude(
+                original_content
+            )
+            if replacements == 0:
+                return 1
+
+            Upgrade._atomicConfigWrite(path, updated_content, metadata)
+            validation_commands = (
+                ['doveconf', '-c', path, '-n'],
+                ['runuser', '-u', 'vmail', '--', 'doveconf', '-c', path, '-n'],
+            )
+            for command in validation_commands:
+                validation = subprocess.run(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
+                )
+                if validation.returncode != 0:
+                    Upgrade._atomicConfigWrite(path, original_content, metadata)
+                    Upgrade.stdOut(
+                        'Dovecot 2.4 LDA update failed validation and was reverted.',
+                        0,
+                    )
+                    return 0
+
+            if subprocess.call(
+                    ['systemctl', 'is-active', '--quiet', 'dovecot']) == 0:
+                subprocess.call(['systemctl', 'reload', 'dovecot'])
+
+            Upgrade.stdOut('Dovecot 2.4 LDA can load its protected configuration.', 0)
+            return 1
+        except Exception as msg:
+            Upgrade.stdOut('Unable to update Dovecot 2.4 LDA configuration: %s' % msg, 0)
             return 0
 
     @staticmethod
@@ -3896,6 +3958,7 @@ passdb {
 
             Upgrade.ensurePostfixLoopbackNetworks()
             Upgrade.ensurePostfixDomainLookup()
+            Upgrade.ensureDovecot24LdaConfig()
 
             # Restore Imunify360 after upgrade
             Upgrade.restoreImunify360()

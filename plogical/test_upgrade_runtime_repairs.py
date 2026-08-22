@@ -196,6 +196,85 @@ class UpgradeRuntimeRepairTests(unittest.TestCase):
             with open(config_path, 'r') as config_file:
                 self.assertEqual(original, config_file.read())
 
+    def test_dovecot_24_sql_include_is_optional_for_lda(self):
+        config = '!include /etc/dovecot/dovecot-sql-2.4.conf\n'
+
+        updated, replacements = Upgrade.normalizeDovecot24SqlInclude(config)
+
+        self.assertEqual(1, replacements)
+        self.assertEqual(
+            '!include_try /etc/dovecot/dovecot-sql-2.4.conf\n',
+            updated,
+        )
+
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.subprocess.call', side_effect=(0, 0))
+    @patch('plogical.upgrade.subprocess.run')
+    def test_dovecot_24_lda_config_is_validated_as_root_and_vmail(
+            self, run, call, std_out):
+        run.return_value = subprocess.CompletedProcess([], 0, '', '')
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = os.path.join(temporary_directory, 'dovecot.conf')
+            with open(config_path, 'w') as config_file:
+                config_file.write(
+                    '!include /etc/dovecot/dovecot-sql-2.4.conf\n'
+                )
+            os.chmod(config_path, 0o644)
+
+            self.assertEqual(1, Upgrade.ensureDovecot24LdaConfig(config_path))
+
+            with open(config_path, 'r') as config_file:
+                updated = config_file.read()
+            self.assertIn('!include_try ', updated)
+            self.assertEqual(0o644, stat.S_IMODE(os.stat(config_path).st_mode))
+            self.assertEqual(
+                [
+                    unittest.mock.call(
+                        ['doveconf', '-c', config_path, '-n'],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True,
+                    ),
+                    unittest.mock.call(
+                        [
+                            'runuser', '-u', 'vmail', '--',
+                            'doveconf', '-c', config_path, '-n',
+                        ],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True,
+                    ),
+                ],
+                run.call_args_list,
+            )
+            self.assertEqual(
+                [
+                    unittest.mock.call(
+                        ['systemctl', 'is-active', '--quiet', 'dovecot']),
+                    unittest.mock.call(['systemctl', 'reload', 'dovecot']),
+                ],
+                call.call_args_list,
+            )
+
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.subprocess.run')
+    def test_invalid_dovecot_24_lda_config_is_reverted(
+            self, run, std_out):
+        run.side_effect = (
+            subprocess.CompletedProcess([], 0, '', ''),
+            subprocess.CompletedProcess([], 1, '', 'permission denied'),
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = os.path.join(temporary_directory, 'dovecot.conf')
+            original = '!include /etc/dovecot/dovecot-sql-2.4.conf\n'
+            with open(config_path, 'w') as config_file:
+                config_file.write(original)
+
+            self.assertEqual(0, Upgrade.ensureDovecot24LdaConfig(config_path))
+
+            with open(config_path, 'r') as config_file:
+                self.assertEqual(original, config_file.read())
+
 
 if __name__ == '__main__':
     unittest.main()

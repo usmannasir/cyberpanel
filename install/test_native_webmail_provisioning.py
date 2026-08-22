@@ -38,6 +38,18 @@ class NativeWebmailProvisioningTests(unittest.TestCase):
                 )
                 self.assertNotIn('AS virtual', config)
 
+    def test_dovecot_24_keeps_sql_credentials_optional_for_lda(self):
+        config = self.read('install/email-configs-one/dovecot-2.4.conf')
+
+        self.assertIn(
+            '!include_try /etc/dovecot/dovecot-sql-2.4.conf',
+            config,
+        )
+        self.assertNotIn(
+            '!include /etc/dovecot/dovecot-sql-2.4.conf',
+            config,
+        )
+
     def test_downloaded_upgrade_script_has_no_new_top_level_dependency(self):
         upgrade_tree = ast.parse(self.read('plogical/upgrade.py'))
         top_level_imports = [
