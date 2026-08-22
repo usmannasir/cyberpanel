@@ -3257,6 +3257,11 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         subprocess.call(shlex.split(command))
 
+        # The integration keeps backward-compatible data under the rainloop
+        # path and creates its private files as the installer user.
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        subprocess.call(shlex.split(command))
+
         # Ensure all data directories have group write permissions
         command = "chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data"
         subprocess.call(shlex.split(command))

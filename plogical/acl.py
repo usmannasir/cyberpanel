@@ -1257,6 +1257,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
                 ProcessUtilities.executioner(command, 'root', True)
 
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                ProcessUtilities.executioner(command, 'root', True)
+
             except:
                 pass
 
@@ -1428,6 +1431,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             ProcessUtilities.executioner(command, 'root', True)
 
             command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
             ProcessUtilities.executioner(command, 'root', True)
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'

@@ -1606,6 +1606,9 @@ milter_default_action = accept
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/"
         ProcessUtilities.executioner(command)
 
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        ProcessUtilities.executioner(command)
+
         # Set proper permissions for data directories (group writable)
         command = "chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/"
         ProcessUtilities.executioner(command)

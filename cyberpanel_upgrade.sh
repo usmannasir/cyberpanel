@@ -1580,6 +1580,7 @@ mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
 # Ensure proper ownership for SnappyMail data directories
 if id -u lscpd >/dev/null 2>&1; then
     chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
+    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data 2>/dev/null || true
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log

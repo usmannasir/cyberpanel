@@ -4253,6 +4253,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
                 subprocess.call(shlex.split(command))
 
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                subprocess.call(shlex.split(command))
+
             except:
                 pass
 
@@ -4439,6 +4442,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner_silent(command, 'Configure SnappyMail')
+
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            Upgrade.executioner(command, 'chown snappymail data', 0)
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner_silent(command, 'Secure SnappyMail config')
