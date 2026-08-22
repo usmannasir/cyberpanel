@@ -1454,7 +1454,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 stderr=subprocess.PIPE,
                 universal_newlines=True,
             )
-            if validation.returncode != 0:
+            if validation.returncode not in (0, 1) or validation.stderr.strip():
                 Upgrade._atomicConfigWrite(path, original_content, metadata)
                 Upgrade.stdOut(
                     'Postfix domain lookup update failed validation and was reverted.',

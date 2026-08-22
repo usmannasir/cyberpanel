@@ -142,7 +142,7 @@ class UpgradeRuntimeRepairTests(unittest.TestCase):
     @patch('plogical.upgrade.subprocess.run')
     def test_postfix_domain_lookup_is_validated_and_reloaded(
             self, run, call, std_out):
-        run.return_value = subprocess.CompletedProcess([], 0, '', '')
+        run.return_value = subprocess.CompletedProcess([], 1, '', '')
         with tempfile.TemporaryDirectory() as temporary_directory:
             config_path = os.path.join(
                 temporary_directory, 'mysql-virtual_domains.cf')
