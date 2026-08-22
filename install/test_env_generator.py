@@ -123,6 +123,14 @@ class BuildDatabaseConfigTests(unittest.TestCase):
                 remote=True, host='db.example.com extra', port='3306',
                 root_db='mysql', root_user='root')
 
+    def test_host_with_shell_syntax_or_folded_port_is_rejected(self):
+        for host in ('db.example.com;id', 'db$(id)', "db'host",
+                     'db.example.com:3306'):
+            with self.assertRaises(DatabaseConfigError):
+                build_database_config(
+                    remote=True, host=host, port='3306',
+                    root_db='mysql', root_user='root')
+
 
 class FormatEnvValueTests(unittest.TestCase):
     def test_simple_values_stay_unquoted(self):

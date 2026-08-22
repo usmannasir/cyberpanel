@@ -19,6 +19,7 @@ import secrets
 import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
+from install.database_consumers import configure_phpmyadmin_signon
 
 def update_all_config_files_with_password(new_password):
     """
@@ -1229,9 +1230,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
 
-                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
-                    mysqlhost)
-                Upgrade.executioner(command, 0)
+                configure_phpmyadmin_signon(
+                    '/usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php',
+                    mysqlhost,
+                    mysqlport,
+                )
 
             except:
                 pass

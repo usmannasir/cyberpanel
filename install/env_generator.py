@@ -141,8 +141,22 @@ def build_database_config(remote=False, host=None, port=None, root_db=None,
     # MySQLdb and Django both want the bare address plus a separate port.
     if host.startswith('[') and host.endswith(']'):
         host = host[1:-1]
-    if any(c.isspace() for c in host):
-        raise DatabaseConfigError('Remote MySQL host may not contain spaces')
+    if ':' in host:
+        # Colons are valid only in an IPv6 literal. In particular, reject a
+        # host with an appended port because every consumer receives the port
+        # separately.
+        import ipaddress
+        try:
+            ipaddress.IPv6Address(host)
+        except ValueError:
+            raise DatabaseConfigError(
+                'Remote MySQL host must be a DNS name or IP address')
+    elif not re.fullmatch(r'[A-Za-z0-9_.-]+', host):
+        # Several legacy service writers still use fixed sed commands. Keep
+        # their replacement value to hostname characters so a direct install
+        # invocation cannot turn the host argument into shell syntax.
+        raise DatabaseConfigError(
+            'Remote MySQL host must be a DNS name or IP address')
 
     port = str(port).strip() if port is not None else ''
     if not port:

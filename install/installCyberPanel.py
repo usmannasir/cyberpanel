@@ -978,6 +978,20 @@ passdb {
 
         ############## Install mariadb ######################
 
+        # Remote installations need the command-line client for database
+        # backup, restore and diagnostics, but must not install or activate a
+        # second database server on the panel host. Keep the complete existing
+        # server installation path below unchanged for local installations.
+        if self.remotemysql == 'ON':
+            if self.distro == ubuntu:
+                command = ('DEBIAN_FRONTEND=noninteractive apt-get install '
+                           'mariadb-client -y')
+            else:
+                command = 'dnf install mariadb -y'
+            install_utils.call(command, self.distro, command, command, 1, 1,
+                               os.EX_OSERR, True)
+            return
+
         if self.distro == ubuntu:
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common apt-transport-https curl -y'

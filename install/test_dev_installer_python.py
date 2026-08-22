@@ -204,6 +204,9 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         self.assertEqual(0, valid.returncode)
         for field, value in (
             ('MySQL_Host', ''),
+            ('MySQL_Host', 'db.example.com;id'),
+            ('MySQL_Host', 'db$(id)'),
+            ('MySQL_Host', 'db.example.com:3306'),
             ('MySQL_DB', ''),
             ('MySQL_User', ''),
             ('MySQL_Password', ''),

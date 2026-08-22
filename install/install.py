@@ -20,6 +20,11 @@ import json
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cyberpanel_version import BUILD, VERSION
+from database_consumers import (
+    configure_phpmyadmin_signon,
+    dovecot_connect_line,
+)
+from env_generator import DatabaseConfigError, build_database_config
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -1105,18 +1110,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
-            if self.remotemysql == 'ON':
-                command = "sed -i 's|'localhost'|'%s'|g' %s" % (
-                    self.mysqlhost, '/usr/local/CyberCP/public/phpmyadmin/config.inc.php')
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
-                    self.mysqlhost)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                configure_phpmyadmin_signon(
+                    '/usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php',
+                    self.mysqlhost,
+                    self.mysqlport,
+                )
 
 
         except BaseException as msg:
@@ -1238,10 +1240,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     else:
                         writeDataToFile.write(items)
             else:
-                if mysql == 'Two':
-                    dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3307\n"
-                else:
-                    dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
+                dataWritten = dovecot_connect_line(
+                    mysqlPassword,
+                    mysql=mysql,
+                    remote=(self.remotemysql == 'ON'),
+                    host=self.mysqlhost,
+                    port=self.mysqlport,
+                )
 
                 for items in data:
                     if items.find("connect") > -1:
@@ -3040,6 +3045,18 @@ def main():
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
 
     args = parser.parse_args()
+
+    if args.remotemysql == 'ON':
+        try:
+            build_database_config(
+                remote=True,
+                host=args.mysqlhost,
+                port=args.mysqlport,
+                root_db=args.mysqldb,
+                root_user=args.mysqluser,
+            )
+        except DatabaseConfigError as error:
+            parser.error(str(error))
 
     logging.InstallLog.ServerIP = args.publicip
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")

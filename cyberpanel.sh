@@ -386,9 +386,15 @@ Validate_Remote_MySQL() {
     return 1
   fi
 
-  if [[ "$MySQL_Host" =~ [[:space:]] ]] ; then
-    echo -e "\nERROR: Remote MySQL hostname cannot contain whitespace.\n" >&2
-    log_error "Remote MySQL hostname contains whitespace"
+  if [[ "$MySQL_Host" == *:* ]] ; then
+    if [[ ! "$MySQL_Host" =~ ^\[?[0-9A-Fa-f:]+\]?$ ]] ; then
+      echo -e "\nERROR: Remote MySQL host must be a DNS name or IP address.\n" >&2
+      log_error "Remote MySQL host contains invalid characters"
+      return 1
+    fi
+  elif [[ ! "$MySQL_Host" =~ ^[A-Za-z0-9_.-]+$ ]] ; then
+    echo -e "\nERROR: Remote MySQL host must be a DNS name or IP address.\n" >&2
+    log_error "Remote MySQL host contains invalid characters"
     return 1
   fi
 
