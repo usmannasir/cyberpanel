@@ -164,6 +164,29 @@ class ApplicationInstaller(multi.Thread):
 
         return 1
 
+    @staticmethod
+    def registerWordPressSite(owner, title, path, final_url):
+        """Register an installed site in WordPress Manager without duplicates."""
+        wordpress_site = WPSites.objects.filter(
+            owner=owner,
+            path=path,
+        ).first()
+        if wordpress_site is None:
+            return WPSites.objects.create(
+                owner=owner,
+                title=title,
+                path=path,
+                FinalURL=final_url,
+                AutoUpdates='Disabled',
+                PluginUpdates='Disabled',
+                ThemeUpdates='Disabled',
+            )
+
+        wordpress_site.title = title
+        wordpress_site.FinalURL = final_url
+        wordpress_site.save(update_fields=['title', 'FinalURL'])
+        return wordpress_site
+
 
     def installMautic(self):
         try:
@@ -971,6 +994,14 @@ class ApplicationInstaller(multi.Thread):
                 pass
 
             ##
+
+            webobj = Websites.objects.get(domain=self.masterDomain)
+            self.registerWordPressSite(
+                webobj,
+                blogTitle,
+                finalPath,
+                finalURL,
+            )
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
