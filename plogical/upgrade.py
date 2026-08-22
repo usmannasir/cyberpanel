@@ -20,7 +20,6 @@ import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
 from install.database_consumers import configure_phpmyadmin_signon
-from plogical.legacyWebmail import legacy_data_permission_commands
 
 def update_all_config_files_with_password(new_password):
     """
@@ -4043,6 +4042,7 @@ milter_default_action = accept
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            from plogical.legacyWebmail import legacy_data_permission_commands
             for command in legacy_data_permission_commands():
                 Upgrade.executioner(command, 'protect legacy webmail data', 0)
 

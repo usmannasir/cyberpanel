@@ -1,4 +1,5 @@
 import pathlib
+import ast
 import unittest
 from unittest import mock
 
@@ -23,6 +24,29 @@ class NativeWebmailProvisioningTests(unittest.TestCase):
         )
         self.assertIn('Upgrade.setupWebmail()', upgrade)
         self.assertIn('Upgrade.setupSieve()', upgrade)
+
+    def test_downloaded_upgrade_script_has_no_new_top_level_dependency(self):
+        upgrade_tree = ast.parse(self.read('plogical/upgrade.py'))
+        top_level_imports = [
+            node for node in upgrade_tree.body
+            if isinstance(node, (ast.Import, ast.ImportFrom))
+        ]
+        self.assertFalse(any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == 'plogical.legacyWebmail'
+            for node in top_level_imports
+        ))
+
+        fix_permissions = next(
+            node for node in ast.walk(upgrade_tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name == 'fixPermissions'
+        )
+        self.assertTrue(any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == 'plogical.legacyWebmail'
+            for node in ast.walk(fix_permissions)
+        ))
 
     def test_legacy_client_is_not_provisioned(self):
         active_sources = '\n'.join(
