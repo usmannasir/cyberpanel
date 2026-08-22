@@ -59,6 +59,25 @@ def get_Ubuntu_release():
     return release
 
 
+def normalize_opendkim_socket_lines(lines):
+    """Return an OpenDKIM config with one inet socket directive."""
+    normalized = []
+    socket_written = False
+
+    for line in lines:
+        if re.match(r'^\s*Socket(?:\s|$)', line):
+            if not socket_written:
+                normalized.append('Socket  inet:8891@localhost\n')
+                socket_written = True
+            continue
+        normalized.append(line)
+
+    if not socket_written:
+        normalized.append('Socket  inet:8891@localhost\n')
+
+    return normalized
+
+
 class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
@@ -2174,6 +2193,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             if self.distro == cent8 or self.distro == openeuler or self.distro == ubuntu:
                 self.install_package('opendkim opendkim-tools')
+
+                if self.distro == ubuntu and get_Ubuntu_release() >= 26.0:
+                    os.makedirs('/etc/opendkim/keys', exist_ok=True)
+                    for table_path in (
+                        '/etc/opendkim/KeyTable',
+                        '/etc/opendkim/SigningTable',
+                        '/etc/opendkim/TrustedHosts',
+                    ):
+                        if not os.path.exists(table_path):
+                            with open(table_path, 'a'):
+                                pass
+                        os.chmod(table_path, 0o644)
             else:
                 self.install_package('opendkim')
 
@@ -2220,7 +2251,11 @@ milter_default_action = accept
             writeToFile.write(configData)
             writeToFile.close()
 
-            if self.distro == ubuntu or self.distro == cent8:
+            if self.distro == ubuntu and get_Ubuntu_release() >= 26.0:
+                data = open(openDKIMConfigurePath, 'r').readlines()
+                with open(openDKIMConfigurePath, 'w') as writeToFile:
+                    writeToFile.writelines(normalize_opendkim_socket_lines(data))
+            elif self.distro == ubuntu or self.distro == cent8:
                 data = open(openDKIMConfigurePath, 'r').readlines()
                 writeToFile = open(openDKIMConfigurePath, 'w')
                 for items in data:

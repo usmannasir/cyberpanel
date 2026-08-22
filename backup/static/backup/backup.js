@@ -311,18 +311,22 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
     $(document).ready(function () {
         $(".destinationHide").hide();
-        $('#create-backup-select').select2();
+        if ($.fn.select2) {
+            $('#create-backup-select').select2();
+        }
     });
 
-    $('#create-backup-select').on('select2:select', function (e) {
-        var data = e.params.data;
-        $scope.websiteToBeBacked = data.text;
-        $(".destinationHide").show();
-        getBackupStatus();
-        populateCurrentRecords();
-        $scope.destination = false;
-        $scope.runningBackup = true;
-    });
+    if ($.fn.select2) {
+        $('#create-backup-select').on('select2:select', function (e) {
+            var data = e.params.data;
+            $scope.websiteToBeBacked = data.text;
+            $(".destinationHide").show();
+            getBackupStatus();
+            populateCurrentRecords();
+            $scope.destination = false;
+            $scope.runningBackup = true;
+        });
+    }
 
     $scope.destination = true;
     $scope.backupButton = true;

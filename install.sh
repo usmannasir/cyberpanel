@@ -70,6 +70,30 @@ fi
 
 rm -f cyberpanel.sh
 rm -f install.tar.gz
-curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+
+if echo "$OUTPUT" | grep -q "Ubuntu 26.04" ; then
+        INSTALL_BRANCH="stable"
+        EXPECT_BRANCH=0
+        for argument do
+                if [ "$EXPECT_BRANCH" -eq 1 ]; then
+                        INSTALL_BRANCH="$argument"
+                        EXPECT_BRANCH=0
+                elif [ "$argument" = "-b" ]; then
+                        EXPECT_BRANCH=1
+                fi
+        done
+
+        case "$INSTALL_BRANCH" in
+                ""|*[!A-Za-z0-9._/-]*) INSTALL_BRANCH="stable" ;;
+                [0-9]*) INSTALL_BRANCH="v$INSTALL_BRANCH" ;;
+        esac
+
+        INSTALLER_URL="https://raw.githubusercontent.com/usmannasir/cyberpanel/$INSTALL_BRANCH/cyberpanel.sh"
+        if ! curl --fail --location --silent --show-error -o cyberpanel.sh "$INSTALLER_URL" ; then
+                curl --fail --location --silent --show-error -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS"
+        fi
+else
+        curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+fi
 chmod +x cyberpanel.sh
 ./cyberpanel.sh $@
