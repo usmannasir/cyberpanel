@@ -224,6 +224,20 @@ class CreateDatabaseTests(unittest.TestCase):
         self.assertIn('CREATE DATABASE IF NOT EXISTS', sql)
         self.assertIn('CREATE USER IF NOT EXISTS', sql)
 
+    def test_rerun_refreshes_the_existing_application_password(self):
+        """The generated password changes on a retry, so an existing account
+        must be updated to match the newly generated .env value."""
+        cursor = FakeCursor()
+        self._with_connection(cursor)
+        mysqlUtilities.createDatabase('cyberpanel', 'cyberpanel',
+                                      'NewAppPw456', '203.0.113.4')
+        changes = [
+            args for sql, args in cursor.statements
+            if sql.startswith('ALTER USER')
+        ]
+        self.assertIn(
+            ('cyberpanel', '203.0.113.4', 'NewAppPw456'), changes)
+
 
 class LoadAdminConnectionTests(unittest.TestCase):
     def _write(self, content):
@@ -255,6 +269,20 @@ class LoadAdminConnectionTests(unittest.TestCase):
         self.assertEqual(params['host'], 'localhost')
         self.assertEqual(params['user'], 'root')
         self.assertEqual(params['passwd'], 'rootpassword')
+
+    def test_local_password_that_looks_like_json_stays_local(self):
+        with mock.patch.object(mu, 'open', mock.mock_open(read_data='123\n'),
+                               create=True):
+            params, remote = mysqlUtilities._load_admin_connection()
+        self.assertEqual(remote, 0)
+        self.assertEqual(params['passwd'], '123')
+
+    def test_malformed_remote_json_is_not_treated_as_a_local_password(self):
+        content = '{"mysqlhost": "db.example.com", "mysqlport": "bad"}'
+        with mock.patch.object(mu, 'open', mock.mock_open(read_data=content),
+                               create=True):
+            with self.assertRaises(MySQLSetupError):
+                mysqlUtilities._load_admin_connection()
 
 
 if __name__ == '__main__':

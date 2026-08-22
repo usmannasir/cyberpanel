@@ -1892,7 +1892,6 @@ if [[ "$Remote_MySQL" = "On" ]] ; then
   Final_Flags+=(--mysqlhost "$MySQL_Host")
   Final_Flags+=(--mysqldb "$MySQL_DB")
   Final_Flags+=(--mysqluser "$MySQL_User")
-  Final_Flags+=(--mysqlpassword "$MySQL_Password")
   Final_Flags+=(--mysqlport "$MySQL_Port")
 else
   Final_Flags+=(--remotemysql "${Remote_MySQL^^}")
@@ -1902,7 +1901,13 @@ if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
 
-/usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+if [[ "$Remote_MySQL" = "On" ]] ; then
+  CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password" \
+    /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+  unset MySQL_Password
+else
+  /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+fi
 
 
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then

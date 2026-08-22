@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from env_generator import (  # noqa: E402
     DatabaseConfigError,
     LOCAL_DATABASE_CONFIG,
+    build_mysql_client_config,
     build_database_config,
     create_env_file,
     format_env_value,
@@ -132,6 +133,7 @@ class FormatEnvValueTests(unittest.TestCase):
         awkward = [
             'pa#ss', 'pa ss', 'pa"ss', "pa'ss", 'pa\\ss', 'pa$ss',
             'pa`ss', ' leading', 'trailing ', 'a#b$c"d\\e f',
+            'pa${HOME}ss',
         ]
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, '.env')
@@ -143,6 +145,37 @@ class FormatEnvValueTests(unittest.TestCase):
             self.assertEqual(parsed['K%d' % index], value,
                              'value %r did not survive the .env round trip'
                              % (value,))
+
+
+class MySQLClientConfigTests(unittest.TestCase):
+    def test_local_config_keeps_socket_defaults(self):
+        rendered = build_mysql_client_config('RootPw123')
+        self.assertIn('[client]\n', rendered)
+        self.assertIn('user=root\n', rendered)
+        self.assertIn('password="RootPw123"\n', rendered)
+        self.assertNotIn('host=', rendered)
+        self.assertNotIn('port=', rendered)
+        self.assertNotIn('protocol=', rendered)
+
+    def test_remote_config_uses_the_administrative_endpoint(self):
+        rendered = build_mysql_client_config(
+            'RemotePw123', remote=True, host='db.example.com', port='3307',
+            user='cpadmin')
+        self.assertIn('user="cpadmin"\n', rendered)
+        self.assertIn('host="db.example.com"\n', rendered)
+        self.assertIn('port=3307\n', rendered)
+        self.assertIn('protocol=TCP\n', rendered)
+        self.assertNotIn('user=root\n', rendered)
+
+    def test_option_values_are_escaped_and_single_line(self):
+        rendered = build_mysql_client_config(
+            'a"b\\c', remote=True, host='2001:db8::5', port='3306',
+            user='cpadmin')
+        self.assertIn('password="a\\"b\\\\c"\n', rendered)
+        with self.assertRaises(DatabaseConfigError):
+            build_mysql_client_config(
+                'password\nextra=1', remote=True, host='db.example.com',
+                port='3306', user='cpadmin')
 
 
 class CreateEnvFileTests(unittest.TestCase):

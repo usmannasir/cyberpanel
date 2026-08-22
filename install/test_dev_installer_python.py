@@ -88,7 +88,38 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual('3.0.3', result.stdout.strip())
+            version = (root / 'cyberpanel_version.py').read_text(
+                encoding='utf-8'
+            )
+            namespace = {}
+            exec(compile(version, 'cyberpanel_version.py', 'exec'), namespace)
+            self.assertEqual(namespace['FULL_VERSION'], result.stdout.strip())
+
+    def test_remote_mysql_password_is_not_passed_on_the_command_line(self):
+        root = pathlib.Path(__file__).parents[1]
+        shell_installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        python_installer = (root / 'install/install.py').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertNotIn(
+            'Final_Flags+=(--mysqlpassword "$MySQL_Password")',
+            shell_installer,
+        )
+        self.assertIn(
+            'CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password"', shell_installer
+        )
+        self.assertIn('os.environ.pop(', python_installer)
+        self.assertIn("'CP_INSTALL_MYSQL_PASSWORD', None", python_installer)
+
+    def test_settings_fallback_uses_python_literals_for_database_values(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+
+        self.assertNotIn("+ cyberpanel_db_password +", installer)
+        self.assertNotIn("+ mysql_root_password +", installer)
+        self.assertIn("        'PASSWORD': %r,\\n", installer)
+        self.assertIn("        'HOST': %r,\\n", installer)
 
     def test_upgrade_failure_banner_does_not_claim_the_old_build_is_running(self):
         root = pathlib.Path(__file__).parents[1]

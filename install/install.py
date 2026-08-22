@@ -659,31 +659,31 @@ class preFlightsChecks:
 
         for items in data:
             if items.find('SECRET_KEY') > -1:
-                SK = "SECRET_KEY = '%s'\n" % (generate_pass(50))
+                SK = "SECRET_KEY = %r\n" % generate_pass(50)
                 writeDataToFile.writelines(SK)
                 continue
 
             if items.find("'PASSWORD':") > -1:
                 if block == 0:
                     writeDataToFile.writelines(
-                        "        'PASSWORD': '" + cyberpanel_db_password + "',\n")
+                        "        'PASSWORD': %r,\n" % cyberpanel_db_password)
                 else:
                     writeDataToFile.writelines(
-                        "        'PASSWORD': '" + mysql_root_password + "',\n")
+                        "        'PASSWORD': %r,\n" % mysql_root_password)
             elif items.find("'HOST':") > -1:
                 host = db['db_host'] if block == 0 else db['root_db_host']
-                writeDataToFile.writelines("        'HOST': '" + host + "',\n")
+                writeDataToFile.writelines("        'HOST': %r,\n" % host)
             elif items.find("'PORT':") > -1:
                 port = db['db_port'] if block == 0 else db['root_db_port']
-                writeDataToFile.writelines("        'PORT': '" + port + "',\n")
+                writeDataToFile.writelines("        'PORT': %r,\n" % port)
                 # PORT is the last entry of each database block.
                 block = block + 1
             elif items.find("'USER':") > -1 and block == 1:
                 writeDataToFile.writelines(
-                    "        'USER': '" + db['root_db_user'] + "',\n")
+                    "        'USER': %r,\n" % db['root_db_user'])
             elif items.find("'NAME':") > -1 and block == 1:
                 writeDataToFile.writelines(
-                    "        'NAME': '" + db['root_db_name'] + "',\n")
+                    "        'NAME': %r,\n" % db['root_db_name'])
             else:
                 writeDataToFile.writelines(items)
 
@@ -722,12 +722,17 @@ class preFlightsChecks:
         # This allows root/sudo users to be able to work with MySQL/MariaDB without hunting down the password like
         # all the other control panels allow
         # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
+        sys.path.append(os.path.join(self.cyberPanelPath, 'install'))
+        from env_generator import build_mysql_client_config
+
         mysql_my_root_cnf = '/root/.my.cnf'
-        mysql_root_cnf_content = """
-[client]
-user=root
-password="%s"
-""" % password
+        mysql_root_cnf_content = build_mysql_client_config(
+            password,
+            remote=(self.remotemysql == 'ON'),
+            host=getattr(self, 'mysqlhost', None),
+            port=getattr(self, 'mysqlport', None),
+            user=getattr(self, 'mysqluser', None),
+        )
 
         with open(mysql_my_root_cnf, 'w') as f:
             f.write(mysql_root_cnf_content)
@@ -3076,7 +3081,14 @@ def main():
         remotemysql = args.remotemysql
         mysqlhost = args.mysqlhost
         mysqluser = args.mysqluser
-        mysqlpassword = args.mysqlpassword
+        mysqlpassword = os.environ.pop(
+            'CP_INSTALL_MYSQL_PASSWORD', None
+        )
+        if mysqlpassword is None:
+            # Retained for callers that invoke install.py directly. The shell
+            # installer uses the process environment so the secret is not
+            # exposed in the command line shown by process tools.
+            mysqlpassword = args.mysqlpassword
         mysqlport = args.mysqlport
         mysqldb = args.mysqldb
 

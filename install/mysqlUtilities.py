@@ -25,31 +25,54 @@ class mysqlUtilities:
         """
         pass_file = "/etc/cyberpanel/mysqlPassword"
         try:
-            from json import loads
-            data = loads(open(pass_file, 'r').read())
-            return {
-                'host': data['mysqlhost'],
-                'port': int(data['mysqlport']),
-                'user': data['mysqluser'],
-                'passwd': data['mysqlpassword'],
-            }, 1
+            with open(pass_file, 'r') as handle:
+                raw = handle.read()
         except (IOError, OSError) as e:
             raise MySQLSetupError(
                 "Cannot read %s: %s" % (pass_file, e))
-        except Exception:
-            # Not JSON: the local-install format, root password on line one.
-            try:
-                with open(pass_file) as handle:
-                    password = handle.read().split('\n', 1)[0]
-            except (IOError, OSError) as e:
+
+        from json import loads
+        try:
+            data = loads(raw)
+        except ValueError as e:
+            # A JSON-looking file was written for a remote install. Treating a
+            # damaged document as a local root password silently redirects the
+            # administrative connection to localhost.
+            if raw.lstrip().startswith(('{', '[')):
                 raise MySQLSetupError(
-                    "Cannot read %s: %s" % (pass_file, e))
+                    "Invalid remote MySQL configuration in %s: %s"
+                    % (pass_file, e))
+            # Not JSON: the local-install format, root password on line one.
+            password = raw.split('\n', 1)[0]
             return {
                 'host': 'localhost',
                 'port': 3306,
                 'user': 'root',
                 'passwd': password,
             }, 0
+
+        if not isinstance(data, dict):
+            # A local password can itself be valid JSON (for example, "123").
+            # Only a JSON object represents the remote-install format.
+            return {
+                'host': 'localhost',
+                'port': 3306,
+                'user': 'root',
+                'passwd': raw.split('\n', 1)[0],
+            }, 0
+
+        try:
+            params = {
+                'host': data['mysqlhost'],
+                'port': int(data['mysqlport']),
+                'user': data['mysqluser'],
+                'passwd': data['mysqlpassword'],
+            }
+        except (KeyError, TypeError, ValueError) as e:
+            raise MySQLSetupError(
+                "Invalid remote MySQL configuration in %s: %s"
+                % (pass_file, e))
+        return params, 1
 
     @staticmethod
     def _connect(params):
@@ -105,13 +128,21 @@ class mysqlUtilities:
                     "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY %s",
                     (dbuser, account_host, dbpassword))
 
-                # DigitalOcean's managed MySQL defaults to caching_sha2 and
-                # the client in use cannot authenticate against it.
-                if remote and host.find('ondigitalocean') > -1:
-                    cursor.execute(
-                        "ALTER USER %s@%s IDENTIFIED WITH "
-                        "mysql_native_password BY %s",
-                        (dbuser, account_host, dbpassword))
+                if remote:
+                    # A retry generates a new application password. CREATE USER
+                    # IF NOT EXISTS leaves an existing account unchanged, so
+                    # explicitly synchronize it with the value written to .env.
+                    # DigitalOcean also needs the legacy authentication plugin
+                    # for the client version shipped with CyberPanel.
+                    if host.find('ondigitalocean') > -1:
+                        cursor.execute(
+                            "ALTER USER %s@%s IDENTIFIED WITH "
+                            "mysql_native_password BY %s",
+                            (dbuser, account_host, dbpassword))
+                    else:
+                        cursor.execute(
+                            "ALTER USER %s@%s IDENTIFIED BY %s",
+                            (dbuser, account_host, dbpassword))
 
                 # RDS does not permit granting privileges the master account
                 # does not itself hold, so ask for the explicit subset there.

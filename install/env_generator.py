@@ -165,6 +165,45 @@ def build_database_config(remote=False, host=None, port=None, root_db=None,
     return config
 
 
+def _format_mysql_option_value(value):
+    """Quote one value for a MySQL option file without creating new keys."""
+    text = '' if value is None else str(value)
+    if '\n' in text or '\r' in text:
+        raise DatabaseConfigError(
+            'MySQL option values must fit on a single line')
+    return '"%s"' % text.replace('\\', '\\\\').replace('"', '\\"')
+
+
+def build_mysql_client_config(password, remote=False, host=None, port=None,
+                              user=None):
+    """Render the administrative /root/.my.cnf used after installation.
+
+    Local installations deliberately omit host and port so the client keeps
+    using the Unix socket. Remote installations must name the same TCP endpoint
+    and administrative user supplied to the installer.
+    """
+    if not remote:
+        return ('[client]\nuser=root\npassword=%s\n'
+                % _format_mysql_option_value(password))
+
+    config = build_database_config(
+        remote=True, host=host, port=port, root_db='mysql', root_user=user)
+    return (
+        '[client]\n'
+        'user=%s\n'
+        'password=%s\n'
+        'host=%s\n'
+        'port=%s\n'
+        'protocol=TCP\n'
+        % (
+            _format_mysql_option_value(config['root_db_user']),
+            _format_mysql_option_value(password),
+            _format_mysql_option_value(config['root_db_host']),
+            config['root_db_port'],
+        )
+    )
+
+
 def format_env_value(value):
     """
     Serialise a value for a python-dotenv .env file.
@@ -185,6 +224,12 @@ def format_env_value(value):
     )
     if not needs_quotes:
         return text
+    # python-dotenv expands ${NAME} even inside single quotes. Replace the
+    # opening sequence with a one-pass default expansion that evaluates to a
+    # literal dollar sign; interpolation is not recursive, so the original
+    # ${NAME} survives as credential data rather than becoming an environment
+    # lookup on the panel host.
+    text = text.replace('${', '${CYBERPANEL_LITERAL_DOLLAR:-$}{')
     escaped = (
         text.replace('\\', '\\\\')
             .replace('"', '\\"')
