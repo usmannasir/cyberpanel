@@ -19,6 +19,7 @@ import secrets
 import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
+from install.database_consumers import configure_phpmyadmin_signon
 
 def update_all_config_files_with_password(new_password):
     """
@@ -314,7 +315,6 @@ class Upgrade:
     UbuntuPath = '/etc/lsb-release'
     openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
-    SnappyVersion = '2.38.2'
     LogPathNew = '/home/cyberpanel/upgrade_logs'
     SoftUpgrade = 0
 
@@ -1229,9 +1229,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
 
-                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
-                    mysqlhost)
-                Upgrade.executioner(command, 0)
+                configure_phpmyadmin_signon(
+                    '/usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php',
+                    mysqlhost,
+                    mysqlport,
+                )
 
             except:
                 pass
@@ -1255,271 +1257,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
         command = "./composer.sh"
         Upgrade.executioner(command, 0)
-
-    @staticmethod
-    def downoad_and_install_raindloop():
-        try:
-            #######
-
-            # if os.path.exists("/usr/local/CyberCP/public/rainloop"):
-            #
-            #     if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
-            #         pass
-            #     else:
-            #         command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
-            #         Upgrade.executioner(command, 0)
-            #
-            #         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-            #         Upgrade.executioner(command, 0)
-            #
-            #     iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
-            #
-            #     path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-            #
-            #     data = open(path, 'r').readlines()
-            #     writeToFile = open(path, 'w')
-            #
-            #     for items in data:
-            #         if items.find("$sCustomDataPath = '';") > -1:
-            #             writeToFile.writelines(
-            #                 "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-            #         else:
-            #             writeToFile.writelines(items)
-            #
-            #     writeToFile.close()
-            #     return 0
-
-            cwd = os.getcwd()
-
-            if not os.path.exists("/usr/local/CyberCP/public"):
-                os.mkdir("/usr/local/CyberCP/public")
-
-            os.chdir("/usr/local/CyberCP/public")
-
-            count = 1
-
-            Upgrade.stdOut("Installing SnappyMail...", 0)
-            
-            while (1):
-                command = 'wget -q https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (
-                    Upgrade.SnappyVersion, Upgrade.SnappyVersion)
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-
-            #############
-
-            count = 0
-
-            if os.path.exists('/usr/local/CyberCP/public/snappymail'):
-                shutil.rmtree('/usr/local/CyberCP/public/snappymail')
-
-            while (1):
-                command = 'unzip -q snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (Upgrade.SnappyVersion)
-
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-            try:
-                os.remove("snappymail-%s.zip" % (Upgrade.SnappyVersion))
-            except:
-                pass
-
-            #######
-
-            os.chdir("/usr/local/CyberCP/public/snappymail")
-
-            count = 0
-
-            while (1):
-                command = 'find . -type d -exec chmod 755 {} \;'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-
-            #############
-
-            count = 0
-
-            while (1):
-                command = 'find . -type f -exec chmod 644 {} \;'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if res != 0:
-                    count = count + 1
-                    if count == 3:
-                        break
-                else:
-                    break
-            ######
-
-            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
-
-            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-
-            data = open(path, 'r').readlines()
-            writeToFile = open(path, 'w')
-
-            for items in data:
-                if items.find("$sCustomDataPath = '';") > -1:
-                    writeToFile.writelines(
-                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            Upgrade.executioner_silent(command, 'mkdir snappymail configs', 0)
-
-            command = f'wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
-            Upgrade.executioner_silent(command, 'verify certificate', 0)
-
-            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
-            Upgrade.executioner_silent(command, 'verify certificate', 0)
-
-            # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
-
-            #             labsData = """[labs]
-            # imap_folder_list_limit = 0
-            # autocreate_system_folders = On
-            # """
-            #
-            #             writeToFile = open(labsPath, 'a')
-            #             writeToFile.write(labsData)
-            #             writeToFile.close()
-
-            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
-            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
-
-            # if os.path.exists(includeFileOldPath):
-            #     writeToFile = open(includeFileOldPath, 'a')
-            #     writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
-            #     writeToFile.close()
-
-            # command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
-            # Upgrade.executioner(command, 'mkdir snappymail configs', 0)
-
-            ## take care of auto create folders
-
-            ## Disable local cert verification
-
-            # command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
-            # Upgrade.executioner(command, 'verify certificate', 0)
-
-            # labsData = open(labsPath, 'r').read()
-            # labsDataLines = open(labsPath, 'r').readlines()
-            #
-            # if labsData.find('autocreate_system_folders') > -1:
-            #     command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
-            #     Upgrade.executioner(command, 'mkdir snappymail configs', 0)
-            # else:
-            #     WriteToFile = open(labsPath, 'w')
-            #     for lines in labsDataLines:
-            #         if lines.find('[labs]') > -1:
-            #             WriteToFile.write(lines)
-            #             WriteToFile.write(f'autocreate_system_folders = On\n')
-            #         else:
-            #             WriteToFile.write(lines)
-            #     WriteToFile.close()
-
-            ##take care of imap_folder_list_limit
-
-            # labsDataLines = open(labsPath, 'r').readlines()
-            #
-            # if labsData.find('imap_folder_list_limit') == -1:
-            #     WriteToFile = open(labsPath, 'w')
-            #     for lines in labsDataLines:
-            #         if lines.find('[labs]') > -1:
-            #             WriteToFile.write(lines)
-            #             WriteToFile.write(f'imap_folder_list_limit = 0\n')
-            #         else:
-            #             WriteToFile.write(lines)
-            #     WriteToFile.close()
-
-            ### now download and install actual plugin
-
-            #             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             ### Enable plugins and enable mailbox creation plugin
-            #
-            #             labsDataLines = open(labsPath, 'r').readlines()
-            #             PluginsActivator = 0
-            #             WriteToFile = open(labsPath, 'w')
-            #
-            #
-            #             for lines in labsDataLines:
-            #                 if lines.find('[plugins]') > -1:
-            #                     PluginsActivator = 1
-            #                     WriteToFile.write(lines)
-            #                 elif PluginsActivator and lines.find('enable = ') > -1:
-            #                     WriteToFile.write(f'enable = On\n')
-            #                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
-            #                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-            #                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-            #                     PluginsActivator = 0
-            #                     WriteToFile.write(lines)
-            #                 else:
-            #                     WriteToFile.write(lines)
-            #             WriteToFile.close()
-            #
-            #             ## enable auto create in the enabled plugin
-            #             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-            #
-            #             WriteToFile = open(PluginsFilePath, 'w')
-            #             WriteToFile.write("""{
-            #     "plugin": {
-            #         "autocreate_system_folders": true
-            #     }
-            # }
-            # """)
-            #             WriteToFile.close()
-            #
-            #             command = f'chown lscpd:lscpd {PluginsFilePath}'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-            #
-            #             command = f'chmod 600 {PluginsFilePath}'
-            #             Upgrade.executioner(command, 'verify certificate', 0)
-
-            os.chdir(cwd)
-            
-            Upgrade.stdOut("SnappyMail installation completed.", 0)
-
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
-
-        return 1
 
     @staticmethod
     def downloadLink():
@@ -1631,6 +1368,28 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         return ''.join(updated_lines), changed
 
     @staticmethod
+    def normalizePostfixDomainLookup(config):
+        """Remove the obsolete alias that is reserved by newer MariaDB releases."""
+        pattern = (
+            r"^([ \t]*query[ \t]*=[ \t]*)SELECT\s+domain\s+AS\s+`?virtual`?\s+"
+            r"FROM\s+e_domains\s+WHERE\s+domain\s*=\s*'%s'[ \t]*$"
+        )
+        replacement = r"\1SELECT domain FROM e_domains WHERE domain='%s'"
+        return re.subn(pattern, replacement, config, flags=re.IGNORECASE | re.MULTILINE)
+
+    @staticmethod
+    def normalizeDovecot24SqlInclude(config):
+        """Allow an unprivileged LDA to skip the protected SQL settings."""
+        pattern = (
+            r'^([ \t]*)!include[ \t]+'
+            r'/etc/dovecot/dovecot-sql-2\.4\.conf[ \t]*$'
+        )
+        replacement = (
+            r'\1!include_try /etc/dovecot/dovecot-sql-2.4.conf'
+        )
+        return re.subn(pattern, replacement, config, flags=re.MULTILINE)
+
+    @staticmethod
     def _atomicConfigWrite(path, content, metadata):
         directory = os.path.dirname(path)
         descriptor, temporary_path = tempfile.mkstemp(prefix='.%s.' % os.path.basename(path), dir=directory)
@@ -1678,6 +1437,104 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 0
 
     @staticmethod
+    def ensurePostfixDomainLookup(path='/etc/postfix/mysql-virtual_domains.cf'):
+        """Repair and validate the virtual-domain query used by Postfix."""
+        if not os.path.exists(path):
+            return 1
+
+        try:
+            if os.path.islink(path):
+                raise RuntimeError('refusing to replace a symbolic link')
+
+            metadata = os.stat(path)
+            with open(path, 'r') as postfix_config:
+                original_content = postfix_config.read()
+
+            updated_content, replacements = Upgrade.normalizePostfixDomainLookup(
+                original_content
+            )
+            if replacements == 0:
+                return 1
+
+            Upgrade._atomicConfigWrite(path, updated_content, metadata)
+            validation = subprocess.run(
+                [
+                    'postmap', '-q', '__cyberpanel_config_check__',
+                    'mysql:%s' % path,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
+            if validation.returncode not in (0, 1) or validation.stderr.strip():
+                Upgrade._atomicConfigWrite(path, original_content, metadata)
+                Upgrade.stdOut(
+                    'Postfix domain lookup update failed validation and was reverted.',
+                    0,
+                )
+                return 0
+
+            if subprocess.call(
+                    ['systemctl', 'is-active', '--quiet', 'postfix']) == 0:
+                subprocess.call(['systemctl', 'reload', 'postfix'])
+
+            Upgrade.stdOut('Postfix domain lookup is compatible with MariaDB.', 0)
+            return 1
+        except Exception as msg:
+            Upgrade.stdOut('Unable to update Postfix domain lookup: %s' % msg, 0)
+            return 0
+
+    @staticmethod
+    def ensureDovecot24LdaConfig(path='/etc/dovecot/dovecot.conf'):
+        """Keep SQL credentials protected while permitting Dovecot LDA startup."""
+        if not os.path.exists(path):
+            return 1
+
+        try:
+            if os.path.islink(path):
+                raise RuntimeError('refusing to replace a symbolic link')
+
+            metadata = os.stat(path)
+            with open(path, 'r') as dovecot_config:
+                original_content = dovecot_config.read()
+
+            updated_content, replacements = Upgrade.normalizeDovecot24SqlInclude(
+                original_content
+            )
+            if replacements == 0:
+                return 1
+
+            Upgrade._atomicConfigWrite(path, updated_content, metadata)
+            validation_commands = (
+                ['doveconf', '-c', path, '-n'],
+                ['runuser', '-u', 'vmail', '--', 'doveconf', '-c', path, '-n'],
+            )
+            for command in validation_commands:
+                validation = subprocess.run(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
+                )
+                if validation.returncode != 0:
+                    Upgrade._atomicConfigWrite(path, original_content, metadata)
+                    Upgrade.stdOut(
+                        'Dovecot 2.4 LDA update failed validation and was reverted.',
+                        0,
+                    )
+                    return 0
+
+            if subprocess.call(
+                    ['systemctl', 'is-active', '--quiet', 'dovecot']) == 0:
+                subprocess.call(['systemctl', 'reload', 'dovecot'])
+
+            Upgrade.stdOut('Dovecot 2.4 LDA can load its protected configuration.', 0)
+            return 1
+        except Exception as msg:
+            Upgrade.stdOut('Unable to update Dovecot 2.4 LDA configuration: %s' % msg, 0)
+            return 0
+
+    @staticmethod
     def upgradeVersion():
         try:
 
@@ -1716,28 +1573,47 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+            with open(passFile) as password_file:
+                data = password_file.read()
 
-            if db == None:
-                conn = mysql.connect(user='root', passwd=password)
+            try:
+                admin_connection = json.loads(data)
+            except (TypeError, ValueError):
+                admin_connection = None
+
+            if isinstance(admin_connection, dict):
+                connection_options = {
+                    'host': admin_connection['mysqlhost'],
+                    'port': int(admin_connection.get('mysqlport') or 3306),
+                    'user': admin_connection['mysqluser'],
+                    'passwd': admin_connection['mysqlpassword'],
+                }
+                if db is not None:
+                    connection_options['db'] = db
+                conn = mysql.connect(**connection_options)
             else:
-                try:
-                    conn = mysql.connect(db=db, user='root', passwd=password)
-                except:
-                    try:
-                        conn = mysql.connect(host='127.0.0.1', port=3307, db=db, user='root', passwd=password)
-                    except:
-                        dbUser = settings.DATABASES['default']['USER']
-                        password = settings.DATABASES['default']['PASSWORD']
-                        host = settings.DATABASES['default']['HOST']
-                        port = settings.DATABASES['default']['PORT']
+                # Preserve the legacy local-database connection order for
+                # existing installations whose password file is plain text.
+                password = data.split('\n', 1)[0]
 
-                        if port == '':
-                            conn = mysql.connect(host=host, port=3306, db=db, user=dbUser, passwd=password)
-                        else:
-                            conn = mysql.connect(host=host, port=int(port), db=db, user=dbUser, passwd=password)
+                if db == None:
+                    conn = mysql.connect(user='root', passwd=password)
+                else:
+                    try:
+                        conn = mysql.connect(db=db, user='root', passwd=password)
+                    except:
+                        try:
+                            conn = mysql.connect(host='127.0.0.1', port=3307, db=db, user='root', passwd=password)
+                        except:
+                            dbUser = settings.DATABASES['default']['USER']
+                            password = settings.DATABASES['default']['PASSWORD']
+                            host = settings.DATABASES['default']['HOST']
+                            port = settings.DATABASES['default']['PORT']
+
+                            if port == '':
+                                conn = mysql.connect(host=host, port=3306, db=db, user=dbUser, passwd=password)
+                            else:
+                                conn = mysql.connect(host=host, port=int(port), db=db, user=dbUser, passwd=password)
 
             cursor = conn.cursor()
             return conn, cursor
@@ -3889,6 +3765,9 @@ passdb {
         critical_files = [
             '/usr/local/CyberCP/CyberCP/settings.py',
             '/usr/local/CyberCP/.git/config',  # Git configuration
+            '/usr/local/CyberCP/.env',
+            '/usr/local/CyberCP/.env.backup',
+            '/usr/local/CyberCP/secret_key',
         ]
         
         # Also backup any custom configurations
@@ -4078,6 +3957,8 @@ passdb {
             Upgrade.staticContent()
 
             Upgrade.ensurePostfixLoopbackNetworks()
+            Upgrade.ensurePostfixDomainLookup()
+            Upgrade.ensureDovecot24LdaConfig()
 
             # Restore Imunify360 after upgrade
             Upgrade.restoreImunify360()
@@ -4230,32 +4111,6 @@ milter_default_action = accept
     def fixPermissions():
         try:
 
-            try:
-                def generate_pass(length=14):
-                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-                    size = length
-                    return ''.join(secrets.choice(chars) for x in range(size))
-
-                content = """<?php
-$_ENV['snappymail_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/snappymail/index.php';
-
-$oConfig = \snappymail\Api::Config();
-$oConfig->SetPassword('%s');
-echo $oConfig->Save() ? 'Done' : 'Error';
-
-?>""" % (generate_pass())
-
-                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
-                writeToFile.write(content)
-                writeToFile.close()
-
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-                subprocess.call(shlex.split(command))
-
-            except:
-                pass
-
             Upgrade.stdOut("Fixing permissions..")
 
             command = "usermod -G lscpd,lsadm,nobody lscpd"
@@ -4309,8 +4164,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
-            Upgrade.executioner(command, 'chown core code', 0)
+            from plogical.legacyWebmail import legacy_data_permission_commands
+            for command in legacy_data_permission_commands():
+                Upgrade.executioner(command, 'protect legacy webmail data', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'chown core code', 0)
@@ -4436,12 +4292,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
-
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
-            Upgrade.executioner_silent(command, 'Configure SnappyMail')
-
-            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
-            Upgrade.executioner_silent(command, 'Secure SnappyMail config')
 
             ###
 
@@ -5539,7 +5389,6 @@ pm.max_spare_servers = 3
 
         versionNumbring = Upgrade.downloadLink()
         Upgrade.download_install_phpmyadmin()
-        Upgrade.downoad_and_install_raindloop()
 
         ##
 

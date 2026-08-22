@@ -139,7 +139,8 @@ class mysqlUtilities:
 
             if dbcreate:
 
-                query = "CREATE DATABASE %s" % (dbname)
+                query = "CREATE DATABASE %s" % (
+                    mysqlUtilities.quoteIdentifier(dbname))
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(query)
@@ -150,22 +151,22 @@ class mysqlUtilities:
 
             def createUserForHost(hostToUse):
                 if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
-                    query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
-                        dbuser, hostToUse, dbpassword)
+                    query = "CREATE USER %s@%s IDENTIFIED WITH mysql_native_password BY %s"
                 else:
-                    query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
-                        hostToUse) + dbpassword + "'"
+                    query = "CREATE USER %s@%s IDENTIFIED BY %s"
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(query)
 
-                cursor.execute(query)
+                cursor.execute(query, (dbuser, hostToUse, dbpassword))
 
                 if mysqlUtilities.RDS == 0:
-                    grant = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (hostToUse)
+                    grant = "GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % (
+                        mysqlUtilities.quoteIdentifier(dbname))
                 else:
-                    grant = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (hostToUse)
-                cursor.execute(grant)
+                    grant = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % (
+                        mysqlUtilities.quoteIdentifier(dbname))
+                cursor.execute(grant, (dbuser, hostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(grant)
 
@@ -1033,31 +1034,30 @@ password=%s
                 LOCALHOST = mysqlUtilities.LOCALHOST
 
             if encrypt == None:
-                try:
-                    dbuser = DBUsers.objects.get(user=userName)
-                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
-                except:
-                    userName = mysqlUtilities.fetchuser(userName)
-                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
+                query = "ALTER USER %s@%s IDENTIFIED BY %s"
+                queryArgs = (userName, LOCALHOST, dbPassword)
             else:
-                query = "SET PASSWORD FOR '" + userName + "'@'%s' = '" % (LOCALHOST) + dbPassword + "'"
+                query = "SET PASSWORD FOR %s@%s = %s"
+                queryArgs = (userName, LOCALHOST, dbPassword)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
 
-            cursor.execute(query)
+            cursor.execute(query, queryArgs)
 
             if LOCALHOST != '127.0.0.1' and mysqlUtilities.REMOTEHOST in ('', 'localhost', '127.0.0.1'):
                 try:
                     if encrypt == None:
-                        query = "SET PASSWORD FOR '" + userName + "'@'127.0.0.1' = PASSWORD('" + dbPassword + "')"
+                        query = "ALTER USER %s@%s IDENTIFIED BY %s"
                     else:
-                        query = "SET PASSWORD FOR '" + userName + "'@'127.0.0.1' = '" + dbPassword + "'"
+                        query = "SET PASSWORD FOR %s@%s = %s"
+
+                    queryArgs = (userName, '127.0.0.1', dbPassword)
 
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.CyberCPLogFileWriter.writeToFile(query)
 
-                    cursor.execute(query)
+                    cursor.execute(query, queryArgs)
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(
                         str(msg) + " [mysqlUtilities.changePassword:127.0.0.1]")

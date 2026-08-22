@@ -21,6 +21,7 @@ from django.shortcuts import HttpResponse, render, redirect
 from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
+from plogical.sshKeyUtilities import authorized_key_records
 from firewall.models import FirewallRules
 from plogical.modSec import modSec
 from plogical.csf import CSF
@@ -306,36 +307,7 @@ class FirewallManager:
                 cat = "sudo cat " + pathToKeyFile
                 data = ProcessUtilities.outputExecutioner(cat).split('\n')
 
-                json_data = "["
-                checker = 0
-
-                for items in data:
-                    if items.find("ssh-rsa") > -1:
-                        keydata = items.split(" ")
-
-                        try:
-                            key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
-                            try:
-                                userName = keydata[2][:keydata[2].index("@")]
-                            except:
-                                userName = keydata[2]
-                        except:
-                            key = "ssh-rsa " + keydata[1][:50]
-                            userName = ''
-
-
-
-                        dic = {'userName': userName,
-                               'key': key,
-                               }
-
-                        if checker == 0:
-                            json_data = json_data + json.dumps(dic)
-                            checker = 1
-                        else:
-                            json_data = json_data + ',' + json.dumps(dic)
-
-                json_data = json_data + ']'
+                json_data = json.dumps(authorized_key_records(data))
 
                 final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
@@ -431,7 +403,11 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
-                final_dic = {'status': 1, 'delete_status': 1, "error_mssage": output}
+                final_dic = {
+                    'status': 0,
+                    'delete_status': 0,
+                    'error_message': output,
+                }
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
@@ -1814,6 +1790,5 @@ class FirewallManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
 
 

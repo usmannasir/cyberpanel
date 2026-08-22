@@ -16025,7 +16025,7 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
 
     populateCurrentKeys();
 
-    $scope.deleteKey = function (key) {
+    $scope.deleteKey = function (keyId) {
 
         $scope.wpInstallLoading = false;
 
@@ -16033,7 +16033,7 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
 
         var data = {
             domain: $("#domainName").text(),
-            key: key,
+            key: keyId,
         };
 
         var config = {

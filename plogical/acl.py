@@ -1,11 +1,11 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
 import random
-import string
 
 from ApachController.ApacheVhosts import ApacheVhost
 from manageServices.models import PDNSStatus
 from .processUtilities import ProcessUtilities
+from .legacyWebmail import legacy_data_permission_commands
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -1233,34 +1233,6 @@ class ACLManager:
     def fixPermissions():
         try:
 
-            try:
-                def generate_pass(length=14):
-                    import secrets
-                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-                    size = length
-                    return ''.join(secrets.choice(chars) for x in range(size))
-
-                content = """<?php
-$_ENV['snappymail_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/snappymail/index.php';
-
-$oConfig = \snappymail\Api::Config();
-$oConfig->SetPassword('%s');
-echo $oConfig->Save() ? 'Done' : 'Error';
-
-?>""" % (generate_pass())
-
-                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
-                writeToFile.write(content)
-                writeToFile.close()
-
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
-                ProcessUtilities.executioner(command, 'root', True)
-
-            except:
-                pass
-
-
             command = "usermod -G lscpd,lsadm,nobody lscpd"
             ProcessUtilities.executioner(command, 'root', True)
 
@@ -1312,8 +1284,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
-            ProcessUtilities.executioner(command, 'root', True)
+            for command in legacy_data_permission_commands():
+                ProcessUtilities.executioner(command, 'root', True)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
             ProcessUtilities.executioner(command, 'root', True)
@@ -1425,12 +1397,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 ProcessUtilities.executioner(command, 'root', True)
 
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
-            ProcessUtilities.executioner(command, 'root', True)
-
-            command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
-            ProcessUtilities.executioner(command, 'root', True)
-
-            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
             ProcessUtilities.executioner(command, 'root', True)
 
             ###

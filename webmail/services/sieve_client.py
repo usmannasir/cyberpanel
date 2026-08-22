@@ -214,7 +214,6 @@ class SieveClient:
                     folder = 'INBOX.%s' % folder
                 action = 'fileinto "%s";' % folder
             elif action_type == 'forward':
-                requires.add('redirect')
                 action = 'redirect "%s";' % action_value
             elif action_type == 'discard':
                 action = 'discard;'

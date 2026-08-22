@@ -1333,8 +1333,9 @@ Post_Upgrade_System_Tweak() {
 
   if [[ "$Server_OS" = "Ubuntu" ]] ; then
 
-  if ! dpkg -l lsphp74-dev >/dev/null 2>&1 ; then
-    apt install -y lsphp74-dev
+  if apt-cache show lsphp74-dev >/dev/null 2>&1 \
+     && ! dpkg-query -W -f='${db:Status-Status}' lsphp74-dev 2>/dev/null | grep -qx installed ; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y lsphp74-dev
   fi
 
     if [[ ! -f /usr/sbin/ipset ]] ; then
@@ -1567,34 +1568,19 @@ if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /u
   fi
 fi
 
-# Fix SnappyMail directory permissions for Ubuntu 24.04 and other systems
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking SnappyMail directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-
-# Create SnappyMail data directories if they don't exist
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
-
-# Ensure proper ownership for SnappyMail data directories
+# Keep private data from retired webmail clients protected when an older server
+# still has it. Do not create or configure those paths on current installs.
 if id -u lscpd >/dev/null 2>&1; then
-    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
-else
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    for legacy_data_path in \
+        /usr/local/lscp/cyberpanel/snappymail/data \
+        /usr/local/lscp/cyberpanel/rainloop/data; do
+        if [[ -d "$legacy_data_path" ]]; then
+            chown -R lscpd:lscpd "$legacy_data_path"
+            find "$legacy_data_path" -type d -exec chmod 700 {} \;
+            find "$legacy_data_path" -type f -exec chmod 600 {} \;
+        fi
+    done
 fi
-
-# Set proper permissions for SnappyMail data directories (group writable)
-chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail data directory permissions to 775 (group writable)" | tee -a /var/log/cyberpanel_upgrade_debug.log
-
-# Ensure web server users are in the lscpd group for access
-usermod -a -G lscpd nobody 2>/dev/null || true
-
-# Fix SnappyMail public directory ownership (critical fix)
-chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Added web server users to lscpd group and fixed SnappyMail ownership" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 systemctl restart lscpd
 

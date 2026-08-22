@@ -20,6 +20,7 @@ import subprocess
 import argparse
 import shlex
 from plogical.processUtilities import ProcessUtilities
+from plogical.legacyWebmail import legacy_data_permission_commands
 import os
 import bcrypt
 import getpass
@@ -51,177 +52,6 @@ class mailUtilities:
             print("Successfully sent email")
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
-    @staticmethod
-    def AfterEffects(domain):
-        path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
-
-        if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-            os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
-
-        finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
-        finalPathJson = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".json"
-
-        if not os.path.exists(finalPath):
-            shutil.copy(path, finalPath)
-
-        contentJSON = """
-{
-    "name": "%s",
-    "IMAP": {
-        "host": "localhost",
-        "port": 993,
-        "type": 1,
-        "timeout": 300,
-        "shortLogin": false,
-        "sasl": [
-            "SCRAM-SHA3-512",
-            "SCRAM-SHA-512",
-            "SCRAM-SHA-256",
-            "SCRAM-SHA-1",
-            "PLAIN",
-            "LOGIN"
-        ],
-        "ssl": {
-            "verify_peer": false,
-            "verify_peer_name": false,
-            "allow_self_signed": false,
-            "SNI_enabled": true,
-            "disable_compression": true,
-            "security_level": 1
-        },
-        "use_expunge_all_on_delete": false,
-        "fast_simple_search": true,
-        "force_select": false,
-        "message_all_headers": false,
-        "message_list_limit": 10000,
-        "search_filter": "",
-        "disabled_capabilities": []
-    },
-    "SMTP": {
-        "host": "localhost",
-        "port": 587,
-        "type": 2,
-        "timeout": 60,
-        "shortLogin": false,
-        "sasl": [
-            "SCRAM-SHA3-512",
-            "SCRAM-SHA-512",
-            "SCRAM-SHA-256",
-            "SCRAM-SHA-1",
-            "PLAIN",
-            "LOGIN"
-        ],
-        "ssl": {
-            "verify_peer": false,
-            "verify_peer_name": false,
-            "allow_self_signed": false,
-            "SNI_enabled": true,
-            "disable_compression": true,
-            "security_level": 1
-        },
-        "useAuth": true,
-        "setSender": false,
-        "usePhpMail": false,
-        "authPlainLine": false
-    },
-    "Sieve": {
-        "host": "localhost",
-        "port": 4190,
-        "type": 0,
-        "timeout": 10,
-        "shortLogin": false,
-        "sasl": [
-            "SCRAM-SHA3-512",
-            "SCRAM-SHA-512",
-            "SCRAM-SHA-256",
-            "SCRAM-SHA-1",
-            "PLAIN",
-            "LOGIN"
-        ],
-        "ssl": {
-            "verify_peer": false,
-            "verify_peer_name": false,
-            "allow_self_signed": false,
-            "SNI_enabled": true,
-            "disable_compression": true,
-            "security_level": 1
-        },
-        "enabled": false
-    },
-    "whiteList": ""
-}
-""" % (domain)
-
-        WriteToFile = open(finalPathJson, 'w')
-        WriteToFile.write(contentJSON)
-        WriteToFile.close()
-
-        command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
-        ProcessUtilities.normalExecutioner(command)
-
-    @staticmethod
-    def InstallMailBoxFoldersPlugin():
-        ### now download and install actual plugin
-
-        labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
-
-        command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-        ProcessUtilities.executioner(command)
-
-        command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-        ProcessUtilities.executioner(command)
-
-        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-        ProcessUtilities.executioner(command)
-
-        command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-        ProcessUtilities.executioner(command)
-
-        command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-        ProcessUtilities.executioner(command)
-
-        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-        ProcessUtilities.executioner(command)
-
-        ### Enable plugins and enable mailbox creation plugin
-
-        labsDataLines = open(labsPath, 'r').readlines()
-        PluginsActivator = 0
-        WriteToFile = open(labsPath, 'w')
-
-        for lines in labsDataLines:
-            if lines.find('[plugins]') > -1:
-                PluginsActivator = 1
-                WriteToFile.write(lines)
-            elif PluginsActivator and lines.find('enable = ') > -1:
-                WriteToFile.write(f'enable = On\n')
-            elif PluginsActivator and lines.find('enabled_list = ') > -1:
-                WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-            elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-                PluginsActivator = 0
-                WriteToFile.write(lines)
-            else:
-                WriteToFile.write(lines)
-        WriteToFile.close()
-
-        ## enable auto create in the enabled plugin
-        PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-
-        WriteToFile = open(PluginsFilePath, 'w')
-        WriteToFile.write("""{
-    "plugin": {
-        "autocreate_system_folders": true
-    }
-}
-""")
-        WriteToFile.close()
-
-        command = f'chown lscpd:lscpd {PluginsFilePath}'
-        ProcessUtilities.executioner(command)
-
-        command = f'chmod 600 {PluginsFilePath}'
-        ProcessUtilities.executioner(command)
-
     @staticmethod
     def createEmailAccount(domain, userName, password, restore = None):
         try:
@@ -288,19 +118,6 @@ class mailUtilities:
                         raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
 
 
-            ## After effects
-
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mailUtilities.py"
-            execPath = execPath + " AfterEffects --domain " + domain
-
-            if getpass.getuser() == 'root':
-                ## This is the case when cPanel Importer is running and token is not present in enviroment.
-                ProcessUtilities.normalExecutioner(execPath)
-            else:
-                ProcessUtilities.executioner(execPath, 'lscpd')
-
-            ## After effects ends
-
             emailDomain = Domains.objects.get(domain=domain)
 
             #emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=hash.hexdigest())
@@ -366,9 +183,6 @@ class mailUtilities:
             # Ensure final ownership
             command = f"chown -R vmail:vmail '{maildir_base}'"
             ProcessUtilities.executioner(command, 'root')
-
-            #if not os.path.exists('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'):
-            #    mailUtilities.InstallMailBoxFoldersPlugin()
 
             print("1,None")
             return 1,"None"
@@ -2471,8 +2285,8 @@ class MailServerManagerUtils(multi.Thread):
         command = "chown -R root:root /usr/local/lscp"
         ProcessUtilities.executioner(command)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        ProcessUtilities.executioner(command)
+        for command in legacy_data_permission_commands():
+            ProcessUtilities.executioner(command)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
         ProcessUtilities.executioner(command)
@@ -2919,8 +2733,6 @@ def main():
         mailUtilities.changeRedisxConfig("install", "changeRedisxConfig")
     elif args.function == 'changeclamavConfig':
         mailUtilities.changeclamavConfig("install", "changeclamavConfig")
-    elif args.function == 'AfterEffects':
-        mailUtilities.AfterEffects(args.domain)
     elif args.function == "ResetEmailConfigurations":
         extraArgs = {'tempStatusPath': args.tempStatusPath}
         background = MailServerManagerUtils(None, 'ResetEmailConfigurations', extraArgs)

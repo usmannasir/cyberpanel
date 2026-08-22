@@ -9,6 +9,71 @@ from install import install_utils
 
 class DeveloperInstallerPythonTests(unittest.TestCase):
 
+    def test_post_install_php_cli_falls_back_without_changing_legacy_priority(self):
+        root = pathlib.Path(__file__).parents[1]
+        script = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        function_start = script.index('Configure_Default_PHP_CLI()')
+        function_end = script.index('\n}\n', function_start) + 3
+        function = script[function_start:function_end]
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            temporary_root = pathlib.Path(temporary_directory)
+            lsws_root = temporary_root / 'lsws'
+            php_link = temporary_root / 'php'
+            php83 = lsws_root / 'lsphp83/bin/php'
+            php83.parent.mkdir(parents=True)
+            php83.write_text('#!/bin/sh\n', encoding='utf-8')
+            php83.chmod(0o755)
+
+            harness = (
+                'log_info() { :; }\nlog_error() { :; }\n' + function
+                + '\nConfigure_Default_PHP_CLI'
+            )
+            environment = {
+                'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                'LSWS_ROOT': str(lsws_root),
+                'PHP_CLI_LINK': str(php_link),
+            }
+            subprocess.run(['bash', '-c', harness], check=True, env=environment)
+            self.assertEqual(php83, php_link.resolve())
+
+            php80 = lsws_root / 'lsphp80/bin/php'
+            php80.parent.mkdir(parents=True)
+            php80.write_text('#!/bin/sh\n', encoding='utf-8')
+            php80.chmod(0o755)
+            subprocess.run(['bash', '-c', harness], check=True, env=environment)
+            self.assertEqual(php80, php_link.resolve())
+
+    def test_install_and_upgrade_use_native_webmail_setup(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        upgrade = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
+
+        self.assertIn(
+            'installCyberPanel.InstallCyberPanel.setupWebmail()', installer
+        )
+        self.assertIn('Upgrade.setupWebmail()', upgrade)
+        self.assertNotIn('snappymail_cyberpanel.php', installer + upgrade)
+
+    def test_upgrade_skips_unavailable_legacy_php_development_package(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrade_script = (root / 'cyberpanel_upgrade.sh').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertIn(
+            'if apt-cache show lsphp74-dev >/dev/null 2>&1',
+            upgrade_script,
+        )
+        self.assertIn(
+            "dpkg-query -W -f='${db:Status-Status}' lsphp74-dev",
+            upgrade_script,
+        )
+        self.assertNotIn(
+            'if ! dpkg -l lsphp74-dev',
+            upgrade_script,
+        )
+
     def test_version_parsers_do_not_depend_on_fixed_json_offsets(self):
         root = pathlib.Path(__file__).parents[1]
         for script_path in (root / 'cyberpanel.sh', root / 'cyberpanel_upgrade.sh'):
@@ -88,7 +153,85 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual('3.0.3', result.stdout.strip())
+            version = (root / 'cyberpanel_version.py').read_text(
+                encoding='utf-8'
+            )
+            namespace = {}
+            exec(compile(version, 'cyberpanel_version.py', 'exec'), namespace)
+            self.assertEqual(namespace['FULL_VERSION'], result.stdout.strip())
+
+    def test_remote_mysql_password_is_not_passed_on_the_command_line(self):
+        root = pathlib.Path(__file__).parents[1]
+        shell_installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        python_installer = (root / 'install/install.py').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertNotIn(
+            'Final_Flags+=(--mysqlpassword "$MySQL_Password")',
+            shell_installer,
+        )
+        self.assertIn(
+            'CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password"', shell_installer
+        )
+        self.assertIn('os.environ.pop(', python_installer)
+        self.assertIn("'CP_INSTALL_MYSQL_PASSWORD', None", python_installer)
+
+    def test_remote_mysql_answers_are_validated_before_package_setup(self):
+        root = pathlib.Path(__file__).parents[1]
+        shell_installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+
+        function_start = shell_installer.index('Validate_Remote_MySQL()')
+        function_end = shell_installer.index('\n}\n', function_start) + 3
+        validator = shell_installer[function_start:function_end]
+        harness = (
+            'log_error() { :; }\n' + validator + '\n'
+            'Validate_Remote_MySQL'
+        )
+        base_env = {
+            'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+            'Remote_MySQL': 'On',
+            'MySQL_Host': 'db.example.com',
+            'MySQL_DB': 'mysql',
+            'MySQL_User': 'cpadmin',
+            'MySQL_Password': 'secret',
+            'MySQL_Port': '3307',
+        }
+
+        valid = subprocess.run(['bash', '-c', harness], env=base_env)
+        self.assertEqual(0, valid.returncode)
+        for field, value in (
+            ('MySQL_Host', ''),
+            ('MySQL_Host', 'db.example.com;id'),
+            ('MySQL_Host', 'db$(id)'),
+            ('MySQL_Host', 'db.example.com:3306'),
+            ('MySQL_DB', ''),
+            ('MySQL_User', ''),
+            ('MySQL_Password', ''),
+            ('MySQL_Port', '70000'),
+            ('MySQL_Port', 'not-a-port'),
+        ):
+            invalid = subprocess.run(
+                ['bash', '-c', harness], env=dict(base_env, **{field: value}),
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(0, invalid.returncode, field)
+            self.assertNotIn('secret', invalid.stdout + invalid.stderr)
+
+        validation_call = shell_installer.rindex(
+            '\nValidate_Remote_MySQL || exit 1\n'
+        )
+        package_setup = shell_installer.rindex('\nPre_Install_Setup_Repository\n')
+        self.assertLess(validation_call, package_setup)
+
+    def test_settings_fallback_uses_python_literals_for_database_values(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+
+        self.assertNotIn("+ cyberpanel_db_password +", installer)
+        self.assertNotIn("+ mysql_root_password +", installer)
+        self.assertIn("        'PASSWORD': %r,\\n", installer)
+        self.assertIn("        'HOST': %r,\\n", installer)
 
     def test_upgrade_failure_banner_does_not_claim_the_old_build_is_running(self):
         root = pathlib.Path(__file__).parents[1]

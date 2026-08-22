@@ -978,6 +978,20 @@ passdb {
 
         ############## Install mariadb ######################
 
+        # Remote installations need the command-line client for database
+        # backup, restore and diagnostics, but must not install or activate a
+        # second database server on the panel host. Keep the complete existing
+        # server installation path below unchanged for local installations.
+        if self.remotemysql == 'ON':
+            if self.distro == ubuntu:
+                command = ('DEBIAN_FRONTEND=noninteractive apt-get install '
+                           'mariadb-client -y')
+            else:
+                command = 'dnf install mariadb -y'
+            install_utils.call(command, self.distro, command, command, 1, 1,
+                               os.EX_OSERR, True)
+            return
+
         if self.distro == ubuntu:
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common apt-transport-https curl -y'
@@ -1600,7 +1614,11 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
         writeToFile.close()
 
         if install.preFlightsChecks.debug:
-            print(open(file_name, 'r').read())
+            # The file holds the remote administrative password; echoing it
+            # would copy the credential into /root/install.log.
+            print('Wrote remote MySQL connection details to %s '
+                  '(host %s, port %s, user %s, password <set>)'
+                  % (file_name, mysqlhost, mysqlport, mysqluser))
             time.sleep(10)
 
     try:
@@ -1649,7 +1667,19 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
         if distro == ubuntu:
             installer.fixMariaDB()
 
-    mysqlUtilities.createDatabase("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, publicip)
+    # Stop here if the database could not be prepared. Continuing produced an
+    # installation that failed several steps later at `manage.py migrate`
+    # against an application account that had never been created, with nothing
+    # in the log about the administrative connection that actually failed.
+    if mysqlUtilities.createDatabase("cyberpanel", "cyberpanel",
+                                     InstallCyberPanel.mysqlPassword,
+                                     publicip) != 1:
+        logging.InstallLog.writeToFile(
+            "[ERROR] Could not create the CyberPanel database or its "
+            "application account. For a remote installation, check that the "
+            "host, port, administrative user and password are correct and "
+            "that this server is allowed to connect. Aborting.")
+        os._exit(os.EX_SOFTWARE)
 
     if ftp is None:
         installer.installPureFTPD()

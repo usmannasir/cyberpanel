@@ -54,6 +54,7 @@ try {
         $_SESSION['PMA_single_signon_user'] = $username;
         $_SESSION['PMA_single_signon_password'] = $password;
         $_SESSION['PMA_single_signon_host'] = 'localhost';
+        $_SESSION['PMA_single_signon_port'] = 3306;
 
         @session_write_close();
 

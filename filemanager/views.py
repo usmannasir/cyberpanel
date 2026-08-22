@@ -312,15 +312,17 @@ def downloadFile(request):
     try:
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
-        from urllib.parse import unquote
 
-        # Properly get fileToDownload from query parameters
+        # Properly get fileToDownload from query parameters.
+        # request.GET has already percent-decoded this value. Decoding it a
+        # second time corrupted any name containing a literal '%': a file
+        # called "100%20off.txt" is sent as "100%2520off.txt", arrives here as
+        # "100%20off.txt", and a second unquote() turned it into
+        # "100 off.txt" - a path that does not exist, so the download was
+        # refused as "Unauthorized access". Issue #1902.
         fileToDownload = request.GET.get('fileToDownload')
         if not fileToDownload:
             return HttpResponse("Unauthorized access: Not a valid file.")
-
-        # URL decode the file path
-        fileToDownload = unquote(fileToDownload)
 
         domainName = request.GET.get('domainName')
         if not domainName:
@@ -405,15 +407,13 @@ def downloadFile(request):
 def RootDownloadFile(request):
     try:
         userID = request.session['userID']
-        from urllib.parse import unquote
 
-        # Properly get fileToDownload from query parameters
+        # request.GET has already percent-decoded this value; decoding again
+        # corrupts names containing a literal '%'. Same defect as
+        # downloadFile() above. Issue #1902.
         fileToDownload = request.GET.get('fileToDownload')
         if not fileToDownload:
             return HttpResponse("Unauthorized access: Not a valid file.")
-
-        # URL decode the file path
-        fileToDownload = unquote(fileToDownload)
 
         currentACL = ACLManager.loadedACL(userID)
 

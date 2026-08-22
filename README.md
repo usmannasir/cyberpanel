@@ -11,7 +11,7 @@ Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting
 - 💻 **FTP Server** for file transfers.
 - 🕒 **Light-weight DNS Server** (PowerDNS).
 - 🔐 **phpMyAdmin** to manage databases (MariaDB).
-- 📧 **Email Support** (SnappyMail).
+- 📧 **Email Support** with integrated webmail.
 - 🕌 **File Manager** for quick file access.
 - 🌐 **PHP Management** made easy.
 - 🔒 **Firewall** (FirewallD & ConfigServer Firewall Integration).

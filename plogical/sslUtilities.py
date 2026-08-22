@@ -24,6 +24,14 @@ class sslUtilities:
     lswsReloadCmd = '/usr/local/lsws/bin/lswsctrl reload'
 
     @staticmethod
+    def acmeEnvironment():
+        """Return an environment that cannot override acme.sh log controls."""
+        environment = os.environ.copy()
+        environment.pop('DEBUG', None)
+        environment.pop('LOG_LEVEL', None)
+        return environment
+
+    @staticmethod
     def removeSSLForDomain(domain, certificateRoot='/etc/letsencrypt/live',
                            acmePath='/root/.acme.sh/acme.sh'):
         if not re.fullmatch(
@@ -41,6 +49,7 @@ class sslUtilities:
                     [acmePath, '--remove', '-d', domain] + extraArgs,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
+                    env=sslUtilities.acmeEnvironment(),
                     check=False,
                 )
 
@@ -847,11 +856,12 @@ context /.well-known/acme-challenge {
         # Fallback to acme.sh if both ACME providers fail
         try:
             acmePath = '/root/.acme.sh/acme.sh'
+            acme_environment = sslUtilities.acmeEnvironment()
             command = '%s --register-account -m %s' % (acmePath, adminEmail)
-            subprocess.call(shlex.split(command))
+            subprocess.call(shlex.split(command), env=acme_environment)
 
             command = '%s --set-default-ca --server letsencrypt' % (acmePath)
-            subprocess.call(shlex.split(command))
+            subprocess.call(shlex.split(command), env=acme_environment)
 
             if aliasDomain is None:
                 existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
@@ -876,14 +886,14 @@ context /.well-known/acme-challenge {
                     command = acmePath + " --issue" + domain_list \
                               + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging'
 
-                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
 
                     if result.returncode == 0:
                         # Step 2: Issue the certificate (production) - this stores config in /root/.acme.sh/
                         command = acmePath + " --issue" + domain_list \
                                   + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
 
                         if result.returncode == 0:
                             # Step 3: Install the certificate to the desired location.
@@ -896,7 +906,7 @@ context /.well-known/acme-challenge {
                                             + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
                                             + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
-                            install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+                            install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
 
                             if install_result.returncode == 0:
                                 logging.CyberCPLogFileWriter.writeToFile(
@@ -933,7 +943,7 @@ context /.well-known/acme-challenge {
                     command = acmePath + " --issue" + domain_list \
                               + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
 
                     if result.returncode == 0:
                         # Step 2: Install the certificate to the desired location.
@@ -946,7 +956,7 @@ context /.well-known/acme-challenge {
                                         + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' \
                                         + ' --reloadcmd "' + sslUtilities.lswsReloadCmd + '"'
 
-                        install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+                        install_result = subprocess.run(install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
 
                         if install_result.returncode == 0:
                             return 1
@@ -989,9 +999,10 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             # Try to renew using acme.sh
             acmePath = '/root/.acme.sh/acme.sh'
             if os.path.exists(acmePath):
+                acme_environment = sslUtilities.acmeEnvironment()
                 # First set the webroot path for the domain
                 command = f'{acmePath} --update-account --accountemail {adminEmail}'
-                subprocess.call(command, shell=True)
+                subprocess.call(command, shell=True, env=acme_environment)
 
                 # Build domain list for renewal
                 renewal_domains = f'-d {domain}'
@@ -1010,7 +1021,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                     # Try to renew with explicit webroot
                     command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --ecc --force'
 
-                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
@@ -1027,7 +1038,24 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                                       f' --key-file {certPath}/privkey.pem' \
                                       f' --fullchain-file {certPath}/fullchain.pem' \
                                       f' --reloadcmd "{sslUtilities.lswsReloadCmd}"'
-                    subprocess.call(install_command, shell=True)
+                    install_result = subprocess.run(install_command, stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    universal_newlines=True, shell=True,
+                                                    env=acme_environment)
+
+                    # A renew that acme.sh completed but could not deploy leaves the
+                    # served files in /etc/letsencrypt/live untouched, which is the
+                    # original #1676 symptom: the site keeps presenting the old, soon
+                    # expired certificate. Reporting success here would hide exactly
+                    # the failure this path exists to prevent.
+                    if install_result.returncode != 0:
+                        install_output = install_result.stderr or install_result.stdout
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f"Renewed certificate for {domain} could not be deployed to "
+                            f"{certPath}; the site is still serving the previous "
+                            f"certificate. acme.sh --install-cert exit "
+                            f"{install_result.returncode}: {install_output}")
+                        return [0, "SSL renewed but deployment to the live path failed"]
 
                     if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                         return [1, "SSL successfully renewed"]

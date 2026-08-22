@@ -17,9 +17,10 @@ class FakeCursor:
         self.queries = []
         self.fail_loopback_create = fail_loopback_create
 
-    def execute(self, query):
-        self.queries.append(query)
-        if self.fail_loopback_create and query.startswith("CREATE USER '") and "@'127.0.0.1'" in query:
+    def execute(self, query, args=None):
+        self.queries.append((query, args))
+        if (self.fail_loopback_create and query.startswith("CREATE USER ")
+                and args and args[1] == '127.0.0.1'):
             raise RuntimeError('loopback account already exists')
 
 
@@ -44,10 +45,21 @@ class MySQLLoopbackUserTests(unittest.TestCase):
         with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
             self.assertEqual(1, mysqlUtilities.createDatabase('site_db', 'site_user', 'secret'))
 
-        sql = '\n'.join(cursor.queries)
-        self.assertIn("CREATE USER 'site_user'@'localhost'", sql)
-        self.assertIn("CREATE USER 'site_user'@'127.0.0.1'", sql)
-        self.assertIn("GRANT ALL PRIVILEGES ON site_db.* TO 'site_user'@'127.0.0.1'", sql)
+        self.assertIn(
+            ('CREATE USER %s@%s IDENTIFIED BY %s',
+             ('site_user', 'localhost', 'secret')),
+            cursor.queries,
+        )
+        self.assertIn(
+            ('CREATE USER %s@%s IDENTIFIED BY %s',
+             ('site_user', '127.0.0.1', 'secret')),
+            cursor.queries,
+        )
+        self.assertIn(
+            ('GRANT ALL PRIVILEGES ON `site_db`.* TO %s@%s',
+             ('site_user', '127.0.0.1')),
+            cursor.queries,
+        )
         self.assertTrue(connection.closed)
 
     def test_loopback_account_failure_does_not_undo_primary_account(self):
@@ -65,7 +77,25 @@ class MySQLLoopbackUserTests(unittest.TestCase):
         with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
             self.assertEqual(1, mysqlUtilities.createDatabase('site_db', 'site_user', 'secret'))
 
-        self.assertNotIn("@'127.0.0.1'", '\n'.join(cursor.queries))
+        hosts = [args[1] for query, args in cursor.queries
+                 if query.startswith('CREATE USER')]
+        self.assertNotIn('127.0.0.1', hosts)
+
+    def test_database_password_is_bound_and_never_logged_in_sql(self):
+        connection = FakeConnection()
+        cursor = FakeCursor()
+        password = "p'ass $word;&|"
+        with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
+            self.assertEqual(
+                1,
+                mysqlUtilities.createDatabase('site_db', 'site_user', password),
+            )
+
+        sql = '\n'.join(query for query, unused_args in cursor.queries)
+        self.assertNotIn(password, sql)
+        self.assertTrue(any(
+            args and password in args for unused_query, args in cursor.queries
+        ))
 
     def test_password_change_updates_loopback_account(self):
         connection = FakeConnection()
@@ -73,9 +103,34 @@ class MySQLLoopbackUserTests(unittest.TestCase):
         with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
             self.assertEqual(1, mysqlUtilities.changePassword('site_user', 'new-hash', encrypt=1))
 
-        sql = '\n'.join(cursor.queries)
-        self.assertIn("SET PASSWORD FOR 'site_user'@'localhost'", sql)
-        self.assertIn("SET PASSWORD FOR 'site_user'@'127.0.0.1'", sql)
+        self.assertIn(
+            ('SET PASSWORD FOR %s@%s = %s',
+             ('site_user', 'localhost', 'new-hash')),
+            cursor.queries,
+        )
+        self.assertIn(
+            ('SET PASSWORD FOR %s@%s = %s',
+             ('site_user', '127.0.0.1', 'new-hash')),
+            cursor.queries,
+        )
+
+    def test_cleartext_password_change_is_bound(self):
+        connection = FakeConnection()
+        cursor = FakeCursor()
+        password = "new $pass;'word"
+        with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
+            self.assertEqual(
+                1,
+                mysqlUtilities.changePassword('site_user', password),
+            )
+
+        self.assertIn(
+            ('ALTER USER %s@%s IDENTIFIED BY %s',
+             ('site_user', 'localhost', password)),
+            cursor.queries,
+        )
+        sql = '\n'.join(query for query, unused_args in cursor.queries)
+        self.assertNotIn(password, sql)
 
 
 class RusticDatabaseRestoreTests(unittest.TestCase):

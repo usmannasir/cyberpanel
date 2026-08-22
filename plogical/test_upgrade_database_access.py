@@ -1,5 +1,6 @@
+import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from plogical.upgrade import Upgrade
 
@@ -15,6 +16,64 @@ class UpgradeDatabaseAccessTests(unittest.TestCase):
                 'HOST': '198.51.100.42',
             },
         }
+
+    @patch('plogical.upgrade.mysql.connect')
+    def test_remote_admin_connection_uses_configured_host_and_port(self, connect):
+        connection = MagicMock()
+        connect.return_value = connection
+        password_file = json.dumps({
+            'mysqlhost': 'database.example',
+            'mysqlport': '3307',
+            'mysqluser': 'remote-admin',
+            'mysqlpassword': "strong $pass;'word",
+        })
+
+        with patch('builtins.open', mock_open(read_data=password_file)):
+            returned_connection, returned_cursor = Upgrade.setupConnection()
+
+        connect.assert_called_once_with(
+            host='database.example',
+            port=3307,
+            user='remote-admin',
+            passwd="strong $pass;'word",
+        )
+        self.assertIs(connection, returned_connection)
+        self.assertIs(connection.cursor.return_value, returned_cursor)
+
+    @patch('plogical.upgrade.mysql.connect')
+    def test_remote_admin_connection_selects_requested_database(self, connect):
+        connection = MagicMock()
+        connect.return_value = connection
+        password_file = json.dumps({
+            'mysqlhost': 'database.example',
+            'mysqlport': 3307,
+            'mysqluser': 'remote-admin',
+            'mysqlpassword': 'database-password',
+        })
+
+        with patch('builtins.open', mock_open(read_data=password_file)):
+            Upgrade.setupConnection('cyberpanel')
+
+        connect.assert_called_once_with(
+            host='database.example',
+            port=3307,
+            user='remote-admin',
+            passwd='database-password',
+            db='cyberpanel',
+        )
+
+    @patch('plogical.upgrade.mysql.connect')
+    def test_plaintext_password_keeps_legacy_local_connection(self, connect):
+        connection = MagicMock()
+        connect.return_value = connection
+
+        with patch('builtins.open', mock_open(read_data='local-password\n')):
+            Upgrade.setupConnection()
+
+        connect.assert_called_once_with(
+            user='root',
+            passwd='local-password',
+        )
 
     @patch('plogical.upgrade.Upgrade.stdOut')
     @patch('plogical.upgrade.Upgrade.getMachineIP', return_value='198.51.100.42')

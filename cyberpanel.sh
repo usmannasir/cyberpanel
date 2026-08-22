@@ -279,11 +279,6 @@ setup_epel_repo() {
             yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
             Check_Return "yum repo" "no_exit"
             ;;
-        "10")
-            # AlmaLinux 10 EPEL support
-            yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
-            Check_Return "yum repo" "no_exit"
-            ;;
     esac
 }
 
@@ -371,6 +366,46 @@ Debug_Log2() {
 Check_Server_IP "$@" >/dev/null 2>&1
 echo -e "\n${1}" >> /var/log/installLogs.txt
 curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
+}
+
+Validate_Remote_MySQL() {
+  if [[ "$Remote_MySQL" != "On" ]] ; then
+    return 0
+  fi
+
+  local -a Missing_Fields=()
+  [[ -z "$MySQL_Host" ]] && Missing_Fields+=(host)
+  [[ -z "$MySQL_DB" ]] && Missing_Fields+=(database)
+  [[ -z "$MySQL_User" ]] && Missing_Fields+=(user)
+  [[ -z "$MySQL_Password" ]] && Missing_Fields+=(password)
+  [[ -z "$MySQL_Port" ]] && Missing_Fields+=(port)
+
+  if [[ ${#Missing_Fields[@]} -gt 0 ]] ; then
+    echo -e "\nERROR: Remote MySQL requires: ${Missing_Fields[*]}.\n" >&2
+    log_error "Remote MySQL configuration is missing required fields: ${Missing_Fields[*]}"
+    return 1
+  fi
+
+  if [[ "$MySQL_Host" == *:* ]] ; then
+    if [[ ! "$MySQL_Host" =~ ^\[?[0-9A-Fa-f:]+\]?$ ]] ; then
+      echo -e "\nERROR: Remote MySQL host must be a DNS name or IP address.\n" >&2
+      log_error "Remote MySQL host contains invalid characters"
+      return 1
+    fi
+  elif [[ ! "$MySQL_Host" =~ ^[A-Za-z0-9_.-]+$ ]] ; then
+    echo -e "\nERROR: Remote MySQL host must be a DNS name or IP address.\n" >&2
+    log_error "Remote MySQL host contains invalid characters"
+    return 1
+  fi
+
+  if [[ ! "$MySQL_Port" =~ ^[0-9]{1,5}$ ]] \
+    || (( 10#$MySQL_Port < 1 || 10#$MySQL_Port > 65535 )); then
+    echo -e "\nERROR: Remote MySQL port must be between 1 and 65535.\n" >&2
+    log_error "Remote MySQL port is outside the valid TCP range"
+    return 1
+  fi
+
+  return 0
 }
 
 Branch_Check() {
@@ -563,8 +598,6 @@ elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 26.04" /etc/os-release ; then
   Server_OS="Ubuntu"
-elif grep -q -E "Debian GNU/Linux 11|Debian GNU/Linux 12|Debian GNU/Linux 13" /etc/os-release ; then
-  Server_OS="Debian"
 elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
@@ -584,9 +617,6 @@ if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$S
   Server_OS="CentOS"
   #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
   #treat CloudLinux, Rocky and Alma as CentOS
-elif [[ "$Server_OS" = "Debian" ]] ; then
-  Server_OS="Ubuntu"
-  #Treat Debian as Ubuntu for package management (both use apt-get)
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -1165,12 +1195,7 @@ if [[ $Server_OS = "CentOS" ]] ; then
       dnf config-manager --set-enabled crb
     fi
 
-    # Install appropriate remi-release based on version
-    if [[ "$Server_OS_Version" = "9" ]]; then
-      yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
-    elif [[ "$Server_OS_Version" = "10" ]]; then
-      yum install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm
-    fi
+    yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
       Check_Return "yum repo" "no_exit"
   fi
 
@@ -1388,7 +1413,7 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
     #!/bin/bash
 
 
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel boost-devel boost-program-options
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
@@ -1815,8 +1840,6 @@ sed -i "s|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech
 sed -i 's|composer.sh|composer_cn.sh|g' install.py
 sed -i 's|./composer_cn.sh|COMPOSER_ALLOW_SUPERUSER=1 ./composer_cn.sh|g' install.py
 sed -i 's|http://www.litespeedtech.com|https://cyberpanel.sh/www.litespeedtech.com|g' install.py
-sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://cyberpanel.sh/www.snappymail.eu/repository/latest.tar.gz|g' install.py
-
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" installCyberPanel.py
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" install.py
 
@@ -1907,7 +1930,6 @@ if [[ "$Remote_MySQL" = "On" ]] ; then
   Final_Flags+=(--mysqlhost "$MySQL_Host")
   Final_Flags+=(--mysqldb "$MySQL_DB")
   Final_Flags+=(--mysqluser "$MySQL_User")
-  Final_Flags+=(--mysqlpassword "$MySQL_Password")
   Final_Flags+=(--mysqlport "$MySQL_Port")
 else
   Final_Flags+=(--remotemysql "${Remote_MySQL^^}")
@@ -1917,7 +1939,13 @@ if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
 
-/usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+if [[ "$Remote_MySQL" = "On" ]] ; then
+  CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password" \
+    /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+  unset MySQL_Password
+else
+  /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+fi
 
 
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then
@@ -2042,30 +2070,9 @@ Current_Dir="$(pwd)"
 rm -f /usr/local/lsws/cyberpanel-tmp
 mkdir /usr/local/lsws/cyberpanel-tmp
 cd /usr/local/lsws/cyberpanel-tmp || exit
-
-# Try to download timezonedb, but continue if it fails
 wget -O timezonedb.tgz https://cyberpanel.sh/pecl.php.net/get/timezonedb
-if [ ! -f timezonedb.tgz ] || [ ! -s timezonedb.tgz ]; then
-    log_info "WARNING: Failed to download timezonedb, skipping installation"
-    cd "$Current_Dir" || exit
-    rm -rf /usr/local/lsws/cyberpanel-tmp
-    return 0
-fi
-
 tar xzvf timezonedb.tgz
-if [ ! -d timezonedb-* ]; then
-    log_info "WARNING: Failed to extract timezonedb, skipping installation"
-    cd "$Current_Dir" || exit
-    rm -rf /usr/local/lsws/cyberpanel-tmp
-    return 0
-fi
-
-cd timezonedb-* || {
-    log_info "WARNING: Cannot enter timezonedb directory, skipping installation"
-    cd "$Current_Dir" || exit
-    rm -rf /usr/local/lsws/cyberpanel-tmp
-    return 0
-}
+cd timezonedb-*  || exit
 
 # Install required packages for building PHP extensions
 if [[ "$Server_OS" = "Ubuntu" ]] ; then
@@ -2150,7 +2157,6 @@ fi
 Post_Install_Display_Final_Info() {
 log_function_start "Post_Install_Display_Final_Info"
 log_info "Preparing final installation information"
-snappymailAdminPass=$(grep SetPassword /usr/local/CyberCP/public/snappymail.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
@@ -2172,9 +2178,6 @@ fi
 #echo "                WebAdmin console username: admin                   "
 #echo "                WebAdmin console password: $Webadmin_Pass          "
 #echo "                                                                   "
-#echo "                Visit: https://$Server_IP:8090/snappymail/?admin     "
-#echo "                snappymail Admin username: admin                     "
-#echo "                snappymail Admin password: $snappymailAdminPass        "
 echo "                                                                   "
 echo -e "             Run \e[31mcyberpanel help\e[39m to get FAQ info"
 echo -e "             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version."
@@ -2465,6 +2468,35 @@ if [[ "$Debug" = "On" ]] ; then
 fi
 }
 
+Configure_Default_PHP_CLI() {
+local lsws_root="${LSWS_ROOT:-/usr/local/lsws}"
+local php_cli_link="${PHP_CLI_LINK:-/usr/bin/php}"
+local php_cli_candidate
+
+# Keep PHP 8.0 as the first choice where it is already installed so existing
+# distributions retain their current CLI default. Newer distributions no
+# longer package it, so fall back to the PHP versions installed by CyberPanel.
+for php_cli_candidate in \
+  "$lsws_root/lsphp80/bin/php" \
+  "$lsws_root/lsphp83/bin/php" \
+  "$lsws_root/lsphp82/bin/php" \
+  "$lsws_root/lsphp84/bin/php" \
+  "$lsws_root/lsphp85/bin/php" \
+  "$lsws_root/lsphp81/bin/php" \
+  "$lsws_root/lsphp74/bin/php"
+do
+  if [[ -x "$php_cli_candidate" ]]; then
+    rm -f "$php_cli_link"
+    ln -s "$php_cli_candidate" "$php_cli_link"
+    log_info "PHP CLI linked to $php_cli_candidate"
+    return 0
+  fi
+done
+
+log_error "No usable LiteSpeed PHP CLI binary was found"
+return 1
+}
+
 Post_Install_Tweak() {
 log_function_start "Post_Install_Tweak"
 log_info "Applying post-installation tweaks and configurations"
@@ -2500,8 +2532,7 @@ echo "systemctl restart lscpd" >> /usr/bin/adminPass
 echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
-rm -f /usr/bin/php
-ln -s /usr/local/lsws/lsphp83/bin/php /usr/bin/php
+Configure_Default_PHP_CLI || return 1
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
 #all centos 7/8 post change goes here
@@ -2638,6 +2669,8 @@ if [[ $Silent = "On" ]]; then
 else
   Interactive_Mode
 fi
+
+Validate_Remote_MySQL || exit 1
 
 Time_Count="0"
 

@@ -56,3 +56,41 @@ class SecurityMiddlewareTests(unittest.TestCase):
 
         self.assertNotEqual(b'login-view-reached', response.content)
         self.assertIn(b'potentially dangerous characters', response.content)
+
+    def test_database_password_allows_special_characters_on_account_endpoints(self):
+        for path in (
+            '/dataBases/submitDBCreation',
+            '/dataBases/changePassword',
+        ):
+            request = RequestFactory().post(
+                path,
+                data=json.dumps({
+                    'dbUserName': 'site_user',
+                    'dbPassword': "valid $pass|with;'special&chars",
+                }),
+                content_type='application/json',
+            )
+            request.session = {'userID': 1}
+
+            response = secMiddleware(
+                lambda unused_request: HttpResponse('database-view-reached')
+            )(request)
+
+            self.assertEqual(b'database-view-reached', response.content)
+
+    def test_database_password_exemption_does_not_cover_other_fields(self):
+        request = RequestFactory().post(
+            '/dataBases/submitDBCreation',
+            data=json.dumps({
+                'dbName': 'site;DROP_DATABASE',
+                'dbPassword': 'valid$password',
+            }),
+            content_type='application/json',
+        )
+        request.session = {'userID': 1}
+
+        response = secMiddleware(
+            lambda unused_request: HttpResponse('database-view-reached')
+        )(request)
+
+        self.assertNotEqual(b'database-view-reached', response.content)

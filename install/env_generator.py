@@ -77,7 +77,184 @@ def get_local_ip():
         print(f"Failed to detect local IP: {e}")
         return None
 
-def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_password=None):
+class DatabaseConfigError(ValueError):
+    """Raised when the requested database endpoint cannot be represented."""
+
+
+# Values used for a normal, single-server installation. A remote installation
+# overrides them through build_database_config().
+LOCAL_DATABASE_CONFIG = {
+    'db_name': 'cyberpanel',
+    'db_user': 'cyberpanel',
+    'db_host': 'localhost',
+    'db_port': '3306',
+    'root_db_name': 'mysql',
+    'root_db_user': 'root',
+    'root_db_host': 'localhost',
+    'root_db_port': '3306',
+}
+
+
+def build_database_config(remote=False, host=None, port=None, root_db=None,
+                          root_user=None):
+    """
+    Build the validated database endpoint used to render .env.
+
+    The application connection (DB_*) and the administrative connection
+    (ROOT_DB_*) are different users on the same server, so a remote
+    installation has to move both. Passwords are not part of this structure;
+    they are passed separately to create_env_file() so they never end up in a
+    repr() or a log line.
+
+    Args:
+        remote: True for a remote MySQL installation
+        host: --mysqlhost, the server hosting both connections
+        port: --mysqlport
+        root_db: --mysqldb, the administrative database (normally 'mysql')
+        root_user: --mysqluser, the administrative account
+
+    Returns:
+        dict: the eight endpoint values, defaulted for a local install
+
+    Raises:
+        DatabaseConfigError: if a remote install is missing a required value
+                             or the port is not a usable TCP port
+    """
+    config = dict(LOCAL_DATABASE_CONFIG)
+
+    if not remote:
+        return config
+
+    # Fail here, before any package or database is touched, rather than
+    # part-way through an installation that cannot succeed.
+    if not host or not str(host).strip():
+        raise DatabaseConfigError('Remote MySQL requires a host (--mysqlhost)')
+    if not root_user or not str(root_user).strip():
+        raise DatabaseConfigError(
+            'Remote MySQL requires an administrative user (--mysqluser)')
+    if not root_db or not str(root_db).strip():
+        raise DatabaseConfigError(
+            'Remote MySQL requires an administrative database (--mysqldb)')
+
+    host = str(host).strip()
+    # A bracketed IPv6 literal is how the address is written in a URL, but
+    # MySQLdb and Django both want the bare address plus a separate port.
+    if host.startswith('[') and host.endswith(']'):
+        host = host[1:-1]
+    if ':' in host:
+        # Colons are valid only in an IPv6 literal. In particular, reject a
+        # host with an appended port because every consumer receives the port
+        # separately.
+        import ipaddress
+        try:
+            ipaddress.IPv6Address(host)
+        except ValueError:
+            raise DatabaseConfigError(
+                'Remote MySQL host must be a DNS name or IP address')
+    elif not re.fullmatch(r'[A-Za-z0-9_.-]+', host):
+        # Several legacy service writers still use fixed sed commands. Keep
+        # their replacement value to hostname characters so a direct install
+        # invocation cannot turn the host argument into shell syntax.
+        raise DatabaseConfigError(
+            'Remote MySQL host must be a DNS name or IP address')
+
+    port = str(port).strip() if port is not None else ''
+    if not port:
+        port = LOCAL_DATABASE_CONFIG['db_port']
+    if not port.isdigit() or not (1 <= int(port) <= 65535):
+        raise DatabaseConfigError(
+            'Remote MySQL port must be a number between 1 and 65535, got %r'
+            % (port,))
+
+    # The port stays a port. Appending it to the host is the mistake that
+    # produces 'db.example.com:3306:3306' further down the stack.
+    config.update({
+        'db_host': host,
+        'db_port': port,
+        'root_db_name': str(root_db).strip(),
+        'root_db_user': str(root_user).strip(),
+        'root_db_host': host,
+        'root_db_port': port,
+    })
+    return config
+
+
+def _format_mysql_option_value(value):
+    """Quote one value for a MySQL option file without creating new keys."""
+    text = '' if value is None else str(value)
+    if '\n' in text or '\r' in text:
+        raise DatabaseConfigError(
+            'MySQL option values must fit on a single line')
+    return '"%s"' % text.replace('\\', '\\\\').replace('"', '\\"')
+
+
+def build_mysql_client_config(password, remote=False, host=None, port=None,
+                              user=None):
+    """Render the administrative /root/.my.cnf used after installation.
+
+    Local installations deliberately omit host and port so the client keeps
+    using the Unix socket. Remote installations must name the same TCP endpoint
+    and administrative user supplied to the installer.
+    """
+    if not remote:
+        return ('[client]\nuser=root\npassword=%s\n'
+                % _format_mysql_option_value(password))
+
+    config = build_database_config(
+        remote=True, host=host, port=port, root_db='mysql', root_user=user)
+    return (
+        '[client]\n'
+        'user=%s\n'
+        'password=%s\n'
+        'host=%s\n'
+        'port=%s\n'
+        'protocol=TCP\n'
+        % (
+            _format_mysql_option_value(config['root_db_user']),
+            _format_mysql_option_value(password),
+            _format_mysql_option_value(config['root_db_host']),
+            config['root_db_port'],
+        )
+    )
+
+
+def format_env_value(value):
+    """
+    Serialise a value for a python-dotenv .env file.
+
+    Generated passwords may contain '#', '$', quotes, backslashes or spaces.
+    Written bare, a '#' starts a comment and a space truncates the value, so
+    the credential that reaches Django is not the one that was created. Values
+    that need it are double-quoted with the escapes python-dotenv understands;
+    simple values are written unquoted so a local install produces the same
+    file it always did.
+    """
+    text = '' if value is None else str(value)
+    needs_quotes = (
+        text != text.strip()
+        or any(c in text for c in ' \t"\'\\#$`')
+        or '\n' in text
+        or '\r' in text
+    )
+    if not needs_quotes:
+        return text
+    # python-dotenv expands ${NAME} even inside single quotes. Replace the
+    # opening sequence with a one-pass default expansion that evaluates to a
+    # literal dollar sign; interpolation is not recursive, so the original
+    # ${NAME} survives as credential data rather than becoming an environment
+    # lookup on the panel host.
+    text = text.replace('${', '${CYBERPANEL_LITERAL_DOLLAR:-$}{')
+    escaped = (
+        text.replace('\\', '\\\\')
+            .replace('"', '\\"')
+            .replace('\n', '\\n')
+            .replace('\r', '\\r')
+    )
+    return '"%s"' % escaped
+
+
+def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_password=None,
+                    database_config=None):
     """
     Create .env file with generated secure credentials
     
@@ -85,8 +262,19 @@ def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_pas
         cyberpanel_path: Path to CyberPanel installation directory
         mysql_root_password: Optional MySQL root password (will generate if None)
         cyberpanel_db_password: Optional CyberPanel DB password (will generate if None)
+        database_config: Optional endpoint from build_database_config(). Omitted
+                         means a local installation, which is what every
+                         pre-existing caller wants.
     """
-    
+
+    if database_config is None:
+        database_config = dict(LOCAL_DATABASE_CONFIG)
+    else:
+        missing = set(LOCAL_DATABASE_CONFIG) - set(database_config)
+        if missing:
+            raise DatabaseConfigError(
+                'database_config is missing: %s' % ', '.join(sorted(missing)))
+
     # Generate secure passwords if not provided
     if not mysql_root_password:
         mysql_root_password = generate_secure_password(24)
@@ -145,23 +333,23 @@ def create_env_file(cyberpanel_path, mysql_root_password=None, cyberpanel_db_pas
 # Generated on: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 # Django Configuration
-SECRET_KEY={secret_key}
+SECRET_KEY={format_env_value(secret_key)}
 DEBUG=False
 ALLOWED_HOSTS={allowed_hosts_str}
 
 # Database Configuration - CyberPanel Database
-DB_NAME=cyberpanel
-DB_USER=cyberpanel
-DB_PASSWORD={cyberpanel_db_password}
-DB_HOST=localhost
-DB_PORT=3306
+DB_NAME={format_env_value(database_config['db_name'])}
+DB_USER={format_env_value(database_config['db_user'])}
+DB_PASSWORD={format_env_value(cyberpanel_db_password)}
+DB_HOST={format_env_value(database_config['db_host'])}
+DB_PORT={format_env_value(database_config['db_port'])}
 
-# Root Database Configuration - MySQL Root Access
-ROOT_DB_NAME=mysql
-ROOT_DB_USER=root
-ROOT_DB_PASSWORD={mysql_root_password}
-ROOT_DB_HOST=localhost
-ROOT_DB_PORT=3306
+# Root Database Configuration - MySQL Administrative Access
+ROOT_DB_NAME={format_env_value(database_config['root_db_name'])}
+ROOT_DB_USER={format_env_value(database_config['root_db_user'])}
+ROOT_DB_PASSWORD={format_env_value(mysql_root_password)}
+ROOT_DB_HOST={format_env_value(database_config['root_db_host'])}
+ROOT_DB_PORT={format_env_value(database_config['root_db_port'])}
 
 # Security Settings
 SECURE_SSL_REDIRECT=False
@@ -195,10 +383,15 @@ LOG_LEVEL=INFO
         pass
     
     print(f"✓ Generated secure .env file at: {env_file_path}")
-    print(f"✓ MySQL Root Password: {mysql_root_password}")
-    print(f"✓ CyberPanel DB Password: {cyberpanel_db_password}")
-    print(f"✓ Django Secret Key: {secret_key[:20]}...")
-    
+    # Installation output is captured into /var/log and pasted into support
+    # threads, so the credentials themselves are never printed. They are in
+    # the .env file and in the .env.backup written next to it.
+    print("✓ Database credentials written to .env (not echoed)")
+    _shown_host = database_config['db_host']
+    if ':' in _shown_host:  # IPv6 literal, bracket it so the port is readable
+        _shown_host = '[%s]' % _shown_host
+    print(f"✓ Database endpoint: {_shown_host}:{database_config['db_port']}")
+
     return {
         'mysql_root_password': mysql_root_password,
         'cyberpanel_db_password': cyberpanel_db_password,
