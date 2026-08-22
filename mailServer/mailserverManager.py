@@ -1603,14 +1603,22 @@ milter_default_action = accept
         command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/"
         ProcessUtilities.executioner(command)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+        ProcessUtilities.executioner(command)
+
+        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+        ProcessUtilities.executioner(command)
+
+        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
         ProcessUtilities.executioner(command)
 
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
         ProcessUtilities.executioner(command)
 
-        # Set proper permissions for data directories (group writable)
-        command = "chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/"
+        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
+        ProcessUtilities.executioner(command)
+
+        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
         ProcessUtilities.executioner(command)
 
         # Ensure web server users are in the lscpd group for access

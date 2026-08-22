@@ -1579,16 +1579,18 @@ mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
 
 # Ensure proper ownership for SnappyMail data directories
 if id -u lscpd >/dev/null 2>&1; then
-    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
+    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data
     chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data 2>/dev/null || true
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
-# Set proper permissions for SnappyMail data directories (group writable)
-chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail data directory permissions to 775 (group writable)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \;
+find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \;
+find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \; 2>/dev/null || true
+find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \; 2>/dev/null || true
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Protected SnappyMail data directories" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Ensure web server users are in the lscpd group for access
 usermod -a -G lscpd nobody 2>/dev/null || true

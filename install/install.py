@@ -983,11 +983,13 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Set proper ownership early
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        # Set proper permissions - make all data directories group writable
-        command = "chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/"
+        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Ensure the web server user (nobody) can access the directories
@@ -1703,11 +1705,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Set proper ownership for SnappyMail data directories
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            # Set proper permissions for SnappyMail data directories (group writable)
-            command = "chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/"
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Ensure web server users are in the lscpd group for access
@@ -3274,13 +3278,21 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         subprocess.call(shlex.split(command))
 
+        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+        subprocess.call(shlex.split(command))
+
+        command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
+        subprocess.call(shlex.split(command))
+
         # The integration keeps backward-compatible data under the rainloop
         # path and creates its private files as the installer user.
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
         subprocess.call(shlex.split(command))
 
-        # Ensure all data directories have group write permissions
-        command = "chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data"
+        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
+        subprocess.call(shlex.split(command))
+
+        command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
         subprocess.call(shlex.split(command))
 
         # Ensure web server users are in the lscpd group

@@ -1,15 +1,12 @@
+import ast
 import pathlib
 import unittest
 
 
 class SnappyMailPermissionTests(unittest.TestCase):
 
-    def test_install_and_repair_paths_own_the_active_data_directory(self):
+    def test_install_and_repair_paths_protect_data_directories(self):
         repository = pathlib.Path(__file__).parents[1]
-        ownership_command = (
-            'chown -R lscpd:lscpd '
-            '/usr/local/lscp/cyberpanel/rainloop/data'
-        )
         repair_sources = (
             'install/install.py',
             'plogical/upgrade.py',
@@ -18,10 +15,31 @@ class SnappyMailPermissionTests(unittest.TestCase):
             'cyberpanel_upgrade.sh',
         )
 
-        for relative_path in repair_sources:
-            with self.subTest(source=relative_path):
-                source = (repository / relative_path).read_text(encoding='utf-8')
-                self.assertIn(ownership_command, source)
+        for data_path in (
+            '/usr/local/lscp/cyberpanel/snappymail/data',
+            '/usr/local/lscp/cyberpanel/rainloop/data',
+        ):
+            required_commands = (
+                f'chown -R lscpd:lscpd {data_path}',
+                f'find {data_path} -type d -exec chmod 700 {{}} \\;',
+                f'find {data_path} -type f -exec chmod 600 {{}} \\;',
+            )
+            for relative_path in repair_sources:
+                with self.subTest(source=relative_path, data_path=data_path):
+                    source = (repository / relative_path).read_text(encoding='utf-8')
+                    if relative_path.endswith('.py'):
+                        source_commands = {
+                            node.value
+                            for node in ast.walk(ast.parse(source))
+                            if isinstance(node, ast.Constant)
+                            and isinstance(node.value, str)
+                        }
+                    else:
+                        source_commands = source
+                    for command in required_commands:
+                        self.assertIn(command, source_commands)
+
+                    self.assertNotIn(f'chmod -R 775 {data_path}', source)
 
         configure_command = (
             '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
@@ -33,9 +51,41 @@ class SnappyMailPermissionTests(unittest.TestCase):
         ):
             with self.subTest(configuration_order=relative_path):
                 source = (repository / relative_path).read_text(encoding='utf-8')
-                configuration = source.rindex(configure_command)
-                ownership = source.index(ownership_command, configuration)
-                self.assertGreater(ownership, configuration)
+                commands = [
+                    (node.lineno, node.value)
+                    for node in ast.walk(ast.parse(source))
+                    if isinstance(node, ast.Constant)
+                    and isinstance(node.value, str)
+                ]
+                configuration = max(
+                    line for line, value in commands if value == configure_command
+                )
+                for data_path in (
+                    '/usr/local/lscp/cyberpanel/snappymail/data',
+                    '/usr/local/lscp/cyberpanel/rainloop/data',
+                ):
+                    ownership = min(
+                        line for line, value in commands
+                        if line > configuration
+                        and value == f'chown -R lscpd:lscpd {data_path}'
+                    )
+                    directory_mode = min(
+                        line for line, value in commands
+                        if line > ownership
+                        and value == (
+                            f'find {data_path} -type d '
+                            f'-exec chmod 700 {{}} \\;'
+                        )
+                    )
+                    file_mode = min(
+                        line for line, value in commands
+                        if line > directory_mode
+                        and value == (
+                            f'find {data_path} -type f '
+                            f'-exec chmod 600 {{}} \\;'
+                        )
+                    )
+                    self.assertGreater(file_mode, configuration)
 
 
 if __name__ == '__main__':

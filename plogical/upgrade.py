@@ -4340,6 +4340,21 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+            Upgrade.executioner(command, 'chown snappymail data', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail directories', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail files', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail directories', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail files', 0)
+
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
@@ -4468,8 +4483,23 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner_silent(command, 'Configure SnappyMail')
 
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+            Upgrade.executioner(command, 'chown snappymail data', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail directories', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail files', 0)
+
             command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
             Upgrade.executioner(command, 'chown snappymail data', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail directories', 0)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
+            Upgrade.executioner(command, 'chmod snappymail files', 0)
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner_silent(command, 'Secure SnappyMail config')

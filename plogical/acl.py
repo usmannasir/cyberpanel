@@ -1318,6 +1318,21 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
             ProcessUtilities.executioner(command, 'root', True)
 
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
             ProcessUtilities.executioner(command, 'root', True)
 
@@ -1433,7 +1448,22 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
             ProcessUtilities.executioner(command, 'root', True)
 
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type d -exec chmod 700 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/snappymail/data -type f -exec chmod 600 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
             command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type d -exec chmod 700 {} \\;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp/cyberpanel/rainloop/data -type f -exec chmod 600 {} \\;"
             ProcessUtilities.executioner(command, 'root', True)
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
