@@ -1438,7 +1438,12 @@ else
      Check_Return
   fi
 
-  DEBIAN_FRONTEND=noninteractive apt install -y python3-pip build-essential libssl-dev libffi-dev python3-dev python3-venv cron inetutils-ping
+  Ping_Package="inetutils-ping"
+  if [[ "$Server_OS_Version" = "26" ]] ; then
+    Ping_Package="iputils-ping"
+  fi
+
+  DEBIAN_FRONTEND=noninteractive apt install -y python3-pip build-essential libssl-dev libffi-dev python3-dev python3-venv cron "$Ping_Package"
     Check_Return
 
   ln -s /usr/bin/pip3 /usr/bin/pip3.6

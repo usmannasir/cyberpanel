@@ -497,6 +497,41 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             installer,
         )
 
+    def test_ubuntu_26_keeps_minimal_system_ping_package(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        self.assertIn('Ping_Package="inetutils-ping"', installer)
+        self.assertIn('if [[ "$Server_OS_Version" = "26" ]]', installer)
+        self.assertIn('Ping_Package="iputils-ping"', installer)
+        self.assertIn('cron "$Ping_Package"', installer)
+
+    def test_ubuntu_26_opendkim_config_is_complete_and_unambiguous(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        self.assertIn(
+            'self.distro == ubuntu and get_Ubuntu_release() >= 26.0',
+            installer,
+        )
+        for table_path in ('KeyTable', 'SigningTable', 'TrustedHosts'):
+            self.assertIn("'/etc/opendkim/%s'" % table_path, installer)
+        self.assertIn('normalize_opendkim_socket_lines(data)', installer)
+
+        namespace = {'re': __import__('re')}
+        function_start = installer.index(
+            'def normalize_opendkim_socket_lines(lines):'
+        )
+        function_end = installer.index('\n\nclass preFlightsChecks:', function_start)
+        exec(installer[function_start:function_end], namespace)
+        normalized = namespace['normalize_opendkim_socket_lines']([
+            'Socket local:/run/opendkim/opendkim.sock\n',
+            'Socket inet:8891@localhost\n',
+            'Mode sv\n',
+            'Socket local:/var/spool/postfix/opendkim.sock\n',
+        ])
+        self.assertEqual(1, sum(line.startswith('Socket') for line in normalized))
+        self.assertIn('Socket  inet:8891@localhost\n', normalized)
+        self.assertIn('Mode sv\n', normalized)
+
     def test_ubuntu_package_commands_wait_for_dpkg_lock(self):
         install_command, install_shell = install_utils.get_package_install_command(
             install_utils.ubuntu,
