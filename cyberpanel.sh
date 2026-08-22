@@ -2468,6 +2468,35 @@ if [[ "$Debug" = "On" ]] ; then
 fi
 }
 
+Configure_Default_PHP_CLI() {
+local lsws_root="${LSWS_ROOT:-/usr/local/lsws}"
+local php_cli_link="${PHP_CLI_LINK:-/usr/bin/php}"
+local php_cli_candidate
+
+# Keep PHP 8.0 as the first choice where it is already installed so existing
+# distributions retain their current CLI default. Newer distributions no
+# longer package it, so fall back to the PHP versions installed by CyberPanel.
+for php_cli_candidate in \
+  "$lsws_root/lsphp80/bin/php" \
+  "$lsws_root/lsphp83/bin/php" \
+  "$lsws_root/lsphp82/bin/php" \
+  "$lsws_root/lsphp84/bin/php" \
+  "$lsws_root/lsphp85/bin/php" \
+  "$lsws_root/lsphp81/bin/php" \
+  "$lsws_root/lsphp74/bin/php"
+do
+  if [[ -x "$php_cli_candidate" ]]; then
+    rm -f "$php_cli_link"
+    ln -s "$php_cli_candidate" "$php_cli_link"
+    log_info "PHP CLI linked to $php_cli_candidate"
+    return 0
+  fi
+done
+
+log_error "No usable LiteSpeed PHP CLI binary was found"
+return 1
+}
+
 Post_Install_Tweak() {
 log_function_start "Post_Install_Tweak"
 log_info "Applying post-installation tweaks and configurations"
@@ -2503,8 +2532,7 @@ echo "systemctl restart lscpd" >> /usr/bin/adminPass
 echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
-rm -f /usr/bin/php
-ln -s /usr/local/lsws/lsphp80/bin/php /usr/bin/php
+Configure_Default_PHP_CLI || return 1
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
 #all centos 7/8 post change goes here

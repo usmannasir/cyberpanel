@@ -9,6 +9,73 @@ from install import install_utils
 
 class DeveloperInstallerPythonTests(unittest.TestCase):
 
+    def test_post_install_php_cli_falls_back_without_changing_legacy_priority(self):
+        root = pathlib.Path(__file__).parents[1]
+        script = (root / 'cyberpanel.sh').read_text(encoding='utf-8')
+        function_start = script.index('Configure_Default_PHP_CLI()')
+        function_end = script.index('\n}\n', function_start) + 3
+        function = script[function_start:function_end]
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            temporary_root = pathlib.Path(temporary_directory)
+            lsws_root = temporary_root / 'lsws'
+            php_link = temporary_root / 'php'
+            php83 = lsws_root / 'lsphp83/bin/php'
+            php83.parent.mkdir(parents=True)
+            php83.write_text('#!/bin/sh\n', encoding='utf-8')
+            php83.chmod(0o755)
+
+            harness = (
+                'log_info() { :; }\nlog_error() { :; }\n' + function
+                + '\nConfigure_Default_PHP_CLI'
+            )
+            environment = {
+                'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                'LSWS_ROOT': str(lsws_root),
+                'PHP_CLI_LINK': str(php_link),
+            }
+            subprocess.run(['bash', '-c', harness], check=True, env=environment)
+            self.assertEqual(php83, php_link.resolve())
+
+            php80 = lsws_root / 'lsphp80/bin/php'
+            php80.parent.mkdir(parents=True)
+            php80.write_text('#!/bin/sh\n', encoding='utf-8')
+            php80.chmod(0o755)
+            subprocess.run(['bash', '-c', harness], check=True, env=environment)
+            self.assertEqual(php80, php_link.resolve())
+
+    def test_snappymail_commands_use_the_configured_php_cli(self):
+        root = pathlib.Path(__file__).parents[1]
+        expected_commands = {
+            'install/install.py': (
+                '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php',
+                '/usr/bin/php /usr/local/CyberCP/public/snappymail.php',
+            ),
+            'plogical/upgrade.py': (
+                '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php',
+                '/usr/bin/php /usr/local/CyberCP/public/snappymail.php',
+            ),
+            'plogical/acl.py': (
+                '/usr/bin/php /usr/local/CyberCP/public/snappymail.php',
+            ),
+        }
+        for relative_path, commands in expected_commands.items():
+            source = (root / relative_path).read_text(encoding='utf-8')
+            for command in commands:
+                self.assertIn(command, source)
+
+        active_sources = '\n'.join(
+            (root / relative_path).read_text(encoding='utf-8')
+            for relative_path in expected_commands
+        )
+        self.assertNotIn(
+            '/lsphp80/bin/php /usr/local/CyberCP/snappymail', active_sources
+        )
+        self.assertNotIn(
+            '/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php',
+            active_sources,
+        )
+
     def test_version_parsers_do_not_depend_on_fixed_json_offsets(self):
         root = pathlib.Path(__file__).parents[1]
         for script_path in (root / 'cyberpanel.sh', root / 'cyberpanel_upgrade.sh'):

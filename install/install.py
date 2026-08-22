@@ -1823,7 +1823,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
@@ -3251,7 +3251,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+        command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
         subprocess.call(shlex.split(command))
 
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"

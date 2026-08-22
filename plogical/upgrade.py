@@ -1390,7 +1390,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             Upgrade.executioner_silent(command, 'verify certificate', 0)
 
-            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = '/usr/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner_silent(command, 'verify certificate', 0)
 
             # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
@@ -4437,7 +4437,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+            command = '/usr/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner_silent(command, 'Configure SnappyMail')
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
