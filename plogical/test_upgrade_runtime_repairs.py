@@ -1,5 +1,6 @@
 import os
 import stat
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import call, patch
@@ -124,6 +125,76 @@ class UpgradeRuntimeRepairTests(unittest.TestCase):
             with open(config_path, 'r') as config_file:
                 self.assertEqual(original, config_file.read())
             call.assert_called_once_with(['postfix', 'check'])
+
+    def test_reserved_postfix_domain_alias_is_removed(self):
+        config = "query = SELECT domain AS virtual FROM e_domains WHERE domain='%s'\n"
+
+        updated, replacements = Upgrade.normalizePostfixDomainLookup(config)
+
+        self.assertEqual(1, replacements)
+        self.assertEqual(
+            "query = SELECT domain FROM e_domains WHERE domain='%s'\n",
+            updated,
+        )
+
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.subprocess.call', side_effect=(0, 0))
+    @patch('plogical.upgrade.subprocess.run')
+    def test_postfix_domain_lookup_is_validated_and_reloaded(
+            self, run, call, std_out):
+        run.return_value = subprocess.CompletedProcess([], 0, '', '')
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = os.path.join(
+                temporary_directory, 'mysql-virtual_domains.cf')
+            with open(config_path, 'w') as config_file:
+                config_file.write(
+                    "query = SELECT domain AS virtual FROM e_domains WHERE domain='%s'\n"
+                )
+            os.chmod(config_path, 0o640)
+
+            self.assertEqual(1, Upgrade.ensurePostfixDomainLookup(config_path))
+
+            with open(config_path, 'r') as config_file:
+                updated = config_file.read()
+            self.assertNotIn('AS virtual', updated)
+            self.assertEqual(0o640, stat.S_IMODE(os.stat(config_path).st_mode))
+            run.assert_called_once_with(
+                [
+                    'postmap', '-q', '__cyberpanel_config_check__',
+                    'mysql:%s' % config_path,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
+            self.assertEqual(
+                [
+                    unittest.mock.call(
+                        ['systemctl', 'is-active', '--quiet', 'postfix']),
+                    unittest.mock.call(['systemctl', 'reload', 'postfix']),
+                ],
+                call.call_args_list,
+            )
+
+    @patch('plogical.upgrade.Upgrade.stdOut')
+    @patch('plogical.upgrade.subprocess.run')
+    def test_invalid_postfix_domain_lookup_is_reverted(
+            self, run, std_out):
+        run.return_value = subprocess.CompletedProcess([], 1, '', 'query failed')
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = os.path.join(
+                temporary_directory, 'mysql-virtual_domains.cf')
+            original = (
+                "query = SELECT domain AS virtual FROM e_domains "
+                "WHERE domain='%s'\n"
+            )
+            with open(config_path, 'w') as config_file:
+                config_file.write(original)
+
+            self.assertEqual(0, Upgrade.ensurePostfixDomainLookup(config_path))
+
+            with open(config_path, 'r') as config_file:
+                self.assertEqual(original, config_file.read())
 
 
 if __name__ == '__main__':

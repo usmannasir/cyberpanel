@@ -1368,6 +1368,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         return ''.join(updated_lines), changed
 
     @staticmethod
+    def normalizePostfixDomainLookup(config):
+        """Remove the obsolete alias that is reserved by newer MariaDB releases."""
+        pattern = (
+            r"^([ \t]*query[ \t]*=[ \t]*)SELECT\s+domain\s+AS\s+`?virtual`?\s+"
+            r"FROM\s+e_domains\s+WHERE\s+domain\s*=\s*'%s'[ \t]*$"
+        )
+        replacement = r"\1SELECT domain FROM e_domains WHERE domain='%s'"
+        return re.subn(pattern, replacement, config, flags=re.IGNORECASE | re.MULTILINE)
+
+    @staticmethod
     def _atomicConfigWrite(path, content, metadata):
         directory = os.path.dirname(path)
         descriptor, temporary_path = tempfile.mkstemp(prefix='.%s.' % os.path.basename(path), dir=directory)
@@ -1412,6 +1422,54 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 1
         except Exception as msg:
             Upgrade.stdOut('Unable to update Postfix loopback trust: %s' % msg, 0)
+            return 0
+
+    @staticmethod
+    def ensurePostfixDomainLookup(path='/etc/postfix/mysql-virtual_domains.cf'):
+        """Repair and validate the virtual-domain query used by Postfix."""
+        if not os.path.exists(path):
+            return 1
+
+        try:
+            if os.path.islink(path):
+                raise RuntimeError('refusing to replace a symbolic link')
+
+            metadata = os.stat(path)
+            with open(path, 'r') as postfix_config:
+                original_content = postfix_config.read()
+
+            updated_content, replacements = Upgrade.normalizePostfixDomainLookup(
+                original_content
+            )
+            if replacements == 0:
+                return 1
+
+            Upgrade._atomicConfigWrite(path, updated_content, metadata)
+            validation = subprocess.run(
+                [
+                    'postmap', '-q', '__cyberpanel_config_check__',
+                    'mysql:%s' % path,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
+            if validation.returncode != 0:
+                Upgrade._atomicConfigWrite(path, original_content, metadata)
+                Upgrade.stdOut(
+                    'Postfix domain lookup update failed validation and was reverted.',
+                    0,
+                )
+                return 0
+
+            if subprocess.call(
+                    ['systemctl', 'is-active', '--quiet', 'postfix']) == 0:
+                subprocess.call(['systemctl', 'reload', 'postfix'])
+
+            Upgrade.stdOut('Postfix domain lookup is compatible with MariaDB.', 0)
+            return 1
+        except Exception as msg:
+            Upgrade.stdOut('Unable to update Postfix domain lookup: %s' % msg, 0)
             return 0
 
     @staticmethod
@@ -3837,6 +3895,7 @@ passdb {
             Upgrade.staticContent()
 
             Upgrade.ensurePostfixLoopbackNetworks()
+            Upgrade.ensurePostfixDomainLookup()
 
             # Restore Imunify360 after upgrade
             Upgrade.restoreImunify360()

@@ -25,6 +25,19 @@ class NativeWebmailProvisioningTests(unittest.TestCase):
         self.assertIn('Upgrade.setupWebmail()', upgrade)
         self.assertIn('Upgrade.setupSieve()', upgrade)
 
+    def test_postfix_domain_templates_avoid_reserved_alias(self):
+        for relative_path in (
+            'install/email-configs/mysql-virtual_domains.cf',
+            'install/email-configs-one/mysql-virtual_domains.cf',
+        ):
+            with self.subTest(relative_path=relative_path):
+                config = self.read(relative_path)
+                self.assertIn(
+                    "query = SELECT domain FROM e_domains WHERE domain='%s'",
+                    config,
+                )
+                self.assertNotIn('AS virtual', config)
+
     def test_downloaded_upgrade_script_has_no_new_top_level_dependency(self):
         upgrade_tree = ast.parse(self.read('plogical/upgrade.py'))
         top_level_imports = [
