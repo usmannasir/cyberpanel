@@ -269,6 +269,8 @@ def controller(request):
             return fm.writeFileContents()
         elif method == 'extract':
             return fm.extract()
+        elif method == 'extractStatus':
+            return fm.extractionStatus()
         elif method == 'compress':
             return fm.compress()
         elif method == 'changePermissions':

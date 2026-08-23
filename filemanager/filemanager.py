@@ -1,4 +1,3 @@
-import getpass
 import os
 import shlex
 import sys
@@ -11,6 +10,11 @@ from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
 from plogical.acl import ACLManager
+from plogical.archiveExtractionJobs import (
+    build_archive_extraction_command,
+    create_archive_extraction_job,
+    get_archive_extraction_status,
+)
 from filemanager.models import Trash
 
 
@@ -933,32 +937,47 @@ class FileManager:
             pythonPath = '/usr/local/CyberCP/bin/python'
             if not os.path.exists(pythonPath):
                 pythonPath = sys.executable
-            extractionScript = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'plogical',
-                'safeArchiveExtraction.py',
+            jobToken, statusPath = create_archive_extraction_job(
+                self.request.session['userID'],
+                domainName,
             )
-            command = '%s %s --allowed-root %s --archive %s --destination %s --type %s' % (
-                shlex.quote(pythonPath),
-                shlex.quote(extractionScript),
-                shlex.quote(homePath),
-                shlex.quote(self.data['fileToExtract']),
-                shlex.quote(self.data['extractionLocation']),
-                shlex.quote(extractionType),
+            command = build_archive_extraction_command(
+                token=jobToken,
+                status_path=statusPath,
+                allowed_root=homePath,
+                archive_path=self.data['fileToExtract'],
+                destination=self.data['extractionLocation'],
+                archive_type=extractionType,
+                run_as=websiteUser,
+                python_path=pythonPath,
             )
-            if getpass.getuser() == 'root':
-                result = ProcessUtilities.normalExecutioner(command, User=websiteUser)
-            else:
-                result = ProcessUtilities.executioner(command, websiteUser)
+            result = ProcessUtilities.executioner(command)
             if result != 1:
-                return self.ajaxPre(0, 'Archive extraction was rejected or failed.')
+                return self.ajaxPre(0, 'Archive extraction could not be started.')
 
-
+            finalData['job'] = jobToken
+            finalData['state'] = 'queued'
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
+
+    def extractionStatus(self):
+        try:
+            domainName = self.data.get('domainName', '')
+            status = get_archive_extraction_status(
+                self.data.get('job', ''),
+                self.request.session['userID'],
+                domainName,
+            )
+            status['status'] = 1
+            return HttpResponse(json.dumps(status))
+        except PermissionError:
+            return self.ajaxPre(0, 'Archive extraction job is not available.')
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [FileManager.extractionStatus]')
+            return self.ajaxPre(0, 'Archive extraction status is not available.')
 
     def compress(self):
         try:

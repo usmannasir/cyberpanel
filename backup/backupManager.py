@@ -36,7 +36,10 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 from plogical.remoteTransferResponse import parse_remote_transfer_response
-from plogical.normalBackupUtilities import normalize_local_backup_path
+from plogical.normalBackupUtilities import (
+    normalize_backup_retention_days,
+    normalize_local_backup_path,
+)
 from django.http import JsonResponse
 from cyberpanel_version import version_at_least
 
@@ -1035,7 +1038,7 @@ class BackupManager:
             selectedAccount = data['selectedAccount']
             name = data['name']
             backupFrequency = data['backupFrequency']
-            backupRetention = data['backupRetention']
+            backupRetention = normalize_backup_retention_days(data['backupRetention'])
 
             currentACL = ACLManager.loadedACL(userID)
 
@@ -1719,6 +1722,7 @@ class BackupManager:
                 'lastRun': lastRun,
                 'allSites': allSites,
                 'currently': frequency,
+                'retention': retention,
                 'currentStatus': currentStatus
             }
             json_data = json.dumps(data_ret)
@@ -1879,9 +1883,9 @@ class BackupManager:
             config = json.loads(nbj.config)
             config[IncScheduler.frequency] = backupFrequency
             try:
-                backupRetention = data['backupRetention']
+                backupRetention = normalize_backup_retention_days(data['backupRetention'])
                 config[IncScheduler.retention] = backupRetention
-            except:
+            except KeyError:
                 pass
 
 

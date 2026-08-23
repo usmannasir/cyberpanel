@@ -468,7 +468,7 @@
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-history" style="margin-right: 0.5rem;"></i>
-                                {% trans "Backup Retention (0 = unlimited)" %}
+                                {% trans "Backup Retention in days (0 = unlimited)" %}
                             </label>
                             <input ng-model="backupRetention" type="number" value="0" 
                                    class="form-control" min="0">
@@ -542,7 +542,7 @@
                             <th>{% trans "Last Run" %}</th>
                             <th>{% trans "All Sites" %}</th>
                             <th>{% trans "Frequency" %} <span style="font-weight: normal;">({$ currently $})</span></th>
-                            <th>{% trans "Retention" %} <span style="font-weight: normal;">({$ currently $})</span></th>
+                            <th>{% trans "Retention (days)" %}</th>
                             <th>{% trans "Current Status" %}</th>
                         </tr>
                     </thead>

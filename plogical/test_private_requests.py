@@ -1,9 +1,11 @@
 import json
+import fcntl
 import os
 import pwd
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 
 from plogical.securityUtils import (
@@ -18,6 +20,34 @@ from plogical.securityUtils import (
 
 
 class PrivateTokenFileTests(unittest.TestCase):
+    def test_reader_waits_for_an_in_progress_writer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            token, path = create_private_token_file(directory, "complete")
+            writer = os.open(path, os.O_RDWR)
+            reader_started = threading.Event()
+            reader_finished = threading.Event()
+            result = []
+            try:
+                fcntl.flock(writer, fcntl.LOCK_EX)
+
+                def read_status():
+                    reader_started.set()
+                    result.append(read_private_token_file(token, directory))
+                    reader_finished.set()
+
+                thread = threading.Thread(target=read_status)
+                thread.start()
+                self.assertTrue(reader_started.wait(1))
+                self.assertFalse(reader_finished.wait(0.1))
+                fcntl.flock(writer, fcntl.LOCK_UN)
+                self.assertTrue(reader_finished.wait(1))
+                thread.join(1)
+            finally:
+                fcntl.flock(writer, fcntl.LOCK_UN)
+                os.close(writer)
+
+            self.assertEqual(["complete"], result)
+
     def test_stale_cleanup_removes_only_regular_token_files(self):
         with tempfile.TemporaryDirectory() as directory:
             token, path = create_private_token_file(directory, "stale")

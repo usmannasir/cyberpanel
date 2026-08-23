@@ -189,6 +189,40 @@ class SafeFileReadTests(unittest.TestCase):
 
 
 class SafeArchiveTests(unittest.TestCase):
+    def test_file_manager_queues_extraction_without_waiting_for_worker(self):
+        manager = FileManager(
+            SimpleNamespace(session={"userID": 17}),
+            {
+                "domainName": "example.com",
+                "fileToExtract": "/home/example.com/site.tar",
+                "extractionLocation": "/home/example.com/public_html",
+                "extractionType": "tar",
+            },
+        )
+        website = SimpleNamespace(externalApp="example_user")
+
+        with mock.patch(
+            "filemanager.filemanager.Websites.objects.get",
+            return_value=website,
+        ), mock.patch(
+            "filemanager.filemanager.create_archive_extraction_job",
+            return_value=("a" * 43, "/home/cyberpanel/.file-extractions/" + ("a" * 43)),
+        ), mock.patch(
+            "filemanager.filemanager.build_archive_extraction_command",
+            return_value="/usr/bin/systemd-run safe-command",
+        ) as command_builder, mock.patch(
+            "filemanager.filemanager.ProcessUtilities.executioner",
+            return_value=1,
+        ) as executioner:
+            response = manager.extract()
+
+        payload = json.loads(response.content)
+        self.assertEqual(1, payload["status"])
+        self.assertEqual("queued", payload["state"])
+        self.assertEqual("a" * 43, payload["job"])
+        self.assertEqual("example_user", command_builder.call_args.kwargs["run_as"])
+        executioner.assert_called_once_with("/usr/bin/systemd-run safe-command")
+
     @unittest.skipUnless(cyberpanel_account_available(), "requires the CyberPanel service account")
     def test_read_and_extract_run_as_cyberpanel_service_account(self):
         account = pwd.getpwnam("cyberpanel")

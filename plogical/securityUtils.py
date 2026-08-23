@@ -1,3 +1,4 @@
+import fcntl
 import hmac
 import json
 import os
@@ -306,7 +307,10 @@ def read_private_token_file(token, directory, consume=False, max_age=None, max_b
 
         flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
         descriptor = os.open(stored_name, flags, dir_fd=directory_fd)
+        locked = False
         try:
+            fcntl.flock(descriptor, fcntl.LOCK_SH)
+            locked = True
             file_status = os.fstat(descriptor)
             if not stat.S_ISREG(file_status.st_mode) or file_status.st_nlink != 1:
                 raise OSError("Private request is not a regular file")
@@ -328,6 +332,8 @@ def read_private_token_file(token, directory, consume=False, max_age=None, max_b
                 raise ValueError("Private request is too large")
             return content.decode("utf-8")
         finally:
+            if locked:
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
             os.close(descriptor)
     finally:
         if consumed_name is not None:
