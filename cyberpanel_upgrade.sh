@@ -983,12 +983,6 @@ Download_Upgrade_Source() {
   local Source_Path="$1"
   local Destination="$2"
   local Expected_Pattern="$3"
-  local Destination_Directory
-
-  Destination_Directory=$(dirname "$Destination")
-  if [ "$Destination_Directory" != "." ]; then
-    mkdir -p "$Destination_Directory" || return 1
-  fi
 
   for i in {1..3}; do
     rm -f "$Destination"
@@ -1007,9 +1001,6 @@ Download_Upgrade_Source() {
 
 Download_Upgrade_Source "plogical/upgrade.py" "upgrade.py" "^import " || exit 1
 Download_Upgrade_Source "cyberpanel_version.py" "cyberpanel_version.py" "^VERSION" || exit 1
-mkdir -p install || exit 1
-: > install/__init__.py
-Download_Upgrade_Source "install/database_consumers.py" "install/database_consumers.py" "^def configure_phpmyadmin_signon" || exit 1
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py

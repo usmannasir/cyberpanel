@@ -133,12 +133,6 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             '"cyberpanel_version.py"',
             upgrade_script,
         )
-        self.assertIn(
-            'Download_Upgrade_Source "install/database_consumers.py" '
-            '"install/database_consumers.py"',
-            upgrade_script,
-        )
-
         with tempfile.TemporaryDirectory() as stage_dir:
             stage = pathlib.Path(stage_dir)
             shutil.copy2(root / 'plogical/upgrade.py', stage / 'upgrade.py')
@@ -146,22 +140,12 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 root / 'cyberpanel_version.py',
                 stage / 'cyberpanel_version.py',
             )
-            staged_install = stage / 'install'
-            staged_install.mkdir()
-            (staged_install / '__init__.py').touch()
-            shutil.copy2(
-                root / 'install/database_consumers.py',
-                staged_install / 'database_consumers.py',
-            )
             result = subprocess.run(
                 [
                     'python3',
                     '-c',
                     'from cyberpanel_version import BUILD, VERSION; '
-                    'from install.database_consumers import '
-                    'configure_phpmyadmin_signon; '
-                    'print(f"{VERSION}.{BUILD}:"'
-                    'f"{configure_phpmyadmin_signon.__name__}")',
+                    'print(f"{VERSION}.{BUILD}")',
                 ],
                 cwd=stage,
                 check=True,
@@ -173,10 +157,30 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             )
             namespace = {}
             exec(compile(version, 'cyberpanel_version.py', 'exec'), namespace)
-            self.assertEqual(
-                namespace['FULL_VERSION'] + ':configure_phpmyadmin_signon',
-                result.stdout.strip(),
-            )
+            self.assertEqual(namespace['FULL_VERSION'], result.stdout.strip())
+
+    def test_upgrade_loads_database_helper_after_source_refresh(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrader = (root / 'plogical/upgrade.py').read_text(encoding='utf-8')
+        helper_import = (
+            'from install.database_consumers import '
+            'configure_phpmyadmin_signon'
+        )
+
+        module_preamble = upgrader[:upgrader.index('\ndef update_all_config_files')]
+        self.assertNotIn(helper_import, module_preamble)
+
+        function_start = upgrader.index('    def download_install_phpmyadmin():')
+        function_end = upgrader.index('\n    @staticmethod', function_start)
+        self.assertIn(helper_import, upgrader[function_start:function_end])
+
+        refresh_call = upgrader.index(
+            'download_status, download_error = Upgrade.downloadAndUpgrade('
+        )
+        consumer_call = upgrader.index(
+            'Upgrade.download_install_phpmyadmin()', refresh_call
+        )
+        self.assertLess(refresh_call, consumer_call)
 
     def test_remote_mysql_password_is_not_passed_on_the_command_line(self):
         root = pathlib.Path(__file__).parents[1]
