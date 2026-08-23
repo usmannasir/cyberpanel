@@ -18,10 +18,15 @@ from plogical.archiveExtractionJobs import (
 class ArchiveExtractionJobTests(unittest.TestCase):
 
     def test_file_manager_polls_background_extraction_status(self):
-        paths = (
+        project_root = Path(__file__).parent.parent
+        paths = [
             Path(__file__).parent / 'static' / 'filemanager' / 'js' / 'fileManager.js',
-            Path(__file__).parent.parent / 'static' / 'filemanager' / 'js' / 'fileManager.js',
+        ]
+        optional_deployed_paths = (
+            project_root / 'static' / 'filemanager' / 'js' / 'fileManager.js',
+            project_root / 'public' / 'static' / 'filemanager' / 'js' / 'fileManager.js',
         )
+        paths.extend(path for path in optional_deployed_paths if path.exists())
         for javascript_path in paths:
             with self.subTest(javascript_path=javascript_path):
                 source = javascript_path.read_text(encoding='utf-8')
