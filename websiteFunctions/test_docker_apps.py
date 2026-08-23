@@ -12,7 +12,7 @@ from unittest import mock
 sys.path.append('/usr/local/CyberCP')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from plogical.DockerSites import DOCKER_APPS, Docker_Sites
+from plogical.DockerSites import DOCKER_APPS, Docker_Sites, container_name_matches
 
 try:
     import yaml
@@ -53,6 +53,12 @@ def make_site(app='Hermes'):
 
 
 class TestDockerAppRegistry(unittest.TestCase):
+
+    def test_container_matching_accepts_compose_name_separators(self):
+        self.assertTrue(container_name_matches('n8n_n8n', 'n8n_n8n_1'))
+        self.assertTrue(container_name_matches('n8n_n8n', 'n8n-n8n-1'))
+        self.assertTrue(container_name_matches('n8n-n8n', 'n8n_n8n_1'))
+        self.assertFalse(container_name_matches('n8n_n8n', 'other_n8n_1'))
 
     def test_every_app_declares_the_full_contract(self):
         for app, meta in DOCKER_APPS.items():

@@ -27,6 +27,19 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import argparse
 import threading as multi
 
+
+def container_name_matches(application_name, container_name):
+    """Match Docker Compose names across underscore and hyphen separators."""
+    if not isinstance(application_name, str) or not isinstance(container_name, str):
+        return False
+    normalized_application = application_name.lower().replace('-', '_')
+    normalized_container = container_name.lower().replace('-', '_')
+    return (
+        normalized_container == normalized_application
+        or normalized_container.startswith(normalized_application + '_')
+    )
+
+
 ## Registry of the one-click applications offered on the Docker Site creation page.
 ##
 ## siteType   -> value stored in DockerSites.SiteType so the panel can tell apps apart
@@ -823,15 +836,10 @@ services:
                 for container in all_containers:
                     logging.writeToFile(f'Container name: {container.name}')
 
-            # Now filter containers - handle both CentOS and Ubuntu naming
+            # Compose v1 and v2 use different separators. Normalize both instead
+            # of assuming a separator from the operating system.
             containers = []
-            
-            # Get both possible name formats
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                search_name = self.DockerAppName  # Already in hyphen format for CentOS
-            else:
-                # For Ubuntu, convert underscore to hyphen as containers use hyphens
-                search_name = self.DockerAppName.replace('_', '-')
+            search_name = self.DockerAppName
             
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(f'Searching for containers with name containing: {search_name}')
@@ -839,7 +847,7 @@ services:
             for container in all_containers:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'Checking container: {container.name} against filter: {search_name}')
-                if search_name.lower() in container.name.lower():
+                if container_name_matches(search_name, container.name):
                     containers.append(container)
 
             if os.path.exists(ProcessUtilities.debugPath):
