@@ -1,4 +1,5 @@
 import json
+import tempfile
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -16,6 +17,25 @@ class UpgradeDatabaseAccessTests(unittest.TestCase):
                 'HOST': '198.51.100.42',
             },
         }
+
+    @patch('plogical.upgrade.os._exit')
+    def test_fatal_upgrade_message_exits_nonzero(self, exit_process):
+        original_log_path = Upgrade.LogPathNew
+        original_soft_upgrade = Upgrade.SoftUpgrade
+        original_from_cloud = Upgrade.FromCloud
+
+        with tempfile.NamedTemporaryFile() as log_file:
+            try:
+                Upgrade.LogPathNew = log_file.name
+                Upgrade.SoftUpgrade = 0
+                Upgrade.FromCloud = 0
+                Upgrade.stdOut('fatal upgrade error', 1)
+            finally:
+                Upgrade.LogPathNew = original_log_path
+                Upgrade.SoftUpgrade = original_soft_upgrade
+                Upgrade.FromCloud = original_from_cloud
+
+        exit_process.assert_called_once_with(1)
 
     @patch('plogical.upgrade.mysql.connect')
     def test_remote_admin_connection_uses_configured_host_and_port(self, connect):

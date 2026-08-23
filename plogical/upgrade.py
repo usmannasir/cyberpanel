@@ -437,7 +437,7 @@ class Upgrade:
                     os.remove(Upgrade.LogPathNew)
 
             if Upgrade.FromCloud == 0:
-                os._exit(0)
+                os._exit(1)
 
     @staticmethod
     def executioner(command, component, do_exit=0, shell=False):
