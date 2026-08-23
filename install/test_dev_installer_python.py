@@ -133,6 +133,11 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             '"cyberpanel_version.py"',
             upgrade_script,
         )
+        self.assertIn(
+            'Download_Upgrade_Source "install/database_consumers.py" '
+            '"install/database_consumers.py"',
+            upgrade_script,
+        )
 
         with tempfile.TemporaryDirectory() as stage_dir:
             stage = pathlib.Path(stage_dir)
@@ -141,12 +146,22 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
                 root / 'cyberpanel_version.py',
                 stage / 'cyberpanel_version.py',
             )
+            staged_install = stage / 'install'
+            staged_install.mkdir()
+            (staged_install / '__init__.py').touch()
+            shutil.copy2(
+                root / 'install/database_consumers.py',
+                staged_install / 'database_consumers.py',
+            )
             result = subprocess.run(
                 [
                     'python3',
                     '-c',
                     'from cyberpanel_version import BUILD, VERSION; '
-                    'print(f"{VERSION}.{BUILD}")',
+                    'from install.database_consumers import '
+                    'configure_phpmyadmin_signon; '
+                    'print(f"{VERSION}.{BUILD}:"'
+                    'f"{configure_phpmyadmin_signon.__name__}")',
                 ],
                 cwd=stage,
                 check=True,
@@ -158,7 +173,10 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             )
             namespace = {}
             exec(compile(version, 'cyberpanel_version.py', 'exec'), namespace)
-            self.assertEqual(namespace['FULL_VERSION'], result.stdout.strip())
+            self.assertEqual(
+                namespace['FULL_VERSION'] + ':configure_phpmyadmin_signon',
+                result.stdout.strip(),
+            )
 
     def test_remote_mysql_password_is_not_passed_on_the_command_line(self):
         root = pathlib.Path(__file__).parents[1]
