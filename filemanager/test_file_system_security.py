@@ -115,6 +115,31 @@ class SafeFileReadTests(unittest.TestCase):
             self.assertEqual(0o700, stat.S_IMODE(os.stat(staging).st_mode))
             self.assertEqual(0o600, stat.S_IMODE(os.stat(staged).st_mode))
 
+    @unittest.skipUnless(cyberpanel_account_available(), "requires the CyberPanel service account")
+    def test_default_staged_download_is_readable_by_wsgi_worker(self):
+        account = pwd.getpwnam("cyberpanel")
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as parent:
+            source = os.path.join(root, "download.txt")
+            staging = os.path.join(parent, "downloads")
+            with open(source, "w", encoding="utf-8") as handle:
+                handle.write("download-content")
+            os.chmod(parent, 0o755)
+
+            staged = stage_file_for_download(root, source, staging)
+            read_result = subprocess.run(
+                ["/usr/bin/sudo", "-u", "cyberpanel", "/bin/cat", staged],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+
+            self.assertEqual("download-content", read_result.stdout)
+            self.assertEqual(account.pw_uid, os.stat(staging).st_uid)
+            self.assertEqual(account.pw_uid, os.stat(staged).st_uid)
+            self.assertEqual(0o700, stat.S_IMODE(os.stat(staging).st_mode))
+            self.assertEqual(0o600, stat.S_IMODE(os.stat(staged).st_mode))
+
     def test_read_command_runs_outside_project_directory(self):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "index.txt")
