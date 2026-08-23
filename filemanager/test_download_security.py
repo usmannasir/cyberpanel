@@ -1,5 +1,6 @@
 import os
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
@@ -159,6 +160,18 @@ class FileDownloadSpecialCharacterTests(unittest.TestCase):
     def test_space_in_filename_survives(self):
         path = "/home/example.com/public_html/my report.txt"
         self.assertEqual(self._path_reaching_filesystem(path), path)
+
+    def test_deployable_file_manager_encodes_download_query(self):
+        script_path = (
+            Path(__file__).resolve().parent
+            / "static/filemanager/js/fileManager.js"
+        )
+        script = script_path.read_text(encoding="utf-8")
+        self.assertIn("encodeURIComponent(domainName)", script)
+        self.assertGreaterEqual(
+            script.count("encodeURIComponent(downloadURL)"),
+            2,
+        )
 
     def test_traversal_is_still_refused(self):
         """The encoding fix must not weaken the traversal check."""

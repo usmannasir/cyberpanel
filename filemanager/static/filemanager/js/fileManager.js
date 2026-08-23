@@ -1628,16 +1628,19 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     // Download files
 
+    // Encode both query values so reserved filename characters such as '#',
+    // '&', '+' and '%' reach Django as the exact path selected by the user.
     $scope.downloadFile = function () {
         url = "/filemanager/downloadFile";
         var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
-        window.location.href = url + '?domainName=' + domainName + '&fileToDownload=' + downloadURL;
+        window.location.href = url + '?domainName=' + encodeURIComponent(domainName) +
+            '&fileToDownload=' + encodeURIComponent(downloadURL);
     };
 
     $scope.RootDownloadFile = function () {
         url = "/filemanager/RootDownloadFile";
         var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
-        window.location.href = url + '?fileToDownload=' + downloadURL;
+        window.location.href = url + '?fileToDownload=' + encodeURIComponent(downloadURL);
     };
 
 
