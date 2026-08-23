@@ -19,7 +19,6 @@ import secrets
 import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
-from install.database_consumers import configure_phpmyadmin_signon
 
 def update_all_config_files_with_password(new_password):
     """
@@ -1222,6 +1221,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             try:
                 import json
+                from install.database_consumers import configure_phpmyadmin_signon
                 jsonData = json.loads(open(passFile, 'r').read())
 
                 mysqluser = jsonData['mysqluser']
