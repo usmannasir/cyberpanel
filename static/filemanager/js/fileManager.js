@@ -22,7 +22,7 @@ fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
 }]);
 
 
-fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader, $window) {
+fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader, $window, $timeout) {
 
     $('form').submit(function (e) {
         e.preventDefault();
@@ -537,19 +537,11 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             var extractNodeRight = document.getElementById("extractOnRight");
 
-            var result = findFileExtension(allFilesAndFolders[0]);
+            var extractionType = archiveExtractionType(allFilesAndFolders[0]);
 
-            if (result !== undefined) {
-                if (result[0] === "gz") {
-                    extractFileNode.style.pointerEvents = "auto";
-                    extractNodeRight.style.display = "Block";
-                } else if (result[0] === "zip") {
-                    extractFileNode.style.pointerEvents = "auto";
-                    extractNodeRight.style.display = "Block";
-                } else {
-                    extractFileNode.style.pointerEvents = "none";
-                    extractNodeRight.style.display = "None";
-                }
+            if (extractionType !== "") {
+                extractFileNode.style.pointerEvents = "auto";
+                extractNodeRight.style.display = "Block";
             } else {
                 extractFileNode.style.pointerEvents = "none";
                 extractNodeRight.style.display = "None";
@@ -740,6 +732,23 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     function findFileExtension(fileName) {
         return (/[.]/.exec(fileName)) ? /[^.]+$/.exec(fileName) : undefined;
+    }
+
+    function archiveExtractionType(fileName) {
+        var lowerName = String(fileName).toLowerCase();
+        if (/\.tar\.gz$/.test(lowerName)) {
+            return 'tar.gz';
+        }
+        if (/\.tgz$/.test(lowerName)) {
+            return 'tgz';
+        }
+        if (/\.tar$/.test(lowerName)) {
+            return 'tar';
+        }
+        if (/\.zip$/.test(lowerName)) {
+            return 'zip';
+        }
+        return '';
     }
 
     $scope.fetchForTableSecondary(null, "startPoint");
@@ -1206,12 +1215,11 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $scope.extractionLoading = false;
 
         var completeFileToExtract = pathbase + "/" + allFilesAndFolders[0];
-        var extractionType = "";
-
-        if (findFileExtension(completeFileToExtract) == "gz") {
-            extractionType = "tar.gz";
-        } else {
-            extractionType = "zip";
+        var extractionType = archiveExtractionType(completeFileToExtract);
+        if (extractionType === "") {
+            $scope.extractionLoading = true;
+            alertify.notify('Unsupported archive type.', 'error', 10);
+            return;
         }
 
         var data = {
@@ -1236,16 +1244,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-
-            $scope.extractionLoading = true;
-            $('#showExtraction').modal('hide');
-
             if (response.data.status === 1) {
-                var notification = alertify.notify('Successfully Extracted!', 'success', 5, function () {
-                    console.log('dismissed');
-                });
-                $scope.fetchForTableSecondary(null, 'refresh');
+                $('#showExtraction').modal('hide');
+                var progressNotification = alertify.notify(
+                    'Archive extraction started. You can keep using the panel.',
+                    'message',
+                    0
+                );
+                pollExtractionStatus(response.data.job, progressNotification);
             } else {
+                $scope.extractionLoading = true;
                 var notification = alertify.notify(response.data.error_message, 'error', 10, function () {
                     console.log('dismissed');
                 });
@@ -1254,9 +1262,71 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.extractionLoading = true;
+            alertify.notify('Could not start archive extraction.', 'error', 10);
         }
 
     };
+
+    function pollExtractionStatus(job, progressNotification) {
+        var failedPolls = 0;
+
+        function finishProgress() {
+            if (progressNotification && progressNotification.dismiss) {
+                progressNotification.dismiss();
+            }
+            $scope.extractionLoading = true;
+        }
+
+        function poll() {
+            var data = {
+                job: job,
+                method: 'extractStatus',
+                domainRandomSeed: domainRandomSeed,
+                domainName: domainName
+            };
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(function (response) {
+                if (response.data.status !== 1) {
+                    finishProgress();
+                    alertify.notify(response.data.error_message, 'error', 10);
+                    return;
+                }
+                if (response.data.state === 'completed') {
+                    finishProgress();
+                    alertify.notify(response.data.message, 'success', 5);
+                    $scope.fetchForTableSecondary(null, 'refresh');
+                    return;
+                }
+                if (response.data.state === 'failed') {
+                    finishProgress();
+                    alertify.notify(response.data.message, 'error', 10);
+                    return;
+                }
+                failedPolls = 0;
+                $timeout(poll, 2000);
+            }, function () {
+                failedPolls += 1;
+                if (failedPolls < 4) {
+                    $timeout(poll, 2000);
+                    return;
+                }
+                finishProgress();
+                alertify.notify(
+                    'Extraction is still running, but its status could not be refreshed.',
+                    'warning',
+                    10
+                );
+            });
+        }
+
+        poll();
+    }
 
     /// move
 
