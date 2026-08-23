@@ -14,6 +14,10 @@
 Sudo_Test=$(set)
 #for SUDO check
 
+# Automated root sessions such as console and guest-agent runs may not provide
+# HOME. Git and Composer both require the root home during an upgrade.
+export HOME=/root
+
 Set_Default_Variables() {
 
 # Set to 1 when upgrade.py fails, so the final banner reports the failure instead

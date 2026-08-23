@@ -74,6 +74,14 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             upgrade_script,
         )
 
+    def test_upgrade_sets_root_home_for_automated_sessions(self):
+        root = pathlib.Path(__file__).parents[1]
+        upgrade_script = (root / 'cyberpanel_upgrade.sh').read_text(
+            encoding='utf-8'
+        )
+
+        self.assertIn('export HOME=/root', upgrade_script)
+
     def test_version_parsers_do_not_depend_on_fixed_json_offsets(self):
         root = pathlib.Path(__file__).parents[1]
         for script_path in (root / 'cyberpanel.sh', root / 'cyberpanel_upgrade.sh'):
