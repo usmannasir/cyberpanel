@@ -8,6 +8,15 @@ import time
 BACKUP_RUN_NAME = re.compile(r'^\d{2}\.\d{2}\.\d{4}_\d{2}-\d{2}-\d{2}$')
 
 
+def normalize_backup_retention_days(value):
+    if isinstance(value, bool):
+        raise ValueError('Backup retention must be a non-negative number of days.')
+    candidate = str(value).strip()
+    if re.fullmatch(r'\d+', candidate) is None:
+        raise ValueError('Backup retention must be a non-negative number of days.')
+    return int(candidate)
+
+
 def normalize_local_backup_path(path):
     if not isinstance(path, str):
         raise ValueError('Local backup path is required.')
@@ -40,12 +49,7 @@ def prepare_local_backup_run(destination_path, run_name):
 
 def prune_expired_local_backup_runs(destination_path, retention_days, now=None):
     destination = normalize_local_backup_path(destination_path)
-    try:
-        retention_days = int(retention_days)
-    except (TypeError, ValueError):
-        raise ValueError('Backup retention must be a non-negative number of days.')
-    if retention_days < 0:
-        raise ValueError('Backup retention must be a non-negative number of days.')
+    retention_days = normalize_backup_retention_days(retention_days)
     if retention_days == 0 or not os.path.isdir(destination):
         return []
 

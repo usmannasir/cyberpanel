@@ -5,6 +5,7 @@ import unittest
 
 from plogical.normalBackupUtilities import (
     move_local_backup_archive,
+    normalize_backup_retention_days,
     normalize_local_backup_path,
     prepare_local_backup_run,
     prune_expired_local_backup_runs,
@@ -12,6 +13,13 @@ from plogical.normalBackupUtilities import (
 
 
 class NormalBackupUtilitiesTests(unittest.TestCase):
+    def test_backup_retention_accepts_only_non_negative_whole_days(self):
+        self.assertEqual(35, normalize_backup_retention_days(35))
+        self.assertEqual(0, normalize_backup_retention_days('0'))
+        for value in (-1, '1.5', '1; touch /tmp/not-run', True, None):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                normalize_backup_retention_days(value)
+
 
     def test_relative_destination_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'absolute path'):

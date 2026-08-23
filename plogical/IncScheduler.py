@@ -25,6 +25,7 @@ from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 from plogical.normalBackupUtilities import (
     move_local_backup_archive,
+    normalize_backup_retention_days,
     prepare_local_backup_run,
     prune_expired_local_backup_runs,
 )
@@ -56,6 +57,7 @@ class IncScheduler(multi.Thread):
     allSites = 'allSites'
     currentStatus = 'currentStatus'
     lastRun = 'lastRun'
+    retention = 'retention'
 
     def __init__(self, function, extraArgs):
         multi.Thread.__init__(self)
@@ -701,7 +703,10 @@ Automatic backup failed for %s on %s.
                     ssh_commands_supported = True
                     
                     try:
-                        command = f'find cpbackups -type f -mtime +{jobConfig["retention"]} -exec rm -f {{}} \\;'
+                        retentionDays = normalize_backup_retention_days(
+                            jobConfig.get(IncScheduler.retention, 0)
+                        )
+                        command = f'find cpbackups -type f -mtime +{retentionDays} -exec rm -f {{}} \\;'
                         logging.writeToFile(command)
                         ssh.exec_command(command)
                         command = 'find cpbackups -type d -empty -delete'
