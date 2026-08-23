@@ -108,7 +108,7 @@ def stage_file_for_download(
         allowed_root,
         source_path,
         staging_directory=FILE_DOWNLOAD_DIRECTORY,
-        owner_user="lscpd"):
+        owner_user="cyberpanel"):
     remove_stale_private_token_files(staging_directory, 3600)
     token, staged_path = create_private_token_file(
         staging_directory,

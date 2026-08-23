@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 import shlex
+import stat
 import sys
 import threading
+from urllib.parse import quote
 from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 import json
 from websiteFunctions.models import Websites
 from plogical.acl import ACLManager
@@ -15,6 +17,78 @@ from .filemanager import FileManager as FM
 from plogical.securityUtils import FILE_DOWNLOAD_DIRECTORY, is_private_token_path
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
+
+
+def _openStagedFile(stagedFile):
+    descriptor = None
+    try:
+        descriptor = os.open(
+            stagedFile,
+            os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
+        )
+        fileStatus = os.fstat(descriptor)
+        if not stat.S_ISREG(fileStatus.st_mode) or fileStatus.st_nlink != 1:
+            raise OSError("Invalid staged download file")
+        handle = os.fdopen(descriptor, 'rb')
+        descriptor = None
+        return handle
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def _stageFileDownload(fileToDownload, allowedRoot):
+    """Copy a validated file through the privileged helper before serving it.
+
+    The panel WSGI worker cannot traverse website homes that are intentionally
+    group-restricted. The privileged staging helper performs the real regular
+    file, boundary, and no-symlink checks while opening each path component.
+    """
+    pythonPath = '/usr/local/CyberCP/bin/python'
+    if not os.path.exists(pythonPath):
+        pythonPath = sys.executable
+    stagingScript = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'plogical',
+        'stageFileDownload.py',
+    )
+    command = '%s %s --allowed-root %s --file %s' % (
+        shlex.quote(pythonPath),
+        shlex.quote(stagingScript),
+        shlex.quote(allowedRoot),
+        shlex.quote(fileToDownload),
+    )
+    stageStatus, stagedFile = ProcessUtilities.outputExecutioner(
+        command,
+        retRequired=True,
+    )
+    stagedFile = stagedFile.strip()
+    if stageStatus != 1 or not is_private_token_path(stagedFile, FILE_DOWNLOAD_DIRECTORY):
+        return HttpResponse("Unauthorized access: Unable to stage file securely.")
+
+    try:
+        stagedHandle = _openStagedFile(stagedFile)
+    except OSError:
+        return HttpResponse("Unauthorized access: Unable to open staged file securely.")
+
+    def removeStagedFile():
+        try:
+            os.remove(stagedFile)
+        except OSError:
+            pass
+
+    cleanupTimer = threading.Timer(300, removeStagedFile)
+    cleanupTimer.daemon = True
+    cleanupTimer.start()
+
+    response = FileResponse(
+        stagedHandle,
+        as_attachment=True,
+        content_type='application/octet-stream',
+    )
+    encodedFilename = quote(os.path.basename(fileToDownload), safe='')
+    response['Content-Disposition'] = "attachment; filename*=UTF-8''%s" % encodedFilename
+    return response
 
 def loadFileManagerHome(request,domain):
     try:
@@ -337,69 +411,20 @@ def downloadFile(request):
 
         homePath = '/home/%s' % (domainName)
 
-        # Security checks: prevent directory traversal and ensure file is within domain's home path
-        if '..' in fileToDownload or not fileToDownload.startswith(homePath):
+        # Security checks: prevent directory traversal and ensure the requested
+        # path is lexically within the site's home before invoking the
+        # privileged no-symlink staging helper.
+        if '..' in fileToDownload or '\x00' in fileToDownload:
             return HttpResponse("Unauthorized access: Not a valid file.")
 
-        # Normalize path to prevent any path traversal attempts
         fileToDownload = os.path.normpath(fileToDownload)
-        if not fileToDownload.startswith(homePath):
+        try:
+            if os.path.commonpath([homePath, fileToDownload]) != homePath:
+                return HttpResponse("Unauthorized access: Not a valid file.")
+        except ValueError:
             return HttpResponse("Unauthorized access: Not a valid file.")
 
-        # SECURITY: Check for symlink attacks - resolve the real path and verify it stays within homePath
-        try:
-            realPath = os.path.realpath(fileToDownload)
-
-            # Verify the resolved path is still within the user's home directory
-            if not realPath.startswith(homePath + '/') and realPath != homePath:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f"Symlink attack blocked: {fileToDownload} -> {realPath} (outside {homePath})")
-                return HttpResponse("Unauthorized access: Symlink points outside allowed directory.")
-
-            # Verify it's a regular file
-            if not os.path.isfile(realPath):
-                return HttpResponse("Unauthorized access: Not a valid file.")
-
-        except OSError as e:
-            return HttpResponse("Unauthorized access: Cannot verify file path.")
-
-        pythonPath = '/usr/local/CyberCP/bin/python'
-        if not os.path.exists(pythonPath):
-            pythonPath = sys.executable
-        stagingScript = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'plogical',
-            'stageFileDownload.py',
-        )
-        command = '%s %s --allowed-root %s --file %s' % (
-            shlex.quote(pythonPath),
-            shlex.quote(stagingScript),
-            shlex.quote(homePath),
-            shlex.quote(fileToDownload),
-        )
-        stageStatus, stagedFile = ProcessUtilities.outputExecutioner(
-            command,
-            retRequired=True,
-        )
-        stagedFile = stagedFile.strip()
-        if stageStatus != 1 or not is_private_token_path(stagedFile, FILE_DOWNLOAD_DIRECTORY):
-            return HttpResponse("Unauthorized access: Unable to stage file securely.")
-
-        def removeStagedFile():
-            try:
-                os.remove(stagedFile)
-            except OSError:
-                pass
-
-        cleanupTimer = threading.Timer(300, removeStagedFile)
-        cleanupTimer.daemon = True
-        cleanupTimer.start()
-
-        response = HttpResponse(content_type='application/force-download')
-        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
-        response['X-LiteSpeed-Location'] = stagedFile
-
-        return response
+        return _stageFileDownload(fileToDownload, homePath)
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -422,45 +447,21 @@ def RootDownloadFile(request):
         else:
             return ACLManager.loadError()
 
-        # SECURITY: Prevent path traversal attacks
-        if '..' in fileToDownload:
+        # SECURITY: Prevent path traversal attacks and invalid paths.
+        if '..' in fileToDownload or '\x00' in fileToDownload or not os.path.isabs(fileToDownload):
             return HttpResponse("Unauthorized access: Path traversal detected.")
 
-        # Normalize path to prevent any path traversal attempts
         fileToDownload = os.path.normpath(fileToDownload)
 
-        # SECURITY: Check for symlink attacks - resolve the real path and verify it's safe
-        try:
-            # Get the real path (resolves symlinks)
-            realPath = os.path.realpath(fileToDownload)
+        sensitive_paths = ['/etc/shadow', '/etc/passwd', '/etc/sudoers', '/root/.ssh',
+                           '/var/log', '/proc', '/sys', '/dev']
+        for sensitive in sensitive_paths:
+            if fileToDownload.startswith(sensitive):
+                return HttpResponse("Unauthorized access: Access to system files denied.")
 
-            # SECURITY: Prevent access to sensitive system files
-            sensitive_paths = ['/etc/shadow', '/etc/passwd', '/etc/sudoers', '/root/.ssh',
-                              '/var/log', '/proc', '/sys', '/dev']
-            for sensitive in sensitive_paths:
-                if realPath.startswith(sensitive):
-                    return HttpResponse("Unauthorized access: Access to system files denied.")
-
-            # SECURITY: Verify the file exists and is a regular file (not a directory or device)
-            if not os.path.isfile(realPath):
-                return HttpResponse("Unauthorized access: Not a valid file.")
-
-            # SECURITY: Check if the original path differs from real path (symlink detection)
-            # Allow the download only if the real path is within allowed directories
-            # For admin, we'll be more permissive but still block sensitive system files
-            if fileToDownload != realPath:
-                # This is a symlink - log it and verify destination is safe
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f"Symlink download detected: {fileToDownload} -> {realPath}")
-
-        except OSError as e:
-            return HttpResponse("Unauthorized access: Cannot verify file path.")
-
-        response = HttpResponse(content_type='application/force-download')
-        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
-        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
-
-        return response
-        #return HttpResponse(response['X-LiteSpeed-Location'])
+        # The helper opens all path components with O_NOFOLLOW and requires a
+        # regular file, so root-manager downloads get the same isolation as
+        # website-manager downloads.
+        return _stageFileDownload(fileToDownload, '/')
     except KeyError:
         return redirect(loadLoginPage)

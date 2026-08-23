@@ -329,14 +329,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.selectAll = function () {
 
         var tableBody = document.getElementById("tableBodyFiles");
-        var getFileName = tableBody.firstChild.firstChild.innerHTML;
+        var getFileName = tableBody.firstChild.firstChild.textContent;
         allFilesAndFolders = [];
 
         var collectionOfA = tableBody.getElementsByTagName("tr");
 
         for (var i = 0; i < collectionOfA.length; i++) {
             collectionOfA[i].style.background = "#ccdbe8";
-            var getFileName = collectionOfA[i].getElementsByTagName('td')[0].innerHTML;
+            var getFileName = collectionOfA[i].getElementsByTagName('td')[0].textContent;
             allFilesAndFolders.push(getFileName);
         }
 
@@ -346,7 +346,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.unSelectAll = function () {
 
         var tableBody = document.getElementById("tableBodyFiles");
-        var getFileName = tableBody.firstChild.firstChild.innerHTML;
+        var getFileName = tableBody.firstChild.firstChild.textContent;
         allFilesAndFolders = [];
 
         var collectionOfA = tableBody.getElementsByTagName("tr");
@@ -363,7 +363,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var rightClickNode = document.getElementById("rightClick")
 
         var check = 1;
-        var getFileName = nodeName.getElementsByTagName('td')[0].innerHTML;
+        var getFileName = nodeName.getElementsByTagName('td')[0].textContent;
 
         if (nodeName.style.backgroundColor === "rgb(204, 219, 232)") {
 
@@ -657,7 +657,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentRPath;
             } else if (functionName === "doubleClick") {
-                completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
+                completePathToFile = $scope.currentRPath + "/" + node.textContent;
             } else if (functionName === "homeFetch") {
                 completePathToFile = homeRPathBack;
             } else if (functionName === "goBackOnPath") {
@@ -685,7 +685,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
                 //
             } else if (functionName === "doubleClick") {
-                completePathToFile = $scope.currentPath + "/" + node.innerHTML;
+                completePathToFile = $scope.currentPath + "/" + node.textContent;
             } else if (functionName === "homeFetch") {
                 completePathToFile = homePathBack;
             } else if (functionName === "goBackOnPath") {
@@ -1460,7 +1460,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         var downloadOnRight = document.getElementById("downloadOnRight");
 
-        if (trNode.lastChild.innerHTML === "File") {
+        if (trNode.lastChild.textContent === "File") {
             downloadOnRight.style.display = "Block";
         } else {
             downloadOnRight.style.display = "none";
@@ -1473,7 +1473,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.addFileOrFolderToListForRightClick = function (nodeName) {
 
         var check = 1;
-        var getFileName = nodeName.getElementsByTagName('td')[0].innerHTML;
+        var getFileName = nodeName.getElementsByTagName('td')[0].textContent;
 
         if (nodeName.style.backgroundColor === "#ccdbe8") {
 
