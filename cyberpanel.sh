@@ -279,6 +279,10 @@ setup_epel_repo() {
             yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
             Check_Return "yum repo" "no_exit"
             ;;
+        "10")
+            yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+            Check_Return "yum repo" "no_exit"
+            ;;
     esac
 }
 
@@ -318,16 +322,42 @@ gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
         cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
+# MariaDB 10.11 RHEL10 repository
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = https://yum.mariadb.org/10.11/rhel10-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
 EOF
     fi
+}
+
+import_litespeed_gpg_key() {
+  if [[ "$Server_OS_Version" != "10" ]]; then
+    rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
+    return $?
+  fi
+
+  local key_url="https://rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed2025"
+  local key_sha256="cd0578a8febe98cb7d7d437a73419b8407ddd98cd848f2c9c7fdd288d768af01"
+  local key_path="/etc/pki/rpm-gpg/RPM-GPG-KEY-litespeed"
+  local key_tmp
+  key_tmp=$(mktemp /tmp/litespeed-el10-key.XXXXXX) || return 1
+
+  if ! curl --fail --location --silent --show-error --output "$key_tmp" "$key_url"; then
+    rm -f "$key_tmp"
+    return 1
+  fi
+  if ! printf '%s  %s\n' "$key_sha256" "$key_tmp" | sha256sum -c - >/dev/null; then
+    rm -f "$key_tmp"
+    return 1
+  fi
+
+  install -m 0644 "$key_tmp" "$key_path"
+  rm -f "$key_tmp"
+  rpmkeys --import "$key_path"
 }
 
 # Helper Function for PHP timezone configuration
@@ -363,7 +393,9 @@ echo -e "\n${1}=${2}\n" >> "/var/log/cyberpanel_debug_$(date +"%Y-%m-%d")_${Rand
 }
 
 Debug_Log2() {
-Check_Server_IP "$@" >/dev/null 2>&1
+if [[ -z "${Server_IP:-}" ]]; then
+  Check_Server_IP "$@" >/dev/null 2>&1
+fi
 echo -e "\n${1}" >> /var/log/installLogs.txt
 curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
 }
@@ -1161,7 +1193,10 @@ log_function_start "Pre_Install_Setup_Repository"
 log_info "Setting up package repositories for $Server_OS $Server_OS_Version"
 if [[ $Server_OS = "CentOS" ]] ; then
   log_debug "Importing LiteSpeed GPG key"
-  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
+  if ! import_litespeed_gpg_key; then
+    log_error "Unable to import the verified LiteSpeed signing key"
+    exit 1
+  fi
   #import the LiteSpeed GPG key
 
   yum clean all
@@ -1195,8 +1230,13 @@ if [[ $Server_OS = "CentOS" ]] ; then
       dnf config-manager --set-enabled crb
     fi
 
-    yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
-      Check_Return "yum repo" "no_exit"
+    if [[ "$Server_OS_Version" = "10" ]]; then
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm
+        Check_Return "yum repo" "no_exit"
+    else
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+        Check_Return "yum repo" "no_exit"
+    fi
   fi
 
   if [[ "$Server_OS_Version" = "8" ]]; then

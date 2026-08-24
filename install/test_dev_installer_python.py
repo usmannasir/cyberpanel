@@ -515,7 +515,11 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         root = pathlib.Path(__file__).parents[1]
         installer = (root / 'install/install.py').read_text(encoding='utf-8')
         self.assertIn(
-            "if self.distro != ubuntu or get_Ubuntu_release() < 26.04:",
+            "skip_logind_restart = is_el10_release() or (",
+            installer,
+        )
+        self.assertIn(
+            "self.distro == ubuntu and get_Ubuntu_release() >= 26.04",
             installer,
         )
         self.assertIn(
@@ -523,9 +527,15 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
             installer,
         )
         self.assertIn(
-            'Ubuntu 26.04: keeping systemd-logind running during installation.',
+            'Keeping systemd-logind running during installation.',
             installer,
         )
+
+    def test_almalinux_10_install_does_not_restart_logind(self):
+        root = pathlib.Path(__file__).parents[1]
+        installer = (root / 'install/install.py').read_text(encoding='utf-8')
+        self.assertIn("skip_logind_restart = is_el10_release() or (", installer)
+        self.assertIn("if not skip_logind_restart:", installer)
 
     def test_ubuntu_26_keeps_minimal_system_ping_package(self):
         root = pathlib.Path(__file__).parents[1]

@@ -217,7 +217,7 @@ class InstallCyberPanel:
             return False
 
     def detectPlatform(self):
-        """Detect OS platform for binary selection (rhel8, rhel9, ubuntu)"""
+        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
@@ -247,11 +247,11 @@ class InstallCyberPanel:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                             return 'rhel9'
 
-                    # Check for version 10.x (AlmaLinux 10, etc.) — the el9 binary runs on el10
-                    # (GLIBC_2.35 <= 2.39, libcrypt.so.2), so map it to the rhel9 artifact.
+                    # EL10 has a dedicated build because its compiler, crypto stack,
+                    # and OpenLiteSpeed module ABI differ from the EL9 release set.
                     if 'version="10.' in content or 'version_id="10.' in content:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
-                            return 'rhel9'
+                            return 'rhel10'
 
             # Default to rhel9 if can't detect (safer default for newer systems)
             InstallCyberPanel.stdOut("WARNING: Could not detect platform, defaulting to rhel9", 1)
@@ -370,7 +370,8 @@ class InstallCyberPanel:
             # Platform-specific URLs and checksums (OpenLiteSpeed v2.5.0 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
             # Module v2.7.3: preserves Content-Encoding on LSCache hits
-            # rhel9 artifact covers EL9 + EL10 (AlmaLinux 10); ubuntu artifact covers 22.04/24.04 (not 20.04 — see detectPlatform)
+            # EL10 uses its dedicated ABI-matched release set. Existing platform
+            # mappings remain pinned to their previously published artifacts.
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-rhel8',
@@ -392,6 +393,16 @@ class InstallCyberPanel:
                         'modsec': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629',
                     },
                 },
+                'rhel10': {
+                    'url': 'https://cyberpanel.net/openlitespeed-2.5.2-x86_64-rhel10',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.6-x86_64-rhel10.so',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.2-x86_64-rhel10.so',
+                    'sha256': {
+                        'binary': '09de31ba2c2c24f30445a0d8565598b9a1758bd2d8abbe4149b4ad35eb60beda',
+                        'module': 'bc84649087112e3dab79bf2b203ec68f08e2d1b23f31d415fd9ee6e4035ff952',
+                        'modsec': '3e4b86a2bcb929c1dd2be4da6191448d67c2db39a5659d544015b9dbc024698f',
+                    },
+                },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-ubuntu',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-ubuntu.so',
@@ -409,6 +420,13 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut(f"ERROR: No binaries available for platform {platform}", 1)
                 InstallCyberPanel.stdOut("Skipping custom binary installation", 1)
                 return True  # Not fatal
+
+            if platform == 'rhel10':
+                InstallCyberPanel.stdOut(
+                    "Installing AlmaLinux 10 OpenLiteSpeed runtime dependency...",
+                    1,
+                )
+                self.install_package('udns')
 
             OLS_BINARY_URL = config['url']
             MODULE_URL = config['module_url']
@@ -1137,11 +1155,12 @@ gpgcheck=1
                 command = 'yum remove mariadb* -y'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'sudo dnf -qy module disable mariadb'
-                install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                if self.detectPlatform() != 'rhel10':
+                    command = 'sudo dnf -qy module disable mariadb'
+                    install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'sudo dnf module reset mariadb -y'
-                install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                    command = 'sudo dnf module reset mariadb -y'
+                    install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
                 # Disable problematic mariadb-maxscale repository to avoid 404 errors
                 command = 'dnf config-manager --disable mariadb-maxscale'
