@@ -9,6 +9,15 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 Reliability release for installation, upgrades, remote databases, SSL,
 WordPress, file management, and native webmail.
 
+### Platform support
+- AlmaLinux 10 fresh installations and upgrades now use native EL10
+  repositories and a matched OpenLiteSpeed ABI set: OpenLiteSpeed 2.5.2,
+  `cyberpanel_ols.so` 2.7.6, and `mod_security.so` 2.5.2.
+- The installer provisions the EL10 `udns`, Postfix, MariaDB, Remi, EPEL, and
+  LiteSpeed dependencies without relying on EL9 packages or removed DNF
+  modularity commands.
+- Existing Ubuntu, EL8, EL9, and openEuler artifact selections are unchanged.
+
 ### Installation and upgrades
 - Remote MySQL installations now configure every database consumer for the
   selected host and port, validate the endpoint before package setup, fail
@@ -247,8 +256,8 @@ below were already shipped to the `v2.4.8` branch and are consolidated here.
   (never a graceful restart) and removes the target before copying.
 - Ubuntu < 22.04 (e.g. 20.04, glibc 2.31) now skips the custom overlay
   entirely — the `ubuntu` artifact needs GLIBC ≥ 2.34 (ticket #OXHTOK7AH).
-- AlmaLinux/Rocky/RHEL 10 now install the `rhel9` artifact (el9 binary covers
-  el10).
+- At the time of this release, AlmaLinux/Rocky/RHEL 10 selected the `rhel9`
+  artifact. CyberPanel 3.0.4 supersedes this with a native EL10 ABI set.
 
 **Support notes:**
 - Servers where support removed the `module cyberpanel_ols { }` block from
