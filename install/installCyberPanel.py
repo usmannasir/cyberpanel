@@ -421,6 +421,13 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut("Skipping custom binary installation", 1)
                 return True  # Not fatal
 
+            if platform == 'rhel10':
+                InstallCyberPanel.stdOut(
+                    "Installing AlmaLinux 10 OpenLiteSpeed runtime dependency...",
+                    1,
+                )
+                self.install_package('udns')
+
             OLS_BINARY_URL = config['url']
             MODULE_URL = config['module_url']
             MODSEC_URL = config.get('modsec_url')
@@ -1148,11 +1155,12 @@ gpgcheck=1
                 command = 'yum remove mariadb* -y'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'sudo dnf -qy module disable mariadb'
-                install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                if self.detectPlatform() != 'rhel10':
+                    command = 'sudo dnf -qy module disable mariadb'
+                    install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'sudo dnf module reset mariadb -y'
-                install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                    command = 'sudo dnf module reset mariadb -y'
+                    install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
                 # Disable problematic mariadb-maxscale repository to avoid 404 errors
                 command = 'dnf config-manager --disable mariadb-maxscale'

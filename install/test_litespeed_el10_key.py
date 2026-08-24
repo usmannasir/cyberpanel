@@ -82,6 +82,26 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
         self.assertIn('dnf install -y postfix postfix-mysql cyrus-sasl-plain', source)
         self.assertIn('gf-release-latest.gf.el9.noarch.rpm', source)
 
+    def test_el10_skips_removed_mariadb_module_commands(self):
+        tree = ast.parse(
+            (INSTALLER.with_name('installCyberPanel.py')).read_text()
+        )
+        installer_class = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'InstallCyberPanel'
+        )
+        method = next(
+            node for node in installer_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == 'installMySQL'
+        )
+        source = ast.get_source_segment(
+            INSTALLER.with_name('installCyberPanel.py').read_text(), method
+        )
+
+        self.assertIn("if self.detectPlatform() != 'rhel10':", source)
+        self.assertIn('dnf -qy module disable mariadb', source)
+        self.assertIn('dnf module reset mariadb -y', source)
+
     def test_progress_logging_reuses_detected_server_ip(self):
         source = BOOTSTRAP.read_text()
         function_start = source.index('Debug_Log2()')

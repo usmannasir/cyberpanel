@@ -842,6 +842,19 @@ class Upgrade:
                 Upgrade.stdOut("Skipping custom binary installation", 0)
                 return True  # Not fatal
 
+            if platform == 'rhel10':
+                Upgrade.stdOut(
+                    "Installing AlmaLinux 10 OpenLiteSpeed runtime dependency...",
+                    0,
+                )
+                if subprocess.call(['dnf', 'install', '-y', 'udns']) != 0:
+                    Upgrade.stdOut(
+                        "ERROR: Could not install the OpenLiteSpeed udns dependency; "
+                        "keeping stock OLS",
+                        0,
+                    )
+                    return True
+
             OLS_BINARY_URL = config['url']
             MODULE_URL = config['module_url']
             MODSEC_URL = config.get('modsec_url')

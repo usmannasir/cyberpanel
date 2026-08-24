@@ -73,6 +73,19 @@ def binary_configs(path, class_name):
     return ast.literal_eval(assignment.value)
 
 
+def method_source(path, class_name, method_name):
+    tree = ast.parse(path.read_text())
+    class_node = next(
+        node for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == class_name
+    )
+    method_node = next(
+        node for node in class_node.body
+        if isinstance(node, ast.FunctionDef) and node.name == method_name
+    )
+    return ast.get_source_segment(path.read_text(), method_node)
+
+
 class CustomOLSPlatformTests(unittest.TestCase):
     install_path = ROOT / 'install' / 'installCyberPanel.py'
     upgrade_path = ROOT / 'plogical' / 'upgrade.py'
@@ -136,6 +149,32 @@ class CustomOLSPlatformTests(unittest.TestCase):
                         f'cyberpanel_ols-{module_version}-x86_64-{platform}.so',
                         configs[platform]['module_url'],
                     )
+
+    def test_almalinux_10_installs_udns_before_abi_preflight(self):
+        cases = (
+            (
+                self.install_path,
+                'InstallCyberPanel',
+                "self.install_package('udns')",
+            ),
+            (
+                self.upgrade_path,
+                'Upgrade',
+                "subprocess.call(['dnf', 'install', '-y', 'udns'])",
+            ),
+        )
+
+        for path, class_name, dependency_install in cases:
+            with self.subTest(path=path.name):
+                source = method_source(
+                    path, class_name, 'installCustomOLSBinaries'
+                )
+                self.assertIn("if platform == 'rhel10':", source)
+                self.assertIn(dependency_install, source)
+                self.assertLess(
+                    source.index(dependency_install),
+                    source.index('checkGlibcCompat'),
+                )
 
 
 if __name__ == '__main__':
