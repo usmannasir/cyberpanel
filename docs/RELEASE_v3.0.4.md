@@ -26,6 +26,8 @@ delivery, plugins, and File Manager.
   account and certificate keys.
 - Downloads files whose names contain spaces or special characters while
   preserving traversal protection (#1902).
+- Restores phpMyAdmin auto-login with a short-lived, one-time handoff from the
+  authenticated CyberPanel session (#1904).
 - Makes interrupted upgrades, firewall-asset repair, plugin route updates,
   Sieve redirect generation, and OpenSSH-key deletion fail safely.
 - Adds native AlmaLinux 10 installation and upgrade support using the matched

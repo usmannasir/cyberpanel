@@ -42,6 +42,8 @@ WordPress, file management, and native webmail.
 - WordPress can be installed on an existing website, uses an available PHP CLI,
   avoids an unnecessary PHP restart, and is registered correctly in WordPress
   Manager.
+- phpMyAdmin auto-login now validates a short-lived, one-time handoff from the
+  authenticated panel session instead of relying on an unrelated PHP session.
 - File Manager downloads preserve filenames containing spaces, `#`, `&`, `+`,
   or `%` while retaining path traversal protection (#1902).
 - Plugin routes and OpenSSH authorized-key deletion now match only the intended

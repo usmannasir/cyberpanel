@@ -25,6 +25,7 @@ from plogical.mysqlUtilities import mysqlUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import get_mysql_upgrade_status_path
 from django.views.decorators.http import require_POST
+from databases.phpmyadmin_handoff import create_handoff
 
 
 # Create your views here.
@@ -300,6 +301,8 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = mysqluser
                     data['password'] = password
+                    data['token'] = token
+                    create_handoff(mysqluser, token)
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
@@ -315,6 +318,8 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = 'root'
                     data['password'] = password
+                    data['token'] = token
+                    create_handoff('root', token)
                     # return redirect(returnURL)
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
@@ -339,6 +344,8 @@ def fetchDetailsPHPMYAdmin(request):
             data = {}
             data['userName'] = admin.userName
             data['password'] = password.decode()
+            data['token'] = token
+            create_handoff(admin.userName, token)
             # return redirect(returnURL)
 
             proc = httpProc(request, 'databases/AutoLogin.html',
