@@ -53,7 +53,6 @@ function consumeHandoff($username, $token) {
     ));
     $response = @curl_exec($request);
     $statusCode = (int) @curl_getinfo($request, CURLINFO_RESPONSE_CODE);
-    @curl_close($request);
 
     if (!is_string($response) || $statusCode !== 200) {
         return false;

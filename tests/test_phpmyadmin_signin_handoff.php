@@ -20,6 +20,11 @@ if (strpos($source, "\$_SESSION['userID']") !== false) {
     exit(1);
 }
 
+if (strpos($source, 'curl_close') !== false) {
+    fwrite(STDERR, "FAIL: signon uses curl_close, which emits output on newer PHP runtimes\n");
+    exit(1);
+}
+
 $testRoot = sys_get_temp_dir() . '/pma-session-test-' . bin2hex(random_bytes(6));
 $sessionDir = $testRoot . '/sessions';
 $router = $testRoot . '/validator.php';
