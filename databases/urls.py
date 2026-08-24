@@ -24,4 +24,5 @@ urlpatterns = [
     re_path(r'^phpMyAdmin$', views.phpMyAdmin, name='phpMyAdmin'),
     re_path(r'^generateAccess$', views.generateAccess, name='generateAccess'),
     re_path(r'^fetchDetailsPHPMYAdmin$', views.fetchDetailsPHPMYAdmin, name='fetchDetailsPHPMYAdmin'),
+    re_path(r'^consumePHPMYAdminHandoff$', views.consumePHPMYAdminHandoff, name='consumePHPMYAdminHandoff'),
 ]
