@@ -217,7 +217,7 @@ class InstallCyberPanel:
             return False
 
     def detectPlatform(self):
-        """Detect OS platform for binary selection (rhel8, rhel9, ubuntu)"""
+        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
@@ -247,11 +247,11 @@ class InstallCyberPanel:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                             return 'rhel9'
 
-                    # Check for version 10.x (AlmaLinux 10, etc.) — the el9 binary runs on el10
-                    # (GLIBC_2.35 <= 2.39, libcrypt.so.2), so map it to the rhel9 artifact.
+                    # EL10 has a dedicated build because its compiler, crypto stack,
+                    # and OpenLiteSpeed module ABI differ from the EL9 release set.
                     if 'version="10.' in content or 'version_id="10.' in content:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
-                            return 'rhel9'
+                            return 'rhel10'
 
             # Default to rhel9 if can't detect (safer default for newer systems)
             InstallCyberPanel.stdOut("WARNING: Could not detect platform, defaulting to rhel9", 1)
@@ -370,7 +370,8 @@ class InstallCyberPanel:
             # Platform-specific URLs and checksums (OpenLiteSpeed v2.5.0 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
             # Module v2.7.3: preserves Content-Encoding on LSCache hits
-            # rhel9 artifact covers EL9 + EL10 (AlmaLinux 10); ubuntu artifact covers 22.04/24.04 (not 20.04 — see detectPlatform)
+            # EL10 uses its dedicated ABI-matched release set. Existing platform
+            # mappings remain pinned to their previously published artifacts.
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-rhel8',
@@ -390,6 +391,16 @@ class InstallCyberPanel:
                         'binary': '780163ee7c0304c9b1db6abaeeaca2e58dbfc05436de776e921ca1d493462596',
                         'module': 'a189da7ec5c09c5ba836209aa10746b691bbef21010cbe4c4c622614cf03c5e1',
                         'modsec': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629',
+                    },
+                },
+                'rhel10': {
+                    'url': 'https://cyberpanel.net/openlitespeed-2.5.2-x86_64-rhel10',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.6-x86_64-rhel10.so',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.2-x86_64-rhel10.so',
+                    'sha256': {
+                        'binary': '09de31ba2c2c24f30445a0d8565598b9a1758bd2d8abbe4149b4ad35eb60beda',
+                        'module': 'bc84649087112e3dab79bf2b203ec68f08e2d1b23f31d415fd9ee6e4035ff952',
+                        'modsec': '3e4b86a2bcb929c1dd2be4da6191448d67c2db39a5659d544015b9dbc024698f',
                     },
                 },
                 'ubuntu': {

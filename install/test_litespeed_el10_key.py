@@ -1,0 +1,48 @@
+import ast
+import hashlib
+import tempfile
+import unittest
+from pathlib import Path
+
+
+INSTALLER = Path(__file__).with_name('install.py')
+
+
+def load_key_helpers():
+    tree = ast.parse(INSTALLER.read_text())
+    selected = []
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name)
+                and target.id == 'LITESPEED_EL10_KEY_SHA256'
+                for target in node.targets):
+            selected.append(node)
+        elif isinstance(node, ast.FunctionDef) and node.name in (
+                'is_el10_release', 'verify_litespeed_el10_key'):
+            selected.append(node)
+    namespace = {'hashlib': hashlib}
+    module = ast.fix_missing_locations(ast.Module(body=selected, type_ignores=[]))
+    exec(compile(module, str(INSTALLER), 'exec'), namespace)
+    return namespace
+
+
+class LiteSpeedEL10KeyTests(unittest.TestCase):
+    def test_el10_detection_is_exact(self):
+        helpers = load_key_helpers()
+        with tempfile.TemporaryDirectory() as directory:
+            release = Path(directory) / 'os-release'
+            release.write_text('ID="almalinux"\nVERSION_ID="10.2"\n')
+            self.assertTrue(helpers['is_el10_release'](release))
+            release.write_text('ID="almalinux"\nVERSION_ID="9.7"\n')
+            self.assertFalse(helpers['is_el10_release'](release))
+
+    def test_key_verification_is_pinned(self):
+        helpers = load_key_helpers()
+        with tempfile.NamedTemporaryFile() as key_file:
+            key_file.write(b'wrong key')
+            key_file.flush()
+            self.assertFalse(helpers['verify_litespeed_el10_key'](key_file.name))
+
+
+if __name__ == '__main__':
+    unittest.main()

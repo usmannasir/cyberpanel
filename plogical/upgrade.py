@@ -634,7 +634,7 @@ class Upgrade:
 
     @staticmethod
     def detectPlatform():
-        """Detect OS platform for binary selection (rhel8, rhel9, ubuntu)"""
+        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
@@ -665,11 +665,11 @@ class Upgrade:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                             return 'rhel9'
 
-                    # Check for version 10.x (AlmaLinux 10, etc.) — the el9 binary runs on el10
-                    # (GLIBC_2.35 <= 2.39, libcrypt.so.2), so map it to the rhel9 artifact.
+                    # EL10 has a dedicated build because its compiler, crypto stack,
+                    # and OpenLiteSpeed module ABI differ from the EL9 release set.
                     if 'version="10.' in content or 'version_id="10.' in content:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
-                            return 'rhel9'
+                            return 'rhel10'
 
             # Default to rhel9 if can't detect (safer default for newer systems)
             Upgrade.stdOut("WARNING: Could not detect platform, defaulting to rhel9", 0)
@@ -791,7 +791,8 @@ class Upgrade:
             # Core v2.5.1: HttpReq::getDocRoot NULL-vhost hardening — no module can crash the worker on unmatched-Host 4xx responses
             # Module v2.7.5: fixes the 4xx segfault on requests whose Host maps to no vhost (2.7.0-2.7.3 all affected,
             #   Cloudflare 520 storms); adds a real `ls_enabled 0` kill-switch. NEVER ship 2.7.0-2.7.3 again.
-            # rhel9 artifact covers EL9 + EL10 (AlmaLinux 10); ubuntu artifact covers 22.04/24.04 (not <22.04 — see detectPlatform)
+            # EL10 uses its dedicated ABI-matched release set. Existing platform
+            # mappings remain pinned to their previously published artifacts.
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-rhel8',
@@ -811,6 +812,16 @@ class Upgrade:
                         'binary': '28423bf1076a2d36dab9955bab71e25768f69175f09edbf4f554ddfd5b9280a5',
                         'module': 'ed1ab032484b05d00133c0f06e99f881e56bd33d8f145e1a5110e20215bc9aa0',
                         'modsec': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629',
+                    },
+                },
+                'rhel10': {
+                    'url': 'https://cyberpanel.net/openlitespeed-2.5.2-x86_64-rhel10',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.6-x86_64-rhel10.so',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.2-x86_64-rhel10.so',
+                    'sha256': {
+                        'binary': '09de31ba2c2c24f30445a0d8565598b9a1758bd2d8abbe4149b4ad35eb60beda',
+                        'module': 'bc84649087112e3dab79bf2b203ec68f08e2d1b23f31d415fd9ee6e4035ff952',
+                        'modsec': '3e4b86a2bcb929c1dd2be4da6191448d67c2db39a5659d544015b9dbc024698f',
                     },
                 },
                 'ubuntu': {

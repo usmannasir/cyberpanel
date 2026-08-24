@@ -15,6 +15,7 @@ from stat import *
 import stat
 import install_utils
 import json
+import hashlib
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cyberpanel_version import BUILD, VERSION
@@ -42,6 +43,37 @@ cent8 = install_utils.cent8
 openeuler = install_utils.openeuler
 cent9 = 4  # Not in install_utils yet
 CloudLinux8 = 0  # Not in install_utils yet
+
+LITESPEED_EL10_KEY_SHA256 = 'cd0578a8febe98cb7d7d437a73419b8407ddd98cd848f2c9c7fdd288d768af01'
+
+
+def is_el10_release(os_release_path='/etc/os-release'):
+    """Return True only for supported Enterprise Linux 10 distributions."""
+    values = {}
+    try:
+        with open(os_release_path, 'r') as release_file:
+            for raw_line in release_file:
+                key, separator, value = raw_line.partition('=')
+                if separator:
+                    values[key.strip()] = value.strip().strip('"\'').lower()
+    except OSError:
+        return False
+
+    supported_ids = {'almalinux', 'rocky', 'rhel', 'centos', 'cloudlinux', 'ol'}
+    return (values.get('ID') in supported_ids
+            and values.get('VERSION_ID', '').split('.', 1)[0] == '10')
+
+
+def verify_litespeed_el10_key(key_path):
+    """Verify the replacement LiteSpeed RPM signing key before importing it."""
+    try:
+        digest = hashlib.sha256()
+        with open(key_path, 'rb') as key_file:
+            for chunk in iter(lambda: key_file.read(65536), b''):
+                digest.update(chunk)
+        return digest.hexdigest() == LITESPEED_EL10_KEY_SHA256
+    except OSError:
+        return False
 
 # Using shared function from install_utils
 FetchCloudLinuxAlmaVersionVersion = install_utils.FetchCloudLinuxAlmaVersionVersion
@@ -479,6 +511,40 @@ class preFlightsChecks:
         except BaseException as msg:
             logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
 
+    def configureLiteSpeedEL10Key(self):
+        """Install LiteSpeed's EL10-compatible RPM key after pin verification."""
+        if not is_el10_release():
+            return
+
+        download_path = '/tmp/RPM-GPG-KEY-litespeed2025'
+        key_path = '/etc/pki/rpm-gpg/RPM-GPG-KEY-litespeed'
+        key_url = 'https://rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed2025'
+        command = f'wget --https-only -q -O {download_path} {key_url}'
+        preFlightsChecks.call(
+            command, self.distro, command,
+            'Download LiteSpeed EL10 signing key', 1, 1, os.EX_OSERR,
+        )
+
+        if not verify_litespeed_el10_key(download_path):
+            try:
+                os.remove(download_path)
+            except OSError:
+                pass
+            preFlightsChecks.stdOut(
+                'LiteSpeed EL10 signing key failed SHA256 verification.',
+                1, 1, os.EX_DATAERR,
+            )
+
+        os.makedirs(os.path.dirname(key_path), exist_ok=True)
+        os.replace(download_path, key_path)
+        os.chmod(key_path, 0o644)
+        result = subprocess.call(['rpmkeys', '--import', key_path])
+        if result != 0:
+            preFlightsChecks.stdOut(
+                'Unable to import the LiteSpeed EL10 signing key.',
+                1, 1, os.EX_OSERR,
+            )
+
     def installCyberPanelRepo(self):
         self.stdOut("Install Cyberpanel repo")
 
@@ -539,6 +605,7 @@ class preFlightsChecks:
         elif self.distro == cent8:
             command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            self.configureLiteSpeedEL10Key()
 
     def fix_selinux_issue(self):
         try:
