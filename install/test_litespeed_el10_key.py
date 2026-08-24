@@ -63,6 +63,23 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
         self.assertIn('remi-release-9.rpm', source)
         self.assertIn('10.11/rhel9-amd64/', source)
 
+    def test_el10_mail_uses_native_packages(self):
+        tree = ast.parse(INSTALLER.read_text())
+        installer_class = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'preFlightsChecks'
+        )
+        method = next(
+            node for node in installer_class.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == 'install_postfix_dovecot'
+        )
+        source = ast.get_source_segment(INSTALLER.read_text(), method)
+
+        self.assertIn('if is_el10_release()', source)
+        self.assertIn('dnf install -y postfix postfix-mysql cyrus-sasl-plain', source)
+        self.assertIn('gf-release-latest.gf.el9.noarch.rpm', source)
+
 
 if __name__ == '__main__':
     unittest.main()

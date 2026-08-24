@@ -1171,19 +1171,21 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             elif self.distro == cent8:
-
-                clAPVersion = FetchCloudLinuxAlmaVersionVersion()
-                type = clAPVersion.split('-')[0]
-                version = int(clAPVersion.split('-')[1])
-
-                if type == 'al' and version >= 90:
-                    command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el9.noarch.rpm'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if is_el10_release():
+                    command = 'dnf install -y postfix postfix-mysql cyrus-sasl-plain'
                 else:
-                    command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    clAPVersion = FetchCloudLinuxAlmaVersionVersion()
+                    type = clAPVersion.split('-')[0]
+                    version = int(clAPVersion.split('-')[1])
 
-                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql cyrus-sasl-plain -y'
+                    if type == 'al' and version >= 90:
+                        command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el9.noarch.rpm'
+                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    else:
+                        command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
+                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                    command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             elif self.distro == openeuler:
                 command = 'dnf install postfix cyrus-sasl-plain -y'
@@ -1726,15 +1728,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 # Not available in ubuntu
                 self.manage_service('dbus', 'restart')
 
-            # Ubuntu 26 terminates the installer's SSH session scope after
-            # systemd-logind is restarted, which kills the installation midway.
-            # Earlier Ubuntu releases and non-Ubuntu distributions retain the
-            # existing behavior.
-            if self.distro != ubuntu or get_Ubuntu_release() < 26.04:
+            # Newer systemd releases terminate the installer's SSH session scope
+            # when logind restarts. Keep earlier distributions unchanged.
+            skip_logind_restart = is_el10_release() or (
+                self.distro == ubuntu and get_Ubuntu_release() >= 26.04
+            )
+            if not skip_logind_restart:
                 self.manage_service('systemd-logind', 'restart')
             else:
                 logging.InstallLog.writeToFile(
-                    "Ubuntu 26.04: keeping systemd-logind running during installation."
+                    "Keeping systemd-logind running during installation."
                 )
 
             self.manage_service('firewalld', 'start')
