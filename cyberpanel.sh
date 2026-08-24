@@ -393,7 +393,9 @@ echo -e "\n${1}=${2}\n" >> "/var/log/cyberpanel_debug_$(date +"%Y-%m-%d")_${Rand
 }
 
 Debug_Log2() {
-Check_Server_IP "$@" >/dev/null 2>&1
+if [[ -z "${Server_IP:-}" ]]; then
+  Check_Server_IP "$@" >/dev/null 2>&1
+fi
 echo -e "\n${1}" >> /var/log/installLogs.txt
 curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
 }

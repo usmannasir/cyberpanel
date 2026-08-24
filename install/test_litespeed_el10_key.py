@@ -1,5 +1,7 @@
 import ast
 import hashlib
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -79,6 +81,35 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
         self.assertIn('if is_el10_release()', source)
         self.assertIn('dnf install -y postfix postfix-mysql cyrus-sasl-plain', source)
         self.assertIn('gf-release-latest.gf.el9.noarch.rpm', source)
+
+    def test_progress_logging_reuses_detected_server_ip(self):
+        source = BOOTSTRAP.read_text()
+        function_start = source.index('Debug_Log2()')
+        function_end = source.index('\n}\n', function_start) + 3
+        function = source[function_start:function_end].replace(
+            '/var/log/installLogs.txt', '"$INSTALL_LOG"'
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            call_log = directory / 'ip-checks'
+            harness = (
+                'Check_Server_IP() { printf called >> "$CALL_LOG"; }\n'
+                'curl() { :; }\n'
+                f'{function}\n'
+                'Debug_Log2 "Installing components,10"\n'
+            )
+            environment = os.environ.copy()
+            environment.update({
+                'CALL_LOG': str(call_log),
+                'INSTALL_LOG': str(directory / 'install.log'),
+                'Server_IP': '192.0.2.10',
+            })
+            subprocess.run(
+                ['bash', '-c', harness], check=True, env=environment
+            )
+
+            self.assertFalse(call_log.exists())
 
 
 if __name__ == '__main__':
