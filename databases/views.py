@@ -7,6 +7,7 @@ import tempfile
 from random import randint
 
 from django.shortcuts import redirect, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from cloudAPI.cloudManager import CloudManager
@@ -25,7 +26,7 @@ from plogical.mysqlUtilities import mysqlUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import get_mysql_upgrade_status_path
 from django.views.decorators.http import require_POST
-from databases.phpmyadmin_handoff import create_handoff
+from databases.phpmyadmin_handoff import consume_handoff, create_handoff
 
 
 # Create your views here.
@@ -262,6 +263,22 @@ def generateAccess(request):
 
 
 @csrf_exempt
+@require_POST
+def consumePHPMYAdminHandoff(request):
+    try:
+        request.session['userID']
+    except KeyError:
+        return JsonResponse({'status': 0}, status=403)
+
+    username = request.POST.get('username', '')
+    token = request.POST.get('token', '')
+    if not consume_handoff(request.session, username, token):
+        return JsonResponse({'status': 0}, status=403)
+
+    return JsonResponse({'status': 1})
+
+
+@csrf_exempt
 def fetchDetailsPHPMYAdmin(request):
     try:
 
@@ -302,7 +319,7 @@ def fetchDetailsPHPMYAdmin(request):
                     data['userName'] = mysqluser
                     data['password'] = password
                     data['token'] = token
-                    create_handoff(mysqluser, token)
+                    create_handoff(request.session, mysqluser, token)
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
@@ -319,7 +336,7 @@ def fetchDetailsPHPMYAdmin(request):
                     data['userName'] = 'root'
                     data['password'] = password
                     data['token'] = token
-                    create_handoff('root', token)
+                    create_handoff(request.session, 'root', token)
                     # return redirect(returnURL)
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
@@ -345,7 +362,7 @@ def fetchDetailsPHPMYAdmin(request):
             data['userName'] = admin.userName
             data['password'] = password.decode()
             data['token'] = token
-            create_handoff(admin.userName, token)
+            create_handoff(request.session, admin.userName, token)
             # return redirect(returnURL)
 
             proc = httpProc(request, 'databases/AutoLogin.html',

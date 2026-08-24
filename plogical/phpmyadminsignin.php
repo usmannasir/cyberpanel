@@ -3,27 +3,16 @@
 define("PMA_SIGNON_INDEX", 1);
 define('PMA_SIGNON_SESSIONNAME', 'SignonSession');
 define('PMA_DISABLE_SSL_PEER_VALIDATION', TRUE);
-if (!defined('PMA_HANDOFF_DIRECTORY')) {
-    define('PMA_HANDOFF_DIRECTORY', sys_get_temp_dir() . '/cyberpanel-phpmyadmin-handoff');
+if (!defined('PMA_HANDOFF_VALIDATION_URL')) {
+    define(
+        'PMA_HANDOFF_VALIDATION_URL',
+        'https://127.0.0.1:8090/dataBases/consumePHPMYAdminHandoff'
+    );
 }
 
 function rejectSignon() {
     header('Location: /base/');
     exit();
-}
-
-function handoffDirectoryIsSecure($directory) {
-    $directoryStat = @lstat($directory);
-    if ($directoryStat === false || ($directoryStat['mode'] & 0170000) !== 0040000) {
-        return false;
-    }
-    if (($directoryStat['mode'] & 0777) !== 0700) {
-        return false;
-    }
-    if (function_exists('posix_geteuid') && $directoryStat['uid'] !== posix_geteuid()) {
-        return false;
-    }
-    return true;
 }
 
 function consumeHandoff($username, $token) {
@@ -33,44 +22,46 @@ function consumeHandoff($username, $token) {
     if (!is_string($token) || $token === '' || strlen($token) > 512) {
         return false;
     }
-    if (!handoffDirectoryIsSecure(PMA_HANDOFF_DIRECTORY)) {
+    if (!isset($_COOKIE['cyberpanel_sessionid'])) {
+        return false;
+    }
+    $sessionID = (string) $_COOKIE['cyberpanel_sessionid'];
+    if (!preg_match('/^[A-Za-z0-9]{16,128}$/D', $sessionID)) {
         return false;
     }
 
-    $recordPath = PMA_HANDOFF_DIRECTORY . '/' . hash('sha256', $token);
-    $recordStat = @lstat($recordPath);
-    if ($recordStat === false || ($recordStat['mode'] & 0170000) !== 0100000) {
-        return false;
-    }
-    if (($recordStat['mode'] & 0777) !== 0600 || $recordStat['nlink'] !== 1) {
-        return false;
-    }
-    if (function_exists('posix_geteuid') && $recordStat['uid'] !== posix_geteuid()) {
+    $request = @curl_init(PMA_HANDOFF_VALIDATION_URL);
+    if ($request === false) {
         return false;
     }
 
-    $directoryPath = @realpath(PMA_HANDOFF_DIRECTORY);
-    $resolvedPath = @realpath($recordPath);
-    if ($directoryPath === false || $resolvedPath === false
-        || dirname($resolvedPath) !== $directoryPath) {
-        return false;
-    }
+    @curl_setopt_array($request, array(
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query(
+            array('username' => $username, 'token' => $token),
+            '',
+            '&',
+            PHP_QUERY_RFC3986
+        ),
+        CURLOPT_COOKIE => 'cyberpanel_sessionid=' . $sessionID,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => 2,
+        CURLOPT_TIMEOUT => 5,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => 0,
+    ));
+    $response = @curl_exec($request);
+    $statusCode = (int) @curl_getinfo($request, CURLINFO_RESPONSE_CODE);
+    @curl_close($request);
 
-    $payload = @json_decode(@file_get_contents($recordPath), true);
-    if (!is_array($payload) || !isset($payload['username'], $payload['expires'])) {
+    if (!is_string($response) || $statusCode !== 200) {
         return false;
     }
-    if (!is_int($payload['expires']) || $payload['expires'] < time()) {
-        @unlink($recordPath);
-        return false;
-    }
-    if (!is_string($payload['username']) || !hash_equals($payload['username'], $username)) {
-        return false;
-    }
-    if (!@unlink($recordPath)) {
-        return false;
-    }
-    return true;
+    $payload = @json_decode($response, true);
+    return is_array($payload)
+        && isset($payload['status'])
+        && $payload['status'] === 1;
 }
 
 try {

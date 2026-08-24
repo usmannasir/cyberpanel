@@ -1,76 +1,62 @@
-import hashlib
-import json
-import os
-import pathlib
-import stat
-import tempfile
 import unittest
 
-from databases.phpmyadmin_handoff import create_handoff
+from databases.phpmyadmin_handoff import consume_handoff, create_handoff
+
+
+class Session(dict):
+    modified = False
 
 
 class PhpMyAdminHandoffTests(unittest.TestCase):
-    def test_creates_private_short_lived_token_record(self):
-        with tempfile.TemporaryDirectory() as directory:
-            handoff_dir = pathlib.Path(directory) / 'handoff'
-            path = create_handoff(
-                'admin', 'unpredictable-token', directory=handoff_dir,
-                now=1_000, ttl=120,
-            )
+    def test_creates_short_lived_session_handoff(self):
+        session = Session()
 
-            self.assertEqual(
-                hashlib.sha256(b'unpredictable-token').hexdigest(),
-                path.name,
-            )
-            self.assertEqual(0o700, handoff_dir.stat().st_mode & 0o777)
-            self.assertEqual(0o600, path.stat().st_mode & 0o777)
-            self.assertEqual(
-                {'username': 'admin', 'expires': 1_120},
-                json.loads(path.read_text(encoding='utf-8')),
-            )
+        create_handoff(
+            session, 'database-user', 'unpredictable-token',
+            now=1_000, ttl=120,
+        )
 
-    def test_rejects_insecure_existing_directory(self):
-        with tempfile.TemporaryDirectory() as directory:
-            handoff_dir = pathlib.Path(directory) / 'handoff'
-            handoff_dir.mkdir(mode=0o755)
-            handoff_dir.chmod(0o755)
+        self.assertEqual(
+            {
+                'username': 'database-user',
+                'token': 'unpredictable-token',
+                'expires': 1_120,
+            },
+            session['phpmyadmin_handoff'],
+        )
+        self.assertTrue(session.modified)
 
-            with self.assertRaises(PermissionError):
-                create_handoff(
-                    'admin', 'token', directory=handoff_dir, now=1_000,
-                )
+    def test_consumes_valid_handoff_only_once(self):
+        session = Session()
+        create_handoff(session, 'admin', 'token', now=1_000)
 
-    def test_refuses_to_replace_existing_handoff(self):
-        with tempfile.TemporaryDirectory() as directory:
-            handoff_dir = pathlib.Path(directory) / 'handoff'
-            create_handoff(
-                'admin', 'same-token', directory=handoff_dir, now=1_000,
-            )
+        self.assertTrue(
+            consume_handoff(session, 'admin', 'token', now=1_001)
+        )
+        self.assertFalse(
+            consume_handoff(session, 'admin', 'token', now=1_002)
+        )
+        self.assertNotIn('phpmyadmin_handoff', session)
 
-            with self.assertRaises(FileExistsError):
-                create_handoff(
-                    'admin', 'same-token', directory=handoff_dir, now=1_001,
-                )
+    def test_rejects_and_consumes_mismatched_handoff(self):
+        session = Session()
+        create_handoff(session, 'admin', 'correct-token', now=1_000)
 
-    def test_removes_only_expired_private_regular_records(self):
-        with tempfile.TemporaryDirectory() as directory:
-            handoff_dir = pathlib.Path(directory) / 'handoff'
-            expired = create_handoff(
-                'admin', 'old-token', directory=handoff_dir,
-                now=1_000, ttl=10,
-            )
-            os.utime(expired, (1_000, 1_000))
-            unrelated = handoff_dir / 'not-a-token'
-            unrelated.write_text('keep', encoding='utf-8')
-            unrelated.chmod(0o600)
+        self.assertFalse(
+            consume_handoff(session, 'admin', 'wrong-token', now=1_001)
+        )
+        self.assertNotIn('phpmyadmin_handoff', session)
 
-            create_handoff(
-                'admin', 'new-token', directory=handoff_dir,
-                now=2_000, ttl=120,
-            )
+    def test_rejects_expired_handoff(self):
+        session = Session()
+        create_handoff(
+            session, 'admin', 'token', now=1_000, ttl=10,
+        )
 
-            self.assertFalse(expired.exists())
-            self.assertTrue(unrelated.exists())
+        self.assertFalse(
+            consume_handoff(session, 'admin', 'token', now=1_011)
+        )
+        self.assertNotIn('phpmyadmin_handoff', session)
 
 
 if __name__ == '__main__':
