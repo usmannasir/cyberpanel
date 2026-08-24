@@ -102,6 +102,43 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
         self.assertIn('dnf -qy module disable mariadb', source)
         self.assertIn('dnf module reset mariadb -y', source)
 
+    def test_el10_keeps_the_verified_modsecurity_module(self):
+        tree = ast.parse(INSTALLER.read_text())
+        installer_class = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'preFlightsChecks'
+        )
+        method = next(
+            node for node in installer_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == 'modSecPreReqs'
+        )
+        source = ast.get_source_segment(INSTALLER.read_text(), method)
+
+        self.assertIn('if is_el10_release():', source)
+        self.assertLess(
+            source.index('if is_el10_release():'),
+            source.index('os.remove(pathToRemoveGarbageFile)'),
+        )
+
+    def test_el10_opendkim_maps_are_readable_by_the_service(self):
+        tree = ast.parse(INSTALLER.read_text())
+        installer_class = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'preFlightsChecks'
+        )
+        method = next(
+            node for node in installer_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == 'installOpenDKIM'
+        )
+        source = ast.get_source_segment(INSTALLER.read_text(), method)
+
+        self.assertIn('if is_el10_release():', source)
+        self.assertIn("shutil.chown(table_path, user='root', group='opendkim')", source)
+        self.assertIn('os.chmod(table_path, 0o640)', source)
+        self.assertIn(
+            "shutil.chown(keys_path, user='root', group='opendkim')", source
+        )
+
     def test_progress_logging_reuses_detected_server_ip(self):
         source = BOOTSTRAP.read_text()
         function_start = source.index('Debug_Log2()')

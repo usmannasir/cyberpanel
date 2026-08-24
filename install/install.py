@@ -2250,6 +2250,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         print("###################################################################")
 
     def modSecPreReqs(self):
+        if is_el10_release():
+            return 1
+
         try:
 
             pathToRemoveGarbageFile = os.path.join(self.server_root_path, "modules/mod_security.so")
@@ -2275,6 +2278,21 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                             with open(table_path, 'a'):
                                 pass
                         os.chmod(table_path, 0o644)
+                elif is_el10_release():
+                    keys_path = '/etc/opendkim/keys'
+                    os.makedirs(keys_path, exist_ok=True)
+                    shutil.chown(keys_path, user='root', group='opendkim')
+                    os.chmod(keys_path, 0o750)
+                    for table_path in (
+                        '/etc/opendkim/KeyTable',
+                        '/etc/opendkim/SigningTable',
+                        '/etc/opendkim/TrustedHosts',
+                    ):
+                        if not os.path.exists(table_path):
+                            with open(table_path, 'a'):
+                                pass
+                        shutil.chown(table_path, user='root', group='opendkim')
+                        os.chmod(table_path, 0o640)
             else:
                 self.install_package('opendkim')
 
