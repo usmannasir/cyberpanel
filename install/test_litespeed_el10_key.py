@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 INSTALLER = Path(__file__).with_name('install.py')
+BOOTSTRAP = INSTALLER.parents[1] / 'cyberpanel.sh'
 
 
 def load_key_helpers():
@@ -42,6 +43,25 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
             key_file.write(b'wrong key')
             key_file.flush()
             self.assertFalse(helpers['verify_litespeed_el10_key'](key_file.name))
+
+    def test_bootstrap_uses_pinned_el10_repositories(self):
+        source = BOOTSTRAP.read_text()
+
+        self.assertIn('RPM-GPG-KEY-litespeed2025', source)
+        self.assertIn(
+            'cd0578a8febe98cb7d7d437a73419b8407ddd98cd848f2c9c7fdd288d768af01',
+            source,
+        )
+        self.assertIn('epel-release-latest-10.noarch.rpm', source)
+        self.assertIn('remi-release-10.rpm', source)
+        self.assertIn('10.11/rhel10-amd64/', source)
+
+    def test_existing_el9_repository_targets_are_retained(self):
+        source = BOOTSTRAP.read_text()
+
+        self.assertIn('epel-release-latest-9.noarch.rpm', source)
+        self.assertIn('remi-release-9.rpm', source)
+        self.assertIn('10.11/rhel9-amd64/', source)
 
 
 if __name__ == '__main__':
