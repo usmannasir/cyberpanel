@@ -36,6 +36,8 @@ file_put_contents($router, <<<'PHP'
 <?php
 $valid = isset($_COOKIE['cyberpanel_sessionid'])
     && $_COOKIE['cyberpanel_sessionid'] === 'authenticatedsession'
+    && isset($_SERVER['HTTP_CF_CONNECTING_IP'])
+    && $_SERVER['HTTP_CF_CONNECTING_IP'] === '203.0.113.10'
     && isset($_POST['username'], $_POST['token'])
     && $_POST['username'] === 'admin'
     && $_POST['token'] === 'one-time-token';
@@ -91,6 +93,7 @@ define(
     'http://127.0.0.1:' . $port . '/validate'
 );
 $_COOKIE['cyberpanel_sessionid'] = 'authenticatedsession';
+$_SERVER['REMOTE_ADDR'] = '203.0.113.10';
 $_POST['username'] = 'admin';
 $_POST['password'] = 'database-password';
 $_POST['handoff_token'] = 'one-time-token';

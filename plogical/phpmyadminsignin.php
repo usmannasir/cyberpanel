@@ -29,6 +29,12 @@ function consumeHandoff($username, $token) {
     if (!preg_match('/^[A-Za-z0-9]{16,128}$/D', $sessionID)) {
         return false;
     }
+    $clientIP = isset($_SERVER['HTTP_CF_CONNECTING_IP'])
+        ? (string) $_SERVER['HTTP_CF_CONNECTING_IP']
+        : (isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '');
+    if (filter_var($clientIP, FILTER_VALIDATE_IP) === false) {
+        return false;
+    }
 
     $request = @curl_init(PMA_HANDOFF_VALIDATION_URL);
     if ($request === false) {
@@ -44,6 +50,7 @@ function consumeHandoff($username, $token) {
             PHP_QUERY_RFC3986
         ),
         CURLOPT_COOKIE => 'cyberpanel_sessionid=' . $sessionID,
+        CURLOPT_HTTPHEADER => array('CF-Connecting-IP: ' . $clientIP),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => false,
         CURLOPT_CONNECTTIMEOUT => 2,
