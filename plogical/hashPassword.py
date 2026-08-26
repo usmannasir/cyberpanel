@@ -34,10 +34,7 @@ def check_password(hashed_password, user_password):
 
 
 def generateToken(username, password):
-    # Concatenate username and password
-    credentials = f'{username}:{password}'.encode()
-
-    # Use SHA-256 hashing
-    hashed_credentials = hashlib.sha256(credentials).hexdigest()
-
-    return 'Basic {0}'.format(hashed_credentials)
+    # API credentials must be independent of the account password.  Keep this
+    # compatibility wrapper for older callers while issuing a random key.
+    from plogical.securityUtils import generate_api_token
+    return generate_api_token()

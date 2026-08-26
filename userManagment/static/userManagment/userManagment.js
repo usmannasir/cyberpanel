@@ -153,7 +153,7 @@ app.controller('modifyUser', function ($scope, $http) {
             $scope.qrHidden = true;
         }
     };
-    
+
     $scope.copySecretKey = function() {
         if ($scope.secretKey) {
             // Create a temporary textarea element
@@ -162,11 +162,11 @@ app.controller('modifyUser', function ($scope, $http) {
             tempTextarea.style.position = 'fixed';
             tempTextarea.style.opacity = '0';
             document.body.appendChild(tempTextarea);
-            
+
             // Select and copy the text
             tempTextarea.select();
             tempTextarea.setSelectionRange(0, 99999); // For mobile devices
-            
+
             try {
                 document.execCommand('copy');
                 // Show success feedback (you can add a toast notification here if available)
@@ -174,7 +174,7 @@ app.controller('modifyUser', function ($scope, $http) {
             } catch (err) {
                 alert('Failed to copy secret key. Please copy it manually.');
             }
-            
+
             // Remove the temporary element
             document.body.removeChild(tempTextarea);
         }
@@ -217,7 +217,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.securityLevel = userDetails.securityLevel;
                 $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
-                
+
                 // Format secret key with spaces for better readability
                 if (userDetails.secretKey) {
                     $scope.secretKey = userDetails.secretKey;
@@ -1489,6 +1489,7 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.apiAccessDropDown = true;
+                $scope.apiToken = response.data.apiToken || '';
                 new PNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',

@@ -27,6 +27,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import (
     EMAIL_REPORT_DIRECTORY,
     api_token_matches,
+    api_two_factor_matches,
     create_private_token_file,
     read_private_token_file,
     remove_stale_private_token_files,
@@ -51,7 +52,8 @@ class CloudManager:
 
     def verifyLogin(self, request):
         try:
-            if api_token_matches(request.META.get('HTTP_AUTHORIZATION'), self.admin.token):
+            if (api_token_matches(request.META.get('HTTP_AUTHORIZATION'), self.admin.token)
+                    and api_two_factor_matches(self.admin, request, self.data)):
                 return 1, self.ajaxPre(1, None)
             else:
                 return 0, self.ajaxPre(0, 'Invalid login information.')

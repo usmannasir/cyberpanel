@@ -3,8 +3,10 @@ from unittest import mock
 
 from django.core.cache import cache
 from django.test import RequestFactory, SimpleTestCase
+import pyotp
 
 from cloudAPI.views import access
+from plogical.securityUtils import generate_api_token, normalize_api_token
 
 
 class Session(dict):
@@ -32,7 +34,10 @@ class CloudAccessSecurityTests(SimpleTestCase):
     def tearDown(self):
         cache.clear()
 
-    def request(self, username='owner', token='valid-token', remote_addr='192.0.2.10'):
+    def request(self, username='owner', token='valid-token', remote_addr='192.0.2.10', otp=None):
+        headers = {}
+        if otp is not None:
+            headers['HTTP_X_CYBERPANEL_OTP'] = otp
         request = self.factory.get(
             '/cloudAPI/access',
             {
@@ -42,6 +47,7 @@ class CloudAccessSecurityTests(SimpleTestCase):
             },
             REMOTE_ADDR=remote_addr,
             HTTP_HOST='panel.example.com',
+            **headers,
         )
         request.session = Session()
         return request
@@ -82,13 +88,16 @@ class CloudAccessSecurityTests(SimpleTestCase):
 
     @mock.patch('cloudAPI.views.Administrator.objects.get')
     def test_successful_access_rotates_and_persists_session(self, get_admin):
+        token = generate_api_token()
         get_admin.return_value = SimpleNamespace(
             pk=7,
             api=1,
             state='ACTIVE',
-            token='Basic valid-token',
+            token=token,
+            twoFA=0,
+            secretKey='None',
         )
-        request = self.request(token='Bearer valid-token')
+        request = self.request(token='Bearer ' + normalize_api_token(token))
 
         response = access(request)
 
@@ -101,6 +110,44 @@ class CloudAccessSecurityTests(SimpleTestCase):
         self.assertEqual(request.session.expiry, 43200)
         self.assertEqual(response['Cache-Control'], 'no-store')
         self.assertEqual(response['Referrer-Policy'], 'no-referrer')
+
+    @mock.patch('cloudAPI.views.Administrator.objects.get')
+    def test_two_factor_account_cannot_create_session_without_otp(self, get_admin):
+        token = generate_api_token()
+        get_admin.return_value = SimpleNamespace(
+            pk=7,
+            api=1,
+            state='ACTIVE',
+            token=token,
+            twoFA=1,
+            secretKey=pyotp.random_base32(),
+        )
+
+        request = self.request(token=token)
+        response = access(request)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertNotIn('userID', request.session)
+        self.assertEqual(response.content, b'Two-factor authentication required.')
+
+    @mock.patch('cloudAPI.views.Administrator.objects.get')
+    def test_two_factor_account_accepts_token_and_current_otp(self, get_admin):
+        token = generate_api_token()
+        secret = pyotp.random_base32()
+        get_admin.return_value = SimpleNamespace(
+            pk=7,
+            api=1,
+            state='ACTIVE',
+            token=token,
+            twoFA=1,
+            secretKey=secret,
+        )
+
+        request = self.request(token=token, otp=pyotp.TOTP(secret).now())
+        response = access(request)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(request.session['userID'], 7)
 
     @mock.patch('cloudAPI.views.Administrator.objects.get')
     def test_repeated_failures_are_rate_limited(self, get_admin):

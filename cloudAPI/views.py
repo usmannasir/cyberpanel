@@ -11,7 +11,7 @@ try:
     from django.utils.http import url_has_allowed_host_and_scheme
 except ImportError:
     from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
-from plogical.securityUtils import api_token_matches
+from plogical.securityUtils import api_token_matches, api_two_factor_matches
 
 
 CLOUD_ACCESS_FAILURE_LIMIT = 10
@@ -501,6 +501,10 @@ def access(request):
     if not admin.api or admin.state != 'ACTIVE' or not api_token_matches(token, admin.token):
         _record_access_failure(cache_key)
         return _access_response('Unauthorized access.', 401)
+
+    if not api_two_factor_matches(admin, request):
+        _record_access_failure(cache_key)
+        return _access_response('Two-factor authentication required.', 401)
 
     if redirectFinal is not None and not url_has_allowed_host_and_scheme(
             redirectFinal,

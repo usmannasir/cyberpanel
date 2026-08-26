@@ -12,7 +12,7 @@ from plogical.httpProc import httpProc
 from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
-from plogical.securityUtils import ensure_api_token
+from plogical.securityUtils import ensure_api_token, rotate_api_token
 
 
 def loadUserHome(request):
@@ -101,12 +101,18 @@ def saveChangesAPIAccess(request):
             if access == "Enable":
                 ensure_api_token(userAcct)
                 userAcct.api = 1
+            elif access == "Regenerate":
+                rotate_api_token(userAcct)
+                userAcct.api = 1
             else:
                 userAcct.api = 0
+                userAcct.token = ''
 
             userAcct.save()
 
             finalResponse = {'status': 1}
+            if userAcct.api:
+                finalResponse['apiToken'] = userAcct.token
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
     except BaseException as msg:

@@ -25,6 +25,8 @@ from userManagment.views import submitUserDeletion as duc
 from plogical.acl import ACLManager
 from plogical.securityUtils import (
     api_token_matches,
+    api_two_factor_matches,
+    ensure_api_token,
     get_remote_transfer_dir_path,
     get_remote_transfer_log_path,
     get_remote_transfer_pid_path,
@@ -75,14 +77,20 @@ def get_api_admin(request, data, username_key='adminUser', password_key='adminPa
         return None, api_error('status', 'Could not authorize access to API.', 401)
 
     authorization = request.META.get('HTTP_AUTHORIZATION')
-    if allow_token and authorization and api_token_matches(authorization, admin.token):
-        return admin, None
-
+    credential_matches = bool(
+        allow_token and authorization and api_token_matches(authorization, admin.token)
+    )
     admin_pass = data.get(password_key)
-    if admin_pass and hashPassword.check_password(admin.password, admin_pass):
-        return admin, None
+    if not credential_matches and admin_pass:
+        credential_matches = hashPassword.check_password(admin.password, admin_pass)
 
-    return None, api_error('status', 'Could not authorize access to API.', 401)
+    if not credential_matches:
+        return None, api_error('status', 'Could not authorize access to API.', 401)
+
+    if not api_two_factor_matches(admin, request, data):
+        return None, api_error('status', 'Two-factor authentication required.', 401)
+
+    return admin, None
 
 
 def api_auth_response(auth_error, status_key='status', extra=None):
@@ -151,12 +159,15 @@ def verifyConn(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data, status=401)
 
-            if hashPassword.check_password(admin.password, adminPass):
-                data_ret = {"verifyConn": 1}
+            if hashPassword.check_password(admin.password, adminPass) and api_two_factor_matches(admin, request, data):
+                ensure_api_token(admin)
+                data_ret = {"verifyConn": 1, "apiToken": admin.token}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                response = HttpResponse(json_data)
+                response['Cache-Control'] = 'no-store'
+                return response
             else:
-                data_ret = {"verifyConn": 0, 'error_message': "Invalid password."}
+                data_ret = {"verifyConn": 0, 'error_message': "Could not authorize access to API."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data, status=401)
         else:
@@ -416,7 +427,7 @@ def loginAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data, status=401)
 
-        if hashPassword.check_password(admin.password, password):
+        if hashPassword.check_password(admin.password, password) and api_two_factor_matches(admin, request, request.POST):
             request.session.cycle_key()
             request.session['userID'] = admin.pk
             ip_address = request.META.get('HTTP_CF_CONNECTING_IP')
@@ -429,7 +440,7 @@ def loginAPI(request):
             request.session.save()
             return redirect(renderBase)
         else:
-            return HttpResponse("Invalid Credentials.")
+            return HttpResponse("Invalid Credentials.", status=401)
 
     except BaseException as msg:
         data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
