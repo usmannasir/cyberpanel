@@ -154,6 +154,32 @@ app.controller('modifyUser', function ($scope, $http) {
         }
     };
 
+    $scope.copySecretKey = function() {
+        if ($scope.secretKey) {
+            // Create a temporary textarea element
+            var tempTextarea = document.createElement('textarea');
+            tempTextarea.value = $scope.secretKey;
+            tempTextarea.style.position = 'fixed';
+            tempTextarea.style.opacity = '0';
+            document.body.appendChild(tempTextarea);
+
+            // Select and copy the text
+            tempTextarea.select();
+            tempTextarea.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                document.execCommand('copy');
+                // Show success feedback (you can add a toast notification here if available)
+                alert('Secret key copied to clipboard!');
+            } catch (err) {
+                alert('Failed to copy secret key. Please copy it manually.');
+            }
+
+            // Remove the temporary element
+            document.body.removeChild(tempTextarea);
+        }
+    };
+
 
     $scope.fetchUserDetails = function () {
 
@@ -191,6 +217,12 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.securityLevel = userDetails.securityLevel;
                 $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
+
+                // Format secret key with spaces for better readability
+                if (userDetails.secretKey) {
+                    $scope.secretKey = userDetails.secretKey;
+                    $scope.formattedSecretKey = userDetails.secretKey.match(/.{1,4}/g).join(' ');
+                }
 
                 qrCode.set({
                     value: userDetails.otpauth
@@ -460,6 +492,10 @@ app.controller('deleteUser', function ($scope, $http) {
 /* Java script code to create acl */
 
 app.controller('createACLCTRL', function ($scope, $http) {
+
+    $scope.aclCreated = true;
+    $scope.aclCreationFailed = true;
+    $scope.couldNotConnect = true;
 
     $scope.aclLoading = true;
     $scope.makeAdmin = false;
@@ -781,7 +817,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             // Email Management
 
             $scope.createEmail = true;
-            $scope.listEmails = True;
+            $scope.listEmails = true;
             $scope.deleteEmail = true;
             $scope.emailForwarding = true;
             $scope.changeEmailPassword = true;
@@ -1260,7 +1296,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             // Email Management
 
             $scope.createEmail = true;
-            $scope.listEmails = True;
+            $scope.listEmails = true;
             $scope.deleteEmail = true;
             $scope.emailForwarding = true;
             $scope.changeEmailPassword = true;
@@ -1453,6 +1489,7 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.apiAccessDropDown = true;
+                $scope.apiToken = response.data.apiToken || '';
                 new PNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',
@@ -1552,6 +1589,7 @@ app.controller('listTableUsers', function ($scope, $http) {
     $scope.deleteUserInitial = function (name){
         UserToDelete = name;
         $scope.UserToDelete = name;
+        $('#deleteModal').modal('show');
     };
 
     $scope.deleteUserFinal = function () {
@@ -1576,6 +1614,7 @@ app.controller('listTableUsers', function ($scope, $http) {
             $scope.cyberpanelLoading = true;
             if (response.data.deleteStatus === 1) {
                 $scope.populateCurrentRecords();
+                $('#deleteModal').modal('hide');
                 new PNotify({
                     title: 'Success!',
                     text: 'Users successfully deleted!',
@@ -1611,9 +1650,8 @@ app.controller('listTableUsers', function ($scope, $http) {
     };
 
     $scope.editInitial = function (name) {
-
         $scope.name = name;
-
+        $('#editModal').modal('show');
     };
 
     $scope.saveResellerChanges = function () {
@@ -1640,6 +1678,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
+                $('#editModal').modal('hide');
                 new PNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',
@@ -1693,6 +1732,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
+                $('#editModal').modal('hide');
                 new PNotify({
                     title: 'Success!',
                     text: 'ACL Successfully changed.',
@@ -1723,6 +1763,7 @@ app.controller('listTableUsers', function ($scope, $http) {
     };
 
     $scope.controlUserState = function (userName, state) {
+
         $scope.cyberpanelLoading = false;
 
         var url = "/users/controlUserState";

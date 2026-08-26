@@ -15,6 +15,7 @@ def main():
     admin.save()
 
     print("API Access Enabled")
+    print("API Token: %s" % admin.token)
 
 if __name__ == "__main__":
     main()

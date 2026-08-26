@@ -1,4 +1,5 @@
 import fcntl
+import hashlib
 import hmac
 import json
 import os
@@ -31,6 +32,10 @@ SYSTEM_USER_RE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
 HOSTNAME_LABEL_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
 MYSQL_UPGRADE_STATUS_RE = re.compile(r"^mysql-upgrade-[A-Za-z0-9_.-]{1,80}$")
 INVALID_API_TOKEN_VALUES = frozenset(("", "none", "null", "undefined"))
+API_TOKEN_PREFIX = "cp_api_v1_"
+API_TOKEN_RE = re.compile(r"^cp_api_v1_[A-Za-z0-9_-]{64}$")
+API_OTP_FAILURE_LIMIT = 10
+API_OTP_FAILURE_WINDOW = 5 * 60
 
 
 def constant_time_equal(left, right):
@@ -51,30 +56,98 @@ def normalize_api_token(token):
 
 
 def is_usable_api_token(token):
-    normalized = normalize_api_token(token).rstrip("=").strip().lower()
-    return normalized not in INVALID_API_TOKEN_VALUES
+    return is_current_api_token(token)
+
+
+def is_current_api_token(token):
+    normalized = normalize_api_token(token).strip()
+    if normalized.lower() in INVALID_API_TOKEN_VALUES:
+        return False
+    return API_TOKEN_RE.fullmatch(normalized) is not None
 
 
 def generate_api_token():
-    return "Basic %s" % secrets.token_urlsafe(48)
+    return "Basic %s%s" % (API_TOKEN_PREFIX, secrets.token_urlsafe(48))
+
+
+def rotate_api_token(account):
+    account.token = generate_api_token()
+    account.save(update_fields=['token'])
+    return account.token
 
 
 def ensure_api_token(account):
-    if is_usable_api_token(account.token):
+    if is_current_api_token(account.token):
         return False
-    account.token = generate_api_token()
-    account.save(update_fields=['token'])
+    rotate_api_token(account)
     return True
 
 
 def api_token_matches(provided, stored):
     provided_token = normalize_api_token(provided)
     stored_token = normalize_api_token(stored)
-    if not is_usable_api_token(provided_token) or not is_usable_api_token(stored_token):
+    if not is_current_api_token(provided_token) or not is_current_api_token(stored_token):
         return False
-    if constant_time_equal(provided_token, stored_token):
+    return constant_time_equal(provided_token, stored_token)
+
+
+def _api_two_factor_code(request, data=None):
+    code = request.META.get('HTTP_X_CYBERPANEL_OTP', '')
+    if not code and data:
+        for key in ('twofa', 'twoFactorCode', 'otp'):
+            code = data.get(key, '')
+            if code:
+                break
+    if not code and hasattr(request, 'POST'):
+        for key in ('twofa', 'twoFactorCode', 'otp'):
+            code = request.POST.get(key, '')
+            if code:
+                break
+    return str(code).strip()
+
+
+def _api_otp_cache_key(account, request):
+    account_id = getattr(account, 'pk', None) or getattr(account, 'userName', '')
+    remote_address = request.META.get('REMOTE_ADDR', '')
+    key_material = '%s\0%s' % (account_id, remote_address)
+    return 'cp_api_otp_%s' % hashlib.sha256(key_material.encode()).hexdigest()
+
+
+def _record_api_otp_failure(cache, cache_key):
+    if cache.add(cache_key, 1, API_OTP_FAILURE_WINDOW):
+        return
+    try:
+        cache.incr(cache_key)
+    except ValueError:
+        cache.set(cache_key, 1, API_OTP_FAILURE_WINDOW)
+
+
+def api_two_factor_matches(account, request, data=None):
+    if not getattr(account, 'twoFA', 0):
         return True
-    return constant_time_equal(provided_token.rstrip("="), stored_token.rstrip("="))
+
+    from django.core.cache import cache
+
+    cache_key = _api_otp_cache_key(account, request)
+    if cache.get(cache_key, 0) >= API_OTP_FAILURE_LIMIT:
+        return False
+
+    code = _api_two_factor_code(request, data)
+    secret = str(getattr(account, 'secretKey', '') or '').strip()
+    if re.fullmatch(r'[0-9]{6}', code) is None or secret.lower() in INVALID_API_TOKEN_VALUES:
+        _record_api_otp_failure(cache, cache_key)
+        return False
+
+    try:
+        import pyotp
+        if pyotp.TOTP(secret).verify(code, valid_window=1):
+            cache.delete(cache_key)
+            return True
+        _record_api_otp_failure(cache, cache_key)
+        return False
+    except Exception:
+        _record_api_otp_failure(cache, cache_key)
+        return False
 
 
 def _read_secret_file(path):
