@@ -45,6 +45,36 @@ class WordPressSiteRegistrationTests(unittest.TestCase):
         self.assertEqual('example.com', existing.FinalURL)
         existing.save.assert_called_once_with(update_fields=['title', 'FinalURL'])
 
+    @mock.patch('plogical.applicationInstaller.WPSites')
+    def test_deploy_reuses_the_row_installwordpress_already_created(self, wordpress_sites):
+        """DeployWordPress runs installWordPress(), which registers the site first.
+
+        Registering again must update that row with the chosen update policies
+        instead of inserting a second row for the same path.
+        """
+        already_registered = mock.Mock()
+        wordpress_sites.objects.filter.return_value.first.return_value = already_registered
+
+        wpobj = ApplicationInstaller.registerWordPressSite(
+            mock.Mock(),
+            'Example site',
+            '/home/example.com/public_html/',
+            'example.com',
+        )
+        wpobj.AutoUpdates = 'All minor and major'
+        wpobj.PluginUpdates = 'Enabled'
+        wpobj.ThemeUpdates = 'Enabled'
+        wpobj.save(update_fields=['AutoUpdates', 'PluginUpdates', 'ThemeUpdates'])
+
+        wordpress_sites.objects.create.assert_not_called()
+        self.assertIs(already_registered, wpobj)
+        self.assertEqual('All minor and major', already_registered.AutoUpdates)
+        self.assertEqual('Enabled', already_registered.PluginUpdates)
+        self.assertEqual('Enabled', already_registered.ThemeUpdates)
+        already_registered.save.assert_called_with(
+            update_fields=['AutoUpdates', 'PluginUpdates', 'ThemeUpdates'],
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2085,10 +2085,16 @@ class ApplicationInstaller(multi.Thread):
                 finalPath = "/home/" + self.extraArgs['domainName'] + "/public_html/"
                 Finalurl = (self.extraArgs['domainName'])
 
-            wpobj = WPSites(owner=webobj, title=self.extraArgs['blogTitle'], path=finalPath, FinalURL=Finalurl,
-                            AutoUpdates=(self.extraArgs['updates']), PluginUpdates=(self.extraArgs['Plugins']),
-                            ThemeUpdates=(self.extraArgs['Themes']), )
-            wpobj.save()
+            # installWordPress() has already registered this path, so reuse that
+            # row and apply the update policies chosen here rather than inserting
+            # a second one for the same site.
+            wpobj = ApplicationInstaller.registerWordPressSite(
+                webobj, self.extraArgs['blogTitle'], finalPath, Finalurl,
+            )
+            wpobj.AutoUpdates = self.extraArgs['updates']
+            wpobj.PluginUpdates = self.extraArgs['Plugins']
+            wpobj.ThemeUpdates = self.extraArgs['Themes']
+            wpobj.save(update_fields=['AutoUpdates', 'PluginUpdates', 'ThemeUpdates'])
 
             statusFile = open(currentTemp, 'w')
             statusFile.writelines('WordPress installed..,[200]')
