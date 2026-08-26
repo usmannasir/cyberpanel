@@ -14,8 +14,10 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
-from cyberpanel_version import BUILD, VERSION
 # Create your views here.
+
+VERSION = '2.5.5'
+BUILD = 'dev'
 
 
 def verifyLogin(request):
@@ -39,6 +41,10 @@ def verifyLogin(request):
 
                 username = data.get('username', '')
                 password = data.get('password', '')
+
+                # Secure logging (no sensitive data)
+                from plogical.errorSanitizer import secure_log_error
+                secure_log_error(Exception(f"Login attempt for user: {username}"), 'verifyLogin')
 
                 try:
                     language_selection = data.get('languageSelection', 'english')
@@ -88,7 +94,23 @@ def verifyLogin(request):
                     response = HttpResponse()
                     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
 
-            admin = Administrator.objects.get(userName=username)
+            from plogical.usernameUtils import resolve_administrator_by_login_name, GENERIC_AUTH_FAIL
+            admin, exact_match = resolve_administrator_by_login_name(username)
+            if not admin:
+                data = {'userID': 0, 'loginStatus': 0, 'error_message': GENERIC_AUTH_FAIL}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+            # Username match is case-sensitive (Admin != admin). Give a clear hint
+            # when the account exists under a different capitalisation.
+            if not exact_match:
+                data = {
+                    'userID': 0,
+                    'loginStatus': 0,
+                    'error_message': 'Username is case-sensitive. Check capitalisation (e.g. Admin).',
+                }
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+
             if admin.state == 'SUSPENDED':
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Account currently suspended.'}
                 json_data = json.dumps(data)
@@ -108,6 +130,13 @@ def verifyLogin(request):
             password_check_result = hashPassword.check_password(admin.password, password)
 
             if password_check_result:
+                try:
+                    from plogical import hashPassword as hp
+                    if hp.needs_password_rehash(admin.password):
+                        admin.password = hp.hash_password(password)
+                        admin.save(update_fields=['password'])
+                except Exception:
+                    pass
                 if admin.twoFA:
                     if request.session.get('twofa', 1) == 0:
                         import pyotp
@@ -123,9 +152,12 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
-                # Rotate a stale or pre-authentication session identifier before
-                # storing authenticated state.
-                request.session.cycle_key()
+                # Rotate session key on privilege elevation (mitigate fixation).
+                try:
+                    request.session.cycle_key()
+                except Exception:
+                    pass
+
                 request.session['userID'] = admin.pk
 
                 ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
@@ -138,9 +170,13 @@ def verifyLogin(request):
                 else:
                     request.session['ipAddr'] = ipAddr
 
-                request.session.set_expiry(43200)
-                # Persist before the browser follows the login response with a
-                # dashboard request.  This is important with multiple workers.
+                remember = bool(data.get('rememberMe'))
+                request.session.set_expiry(2592000 if remember else 43200)
+                try:
+                    from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+                    SSHSecurityWhitelistUtilities.on_successful_panel_login(request, admin)
+                except Exception:
+                    pass
                 request.session.save()
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
@@ -153,13 +189,54 @@ def verifyLogin(request):
                 response.write(json_data)
                 return response
 
-        except BaseException as msg:
-            data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            from plogical.errorSanitizer import secure_log_error, secure_error_response
+            secure_log_error(e, 'verifyLogin')
+            data = secure_error_response(e, 'Login failed')
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
+def _passkey_login_enabled():
+    """Return True only when passkey login should be shown (at least one passkey registered)."""
+    try:
+        from .webauthn_models import WebAuthnCredential
+        return WebAuthnCredential.objects.filter(is_active=True).exists()
+    except Exception:
+        return False
+
+
 @ensure_csrf_cookie
 def loadLoginPage(request):
+    try:
+        return _loadLoginPage(request)
+    except Exception as e:
+        try:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            import traceback
+            logging.writeToFile("loadLoginPage error: %s\n%s" % (str(e), traceback.format_exc()))
+        except Exception:
+            pass
+        # User-friendly message for database connection errors
+        from django.db.utils import OperationalError
+        err_str = str(e).lower()
+        if isinstance(e, OperationalError) or 'access denied' in err_str or '1045' in err_str:
+            msg = (
+                "Database connection failed (Access denied for user 'cyberpanel'@'localhost'). "
+                "Check: 1) MariaDB is running (systemctl status mariadb). "
+                "2) Password in /etc/cyberpanel/mysqlPassword matches the MySQL user used by the panel. "
+                "3) User exists: mysql -u root -p -e \"SELECT User,Host FROM mysql.user WHERE User='cyberpanel';\""
+            )
+            return HttpResponse(msg, status=503, content_type="text/plain; charset=utf-8")
+        try:
+            # Minimal cosmetic so template does not break (login.html uses cosmetic.MainDashboardCSS)
+            class _MinimalCosmetic:
+                MainDashboardCSS = ''
+            return render(request, 'loginSystem/login.html', {'cosmetic': _MinimalCosmetic(), 'passkey_login_available': False})
+        except Exception:
+            return HttpResponse("Server error. Check /home/cyberpanel/error-logs.txt", status=500, content_type="text/plain")
+
+
+def _loadLoginPage(request):
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
@@ -258,7 +335,8 @@ def loadLoginPage(request):
                 cosmetic = CyberPanelCosmetic()
                 cosmetic.save()
 
-            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
+            passkey_login_available = _passkey_login_enabled()
+            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic, 'passkey_login_available': passkey_login_available})
         else:
             ### Load Custom CSS
             try:
@@ -268,13 +346,21 @@ def loadLoginPage(request):
                 from baseTemplate.models import CyberPanelCosmetic
                 cosmetic = CyberPanelCosmetic()
                 cosmetic.save()
-            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
+            passkey_login_available = _passkey_login_enabled()
+            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic, 'passkey_login_available': passkey_login_available})
 
 
 @ensure_csrf_cookie
 def logout(request):
     try:
         del request.session['userID']
-        return render(request, 'loginSystem/login.html', {})
-    except:
-        return render(request, 'loginSystem/login.html', {})
+    except KeyError:
+        pass
+    try:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+    except Exception:
+        class _MinimalCosmetic:
+            MainDashboardCSS = ''
+        cosmetic = _MinimalCosmetic()
+    return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic, 'passkey_login_available': _passkey_login_enabled()})

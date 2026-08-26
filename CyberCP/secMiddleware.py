@@ -13,7 +13,7 @@ CONTENT_SECURITY_POLICY = (
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
     "https://www.jsdelivr.com https://cdn.jsdelivr.net https://code.jquery.com "
     "https://code.angularjs.org https://cdnjs.cloudflare.com "
-    "https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com https://js.stripe.com; "
+    "https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com https://js.stripe.com https://static.cloudflareinsights.com; "
     "connect-src *; "
     "font-src 'self' data: https:; "
     "style-src 'self' 'unsafe-inline' https:; "
@@ -53,8 +53,14 @@ class secMiddleware:
         import re
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
-        if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
-                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
+        # Static assets and a few public plugin callbacks must not require a session.
+        _lpma_public_launch = pathActual.startswith('/plugins/limitedPhpmyAdmin/launch/')
+        _lpma_pma_signon = pathActual == '/phpmyadmin/phpmyadminsignin.php'
+        _ai_scanner_callback = pathActual in ('/aiscanner/callback/', '/aiscanner/callback')
+
+        if pathActual == "/backup/localInitiate" or pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
+                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI') or pathActual.startswith('/static/')\
+                or _lpma_public_launch or _lpma_pma_signon or _ai_scanner_callback:
             pass
         else:
             # Session check logging removed
@@ -66,7 +72,7 @@ class secMiddleware:
                         'error_message': "This request need session.",
                         "errorMessage": "This request need session."}
                     final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                    return HttpResponse(final_json, content_type='application/json')
                 else:
                     from django.shortcuts import redirect
                     from loginSystem.views import loadLoginPage
@@ -82,31 +88,39 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = secMiddleware.get_client_ip(request)
-
-            if ipAddr.find('.') > -1:
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
-                else:
-                    del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
-                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                                 "errorMessage": "Session reuse detected, IPAddress logged."}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+            raw_ip = secMiddleware.get_client_ip(request) or ''
+            # Normalize the same way loginSystem stores ipAddr (IPv6: first 3 hextets)
+            if raw_ip.find(':') > -1:
+                session_ip = ':'.join(raw_ip.split(':')[:3])
             else:
-                ipAddr = ':'.join(secMiddleware.get_client_ip(request).split(':')[:3])
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
+                session_ip = raw_ip
+
+            stored_ip = request.session.get('ipAddr')
+            # Missing/empty bind: seed from current client (avoids false need-session after IP key loss)
+            if not stored_ip and session_ip:
+                request.session['ipAddr'] = session_ip
+                stored_ip = session_ip
+
+            if admin.securityLevel == secMiddleware.LOW or stored_ip == session_ip:
+                pass
+            else:
+                # Also accept REMOTE_ADDR if CF header/proxy briefly disagrees with login-time IP
+                alt_ip = request.META.get('REMOTE_ADDR') or ''
+                if alt_ip.find(':') > -1:
+                    alt_norm = ':'.join(alt_ip.split(':')[:3])
+                else:
+                    alt_norm = alt_ip
+                if stored_ip == alt_norm:
+                    request.session['ipAddr'] = session_ip or alt_norm
                 else:
                     del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
+                    if 'ipAddr' in request.session:
+                        del request.session['ipAddr']
+                    logging.writeToFile(raw_ip)
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                    return HttpResponse(final_json, content_type='application/json')
         except:
             pass
 
@@ -165,18 +179,6 @@ class secMiddleware:
                         continue
                     elif key == 'ports':
                         # For other endpoints, ports key continues to skip validation
-                        continue
-
-                    # Database passwords are opaque credentials.  The database
-                    # layer binds these values as SQL parameters, so rejecting
-                    # characters such as $, &, quotes, or semicolons only makes
-                    # strong generated passwords unusable.  Keep the exemption
-                    # limited to the password field on the two endpoints that
-                    # create or update a database account.
-                    if key == 'dbPassword' and pathActual in (
-                        '/dataBases/submitDBCreation',
-                        '/dataBases/changePassword',
-                    ):
                         continue
                     
                     # Allow protocol parameter for CSF modifyPorts endpoint
