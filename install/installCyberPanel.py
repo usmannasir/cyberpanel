@@ -725,9 +725,9 @@ module cyberpanel_ols {
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 if str.lower(self.serial) == 'trial':
-                    command = f'wget -q --output-document=lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                    command = f'wget -q --output-document=lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key.cwp'
                 if self.serial == '1111-2222-3333-4444':
-                    command = f'wget -q --output-document=/root/cyberpanel/install/lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                    command = f'wget -q --output-document=/root/cyberpanel/install/lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key.cwp'
                     install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
                 else:
                     writeSerial = open(f'lsws-{lsws_version}/serial.no', 'w')
