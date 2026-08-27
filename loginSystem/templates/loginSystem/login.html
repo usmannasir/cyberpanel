@@ -323,12 +323,13 @@
                             <div ng-hide="verifyCode" class="form-group">
                                 <div class="input-group">
                                     <input ng-model="twofa" type="text" class="form-control" name="twofa"
-                                           placeholder="Enter code from Google Authenticator" required
+                                           placeholder="Authenticator or recovery code" required
                                            style="height: 45px;">
                                     <span class="input-group-addon bg-blue">
                       <i class="glyph-icon icon-unlock-alt"></i>
                     </span>
                                 </div>
+                                <small class="text-muted">Enter the current authenticator code or one unused recovery code.</small>
                             </div>
 
 

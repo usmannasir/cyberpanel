@@ -13,6 +13,11 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
 from plogical.securityUtils import ensure_api_token, rotate_api_token
+from loginSystem.twoFactor import (
+    clear_recovery_codes,
+    confirm_recovery_codes,
+    prepare_recovery_codes,
+)
 
 
 def loadUserHome(request):
@@ -313,9 +318,14 @@ def fetchUserDetails(request):
 
                 if user.secretKey == 'None':
                     user.secretKey = pyotp.random_base32()
-                    user.save()
+                    user.save(update_fields=['secretKey'])
 
-                otpauth = pyotp.totp.TOTP(user.secretKey).provisioning_uri(email, issuer_name="CyberPanel")
+                if user.twoFA:
+                    otpauth = ''
+                    secretKey = ''
+                else:
+                    otpauth = pyotp.totp.TOTP(user.secretKey).provisioning_uri(email, issuer_name="CyberPanel")
+                    secretKey = user.secretKey
 
                 userDetails = {
                     "id": user.id,
@@ -326,6 +336,7 @@ def fetchUserDetails(request):
                     "websitesLimit": websitesLimit,
                     "securityLevel": SecurityLevel(user.securityLevel).name,
                     "otpauth": otpauth,
+                    "secretKey": secretKey,
                     'twofa': user.twoFA
                 }
 
@@ -386,6 +397,42 @@ def saveModifications(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            twofaWasEnabled = bool(user.twoFA)
+
+            if twofa and not twofaWasEnabled:
+                import pyotp
+                verificationCode = str(data.get('twofaVerificationCode', '')).strip()
+                setupConfirmed = bool(data.get('twofaSetupConfirmed', False))
+
+                if setupConfirmed:
+                    if not confirm_recovery_codes(user):
+                        data_ret = {
+                            'status': 0,
+                            'saveStatus': 0,
+                            'error_message': 'Recovery-code setup expired. Verify a new authenticator code and download a new set.',
+                        }
+                        return HttpResponse(json.dumps(data_ret))
+                else:
+                    if not verificationCode or not pyotp.TOTP(user.secretKey).verify(
+                        verificationCode, valid_window=1
+                    ):
+                        data_ret = {
+                            'status': 0,
+                            'saveStatus': 0,
+                            'error_message': 'Enter a valid current authenticator code before enabling 2FA.',
+                        }
+                        return HttpResponse(json.dumps(data_ret))
+
+                    recoveryCodes = prepare_recovery_codes(user)
+                    data_ret = {
+                        'status': 1,
+                        'saveStatus': 0,
+                        'recoverySetupRequired': 1,
+                        'recoveryCodes': recoveryCodes,
+                        'error_message': 'Download and confirm the recovery codes to finish enabling 2FA.',
+                    }
+                    return HttpResponse(json.dumps(data_ret))
+
             user.firstName = firstName
             user.lastName = lastName
             user.email = email
@@ -406,6 +453,7 @@ def saveModifications(request):
             # generates a fresh secret (and QR) the next time setup is opened.
             if twofa == 0:
                 user.secretKey = 'None'
+                clear_recovery_codes(user)
 
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW

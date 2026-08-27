@@ -182,6 +182,12 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         });
     };
 
+    $scope.logoutStandalone = function() {
+        apiCall('/webmail/api/logout', {}, function() {
+            window.location.href = '/webmail/login';
+        });
+    };
+
     // ── Account Switching ────────────────────────────────────
     $scope.switchAccount = function() {
         var newEmail = $scope.currentEmail;

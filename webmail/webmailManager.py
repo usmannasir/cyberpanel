@@ -1,6 +1,7 @@
 import json
 import os
 import base64
+import hashlib
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -11,10 +12,13 @@ from .services.smtp_client import SMTPClient
 from .services.email_composer import EmailComposer
 from .services.email_parser import EmailParser
 from .services.sieve_client import SieveClient
+from plogical.securityUtils import record_rate_limit_failure
 
 import plogical.CyberCPLogFileWriter as logging
 
 WEBMAIL_CONF = '/etc/cyberpanel/webmail.conf'
+WEBMAIL_LOGIN_FAILURE_LIMIT = 10
+WEBMAIL_LOGIN_FAILURE_WINDOW = 300
 
 
 class WebmailManager:
@@ -45,6 +49,16 @@ class WebmailManager:
             return json.loads(self.request.body)
         except Exception:
             return self.request.POST.dict()
+
+    def _login_failure_cache_key(self, email_addr):
+        # REMOTE_ADDR cannot be supplied by the browser.  Proxy forwarding
+        # headers are intentionally excluded so direct clients cannot rotate a
+        # spoofed header to bypass the throttle.
+        remoteAddress = self.request.META.get('REMOTE_ADDR', '')
+        keyMaterial = '%s\0%s' % (remoteAddress, email_addr.lower())
+        return 'cp_webmail_login_%s' % hashlib.sha256(
+            keyMaterial.encode('utf-8')
+        ).hexdigest()
 
     def _get_email(self):
         # Check for explicit email in POST body (from account switcher)
@@ -145,6 +159,16 @@ class WebmailManager:
         email = self._get_email()
         accounts = self._get_managed_accounts()
 
+        if self.request.session.get('webmail_standalone'):
+            if not email or not self.request.session.get('webmail_password'):
+                return redirect('/webmail/login')
+            return render(self.request, 'webmail/index.html', {
+                'email': email,
+                'accounts': json.dumps([email]),
+                'show_picker': False,
+                'standalone_webmail': True,
+            })
+
         if not email and accounts:
             if len(accounts) == 1:
                 self.request.session['webmail_email'] = accounts[0]
@@ -169,31 +193,58 @@ class WebmailManager:
     # ── Auth APIs ─────────────────────────────────────────────
 
     def apiLogin(self):
+        from django.core.cache import cache
+
         data = self._get_post_data()
-        email_addr = data.get('email', '')
+        email_addr = data.get('email', '').strip()
         password = data.get('password', '')
 
         if not email_addr or not password:
             return self._error('Email and password are required.')
 
+        failureCacheKey = self._login_failure_cache_key(email_addr)
+        if cache.get(failureCacheKey, 0) >= WEBMAIL_LOGIN_FAILURE_LIMIT:
+            return self._error('Too many login attempts. Try again in a few minutes.')
+
         try:
             client = IMAPClient(email_addr, password)
             client.close()
         except Exception as e:
-            return self._error('Login failed: %s' % str(e))
+            record_rate_limit_failure(
+                cache, failureCacheKey, WEBMAIL_LOGIN_FAILURE_WINDOW
+            )
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Standalone webmail authentication failed for account %s (%s)' % (
+                    failureCacheKey[-12:],
+                    type(e).__name__,
+                )
+            )
+            return self._error('Login failed. Check the email address and password.')
 
+        cache.delete(failureCacheKey)
+        self.request.session.cycle_key()
         self.request.session['webmail_email'] = email_addr
         self.request.session['webmail_password'] = password
         self.request.session['webmail_standalone'] = True
+        self.request.session.set_expiry(43200)
+        self.request.session.save()
         return self._success()
 
     def apiLogout(self):
         for key in ['webmail_email', 'webmail_password', 'webmail_standalone']:
             self.request.session.pop(key, None)
+        self.request.session.cycle_key()
+        self.request.session.save()
         return self._success()
 
     def apiSSO(self):
         """Auto-login for CyberPanel users."""
+        if self.request.session.get('webmail_standalone'):
+            current = self._get_email()
+            if not current or not self.request.session.get('webmail_password'):
+                return self._error('Mailbox session expired.')
+            return self._success({'email': current, 'accounts': [current]})
+
         accounts = self._get_managed_accounts()
         if not accounts:
             return self._error('No email accounts found for your user.')
@@ -205,6 +256,9 @@ class WebmailManager:
         return self._success({'email': current, 'accounts': accounts})
 
     def apiListAccounts(self):
+        if self.request.session.get('webmail_standalone'):
+            current = self._get_email()
+            return self._success({'accounts': [current] if current else []})
         accounts = self._get_managed_accounts()
         return self._success({'accounts': accounts})
 
