@@ -1,0 +1,18 @@
+[Unit]
+Description=CyberPanel Fail2ban SSH-alert Auto Ban monitor
+After=network.target lscpd.service firewalld.service fail2ban.service
+Wants=lscpd.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/CyberCP
+Environment=PYTHONPATH=/usr/local/CyberCP
+ExecStart=/usr/local/CyberCP/bin/python /usr/local/CyberCP/fail2ban/monitor_service.py
+Restart=always
+RestartSec=10
+Nice=10
+CPUQuota=30%
+
+[Install]
+WantedBy=multi-user.target

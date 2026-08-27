@@ -1,0 +1,193 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block title %}Fail2ban Security Manager{% endblock %}
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+
+<div class="f2b" id="f2bApp" data-active-tab="{{ active_tab|default:'overview'|escape }}">
+  <div class="f2b-hero">
+    <h1>Fail2ban Security Manager</h1>
+    <p>Monitor jails, ban SSH alert IPs, and optionally auto-ban attackers from dashboard Security Alerts.</p>
+    <div class="f2b-meta">
+      <span class="f2b-chip">v{{ version|default:"1.3.0" }}</span>
+      <span class="f2b-chip">{{ plugin_status|default:"Active" }}</span>
+      <span class="f2b-chip" id="f2bServiceChip">Service: …</span>
+    </div>
+    <div class="f2b-actions">
+      <button type="button" class="f2b-btn f2b-btn-ghost" id="btnRestartF2b">Restart Fail2ban</button>
+      <button type="button" class="f2b-btn f2b-btn-ghost" id="btnRestartLs">Restart LiteSpeed</button>
+    </div>
+  </div>
+
+  <div class="f2b-autoban">
+    <div class="f2b-autoban-row">
+      <div>
+        <h2>Auto-ban SSH Security Alerts</h2>
+        <p class="sub">When enabled, alert IPs from Recent SSH Logs (root logins, brute force, dictionary attacks) are banned automatically via fail2ban + firewall. No manual Ban All click needed.</p>
+      </div>
+      <label class="f2b-switch" title="Toggle auto-ban">
+        <input type="checkbox" id="autobanEnabled" {% if autoban_enabled %}checked{% endif %}>
+        <span></span>
+      </label>
+    </div>
+    <div class="f2b-autoban-opts">
+      <div class="f2b-field">
+        <label for="autobanInterval">Check interval (seconds)</label>
+        <input type="number" id="autobanInterval" min="30" max="3600" value="60">
+      </div>
+      <div class="f2b-field">
+        <label for="autobanJail">Fail2ban jail</label>
+        <input type="text" id="autobanJail" value="sshd">
+      </div>
+      <div class="f2b-field">
+        <label for="autobanPermanent">Ban type</label>
+        <select id="autobanPermanent">
+          <option value="1">Permanent (firewall + fail2ban)</option>
+          <option value="0">Fail2ban only (jail bantime)</option>
+        </select>
+      </div>
+    </div>
+    <div class="f2b-actions" style="margin-top:12px">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnSaveAutoban">Save auto-ban settings</button>
+      <button type="button" class="f2b-btn f2b-btn-ok" id="btnRunAutoban">Run once now</button>
+      <button type="button" class="f2b-btn f2b-btn-danger" id="btnBanAlerts">Ban all current alert IPs</button>
+    </div>
+    <div class="f2b-statusline" id="autobanStatus">Loading auto-ban status…</div>
+  </div>
+
+  <div class="f2b-tabs" role="tablist" aria-label="Fail2ban sections">
+    <button type="button" class="f2b-tab active" data-tab="overview">📊 Dashboard</button>
+    <button type="button" class="f2b-tab" data-tab="jails">🔒 Manage Jails</button>
+    <button type="button" class="f2b-tab" data-tab="banned">🚫 Banned IPs</button>
+    <button type="button" class="f2b-tab" data-tab="whitelist">✅ Whitelist</button>
+    <button type="button" class="f2b-tab" data-tab="blacklist">⚫ Blacklist</button>
+    <button type="button" class="f2b-tab" data-tab="logs">📋 Security Logs</button>
+    <button type="button" class="f2b-tab" data-tab="statistics">📈 Statistics</button>
+    <button type="button" class="f2b-tab" data-tab="settings">⚙️ Settings</button>
+  </div>
+
+  <div class="f2b-panel active" id="panel-overview">
+    <div class="f2b-grid">
+      <div class="f2b-card"><h3>Service</h3><div class="val" id="statService">-</div><div class="hint">fail2ban service</div></div>
+      <div class="f2b-card"><h3>Jails</h3><div class="val" id="statJails">-</div><div class="hint">configured jails</div></div>
+      <div class="f2b-card"><h3>Banned</h3><div class="val" id="statBanned">-</div><div class="hint">currently banned</div></div>
+      <div class="f2b-card"><h3>Auto-ban</h3><div class="val" id="statAutoban">Off</div><div class="hint">SSH alert monitor</div></div>
+    </div>
+    <div class="f2b-actions" style="margin:16px 0 12px">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnRefreshAlerts">Refresh SSH alerts</button>
+    </div>
+    <div id="alertsList" class="f2b-empty">Loading alerts…</div>
+  </div>
+
+  <div class="f2b-panel" id="panel-jails">
+    <div id="jailsList" class="f2b-empty">Loading…</div>
+  </div>
+
+  <div class="f2b-panel" id="panel-banned">
+    <div class="f2b-actions" style="margin:0 0 12px">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnRefreshBanned">Refresh</button>
+      <button type="button" class="f2b-btn f2b-btn-ok" id="btnSyncFirewall">Import firewall bans into fail2ban (batch)</button>
+    </div>
+    <div class="f2b-statusline" id="bannedMeta">Firewall bans already block traffic. This list merges fail2ban jail bans and CyberPanel firewall bans.</div>
+    <div id="bannedList" class="f2b-empty">Loading…</div>
+  </div>
+
+  <div class="f2b-panel" id="panel-whitelist">
+    <div class="f2b-statusline" style="margin-top:0">
+      Never-ban list mirrored with <strong>Firewall → SSH trusted IPs</strong> and fail2ban <code>ignoreip</code>.
+      Public IPs sync to the firewall whitelist; private/CIDR stay in fail2ban. Up to 2000 entries.
+    </div>
+    <div class="f2b-autoban-opts" style="margin-top:12px">
+      <div class="f2b-field">
+        <label for="wlIp">IP address / CIDR</label>
+        <input type="text" id="wlIp" placeholder="203.0.113.10 or 203.0.113.0/24" autocomplete="off">
+      </div>
+      <div class="f2b-field">
+        <label for="wlLabel">Label (optional)</label>
+        <input type="text" id="wlLabel" placeholder="e.g. Office / Home PC" autocomplete="off">
+      </div>
+      <div class="f2b-field" style="display:flex;align-items:flex-end">
+        <button type="button" class="f2b-btn f2b-btn-ok" id="btnAddWhitelist" style="width:100%">Add trusted IP</button>
+      </div>
+    </div>
+    <div class="f2b-field" style="margin-top:14px">
+      <label for="wlBulk">Bulk add (one IP / CIDR per line, or comma-separated)</label>
+      <textarea id="wlBulk" rows="6" placeholder="203.0.113.10&#10;198.51.100.0/24"></textarea>
+    </div>
+    <div class="f2b-actions">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnBulkWhitelist">Import bulk list</button>
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnRefreshWhitelist">Refresh</button>
+      <a class="f2b-btn f2b-btn-soft" href="/firewall/#trusted-ips" style="text-decoration:none">Open Firewall trusted IPs</a>
+    </div>
+    <div class="f2b-statusline" id="wlMeta">Loading whitelist…</div>
+    <div id="whitelistList" class="f2b-empty">Loading…</div>
+  </div>
+
+  <div class="f2b-panel" id="panel-blacklist">
+    <div class="f2b-statusline" style="margin-top:0">Permanent firewall drop rules (blacklist). Add an IP to block it at the firewall layer.</div>
+    <div class="f2b-autoban-opts" style="margin-top:12px">
+      <div class="f2b-field">
+        <label for="blIp">IP to blacklist</label>
+        <input type="text" id="blIp" placeholder="198.51.100.20" autocomplete="off">
+      </div>
+      <div class="f2b-field" style="display:flex;align-items:flex-end">
+        <button type="button" class="f2b-btn f2b-btn-danger" id="btnAddBlacklist" style="width:100%">Add to blacklist</button>
+      </div>
+    </div>
+    <div class="f2b-actions">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnRefreshBlacklist">Refresh</button>
+    </div>
+    <div id="blacklistList" class="f2b-empty">Loading…</div>
+  </div>
+
+  <div class="f2b-panel" id="panel-logs">
+    <div class="f2b-actions" style="margin:0 0 12px">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnRefreshLogs">Refresh logs</button>
+    </div>
+    <pre id="logsList" class="f2b-empty" style="white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:.82rem;max-height:480px;overflow:auto;margin:0;">Loading…</pre>
+  </div>
+
+  <div class="f2b-panel" id="panel-statistics">
+    <div class="f2b-actions" style="margin:0 0 12px">
+      <button type="button" class="f2b-btn f2b-btn-soft" id="btnRefreshStats">Refresh statistics</button>
+    </div>
+    <div class="f2b-grid" id="statsGrid">
+      <div class="f2b-card"><h3>Events</h3><div class="val" id="statEvents">-</div><div class="hint">total logged</div></div>
+      <div class="f2b-card"><h3>Banned</h3><div class="val" id="statStatsBanned">-</div><div class="hint">ban events</div></div>
+      <div class="f2b-card"><h3>Unbanned</h3><div class="val" id="statUnbanned">-</div><div class="hint">unban events</div></div>
+      <div class="f2b-card"><h3>Active now</h3><div class="val" id="statCurrentBanned">-</div><div class="hint">currently banned</div></div>
+    </div>
+    <div id="statsExtra" class="f2b-statusline" style="margin-top:12px"></div>
+  </div>
+
+  <div class="f2b-panel" id="panel-settings">
+    <form id="settingsForm">
+      <div class="f2b-autoban-opts">
+        <div class="f2b-field">
+          <label for="autoBanThreshold">Auto ban threshold</label>
+          <input type="number" id="autoBanThreshold" min="1" max="100" value="5">
+        </div>
+        <div class="f2b-field">
+          <label for="banDuration">Ban duration (seconds)</label>
+          <input type="number" id="banDuration" min="60" max="604800" value="3600">
+        </div>
+        <div class="f2b-field">
+          <label for="enabledJails">Enabled jails</label>
+          <input type="text" id="enabledJails" value="sshd">
+        </div>
+      </div>
+      <div class="f2b-field" style="margin-top:12px">
+        <label for="whitelistIps">Whitelist IPs (mirrored from Firewall SSH trusted + fail2ban ignoreip; one per line, up to 2000)</label>
+        <textarea id="whitelistIps" rows="10" placeholder="Loading whitelist from firewall + fail2ban…"></textarea>
+      </div>
+      <div class="f2b-actions">
+        <button type="submit" class="f2b-btn f2b-btn-ok">Save settings</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="f2b-toast" id="f2bToast"></div>
+
+<script src="{% static 'fail2ban/f2b_app.js' %}?v=1.3.1"></script>
+
+{% endblock %}

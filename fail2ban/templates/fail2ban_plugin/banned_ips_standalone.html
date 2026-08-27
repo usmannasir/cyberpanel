@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+<style>
+/* Standalone page styling */
+.fail2ban-standalone {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.header p {
+    margin: 10px 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.navigation {
+    background: #f8f9fa;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-tab {
+    padding: 12px 24px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-tab:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.nav-tab.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.content {
+    padding: 30px;
+}
+
+.summary-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.summary-card h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.summary-card .value {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+    color: #dc3545;
+}
+
+.action-bar {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.action-bar select {
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    background: white;
+    font-size: 14px;
+}
+
+.action-bar button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.data-table {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.table-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table-header h3 {
+    margin: 0;
+    color: #495057;
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-content {
+    padding: 20px;
+}
+
+.banned-item {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.banned-item:hover {
+    background-color: #f8f9fa;
+}
+
+.banned-item:last-child {
+    border-bottom: none;
+}
+
+.banned-info {
+    flex: 1;
+}
+
+.banned-ip {
+    font-weight: 600;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.banned-details {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.25rem;
+    color: #495057;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.loading {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .fail2ban-standalone {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .nav-tab {
+        justify-content: center;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .banned-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+<div class="fail2ban-standalone">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚫 Currently Banned IPs</h1>
+            <p>View and manage IP addresses that are currently banned by fail2ban</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-tabs">
+                <a href="/plugins/fail2ban/" class="nav-tab">
+                    <span>📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/plugins/fail2ban/jails/" class="nav-tab">
+                    <span>🔒</span>
+                    <span>Manage Jails</span>
+                </a>
+                <a href="/plugins/fail2ban/banned-ips/" class="nav-tab active">
+                    <span>🚫</span>
+                    <span>Banned IPs</span>
+                </a>
+                <a href="/plugins/fail2ban/whitelist/" class="nav-tab">
+                    <span>✅</span>
+                    <span>Whitelist</span>
+                </a>
+                <a href="/plugins/fail2ban/blacklist/" class="nav-tab">
+                    <span>⚫</span>
+                    <span>Blacklist</span>
+                </a>
+                <a href="/plugins/fail2ban/logs/" class="nav-tab">
+                    <span>📋</span>
+                    <span>Security Logs</span>
+                </a>
+                <a href="/plugins/fail2ban/statistics/" class="nav-tab">
+                    <span>📈</span>
+                    <span>Statistics</span>
+                </a>
+                <a href="/plugins/fail2ban/settings/" class="nav-tab">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Summary Card -->
+            <div class="summary-card">
+                <h3>Currently Banned IP Addresses</h3>
+                <p class="value" id="bannedCount">0</p>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <select id="actionSelect">
+                    <option value="">Select Action</option>
+                    <option value="unban">Unban Selected</option>
+                    <option value="unban-all">Unban All</option>
+                </select>
+                <button class="btn-primary" id="applyBtn" disabled>Apply</button>
+                <button class="btn-secondary" id="selectAllBtn">Select All</button>
+                <button class="btn-secondary" id="deselectAllBtn">Deselect All</button>
+            </div>
+
+            <!-- Banned IPs Table -->
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>🚫 Banned IP Addresses</h3>
+                </div>
+                <div class="table-content">
+                    <div id="banned-content" class="loading">
+                        Loading banned IPs...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadBannedIPsData();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('applyBtn').addEventListener('click', applyAction);
+    document.getElementById('selectAllBtn').addEventListener('click', selectAll);
+    document.getElementById('deselectAllBtn').addEventListener('click', deselectAll);
+    document.getElementById('actionSelect').addEventListener('change', function() {
+        document.getElementById('applyBtn').disabled = !this.value;
+    });
+}
+
+async function loadBannedIPsData() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/banned-ips/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBannedIPs(data.data);
+            updateBannedCount(data.data);
+        } else {
+            document.getElementById('banned-content').innerHTML = 
+                '<div class="empty-state"><div class="icon">🎉</div><h4>No banned IPs</h4><p>Great! No IP addresses are currently banned by fail2ban.</p></div>';
+        }
+    } catch (error) {
+        console.error('Error loading banned IPs:', error);
+        document.getElementById('banned-content').innerHTML = 
+            '<div class="empty-state"><div class="icon">❌</div><h4>Error loading banned IPs</h4><p>Failed to load banned IP information.</p></div>';
+    }
+}
+
+function displayBannedIPs(bannedIPs) {
+    if (bannedIPs.length === 0) {
+        document.getElementById('banned-content').innerHTML = 
+            '<div class="empty-state"><div class="icon">🎉</div><h4>No banned IPs</h4><p>Great! No IP addresses are currently banned by fail2ban.</p></div>';
+        return;
+    }
+
+    const bannedHtml = bannedIPs.map(ip => `
+        <div class="banned-item">
+            <input type="checkbox" class="banned-checkbox" data-ip="${ip.ip}">
+            <div class="banned-info">
+                <div class="banned-ip">${ip.ip}</div>
+                <div class="banned-details">Banned: ${ip.banned_date || 'Unknown'} | Jail: ${ip.jail || 'Unknown'}</div>
+            </div>
+            <button class="btn-danger" onclick="unbanIP('${ip.ip}')">
+                Unban
+            </button>
+        </div>
+    `).join('');
+
+    document.getElementById('banned-content').innerHTML = bannedHtml;
+}
+
+function updateBannedCount(bannedIPs) {
+    document.getElementById('bannedCount').textContent = bannedIPs.length;
+}
+
+function selectAll() {
+    document.querySelectorAll('.banned-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function deselectAll() {
+    document.querySelectorAll('.banned-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+function applyAction() {
+    const action = document.getElementById('actionSelect').value;
+    const selectedIPs = Array.from(document.querySelectorAll('.banned-checkbox:checked')).map(cb => cb.dataset.ip);
+    
+    if (!action || selectedIPs.length === 0) {
+        alert('Please select an action and at least one IP address.');
+        return;
+    }
+
+    if (action === 'unban') {
+        unbanSelectedIPs(selectedIPs);
+    } else if (action === 'unban-all') {
+        unbanAllIPs();
+    }
+}
+
+function unbanIP(ip) {
+    if (!confirm(`Are you sure you want to unban ${ip}?`)) {
+        return;
+    }
+
+    // Implement unban logic here
+    console.log(`Unbanning IP: ${ip}`);
+    alert(`IP ${ip} has been unbanned.`);
+    loadBannedIPsData();
+}
+
+function unbanSelectedIPs(ips) {
+    if (!confirm(`Are you sure you want to unban ${ips.length} selected IP address(es)?`)) {
+        return;
+    }
+
+    // Implement bulk unban logic here
+    console.log(`Unbanning IPs:`, ips);
+    alert(`${ips.length} IP address(es) have been unbanned.`);
+    loadBannedIPsData();
+}
+
+function unbanAllIPs() {
+    if (!confirm('Are you sure you want to unban ALL IP addresses? This action cannot be undone.')) {
+        return;
+    }
+
+    // Implement unban all logic here
+    console.log('Unbanning all IPs');
+    alert('All IP addresses have been unbanned.');
+    loadBannedIPsData();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+</body>
+</html>

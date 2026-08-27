@@ -1,0 +1,548 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Auto Ban Security Alerts Settings - CyberPanel" %}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Auto Ban Security Alerts</h1>
+    <p>Ban attacker IPs from dashboard Security Alerts automatically.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="auto-ban-container">
+    <div class="settings-card">
+        <span class="premium-badge">{% trans "Premium Plugin" %}</span>
+        <h1>{% trans "Auto Ban Security Alerts Settings" %}</h1>
+        
+        {% if show_payment_ui %}
+        <div style="background: #e6f7ff; border: 2px solid #17a2b8; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: #17a2b8; margin-top: 0;"><i class="fas fa-key"></i> {% trans "Activate Premium Access" %}</h3>
+            <p style="color: #495057;">{% trans "If you have an activation key, enter it below." %}</p>
+            <div id="activation-msg" style="display: none; margin-bottom: 10px; padding: 10px; border-radius: 6px;"></div>
+            <form id="activation-form" style="display: flex; gap: 10px; align-items: flex-end;">
+                {% csrf_token %}
+                <input type="text" id="activation-key" name="activation_key" placeholder="AUTOBAN-XXXX-XXXX-XXXX" style="flex: 1; padding: 10px; border: 2px solid #17a2b8; border-radius: 6px; font-family: monospace; text-transform: uppercase;" />
+                <button type="submit" class="btn btn-primary" id="activate-btn"><i class="fas fa-check-circle"></i> {% trans "Activate" %}</button>
+            </form>
+        </div>
+        {% else %}
+        <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <i class="fas fa-check-circle" style="color: #28a745;"></i> <strong>{% trans "Premium Access Active" %}</strong> — {% trans "Access granted via Plugin Grants or activation key." %}
+        </div>
+        {% endif %}
+        
+        <div style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px;">
+            <i class="fas fa-info-circle" style="color: #0c5460; margin-right: 8px;"></i>
+            <strong style="color: #0c5460;">{% trans "Plugin Information" %}</strong>
+            <ul style="list-style: none; padding-left: 0; margin-top: 10px; margin-bottom: 0;">
+                <li><strong>{% trans "Name" %}:</strong> {{ plugin_name }}</li>
+                <li><strong>{% trans "Version" %}:</strong> {{ version }}</li>
+                <li><strong>{% trans "Status" %}:</strong> 
+                    <span class="status-badge {% if config.enabled %}status-active{% else %}status-disabled{% endif %}">
+                        {{ status }}
+                    </span>
+                </li>
+            </ul>
+        </div>
+        
+        <p>{{ description }}</p>
+        
+        <!-- Configuration Settings -->
+        <h2 style="margin-top: 30px; margin-bottom: 20px;"><i class="fas fa-cog"></i> {% trans "Configuration" %}</h2>
+        
+        <form id="config-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>
+                    <span class="toggle-switch">
+                        <input type="checkbox" id="enabled" name="enabled" {% if config.enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </span>
+                    <strong style="margin-left: 10px;">{% trans "Enable Auto-Banning" %}</strong>
+                </label>
+                <p style="color: #6c757d; font-size: 13px; margin-top: 5px;">{% trans "When enabled, IPs from Security Alerts will be automatically banned." %}</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="ban_duration">{% trans "Ban Duration" %}</label>
+                <select class="form-control" id="ban_duration" name="ban_duration">
+                    <option value="1h" {% if config.ban_duration == '1h' %}selected{% endif %}>{% trans "1 Hour" %}</option>
+                    <option value="24h" {% if config.ban_duration == '24h' %}selected{% endif %}>{% trans "24 Hours" %}</option>
+                    <option value="7d" {% if config.ban_duration == '7d' %}selected{% endif %}>{% trans "7 Days" %}</option>
+                    <option value="30d" {% if config.ban_duration == '30d' %}selected{% endif %}>{% trans "30 Days" %}</option>
+                    <option value="permanent" {% if config.ban_duration == 'permanent' %}selected{% endif %}>{% trans "Permanent" %}</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="ban_reason">{% trans "Ban Reason" %}</label>
+                <input type="text" class="form-control" id="ban_reason" name="ban_reason" value="{{ config.ban_reason }}" placeholder="{% trans 'Default reason for auto-banned IPs' %}">
+            </div>
+            
+            <div class="form-group">
+                <label for="check_interval">{% trans "Check Interval (seconds)" %}</label>
+                <input type="number" class="form-control" id="check_interval" name="check_interval" value="{{ config.check_interval }}" min="30" placeholder="60">
+                <p style="color: #6c757d; font-size: 13px; margin-top: 5px;">{% trans "How often to check for Security Alerts (minimum 30 seconds)" %}</p>
+            </div>
+            
+            <button type="button" class="btn btn-primary" onclick="saveConfig()">
+                <i class="fas fa-save"></i> {% trans "Save Configuration" %}
+            </button>
+        </form>
+        
+        <!-- IP Whitelist Management -->
+        <h2 style="margin-top: 40px; margin-bottom: 20px;"><i class="fas fa-shield-alt"></i> {% trans "IP Whitelist" %}</h2>
+        <p style="color: #6c757d; margin-bottom: 20px;">{% trans "Whitelisted IPs will never be auto-banned. The CyberPanel machine IP is automatically whitelisted and cannot be removed." %}</p>
+        
+        {% if machine_ip %}
+        <div style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <strong><i class="fas fa-server"></i> {% trans "Current CyberPanel Machine IP" %}:</strong> 
+            <code style="background: white; padding: 4px 8px; border-radius: 4px; margin-left: 10px;">{{ machine_ip }}</code>
+            <span class="system-ip-badge" style="margin-left: 10px;">{% trans "Auto-whitelisted" %}</span>
+        </div>
+        {% endif %}
+        
+        <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">{% trans "Add IP to Whitelist" %}</h3>
+            <form id="add-whitelist-form" style="display: flex; gap: 10px; align-items: flex-end;">
+                {% csrf_token %}
+                <div style="flex: 1;">
+                    <input type="text" id="whitelist-ip" name="ip_address" class="form-control" placeholder="{% trans 'Enter IP address (e.g., 192.168.1.1)' %}" required>
+                </div>
+                <div style="flex: 1;">
+                    <input type="text" id="whitelist-desc" name="description" class="form-control" placeholder="{% trans 'Optional description' %}">
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-plus"></i> {% trans "Add" %}
+                </button>
+            </form>
+        </div>
+        
+        <div class="settings-card" style="padding: 20px;">
+            <h3 style="margin-top: 0;">{% trans "Whitelisted IPs" %}</h3>
+            {% if whitelisted_ips %}
+            <table class="whitelist-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "IP Address" %}</th>
+                        <th>{% trans "Description" %}</th>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ip in whitelisted_ips %}
+                    <tr>
+                        <td><code>{{ ip.ip_address }}</code></td>
+                        <td>{{ ip.description|default:"—" }}</td>
+                        <td>
+                            {% if ip.is_system_ip %}
+                            <span class="system-ip-badge">{% trans "System IP" %}</span>
+                            {% else %}
+                            <span style="color: #6c757d;">{% trans "User Added" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not ip.is_system_ip %}
+                            <button type="button" class="btn btn-danger" onclick="removeWhitelistIP({{ ip.id }})" style="padding: 6px 12px; font-size: 12px;">
+                                <i class="fas fa-trash"></i> {% trans "Remove" %}
+                            </button>
+                            {% else %}
+                            <span style="color: #6c757d; font-size: 12px;">{% trans "Cannot remove" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: #6c757d; text-align: center; padding: 20px;">{% trans "No whitelisted IPs (except system IP)" %}</p>
+            {% endif %}
+        </div>
+        
+        <!-- Recent Auto-Bans (AJAX pagination: #auto-ban-recent-root) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 40px; margin-bottom: 12px;">
+            <h2 style="margin: 0;"><i class="fas fa-history"></i> {% trans "Recent Auto-Bans" %}</h2>
+            <div>
+                <a href="/plugins/autoBanSecurityAlerts/export_firewall_json/" class="btn btn-secondary" style="white-space: nowrap;" title="{% trans 'JSON compatible with CyberPanel Firewall → Import Banned IPs' %}">
+                    <i class="fas fa-file-download"></i> {% trans "Export for Firewall" %}
+                </a>
+            </div>
+        </div>
+        <p style="color: #6c757d; font-size: 13px; margin: 0 0 16px 0;">{% trans "Download and import this file under Firewall → Banned IP Addresses → Import Banned IPs if needed." %}</p>
+        <div class="settings-card" style="padding: 20px;">
+            <div id="auto-ban-recent-root">
+            {% include 'autoBanSecurityAlerts/_recent_bans_fragment.html' %}
+            </div>
+        </div>
+    </div>
+
+    <div id="auto-ban-remove-modal" role="dialog" aria-modal="true" aria-labelledby="auto-ban-remove-title" aria-hidden="true">
+        <div class="auto-ban-remove-modal-box">
+            <h3 id="auto-ban-remove-title">{% trans "Remove ban?" %}</h3>
+            <p>{% trans "This will unban the IP in the firewall. The address will be allowed again until blocked by another rule." %}</p>
+            <div class="auto-ban-remove-modal-actions">
+                <button type="button" class="btn btn-secondary" id="auto-ban-remove-cancel">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-danger" id="auto-ban-remove-confirm">{% trans "Confirm removal" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.autoBanCurrentPage = {{ recent_bans_page.number }};
+window.autoBanCurrentPerPage = {{ per_page }};
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function persistActivationInCyberPanel(pluginName, activationKey) {
+    try {
+        if (!activationKey) return;
+        await fetch('/plugins/api/store-activation/' + encodeURIComponent(pluginName) + '/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ activation_key: activationKey })
+        });
+    } catch (e) {
+        console.warn('Activation persistence hook failed:', e);
+    }
+}
+
+function saveConfig() {
+    const form = document.getElementById('config-form');
+    const data = {
+        enabled: document.getElementById('enabled').checked,
+        ban_duration: document.getElementById('ban_duration').value,
+        ban_reason: document.getElementById('ban_reason').value,
+        check_interval: parseInt(document.getElementById('check_interval').value) || 60
+    };
+    
+    fetch('/plugins/autoBanSecurityAlerts/update_config/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 1) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success', text: data.message || 'Configuration saved', type: 'success' });
+            } else {
+                alert('Configuration saved successfully');
+            }
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Error', text: data.error_message || 'Failed to save configuration', type: 'error' });
+            } else {
+                alert('Error: ' + (data.error_message || 'Failed to save configuration'));
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Error', text: 'Failed to save configuration', type: 'error' });
+        } else {
+            alert('Failed to save configuration');
+        }
+    });
+}
+
+document.getElementById('add-whitelist-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const ip = document.getElementById('whitelist-ip').value.trim();
+    const desc = document.getElementById('whitelist-desc').value.trim();
+    
+    if (!ip) {
+        alert('Please enter an IP address');
+        return;
+    }
+    
+    fetch('/plugins/autoBanSecurityAlerts/add_whitelist_ip/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ ip_address: ip, description: desc })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 1) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success', text: data.message || 'IP added to whitelist', type: 'success' });
+            }
+            location.reload();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Error', text: data.error_message || 'Failed to add IP', type: 'error' });
+            } else {
+                alert('Error: ' + (data.error_message || 'Failed to add IP'));
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to add IP to whitelist');
+    });
+});
+
+function removeWhitelistIP(ipId) {
+    if (!confirm('Are you sure you want to remove this IP from the whitelist?')) {
+        return;
+    }
+    
+    fetch('/plugins/autoBanSecurityAlerts/remove_whitelist_ip/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ ip_id: ipId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 1) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success', text: data.message || 'IP removed from whitelist', type: 'success' });
+            }
+            location.reload();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Error', text: data.error_message || 'Failed to remove IP', type: 'error' });
+            } else {
+                alert('Error: ' + (data.error_message || 'Failed to remove IP'));
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to remove IP from whitelist');
+    });
+}
+
+function autoBanLoadRecentBans(page, perPage) {
+    var per = parseInt(perPage, 10);
+    if (isNaN(per) || [5, 10, 15, 30, 50].indexOf(per) === -1) {
+        per = 5;
+    }
+    var p = parseInt(page, 10);
+    if (isNaN(p) || p < 1) {
+        p = 1;
+    }
+    var root = document.getElementById('auto-ban-recent-root');
+    if (!root) {
+        return;
+    }
+    var prev = root.style.opacity;
+    root.style.opacity = '0.65';
+    var url = '/plugins/autoBanSecurityAlerts/recent_bans_fragment/?page=' + encodeURIComponent(p) + '&per_page=' + encodeURIComponent(per);
+    fetch(url, {
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        root.style.opacity = prev || '1';
+        if (!data.ok) {
+            throw new Error(data.error || 'Load failed');
+        }
+        root.innerHTML = data.html;
+        window.autoBanCurrentPage = data.page;
+        window.autoBanCurrentPerPage = data.per_page;
+        if (typeof history.replaceState === 'function') {
+            var u = new URL(window.location.href);
+            u.searchParams.set('page', String(data.page));
+            u.searchParams.set('per_page', String(data.per_page));
+            history.replaceState(null, '', u.pathname + u.search + u.hash);
+        }
+    })
+    .catch(function(err) {
+        root.style.opacity = prev || '1';
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Error', text: (err && err.message) ? err.message : 'Failed to load recent bans', type: 'error' });
+        } else {
+            alert('Failed to load recent bans');
+        }
+    });
+}
+
+function autoBanChangePerPage(sel) {
+    autoBanLoadRecentBans(1, parseInt(sel.value, 10));
+}
+
+function autoBanGotoPage() {
+    var inp = document.getElementById('auto-ban-goto');
+    if (!inp) return;
+    var max = parseInt(inp.getAttribute('max'), 10) || 1;
+    var p = parseInt(inp.value, 10);
+    if (isNaN(p) || p < 1) p = 1;
+    if (p > max) p = max;
+    var perSelect = document.getElementById('auto-ban-per-page');
+    var per = perSelect ? parseInt(perSelect.value, 10) : (window.autoBanCurrentPerPage || 5);
+    autoBanLoadRecentBans(p, per);
+}
+
+window.autoBanPendingRemoveLogId = null;
+
+function autoBanOpenRemoveModal() {
+    var el = document.getElementById('auto-ban-remove-modal');
+    if (!el) return;
+    el.classList.add('is-open');
+    el.setAttribute('aria-hidden', 'false');
+    var confirmBtn = document.getElementById('auto-ban-remove-confirm');
+    if (confirmBtn) confirmBtn.focus();
+}
+
+function autoBanCloseRemoveModal() {
+    var el = document.getElementById('auto-ban-remove-modal');
+    if (!el) return;
+    el.classList.remove('is-open');
+    el.setAttribute('aria-hidden', 'true');
+    window.autoBanPendingRemoveLogId = null;
+}
+
+function removeAutoBan(logId) {
+    window.autoBanPendingRemoveLogId = logId;
+    autoBanOpenRemoveModal();
+}
+
+function autoBanExecuteRemoveBan() {
+    var logId = window.autoBanPendingRemoveLogId;
+    autoBanCloseRemoveModal();
+    if (!logId) {
+        return;
+    }
+    fetch('/plugins/autoBanSecurityAlerts/remove_auto_ban/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ log_id: logId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 1) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success', text: data.message || 'Ban removed', type: 'success' });
+            }
+            var p = window.autoBanCurrentPage || 1;
+            var per = window.autoBanCurrentPerPage || 5;
+            autoBanLoadRecentBans(p, per);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Error', text: data.error_message || 'Failed to remove ban', type: 'error' });
+            } else {
+                alert(data.error_message || 'Failed to remove ban');
+            }
+        }
+    })
+    .catch(function() {
+        alert('Failed to remove ban');
+    });
+}
+
+(function autoBanRemoveModalInit() {
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById('auto-ban-remove-modal');
+        var cancel = document.getElementById('auto-ban-remove-cancel');
+        var confirmBtn = document.getElementById('auto-ban-remove-confirm');
+        if (cancel) {
+            cancel.addEventListener('click', autoBanCloseRemoveModal);
+        }
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', autoBanExecuteRemoveBan);
+        }
+        if (modal) {
+            modal.addEventListener('click', function(ev) {
+                if (ev.target === modal) {
+                    autoBanCloseRemoveModal();
+                }
+            });
+        }
+        document.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Escape') {
+                var m = document.getElementById('auto-ban-remove-modal');
+                if (m && m.classList.contains('is-open')) {
+                    autoBanCloseRemoveModal();
+                }
+            }
+        });
+    });
+})();
+
+{% if show_payment_ui %}
+document.getElementById('activation-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const key = document.getElementById('activation-key').value.trim().toUpperCase();
+    if (!key) return;
+    const btn = document.getElementById('activate-btn');
+    const msg = document.getElementById('activation-msg');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+    try {
+        const res = await fetch('/plugins/autoBanSecurityAlerts/activate_key/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ activation_key: key })
+        });
+        const raw = await res.text();
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        let data;
+        if (ct.indexOf('application/json') !== -1) {
+            try { data = JSON.parse(raw); } catch (e) { throw new Error('Invalid response from server. Please reload the page.'); }
+        } else {
+            var s = raw.trim(); if (s.indexOf('<!DOCTYPE') === 0 || s.indexOf('<html') === 0) {
+                throw new Error('Session expired or server returned a page instead of data. Reload and try again.');
+            }
+            throw new Error('Could not activate. Check your network and try again.');
+        }
+        msg.textContent = data.status === 1 ? '✅ ' + data.message : '❌ ' + (data.error_message || 'Invalid activation key for this plugin.');
+        msg.style.display = 'block';
+        msg.style.background = data.status === 1 ? '#d4edda' : '#f8d7da';
+        msg.style.color = data.status === 1 ? '#155724' : '#721c24';
+        if (data.status === 1) {
+            await persistActivationInCyberPanel('autoBanSecurityAlerts', key);
+            document.getElementById('activation-key').value = ''; 
+            setTimeout(function() { location.reload(); }, 2000); 
+        }
+    } catch (err) {
+        msg.textContent = '❌ ' + (err && err.message ? err.message : 'Activation failed.');
+        msg.style.display = 'block';
+        msg.style.background = '#f8d7da';
+        msg.style.color = '#721c24';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check-circle"></i> Activate';
+});
+{% endif %}
+</script>
+  </div>
+</div>
+{% endblock %}

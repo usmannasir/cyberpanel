@@ -1,0 +1,74 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Fail2ban Security Manager Settings - CyberPanel" %}{% endblock %}
+
+{% block header_scripts %}
+<style>
+    /* Plugin Information Section - Ensure visibility (PM2 Manager style) */
+    .plugin-info-section {
+        background: #d1ecf1 !important;
+        border: 1px solid #bee5eb !important;
+        border-radius: 8px !important;
+        padding: 15px 20px !important;
+        margin-bottom: 25px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+    
+    .plugin-info-section ul {
+        list-style: none !important;
+        padding-left: 0 !important;
+        margin-top: 10px !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .plugin-info-section li {
+        margin-bottom: 8px;
+    }
+    
+    .plugin-info-section li:last-child {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock header_scripts %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1>{% trans "Fail2ban Security Manager Settings" %}</h1>
+    
+    <!-- Plugin Information Section - Always Visible -->
+    <div class="plugin-info-section" style="background: #d1ecf1 !important; border: 1px solid #bee5eb !important; border-radius: 8px !important; padding: 15px 20px !important; margin-bottom: 25px !important; display: block !important; visibility: visible !important; opacity: 1 !important;">
+        <i class="fas fa-info-circle" style="color: #0c5460; margin-right: 8px;"></i>
+        <strong style="color: #0c5460; font-weight: 600;">{% trans "Plugin Information" %}</strong>
+        <ul style="list-style: none !important; padding-left: 0 !important; margin-top: 10px !important; margin-bottom: 0 !important;">
+            <li style="margin-bottom: 8px;"><strong>{% trans "Name" %}:</strong> {{ plugin_name|default:"Fail2ban Security Manager" }}</li>
+            <li style="margin-bottom: 8px;"><strong>{% trans "Version" %}:</strong> {{ version|default:"1.0.3" }}</li>
+            <li style="margin-bottom: 0;">
+                <strong>{% trans "Status" %}:</strong> 
+                <span class="badge badge-success" style="background: #28a745 !important; color: white !important; padding: 4px 10px !important; border-radius: 4px !important; font-size: 12px !important; font-weight: 600 !important; display: inline-block !important;">{{ status|default:"Active" }}</span>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="card" style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 20px;">
+        <h3>{% trans "Fail2ban Security Manager Configuration" %}</h3>
+        <p>{% trans "Fail2ban Security Manager allows you to monitor and manage fail2ban jails, banned IPs, whitelist, blacklist, and security logs." %}</p>
+        <p><strong>{% trans "Features:" %}</strong></p>
+        <ul>
+            <li>{% trans "Real-time fail2ban monitoring" %}</li>
+            <li>{% trans "Jail configuration and control" %}</li>
+            <li>{% trans "IP whitelist and blacklist management" %}</li>
+            <li>{% trans "Security statistics and analytics" %}</li>
+        </ul>
+        <p style="margin-top: 15px;">
+            <a href="/plugins/fail2ban/" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+                {% trans "Go to Fail2ban Security Manager Dashboard" %}
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

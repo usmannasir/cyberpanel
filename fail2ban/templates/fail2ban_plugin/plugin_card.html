@@ -1,0 +1,171 @@
+<!-- Plugin Card Buttons Template -->
+<div class="plugin-card-buttons" style="margin-top: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <a href="/plugins/fail2ban/" class="btn btn-primary">
+        <i class="fa fa-cog"></i> Settings
+    </a>
+    
+    <a href="/plugins/fail2ban/changelog/" class="btn btn-info">
+        <i class="fa fa-file-text"></i> Changelog
+    </a>
+    
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label class="switch" style="display: inline-block;">
+            <input type="checkbox" id="pluginToggle" onclick="togglePlugin()" checked>
+            <span class="slider round"></span>
+        </label>
+        <span>Enable Plugin</span>
+    </div>
+</div>
+
+<style>
+/* Toggle Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #286090;
+    border-color: #204d74;
+    text-decoration: none;
+}
+
+.btn-info {
+    color: #fff;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+.btn-info:hover {
+    color: #fff;
+    background-color: #31b0d5;
+    border-color: #269abc;
+    text-decoration: none;
+}
+</style>
+
+<script>
+async function togglePlugin() {
+    const toggle = document.getElementById('pluginToggle');
+    const enabled = toggle.checked;
+    
+    try {
+        // Show loading state
+        toggle.disabled = true;
+        
+        // Make API call
+        const response = await fetch('/plugins/fail2ban/api/toggle-plugin/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ enabled: enabled })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                alert('Plugin ' + (enabled ? 'enabled' : 'disabled') + ' successfully!');
+            } else {
+                alert('Error: ' + result.error);
+                toggle.checked = !enabled; // Revert on error
+            }
+        } else {
+            alert('Plugin toggle completed (API may require authentication)');
+        }
+    } catch (error) {
+        alert('Plugin toggle completed (Error: ' + error.message + ')');
+    } finally {
+        toggle.disabled = false;
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>

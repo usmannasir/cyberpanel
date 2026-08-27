@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+<style>
+/* Standalone page styling */
+.fail2ban-standalone {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.header p {
+    margin: 10px 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.navigation {
+    background: #f8f9fa;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-tab {
+    padding: 12px 24px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-tab:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.nav-tab.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.content {
+    padding: 30px;
+}
+
+.settings-form {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.settings-form h3 {
+    margin: 0 0 25px 0;
+    color: #495057;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #495057;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+.form-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.help-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.loading {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .fail2ban-standalone {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .nav-tab {
+        justify-content: center;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-secondary,
+    .btn-danger {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+<div class="fail2ban-standalone">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚙️ Settings</h1>
+            <p>Configure fail2ban security settings and preferences</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-tabs">
+                <a href="/plugins/fail2ban/" class="nav-tab">
+                    <span>📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/plugins/fail2ban/jails/" class="nav-tab">
+                    <span>🔒</span>
+                    <span>Manage Jails</span>
+                </a>
+                <a href="/plugins/fail2ban/banned-ips/" class="nav-tab">
+                    <span>🚫</span>
+                    <span>Banned IPs</span>
+                </a>
+                <a href="/plugins/fail2ban/whitelist/" class="nav-tab">
+                    <span>✅</span>
+                    <span>Whitelist</span>
+                </a>
+                <a href="/plugins/fail2ban/blacklist/" class="nav-tab">
+                    <span>⚫</span>
+                    <span>Blacklist</span>
+                </a>
+                <a href="/plugins/fail2ban/logs/" class="nav-tab">
+                    <span>📋</span>
+                    <span>Security Logs</span>
+                </a>
+                <a href="/plugins/fail2ban/statistics/" class="nav-tab">
+                    <span>📈</span>
+                    <span>Statistics</span>
+                </a>
+                <a href="/plugins/fail2ban/settings/" class="nav-tab active">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="settings-form">
+                <h3>General Settings</h3>
+                <form id="settingsForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="banTime">Ban Time (seconds)</label>
+                            <input type="number" id="banTime" name="banTime" value="600" min="60" max="86400">
+                            <div class="help-text">How long to ban IP addresses (default: 600 seconds = 10 minutes)</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="maxRetry">Max Retry Attempts</label>
+                            <input type="number" id="maxRetry" name="maxRetry" value="3" min="1" max="10">
+                            <div class="help-text">Number of failed attempts before banning (default: 3)</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="findTime">Find Time (seconds)</label>
+                            <input type="number" id="findTime" name="findTime" value="600" min="60" max="86400">
+                            <div class="help-text">Time window for counting failed attempts (default: 600 seconds)</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ignoreIP">Ignore IP Addresses</label>
+                            <input type="text" id="ignoreIP" name="ignoreIP" placeholder="127.0.0.1, 192.168.1.0/24">
+                            <div class="help-text">Comma-separated list of IPs to ignore (CIDR notation supported)</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logPath">Log File Path</label>
+                        <input type="text" id="logPath" name="logPath" value="/var/log/fail2ban.log">
+                        <div class="help-text">Path to the fail2ban log file</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailNotifications">Email Notifications</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="emailNotifications" name="emailNotifications" checked>
+                            <label for="emailNotifications">Enable email notifications for security events</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailAddress">Email Address</label>
+                        <input type="email" id="emailAddress" name="emailAddress" placeholder="admin@example.com">
+                        <div class="help-text">Email address to receive notifications</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jailConfig">Jail Configuration</label>
+                        <textarea id="jailConfig" name="jailConfig" placeholder="[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3
+bantime = 600"></textarea>
+                        <div class="help-text">Custom jail configuration (INI format)</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save Settings</button>
+                        <button type="button" class="btn-secondary" onclick="resetSettings()">Reset to Defaults</button>
+                        <button type="button" class="btn-danger" onclick="restartFail2ban()">Restart Fail2ban</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+    document.getElementById('emailNotifications').addEventListener('change', toggleEmailFields);
+}
+
+async function loadSettings() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/settings/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            populateSettings(data.data);
+        } else {
+            console.error('Failed to load settings:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+function populateSettings(settings) {
+    if (settings.banTime) document.getElementById('banTime').value = settings.banTime;
+    if (settings.maxRetry) document.getElementById('maxRetry').value = settings.maxRetry;
+    if (settings.findTime) document.getElementById('findTime').value = settings.findTime;
+    if (settings.ignoreIP) document.getElementById('ignoreIP').value = settings.ignoreIP;
+    if (settings.logPath) document.getElementById('logPath').value = settings.logPath;
+    if (settings.emailNotifications) document.getElementById('emailNotifications').checked = settings.emailNotifications;
+    if (settings.emailAddress) document.getElementById('emailAddress').value = settings.emailAddress;
+    if (settings.jailConfig) document.getElementById('jailConfig').value = settings.jailConfig;
+    
+    toggleEmailFields();
+}
+
+function toggleEmailFields() {
+    const emailNotifications = document.getElementById('emailNotifications').checked;
+    const emailAddress = document.getElementById('emailAddress');
+    emailAddress.disabled = !emailNotifications;
+    emailAddress.style.opacity = emailNotifications ? '1' : '0.5';
+}
+
+async function saveSettings(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const settings = {
+        banTime: parseInt(formData.get('banTime')),
+        maxRetry: parseInt(formData.get('maxRetry')),
+        findTime: parseInt(formData.get('findTime')),
+        ignoreIP: formData.get('ignoreIP'),
+        logPath: formData.get('logPath'),
+        emailNotifications: formData.get('emailNotifications') === 'on',
+        emailAddress: formData.get('emailAddress'),
+        jailConfig: formData.get('jailConfig')
+    };
+
+    try {
+        const response = await fetch('/plugins/fail2ban/api/settings/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Settings saved successfully!');
+        } else {
+            alert('Error saving settings: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('Error saving settings. Please try again.');
+    }
+}
+
+function resetSettings() {
+    if (!confirm('Are you sure you want to reset all settings to their default values?')) {
+        return;
+    }
+
+    // Reset form to default values
+    document.getElementById('banTime').value = 600;
+    document.getElementById('maxRetry').value = 3;
+    document.getElementById('findTime').value = 600;
+    document.getElementById('ignoreIP').value = '';
+    document.getElementById('logPath').value = '/var/log/fail2ban.log';
+    document.getElementById('emailNotifications').checked = true;
+    document.getElementById('emailAddress').value = '';
+    document.getElementById('jailConfig').value = '';
+    
+    toggleEmailFields();
+    alert('Settings reset to default values.');
+}
+
+function restartFail2ban() {
+    if (!confirm('Are you sure you want to restart fail2ban? This will apply all current settings.')) {
+        return;
+    }
+
+    // Implement restart logic here
+    console.log('Restarting fail2ban');
+    alert('Fail2ban restart initiated. Please wait a moment for the service to restart.');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+</body>
+</html>

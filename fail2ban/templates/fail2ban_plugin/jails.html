@@ -1,0 +1,244 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Fail2ban jails</h1>
+    <p>Enable and configure Fail2ban jails.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="jails-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>🔒 Jails Management</h1>
+        <p>Monitor and control fail2ban jails for different services</p>
+    </div>
+
+    <!-- Jails Grid -->
+    <div class="jails-grid" id="jails-grid">
+        <div class="loading"></div> Loading jails...
+    </div>
+</div>
+
+<script>
+// Load jails data
+async function loadJails() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/jails/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayJails(data.data);
+        } else {
+            document.getElementById('jails-grid').innerHTML = 
+                '<div class="alert alert-danger">Error loading jails: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        console.error('Error loading jails:', error);
+        document.getElementById('jails-grid').innerHTML = 
+            '<div class="alert alert-danger">Error loading jails</div>';
+    }
+}
+
+// Display jails
+function displayJails(jails) {
+    const grid = document.getElementById('jails-grid');
+    
+    if (jails.length === 0) {
+        grid.innerHTML = '<div class="alert alert-info">No jails found</div>';
+        return;
+    }
+    
+    let html = '';
+    
+    jails.forEach(jail => {
+        const bannedIPs = jail.banned_ip_list || [];
+        const bannedIPsHTML = bannedIPs.length > 0 
+            ? bannedIPs.map(ip => `
+                <div class="banned-ip-item">
+                    <span class="ip-address">${ip}</span>
+                    <button class="unban-btn" onclick="unbanIP('${ip}', '${jail.name}')">
+                        Unban
+                    </button>
+                </div>
+            `).join('')
+            : '<p style="color: #718096; font-style: italic;">No banned IPs</p>';
+        
+        html += `
+            <div class="jail-card">
+                <div class="jail-header">
+                    <h3 class="jail-name">${jail.name}</h3>
+                    <div class="jail-status ${jail.enabled ? 'enabled' : 'disabled'}">
+                        ${jail.enabled ? '✓ Enabled' : '✗ Disabled'}
+                    </div>
+                </div>
+                <div class="jail-body">
+                    <div class="jail-stats">
+                        <div class="stat-item">
+                            <h4 class="stat-number">${jail.failed_attempts || 0}</h4>
+                            <p class="stat-label">Failed Attempts</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4 class="stat-number">${jail.banned_ips || 0}</h4>
+                            <p class="stat-label">Banned IPs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="banned-ips-list">
+                        <h5 style="margin: 0 0 10px 0; color: var(--dark-color);">Banned IPs:</h5>
+                        ${bannedIPsHTML}
+                    </div>
+                    
+                    <div class="jail-actions">
+                        <button class="btn btn-primary" onclick="viewJailDetails('${jail.name}')">
+                            📊 Details
+                        </button>
+                        <button class="btn btn-warning" onclick="toggleJail('${jail.name}', ${jail.enabled})">
+                            ${jail.enabled ? '⏸️ Disable' : '▶️ Enable'}
+                        </button>
+                        <button class="btn btn-danger" onclick="unbanAllIPs('${jail.name}')">
+                            🚫 Unban All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    grid.innerHTML = html;
+}
+
+// Unban IP
+async function unbanIP(ip, jail) {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/unban-ip/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                ip: ip,
+                jail: jail
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(`IP ${ip} unbanned from ${jail}`, 'success');
+            loadJails(); // Reload to update the display
+        } else {
+            showAlert(`Failed to unban IP: ${data.error}`, 'danger');
+        }
+    } catch (error) {
+        console.error('Error unbanning IP:', error);
+        showAlert('Error unbanning IP', 'danger');
+    }
+}
+
+// Unban all IPs from a jail
+async function unbanAllIPs(jail) {
+    if (!confirm(`Are you sure you want to unban all IPs from ${jail}?`)) {
+        return;
+    }
+    
+    try {
+        // Get all banned IPs for this jail first
+        const response = await fetch('/plugins/fail2ban/api/jails/');
+        const data = await response.json();
+        
+        if (data.success) {
+            const jailData = data.data.find(j => j.name === jail);
+            if (jailData && jailData.banned_ip_list) {
+                // Unban each IP
+                for (const ip of jailData.banned_ip_list) {
+                    await unbanIP(ip, jail);
+                }
+                showAlert(`All IPs unbanned from ${jail}`, 'success');
+            }
+        }
+    } catch (error) {
+        console.error('Error unbanning all IPs:', error);
+        showAlert('Error unbanning all IPs', 'danger');
+    }
+}
+
+// Toggle jail (placeholder)
+function toggleJail(jail, enabled) {
+    showAlert(`Toggle jail ${jail} - Coming soon!`, 'info');
+}
+
+// View jail details (placeholder)
+function viewJailDetails(jail) {
+    showAlert(`View details for ${jail} - Coming soon!`, 'info');
+}
+
+// Show alert
+function showAlert(message, type) {
+    // Create alert element
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        max-width: 400px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    `;
+    
+    if (type === 'success') {
+        alert.style.background = '#48bb78';
+    } else if (type === 'danger') {
+        alert.style.background = '#f56565';
+    } else if (type === 'warning') {
+        alert.style.background = '#ed8936';
+    } else {
+        alert.style.background = '#4299e1';
+    }
+    
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Load jails on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadJails();
+});
+</script>
+  </div>
+</div>
+{% endblock %}

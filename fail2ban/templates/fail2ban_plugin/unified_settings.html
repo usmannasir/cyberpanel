@@ -1,0 +1,1715 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extraCSS %}
+<style>
+/* Completely isolate our plugin from CyberPanel's CSS */
+.fail2ban-plugin-container {
+    /* Reset and isolate */
+    all: initial;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background: #f7fafc;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    /* Prevent interference with CyberPanel sidebar */
+    overflow: visible !important;
+    max-width: none !important;
+    width: 100% !important;
+}
+
+/* Prevent CyberPanel CSS from affecting our plugin */
+.fail2ban-plugin-container * {
+    /* Reset all inherited styles */
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    font-size: 100% !important;
+    font: inherit !important;
+    vertical-align: baseline !important;
+}
+
+/* Restore our specific styles after reset */
+.fail2ban-plugin-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    line-height: 1.5 !important;
+    color: #333 !important;
+    background: #f7fafc !important;
+    padding: 20px !important;
+}
+
+.fail2ban-plugin-container * {
+    box-sizing: border-box;
+}
+
+/* CSS Variables */
+.fail2ban-plugin-container {
+    --primary-color: #667eea;
+    --primary-dark: #5a67d8;
+    --secondary-color: #edf2f7;
+    --success-color: #48bb78;
+    --warning-color: #ed8936;
+    --danger-color: #f56565;
+    --info-color: #4299e1;
+    --dark-color: #2d3748;
+    --light-color: #f7fafc;
+    --border-color: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* Header with Toggle */
+.fail2ban-plugin-container .settings-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.settings-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.settings-header p {
+    margin: 10px 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+/* Plugin Controls */
+.plugin-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.plugin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    backdrop-filter: blur(10px);
+}
+
+.service-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.service-controls .btn {
+    white-space: nowrap;
+    min-width: auto;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 60px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.toggle-switch.active {
+    background: var(--success-color);
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-slider {
+    transform: translateX(30px);
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.tab-list {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--secondary-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-item {
+    flex: 1;
+}
+
+.tab-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    text-decoration: none;
+    color: var(--dark-color);
+    font-weight: 500;
+    transition: var(--transition);
+    border-bottom: 3px solid transparent;
+}
+
+.tab-link:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--primary-color);
+}
+
+.tab-link.active {
+    background: white;
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-icon {
+    font-size: 1.2rem;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: 30px;
+    background: white;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Status Cards */
+.status-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.status-card {
+    background: white;
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary-color);
+    transition: var(--transition);
+}
+
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.status-card.success {
+    border-left-color: var(--success-color);
+}
+
+.status-card.warning {
+    border-left-color: var(--warning-color);
+}
+
+.status-card.danger {
+    border-left-color: var(--danger-color);
+}
+
+.status-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: var(--dark-color);
+}
+
+.status-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.status-card .label {
+    color: #718096;
+    font-size: 0.9rem;
+    margin: 5px 0 0 0;
+}
+
+/* Settings Form */
+.settings-form {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary-color);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #38a169;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #e53e3e;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #dd6b20;
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: var(--dark-color);
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+/* Button states */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn:disabled:hover {
+    transform: none !important;
+}
+
+/* Button size variants */
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+}
+
+.btn-lg {
+    padding: 16px 32px;
+    font-size: 1.125rem;
+}
+
+/* Badge styles */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 4px;
+    color: white;
+}
+
+.badge.success {
+    background: var(--success-color);
+}
+
+.badge.warning {
+    background: var(--warning-color);
+}
+
+.badge.danger {
+    background: var(--danger-color);
+}
+
+.badge.info {
+    background: var(--info-color);
+}
+
+/* Ensure buttons are visible */
+.fail2ban-plugin-container .btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Force button display */
+.fail2ban-plugin-container button,
+.fail2ban-plugin-container .btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Debug styles to ensure buttons are visible */
+.fail2ban-plugin-container .btn {
+    border: 2px solid transparent !important;
+    background: var(--primary-color) !important;
+    color: white !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+}
+
+.fail2ban-plugin-container .btn:hover {
+    background: var(--primary-dark) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Ensure all buttons in table headers are visible */
+.table-header .btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+    padding: 12px 24px !important;
+}
+
+/* Ensure service control buttons are visible */
+.service-controls .btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+    padding: 12px 24px !important;
+}
+
+/* Ensure toggle switch is visible and clickable */
+.toggle-switch {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+.toggle-switch:hover {
+    opacity: 0.8 !important;
+}
+
+/* Force all buttons to be visible */
+.fail2ban-plugin-container button {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+    margin: 2px !important;
+    padding: 8px 16px !important;
+    border: 1px solid #ccc !important;
+    background: #007bff !important;
+    color: white !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.fail2ban-plugin-container button:hover {
+    background: #0056b3 !important;
+    border-color: #0056b3 !important;
+    transform: translateY(-1px) !important;
+}
+
+.fail2ban-plugin-container button:active {
+    transform: translateY(0) !important;
+}
+
+/* Data Tables */
+.data-table {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table-header {
+    background: var(--secondary-color);
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.table-header h3 {
+    margin: 0;
+    color: var(--dark-color);
+    flex: 1;
+}
+
+.table-header .btn {
+    flex-shrink: 0;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+    background: var(--light-color);
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.table tbody tr:hover {
+    background: var(--light-color);
+}
+
+/* Loading States */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--dark-color);
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .fail2ban-settings {
+        padding: 10px;
+    }
+    
+    .settings-header {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .settings-header h1 {
+        font-size: 2rem;
+    }
+    
+    .plugin-controls {
+        align-items: center;
+        margin-top: 20px;
+    }
+    
+    .service-controls {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .service-controls .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tab-list {
+        flex-direction: column;
+    }
+    
+    .tab-link {
+        padding: 15px;
+    }
+    
+    .status-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .tab-content {
+        padding: 20px;
+    }
+}
+
+/* CyberPanel Compatibility */
+.fail2ban-plugin-container {
+    /* Ensure the plugin content doesn't interfere with CyberPanel's layout */
+    position: relative;
+    z-index: 1;
+}
+
+/* Reset any potential conflicts with CyberPanel's CSS */
+.fail2ban-plugin-container * {
+    /* Ensure our styles don't leak out */
+    box-sizing: border-box;
+}
+
+/* Ensure tab navigation doesn't conflict with CyberPanel's menu */
+.fail2ban-plugin-container .tab-navigation {
+    /* Isolate our tab navigation from CyberPanel's menu system */
+    position: relative;
+    z-index: 10;
+}
+
+.fail2ban-plugin-container .tab-list {
+    /* Ensure our tab list doesn't interfere with CyberPanel's navigation */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.fail2ban-plugin-container .tab-item {
+    /* Ensure tab items don't conflict with menu items */
+    display: block;
+}
+
+.fail2ban-plugin-container .tab-link {
+    /* Ensure tab links don't inherit CyberPanel's menu link styles */
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: #f0fff4;
+    border-left-color: var(--success-color);
+    color: #22543d;
+}
+
+.alert-warning {
+    background: #fffaf0;
+    border-left-color: var(--warning-color);
+    color: #744210;
+}
+
+.alert-danger {
+    background: #fed7d7;
+    border-left-color: var(--danger-color);
+    color: #742a2a;
+}
+
+.alert-info {
+    background: #ebf8ff;
+    border-left-color: var(--info-color);
+    color: #2a4365;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fail2ban-plugin-container">
+    <!-- Header -->
+    <div class="settings-header">
+        <div>
+            <h1>🔒 Fail2ban Security Manager</h1>
+            <p>Advanced fail2ban management with real-time monitoring and comprehensive security features</p>
+        </div>
+        <div class="plugin-controls">
+            <div class="plugin-toggle">
+                <span>Plugin Status:</span>
+                <div class="toggle-switch active" id="pluginToggle" onclick="togglePlugin()">
+                    <div class="toggle-slider"></div>
+                </div>
+                <span id="pluginStatus">Active</span>
+            </div>
+            <div class="service-controls">
+                <button class="btn btn-warning" id="restartLiteSpeed" onclick="restartLiteSpeed()">
+                    <span>🔄</span>
+                    Restart LiteSpeed
+                </button>
+                <button class="btn btn-secondary" id="restartFail2ban" onclick="restartFail2ban()">
+                    <span>🔄</span>
+                    Restart Fail2ban
+                </button>
+            </div>
+        </div>
+                </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <ul class="tab-list">
+            <li class="tab-item">
+                <a href="#overview" class="tab-link{% if active_tab == 'overview' %} active{% endif %}" data-tab="overview">
+                    <span class="tab-icon">📊</span>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#jails" class="tab-link{% if active_tab == 'jails' %} active{% endif %}" data-tab="jails">
+                    <span class="tab-icon">🔒</span>
+                    <span>Manage Jails</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#banned-ips" class="tab-link{% if active_tab == 'banned-ips' %} active{% endif %}" data-tab="banned-ips">
+                    <span class="tab-icon">🚫</span>
+                    <span>Banned IPs</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#whitelist" class="tab-link{% if active_tab == 'whitelist' %} active{% endif %}" data-tab="whitelist">
+                    <span class="tab-icon">✅</span>
+                    <span>Whitelist</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#blacklist" class="tab-link{% if active_tab == 'blacklist' %} active{% endif %}" data-tab="blacklist">
+                    <span class="tab-icon">⚫</span>
+                    <span>Blacklist</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#logs" class="tab-link{% if active_tab == 'logs' %} active{% endif %}" data-tab="logs">
+                    <span class="tab-icon">📋</span>
+                    <span>Security Logs</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#statistics" class="tab-link{% if active_tab == 'statistics' %} active{% endif %}" data-tab="statistics">
+                    <span class="tab-icon">📈</span>
+                    <span>Statistics</span>
+                </a>
+            </li>
+            <li class="tab-item">
+                <a href="#settings" class="tab-link{% if active_tab == 'settings' %} active{% endif %}" data-tab="settings">
+                    <span class="tab-icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </li>
+        </ul>
+            </div>
+
+        <!-- Tab Content -->
+    <div class="tab-content{% if active_tab == 'overview' %} active{% endif %}" id="overview">
+        <!-- Status Cards -->
+        <div class="status-cards">
+            <div class="status-card success">
+                    <h3>Service Status</h3>
+                <p class="value" id="serviceStatus">Active</p>
+                <p class="label">Fail2ban is running and protecting your server</p>
+                </div>
+            <div class="status-card">
+                <h3>Active Jails</h3>
+                <p class="value" id="activeJails">0</p>
+                <p class="label">out of 0 total jails</p>
+                    </div>
+            <div class="status-card">
+                <h3>Banned IPs</h3>
+                <p class="value" id="bannedIPs">0</p>
+                <p class="label">currently banned IP addresses</p>
+                    </div>
+            <div class="status-card">
+                <h3>Uptime</h3>
+                <p class="value" id="serviceUptime">N/A</p>
+                <p class="label">service uptime</p>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3>Recent Activity</h3>
+                </div>
+            <div class="loading" id="recentActivity">
+                <div class="spinner"></div>
+                Loading recent activity...
+                </div>
+            </div>
+        </div>
+
+        <!-- Jails Tab -->
+    <div class="tab-content{% if active_tab == 'jails' %} active{% endif %}" id="jails">
+        <div class="data-table">
+            <div class="table-header">
+                    <h3>Jail Management</h3>
+                <button class="btn btn-primary" onclick="refreshJails()">
+                    <span>🔄</span>
+                    Refresh
+                </button>
+                </div>
+            <div class="loading" id="jailsContent">
+                <div class="spinner"></div>
+                Loading jails...
+                </div>
+            </div>
+        </div>
+
+        <!-- Banned IPs Tab -->
+    <div class="tab-content{% if active_tab == 'banned-ips' %} active{% endif %}" id="banned-ips">
+        <div class="data-table">
+            <div class="table-header">
+                    <h3>Banned IP Addresses</h3>
+                <button class="btn btn-primary" onclick="refreshBannedIPs()">
+                    <span>🔄</span>
+                    Refresh
+                </button>
+                </div>
+            <div class="loading" id="bannedIPsContent">
+                <div class="spinner"></div>
+                Loading banned IPs...
+                </div>
+            </div>
+        </div>
+
+        <!-- Whitelist Tab -->
+    <div class="tab-content{% if active_tab == 'whitelist' %} active{% endif %}" id="whitelist">
+        <div class="data-table">
+            <div class="table-header">
+                    <h3>Whitelist Management</h3>
+                <button class="btn btn-success" onclick="showAddWhitelistModal()">
+                    <span>➕</span>
+                    Add IP
+                </button>
+                </div>
+            <div class="loading" id="whitelistContent">
+                <div class="spinner"></div>
+                Loading whitelist...
+                </div>
+            </div>
+        </div>
+
+        <!-- Blacklist Tab -->
+    <div class="tab-content{% if active_tab == 'blacklist' %} active{% endif %}" id="blacklist">
+        <div class="data-table">
+            <div class="table-header">
+                    <h3>Blacklist Management</h3>
+                <button class="btn btn-danger" onclick="showAddBlacklistModal()">
+                    <span>➕</span>
+                    Add IP
+                </button>
+                </div>
+            <div class="loading" id="blacklistContent">
+                <div class="spinner"></div>
+                Loading blacklist...
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+    <div class="tab-content{% if active_tab == 'logs' %} active{% endif %}" id="logs">
+        <div class="data-table">
+            <div class="table-header">
+                    <h3>Security Logs</h3>
+                <button class="btn btn-primary" onclick="refreshLogs()">
+                    <span>🔄</span>
+                    Refresh
+                </button>
+                </div>
+            <div class="loading" id="logsContent">
+                <div class="spinner"></div>
+                Loading logs...
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+    <div class="tab-content{% if active_tab == 'statistics' %} active{% endif %}" id="statistics">
+        <div class="data-table">
+            <div class="table-header">
+                    <h3>Security Statistics</h3>
+                <button class="btn btn-primary" onclick="refreshStatistics()">
+                    <span>🔄</span>
+                    Refresh
+                </button>
+                </div>
+            <div class="loading" id="statisticsContent">
+                <div class="spinner"></div>
+                Loading statistics...
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+    <div class="tab-content{% if active_tab == 'settings' %} active{% endif %}" id="settings">
+        <div class="settings-form">
+            <h3>General Settings</h3>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="emailNotifications" name="email_notifications" checked>
+                        <label for="emailNotifications">Enable Email Notifications</label>
+                </div>
+                    </div>
+                
+                <div class="form-group">
+                    <label for="autoBanThreshold">Auto Ban Threshold:</label>
+                    <input type="number" id="autoBanThreshold" name="auto_ban_threshold" class="form-control" value="5" min="1" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="banDuration">Ban Duration (seconds):</label>
+                    <input type="number" id="banDuration" name="ban_duration" class="form-control" value="3600" min="60" max="86400">
+            </div>
+                
+                <div class="form-group">
+                    <label for="enabledJails">Enabled Jails (comma-separated):</label>
+                    <input type="text" id="enabledJails" name="enabled_jails" class="form-control" value="sshd,openlitespeed,cyberpanel">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span>
+                    Save Settings
+                </button>
+            </form>
+        </div>
+        </div>
+    </div>
+
+<!-- Modals -->
+<div id="addWhitelistModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Add IP to Whitelist</h3>
+        <form id="addWhitelistForm">
+            <div class="form-group">
+                <label for="whitelistIP">IP Address:</label>
+                <input type="text" id="whitelistIP" name="ip" class="form-control" placeholder="192.168.1.1" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Add IP</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addWhitelistModal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="addBlacklistModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Add IP to Blacklist</h3>
+        <form id="addBlacklistForm">
+            <div class="form-group">
+                <label for="blacklistIP">IP Address:</label>
+                <input type="text" id="blacklistIP" name="ip" class="form-control" placeholder="192.168.1.1" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-danger">Add IP</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addBlacklistModal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal-content h3 {
+    margin: 0 0 20px 0;
+    color: var(--dark-color);
+}
+</style>
+{% endblock %}
+
+{% block extraJS %}
+<script>
+// Global variables
+let currentTab = '{{ active_tab|default:"overview" }}';
+let pluginEnabled = true;
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTabs();
+    
+    // Load data for the active tab
+    switch(currentTab) {
+        case 'overview':
+            loadOverviewData();
+            break;
+        case 'jails':
+            loadJailsData();
+            break;
+        case 'banned-ips':
+            loadBannedIPsData();
+            break;
+        case 'whitelist':
+            loadWhitelistData();
+            break;
+        case 'blacklist':
+            loadBlacklistData();
+            break;
+        case 'logs':
+            loadLogsData();
+            break;
+        case 'statistics':
+            loadStatisticsData();
+            break;
+        case 'settings':
+            loadSettings();
+            break;
+    }
+    
+    // Set up form handlers
+    document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+    document.getElementById('addWhitelistForm').addEventListener('submit', addToWhitelist);
+    document.getElementById('addBlacklistForm').addEventListener('submit', addToBlacklist);
+    
+    // Plugin toggle is handled by onclick attribute in HTML
+});
+
+// Tab management
+function initializeTabs() {
+    const tabLinks = document.querySelectorAll('.tab-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabId = this.getAttribute('data-tab');
+            switchTab(tabId);
+        });
+    });
+}
+
+function switchTab(tabId) {
+    // Update active tab link
+    document.querySelectorAll('.tab-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    
+    // Update active tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(tabId).classList.add('active');
+    
+    currentTab = tabId;
+    
+    // Load tab-specific data
+    switch(tabId) {
+        case 'overview':
+            loadOverviewData();
+            break;
+            case 'jails':
+            loadJailsData();
+                break;
+            case 'banned-ips':
+            loadBannedIPsData();
+                break;
+            case 'whitelist':
+            loadWhitelistData();
+                break;
+            case 'blacklist':
+            loadBlacklistData();
+                break;
+            case 'logs':
+            loadLogsData();
+                break;
+            case 'statistics':
+            loadStatisticsData();
+                break;
+            case 'settings':
+            loadSettings();
+                break;
+    }
+}
+
+// Data loading functions
+async function loadOverviewData() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/status/');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('serviceStatus').textContent = data.data.status || 'Active';
+            document.getElementById('activeJails').textContent = data.data.active_jails || '0';
+            document.getElementById('bannedIPs').textContent = data.data.banned_ips || '0';
+            document.getElementById('serviceUptime').textContent = data.data.uptime || 'N/A';
+        }
+    } catch (error) {
+        console.error('Error loading overview data:', error);
+    }
+}
+
+async function loadJailsData() {
+    const content = document.getElementById('jailsContent');
+    content.innerHTML = '<div class="spinner"></div>Loading jails...';
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/jails/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayJails(data.data);
+            } else {
+            content.innerHTML = '<div class="alert alert-danger">Error loading jails: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="alert alert-danger">Error loading jails: ' + error.message + '</div>';
+    }
+}
+
+async function loadBannedIPsData() {
+    const content = document.getElementById('bannedIPsContent');
+    content.innerHTML = '<div class="spinner"></div>Loading banned IPs...';
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/banned-ips/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBannedIPs(data.data);
+            } else {
+            content.innerHTML = '<div class="alert alert-danger">Error loading banned IPs: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="alert alert-danger">Error loading banned IPs: ' + error.message + '</div>';
+    }
+}
+
+async function loadWhitelistData() {
+    const content = document.getElementById('whitelistContent');
+    content.innerHTML = '<div class="spinner"></div>Loading whitelist...';
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayWhitelist(data.data);
+            } else {
+            content.innerHTML = '<div class="alert alert-danger">Error loading whitelist: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="alert alert-danger">Error loading whitelist: ' + error.message + '</div>';
+    }
+}
+
+async function loadBlacklistData() {
+    const content = document.getElementById('blacklistContent');
+    content.innerHTML = '<div class="spinner"></div>Loading blacklist...';
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/blacklist/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBlacklist(data.data);
+            } else {
+            content.innerHTML = '<div class="alert alert-danger">Error loading blacklist: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="alert alert-danger">Error loading blacklist: ' + error.message + '</div>';
+    }
+}
+
+async function loadLogsData() {
+    const content = document.getElementById('logsContent');
+    content.innerHTML = '<div class="spinner"></div>Loading logs...';
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/logs/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayLogs(data.data);
+            } else {
+            content.innerHTML = '<div class="alert alert-danger">Error loading logs: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="alert alert-danger">Error loading logs: ' + error.message + '</div>';
+    }
+}
+
+async function loadStatisticsData() {
+    const content = document.getElementById('statisticsContent');
+    content.innerHTML = '<div class="spinner"></div>Loading statistics...';
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/statistics/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayStatistics(data.data);
+        } else {
+            content.innerHTML = '<div class="alert alert-danger">Error loading statistics: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="alert alert-danger">Error loading statistics: ' + error.message + '</div>';
+    }
+}
+
+async function loadSettings() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/settings/');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('emailNotifications').checked = data.data.email_notifications;
+            document.getElementById('autoBanThreshold').value = data.data.auto_ban_threshold;
+            document.getElementById('banDuration').value = data.data.ban_duration;
+            document.getElementById('enabledJails').value = data.data.enabled_jails;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+// Display functions
+function displayJails(jails) {
+    const content = document.getElementById('jailsContent');
+    
+    if (!jails || jails.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No jails configured</div>';
+        return;
+    }
+    
+    let html = '<table class="table"><thead><tr><th>Jail Name</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    
+    jails.forEach(jail => {
+        html += `<tr>
+            <td>${jail.name}</td>
+            <td><span class="badge ${jail.status === 'active' ? 'success' : 'warning'}">${jail.status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="toggleJail('${jail.name}')">
+                    ${jail.status === 'active' ? 'Disable' : 'Enable'}
+                </button>
+            </td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+function displayBannedIPs(ips) {
+    const content = document.getElementById('bannedIPsContent');
+    
+    if (!ips || ips.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No banned IPs</div>';
+        return;
+    }
+    
+    let html = '<table class="table"><thead><tr><th>IP Address</th><th>Jail</th><th>Banned At</th><th>Actions</th></tr></thead><tbody>';
+    
+    ips.forEach(ip => {
+        html += `<tr>
+            <td>${ip.ip}</td>
+            <td>${ip.jail}</td>
+            <td>${ip.banned_at || 'N/A'}</td>
+            <td>
+                <button class="btn btn-sm btn-success" onclick="unbanIP('${ip.ip}', '${ip.jail}')">
+                    Unban
+                </button>
+            </td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+function displayWhitelist(ips) {
+    const content = document.getElementById('whitelistContent');
+    
+    if (!ips || ips.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No whitelisted IPs</div>';
+        return;
+    }
+    
+    let html = '<table class="table"><thead><tr><th>IP Address</th><th>Added At</th><th>Actions</th></tr></thead><tbody>';
+    
+    ips.forEach(ip => {
+        html += `<tr>
+            <td>${ip.ip}</td>
+            <td>${ip.added_at || 'N/A'}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="removeFromWhitelist('${ip.ip}')">
+                    Remove
+                </button>
+            </td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+function displayBlacklist(ips) {
+    const content = document.getElementById('blacklistContent');
+    
+    if (!ips || ips.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No blacklisted IPs</div>';
+        return;
+    }
+    
+    let html = '<table class="table"><thead><tr><th>IP Address</th><th>Added At</th><th>Actions</th></tr></thead><tbody>';
+    
+    ips.forEach(ip => {
+        html += `<tr>
+            <td>${ip.ip}</td>
+            <td>${ip.added_at || 'N/A'}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="removeFromBlacklist('${ip.ip}')">
+                    Remove
+                </button>
+            </td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+function displayLogs(logs) {
+    const content = document.getElementById('logsContent');
+    
+    if (!logs || logs.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No logs available</div>';
+        return;
+    }
+    
+    let html = '<table class="table"><thead><tr><th>Timestamp</th><th>Level</th><th>Message</th></tr></thead><tbody>';
+    
+    logs.forEach(log => {
+        html += `<tr>
+            <td>${log.timestamp || 'N/A'}</td>
+            <td><span class="badge ${log.level === 'error' ? 'danger' : 'info'}">${log.level}</span></td>
+            <td>${log.message}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+function displayStatistics(stats) {
+    const content = document.getElementById('statisticsContent');
+    
+    let html = '<div class="status-cards">';
+    html += `<div class="status-card"><h3>Total Events</h3><p class="value">${stats.total_events || 0}</p></div>`;
+    html += `<div class="status-card"><h3>Banned IPs</h3><p class="value">${stats.banned_ips || 0}</p></div>`;
+    html += `<div class="status-card"><h3>Currently Banned</h3><p class="value">${stats.currently_banned || 0}</p></div>`;
+    html += `<div class="status-card"><h3>Attacks Detected</h3><p class="value">${stats.attacks_detected || 0}</p></div>`;
+    html += '</div>';
+    
+    content.innerHTML = html;
+}
+
+// Action functions
+async function saveSettings(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        email_notifications: formData.get('email_notifications') === 'on',
+        auto_ban_threshold: parseInt(formData.get('auto_ban_threshold')),
+        ban_duration: parseInt(formData.get('ban_duration')),
+        enabled_jails: formData.get('enabled_jails')
+    };
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/settings/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Settings saved successfully!', 'success');
+        } else {
+            showAlert('Error saving settings: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error saving settings: ' + error.message, 'danger');
+    }
+}
+
+async function addToWhitelist(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const ip = formData.get('ip');
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ip: ip })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('IP added to whitelist successfully!', 'success');
+            closeModal('addWhitelistModal');
+            loadWhitelistData();
+        } else {
+            showAlert('Error adding IP to whitelist: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error adding IP to whitelist: ' + error.message, 'danger');
+    }
+}
+
+async function addToBlacklist(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const ip = formData.get('ip');
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/blacklist/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ip: ip })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('IP added to blacklist successfully!', 'success');
+            closeModal('addBlacklistModal');
+            loadBlacklistData();
+        } else {
+            showAlert('Error adding IP to blacklist: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error adding IP to blacklist: ' + error.message, 'danger');
+    }
+}
+
+async function togglePlugin() {
+    try {
+        // Get current state
+        const toggle = document.getElementById('pluginToggle');
+        const status = document.getElementById('pluginStatus');
+        const isCurrentlyActive = toggle.classList.contains('active');
+        
+        // Update UI immediately for better UX
+        if (isCurrentlyActive) {
+            toggle.classList.remove('active');
+            status.textContent = 'Inactive';
+            pluginEnabled = false;
+        } else {
+            toggle.classList.add('active');
+            status.textContent = 'Active';
+            pluginEnabled = true;
+        }
+        
+        // Try to make API call, but don't fail if it doesn't work
+        try {
+            const response = await fetch('/plugins/fail2ban/api/toggle-plugin/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ enabled: !isCurrentlyActive })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('Plugin ' + (pluginEnabled ? 'enabled' : 'disabled') + ' successfully!', 'success');
+                } else {
+                    showAlert('Plugin toggle completed (API: ' + result.error + ')', 'warning');
+                }
+            } else {
+                showAlert('Plugin toggle completed (API unavailable)', 'warning');
+            }
+        } catch (apiError) {
+            // If API fails, just show a warning but keep the UI change
+            showAlert('Plugin toggle completed (API error: ' + apiError.message + ')', 'warning');
+        }
+        
+    } catch (error) {
+        showAlert('Error toggling plugin: ' + error.message, 'danger');
+        // Revert UI changes on error
+        const toggle = document.getElementById('pluginToggle');
+        const status = document.getElementById('pluginStatus');
+        if (pluginEnabled) {
+            toggle.classList.add('active');
+            status.textContent = 'Active';
+        } else {
+            toggle.classList.remove('active');
+            status.textContent = 'Inactive';
+        }
+    }
+}
+
+// Utility functions
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    
+    const container = document.querySelector('.fail2ban-plugin-container');
+    container.insertBefore(alert, container.firstChild);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+function showAddWhitelistModal() {
+    document.getElementById('addWhitelistModal').style.display = 'flex';
+}
+
+function showAddBlacklistModal() {
+    document.getElementById('addBlacklistModal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Refresh functions
+function refreshJails() {
+    loadJailsData();
+}
+
+function refreshBannedIPs() {
+    loadBannedIPsData();
+}
+
+function refreshLogs() {
+    loadLogsData();
+}
+
+function refreshStatistics() {
+    loadStatisticsData();
+}
+
+// Service control functions
+async function restartLiteSpeed() {
+    const button = document.getElementById('restartLiteSpeed');
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = '<span class="spinner"></span> Restarting...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/restart-litespeed/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('LiteSpeed service restarted successfully!', 'success');
+            // Refresh the page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showAlert('Error restarting LiteSpeed: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error restarting LiteSpeed: ' + error.message, 'danger');
+    } finally {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function restartFail2ban() {
+    const button = document.getElementById('restartFail2ban');
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = '<span class="spinner"></span> Restarting...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/restart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Fail2ban service restarted successfully!', 'success');
+            // Refresh overview data
+            loadOverviewData();
+        } else {
+            showAlert('Error restarting Fail2ban: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error restarting Fail2ban: ' + error.message, 'danger');
+    } finally {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+</script>
+{% endblock %}

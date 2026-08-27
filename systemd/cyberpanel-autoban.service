@@ -1,0 +1,18 @@
+[Unit]
+Description=CyberPanel Auto Ban Security Alerts monitor
+After=network.target lscpd.service firewalld.service
+Wants=lscpd.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/CyberCP
+Environment=PYTHONPATH=/usr/local/CyberCP
+ExecStart=/usr/local/CyberCP/bin/python /usr/local/CyberCP/autoBanSecurityAlerts/monitor_service.py
+Restart=always
+RestartSec=10
+Nice=10
+CPUQuota=30%
+
+[Install]
+WantedBy=multi-user.target

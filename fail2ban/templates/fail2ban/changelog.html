@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .changelog-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .changelog-header h1 {
+            color: #667eea;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .changelog-header .subtitle {
+            color: #666;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+        .version-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .version-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .version-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .version-date {
+            color: #999;
+            font-size: 0.9rem;
+        }
+        .version-content {
+            display: none;
+            padding-top: 20px;
+        }
+        .version-content.show {
+            display: block;
+        }
+        .change-category {
+            margin-bottom: 20px;
+        }
+        .change-category h4 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .change-category.added h4 { color: #28a745; }
+        .change-category.changed h4 { color: #17a2b8; }
+        .change-category.fixed h4 { color: #ffc107; }
+        .change-category.removed h4 { color: #dc3545; }
+        .change-category.security h4 { color: #6f42c1; }
+        .change-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .change-list li {
+            padding: 8px 0 8px 30px;
+            position: relative;
+            color: #555;
+            line-height: 1.6;
+        }
+        .change-list li:before {
+            content: "▸";
+            position: absolute;
+            left: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+        .back-button {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/plugins/fail2ban/" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+
+        <div class="changelog-header">
+            <h1>
+                <i class="fas fa-file-alt"></i>
+                Changelog
+            </h1>
+            <p class="subtitle">Fail2ban Security Manager - Version History</p>
+        </div>
+
+        <!-- Version 1.0.0 -->
+        <div class="version-container" onclick="toggleVersion('v1-0-0')">
+            <div class="version-header">
+                <div class="version-number">
+                    <i class="fas fa-tag"></i>
+                    Version 1.0.0
+                </div>
+                <div class="version-date">
+                    <i class="far fa-calendar"></i> 12.10.2025
+                </div>
+            </div>
+            <div class="version-content" id="v1-0-0">
+                <div class="change-category added">
+                    <h4><i class="fas fa-plus-circle"></i> Added</h4>
+                    <ul class="change-list">
+                        <li>Initial release of Fail2ban Security Manager plugin</li>
+                        <li>Real-time dashboard with security statistics</li>
+                        <li>Jail management interface for monitoring and controlling fail2ban jails</li>
+                        <li>Banned IPs management with search and filter capabilities</li>
+                        <li>IP whitelist management to prevent accidental bans</li>
+                        <li>IP blacklist management for permanent blocks</li>
+                        <li>Settings management with fail2ban configuration editor</li>
+                        <li>Comprehensive logging system with live log viewer</li>
+                        <li>Security statistics and analytics dashboard</li>
+                        <li>Plugin enable/disable toggle functionality</li>
+                        <li>Clean URL routing (/plugins/fail2ban/)</li>
+                        <li>Changelog page to track version history</li>
+                    </ul>
+                </div>
+
+                <div class="change-category security">
+                    <h4><i class="fas fa-shield-alt"></i> Security</h4>
+                    <ul class="change-list">
+                        <li>CyberPanel session-based authentication integration</li>
+                        <li>Secure API endpoints with CSRF protection</li>
+                        <li>Input validation and sanitization</li>
+                        <li>Protection against unauthorized access</li>
+                        <li>Secure configuration file handling</li>
+                    </ul>
+                </div>
+
+                <div class="change-category changed">
+                    <h4><i class="fas fa-sync-alt"></i> Technical</h4>
+                    <ul class="change-list">
+                        <li>Modular Django application structure</li>
+                        <li>Standalone template system for portability</li>
+                        <li>RESTful API endpoints for all operations</li>
+                        <li>Bootstrap 5 responsive UI framework</li>
+                        <li>Font Awesome icon integration</li>
+                        <li>Real-time updates using JavaScript fetch API</li>
+                        <li>Compatible with CyberPanel on AlmaLinux 8.8, 9.6, and 10</li>
+                        <li>Works with both OpenLiteSpeed and LiteSpeed Enterprise</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Future versions will be added here -->
+        <!-- Example template for future versions:
+        <div class="version-container" onclick="toggleVersion('v1-1-0')">
+            <div class="version-header">
+                <div class="version-number">
+                    <i class="fas fa-tag"></i>
+                    Version 1.1.0
+                </div>
+                <div class="version-date">
+                    <i class="far fa-calendar"></i> DD.MM.YYYY
+                </div>
+            </div>
+            <div class="version-content" id="v1-1-0">
+                <div class="change-category added">
+                    <h4><i class="fas fa-plus-circle"></i> Added</h4>
+                    <ul class="change-list">
+                        <li>New feature description</li>
+                    </ul>
+                </div>
+                <div class="change-category fixed">
+                    <h4><i class="fas fa-wrench"></i> Fixed</h4>
+                    <ul class="change-list">
+                        <li>Bug fix description</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        -->
+
+    </div>
+
+    <script>
+        function toggleVersion(versionId) {
+            const content = document.getElementById(versionId);
+            const container = content.closest('.version-container');
+            const icon = container.querySelector('.toggle-icon');
+            
+            // Toggle current version
+            content.classList.toggle('show');
+            if (icon) {
+                icon.classList.toggle('rotated');
+            }
+        }
+
+        // Add toggle icons to all version headers
+        document.addEventListener('DOMContentLoaded', function() {
+            const versionHeaders = document.querySelectorAll('.version-header');
+            versionHeaders.forEach(header => {
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-chevron-down toggle-icon';
+                icon.style.color = '#667eea';
+                icon.style.fontSize = '1.2rem';
+                header.appendChild(icon);
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -97,6 +97,8 @@ INSTALLED_APPS = [
     'filemanager',
     'manageServices',
     'pluginHolder',
+    'fail2ban',
+    'autoBanSecurityAlerts',
     'emailPremium',
     'emailMarketing',
     'cloudAPI',

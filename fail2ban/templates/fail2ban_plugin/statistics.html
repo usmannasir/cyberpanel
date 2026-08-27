@@ -1,0 +1,307 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Fail2ban statistics</h1>
+    <p>Ban and jail statistics.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="stats-container">
+    <div class="page-header">
+        <h1>📊 Security Statistics</h1>
+        <p>Comprehensive security analytics and threat intelligence</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3 class="stat-number" id="total-events">-</h3>
+            <p class="stat-label">Total Events (30 days)</p>
+        </div>
+        <div class="stat-card">
+            <h3 class="stat-number" id="banned-ips">-</h3>
+            <p class="stat-label">IPs Banned</p>
+        </div>
+        <div class="stat-card">
+            <h3 class="stat-number" id="unbanned-ips">-</h3>
+            <p class="stat-label">IPs Unbanned</p>
+        </div>
+        <div class="stat-card">
+            <h3 class="stat-number" id="attacks-detected">-</h3>
+            <p class="stat-label">Attacks Detected</p>
+        </div>
+        <div class="stat-card">
+            <h3 class="stat-number" id="currently-banned">-</h3>
+            <p class="stat-label">Currently Banned</p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div class="card">
+            <h3>Events by Type</h3>
+            <div class="chart-container" id="events-by-type-chart">
+                <div class="loading"></div> Loading chart...
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Events by Day (Last 7 Days)</h3>
+            <div class="chart-container" id="events-by-day-chart">
+                <div class="loading"></div> Loading chart...
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="card">
+        <h3>Security Overview</h3>
+        <div id="security-overview">
+            <div class="loading"></div> Loading overview...
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatistics();
+});
+
+async function loadStatistics() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/statistics/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            updateStatistics(data.data);
+        } else {
+            showAlert('Error loading statistics: ' + data.error, 'danger');
+        }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+        showAlert('Error loading statistics', 'danger');
+    }
+}
+
+function updateStatistics(stats) {
+    // Update stat cards
+    document.getElementById('total-events').textContent = stats.total_events || 0;
+    document.getElementById('banned-ips').textContent = stats.banned_ips || 0;
+    document.getElementById('unbanned-ips').textContent = stats.unbanned_ips || 0;
+    document.getElementById('attacks-detected').textContent = stats.attacks_detected || 0;
+    document.getElementById('currently-banned').textContent = stats.currently_banned || 0;
+    
+    // Update events by type chart
+    updateEventsByTypeChart(stats.events_by_type || {});
+    
+    // Update events by day chart
+    updateEventsByDayChart(stats.events_by_day || {});
+    
+    // Update security overview
+    updateSecurityOverview(stats);
+}
+
+function updateEventsByTypeChart(eventsByType) {
+    const container = document.getElementById('events-by-type-chart');
+    
+    if (Object.keys(eventsByType).length === 0) {
+        container.innerHTML = '<div style="color: #718096;">No data available</div>';
+        return;
+    }
+    
+    let html = '<div style="width: 100%;">';
+    const total = Object.values(eventsByType).reduce((sum, count) => sum + count, 0);
+    
+    Object.entries(eventsByType).forEach(([type, count]) => {
+        const percentage = total > 0 ? (count / total) * 100 : 0;
+        const color = getEventTypeColor(type);
+        
+        html += `
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="text-transform: capitalize; font-weight: 500;">${type.replace('_', ' ')}</span>
+                    <span style="font-weight: 600;">${count}</span>
+                </div>
+                <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: ${color}; height: 100%; width: ${percentage}%; transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function updateEventsByDayChart(eventsByDay) {
+    const container = document.getElementById('events-by-day-chart');
+    
+    if (Object.keys(eventsByDay).length === 0) {
+        container.innerHTML = '<div style="color: #718096;">No data available</div>';
+        return;
+    }
+    
+    let html = '<div style="width: 100%; height: 100%; display: flex; align-items: end; justify-content: space-around; padding: 20px 0;">';
+    
+    const maxValue = Math.max(...Object.values(eventsByDay));
+    
+    Object.entries(eventsByDay).forEach(([date, count]) => {
+        const height = maxValue > 0 ? (count / maxValue) * 200 : 0;
+        const day = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+        
+        html += `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="background: var(--primary-color); width: 30px; height: ${height}px; border-radius: 4px 4px 0 0; margin-bottom: 10px;"></div>
+                <div style="font-size: 0.8rem; color: #718096;">${day}</div>
+                <div style="font-size: 0.7rem; color: #718096; margin-top: 2px;">${count}</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function updateSecurityOverview(stats) {
+    const container = document.getElementById('security-overview');
+    
+    const threatLevel = calculateThreatLevel(stats);
+    const recommendations = generateRecommendations(stats);
+    
+    let html = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: var(--border-radius);">
+                <h4 style="margin: 0 0 10px 0; color: #2d3748;">Threat Level</h4>
+                <div style="font-size: 2rem; font-weight: 700; color: ${getThreatLevelColor(threatLevel)};">${threatLevel}</div>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: var(--border-radius);">
+                <h4 style="margin: 0 0 10px 0; color: #2d3748;">Protection Status</h4>
+                <div style="font-size: 1.2rem; font-weight: 600; color: #48bb78;">Active</div>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: var(--border-radius);">
+                <h4 style="margin: 0 0 10px 0; color: #2d3748;">Response Time</h4>
+                <div style="font-size: 1.2rem; font-weight: 600; color: #4299e1;">Real-time</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h4 style="color: #2d3748; margin-bottom: 15px;">Recommendations</h4>
+            <ul style="color: #718096; line-height: 1.6;">
+                ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function calculateThreatLevel(stats) {
+    const totalEvents = stats.total_events || 0;
+    const attacks = stats.attacks_detected || 0;
+    
+    if (totalEvents > 100 || attacks > 50) return 'HIGH';
+    if (totalEvents > 50 || attacks > 20) return 'MEDIUM';
+    return 'LOW';
+}
+
+function getThreatLevelColor(level) {
+    switch (level) {
+        case 'HIGH': return '#f56565';
+        case 'MEDIUM': return '#ed8936';
+        case 'LOW': return '#48bb78';
+        default: return '#718096';
+    }
+}
+
+function getEventTypeColor(type) {
+    const colors = {
+        'ban': '#f56565',
+        'unban': '#48bb78',
+        'attack': '#ed8936',
+        'whitelist': '#4299e1',
+        'blacklist': '#9f7aea',
+        'restart': '#38b2ac'
+    };
+    return colors[type] || '#718096';
+}
+
+function generateRecommendations(stats) {
+    const recommendations = [];
+    
+    if (stats.total_events > 100) {
+        recommendations.push('Consider increasing ban duration for persistent attackers');
+    }
+    
+    if (stats.attacks_detected > 50) {
+        recommendations.push('Review and update fail2ban filters for better detection');
+    }
+    
+    if (stats.currently_banned > 20) {
+        recommendations.push('Monitor banned IPs and consider permanent blacklisting for repeat offenders');
+    }
+    
+    if (recommendations.length === 0) {
+        recommendations.push('System is running optimally with good security posture');
+        recommendations.push('Continue monitoring and maintain current security settings');
+    }
+    
+    return recommendations;
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        max-width: 400px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: ${type === 'success' ? '#48bb78' : '#f56565'};
+    `;
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+  </div>
+</div>
+{% endblock %}

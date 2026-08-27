@@ -1,0 +1,137 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Fail2ban logs</h1>
+    <p>Recent Fail2ban log output.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="logs-container">
+    <div class="page-header">
+        <h1>📋 Security Logs</h1>
+        <p>View fail2ban security logs and events</p>
+    </div>
+
+    <div class="card">
+        <h3>Fail2ban Logs</h3>
+        <div style="margin-bottom: 15px;">
+            <button class="btn btn-primary" onclick="refreshLogs()">🔄 Refresh</button>
+            <button class="btn btn-primary" onclick="clearLogs()">🗑️ Clear</button>
+        </div>
+        <div class="logs-content" id="logs-content">
+            <div class="loading"></div> Loading logs...
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadLogs();
+});
+
+async function loadLogs() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/logs/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayLogs(data.data);
+        } else {
+            document.getElementById('logs-content').innerHTML = 
+                '<div style="color: #f56565;">Error loading logs: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        console.error('Error loading logs:', error);
+        document.getElementById('logs-content').innerHTML = 
+            '<div style="color: #f56565;">Error loading logs</div>';
+    }
+}
+
+function displayLogs(logs) {
+    const container = document.getElementById('logs-content');
+    
+    if (logs.length === 0) {
+        container.innerHTML = '<div style="color: #718096; font-style: italic;">No logs available</div>';
+        return;
+    }
+    
+    let html = '';
+    logs.forEach(log => {
+        // Color code different types of log entries
+        let color = '#e2e8f0';
+        if (log.includes('ERROR')) color = '#f56565';
+        else if (log.includes('WARNING')) color = '#ed8936';
+        else if (log.includes('INFO')) color = '#4299e1';
+        else if (log.includes('ban')) color = '#f56565';
+        else if (log.includes('unban')) color = '#48bb78';
+        
+        html += `<div style="color: ${color};">${log}</div>`;
+    });
+    
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+
+function refreshLogs() {
+    loadLogs();
+}
+
+function clearLogs() {
+    document.getElementById('logs-content').innerHTML = '<div style="color: #718096; font-style: italic;">Logs cleared</div>';
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        max-width: 400px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: ${type === 'success' ? '#48bb78' : '#f56565'};
+    `;
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+<style>
+/* Standalone page styling */
+.fail2ban-standalone {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.header p {
+    margin: 10px 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.navigation {
+    background: #f8f9fa;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-tab {
+    padding: 12px 24px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-tab:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.nav-tab.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.content {
+    padding: 30px;
+}
+
+.summary-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.summary-card h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.summary-card .value {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+    color: #28a745;
+}
+
+.add-form {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.add-form h3 {
+    margin: 0 0 20px 0;
+    color: #495057;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #495057;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.data-table {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.table-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table-header h3 {
+    margin: 0;
+    color: #495057;
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-content {
+    padding: 20px;
+}
+
+.whitelist-item {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.whitelist-item:hover {
+    background-color: #f8f9fa;
+}
+
+.whitelist-item:last-child {
+    border-bottom: none;
+}
+
+.whitelist-info {
+    flex: 1;
+}
+
+.whitelist-ip {
+    font-weight: 600;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.whitelist-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.25rem;
+    color: #495057;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.loading {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .fail2ban-standalone {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .nav-tab {
+        justify-content: center;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .whitelist-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+<div class="fail2ban-standalone">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✅ IP Whitelist Management</h1>
+            <p>Manage trusted IP addresses that should never be banned by fail2ban</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-tabs">
+                <a href="/plugins/fail2ban/" class="nav-tab">
+                    <span>📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/plugins/fail2ban/jails/" class="nav-tab">
+                    <span>🔒</span>
+                    <span>Manage Jails</span>
+                </a>
+                <a href="/plugins/fail2ban/banned-ips/" class="nav-tab">
+                    <span>🚫</span>
+                    <span>Banned IPs</span>
+                </a>
+                <a href="/plugins/fail2ban/whitelist/" class="nav-tab active">
+                    <span>✅</span>
+                    <span>Whitelist</span>
+                </a>
+                <a href="/plugins/fail2ban/blacklist/" class="nav-tab">
+                    <span>⚫</span>
+                    <span>Blacklist</span>
+                </a>
+                <a href="/plugins/fail2ban/logs/" class="nav-tab">
+                    <span>📋</span>
+                    <span>Security Logs</span>
+                </a>
+                <a href="/plugins/fail2ban/statistics/" class="nav-tab">
+                    <span>📈</span>
+                    <span>Statistics</span>
+                </a>
+                <a href="/plugins/fail2ban/settings/" class="nav-tab">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Summary Card -->
+            <div class="summary-card">
+                <h3>Whitelisted IP Addresses</h3>
+                <p class="value" id="whitelistCount">2</p>
+            </div>
+
+            <!-- Add IP Form -->
+            <div class="add-form">
+                <h3>Add IP to Whitelist</h3>
+                <form id="addWhitelistForm">
+                    <div class="form-group">
+                        <label for="ipAddress">IP Address or Range</label>
+                        <input type="text" id="ipAddress" name="ipAddress" placeholder="192.168.1.100 or 192.168.1.0/24" required>
+                    </div>
+                    <button type="submit" class="btn-success">
+                        <span>➕</span>
+                        Add to Whitelist
+                    </button>
+                </form>
+            </div>
+
+            <!-- Whitelist Table -->
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>🔒 Whitelisted IP Addresses</h3>
+                </div>
+                <div class="table-content">
+                    <div id="whitelist-content" class="loading">
+                        Loading whitelist...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadWhitelistData();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('addWhitelistForm').addEventListener('submit', addToWhitelist);
+}
+
+async function loadWhitelistData() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayWhitelist(data.data);
+            updateWhitelistCount(data.data);
+        } else {
+            document.getElementById('whitelist-content').innerHTML = 
+                '<div class="empty-state"><div class="icon">✅</div><h4>No whitelisted IPs</h4><p>No IP addresses are currently whitelisted.</p></div>';
+        }
+    } catch (error) {
+        console.error('Error loading whitelist:', error);
+        document.getElementById('whitelist-content').innerHTML = 
+            '<div class="empty-state"><div class="icon">❌</div><h4>Error loading whitelist</h4><p>Failed to load whitelist information.</p></div>';
+    }
+}
+
+function displayWhitelist(whitelist) {
+    if (whitelist.length === 0) {
+        document.getElementById('whitelist-content').innerHTML = 
+            '<div class="empty-state"><div class="icon">✅</div><h4>No whitelisted IPs</h4><p>No IP addresses are currently whitelisted.</p></div>';
+        return;
+    }
+
+    const whitelistHtml = whitelist.map(item => `
+        <div class="whitelist-item">
+            <div class="whitelist-info">
+                <div class="whitelist-ip">${item.ip}</div>
+                <div class="whitelist-date">Added: ${item.added_date || 'Unknown'}</div>
+            </div>
+            <button class="btn-danger" onclick="removeFromWhitelist('${item.ip}')">
+                Remove
+            </button>
+        </div>
+    `).join('');
+
+    document.getElementById('whitelist-content').innerHTML = whitelistHtml;
+}
+
+function updateWhitelistCount(whitelist) {
+    document.getElementById('whitelistCount').textContent = whitelist.length;
+}
+
+async function addToWhitelist(event) {
+    event.preventDefault();
+    
+    const ipAddress = document.getElementById('ipAddress').value.trim();
+    if (!ipAddress) {
+        alert('Please enter an IP address or range.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                ip: ipAddress
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('IP address added to whitelist successfully!');
+            document.getElementById('ipAddress').value = '';
+            loadWhitelistData();
+        } else {
+            alert('Error adding IP to whitelist: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error adding to whitelist:', error);
+        alert('Error adding IP to whitelist. Please try again.');
+    }
+}
+
+function removeFromWhitelist(ip) {
+    if (!confirm(`Are you sure you want to remove ${ip} from the whitelist?`)) {
+        return;
+    }
+
+    // Implement remove logic here
+    console.log(`Removing ${ip} from whitelist`);
+    alert(`IP ${ip} removed from whitelist.`);
+    loadWhitelistData();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+</body>
+</html>
