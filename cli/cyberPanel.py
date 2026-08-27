@@ -1049,6 +1049,20 @@ def main():
 
         cyberpanel.deleteDNSRecord(args.recordID)
 
+    ## Fix File Permission function
+    
+    elif args.function == "fixFilePermissions":
+
+        completeCommandExample = 'cyberpanel fixFilePermissions --domainName cyberpanel.net'
+
+        if not args.domainName:
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+        
+        from filemanager.filemanager import FileManager
+        fm = FileManager(None, None)
+        fm.fixPermissions(args.domainName)
+        
     ## Backup Functions.
 
     elif args.function == "createBackup":
