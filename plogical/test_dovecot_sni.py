@@ -1,10 +1,21 @@
 import pathlib
 import unittest
+from unittest.mock import patch
 
 from plogical.virtualHostUtilities import virtualHostUtilities
 
 
 class DovecotSNIConfigurationTests(unittest.TestCase):
+
+    def test_email_services_require_postfix_configuration(self):
+        with patch('plogical.virtualHostUtilities.os.path.exists', return_value=True), \
+                patch('plogical.virtualHostUtilities.os.path.isfile', return_value=False):
+            self.assertFalse(virtualHostUtilities.emailServicesInstalled())
+
+    def test_email_services_are_available_with_marker_and_configuration(self):
+        with patch('plogical.virtualHostUtilities.os.path.exists', return_value=True), \
+                patch('plogical.virtualHostUtilities.os.path.isfile', return_value=True):
+            self.assertTrue(virtualHostUtilities.emailServicesInstalled())
 
     def test_dovecot_24_sni_uses_plain_file_paths(self):
         block = virtualHostUtilities.getDovecotSNIBlock(
