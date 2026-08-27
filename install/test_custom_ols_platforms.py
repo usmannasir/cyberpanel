@@ -120,6 +120,43 @@ class CustomOLSPlatformTests(unittest.TestCase):
                 for checksum in config['sha256'].values():
                     self.assertRegex(checksum, r'^[0-9a-f]{64}$')
 
+    def test_ubuntu_26_uses_native_modsecurity_artifact(self):
+        os_release = (
+            'DISTRIB_ID=Ubuntu\n'
+            'DISTRIB_RELEASE=26.04\n'
+            'DISTRIB_CODENAME=resolute\n'
+        )
+        cases = (
+            (self.install_path, 'InstallCyberPanel', False),
+            (self.upgrade_path, 'Upgrade', True),
+        )
+
+        for path, class_name, is_static in cases:
+            with self.subTest(path=path.name):
+                detect = load_method(path, class_name, 'detectPlatform')
+                exists = lambda candidate: candidate == '/etc/lsb-release'
+                with mock.patch.object(os.path, 'exists', side_effect=exists), \
+                     mock.patch.object(
+                         builtins, 'open', mock.mock_open(read_data=os_release)
+                     ):
+                    target = None if is_static else type('Target', (), {})()
+                    self.assertEqual(
+                        detect() if is_static else detect(target), 'ubuntu26'
+                    )
+
+                config = binary_configs(path, class_name)['ubuntu26']
+                self.assertTrue(config['url'].endswith(
+                    'openlitespeed-2.5.1-x86_64-ubuntu'
+                ))
+                self.assertTrue(config['module_url'].endswith(
+                    'cyberpanel_ols-2.7.5-x86_64-ubuntu.so'
+                ))
+                self.assertTrue(config['modsec_url'].endswith(
+                    'mod_security-2.5.1-x86_64-ubuntu26.so'
+                ))
+                for checksum in config['sha256'].values():
+                    self.assertRegex(checksum, r'^[0-9a-f]{64}$')
+
     def test_existing_platform_artifact_urls_do_not_change(self):
         expected = {
             self.install_path: {
@@ -174,6 +211,40 @@ class CustomOLSPlatformTests(unittest.TestCase):
                 self.assertLess(
                     source.index(dependency_install),
                     source.index('checkGlibcCompat'),
+                )
+
+    def test_ubuntu_26_installs_modsecurity_dependencies(self):
+        for path, class_name in (
+            (self.install_path, 'InstallCyberPanel'),
+            (self.upgrade_path, 'Upgrade'),
+        ):
+            with self.subTest(path=path.name):
+                source = method_source(
+                    path, class_name, 'installCustomOLSBinaries'
+                )
+                self.assertIn("platform == 'ubuntu26'", source)
+                for package in (
+                    'libxml2-16', 'libcurl3t64-gnutls', 'libyajl2',
+                    'libgeoip1t64', 'liblmdb0', 'libpcre2-8-0',
+                ):
+                    self.assertIn(package, source)
+                self.assertLess(
+                    source.index("platform == 'ubuntu26'"),
+                    source.index('checkGlibcCompat'),
+                )
+
+    def test_modsecurity_is_abi_checked_before_install(self):
+        for path, class_name in (
+            (self.install_path, 'InstallCyberPanel'),
+            (self.upgrade_path, 'Upgrade'),
+        ):
+            with self.subTest(path=path.name):
+                source = method_source(
+                    path, class_name, 'installCustomOLSBinaries'
+                )
+                self.assertRegex(
+                    source,
+                    r'checkGlibcCompat\(tmp_modsec\)',
                 )
 
 
