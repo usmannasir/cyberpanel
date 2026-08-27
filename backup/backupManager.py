@@ -27,6 +27,7 @@ from plogical.mailUtilities import mailUtilities
 from random import randint
 import time
 import plogical.backupUtilities as backupUtil
+from plogical.backupArchive import archive_path_without_suffix
 from plogical.processUtilities import ProcessUtilities
 from multiprocessing import Process
 import requests
@@ -721,14 +722,14 @@ class BackupManager:
             if '..' in str(data['backupFile']) or '..' in str(data.get('dir', '')):
                 return ACLManager.loadErrorJson()
 
-            backupFile = data['backupFile'].strip(".tar.gz")
+            backupFile = archive_path_without_suffix(data['backupFile'])
 
             path = os.path.join("/home", "backup", data['backupFile'])
 
             if os.path.exists(path):
                 path = os.path.join("/home", "backup", backupFile)
             elif os.path.exists(data['backupFile']):
-                path = data['backupFile'].strip(".tar.gz")
+                path = archive_path_without_suffix(data['backupFile'])
             else:
                 dir = data['dir']
                 path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
@@ -1493,6 +1494,15 @@ class BackupManager:
                 data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+            elif status.find("completed[failed]") > -1:
+                data = {
+                    'remoteTransferStatus': 0,
+                    'error_message': status,
+                    'status': status,
+                    'complete': 1,
+                }
+                return HttpResponse(json.dumps(data))
 
             elif status.find("[5010]") > -1:
                 command = "sudo rm -rf " + shlex.quote(removalPath)

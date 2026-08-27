@@ -8,12 +8,31 @@ import time
 from multiprocessing import Process
 import subprocess
 import shlex
-from shutil import move
+from shutil import move, rmtree
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupSchedule import backupSchedule
+from plogical.backupArchive import archive_path_without_suffix
 
 class remoteTransferUtilities:
+
+    RESTORE_STATUS_TIMEOUT = 120
+    RESTORE_POLL_INTERVAL = 1
+
+    @staticmethod
+    def _appendRestoreLog(backupLogPath, message):
+        with open(backupLogPath, "a") as writeToFile:
+            writeToFile.writelines("[" + time.strftime(
+                "%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
+
+    @staticmethod
+    def _restoreStatusPath(backupDir, backup):
+        backupName = archive_path_without_suffix(backup)
+        path = os.path.join(backupDir, backupName)
+        backupRoot = os.path.realpath(backupDir)
+        if os.path.commonpath((backupRoot, os.path.realpath(path))) != backupRoot:
+            raise ValueError('Invalid backup archive path')
+        return path, os.path.join(path, 'status')
 
     @staticmethod
     def writeAuthKey(pathToKey):
@@ -298,82 +317,92 @@ class remoteTransferUtilities:
         try:
             ext = ".tar.gz"
 
-            for backup in os.listdir(backupDir):
+            backups = sorted(
+                backup for backup in os.listdir(backupDir)
+                if backup.endswith(ext)
+                and os.path.isfile(os.path.join(backupDir, backup))
+                and not os.path.islink(os.path.join(backupDir, backup))
+            )
+            if not backups:
+                raise RuntimeError('No backup archives were found in the transfer directory')
 
-                if backup.endswith(ext):
+            restoreFailed = False
 
-                    writeToFile = open(backupLogPath, "a")
+            for backup in backups:
+                remoteTransferUtilities._appendRestoreLog(
+                    backupLogPath, "Starting restore for: " + backup + "."
+                )
 
-                    writeToFile.writelines("\n")
-                    writeToFile.writelines("\n")
-                    writeToFile.writelines("[" + time.strftime(
-                        "%m.%d.%Y_%H-%M-%S") + "]" + " Starting restore for: " + backup + ".\n")
-                    writeToFile.close()
+                path, statusPath = remoteTransferUtilities._restoreStatusPath(
+                    backupDir, backup
+                )
+                if os.path.exists(path):
+                    rmtree(path)
 
-                    backupFile = backup
-                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-                    execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
-                    subprocess.Popen(shlex.split(execPath))
-                    time.sleep(4)
+                execArgs = [
+                    'sudo', 'nice', '-n', '10',
+                    '/usr/local/CyberCP/bin/python',
+                    virtualHostUtilities.cyberPanel + '/plogical/backupUtilities.py',
+                    'submitRestore', '--backupFile', backup, '--dir', str(dir),
+                ]
+                restoreLauncher = subprocess.Popen(execArgs)
+                statusDeadline = time.monotonic() + remoteTransferUtilities.RESTORE_STATUS_TIMEOUT
 
-                    while (1):
-                        time.sleep(1)
+                while not os.path.exists(statusPath):
+                    if time.monotonic() >= statusDeadline:
+                        exitCode = restoreLauncher.poll()
+                        raise RuntimeError(
+                            'Restore status was not created for %s within %s seconds '
+                            '(launcher exit code: %s)' % (
+                                backup,
+                                remoteTransferUtilities.RESTORE_STATUS_TIMEOUT,
+                                str(exitCode),
+                            )
+                        )
+                    time.sleep(remoteTransferUtilities.RESTORE_POLL_INTERVAL)
 
-                        backupFile = backup.strip(".tar.gz")
-                        path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
-                        status = open(path + "/status", 'r').read()
+                while True:
+                    with open(statusPath, 'r') as statusFile:
+                        status = statusFile.read()
 
-                        if status.find("Done") > -1:
-                            command = "sudo rm -rf " + path
-                            ProcessUtilities.normalExecutioner(command)
+                    if status.find("Done") > -1:
+                        rmtree(path)
+                        remoteTransferUtilities._appendRestoreLog(
+                            backupLogPath, "Restore completed for: " + backup + "."
+                        )
+                        break
+                    elif status.find("[5009]") > -1:
+                        restoreFailed = True
+                        remoteTransferUtilities._appendRestoreLog(
+                            backupLogPath,
+                            "Restore aborted for: " + backup + ". Error message: " + status,
+                        )
+                        break
+                    else:
+                        remoteTransferUtilities._appendRestoreLog(
+                            backupLogPath, "Waiting for restore to complete: " + backup + "."
+                        )
+                        time.sleep(4)
 
-                            writeToFile = open(backupLogPath, "a")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Restore Completed for: " + backup + ".\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " #########################################\n")
-                            writeToFile.close()
-                            break
-                        elif status.find("[5009]") > -1:
-                            ## removing temporarily generated files while restoring
-                            command = "sudo rm -rf " + path
-                            ProcessUtilities.normalExecutioner(command)
-
-                            writeToFile = open(backupLogPath, "a")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Restore aborted for: " + backup + ". Error message: " +
-                                                   status + "\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " #########################################\n")
-                            writeToFile.close()
-                            break
-                        else:
-                            writeToFile = open(backupLogPath, "a")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Waiting for restore to complete.\n")
-                            writeToFile.close()
-                            time.sleep(3)
-                            pass
-
-            writeToFile = open(backupLogPath, "a")
-
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore complete\n")
-            writeToFile.writelines("completed[success]")
+            if restoreFailed:
+                remoteTransferUtilities._appendRestoreLog(
+                    backupLogPath, "Backup restore finished with errors."
+                )
+                with open(backupLogPath, "a") as writeToFile:
+                    writeToFile.writelines("completed[failed]")
+            else:
+                remoteTransferUtilities._appendRestoreLog(
+                    backupLogPath, "Backup restore complete."
+                )
+                with open(backupLogPath, "a") as writeToFile:
+                    writeToFile.writelines("completed[success]")
 
         except BaseException as msg:
-            writeToFile = open(backupLogPath, "a")
-            writeToFile.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore Failed\n")
-            writeToFile.writelines("Error[Failed]")
+            remoteTransferUtilities._appendRestoreLog(
+                backupLogPath, "Backup restore failed: " + str(msg)
+            )
+            with open(backupLogPath, "a") as writeToFile:
+                writeToFile.writelines("completed[failed]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
 
 

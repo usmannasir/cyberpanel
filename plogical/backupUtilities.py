@@ -51,6 +51,7 @@ from cyberpanel_version import (
 from plogical.backupIntegrity import safe_extract
 from plogical.backupMetadata import backup_includes_mail_domain
 from plogical.backupExcludes import rsync_exclude_arguments
+from plogical.backupArchive import archive_path_without_suffix
 from plogical.backupMetadataBuilder import (
     build_dns_records_xml,
     build_email_accounts_xml,
@@ -655,7 +656,7 @@ class backupUtilities:
     @staticmethod
     def createWebsiteFromBackup(backupFileOrig, dir):
         try:
-            backupFile = backupFileOrig.strip(".tar.gz")
+            backupFile = archive_path_without_suffix(backupFileOrig)
             originalFile = f"/home/backup/{backupFileOrig}"
 
             if os.path.exists(backupFileOrig):
@@ -796,14 +797,14 @@ class backupUtilities:
         try:
 
             if dir == "CyberPanelRestore":
-                backupFileName = backupName.strip(".tar.gz")
+                backupFileName = archive_path_without_suffix(backupName)
                 completPath = os.path.join("/home", "backup", backupFileName)  ## without extension
                 originalFile = os.path.join("/home", "backup", backupName)  ## with extension
             elif dir == 'CLI':
-                completPath = backupName.strip(".tar.gz")  ## without extension
+                completPath = archive_path_without_suffix(backupName)  ## without extension
                 originalFile = backupName  ## with extension
             else:
-                backupFileName = backupName.strip(".tar.gz")
+                backupFileName = archive_path_without_suffix(backupName)
                 completPath = "/home/backup/transfer-" + str(dir) + "/" + backupFileName  ## without extension
                 originalFile = "/home/backup/transfer-" + str(dir) + "/" + backupName  ## with extension
 
