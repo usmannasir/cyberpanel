@@ -1,0 +1,425 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans "Enhanced Remote Transfer - CyberPanel" %}{% endblock %}
+{% block content %}
+
+<style>
+    .enhanced-transfer-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .disk-analysis-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .transfer-mode-card {
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        background: white;
+    }
+
+    .transfer-mode-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .transfer-mode-card.selected {
+        border-color: #5b5fcf;
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f1ff 100%);
+    }
+
+    .transfer-mode-card.recommended {
+        border-color: #28a745;
+    }
+
+    .mode-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .mode-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1e293b;
+    }
+
+    .mode-description {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .compatibility-indicator {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .compatibility-excellent { color: #28a745; }
+    .compatibility-good { color: #17a2b8; }
+    .compatibility-fair { color: #ffc107; }
+    .compatibility-poor { color: #dc3545; }
+
+    .website-selector {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .website-item {
+        padding: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .website-item:hover {
+        background: #f8fafc;
+    }
+
+    .website-item.selected {
+        background: #eef2ff;
+        border-color: #5b5fcf;
+    }
+
+    .progress-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .custom-progress-bar {
+        height: 30px;
+        border-radius: 15px;
+        overflow: hidden;
+        background: #f1f5f9;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .btn-enhanced {
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-start {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .btn-start:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-cancel {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+
+    .btn-cancel:hover {
+        background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3);
+    }
+
+    .recommendation-badge {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #28a745;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+
+<div class="enhanced-transfer-container" ng-app="CyberCPApp" ng-controller="enhancedRemoteTransfer">
+
+    <!-- Disk Analysis Card -->
+    <div class="disk-analysis-card" ng-if="diskAnalysis">
+        <h3><i class="fas fa-hdd"></i> Disk Space Analysis</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">{{ diskAnalysis.disk_usage_percent.toFixed(1) }}%</div>
+                <div class="stat-label">Used Space</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ diskAnalysis.free_space_gb.toFixed(1) }}GB</div>
+                <div class="stat-label">Free Space</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ diskAnalysis.total_space_gb.toFixed(1) }}GB</div>
+                <div class="stat-label">Total Space</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Mode Selection -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-cogs"></i> Transfer Mode Selection</h4>
+        </div>
+        <div class="card-body">
+
+            <div class="row">
+                <!-- Sequential Mode -->
+                <div class="col-md-4">
+                    <div class="transfer-mode-card"
+                         ng-class="{'selected': selectedMode === 'sequential', 'recommended': recommendedMode === 'sequential'}"
+                         ng-click="selectedMode = 'sequential'">
+                        <div ng-if="recommendedMode === 'sequential'" class="recommendation-badge">
+                            <i class="fas fa-star"></i> Recommended
+                        </div>
+                        <div class="compatibility-indicator">
+                            <i class="fas fa-circle compatibility-{{ getModeCompatibility('sequential').toLowerCase() }}"></i>
+                        </div>
+                        <div class="mode-icon text-center">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="mode-title">{{ transferModes.sequential.name }}</div>
+                        <div class="mode-description">{{ transferModes.sequential.description }}</div>
+                        <div class="mt-2">
+                            <small class="text-muted">Compatibility: {{ getModeCompatibility('sequential') }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rsync Mode -->
+                <div class="col-md-4">
+                    <div class="transfer-mode-card"
+                         ng-class="{'selected': selectedMode === 'rsync', 'recommended': recommendedMode === 'rsync'}"
+                         ng-click="selectedMode = 'rsync'">
+                        <div ng-if="recommendedMode === 'rsync'" class="recommendation-badge">
+                            <i class="fas fa-star"></i> Recommended
+                        </div>
+                        <div class="compatibility-indicator">
+                            <i class="fas fa-circle compatibility-{{ getModeCompatibility('rsync').toLowerCase() }}"></i>
+                        </div>
+                        <div class="mode-icon text-center">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="mode-title">{{ transferModes.rsync.name }}</div>
+                        <div class="mode-description">{{ transferModes.rsync.description }}</div>
+                        <div class="mt-2">
+                            <small class="text-muted">Compatibility: {{ getModeCompatibility('rsync') }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parallel Mode -->
+                <div class="col-md-4">
+                    <div class="transfer-mode-card"
+                         ng-class="{'selected': selectedMode === 'parallel', 'recommended': recommendedMode === 'parallel'}"
+                         ng-click="selectedMode = 'parallel'">
+                        <div ng-if="recommendedMode === 'parallel'" class="recommendation-badge">
+                            <i class="fas fa-star"></i> Recommended
+                        </div>
+                        <div class="compatibility-indicator">
+                            <i class="fas fa-circle compatibility-{{ getModeCompatibility('parallel').toLowerCase() }}"></i>
+                        </div>
+                        <div class="mode-icon text-center">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="mode-title">{{ transferModes.parallel.name }}</div>
+                        <div class="mode-description">{{ transferModes.parallel.description }}</div>
+                        <div class="mt-2">
+                            <small class="text-muted">Compatibility: {{ getModeCompatibility('parallel') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estimated Requirements -->
+            <div class="alert alert-info mt-3" ng-if="spaceRequirement">
+                <i class="fas fa-info-circle"></i> <strong>Estimated Requirements:</strong> {{ spaceRequirement }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Setup -->
+    <div class="card" ng-show="!accountsFetched">
+        <div class="card-header bg-info text-white">
+            <h4><i class="fas fa-server"></i> Remote Server Connection</h4>
+        </div>
+        <div class="card-body">
+            <form ng-submit="fetchRemoteAccounts()">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="ipAddress">Remote Server IP Address</label>
+                            <input type="text" class="form-control" id="ipAddress" ng-model="ipAddress"
+                                   placeholder="192.168.1.100" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="rootPassword">Root Password</label>
+                            <input type="password" class="form-control" id="rootPassword" ng-model="rootPassword"
+                                   placeholder="Enter root password">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="rootSSHKey">Root SSH Key (Optional)</label>
+                            <textarea class="form-control" id="rootSSHKey" ng-model="rootSSHKey"
+                                      placeholder="Paste SSH private key content here" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-enhanced" ng-disabled="cyberpanelLoading || !ipAddress">
+                        <i class="fas fa-plug"></i> Connect to Server
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Website Selection -->
+    <div class="website-selector" ng-show="accountsFetched">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4><i class="fas fa-globe"></i> Select Websites to Transfer</h4>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" ng-click="selectAllWebsites()">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" ng-click="clearSelection()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4" ng-repeat="website in remoteAccounts">
+                <div class="website-item" ng-class="{'selected': selectedWebsites.includes(website)}"
+                     ng-click="toggleWebsiteSelection(website)">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-3">
+                            <i class="fas fa-check-circle" ng-show="selectedWebsites.includes(website)" style="color: #28a745;"></i>
+                            <i class="far fa-circle" ng-hide="selectedWebsites.includes(website)"></i>
+                        </div>
+                        <div>
+                            <strong>{{ website }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning mt-3" ng-if="selectedWebsites.length === 0">
+            <i class="fas fa-exclamation-triangle"></i> Please select at least one website to transfer
+        </div>
+    </div>
+
+    <!-- Transfer Progress -->
+    <div class="progress-section" ng-show="transferring">
+        <h4><i class="fas fa-tasks"></i> Transfer Progress</h4>
+
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <span>Progress: {{ transferredCount || 0 }} / {{ totalCount || selectedWebsites.length }}</span>
+                <span>{{ transferProgress.toFixed(1) }}%</span>
+            </div>
+            <div class="custom-progress-bar">
+                <div class="progress-bar"
+                     ng-class="getProgressBarClass()"
+                     style="width: {{ transferProgress }}%">
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center" ng-if="currentWebsite">
+            <p class="mb-0"><i class="fas fa-spinner fa-spin"></i> Currently transferring: <strong>{{ currentWebsite }}</strong></p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons" ng-show="accountsFetched && !transferring">
+        <button class="btn btn-enhanced btn-start"
+                ng-click="startEnhancedTransfer()"
+                ng-disabled="selectedWebsites.length === 0 || !selectedMode || cyberpanelLoading">
+            <i class="fas fa-rocket"></i> Start Transfer
+        </button>
+
+        <button class="btn btn-enhanced btn-cancel"
+                ng-click="cancelTransfer()"
+                ng-disabled="!transferring">
+            <i class="fas fa-stop"></i> Cancel Transfer
+        </button>
+    </div>
+
+</div>
+
+<!-- Include Enhanced Remote Transfer JS -->
+<script src="{% static 'backup/enhancedRemoteTransfer.js' %}"></script>
+
+{% endblock %}

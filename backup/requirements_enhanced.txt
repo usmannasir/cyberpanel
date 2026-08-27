@@ -1,0 +1,14 @@
+# Enhanced Remote Transfer Dependencies
+# These are additional dependencies for the enhanced migration system
+
+# For disk space analysis and system monitoring
+psutil>=5.8.0
+
+# For better JSON handling and validation
+jsonschema>=4.0.0
+
+# For enhanced logging and error tracking
+colorlog>=6.0.0
+
+# For progress tracking and better UX
+tqdm>=4.60.0
