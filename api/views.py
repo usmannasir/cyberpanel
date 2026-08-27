@@ -496,12 +496,6 @@ def remoteTransfer(request):
 
             dir = str(randint(1000, 9999))
 
-            ##save this port into file
-            portpath = "/home/cyberpanel/remote_port"
-            writeToFile = open(portpath, 'w')
-            writeToFile.writelines(str(port))
-            writeToFile.close()
-
             mailUtilities.checkHome()
             path = "/home/cyberpanel/accounts-" + str(randint(1000, 9999))
             writeToFile = open(path, 'w')
@@ -514,7 +508,7 @@ def remoteTransfer(request):
 
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-            execPath = execPath + " remoteTransfer --ipAddress " + ipAddress.rstrip('\n') + " --dir " + dir + " --accountsToTransfer " + path
+            execPath = execPath + " remoteTransfer --ipAddress " + shlex.quote(ipAddress.rstrip('\n')) + " --dir " + shlex.quote(dir) + " --accountsToTransfer " + shlex.quote(path) + " --port " + shlex.quote(str(port))
             ProcessUtilities.popenExecutioner(execPath)
 
             if os.path.exists('/usr/local/CyberCP/debug'):

@@ -37,6 +37,7 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 from plogical.remoteTransferResponse import parse_remote_transfer_response
+from plogical.remoteTransferNetwork import callback_ip_for_remote
 from plogical.normalBackupUtilities import (
     normalize_backup_retention_days,
     normalize_local_backup_path,
@@ -1298,6 +1299,8 @@ class BackupManager:
                 with open(ipFile) as ip_file:
                     ownIP = ip_file.read().strip()
 
+                ownIP = callback_ip_for_remote(ipAddress, ownIP)
+
                 finalData = json.dumps({'username': "admin", "password": password, "ipAddress": ownIP,
                                         "accountsToTransfer": accountsToTransfer, 'port': port})
 
@@ -1371,15 +1374,15 @@ class BackupManager:
             data = json.loads(r.text)
 
             if data['fetchStatus'] == 1:
-                if data['status'].find("Backups are successfully generated and received on") > -1:
+                if data['status'].find("[5010]") > -1:
+                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
+                            'backupsSent': 0}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+                elif data['status'].find("Backups are successfully generated and received on") > -1:
 
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],
                             'backupsSent': 1}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                elif data['status'].find("[5010]") > -1:
-                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
-                            'backupsSent': 0}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
                 else:

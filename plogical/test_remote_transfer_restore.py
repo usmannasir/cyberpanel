@@ -1,10 +1,12 @@
 import os
+import io
 import tempfile
 from unittest import mock
 
 from django.test import SimpleTestCase
 
 from plogical.backupArchive import archive_path_without_suffix
+from plogical.remoteTransferNetwork import callback_ip_for_remote
 from plogical.remoteTransferUtilities import remoteTransferUtilities
 
 
@@ -90,3 +92,91 @@ class RemoteTransferRestoreTests(SimpleTestCase):
             result = log_file.read()
         self.assertIn('No backup archives were found', result)
         self.assertIn('completed[failed]', result)
+
+
+class RemoteTransferDeliveryTests(SimpleTestCase):
+
+    @mock.patch('plogical.remoteTransferNetwork.socket.socket')
+    @mock.patch('plogical.remoteTransferNetwork.socket.getaddrinfo')
+    def test_private_remote_uses_the_routed_local_address(
+        self, getaddrinfo, socket_factory
+    ):
+        getaddrinfo.return_value = [
+            (2, 2, 17, '', ('172.16.0.20', 8090)),
+        ]
+        route_socket = socket_factory.return_value
+        route_socket.getsockname.return_value = ('172.16.0.30', 43122)
+
+        self.assertEqual(
+            '172.16.0.30',
+            callback_ip_for_remote('172.16.0.20', '203.0.113.30'),
+        )
+        route_socket.connect.assert_called_once_with(('172.16.0.20', 8090))
+
+    @mock.patch('plogical.remoteTransferNetwork.socket.socket')
+    @mock.patch('plogical.remoteTransferNetwork.socket.getaddrinfo')
+    def test_public_remote_keeps_the_configured_address(
+        self, getaddrinfo, socket_factory
+    ):
+        getaddrinfo.return_value = [
+            (2, 2, 17, '', ('8.8.8.8', 8090)),
+        ]
+
+        self.assertEqual(
+            '198.51.100.30',
+            callback_ip_for_remote('8.8.8.8', '198.51.100.30'),
+        )
+        socket_factory.assert_not_called()
+
+    @mock.patch('plogical.remoteTransferUtilities.subprocess.call')
+    def test_scp_failure_keeps_the_archive_and_returns_false(self, call):
+        call.return_value = 255
+        with tempfile.TemporaryDirectory() as directory:
+            archive = os.path.join(directory, 'backup-example.tar.gz')
+            with open(archive, 'wb'):
+                pass
+            output = io.StringIO()
+
+            sent = remoteTransferUtilities.sendBackup(
+                archive, '172.16.0.30', '1234', output, '2222'
+            )
+
+            self.assertFalse(sent)
+            self.assertTrue(os.path.exists(archive))
+            self.assertIn('[5010]', output.getvalue())
+            command = call.call_args.args[0]
+            self.assertIn('2222', command)
+
+    @mock.patch.object(remoteTransferUtilities, 'sendBackup', return_value=False)
+    @mock.patch(
+        'plogical.remoteTransferUtilities.ProcessUtilities.executioner',
+        return_value=None,
+    )
+    @mock.patch('plogical.remoteTransferUtilities.backupSchedule.createLocalBackup')
+    def test_failed_scp_is_not_followed_by_a_success_marker(
+        self, create_backup, unused_executioner, unused_send
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            generated = os.path.join(directory, 'generated-example')
+            with open(generated + '.tar.gz', 'wb'):
+                pass
+            destination = os.path.join(directory, 'transfer-1234')
+            os.mkdir(destination)
+            log_path = os.path.join(destination, 'backup_log')
+            create_backup.return_value = [1, generated]
+
+            remoteTransferUtilities.backupProcess(
+                '172.16.0.30',
+                destination,
+                log_path,
+                '1234',
+                ['example.com'],
+                '2222',
+            )
+
+            with open(log_path) as log_file:
+                result = log_file.read()
+            self.assertNotIn(' Sent ', result)
+            self.assertNotIn(
+                'Backups are successfully generated and received on', result
+            )

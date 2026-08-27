@@ -72,7 +72,7 @@ class remoteTransferUtilities:
 
     ## House keeping function to run remote backups
     @staticmethod
-    def remoteTransfer(ipAddress, dir, accountsToTransfer):
+    def remoteTransfer(ipAddress, dir, accountsToTransfer, sshPort='22'):
         try:
 
             destination = "/home/backup/transfer-" + dir
@@ -101,7 +101,9 @@ class remoteTransferUtilities:
             writeToFile.writelines("\n")
 
             if backupUtil.backupUtilities.checkIfHostIsUp(ipAddress) == 1:
-                checkConn = backupUtil.backupUtilities.checkConnection(ipAddress)
+                checkConn = backupUtil.backupUtilities.checkConnection(
+                    ipAddress, str(sshPort)
+                )
                 if checkConn[0] == 0:
                     writeToFile.writelines("[" + time.strftime(
                         "%m.%d.%Y_%H-%M-%S") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting. [5010]" + "\n")
@@ -122,7 +124,8 @@ class remoteTransferUtilities:
             ## Array of domains to be transferred
 
             p = Process(target=remoteTransferUtilities.backupProcess,
-                        args=(ipAddress, destination, backupLogPath, dir, accountsToTransfer))
+                        args=(ipAddress, destination, backupLogPath, dir,
+                              accountsToTransfer, str(sshPort)))
             p.start()
 
             pid = open(destination + '/pid', "w")
@@ -145,9 +148,13 @@ class remoteTransferUtilities:
     ## Array of domains to be transferred
 
     @staticmethod
-    def backupProcess(ipAddress, dir, backupLogPath, folderNumber, accountsToTransfer):
+    def backupProcess(ipAddress, dir, backupLogPath, folderNumber,
+                      accountsToTransfer, sshPort='22'):
             try:
                 ## dir is without forward slash
+
+                allBackupsSent = True
+                backupsAttempted = 0
 
                 for virtualHost in accountsToTransfer:
                     try:
@@ -160,6 +167,7 @@ class remoteTransferUtilities:
                         retValue = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
 
                         if retValue[0] == 1:
+                            backupsAttempted += 1
                             writeToFile = open(backupLogPath, 'a')
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " Local Backup Completed for: " + virtualHost + "\n")
@@ -181,34 +189,48 @@ class remoteTransferUtilities:
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
 
-                            remoteTransferUtilities.sendBackup(completedPathToSend, ipAddress, str(folderNumber),
-                                                               writeToFile)
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+                            sent = remoteTransferUtilities.sendBackup(
+                                completedPathToSend,
+                                ipAddress,
+                                str(folderNumber),
+                                writeToFile,
+                                str(sshPort),
+                            )
+                            if sent:
+                                writeToFile.writelines("[" + time.strftime(
+                                    "%m.%d.%Y_%H-%M-%S") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+                            else:
+                                allBackupsSent = False
 
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " #############################################" + "\n")
 
                             writeToFile.close()
                         else:
+                            allBackupsSent = False
                             writeToFile = open(backupLogPath, "a")
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + "Failed to generate local backup for: " + virtualHost + ". Error message: %s\n" % (retValue[1]))
                             writeToFile.close()
 
                     except BaseException as msg:
+                        allBackupsSent = False
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
-                        pass
-
-                portpath = "/home/cyberpanel/remote_port"
-                try:
-                    os.remove(portpath)
-                except OSError:
-                    pass
+                        remoteTransferUtilities._appendRestoreLog(
+                            backupLogPath,
+                            "Backup or transfer failed for: " + virtualHost +
+                            ". Error message: " + str(msg) + " [5010]",
+                        )
 
                 writeToFile = open(backupLogPath, "a")
-                writeToFile.writelines("[" + time.strftime(
-                    "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
+                if (allBackupsSent and backupsAttempted > 0 and
+                        backupsAttempted == len(accountsToTransfer)):
+                    writeToFile.writelines("[" + time.strftime(
+                        "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
+                else:
+                    writeToFile.writelines("[" + time.strftime(
+                        "%m.%d.%Y_%H-%M-%S") + "]" +
+                        " Backup transfer finished with errors. [5010]\n")
                 writeToFile.close()
 
                 ## removing local directory where backups were generated
@@ -223,22 +245,10 @@ class remoteTransferUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupProcess]")
 
     @staticmethod
-    def sendBackup(completedPathToSend, IPAddress, folderNumber,writeToFile):
+    def sendBackup(completedPathToSend, IPAddress, folderNumber, writeToFile,
+                   sshPort='22'):
         try:
             ## complete path is a path to the file need to send
-            portpath = "/home/cyberpanel/remote_port"
-
-            # Default to the standard SSH port when no custom port file is present,
-            # rather than failing the whole send. The file is a best-effort hint.
-            sshPort = "22"
-            try:
-                with open(portpath, 'r') as file:
-                    candidate = file.readline().strip()
-                if candidate.isdigit():
-                    sshPort = candidate
-            except (OSError, IOError):
-                pass
-
             command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel -P "+ sshPort + " " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
             return_Code = subprocess.call(shlex.split(command), stdout=writeToFile)
 
@@ -251,11 +261,13 @@ class remoteTransferUtilities:
                     "%m.%d.%Y_%H-%M-%S") + "]" + " Transfer of " + completedPathToSend + " completed successfully.\n")
                 ## Only remove the local copy once the transfer is confirmed.
                 os.remove(completedPathToSend)
+                return True
             else:
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Remote backup transfer FAILED (scp exit %s): %s" % (return_Code, completedPathToSend))
                 writeToFile.writelines("[" + time.strftime(
                     "%m.%d.%Y_%H-%M-%S") + "]" + " Transfer of " + completedPathToSend + " FAILED (scp exit code " + str(return_Code) + "). Local copy kept. [5010]\n")
+                return False
 
         except BaseException as msg:
             try:
@@ -264,6 +276,7 @@ class remoteTransferUtilities:
             except:
                 pass
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendBackup]")
+            return False
 
     @staticmethod
     def remoteBackupRestore(backupDir, dir):
@@ -418,6 +431,7 @@ def main():
     parser.add_argument('--ipAddress', help='')
     parser.add_argument('--dir', help='')
     parser.add_argument('--accountsToTransfer', help='')
+    parser.add_argument('--port', default='22', help='')
 
     ## remote backup restore arguments
 
@@ -430,7 +444,9 @@ def main():
     if args.function == "writeAuthKey":
         remoteTransferUtilities.writeAuthKey(args.pathToKey)
     elif args.function == "remoteTransfer":
-        remoteTransferUtilities.remoteTransfer(args.ipAddress,args.dir,args.accountsToTransfer)
+        remoteTransferUtilities.remoteTransfer(
+            args.ipAddress, args.dir, args.accountsToTransfer, args.port
+        )
     elif args.function == "remoteBackupRestore":
         remoteTransferUtilities.remoteBackupRestore(args.backupDirComplete,args.backupDir)
 
