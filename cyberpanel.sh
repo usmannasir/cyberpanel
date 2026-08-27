@@ -137,6 +137,11 @@ log_info "Fetching latest data from CyberPanel server"
 Silent="Off"
 Server_Edition="OLS"
 Admin_Pass="1234567"
+Admin_User="${CYBERPANEL_ADMIN_USER:-admin}"
+
+if [[ -n "${CYBERPANEL_GIT_USER:-}" ]]; then
+  Git_User_Override="${CYBERPANEL_GIT_USER}"
+fi
 
 Memcached="Off"
 Redis="Off"
@@ -165,7 +170,10 @@ parse_panel_version() {
 }
 
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-if parse_panel_version "$Temp_Value"; then
+if [[ -n "${CYBERPANEL_BRANCH:-}" ]]; then
+  Branch_Check "${CYBERPANEL_BRANCH}"
+  echo -e  "\nBranch name set from CYBERPANEL_BRANCH...$Branch_Name"
+elif parse_panel_version "$Temp_Value"; then
   Branch_Name="v${Panel_Version}.${Panel_Build}"
   echo -e  "\nBranch name fetched...$Branch_Name"
   log_info "Branch name fetched: $Branch_Name"
@@ -186,6 +194,7 @@ Remote_MySQL="Off"
 Final_Flags=()
 
 Git_User=""
+Git_User_Override=""
 Git_Content_URL=""
 Git_Clone_URL=""
 
@@ -441,24 +450,30 @@ Validate_Remote_MySQL() {
 }
 
 Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
-  BEGIN {
-    print "num1", (num1 < num2 ? "<" : ">="), "num2"
-  }
-  ')
-  if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 1.9.4"
-    exit
-  else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
-  fi
+local raw="${1//[[:space:]]/}"
+if [[ "$raw" == v*.*.* ]]; then
+  Branch_Name="$raw"
+elif [[ "$raw" == *.*.* ]]; then
+  Branch_Name="v${raw}"
 else
-  echo -e "\nPlease input a valid format version number."
+  echo -e "
+Please input a valid format version number (for example 3.0.4 or 3.0.4-dev)."
   exit
 fi
+local cmp="${Branch_Name#v}"
+cmp="${cmp%%-*}"
+Output=$(awk -v num1="$Base_Number" -v num2="$cmp" '
+BEGIN {
+  print "num1", (num1 < num2 ? "<" : ">="), "num2"
+}
+')
+if [[ $Output = *">="* ]]; then
+  echo -e "
+You must use version number higher than 1.9.4"
+  exit
+fi
+echo -e "
+Set branch name to $Branch_Name..."
 }
 
 License_Check() {
@@ -788,6 +803,9 @@ echo -e "\n\e[31m-m postfix/pureftpd/powerdns\e[39m will do minimal install also
 echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix"
 echo -e "      \e[31m-m powerdns\e[39m will do minimal install also with PowerDNS"
 echo -e "      \e[31m-m postfix\e[39m powerdns will do minimal install also with Postfix and PowerDNS"
+echo -e "\n\e[31m-u\e[39m or \e[31m--username\e[39m : panel admin username (default admin, 3-32 chars)"
+echo -e "\n\e[31m-r\e[39m or \e[31m--repo\e[39m : GitHub user that owns the cyberpanel repo (default usmannasir, fork: master3395)"
+echo -e "e.g.  \e[31m--repo master3395\e[39m clones github.com/master3395/cyberpanel"
 echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
 echo -e "e.g.  \e[31m-b 2.0.2\e[39m will install 2.0.2 version"
 echo -e "\n\e[31m--mirror\e[39m : this argument force to use mirror server for majority of repositories, only suggest to use for servers within China"
@@ -860,6 +878,28 @@ else
       shift
         Branch_Check "${1}"
       ;;
+      -r | --repo)
+      shift
+      if [[ "${1}" = "" ]]; then
+        Show_Help
+        exit
+      fi
+      Git_User_Override="${1}"
+      echo -e "\nUsing --repo: GitHub user ${Git_User_Override} for cyberpanel..."
+      ;;
+      -u | --username)
+      shift
+      if [[ "${1}" = "" ]]; then
+        Show_Help
+        exit
+      fi
+      if [[ ! "${1}" =~ ^[A-Za-z0-9_]{3,32}$ ]]; then
+        echo -e "\nInvalid username. Use 3-32 characters: letters, numbers, underscore.\n"
+        exit
+      fi
+      Admin_User="${1}"
+      echo -e "\nSet admin username to ${Admin_User}..."
+      ;;
       -m | --minimal)
       if ! echo "$@" | grep -q -i "postfix\|pureftpd\|powerdns" ; then
         Postfix_Switch="Off"
@@ -918,6 +958,58 @@ fi
 
 Debug_Log2 "Initialization completed..,2"
 }
+
+Apply_Container_Env() {
+log_function_start "Apply_Container_Env"
+if [[ -f /run/.containerenv ]] || [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]]; then
+  export CYBERPANEL_CONTAINER=1
+  Silent="On"
+  Server_Edition="OLS"
+  Memcached="Off"
+  Redis="Off"
+  Watchdog="On"
+
+  if [[ "${CYBERPANEL_FULL_INSTALL:-0}" = "1" ]]; then
+    CYBERPANEL_MINIMAL=0
+    Postfix_Switch="On"
+    PowerDNS_Switch="On"
+    PureFTPd_Switch="On"
+    log_info "Container full install mode (CYBERPANEL_FULL_INSTALL=1)"
+  elif [[ "${CYBERPANEL_MINIMAL:-0}" = "1" ]]; then
+    Postfix_Switch="Off"
+    PowerDNS_Switch="Off"
+    PureFTPd_Switch="Off"
+    if [[ "${CYBERPANEL_ENABLE_POSTFIX:-0}" = "1" ]]; then Postfix_Switch="On"; fi
+    if [[ "${CYBERPANEL_ENABLE_POWERDNS:-0}" = "1" ]]; then PowerDNS_Switch="On"; fi
+    if [[ "${CYBERPANEL_ENABLE_PUREFTPD:-0}" = "1" ]]; then PureFTPd_Switch="On"; fi
+    log_info "Container minimal/partial mode (CYBERPANEL_MINIMAL=1)"
+  fi
+
+  if [[ -n "${CYBERPANEL_ADMIN_PASSWORD:-}" ]]; then
+    Admin_Pass="${CYBERPANEL_ADMIN_PASSWORD}"
+  fi
+  if [[ -n "${CYBERPANEL_ADMIN_USER:-}" ]]; then
+    Admin_User="${CYBERPANEL_ADMIN_USER}"
+  fi
+  if [[ -n "${CYBERPANEL_BRANCH:-}" ]]; then
+    Branch_Name="${CYBERPANEL_BRANCH}"
+  fi
+  if [[ -n "${CYBERPANEL_REPO:-}" ]]; then
+    Git_User_Override="${CYBERPANEL_REPO}"
+  fi
+  if [[ -z "${Server_IP:-}" ]] || [[ "${Server_IP}" = "" ]]; then
+    Server_IP=$(curl -s --max-time 10 -4 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
+    Server_IP="${Server_IP:-127.0.0.1}"
+  fi
+  if [[ -n "${CYBERPANEL_HOSTNAME:-}" ]]; then
+    hostnamectl set-hostname "${CYBERPANEL_HOSTNAME}" 2>/dev/null || hostname "${CYBERPANEL_HOSTNAME}" 2>/dev/null || true
+  fi
+  log_info "Container runtime detected; silent install enabled"
+fi
+log_function_end "Apply_Container_Env"
+}
+
+
 
 Argument_Mode() {
 if [[ "${Server_Edition^^}" = "OLS" ]] ; then
@@ -1079,9 +1171,22 @@ else
   Branch_Check "$Tmp_Input"
 fi
 
+echo -e "\nChoose panel admin username (default: admin, 3-32 chars, letters/numbers/underscore):"
+printf "%s" "Username [admin]: "
+read -r Tmp_Input
+if [[ -z "$Tmp_Input" ]]; then
+  Admin_User="admin"
+elif [[ "$Tmp_Input" =~ ^[A-Za-z0-9_]{3,32}$ ]]; then
+  Admin_User="$Tmp_Input"
+else
+  echo -e "\nInvalid username. Use 3-32 characters: letters, numbers, underscore.\n"
+  exit
+fi
+echo -e "\nAdmin username will be set to $Admin_User\n"
+
 echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
 printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
-Tmp_Input="r"
+read -r Tmp_Input
 
 if [[ $Tmp_Input =~ ^(d|D| ) ]] || [[ -z $Tmp_Input ]]; then
   Admin_Pass="1234567"
@@ -1979,10 +2084,17 @@ if [[ "$Remote_MySQL" = "On" ]] ; then
 else
   Final_Flags+=(--remotemysql "${Remote_MySQL^^}")
 fi
+
+if [[ "${CYBERPANEL_CONTAINER:-0}" = "1" ]]; then
+  Final_Flags+=(--container ON)
+fi
   #form up the final agurment for install.py
 if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
+
+export CYBERPANEL_BRANCH="${Branch_Name:-stable}"
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
 
 if [[ "$Remote_MySQL" = "On" ]] ; then
   CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password" \
@@ -2213,7 +2325,7 @@ echo "                                                                   "
 echo "                Installation time  : $Elapsed_Time                 "
 echo "                                                                   "
 echo "                Visit: https://$Server_IP:8090                     "
-echo "                Panel username: admin                              "
+echo "                Panel username: $Admin_User                              "
 if [[ "$Custom_Pass" = "True" ]]; then
 echo "                Panel password: *****                              "
 else
@@ -2499,11 +2611,20 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 
 Pre_Install_Setup_Git_URL() {
 if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
+  if [[ -n "$Git_User_Override" ]]; then
+    Git_User="$Git_User_Override"
+    echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel\n"
+  else
+    Git_User="usmannasir"
+  fi
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
 else
-  Git_User="qtwrk"
+  if [[ -n "$Git_User_Override" ]]; then
+    Git_User="$Git_User_Override"
+  else
+    Git_User="qtwrk"
+  fi
   Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
   Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
 fi
@@ -2567,9 +2688,11 @@ fi
 rm -rf /etc/profile.d/cyberpanel*
 curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
 chmod 700 /etc/profile.d/cyberpanel.sh
+echo "$Admin_User" > /etc/cyberpanel/adminUser
+chmod 600 /etc/cyberpanel/adminUser
 echo "$Admin_Pass" > /etc/cyberpanel/adminPass
 chmod 600 /etc/cyberpanel/adminPass
-/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$Admin_Pass"
+/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --username "$Admin_User" --password "$Admin_Pass"
 mkdir -p /etc/opendkim
 
 echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"' > /usr/bin/adminPass
@@ -2708,6 +2831,8 @@ Check_Process
 Check_Provider
 
 Check_Argument "$@"
+
+Apply_Container_Env
 
 if [[ $Silent = "On" ]]; then
   Argument_Mode

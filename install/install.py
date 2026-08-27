@@ -2917,6 +2917,7 @@ def main():
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
+    parser.add_argument('--container', default='OFF', help='Container runtime install (ON/OFF).')
 
     args = parser.parse_args()
 

@@ -71,29 +71,47 @@ fi
 rm -f cyberpanel.sh
 rm -f install.tar.gz
 
-if echo "$OUTPUT" | grep -q "Ubuntu 26.04" ; then
-        INSTALL_BRANCH="stable"
-        EXPECT_BRANCH=0
-        for argument do
-                if [ "$EXPECT_BRANCH" -eq 1 ]; then
-                        INSTALL_BRANCH="$argument"
-                        EXPECT_BRANCH=0
-                elif [ "$argument" = "-b" ]; then
-                        EXPECT_BRANCH=1
-                fi
-        done
+CYBERPANEL_GIT_USER="${CYBERPANEL_GIT_USER:-usmannasir}"
+CYBERPANEL_BRANCH="${CYBERPANEL_BRANCH:-}"
+export CYBERPANEL_GIT_USER CYBERPANEL_BRANCH
 
-        case "$INSTALL_BRANCH" in
-                ""|*[!A-Za-z0-9._/-]*) INSTALL_BRANCH="stable" ;;
-                [0-9]*) INSTALL_BRANCH="v$INSTALL_BRANCH" ;;
-        esac
+INSTALL_BRANCH="$CYBERPANEL_BRANCH"
+EXPECT_BRANCH=0
+for argument do
+        if [ "$EXPECT_BRANCH" -eq 1 ]; then
+                INSTALL_BRANCH="$argument"
+                EXPECT_BRANCH=0
+        elif [ "$argument" = "-b" ] || [ "$argument" = "--branch" ]; then
+                EXPECT_BRANCH=1
+        elif [ "$argument" = "-r" ] || [ "$argument" = "--repo" ]; then
+                EXPECT_BRANCH=2
+        elif [ "$EXPECT_BRANCH" -eq 2 ]; then
+                CYBERPANEL_GIT_USER="$argument"
+                export CYBERPANEL_GIT_USER
+                EXPECT_BRANCH=0
+        fi
+done
 
-        INSTALLER_URL="https://raw.githubusercontent.com/usmannasir/cyberpanel/$INSTALL_BRANCH/cyberpanel.sh"
+case "$INSTALL_BRANCH" in
+        "") ;;
+        *[!A-Za-z0-9._/-]*) INSTALL_BRANCH="" ;;
+        [0-9]*) INSTALL_BRANCH="v$INSTALL_BRANCH" ;;
+        v*) ;;
+        *) INSTALL_BRANCH="v$INSTALL_BRANCH" ;;
+esac
+if [ -n "$INSTALL_BRANCH" ]; then
+        export CYBERPANEL_BRANCH="$INSTALL_BRANCH"
+fi
+
+if [ -n "$INSTALL_BRANCH" ]; then
+        INSTALLER_URL="https://raw.githubusercontent.com/${CYBERPANEL_GIT_USER}/cyberpanel/${INSTALL_BRANCH}/cyberpanel.sh"
         if ! curl --fail --location --silent --show-error -o cyberpanel.sh "$INSTALLER_URL" ; then
-                curl --fail --location --silent --show-error -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS"
+                echo "Failed to download installer from ${INSTALLER_URL}" >&2
+                curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || exit 1
         fi
 else
-        curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+        # No branch selected: historical CDN bootstrap
+        curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || exit 1
 fi
 chmod +x cyberpanel.sh
 ./cyberpanel.sh $@

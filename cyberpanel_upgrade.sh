@@ -79,6 +79,7 @@ Branch_Name="v${Panel_Version}.${Panel_Build}"
 Base_Number="1.9.3"
 
 Git_User=""
+Git_User_Override=""
 Git_Content_URL=""
 Git_Clone_URL=""
 
@@ -354,19 +355,46 @@ done
 }
 
 Check_Argument() {
-if [[ "$*" = *"--branch "* ]] || [[ "$*" = *"-b "* ]]; then
-  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/-b //")
-  Branch_Check "$Branch_Name"
+if [[ -n "${CYBERPANEL_GIT_USER:-}" ]]; then
+  Git_User_Override="${CYBERPANEL_GIT_USER}"
 fi
+if [[ -n "${CYBERPANEL_BRANCH:-}" ]]; then
+  Branch_Name="${CYBERPANEL_BRANCH}"
+fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -b|--branch)
+      shift
+      Branch_Check "${1:-}"
+      shift
+      ;;
+    -r|--repo)
+      shift
+      Git_User_Override="${1:-}"
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
 }
 
 Pre_Upgrade_Setup_Git_URL() {
   if [[ $Server_Country != "CN" ]] ; then
-    Git_User="usmannasir"
+    if [[ -n "$Git_User_Override" ]]; then
+      Git_User="$Git_User_Override"
+    else
+      Git_User="usmannasir"
+    fi
     Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
     Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
   else
-    Git_User="qtwrk"
+    if [[ -n "$Git_User_Override" ]]; then
+      Git_User="$Git_User_Override"
+    else
+      Git_User="qtwrk"
+    fi
     Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
     Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
   fi
@@ -1667,6 +1695,8 @@ fi
 Pre_Upgrade_Setup_Repository
 
 Pre_Upgrade_Setup_Git_URL
+export CYBERPANEL_GIT_USER="${Git_User}"
+export CYBERPANEL_BRANCH="${Branch_Name}"
 
 Pre_Upgrade_Required_Components
 
