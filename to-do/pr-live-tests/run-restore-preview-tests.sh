@@ -22,7 +22,13 @@ python3 -m py_compile \
   "$REPO/backup/test_restore_preview.py" >>"$LOG" 2>&1 \
   && pass "python syntax" || fail "python syntax"
 
+
+log "=== SYNC PUBLIC STATIC (CyberPanel serves public/static) ==="
+mkdir -p "$LIVE/public/static/backup"
+cp "$LIVE/static/backup/backup.js" "$LIVE/public/static/backup/backup.js"
 log "=== LIVE STATIC + TEMPLATE CHECKS ==="
+grep -q 'getBackupFileInfo' "$LIVE/public/static/backup/backup.js" && pass "public/static backup.js preview endpoint" || fail "public/static backup.js preview endpoint"
+cmp -s "$LIVE/static/backup/backup.js" "$LIVE/public/static/backup/backup.js" && pass "static copies in sync" || fail "static copies differ"
 grep -q 'getBackupFileInfo' "$LIVE/static/backup/backup.js" && pass "live backup.js preview endpoint" || fail "live backup.js preview endpoint"
 grep -q 'openRestoreConfirm' "$LIVE/static/backup/backup.js" && pass "live backup.js confirm modal" || fail "live backup.js confirm modal"
 grep -q 'Review and Restore' "$LIVE/backup/templates/backup/restore.html" && pass "live restore template" || fail "live restore template"
