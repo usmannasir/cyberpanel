@@ -533,12 +533,12 @@
                         </select>
                     </div>
 
-                    <div ng-hide="previewLoading" style="text-align: center; margin-top: 1rem;">
+                    <div ng-if="!previewLoading && backupFile" style="text-align: center; margin-top: 1rem;">
                         <span class="loading-spinner"></span>
                         <span style="margin-left: 0.5rem; color: var(--text-secondary, #64748b); font-size: 0.875rem;">{% trans "Loading backup details..." %}</span>
                     </div>
 
-                    <div ng-hide="backupPreview" class="backup-preview-card">
+                    <div ng-if="previewDetails" class="backup-preview-card">
                         <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--text-primary, #1e293b);">
                             <i class="fas fa-list-alt" style="margin-right: 0.5rem;"></i>
                             {% trans "Selected Backup Details" %}
@@ -573,7 +573,7 @@
                     </div>
                 </div>
 
-                <div ng-hide="confirmModal" class="confirm-modal-backdrop">
+                <div ng-if="showConfirmModal" class="confirm-modal-backdrop">
                     <div class="confirm-modal">
                         <div class="confirm-modal-header">
                             <h3 style="margin: 0; font-size: 1.1rem; color: #856404;">

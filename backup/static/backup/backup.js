@@ -562,7 +562,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
     $scope.runningRestore = true;
     $scope.restoreButton = true;
     $scope.backupPreview = true;
-    $scope.confirmModal = true;
+    $scope.showConfirmModal = false;
     $scope.confirmChecked = false;
     $scope.restoreFinished = false;
     $scope.couldNotConnect = true;
@@ -580,7 +580,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
         $scope.restoreFinished = false;
         $scope.backupError = true;
         $scope.confirmChecked = false;
-        $scope.confirmModal = true;
+        $scope.showConfirmModal = false;
         $scope.restoreInProgress = false;
         $scope.previewDetails = null;
         if (restorePollTimer) {
@@ -642,11 +642,11 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
             return;
         }
         $scope.confirmChecked = false;
-        $scope.confirmModal = false;
+        $scope.showConfirmModal = true;
     };
 
     $scope.cancelRestoreConfirm = function () {
-        $scope.confirmModal = true;
+        $scope.showConfirmModal = false;
         $scope.confirmChecked = false;
     };
 
@@ -716,7 +716,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
             return;
         }
 
-        $scope.confirmModal = true;
+        $scope.showConfirmModal = false;
         var restoreBackupButton = document.getElementById("restoreBackup");
         if (restoreBackupButton) {
             restoreBackupButton.disabled = true;
