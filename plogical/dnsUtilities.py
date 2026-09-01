@@ -24,6 +24,29 @@ from plogical.processUtilities import ProcessUtilities
 
 
 class DNS:
+
+    VALID_CF_AUTH_TYPES = ('global_key', 'api_token')
+
+    @staticmethod
+    def createCloudFlareClient(email, api_secret, auth_type=None):
+        """Build CloudFlare API client using explicit auth type when possible."""
+        import CloudFlare
+        api_secret = (api_secret or '').strip()
+        email = (email or '').strip()
+        auth_type = (auth_type or '').strip().lower()
+        if not api_secret:
+            raise ValueError('Cloudflare API key or token is not configured')
+        if auth_type == 'api_token':
+            return CloudFlare.CloudFlare(token=api_secret)
+        if auth_type == 'global_key':
+            if not email or '@' not in email:
+                raise ValueError('Cloudflare account email is required for Global API Key auth')
+            return CloudFlare.CloudFlare(email=email, key=api_secret)
+        # Legacy 3-line files without auth_type: infer only when unambiguous
+        if email.lower() in ('api_token', 'token', 'none', 'n/a') or '@' not in email:
+            return CloudFlare.CloudFlare(token=api_secret)
+        return CloudFlare.CloudFlare(email=email, key=api_secret)
+
     nsd_base = "/etc/nsd/nsd.conf"
     zones_base_dir = "/usr/local/lsws/conf/zones/"
     create_zone_dir = "/usr/local/lsws/conf/zones"
@@ -56,10 +79,17 @@ class DNS:
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
 
         if os.path.exists(cfFile):
-            data = open(cfFile, 'r').readlines()
-            self.email = data[0].rstrip('\n')
-            self.key = data[1].rstrip('\n')
-            self.status = data[2].rstrip('\n')
+            data = [line.rstrip('\n') for line in open(cfFile, 'r').readlines()]
+            if len(data) >= 4 and data[0] in DNS.VALID_CF_AUTH_TYPES:
+                self.auth_type = data[0]
+                self.email = data[1]
+                self.key = data[2]
+                self.status = data[3]
+            else:
+                self.auth_type = ''
+                self.email = data[0] if len(data) > 0 else ''
+                self.key = data[1] if len(data) > 1 else ''
+                self.status = data[2] if len(data) > 2 else 'Disable'
             return 1
         else:
             #logging.CyberCPLogFileWriter.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
@@ -80,7 +110,7 @@ class DNS:
                     else:
                         return 0, 'Sync not enabled.'
 
-                cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+                cf = DNS.createCloudFlareClient(self.email, self.key, getattr(self, "auth_type", None))
 
                 try:
                     params = {'name': zoneDomain, 'per_page': 50}
@@ -644,7 +674,7 @@ class DNS:
             dns = DNS()
             dns.admin = zone.admin
             if dns.loadCFKeys():
-                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                cf = DNS.createCloudFlareClient(dns.email, dns.key, getattr(dns, "auth_type", None))
 
                 if dns.status == 'Enable':
                     try:
@@ -819,7 +849,7 @@ class DNS:
                 dns.admin = zone.admin
                 dns.loadCFKeys()
 
-                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                cf = DNS.createCloudFlareClient(dns.email, dns.key, getattr(dns, "auth_type", None))
 
                 if dns.status == 'Enable':
                     try:
