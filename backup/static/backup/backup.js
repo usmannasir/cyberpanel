@@ -561,21 +561,94 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
     $scope.restoreLoading = true;
     $scope.runningRestore = true;
     $scope.restoreButton = true;
+    $scope.backupPreview = true;
+    $scope.confirmModal = true;
+    $scope.confirmChecked = false;
     $scope.restoreFinished = false;
     $scope.couldNotConnect = true;
     $scope.backupError = true;
     $scope.siteExists = true;
+    $scope.previewLoading = true;
+    $scope.restoreInProgress = false;
 
-    // check to start time of status function
+    var restorePollTimer = null;
 
-    var check = 1;
-
+    function resetSelectionState() {
+        $scope.backupPreview = true;
+        $scope.restoreButton = true;
+        $scope.runningRestore = true;
+        $scope.restoreFinished = false;
+        $scope.backupError = true;
+        $scope.confirmChecked = false;
+        $scope.confirmModal = true;
+        $scope.restoreInProgress = false;
+        $scope.previewDetails = null;
+        if (restorePollTimer) {
+            $timeout.cancel(restorePollTimer);
+            restorePollTimer = null;
+        }
+    }
 
     $scope.fetchDetails = function () {
+        resetSelectionState();
+
+        if (!$scope.backupFile) {
+            $scope.restoreLoading = true;
+            $scope.previewLoading = true;
+            return;
+        }
+
         $scope.restoreLoading = false;
-        getRestoreStatus();
+        $scope.previewLoading = false;
+
+        var url = "/backup/getBackupFileInfo";
+        var data = {
+            backupFile: $scope.backupFile,
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function (response) {
+            $scope.previewLoading = true;
+            if (response.data.infoStatus === 1) {
+                $scope.previewDetails = response.data;
+                $scope.backupPreview = false;
+                $scope.backupError = true;
+                if (response.data.restoreInProgress === 1) {
+                    $scope.restoreInProgress = true;
+                    $scope.runningRestore = false;
+                    $scope.running = "Running..";
+                    $scope.fileName = response.data.fileName;
+                    $scope.status = response.data.restoreState || "In progress";
+                    getRestoreStatus();
+                } else {
+                    $scope.restoreButton = false;
+                }
+            } else {
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.previewLoading = true;
+            $scope.couldNotConnect = false;
+        });
     };
 
+    $scope.openRestoreConfirm = function () {
+        if (!$scope.backupFile || !$scope.previewDetails || $scope.restoreInProgress) {
+            return;
+        }
+        $scope.confirmChecked = false;
+        $scope.confirmModal = false;
+    };
+
+    $scope.cancelRestoreConfirm = function () {
+        $scope.confirmModal = true;
+        $scope.confirmChecked = false;
+    };
 
     function getRestoreStatus() {
 
@@ -608,9 +681,13 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                     $scope.restoreLoading = true;
                     $scope.status = response.data.status;
                     $scope.runningRestore = false;
-                    $scope.restoreButton = false;
+                    $scope.restoreButton = true;
                     $scope.restoreFinished = true;
-                    $timeout.cancel();
+                    $scope.restoreInProgress = false;
+                    if (restorePollTimer) {
+                        $timeout.cancel(restorePollTimer);
+                        restorePollTimer = null;
+                    }
                     return;
                 } else {
                     $scope.running = response.data.running;
@@ -619,7 +696,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                     $scope.status = response.data.status;
                     $scope.runningRestore = false;
                     $scope.restoreButton = true;
-                    $timeout(getRestoreStatus, 2000);
+                    restorePollTimer = $timeout(getRestoreStatus, 2000);
                 }
             }
 
@@ -635,8 +712,15 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
 
     $scope.restoreBackup = function () {
+        if (!$scope.confirmChecked) {
+            return;
+        }
+
+        $scope.confirmModal = true;
         var restoreBackupButton = document.getElementById("restoreBackup");
-        restoreBackupButton.disabled = true;
+        if (restoreBackupButton) {
+            restoreBackupButton.disabled = true;
+        }
         var backupFile = $scope.backupFile;
         $scope.running = "Lets start.."
 
@@ -644,6 +728,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
         var data = {
             backupFile: backupFile,
+            confirmed: true,
         };
 
         var config = {
@@ -664,20 +749,28 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                 $scope.running = "Running";
                 $scope.fileName = $scope.backupFile;
                 $scope.status = "Just Started..";
+                $scope.restoreInProgress = true;
+                $scope.restoreButton = true;
 
                 getRestoreStatus();
-                restoreBackupButton.disabled = false;
+                if (restoreBackupButton) {
+                    restoreBackupButton.disabled = false;
+                }
             } else {
                 $scope.backupError = false;
                 $scope.errorMessage = response.data.error_message;
-                restoreBackupButton.disabled = false;
+                if (restoreBackupButton) {
+                    restoreBackupButton.disabled = false;
+                }
             }
 
         }
 
         function cantLoadInitialDatas(response) {
             $scope.couldNotConnect = false;
-            restoreBackupButton.disabled = false;
+            if (restoreBackupButton) {
+                restoreBackupButton.disabled = false;
+            }
         }
 
     };

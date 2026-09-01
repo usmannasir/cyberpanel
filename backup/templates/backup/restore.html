@@ -119,6 +119,117 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(91, 95, 207, 0.2);
     }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-danger:hover {
+        background: #bb2d3b;
+    }
+
+    .btn-danger:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .backup-preview-card {
+        background: var(--bg-secondary, #f8f9ff);
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .preview-table th,
+    .preview-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-primary, #e8e9ff);
+        font-size: 0.875rem;
+    }
+
+    .preview-table th {
+        width: 180px;
+        color: var(--text-secondary, #64748b);
+        font-weight: 600;
+    }
+
+    .preview-warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-top: 1rem;
+        color: #856404;
+        font-size: 0.875rem;
+    }
+
+    .confirm-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 1rem;
+    }
+
+    .confirm-modal {
+        background: var(--bg-primary, #fff);
+        border-radius: 16px;
+        max-width: 560px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+
+    .confirm-modal-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-primary, #e8e9ff);
+        background: #fff3cd;
+    }
+
+    .confirm-modal-body {
+        padding: 1.5rem;
+    }
+
+    .confirm-modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        padding: 0 1.5rem 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .confirm-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        font-size: 0.875rem;
+        color: var(--text-primary, #1e293b);
+    }
     
     .main-card {
         background: var(--bg-primary, white);
@@ -421,12 +532,73 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div ng-hide="previewLoading" style="text-align: center; margin-top: 1rem;">
+                        <span class="loading-spinner"></span>
+                        <span style="margin-left: 0.5rem; color: var(--text-secondary, #64748b); font-size: 0.875rem;">{% trans "Loading backup details..." %}</span>
+                    </div>
+
+                    <div ng-hide="backupPreview" class="backup-preview-card">
+                        <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--text-primary, #1e293b);">
+                            <i class="fas fa-list-alt" style="margin-right: 0.5rem;"></i>
+                            {% trans "Selected Backup Details" %}
+                        </h3>
+                        <table class="preview-table">
+                            <tbody>
+                                <tr>
+                                    <th>{% trans "File name" %}</th>
+                                    <td><span class="file-badge">{$ previewDetails.fileName $}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "File size" %}</th>
+                                    <td>{$ previewDetails.fileSize $}</td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Last modified" %}</th>
+                                    <td>{$ previewDetails.modified $}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="preview-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            {% trans "Review these details carefully. Restoring the wrong backup can overwrite live website data." %}
+                        </div>
+                    </div>
                     
                     <div ng-hide="restoreButton" style="text-align: center; margin-top: 2rem;">
-                        <button type="button" ng-click="restoreBackup()" id="restoreBackup" class="btn-primary">
-                            <i class="fas fa-sync-alt"></i>
-                            {% trans "Start Restoration" %}
+                        <button type="button" ng-click="openRestoreConfirm()" id="restoreBackup" class="btn-primary">
+                            <i class="fas fa-shield-alt"></i>
+                            {% trans "Review and Restore" %}
                         </button>
+                    </div>
+                </div>
+
+                <div ng-hide="confirmModal" class="confirm-modal-backdrop">
+                    <div class="confirm-modal">
+                        <div class="confirm-modal-header">
+                            <h3 style="margin: 0; font-size: 1.1rem; color: #856404;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {% trans "Confirm website restore" %}
+                            </h3>
+                        </div>
+                        <div class="confirm-modal-body">
+                            <p>{% trans "You are about to restore this backup:" %}</p>
+                            <p><strong>{$ previewDetails.fileName $}</strong> ({$ previewDetails.fileSize $}, {$ previewDetails.modified $})</p>
+                            <p>{% trans "This action can replace databases, files, and mail settings for the restored website. It cannot be undone easily." %}</p>
+                            <label class="confirm-checkbox">
+                                <input type="checkbox" ng-model="confirmChecked">
+                                <span>{% trans "I have verified this is the correct backup and I want to start the restore now." %}</span>
+                            </label>
+                        </div>
+                        <div class="confirm-modal-actions">
+                            <button type="button" class="btn-secondary" ng-click="cancelRestoreConfirm()">
+                                {% trans "Cancel" %}
+                            </button>
+                            <button type="button" class="btn-danger" ng-click="restoreBackup()" ng-disabled="!confirmChecked">
+                                <i class="fas fa-sync-alt"></i>
+                                {% trans "Yes, start restore" %}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
