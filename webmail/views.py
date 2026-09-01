@@ -1,7 +1,6 @@
 import json
 from django.shortcuts import redirect
 from django.http import HttpResponse
-from django.views.decorators.http import require_POST
 from loginSystem.views import loadLoginPage
 from .webmailManager import WebmailManager
 
@@ -23,7 +22,6 @@ def loadLogin(request):
 
 # ── Auth APIs ─────────────────────────────────────────────────
 
-@require_POST
 def apiLogin(request):
     try:
         wm = WebmailManager(request)
@@ -32,7 +30,6 @@ def apiLogin(request):
         return _error_response(e)
 
 
-@require_POST
 def apiLogout(request):
     try:
         wm = WebmailManager(request)

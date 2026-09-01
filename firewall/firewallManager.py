@@ -865,8 +865,7 @@ class FirewallManager:
                 modSecInstalled = 0
 
                 for items in httpdConfig:
-                    if (not items.strip().startswith('#') and
-                            items.strip().startswith('module mod_security')):
+                    if items.find('module mod_security') > -1:
                         modSecInstalled = 1
                         break
 
@@ -989,26 +988,66 @@ class FirewallManager:
                 owaspInstalled = 0
 
                 if modSecInstalled:
-                    activeConfig = [
-                        items.strip() for items in httpdConfig
-                        if items.strip() and not items.strip().startswith('#')
-                    ]
-                    comodoInstalled = int(any(
-                        items.startswith('modsecurity_rules_file ') and
-                        'modsec/comodo' in items
-                        for items in activeConfig
-                    ))
-                    if modSec.hasActiveOWASPDirective(httpdConfig):
-                        command = 'sudo cat ' + modSec.OWASP_MASTER_CONF
-                        rulesConfig = ProcessUtilities.outputExecutioner(
-                            command
-                        ).splitlines()
-                        owaspInstalled = int(any(
-                            items.strip().lower().startswith('include ')
-                            for items in rulesConfig
-                            if items.strip() and
-                            not items.strip().startswith('#')
-                        ))
+                    command = "sudo cat " + confPath
+                    httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+
+                    for items in httpdConfig:
+
+                        if items.find('modsec/comodo') > -1:
+                            comodoInstalled = 1
+                        elif items.find('modsec/owasp') > -1:
+                            owaspInstalled = 1
+
+                        if owaspInstalled == 1 and comodoInstalled == 1:
+                            break
+
+                    # Check multiple locations for OWASP CRS installation
+                    if owaspInstalled == 0:
+                        # Check 1: rules.conf for OWASP includes
+                        rulesConfPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
+                        if os.path.exists(rulesConfPath):
+                            try:
+                                command = "sudo cat " + rulesConfPath
+                                rulesConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                                for items in rulesConfig:
+                                    # Check for OWASP includes in rules.conf (case-insensitive)
+                                    if ('owasp' in items.lower() or 'crs-setup' in items.lower()) and \
+                                       ('include' in items.lower() or 'modsecurity_rules_file' in items.lower()):
+                                        owaspInstalled = 1
+                                        break
+                            except:
+                                pass
+
+                        # Check 2: owasp-master.conf exists and has rules loaded
+                        if owaspInstalled == 0:
+                            owaspMasterConf = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf")
+                            if os.path.exists(owaspMasterConf):
+                                try:
+                                    command = "sudo cat " + owaspMasterConf
+                                    owaspConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                                    # Check if at least one rule file is enabled (not commented)
+                                    for items in owaspConfig:
+                                        if items.strip() and not items.strip().startswith('#') and 'include' in items.lower():
+                                            owaspInstalled = 1
+                                            break
+                                except:
+                                    pass
+
+                        # Check 3: OWASP CRS directory exists with rules
+                        if owaspInstalled == 0:
+                            owaspRulesDir = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-3.0-master/rules")
+                            if os.path.exists(owaspRulesDir):
+                                try:
+                                    command = "sudo ls " + owaspRulesDir + " | grep -c '.conf'"
+                                    output = ProcessUtilities.outputExecutioner(command).strip()
+                                    if output.isdigit() and int(output) > 0:
+                                        # Rules exist, check if referenced in httpd_config.conf
+                                        for items in httpdConfig:
+                                            if 'owasp-modsecurity-crs' in items.lower() or 'owasp-master.conf' in items.lower():
+                                                owaspInstalled = 1
+                                                break
+                                except:
+                                    pass
 
                     final_dic = {
                         'modSecInstalled': 1,
@@ -1585,10 +1624,7 @@ class FirewallManager:
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                           'Not authorized to install container packages. [404].',
                                                           1)
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Not authorized to install Imunify360.',
-                }))
+                return 0
 
             data = json.loads(self.request.body)
             key = str(data.get('key', '')).strip()
@@ -1611,10 +1647,6 @@ class FirewallManager:
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
-            return HttpResponse(json.dumps({
-                'status': 0,
-                'error_message': 'Could not start the Imunify360 installation. Check the installation log.',
-            }))
 
     def imunifyAV(self):
         ipFile = "/etc/cyberpanel/machineIP"
@@ -1652,10 +1684,7 @@ class FirewallManager:
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                           'Not authorized to install container packages. [404].',
                                                           1)
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Not authorized to install ImunifyAV.',
-                }))
+                return 0
 
             from plogical.imunify_integration import (
                 build_install_worker_command,
@@ -1672,10 +1701,6 @@ class FirewallManager:
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
-            return HttpResponse(json.dumps({
-                'status': 0,
-                'error_message': 'Could not start the ImunifyAV installation. Check the installation log.',
-            }))
 
 
 
@@ -1765,3 +1790,5 @@ class FirewallManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+

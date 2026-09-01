@@ -1,0 +1,34 @@
+# Hyper-V smoke via Vagrant (fallback when raw Generic Cloud seed fails).
+# Requires elevated PowerShell. Uses AlmaLinux 10 box with native Hyper-V (AVX2 visible).
+# Run: vagrant up cp-fresh --provider=hyperv
+
+Vagrant.configure('2') do |config|
+  config.vm.box = 'almalinux/10'
+  config.vm.box_check_update = false
+  config.ssh.insert_key = true
+  config.ssh.keep_alive = true
+  config.vm.boot_timeout = 900
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
+  config.vm.provider 'hyperv' do |hv|
+    hv.memory = 4096
+    hv.cpus = 2
+    hv.enable_virtualization_extensions = true
+  end
+
+  config.vm.network 'public_network', bridge: 'Default Switch'
+
+  config.vm.define 'cp-fresh', autostart: false do |fresh|
+    fresh.vm.hostname = 'cp-fresh-hv.local'
+    fresh.vm.network 'forwarded_port', guest: 8090, host: 18090, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 22, host: 10022, id: 'ssh', auto_correct: true
+    fresh.vm.provision 'shell', path: 'provision-fresh.sh', privileged: true
+  end
+
+  config.vm.define 'cp-upgrade', autostart: false do |fresh|
+    fresh.vm.hostname = 'cp-upgrade-hv.local'
+    fresh.vm.network 'forwarded_port', guest: 8090, host: 28090, auto_correct: true
+    fresh.vm.network 'forwarded_port', guest: 22, host: 20022, id: 'ssh', auto_correct: true
+    fresh.vm.provision 'shell', path: 'provision-upgrade.sh', privileged: true
+  end
+end

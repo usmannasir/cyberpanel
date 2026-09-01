@@ -14,13 +14,10 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
-from django.views.decorators.http import require_POST
 from cyberpanel_version import BUILD, VERSION
-from loginSystem.twoFactor import consume_recovery_code
 # Create your views here.
 
 
-@require_POST
 def verifyLogin(request):
     try:
         userID = request.session['userID']
@@ -97,25 +94,34 @@ def verifyLogin(request):
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
 
+            if admin.twoFA:
+                try:
+                    twoinit = request.session['twofa']
+                except:
+                    request.session['twofa'] = 0
+                    request.session.save()
+                    data = {'userID': admin.pk, 'loginStatus': 2, 'error_message': "None"}
+                    json_data = json.dumps(data)
+                    response.write(json_data)
+                    return response
+
             password_check_result = hashPassword.check_password(admin.password, password)
 
             if password_check_result:
                 if admin.twoFA:
-                    twofa_code = str(data.get('twofa', '')).strip()
-                    if not twofa_code:
-                        data = {'userID': admin.pk, 'loginStatus': 2, 'error_message': "None"}
-                        response.write(json.dumps(data))
-                        return response
-
-                    import pyotp
-                    totp = pyotp.TOTP(admin.secretKey)
-                    validTwoFactor = totp.verify(twofa_code, valid_window=1)
-                    if not validTwoFactor:
-                        validTwoFactor = consume_recovery_code(admin.pk, twofa_code)
-                    if not validTwoFactor:
-                        data = {'userID': 0, 'loginStatus': 0, 'error_message': "Invalid verification or recovery code."}
-                        response.write(json.dumps(data))
-                        return response
+                    if request.session.get('twofa', 1) == 0:
+                        import pyotp
+                        totp = pyotp.TOTP(admin.secretKey)
+                        twofa_code = data.get('twofa', '')
+                        if not twofa_code or not totp.verify(str(twofa_code).strip(), valid_window=1):
+                            request.session['twofa'] = 0
+                            request.session.save()
+                            data = {'userID': 0, 'loginStatus': 0, 'error_message': "Invalid verification code."}
+                            json_data = json.dumps(data)
+                            response.write(json_data)
+                            return response
+                        # Clear the session flag after successful 2FA verification
+                        del request.session['twofa']
 
                 # Rotate a stale or pre-authentication session identifier before
                 # storing authenticated state.
@@ -147,14 +153,8 @@ def verifyLogin(request):
                 response.write(json_data)
                 return response
 
-        except Administrator.DoesNotExist:
-            data = {'userID': 0, 'loginStatus': 0, 'error_message': 'login failed.'}
-            json_data = json.dumps(data)
-            return HttpResponse(json_data)
         except BaseException as msg:
-            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-            logging.writeToFile(str(msg) + ' [loginSystem.verifyLogin]')
-            data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Unable to complete login.'}
+            data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
@@ -273,5 +273,8 @@ def loadLoginPage(request):
 
 @ensure_csrf_cookie
 def logout(request):
-    request.session.flush()
-    return render(request, 'loginSystem/login.html', {})
+    try:
+        del request.session['userID']
+        return render(request, 'loginSystem/login.html', {})
+    except:
+        return render(request, 'loginSystem/login.html', {})

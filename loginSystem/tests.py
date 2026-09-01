@@ -118,24 +118,3 @@ class LoginSessionRegressionTests(SimpleTestCase):
 
         self.assertEqual(1, json.loads(second.content)['loginStatus'])
         self.assertEqual(7, request.session['userID'])
-
-    def test_logout_flushes_panel_and_standalone_webmail_state(self):
-        from loginSystem.views import logout
-        request = self.factory.get('/logout')
-        request.session = SessionStore()
-        request.session.update({
-            'userID': 7,
-            'ipAddr': '127.0.0.1',
-            'webmail_standalone': True,
-            'webmail_email': 'user@example.com',
-            'webmail_password': 'secret',
-        })
-
-        from django.http import HttpResponse
-        with mock.patch(
-            'loginSystem.views.render',
-            return_value=HttpResponse('logged out'),
-        ):
-            logout(request)
-
-        self.assertEqual({}, dict(request.session.items()))

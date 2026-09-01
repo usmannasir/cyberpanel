@@ -145,28 +145,15 @@ app.controller('modifyUser', function ($scope, $http) {
     $scope.accountTypeView = true;
     $scope.websitesLimit = true;
     $scope.qrHidden = true;
-    $scope.twofaWasEnabled = false;
-    $scope.twofaVerificationCode = '';
-    $scope.recoveryCodes = [];
-    $scope.recoveryCodesVisible = false;
-    $scope.recoveryCodesDownloaded = false;
-    $scope.recoveryCodesConfirmed = false;
 
     $scope.decideQRShow = function(){
-        if($scope.twofa === true && !$scope.twofaWasEnabled){
+        if($scope.twofa === true){
             $scope.qrHidden = false;
         }else{
             $scope.qrHidden = true;
         }
-        if($scope.twofa !== true){
-            $scope.twofaVerificationCode = '';
-            $scope.recoveryCodes = [];
-            $scope.recoveryCodesVisible = false;
-            $scope.recoveryCodesDownloaded = false;
-            $scope.recoveryCodesConfirmed = false;
-        }
     };
-
+    
     $scope.copySecretKey = function() {
         if ($scope.secretKey) {
             // Create a temporary textarea element
@@ -175,11 +162,11 @@ app.controller('modifyUser', function ($scope, $http) {
             tempTextarea.style.position = 'fixed';
             tempTextarea.style.opacity = '0';
             document.body.appendChild(tempTextarea);
-
+            
             // Select and copy the text
             tempTextarea.select();
             tempTextarea.setSelectionRange(0, 99999); // For mobile devices
-
+            
             try {
                 document.execCommand('copy');
                 // Show success feedback (you can add a toast notification here if available)
@@ -187,27 +174,10 @@ app.controller('modifyUser', function ($scope, $http) {
             } catch (err) {
                 alert('Failed to copy secret key. Please copy it manually.');
             }
-
+            
             // Remove the temporary element
             document.body.removeChild(tempTextarea);
         }
-    };
-
-    $scope.downloadRecoveryCodes = function() {
-        if (!$scope.recoveryCodes.length) {
-            return;
-        }
-        var content = 'CyberPanel 2FA recovery codes\n\n' + $scope.recoveryCodes.join('\n') +
-            '\n\nEach code can be used once.';
-        var blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
-        var link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = 'cyberpanel-recovery-codes.txt';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(link.href);
-        $scope.recoveryCodesDownloaded = true;
     };
 
 
@@ -247,21 +217,11 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.securityLevel = userDetails.securityLevel;
                 $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
-                $scope.twofaWasEnabled = Boolean(userDetails.twofa);
-                $scope.qrHidden = !$scope.twofa || $scope.twofaWasEnabled;
-                $scope.twofaVerificationCode = '';
-                $scope.recoveryCodes = [];
-                $scope.recoveryCodesVisible = false;
-                $scope.recoveryCodesDownloaded = false;
-                $scope.recoveryCodesConfirmed = false;
-
+                
                 // Format secret key with spaces for better readability
                 if (userDetails.secretKey) {
                     $scope.secretKey = userDetails.secretKey;
                     $scope.formattedSecretKey = userDetails.secretKey.match(/.{1,4}/g).join(' ');
-                } else {
-                    $scope.secretKey = '';
-                    $scope.formattedSecretKey = '';
                 }
 
                 qrCode.set({
@@ -347,13 +307,7 @@ app.controller('modifyUser', function ($scope, $http) {
             email: email,
             passwordByPass: password,
             securityLevel: $scope.securityLevel,
-            twofa: $scope.twofa,
-            twofaVerificationCode: $scope.twofaVerificationCode,
-            twofaSetupConfirmed: Boolean(
-                $scope.recoveryCodesVisible &&
-                $scope.recoveryCodesDownloaded &&
-                $scope.recoveryCodesConfirmed
-            )
+            twofa: $scope.twofa
         };
 
         var config = {
@@ -368,17 +322,6 @@ app.controller('modifyUser', function ($scope, $http) {
         function ListInitialDatas(response) {
 
 
-            if (response.data.recoverySetupRequired == 1) {
-                $scope.userModificationLoading = true;
-                $scope.recoveryCodes = response.data.recoveryCodes;
-                $scope.recoveryCodesVisible = true;
-                $scope.recoveryCodesDownloaded = false;
-                $scope.recoveryCodesConfirmed = false;
-                $scope.canotModifyUser = true;
-                return;
-            }
-
-
             if (response.data.saveStatus == 1) {
 
                 $scope.userModificationLoading = true;
@@ -391,10 +334,6 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.userAccountsLimit = true;
                 $scope.accountTypeView = true;
                 $scope.websitesLimit = true;
-                $scope.recoveryCodes = [];
-                $scope.recoveryCodesVisible = false;
-                $scope.recoveryCodesDownloaded = false;
-                $scope.recoveryCodesConfirmed = false;
 
 
                 $scope.userName = accountUsername;
@@ -1550,7 +1489,6 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.apiAccessDropDown = true;
-                $scope.apiToken = response.data.apiToken || '';
                 new PNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',

@@ -217,30 +217,19 @@ class InstallCyberPanel:
             return False
 
     def detectPlatform(self):
-        """Detect OS platform for binary selection."""
+        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
                 with open('/etc/lsb-release', 'r') as f:
                     content = f.read()
                     if 'Ubuntu' in content or 'ubuntu' in content:
-                        release = re.search(
-                            r'DISTRIB_RELEASE=(\d+)\.(\d+)', content
-                        )
-                        releaseVersion = (
-                            (int(release.group(1)), int(release.group(2)))
-                            if release else None
-                        )
-                        if releaseVersion and releaseVersion < (22, 4):
-                            InstallCyberPanel.stdOut(
-                                "Ubuntu %s.%s detected: custom OLS binary "
-                                "requires GLIBC_2.34 (Ubuntu 22.04+); keeping "
-                                "stock OLS" % release.groups(),
-                                1,
-                            )
+                        # The 'ubuntu' artifact is built on 22.04 (needs GLIBC_2.34) and
+                        # does NOT run on Ubuntu 20.04 (glibc 2.31, ticket #OXHTOK7AH).
+                        # Skip the overlay there and keep stock OLS.
+                        if 'DISTRIB_RELEASE=20.04' in content:
+                            InstallCyberPanel.stdOut("Ubuntu 20.04 detected: custom OLS binary requires GLIBC_2.34 (22.04+); keeping stock OLS", 1)
                             return 'skip'
-                        if releaseVersion and releaseVersion[0] == 26:
-                            return 'ubuntu26'
                         return 'ubuntu'
 
             # Check for RHEL-based distributions
@@ -423,16 +412,6 @@ class InstallCyberPanel:
                         'module': 'f1c1ab881625fa6fe6545e45283220e86245a1e3c96e29c4d86af9ab15fd6c2b',
                         'modsec': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd',
                     },
-                },
-                'ubuntu26': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-ubuntu.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-ubuntu26.so',
-                    'sha256': {
-                        'binary': 'd61e9c6f474495bcbe7803783ffe301779eaaeed833a5d607e7c65aa38ace5f2',
-                        'module': '61ef59ac7a46f3c9de7ec7156bbc4359a6dc5b12b3ffb03ea986a49895b70148',
-                        'modsec': '853221ab6bad0f8363bc9f66c1f143dcd48b58662df56c0d9d96cf3b62a65998',
-                    },
                 }
             }
 
@@ -448,16 +427,6 @@ class InstallCyberPanel:
                     1,
                 )
                 self.install_package('udns')
-            elif platform == 'ubuntu26':
-                InstallCyberPanel.stdOut(
-                    "Installing Ubuntu 26 ModSecurity runtime dependencies...",
-                    1,
-                )
-                for package in (
-                    'libxml2-16', 'libcurl3t64-gnutls', 'libyajl2',
-                    'libgeoip1t64', 'liblmdb0', 'libpcre2-8-0',
-                ):
-                    self.install_package(package)
 
             OLS_BINARY_URL = config['url']
             MODULE_URL = config['module_url']
@@ -524,15 +493,10 @@ class InstallCyberPanel:
             if MODSEC_URL:
                 InstallCyberPanel.stdOut("Downloading ModSecurity WAF module...", 1)
                 if self.downloadCustomBinary(MODSEC_URL, tmp_modsec):
-                    if (self.verifyChecksum(tmp_modsec, SHA256.get('modsec')) and
-                            self.checkGlibcCompat(tmp_modsec)):
+                    if self.verifyChecksum(tmp_modsec, SHA256.get('modsec')):
                         modsec_downloaded = True
                     else:
-                        InstallCyberPanel.stdOut(
-                            "WARNING: ModSecurity failed integrity or ABI "
-                            "verification; continuing without it",
-                            1,
-                        )
+                        InstallCyberPanel.stdOut("WARNING: ModSecurity failed checksum verification; continuing without it", 1)
                 else:
                     InstallCyberPanel.stdOut("WARNING: Failed to download ModSecurity module; continuing without it", 1)
 

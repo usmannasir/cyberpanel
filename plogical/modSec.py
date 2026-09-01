@@ -9,8 +9,6 @@ import os
 import tarfile
 import shutil
 import time
-import tempfile
-import zipfile
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.installUtilities import installUtilities
@@ -20,12 +18,6 @@ class modSec:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
     mirrorPath = "cyberpanel.net"
-    OWASP_RULES_DIR = os.path.join(
-        virtualHostUtilities.vhostConfPath,
-        'modsec/owasp-modsecurity-crs-3.0-master',
-    )
-    OWASP_MASTER_CONF = os.path.join(OWASP_RULES_DIR, 'owasp-master.conf')
-    OWASP_DIRECTIVE = 'modsecurity_rules_file ' + OWASP_MASTER_CONF
 
     # Compatible ModSecurity binaries (built against custom OLS headers)
     # These prevent ABI incompatibility crashes (Signal 11/SIGSEGV)
@@ -773,75 +765,68 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     @staticmethod
     def setupOWASPRules():
         try:
-            modsecDirectory = os.path.join(
-                virtualHostUtilities.Server_root, 'conf/modsec'
-            )
-            os.makedirs(modsecDirectory, exist_ok=True)
+            pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp")
+            pathToOWASFolderNew = '%s/modsec/owasp-modsecurity-crs-3.0-master' % (virtualHostUtilities.vhostConfPath)
 
-            with tempfile.TemporaryDirectory(
-                prefix='cyberpanel-owasp-'
-            ) as stagingDirectory:
-                archivePath = os.path.join(stagingDirectory, 'owasp.zip')
-                download = subprocess.run(
-                    [
-                        'wget', '--tries=3', '--timeout=30', '-O', archivePath,
-                        'https://github.com/coreruleset/coreruleset/archive/refs/tags/v3.3.2.zip',
-                    ],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE,
-                    timeout=180,
-                )
-                if download.returncode != 0:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Failed to download OWASP CRS from GitHub. '
-                        '[setupOWASPRules]'
-                    )
-                    return 0
+            command = 'mkdir -p /usr/local/lsws/conf/modsec'
+            result = subprocess.call(shlex.split(command))
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to create modsec directory [setupOWASPRules]")
+                return 0
 
-                extractDirectory = os.path.join(stagingDirectory, 'extract')
-                os.makedirs(extractDirectory)
-                with zipfile.ZipFile(archivePath) as archive:
-                    extractRoot = os.path.realpath(extractDirectory)
-                    for member in archive.infolist():
-                        memberPath = os.path.realpath(
-                            os.path.join(extractDirectory, member.filename)
-                        )
-                        if os.path.commonpath((extractRoot, memberPath)) != extractRoot:
-                            raise ValueError('Invalid path in OWASP archive.')
-                    archive.extractall(extractDirectory)
+            if os.path.exists(pathToOWASFolderNew):
+                shutil.rmtree(pathToOWASFolderNew)
 
-                stagedRules = os.path.join(
-                    extractDirectory, 'coreruleset-3.3.2'
-                )
-                if not os.path.isdir(os.path.join(stagedRules, 'rules')):
-                    raise ValueError('OWASP archive does not contain the rules directory.')
+            if os.path.exists(pathTOOWASPFolder):
+                shutil.rmtree(pathTOOWASPFolder)
 
-                shutil.copy2(
-                    os.path.join(stagedRules, 'crs-setup.conf.example'),
-                    os.path.join(stagedRules, 'crs-setup.conf'),
-                )
-                shutil.copy2(
-                    os.path.join(
-                        stagedRules, 'rules',
-                        'REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example',
-                    ),
-                    os.path.join(
-                        stagedRules, 'rules',
-                        'REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf',
-                    ),
-                )
-                shutil.copy2(
-                    os.path.join(
-                        stagedRules, 'rules',
-                        'RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example',
-                    ),
-                    os.path.join(
-                        stagedRules, 'rules',
-                        'RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf',
-                    ),
-                )
+            if os.path.exists('owasp.tar.gz'):
+                os.remove('owasp.tar.gz')
 
-                content = """include {pathToOWASFolderNew}/crs-setup.conf
+            command = "wget https://github.com/coreruleset/coreruleset/archive/refs/tags/v3.3.2.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to download OWASP CRS from GitHub. Check internet connection. [setupOWASPRules]")
+                return 0
+
+            command = "unzip -o /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to extract OWASP CRS zip file. Ensure unzip is installed. [setupOWASPRules]")
+                return 0
+
+            command = 'mv /usr/local/lsws/conf/modsec/coreruleset-3.3.2 /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master'
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to rename OWASP CRS directory. File may already exist. [setupOWASPRules]")
+                return 0
+
+            command = 'mv %s/crs-setup.conf.example %s/crs-setup.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to setup crs-setup.conf configuration file. [setupOWASPRules]")
+                return 0
+
+            command = 'mv %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to setup REQUEST-900 exclusion rules. [setupOWASPRules]")
+                return 0
+
+            command = 'mv %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf' % (
+            pathToOWASFolderNew, pathToOWASFolderNew)
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to setup RESPONSE-999 exclusion rules. [setupOWASPRules]")
+                return 0
+
+            content = """include {pathToOWASFolderNew}/crs-setup.conf
 include {pathToOWASFolderNew}/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
 include {pathToOWASFolderNew}/rules/REQUEST-901-INITIALIZATION.conf
 include {pathToOWASFolderNew}/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
@@ -868,30 +853,9 @@ include {pathToOWASFolderNew}/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
 include {pathToOWASFolderNew}/rules/RESPONSE-980-CORRELATION.conf
 include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 """
-                with open(os.path.join(stagedRules, 'owasp-master.conf'), 'w') as output:
-                    output.write(
-                        content.replace(
-                            '{pathToOWASFolderNew}', modSec.OWASP_RULES_DIR
-                        )
-                    )
-
-                installingPath = modSec.OWASP_RULES_DIR + '.installing'
-                previousPath = modSec.OWASP_RULES_DIR + '.previous'
-                if os.path.exists(installingPath):
-                    shutil.rmtree(installingPath)
-                if os.path.exists(previousPath):
-                    shutil.rmtree(previousPath)
-                shutil.copytree(stagedRules, installingPath)
-                if os.path.exists(modSec.OWASP_RULES_DIR):
-                    os.replace(modSec.OWASP_RULES_DIR, previousPath)
-                try:
-                    os.replace(installingPath, modSec.OWASP_RULES_DIR)
-                except BaseException:
-                    if os.path.exists(previousPath):
-                        os.replace(previousPath, modSec.OWASP_RULES_DIR)
-                    raise
-                if os.path.exists(previousPath):
-                    shutil.rmtree(previousPath)
+            writeToFile = open('%s/owasp-master.conf' % (pathToOWASFolderNew), 'w')
+            writeToFile.write(content.replace('{pathToOWASFolderNew}', pathToOWASFolderNew))
+            writeToFile.close()
 
             return 1
 
@@ -902,84 +866,6 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
             return 0
 
     @staticmethod
-    def hasActiveOWASPDirective(configLines):
-        if isinstance(configLines, str):
-            configLines = configLines.splitlines()
-        for rawLine in configLines:
-            line = rawLine.strip()
-            if line.startswith('#'):
-                continue
-            if line == modSec.OWASP_DIRECTIVE:
-                return True
-        return False
-
-    @staticmethod
-    def isOWASPEnabled(confFile):
-        try:
-            with open(confFile, 'r') as config:
-                return modSec.hasActiveOWASPDirective(config)
-        except OSError:
-            return False
-
-    @staticmethod
-    def enableOWASPForOLS(confFile):
-        with open(confFile, 'r') as config:
-            configLines = config.readlines()
-
-        for rawLine in configLines:
-            if rawLine.strip() == modSec.OWASP_DIRECTIVE:
-                return
-
-        moduleStart = None
-        insertAt = None
-        for index, rawLine in enumerate(configLines):
-            line = rawLine.strip()
-            if line.startswith('module mod_security'):
-                moduleStart = index
-            if moduleStart is not None and line.startswith(
-                'modsecurity_rules_file '
-            ) and line.endswith('/conf/modsec/rules.conf'):
-                insertAt = index + 1
-                break
-
-        if moduleStart is None:
-            raise RuntimeError('ModSecurity must be installed before OWASP rules.')
-
-        if insertAt is None:
-            for index in range(moduleStart + 1, len(configLines)):
-                if configLines[index].strip() == '}':
-                    insertAt = index
-                    break
-        if insertAt is None:
-            raise RuntimeError('The ModSecurity module configuration is incomplete.')
-
-        configLines.insert(insertAt, modSec.OWASP_DIRECTIVE + '\n')
-        configStat = os.stat(confFile)
-        temporary = tempfile.NamedTemporaryFile(
-            mode='w',
-            dir=os.path.dirname(confFile),
-            prefix='.httpd_config.',
-            delete=False,
-        )
-        try:
-            with temporary:
-                temporary.writelines(configLines)
-                temporary.flush()
-                os.fsync(temporary.fileno())
-            os.chmod(temporary.name, configStat.st_mode & 0o7777)
-            try:
-                os.chown(temporary.name, configStat.st_uid, configStat.st_gid)
-            except PermissionError:
-                pass
-            os.replace(temporary.name, confFile)
-        except BaseException:
-            try:
-                os.unlink(temporary.name)
-            except OSError:
-                pass
-            raise
-
-    @staticmethod
     def installOWASP():
         try:
             if modSec.setupOWASPRules() == 0:
@@ -987,10 +873,25 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
                 return
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                owaspRulesConf = """
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf
+"""
+
                 confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                with open(confFile, 'r') as config:
-                    previousConfig = config.read()
-                modSec.enableOWASPForOLS(confFile)
+
+                confData = open(confFile).readlines()
+
+                conf = open(confFile, 'w')
+
+                for items in confData:
+                    if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
+                        conf.writelines(items)
+                        conf.write(owaspRulesConf)
+                        continue
+                    else:
+                        conf.writelines(items)
+
+                conf.close()
             else:
                 confFile = os.path.join('/usr/local/lsws/conf/modsec.conf')
                 confData = open(confFile).readlines()
@@ -1007,19 +908,7 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 
                 conf.close()
 
-            if installUtilities.reStartLiteSpeed() != 1:
-                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                    with open(confFile, 'w') as config:
-                        config.write(previousConfig)
-                    installUtilities.reStartLiteSpeed()
-                raise RuntimeError('OpenLiteSpeed could not restart with OWASP rules.')
-
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                if (not modSec.isOWASPEnabled(confFile) or
-                        not os.path.isfile(modSec.OWASP_MASTER_CONF)):
-                    raise RuntimeError(
-                        'OWASP rules were downloaded but not activated.'
-                    )
+            installUtilities.reStartLiteSpeed()
 
             print("1,None")
 

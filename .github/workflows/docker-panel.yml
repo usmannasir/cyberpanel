@@ -1,0 +1,139 @@
+name: Docker panel image
+
+on:
+  push:
+    branches: [v3.0.4-dev]
+    tags: ['docker-panel-*']
+  schedule:
+    # Weekly Monday 04:00 UTC: pick up distro security patches in base images.
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      os_tag:
+        description: OS tag (almalinux10 or all)
+        required: false
+        default: almalinux10
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: set-matrix
+        env:
+          OS_TAG_INPUT: ${{ github.event.inputs.os_tag }}
+        run: |
+          set -euo pipefail
+          if [ "${OS_TAG_INPUT:-}" != "" ] && [ "${OS_TAG_INPUT}" != "all" ]; then
+            matrix=$(jq -c --arg t "${OS_TAG_INPUT}" '[.[] | select(.tag == $t)]' docker/panel/os-matrix.json)
+          else
+            matrix=$(jq -c '.' docker/panel/os-matrix.json)
+          fi
+          count=$(echo "$matrix" | jq 'length')
+          if [ "$count" -lt 1 ]; then
+            echo "No matrix entry for tag: ${OS_TAG_INPUT}" >&2
+            exit 1
+          fi
+          echo "matrix={\"include\":${matrix}}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Resolve base image reference
+        id: base
+        env:
+          BASE: ${{ matrix.base }}
+          DIGEST: ${{ matrix.digest }}
+        run: |
+          if [ -n "${DIGEST}" ]; then
+            echo "ref=${BASE}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${BASE}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect Docker Hub credentials
+        id: hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Docker Hub secrets missing: build and scan only (no push)."
+          fi
+
+      - name: Log in to Docker Hub
+        if: steps.hub.outputs.available == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/panel/Dockerfile
+          load: true
+          push: false
+          tags: |
+            master3395/cyberpanel:${{ matrix.tag }}
+            ${{ matrix.tag == 'almalinux10' && format('master3395/cyberpanel:latest') || '' }}
+          build-args: |
+            BASE_IMAGE=${{ steps.base.outputs.ref }}
+            OS_FAMILY=${{ matrix.family }}
+            OS_TAG=${{ matrix.tag }}
+            IMAGE_REVISION=${{ github.sha }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: master3395/cyberpanel:${{ matrix.tag }}
+          format: json
+          output: trivy-${{ matrix.tag }}.json
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Enforce vulnerability policy
+        run: bash docker/panel/check-trivy-policy.sh "trivy-${{ matrix.tag }}.json" "${{ matrix.tag }}"
+
+      - name: Upload Trivy report (SARIF)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: master3395/cyberpanel:${{ matrix.tag }}
+          format: sarif
+          output: trivy-${{ matrix.tag }}.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.tag }}.sarif
+          category: trivy-${{ matrix.tag }}
+
+      - name: Push image to Docker Hub
+        if: steps.hub.outputs.available == 'true'
+        run: |
+          docker push master3395/cyberpanel:${{ matrix.tag }}
+          if [ "${{ matrix.tag }}" = "almalinux10" ]; then
+            docker push master3395/cyberpanel:latest
+          fi

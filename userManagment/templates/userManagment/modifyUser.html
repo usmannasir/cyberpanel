@@ -319,41 +319,11 @@
                                 </div>
                                 <small class="text-muted mt-1 d-block">{% trans "Enter this key in your authenticator app if you cannot scan QR codes." %}</small>
                             </div>
-                            <div class="mt-3">
-                                <label class="form-label">{% trans "Verify authenticator setup" %}</label>
-                                <input type="text" inputmode="numeric" autocomplete="one-time-code"
-                                       class="form-control" ng-model="twofaVerificationCode"
-                                       placeholder="{% trans 'Enter the current 6-digit code' %}"
-                                       style="max-width:350px;">
-                                <small class="text-muted mt-1 d-block">{% trans "A valid current code is required before 2FA can be enabled." %}</small>
-                            </div>
-                            <div ng-if="recoveryCodesVisible" class="alert alert-warning mt-3">
-                                <strong>{% trans "Save these recovery codes now" %}</strong>
-                                <p class="help-text mt-2">{% trans "Each code works once. They will not be shown again after setup." %}</p>
-                                <div style="display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:8px;max-width:350px;margin:12px 0;">
-                                    <code ng-repeat="code in recoveryCodes" style="font-size:14px;padding:6px;">{$ code $}</code>
-                                </div>
-                                <button type="button" class="btn btn-outline-secondary" ng-click="downloadRecoveryCodes()">
-                                    <i class="fa fa-download"></i> {% trans "Download recovery codes" %}
-                                </button>
-                                <div class="checkbox-wrapper mt-3">
-                                    <label>
-                                        <input type="checkbox" ng-model="$parent.recoveryCodesConfirmed" ng-disabled="!recoveryCodesDownloaded">
-                                        {% trans "I downloaded and stored the recovery codes securely" %}
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div ng-if="twofa && twofaWasEnabled" class="alert alert-success mt-3">
-                            <i class="fa fa-shield"></i> {% trans "Two-factor authentication is enabled for this account." %}
                         </div>
                     </div>
                     <div class="form-group" style="margin-top: 2rem;">
-                        <button type="button" ng-click="modifyUser()" class="btn-primary"
-                                ng-disabled="twofa && !twofaWasEnabled && (!twofaVerificationCode || (recoveryCodesVisible && (!recoveryCodesDownloaded || !recoveryCodesConfirmed)))">
-                            <i class="fa fa-save"></i>
-                            <span ng-if="!recoveryCodesVisible">{% trans "Save Changes" %}</span>
-                            <span ng-if="recoveryCodesVisible">{% trans "Finish enabling 2FA" %}</span>
+                        <button type="button" ng-click="modifyUser()" class="btn-primary">
+                            <i class="fa fa-save"></i> {% trans "Save Changes" %}
                         </button>
                     </div>
                 </div>

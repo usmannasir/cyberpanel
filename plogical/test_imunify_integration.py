@@ -101,46 +101,15 @@ class ImunifyIntegrationTests(unittest.TestCase):
 
     def test_deploy_runner_rejects_a_failed_install(self):
         commands = build_deploy_commands('av')
-        return_codes = [0, 1, 0, 2]
+        return_codes = [0, 1, 0, 1, 2]
         with tempfile.TemporaryFile(mode='w+') as status_file:
             with mock.patch(
                 'plogical.imunify_integration.subprocess.call',
                 side_effect=return_codes,
             ) as process_call:
                 with self.assertRaisesRegex(RuntimeError, 'installation failed'):
-                    with mock.patch(
-                        'plogical.imunify_integration.os.path.isfile',
-                        return_value=True,
-                    ), mock.patch(
-                        'plogical.imunify_integration.os.path.getsize',
-                        return_value=4096,
-                    ):
-                        run_deploy_commands(commands, status_file)
-                self.assertNotIn('shell', process_call.call_args.kwargs)
-
-    def test_download_uses_retries_and_does_not_uninstall_first(self):
-        commands = build_deploy_commands('av')
-        download = commands[2]
-
-        self.assertIn('--tries=3', download)
-        self.assertIn('--timeout=30', download)
-        self.assertFalse(any('--uninstall' in command for command in commands))
-
-    def test_deploy_runner_rejects_an_incomplete_download(self):
-        commands = build_deploy_commands('av')
-        with tempfile.TemporaryFile(mode='w+') as status_file:
-            with mock.patch(
-                'plogical.imunify_integration.subprocess.call',
-                side_effect=[0, 1, 0],
-            ), mock.patch(
-                'plogical.imunify_integration.os.path.isfile',
-                return_value=True,
-            ), mock.patch(
-                'plogical.imunify_integration.os.path.getsize',
-                return_value=12,
-            ):
-                with self.assertRaisesRegex(RuntimeError, 'incomplete'):
                     run_deploy_commands(commands, status_file)
+                self.assertNotIn('shell', process_call.call_args.kwargs)
 
     def test_status_file_and_ui_executables_receive_safe_modes(self):
         with tempfile.TemporaryDirectory() as directory:

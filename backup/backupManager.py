@@ -27,7 +27,6 @@ from plogical.mailUtilities import mailUtilities
 from random import randint
 import time
 import plogical.backupUtilities as backupUtil
-from plogical.backupArchive import archive_path_without_suffix
 from plogical.processUtilities import ProcessUtilities
 from multiprocessing import Process
 import requests
@@ -37,7 +36,6 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 from plogical.remoteTransferResponse import parse_remote_transfer_response
-from plogical.remoteTransferNetwork import callback_ip_for_remote
 from plogical.normalBackupUtilities import (
     normalize_backup_retention_days,
     normalize_local_backup_path,
@@ -723,14 +721,14 @@ class BackupManager:
             if '..' in str(data['backupFile']) or '..' in str(data.get('dir', '')):
                 return ACLManager.loadErrorJson()
 
-            backupFile = archive_path_without_suffix(data['backupFile'])
+            backupFile = data['backupFile'].strip(".tar.gz")
 
             path = os.path.join("/home", "backup", data['backupFile'])
 
             if os.path.exists(path):
                 path = os.path.join("/home", "backup", backupFile)
             elif os.path.exists(data['backupFile']):
-                path = archive_path_without_suffix(data['backupFile'])
+                path = data['backupFile'].strip(".tar.gz")
             else:
                 dir = data['dir']
                 path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
@@ -1299,8 +1297,6 @@ class BackupManager:
                 with open(ipFile) as ip_file:
                     ownIP = ip_file.read().strip()
 
-                ownIP = callback_ip_for_remote(ipAddress, ownIP)
-
                 finalData = json.dumps({'username': "admin", "password": password, "ipAddress": ownIP,
                                         "accountsToTransfer": accountsToTransfer, 'port': port})
 
@@ -1374,15 +1370,15 @@ class BackupManager:
             data = json.loads(r.text)
 
             if data['fetchStatus'] == 1:
-                if data['status'].find("[5010]") > -1:
-                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
-                            'backupsSent': 0}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                elif data['status'].find("Backups are successfully generated and received on") > -1:
+                if data['status'].find("Backups are successfully generated and received on") > -1:
 
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],
                             'backupsSent': 1}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+                elif data['status'].find("[5010]") > -1:
+                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
+                            'backupsSent': 0}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
                 else:
@@ -1497,15 +1493,6 @@ class BackupManager:
                 data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-            elif status.find("completed[failed]") > -1:
-                data = {
-                    'remoteTransferStatus': 0,
-                    'error_message': status,
-                    'status': status,
-                    'complete': 1,
-                }
-                return HttpResponse(json.dumps(data))
 
             elif status.find("[5010]") > -1:
                 command = "sudo rm -rf " + shlex.quote(removalPath)
