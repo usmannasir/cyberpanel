@@ -20,6 +20,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!postgresql-stack/lib/
+!postgresql-stack/lib/**
 lib64/
 parts/
 sdist/
