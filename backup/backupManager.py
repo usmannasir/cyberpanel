@@ -688,6 +688,15 @@ class BackupManager:
 
     def submitRestore(self, data=None, userID=None):
         try:
+            confirmed = data.get('confirmed')
+            if confirmed not in (True, 1, '1', 'true', 'True'):
+                final_dic = {
+                    'restoreStatus': 0,
+                    'error_message': 'Restore confirmation required. Review the backup details and confirm before starting.'
+                }
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             backupFile = data['backupFile']
             originalFile = "/home/backup/" + backupFile
 
@@ -780,6 +789,63 @@ class BackupManager:
             final_dic = {'restoreStatus': 0, 'error_message': str(msg), 'abort': 0, 'running': 'Running..', 'status': ''}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def getBackupFileInfo(self, data=None, userID=None):
+        try:
+            backupFile = data.get('backupFile', '')
+            if not backupFile or '..' in str(backupFile):
+                return ACLManager.loadErrorJson('infoStatus', 0)
+
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] != 1:
+                return ACLManager.loadErrorJson('infoStatus', 0)
+
+            file_path = os.path.join("/home", "backup", backupFile)
+            if not os.path.isfile(file_path):
+                final_dic = {'infoStatus': 0, 'error_message': 'Backup file not found.'}
+                return HttpResponse(json.dumps(final_dic))
+
+            stat = os.stat(file_path)
+            size_bytes = stat.st_size
+            modified_display = time.strftime("%d/%m/%Y %H:%M", time.localtime(stat.st_mtime))
+
+            if size_bytes >= 1073741824:
+                size_display = "%.2f GB" % (size_bytes / 1073741824.0)
+            elif size_bytes >= 1048576:
+                size_display = "%.2f MB" % (size_bytes / 1048576.0)
+            elif size_bytes >= 1024:
+                size_display = "%.2f KB" % (size_bytes / 1024.0)
+            else:
+                size_display = "%d bytes" % size_bytes
+
+            restore_in_progress = 0
+            restore_state = ''
+            backup_dir = archive_path_without_suffix(backupFile)
+            status_file = os.path.join("/home", "backup", backup_dir, "status")
+            if os.path.isfile(status_file):
+                try:
+                    execPath = "sudo cat " + shlex.quote(status_file)
+                    status = ProcessUtilities.outputExecutioner(execPath)
+                    if status.find("Done") == -1 and status.find("[5009]") == -1:
+                        restore_in_progress = 1
+                        restore_state = status
+                except BaseException:
+                    pass
+
+            final_json = json.dumps({
+                'infoStatus': 1,
+                'error_message': 'None',
+                'fileName': backupFile,
+                'fileSize': size_display,
+                'fileSizeBytes': size_bytes,
+                'modified': modified_display,
+                'restoreInProgress': restore_in_progress,
+                'restoreState': restore_state,
+            })
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'infoStatus': 0, 'error_message': str(msg)}
+            return HttpResponse(json.dumps(final_dic))
 
     def backupDestinations(self, request=None, userID=None, data=None):
         proc = httpProc(request, 'backup/backupDestinations.html', {}, 'addDeleteDestinations')
