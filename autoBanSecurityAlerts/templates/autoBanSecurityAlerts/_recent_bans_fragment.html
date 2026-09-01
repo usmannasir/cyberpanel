@@ -1,0 +1,62 @@
+{% load i18n %}
+{% if recent_bans_page.paginator.count %}
+<div class="auto-ban-pagination">
+    <div>
+        <label for="auto-ban-per-page">{% trans "Per page" %}</label>
+        <select id="auto-ban-per-page" onchange="autoBanLoadRecentBans(1, parseInt(this.value, 10))">
+            {% for n in per_page_choices %}
+            <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="page-nav">
+        {% if recent_bans_page.has_previous %}
+        <button type="button" class="auto-ban-nav-btn" onclick="autoBanLoadRecentBans({{ recent_bans_page.previous_page_number }}, {{ per_page }})">{% trans "Previous" %}</button>
+        {% endif %}
+        <span class="current">{{ recent_bans_page.number }}</span>
+        <span style="color:#6c757d;">/ {{ recent_bans_page.paginator.num_pages }}</span>
+        {% if recent_bans_page.has_next %}
+        <button type="button" class="auto-ban-nav-btn" onclick="autoBanLoadRecentBans({{ recent_bans_page.next_page_number }}, {{ per_page }})">{% trans "Next" %}</button>
+        {% endif %}
+    </div>
+    <div>
+        <label for="auto-ban-goto">{% trans "Go to page" %}</label>
+        <input type="number" id="auto-ban-goto" min="1" max="{{ recent_bans_page.paginator.num_pages }}" value="{{ recent_bans_page.number }}" />
+        <button type="button" class="btn btn-primary" style="padding:6px 14px;font-size:13px;" onclick="autoBanGotoPage()">{% trans "Go" %}</button>
+    </div>
+</div>
+<table class="whitelist-table">
+    <thead>
+        <tr>
+            <th>{% trans "IP Address" %}</th>
+            <th>{% trans "Reason" %}</th>
+            <th>{% trans "Duration" %}</th>
+            <th>{% trans "Alert Type" %}</th>
+            <th>{% trans "Banned At" %}</th>
+            <th>{% trans "Actions" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ban in recent_bans_page %}
+        <tr data-ban-log-id="{{ ban.id }}">
+            <td><code>{{ ban.ip_address }}</code></td>
+            <td>{{ ban.ban_reason }}</td>
+            <td>{{ ban.ban_duration }}</td>
+            <td>{{ ban.security_alert_type|default:"—" }}</td>
+            <td>{{ ban.banned_at|date:"d.m.Y H:i" }}</td>
+            <td>
+                {% if machine_ip and ban.ip_address == machine_ip %}
+                <span style="color: #6c757d; font-size: 12px;">{% trans "Cannot remove" %}</span>
+                {% else %}
+                <button type="button" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="removeAutoBan({{ ban.id }})">
+                    <i class="fas fa-unlock"></i> {% trans "Remove ban" %}
+                </button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: #6c757d; text-align: center; padding: 20px;">{% trans "No auto-bans yet" %}</p>
+{% endif %}

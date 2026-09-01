@@ -1,0 +1,182 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment Required - Auto Ban Security Alerts" %}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui cpui-paywall" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Premium access required</h1>
+    <p>Unlock Auto Ban Security Alerts with a subscription or activation key.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Premium</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="subscription-required-container">
+    <div class="subscription-card">
+        <div class="premium-icon"><i class="fas fa-shield-alt"></i></div>
+        <h1>{% trans "Premium Plugin Access Required" %}</h1>
+        <p>{% trans "This plugin requires payment or subscription to access premium features." %}</p>
+
+        <div style="background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%); border: 2px solid #17a2b8; border-radius: 12px; padding: 25px; margin: 30px 0; text-align: left;">
+            <h3 style="color: #17a2b8; margin-top: 0;"><i class="fas fa-key"></i> {% trans "Activate Premium Access" %}</h3>
+            <p style="color: #495057; margin-bottom: 20px;">{% trans "If you received an activation key, enter it below." %}</p>
+            <div id="activation-message" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 6px;"></div>
+            <form id="activation-key-form" style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; max-width: 640px;">
+                {% csrf_token %}
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="activation-key-input" style="font-weight: 600; display: block; margin-bottom: 8px;">{% trans "Activation Key" %}</label>
+                    <input type="text" id="activation-key-input" name="activation_key" placeholder="AUTOBANSECURITYALERTS-XXXX-XXXX-XXXX" style="width: 100%; padding: 12px; border: 2px solid #17a2b8; border-radius: 6px; font-family: monospace; text-transform: uppercase;" required />
+                </div>
+                <button type="submit" style="background: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer;" id="activate-btn">
+                    <i class="fas fa-check-circle"></i> {% trans "Activate" %}
+                </button>
+            </form>
+        </div>
+
+        {% if payment_method == 'both' %}
+        <div class="payment-method-selector">
+            <strong>{% trans "Current Payment Method:" %}</strong> {% trans "Check Both (Patreon or PayPal)" %}
+        </div>
+        {% elif payment_method == 'patreon' %}
+        <div class="payment-method-selector">
+            <strong>{% trans "Current Payment Method:" %}</strong> {% trans "Patreon Subscription Only" %}
+        </div>
+        {% elif payment_method == 'paypal' %}
+        <div class="payment-method-selector">
+            <strong>{% trans "Current Payment Method:" %}</strong> {% trans "PayPal Payment Only" %}
+        </div>
+        {% endif %}
+
+        <div class="payment-methods">
+            <div class="payment-method-card patreon">
+                <h3><i class="fab fa-patreon"></i> {% trans "Patreon Subscription" %}</h3>
+                <p>{% trans "Subscribe to" %} <strong>"{{ patreon_tier }}"</strong></p>
+                <a href="{{ patreon_url }}" target="_blank" rel="noopener noreferrer" class="patreon-button">
+                    <i class="fab fa-patreon"></i> {% trans "Subscribe on Patreon" %}
+                </a>
+            </div>
+            <div class="payment-method-card paypal">
+                <h3><i class="fab fa-paypal"></i> {% trans "PayPal Payment" %}</h3>
+                <p>{% trans "Complete one-time payment via PayPal" %}</p>
+                {% if paypal_payment_link %}
+                <a href="{{ paypal_payment_link }}" target="_blank" rel="noopener noreferrer" class="paypal-button">
+                    <i class="fab fa-paypal"></i> {% trans "Pay with Payment Link" %}
+                </a>
+                {% endif %}
+                {% if paypal_me_url %}
+                <a href="{{ paypal_me_url }}" target="_blank" rel="noopener noreferrer" class="paypal-button">
+                    <i class="fab fa-paypal"></i> {% trans "Pay with PayPal.me" %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>{% trans "How it works:" %}</h3>
+            <ul>
+                <li>{% trans "Install the plugin (already done)" %}</li>
+                <li>{% trans "Enter activation key, subscribe on Patreon, or pay via PayPal" %}</li>
+                <li>{% trans "The plugin will automatically unlock" %}</li>
+            </ul>
+        </div>
+
+        {% if error %}
+        <div style="background: #fee; border: 1px solid #fcc; border-radius: 8px; padding: 15px; margin-top: 20px; color: #c33;">
+            <strong>{% trans "Error:" %}</strong> {{ error }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var CP_PLUGIN_SLUG = 'autoBanSecurityAlerts';
+    var CP_ACTIVATE_PATH = '/plugins/autoBanSecurityAlerts/activate_key/';
+    function cpCsrf() {
+        var inp = document.querySelector('input[name=csrfmiddlewaretoken]');
+        if (inp && inp.value) return inp.value;
+        var m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1].trim()) : '';
+    }
+    function activationOk(data) {
+        if (!data) return false;
+        if (data.status === 1) return true;
+        if (data.success === true || data.success === 'true') return true;
+        return false;
+    }
+    function activationErrMsg(data) {
+        if (data && data.error_message) return data.error_message;
+        if (data && data.message) return data.message;
+        return 'Invalid activation key for this plugin.';
+    }
+    async function persistActivationInCyberPanel(pluginName, activationKey) {
+        try {
+            if (!activationKey) return;
+            await fetch('/plugins/api/store-activation/' + encodeURIComponent(pluginName) + '/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': cpCsrf()
+                },
+                body: JSON.stringify({ activation_key: activationKey })
+            });
+        } catch (e) {
+            console.warn('Activation persistence hook failed:', e);
+        }
+    }
+    var form = document.getElementById('activation-key-form');
+    var input = document.getElementById('activation-key-input');
+    var btn = document.getElementById('activate-btn');
+    var msg = document.getElementById('activation-message');
+    var activateBtnHtml = btn ? btn.innerHTML : '';
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var key = input.value.trim().toUpperCase();
+            if (!key) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                var res = await fetch(CP_ACTIVATE_PATH, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': cpCsrf() },
+                    body: JSON.stringify({ activation_key: key })
+                });
+                var raw = await res.text();
+                var ct = (res.headers.get('content-type') || '').toLowerCase();
+                var data;
+                if (ct.indexOf('application/json') !== -1) {
+                    try { data = JSON.parse(raw); } catch (e2) { throw new Error('Invalid response from server. Please reload the page.'); }
+                } else {
+                    var s = raw.trim();
+                    if (s.indexOf('<!DOCTYPE') === 0 || s.indexOf('<html') === 0) {
+                        throw new Error('Session expired or server returned a page instead of data. Reload and try again.');
+                    }
+                    throw new Error('Could not activate. Check your network and try again.');
+                }
+                var ok = activationOk(data);
+                msg.textContent = ok ? ('✅ ' + (data.message || '')) : ('❌ ' + activationErrMsg(data));
+                msg.style.display = 'block';
+                msg.style.background = ok ? '#d4edda' : '#f8d7da';
+                msg.style.color = ok ? '#155724' : '#721c24';
+                if (ok) {
+                    await persistActivationInCyberPanel(CP_PLUGIN_SLUG, key);
+                    input.value = '';
+                    setTimeout(function() { location.reload(); }, 2000);
+                }
+            } catch (err) {
+                msg.textContent = '❌ ' + (err && err.message ? err.message : 'Activation failed.');
+                msg.style.display = 'block';
+                msg.style.background = '#f8d7da';
+                msg.style.color = '#721c24';
+            }
+            btn.disabled = false;
+            btn.innerHTML = activateBtnHtml;
+        });
+    }
+});
+</script>
+  </div>
+</div>
+{% endblock %}

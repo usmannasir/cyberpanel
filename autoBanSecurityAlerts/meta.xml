@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+    <name>Auto Ban Security Alerts</name>
+    <type>Security</type>
+    <version>1.0.4</version>
+    <description>Automatically ban IP addresses from Security Alerts Detected in Recent SSH Logs. Includes IP whitelist management with automatic CyberPanel IP whitelisting.</description>
+    <author>master3395</author>
+    <website>https://github.com/master3395/cyberpanel-plugins</website>
+    <license>MIT</license>
+    <dependencies>
+        <python>3.6+</python>
+        <django>2.2+</django>
+        <cyberpanel>2.5.5+</cyberpanel>
+    </dependencies>
+    <compatibility>
+        <min_version>2.5.5</min_version>
+        <max_version>3.0.0</max_version>
+    </compatibility>
+    <permissions>
+        <admin>true</admin>
+        <user>false</user>
+    </permissions>
+    <paid>true</paid>
+    <patreon_tier>CyberPanel Paid Plugin</patreon_tier>
+    <patreon_url>https://www.patreon.com/membership/27789984</patreon_url>
+    <paypal_me_url>https://paypal.me/KimBS?locale.x=en_US&amp;country.x=NO</paypal_me_url>
+    <paypal_payment_link></paypal_payment_link>
+    <url>/plugins/autoBanSecurityAlerts/</url>
+    <settings_url>/plugins/autoBanSecurityAlerts/settings/</settings_url>
+</plugin>
