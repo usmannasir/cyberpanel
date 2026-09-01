@@ -100,6 +100,13 @@ def verifyLogin(request):
             password_check_result = hashPassword.check_password(admin.password, password)
 
             if password_check_result:
+                try:
+                    from plogical import hashPassword as hp
+                    if hp.needs_password_rehash(admin.password):
+                        admin.password = hp.hash_password(password)
+                        admin.save(update_fields=['password'])
+                except Exception:
+                    pass
                 if admin.twoFA:
                     twofa_code = str(data.get('twofa', '')).strip()
                     if not twofa_code:
