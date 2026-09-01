@@ -61,13 +61,10 @@ class virtualHostUtilities:
         Check if email services (Postfix/OpenDKIM) are installed and configured.
         Returns True if email services are available, False otherwise.
 
-        The installer marker can remain on partial or intentionally minimal
-        installations, so require the Postfix configuration as well.
+        This checks for the marker file /home/cyberpanel/postfix which is created
+        during email services installation.
         """
-        return (
-            os.path.exists('/home/cyberpanel/postfix')
-            and os.path.isfile('/etc/postfix/main.cf')
-        )
+        return os.path.exists('/home/cyberpanel/postfix')
 
     @staticmethod
     def OnBoardingHostName(Domain, tempStatusPath, skipRDNSCheck):
@@ -592,12 +589,6 @@ class virtualHostUtilities:
             ### Update postfix configurations
 
             postFixPath = '/etc/postfix/main.cf'
-
-            if not os.path.isfile(postFixPath):
-                logging.CyberCPLogFileWriter.writeToFile(
-                    f"setupAutoDiscover: {postFixPath} not found, skipping postfix TLS SNI configuration"
-                )
-                return
 
             postFixContent = open(postFixPath, 'r').read()
 

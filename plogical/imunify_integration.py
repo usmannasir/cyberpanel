@@ -220,9 +220,8 @@ def build_deploy_commands(product, key=None, deploy_tmp=DEPLOY_TMP):
     commands = [
         ['mkdir', '-p', deploy_tmp],
         ['pkill', '-f', '[%s]%s' % (filename[0], filename[1:])],
-        [
-            'wget', '--tries=3', '--timeout=30', '-O', script_path, url,
-        ],
+        ['wget', '-qO', script_path, url],
+        ['bash', script_path, '--uninstall', '--yes'],
     ]
     if product == '360':
         commands.append(['bash', script_path, '--key', str(key), '--yes'])
@@ -249,6 +248,7 @@ def run_deploy_commands(commands, status_file):
         'Could not create the Imunify deployment directory.',
         'Could not stop an existing Imunify installer.',
         'Imunify installer download failed.',
+        'Existing Imunify uninstall failed.',
         'Imunify installation failed.',
     )
     for index, command in enumerate(commands):
@@ -257,14 +257,5 @@ def run_deploy_commands(commands, status_file):
             stdout=status_file,
             stderr=status_file,
         )
-        if return_code != 0 and index != 1:
-            raise RuntimeError(
-                '%s (exit code %s)' % (failure_messages[index], return_code)
-            )
-        if index == 2:
-            script_path = command[-2]
-            if (not os.path.isfile(script_path) or
-                    os.path.getsize(script_path) < 1024):
-                raise RuntimeError(
-                    'Imunify installer download was empty or incomplete.'
-                )
+        if return_code != 0 and index not in (1, 3):
+            raise RuntimeError(failure_messages[index])

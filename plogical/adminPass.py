@@ -12,7 +12,7 @@ from plogical.acl import ACLManager
 from packages.models import Package
 from baseTemplate.models import version
 from cyberpanel_version import BUILD, VERSION
-from plogical.securityUtils import ensure_api_token, is_current_api_token, normalize_api_token
+from plogical.securityUtils import ensure_api_token
 
 if not os.geteuid() == 0:
     sys.exit("\nOnly root can run this script\n")
@@ -22,26 +22,18 @@ def main():
     parser = argparse.ArgumentParser(description='Reset admin user password!')
     parser.add_argument('--password', help='New Password')
     parser.add_argument('--api', help='Enable/Disable API')
-    parser.add_argument('--api-token', help='Set a pre-generated versioned API token while enabling API access')
     args = parser.parse_args()
 
     if args.api != None:
         if args.api == '1':
             admin = Administrator.objects.get(userName="admin")
-            if args.api_token:
-                if not is_current_api_token(args.api_token):
-                    parser.error('--api-token must use the cp_api_v1_ format')
-                admin.token = 'Basic %s' % normalize_api_token(args.api_token)
-            else:
-                ensure_api_token(admin)
+            ensure_api_token(admin)
             admin.api = 1
             admin.save()
             print("API Enabled.")
-            print("API Token: %s" % admin.token)
         else:
             admin = Administrator.objects.get(userName="admin")
             admin.api = 0
-            admin.token = ''
             admin.save()
             print("API Disabled.")
     else:

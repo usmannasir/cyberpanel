@@ -1,0 +1,8 @@
+services:
+  cyberpanel:
+    extends:
+      file: docker-compose.yml
+      service: cyberpanel
+    environment:
+      CYBERPANEL_MINIMAL: "0"
+      CYBERPANEL_FULL_INSTALL: "1"

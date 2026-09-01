@@ -634,7 +634,7 @@ class Upgrade:
 
     @staticmethod
     def detectPlatform():
-        """Detect OS platform for binary selection."""
+        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
@@ -648,8 +648,6 @@ class Upgrade:
                         if release and (int(release.group(1)), int(release.group(2))) < (22, 4):
                             Upgrade.stdOut(f"Ubuntu {release.group(1)}.{release.group(2)} detected: custom OLS binary requires GLIBC_2.34 (Ubuntu 22.04+); keeping stock OLS", 0)
                             return 'skip'
-                        if release and int(release.group(1)) == 26:
-                            return 'ubuntu26'
                         return 'ubuntu'
 
             # Check for RHEL-based distributions
@@ -835,16 +833,6 @@ class Upgrade:
                         'module': '61ef59ac7a46f3c9de7ec7156bbc4359a6dc5b12b3ffb03ea986a49895b70148',
                         'modsec': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd',
                     },
-                },
-                'ubuntu26': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-ubuntu.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-ubuntu26.so',
-                    'sha256': {
-                        'binary': 'd61e9c6f474495bcbe7803783ffe301779eaaeed833a5d607e7c65aa38ace5f2',
-                        'module': '61ef59ac7a46f3c9de7ec7156bbc4359a6dc5b12b3ffb03ea986a49895b70148',
-                        'modsec': '853221ab6bad0f8363bc9f66c1f143dcd48b58662df56c0d9d96cf3b62a65998',
-                    },
                 }
             }
 
@@ -863,22 +851,6 @@ class Upgrade:
                     Upgrade.stdOut(
                         "ERROR: Could not install the OpenLiteSpeed udns dependency; "
                         "keeping stock OLS",
-                        0,
-                    )
-                    return True
-            elif platform == 'ubuntu26':
-                Upgrade.stdOut(
-                    "Installing Ubuntu 26 ModSecurity runtime dependencies...",
-                    0,
-                )
-                if subprocess.call([
-                    'apt-get', 'install', '-y', 'libxml2-16',
-                    'libcurl3t64-gnutls', 'libyajl2', 'libgeoip1t64',
-                    'liblmdb0', 'libpcre2-8-0',
-                ]) != 0:
-                    Upgrade.stdOut(
-                        "ERROR: Could not install Ubuntu 26 ModSecurity "
-                        "runtime dependencies; keeping the existing OLS set",
                         0,
                     )
                     return True
@@ -950,15 +922,10 @@ class Upgrade:
             if os.path.exists(MODSEC_PATH) and MODSEC_URL:
                 Upgrade.stdOut("Existing ModSecurity detected - downloading compatible version...", 0)
                 if Upgrade.downloadCustomBinary(MODSEC_URL, tmp_modsec):
-                    if (Upgrade.verifyChecksum(tmp_modsec, SHA256.get('modsec')) and
-                            Upgrade.checkGlibcCompat(tmp_modsec)):
+                    if Upgrade.verifyChecksum(tmp_modsec, SHA256.get('modsec')):
                         modsec_downloaded = True
                     else:
-                        Upgrade.stdOut(
-                            "WARNING: ModSecurity failed integrity or ABI "
-                            "verification; leaving the existing module in place",
-                            0,
-                        )
+                        Upgrade.stdOut("WARNING: ModSecurity failed checksum verification; leaving existing ModSecurity in place", 0)
                 else:
                     Upgrade.stdOut("WARNING: Failed to download compatible ModSecurity", 0)
                     Upgrade.stdOut("ModSecurity may crash due to ABI incompatibility", 0)

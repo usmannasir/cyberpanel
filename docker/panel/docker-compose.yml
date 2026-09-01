@@ -1,0 +1,53 @@
+services:
+  cyberpanel:
+    image: master3395/cyberpanel:almalinux10
+    build:
+      context: ../..
+      dockerfile: docker/panel/Dockerfile
+      args:
+        BASE_IMAGE: almalinux:10
+        OS_FAMILY: rhel
+        OS_TAG: almalinux10
+    container_name: cyberpanel
+    hostname: cyberpanel.local
+    privileged: true
+    cgroup: host
+    restart: unless-stopped
+    environment:
+      CYBERPANEL_CONTAINER: "1"
+      CYBERPANEL_ADMIN_PASSWORD: "${CYBERPANEL_ADMIN_PASSWORD:-TestPass12}"
+      CYBERPANEL_HOSTNAME: "${CYBERPANEL_HOSTNAME:-cyberpanel.local}"
+      CYBERPANEL_BRANCH: "${CYBERPANEL_BRANCH:-v3.0.4-dev}"
+      CYBERPANEL_REPO: "${CYBERPANEL_REPO:-master3395}"
+      CYBERPANEL_PUBLIC_IP: "${CYBERPANEL_PUBLIC_IP:-127.0.0.1}"
+      CYBERPANEL_MINIMAL: "${CYBERPANEL_MINIMAL:-0}"
+      CYBERPANEL_FULL_INSTALL: "${CYBERPANEL_FULL_INSTALL:-1}"
+    ports:
+      - "8090:8090"
+      - "80:80"
+      - "443:443"
+      - "7080:7080"
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "21:21"
+      - "25:25"
+      - "587:587"
+      - "465:465"
+      - "993:993"
+      - "995:995"
+      - "40100-40200:40100-40200/tcp"
+    volumes:
+      - cyberpanel_home:/home
+      - cyberpanel_mysql:/var/lib/mysql
+      - cyberpanel_etc:/etc/cyberpanel
+      - cyberpanel_docker:/var/lib/docker
+      - cyberpanel_mail:/var/mail
+      - cyberpanel_acme:/root/.acme.sh
+
+volumes:
+  cyberpanel_home:
+  cyberpanel_mysql:
+  cyberpanel_etc:
+  cyberpanel_docker:
+  cyberpanel_mail:
+  cyberpanel_acme:

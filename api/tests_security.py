@@ -15,7 +15,6 @@ from plogical.securityUtils import (
     get_remote_transfer_pid_path,
     get_mysql_upgrade_status_path,
     get_terminal_jwt_secret,
-    normalize_api_token,
     is_safe_hostname,
     is_safe_sql_identifier,
     is_safe_numeric_id,
@@ -29,13 +28,11 @@ from plogical.acl import ACLManager
 
 
 class SecurityUtilsTests(SimpleTestCase):
-    def test_api_token_matches_current_basic_and_bearer_forms(self):
-        token = generate_api_token()
-        raw_token = normalize_api_token(token)
-
-        self.assertTrue(api_token_matches("Bearer " + raw_token, token))
-        self.assertTrue(api_token_matches(raw_token, token))
-        self.assertFalse(api_token_matches("Bearer " + raw_token, generate_api_token()))
+    def test_api_token_matches_legacy_basic_and_bearer_forms(self):
+        self.assertTrue(api_token_matches("Bearer abc123", "Basic abc123"))
+        self.assertTrue(api_token_matches("abc123", "Basic abc123"))
+        self.assertTrue(api_token_matches("abc123", "Basic abc123="))
+        self.assertFalse(api_token_matches("Bearer abc123", "Basic different"))
 
     def test_api_token_matches_rejects_placeholder_values(self):
         for placeholder in ('None', 'none', 'NULL', 'undefined', 'Basic None', 'Bearer null', '='):
@@ -54,15 +51,14 @@ class SecurityUtilsTests(SimpleTestCase):
 
     def test_ensure_api_token_only_rotates_invalid_tokens(self):
         invalid_account = SimpleNamespace(token='None', save=mock.Mock())
-        current_token = generate_api_token()
-        valid_account = SimpleNamespace(token=current_token, save=mock.Mock())
+        valid_account = SimpleNamespace(token='Basic existing-token', save=mock.Mock())
 
         self.assertTrue(ensure_api_token(invalid_account))
         self.assertTrue(api_token_matches(invalid_account.token, invalid_account.token))
         invalid_account.save.assert_called_once_with(update_fields=['token'])
 
         self.assertFalse(ensure_api_token(valid_account))
-        self.assertEqual(valid_account.token, current_token)
+        self.assertEqual(valid_account.token, 'Basic existing-token')
         valid_account.save.assert_not_called()
 
     def test_administrator_model_has_no_placeholder_token_default(self):

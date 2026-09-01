@@ -232,20 +232,7 @@
                                     <small class="text-muted">{% trans "Block all API connections for this account" %}</small>
                                 </div>
                             </label>
-                            <label class="toggle-option">
-                                <input type="radio" ng-model="access" value="Regenerate" name="apiAccess">
-                                <i class="fa fa-refresh toggle-enable"></i>
-                                <div>
-                                    <strong>{% trans "Regenerate API Key" %}</strong><br>
-                                    <small class="text-muted">{% trans "Revoke the existing key and issue a new random credential" %}</small>
-                                </div>
-                            </label>
                         </div>
-                    </div>
-                    <div ng-if="apiToken" class="form-group mt-4">
-                        <label class="form-label">{% trans "API Key" %}</label>
-                        <input type="text" class="form-control" ng-model="apiToken" readonly autocomplete="off">
-                        <p class="help-text">{% trans "Copy this key now and store it securely. Accounts with 2FA must also provide a current verification code in the X-CyberPanel-OTP header." %}</p>
                     </div>
                     <div class="form-group mt-4">
                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg">

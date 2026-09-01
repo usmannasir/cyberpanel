@@ -4,40 +4,6 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
-## v3.0.5-dev — 2026-09-01
-
-### Added
-- Optional PostgreSQL stack addon (`postgresql-stack/`): PostgreSQL 17, pg_cron, pgAdmin 4, SSO tile, and LiteSpeed proxy integration.
-- Install flag `--postgresql-stack` and interactive prompt in `cyberpanel.sh`.
-- Upgrade refresh hook `Post_Upgrade_PostgreSQL_Stack` in `cyberpanel_upgrade.sh`.
-- Docs: `to-do/POSTGRESQL-STACK.md`, `install/postgresql_stack.md`.
-
-## v3.0.5 (build 5) — 2026-08-26
-
-Security update for API authentication and two-factor enforcement.
-
-### Security
-- Standard API, cloud API, connection verification, and panel-session handoff
-  now require a current TOTP code whenever two-factor authentication is
-  enabled for the account.
-- API keys are versioned, cryptographically random credentials independent of
-  the account password. Enabled accounts using legacy keys receive a new key
-  during upgrade.
-- API Access can display a newly enabled key, regenerate it on demand, and
-  revoke it completely when access is disabled.
-- Repeated invalid API TOTP attempts are rate-limited per account and source.
-- Password-authenticated connection verification returns the account's current
-  API key only after all required factors succeed and marks the response as
-  non-cacheable.
-
-### Integration guidance
-- Send the current TOTP code in the `X-CyberPanel-OTP` header or the JSON
-  `otp` field. TOTP values are not accepted from query strings.
-- After upgrading, replace legacy password-derived keys in external tools with
-  the key shown under **Users > API Access**.
-- Provisioning systems can set a pre-generated `cp_api_v1_` credential with
-  `adminPass.py --api 1 --api-token '<key>'`.
-
 ## v3.0.4 (build 4) — 2026-08-23
 
 Reliability release for installation, upgrades, remote databases, SSL,

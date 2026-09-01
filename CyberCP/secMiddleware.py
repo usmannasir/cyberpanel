@@ -28,19 +28,6 @@ class secMiddleware:
     HIGH = 0
     LOW = 1
 
-    WEBMAIL_PUBLIC_PATHS = (
-        '/webmail/login',
-        '/webmail/api/login',
-    )
-
-    @staticmethod
-    def _has_standalone_webmail_session(request):
-        return bool(
-            request.session.get('webmail_standalone')
-            and request.session.get('webmail_email')
-            and request.session.get('webmail_password')
-        )
-
     def get_client_ip(request):
         ip = request.META.get('HTTP_CF_CONNECTING_IP')
         if ip is None:
@@ -66,14 +53,7 @@ class secMiddleware:
         import re
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
-        publicWebmailRequest = pathActual in self.WEBMAIL_PUBLIC_PATHS
-        standaloneWebmailRequest = (
-            pathActual.startswith('/webmail/')
-            and self._has_standalone_webmail_session(request)
-        )
-
         if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
-                or publicWebmailRequest or standaloneWebmailRequest\
                 or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
             pass
         else:

@@ -2,7 +2,6 @@
 
 
 from django.test import TestCase, Client
-from django.test import override_settings
 from django.urls import reverse
 import json
 from loginSystem.models import Administrator, ACL
@@ -99,58 +98,6 @@ class TestUserManagement(TestCase):
         self.assertEqual(Administrator.objects.get(userName='usman').firstName, 'Rehan')
         self.assertEqual(Administrator.objects.get(userName='usman').lastName, 'Nasir')
         self.assertEqual(Administrator.objects.get(userName='usman').securityLevel, 1)
-
-    @override_settings(
-        PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher']
-    )
-    def test_two_factor_setup_requires_verification_and_recovery_confirmation(self):
-        import pyotp
-
-        fetch_data = json.dumps({'accountUsername': 'admin'})
-        response = self.client.post(
-            self.fetchUserDetails,
-            fetch_data,
-            content_type='application/json',
-        )
-        user_details = json.loads(response.content)['userDetails']
-        self.assertTrue(user_details['secretKey'])
-
-        setup_data = {
-            'accountUsername': 'admin',
-            'firstName': 'Cyber',
-            'lastName': 'Panel',
-            'email': 'admin@cyberpanel.net',
-            'passwordByPass': '',
-            'securityLevel': 'HIGH',
-            'twofa': True,
-            'twofaVerificationCode': pyotp.TOTP(
-                user_details['secretKey']
-            ).now(),
-            'twofaSetupConfirmed': False,
-        }
-        response = self.client.post(
-            self.saveModifications,
-            json.dumps(setup_data),
-            content_type='application/json',
-        )
-        first_result = json.loads(response.content)
-
-        self.assertEqual(1, first_result['recoverySetupRequired'])
-        self.assertEqual(10, len(first_result['recoveryCodes']))
-        self.assertEqual(0, Administrator.objects.get(userName='admin').twoFA)
-
-        setup_data['twofaSetupConfirmed'] = True
-        response = self.client.post(
-            self.saveModifications,
-            json.dumps(setup_data),
-            content_type='application/json',
-        )
-        final_result = json.loads(response.content)
-        account = Administrator.objects.get(userName='admin')
-
-        self.assertEqual(1, final_result['saveStatus'])
-        self.assertEqual(1, account.twoFA)
-        self.assertEqual(10, len(json.loads(account.config)['twoFARecoveryCodes']))
 
     def test_saveResellerChangess(self):
         self.test_submitUserCreation()
@@ -310,6 +257,7 @@ class TestUserManagement(TestCase):
         # json_data = json.loads(response.content)
 
         self.assertEqual(Administrator.objects.get(userName='usman').api, 1)
+
 
 
 

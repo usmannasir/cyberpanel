@@ -192,8 +192,6 @@ class CageFS:
 
                 commands = build_deploy_commands('360', key=key)
                 run_deploy_commands(commands, statusFile)
-                write_integration_conf(build_imunify360_integration_conf())
-                ensure_clscripts_executable()
                 chmod_imunify_execute_files(IMUNIFY_360_UI)
 
                 logging.CyberCPLogFileWriter.statusWriter(
@@ -227,8 +225,6 @@ class CageFS:
 
                 commands = build_deploy_commands('av')
                 run_deploy_commands(commands, statusFile)
-                write_integration_conf(build_imunifyav_integration_conf())
-                ensure_clscripts_executable()
                 chmod_imunify_execute_files(IMUNIFY_AV_UI)
 
                 logging.CyberCPLogFileWriter.statusWriter(
