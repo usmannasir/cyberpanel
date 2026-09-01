@@ -4,6 +4,14 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.5-dev — 2026-09-01
+
+### Added
+- Optional PostgreSQL stack addon (`postgresql-stack/`): PostgreSQL 17, pg_cron, pgAdmin 4, SSO tile, and LiteSpeed proxy integration.
+- Install flag `--postgresql-stack` and interactive prompt in `cyberpanel.sh`.
+- Upgrade refresh hook `Post_Upgrade_PostgreSQL_Stack` in `cyberpanel_upgrade.sh`.
+- Docs: `to-do/POSTGRESQL-STACK.md`, `install/postgresql_stack.md`.
+
 ## v3.0.5 (build 5) — 2026-08-26
 
 Security update for API authentication and two-factor enforcement.

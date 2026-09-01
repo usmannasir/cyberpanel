@@ -42,6 +42,19 @@ application.config(['$interpolateProvider',
 application.controller('loginSystem', function ($scope, $http, $window) {
 
     $scope.verifyCode = true;
+    $scope.rememberMe = false;
+    $scope.username = '';
+
+    // Username only (never store password in localStorage).
+    try {
+        if ($window.localStorage.getItem('cpRememberMe') === '1') {
+            $scope.rememberMe = true;
+            var savedUser = $window.localStorage.getItem('cpRememberUsername') || '';
+            // Basic sanitize: strip control chars / keep short login names
+            savedUser = String(savedUser).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 64);
+            $scope.username = savedUser;
+        }
+    } catch (e) { /* private mode */ }
 
     $scope.verifyLoginCredentials = function () {
 
@@ -51,6 +64,7 @@ application.controller('loginSystem', function ($scope, $http, $window) {
         var username = $scope.username;
         var password = $scope.password;
         var languageSelection = $scope.languageSelection;
+        var rememberMe = !!$scope.rememberMe;
 
 
         url = "/verifyLogin";
@@ -59,7 +73,8 @@ application.controller('loginSystem', function ($scope, $http, $window) {
             username: username,
             password: password,
             languageSelection: languageSelection,
-            twofa: $scope.twofa
+            twofa: $scope.twofa,
+            rememberMe: rememberMe
         };
 
         var config = {
@@ -81,6 +96,15 @@ application.controller('loginSystem', function ($scope, $http, $window) {
             }
             else {
                 $("#loginFailed").hide();
+                try {
+                    if (rememberMe) {
+                        $window.localStorage.setItem('cpRememberMe', '1');
+                        $window.localStorage.setItem('cpRememberUsername', String(username || '').slice(0, 64));
+                    } else {
+                        $window.localStorage.removeItem('cpRememberMe');
+                        $window.localStorage.removeItem('cpRememberUsername');
+                    }
+                } catch (e) { /* private mode */ }
                 $window.location.href = '/base/';
             }
 
@@ -89,6 +113,7 @@ application.controller('loginSystem', function ($scope, $http, $window) {
         }
 
         function cantLoadInitialData(response) {
+            $("#verifyingLogin").hide();
         }
 
 
