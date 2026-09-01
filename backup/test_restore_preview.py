@@ -47,11 +47,13 @@ class RestorePreviewTests(unittest.TestCase):
         backup_name = 'example.com-backup.tar.gz'
         fake_stat = mock.Mock(st_size=1048576, st_mtime=1700000000.0)
 
+        def isfile(path):
+            return path.endswith('.tar.gz')
+
         with mock.patch('backup.backupManager.ACLManager.loadedACL', return_value={'admin': 1}), mock.patch(
-            'backup.backupManager.os.path.isfile', return_value=True
+            'backup.backupManager.os.path.isfile', side_effect=isfile
         ), mock.patch('backup.backupManager.os.stat', return_value=fake_stat), mock.patch(
-            'backup.backupManager.os.path.exists', return_value=False
-        ), mock.patch('backup.backupManager.time.strftime', return_value='15/11/2023 09:46'):
+            'backup.backupManager.time.strftime', return_value='15/11/2023 09:46'):
             response = BackupManager().getBackupFileInfo(
                 data={'backupFile': backup_name},
                 userID=1,
@@ -94,6 +96,26 @@ class RestorePreviewTests(unittest.TestCase):
         self.assertIn('/backup/getBackupFileInfo', source)
         self.assertIn('openRestoreConfirm', source)
         self.assertIn('confirmed: true', source)
+
+
+    def test_get_backup_file_info_ignores_extract_dir_without_status(self):
+        backup_name = 'example.com-backup.tar.gz'
+        fake_stat = mock.Mock(st_size=2048, st_mtime=1700000000.0)
+
+        def isfile(path):
+            return path.endswith('.tar.gz')
+
+        with mock.patch('backup.backupManager.ACLManager.loadedACL', return_value={'admin': 1}), mock.patch(
+            'backup.backupManager.os.path.isfile', side_effect=isfile
+        ), mock.patch('backup.backupManager.os.stat', return_value=fake_stat):
+            response = BackupManager().getBackupFileInfo(
+                data={'backupFile': backup_name},
+                userID=1,
+            )
+
+        payload = json.loads(response.content)
+        self.assertEqual(1, payload['infoStatus'])
+        self.assertEqual(0, payload['restoreInProgress'])
 
 
 if __name__ == '__main__':

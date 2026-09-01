@@ -821,17 +821,16 @@ class BackupManager:
             restore_in_progress = 0
             restore_state = ''
             backup_dir = archive_path_without_suffix(backupFile)
-            status_path = os.path.join("/home", "backup", backup_dir)
-            if os.path.exists(status_path):
+            status_file = os.path.join("/home", "backup", backup_dir, "status")
+            if os.path.isfile(status_file):
                 try:
-                    execPath = "sudo cat " + shlex.quote(status_path + "/status")
+                    execPath = "sudo cat " + shlex.quote(status_file)
                     status = ProcessUtilities.outputExecutioner(execPath)
                     if status.find("Done") == -1 and status.find("[5009]") == -1:
                         restore_in_progress = 1
                         restore_state = status
                 except BaseException:
-                    restore_in_progress = 1
-                    restore_state = 'Unknown'
+                    pass
 
             final_json = json.dumps({
                 'infoStatus': 1,

@@ -559,7 +559,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
     $scope.restoreLoading = true;
-    $scope.runningRestore = true;
+    $scope.showRestoreProgress = false;
     $scope.restoreButton = true;
     $scope.backupPreview = true;
     $scope.showConfirmModal = false;
@@ -576,7 +576,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
     function resetSelectionState() {
         $scope.backupPreview = true;
         $scope.restoreButton = true;
-        $scope.runningRestore = true;
+        $scope.showRestoreProgress = false;
         $scope.restoreFinished = false;
         $scope.backupError = true;
         $scope.confirmChecked = false;
@@ -619,7 +619,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                 $scope.backupError = true;
                 if (response.data.restoreInProgress === 1) {
                     $scope.restoreInProgress = true;
-                    $scope.runningRestore = false;
+                    $scope.showRestoreProgress = true;
                     $scope.running = "Running..";
                     $scope.fileName = response.data.fileName;
                     $scope.status = response.data.restoreState || "In progress";
@@ -680,7 +680,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                     $scope.fileName = $scope.backupFile;
                     $scope.restoreLoading = true;
                     $scope.status = response.data.status;
-                    $scope.runningRestore = false;
+                    $scope.showRestoreProgress = false;
                     $scope.restoreButton = true;
                     $scope.restoreFinished = true;
                     $scope.restoreInProgress = false;
@@ -694,7 +694,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                     $scope.fileName = $scope.backupFile;
                     $scope.restoreLoading = false;
                     $scope.status = response.data.status;
-                    $scope.runningRestore = false;
+                    $scope.showRestoreProgress = true;
                     $scope.restoreButton = true;
                     restorePollTimer = $timeout(getRestoreStatus, 2000);
                 }
@@ -745,7 +745,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
             $scope.restoreLoading = true;
             if (response.data.restoreStatus == 1) {
-                $scope.runningRestore = false;
+                $scope.showRestoreProgress = true;
                 $scope.running = "Running";
                 $scope.fileName = $scope.backupFile;
                 $scope.status = "Just Started..";
