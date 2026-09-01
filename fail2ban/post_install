@@ -1,0 +1,316 @@
+#!/usr/bin/python3
+"""
+Post-installation script for Fail2ban Security Manager Plugin
+Executes after plugin installation to configure the system
+"""
+
+import os
+import sys
+import subprocess
+import logging
+import json
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('/var/log/cyberpanel/fail2ban_plugin_post_install.log'),
+        logging.StreamHandler()
+    ]
+)
+
+def run_command(command, description):
+    """Run a system command and log the result"""
+    try:
+        logging.info(f"Executing: {description}")
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.info(f"Success: {description}")
+            if result.stdout:
+                logging.info(f"Output: {result.stdout}")
+        else:
+            logging.error(f"Failed: {description}")
+            logging.error(f"Error: {result.stderr}")
+            return False
+        return True
+    except Exception as e:
+        logging.error(f"Exception during {description}: {str(e)}")
+        return False
+
+def create_fail2ban_config():
+    """Create basic fail2ban configuration for CyberPanel"""
+    try:
+        # Create jail.local configuration
+        jail_config = """[DEFAULT]
+# Ban hosts for one hour:
+bantime = 3600
+
+# Override /etc/fail2ban/jail.d/00-firewalld.conf:
+banaction = iptables-multiport
+
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/secure
+maxretry = 3
+bantime = 3600
+
+[apache-auth]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/error.log
+maxretry = 3
+
+[apache-badbots]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 2
+
+[apache-noscript]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 6
+
+[apache-overflows]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/error.log
+maxretry = 2
+
+[apache-nohome]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 2
+
+[apache-botsearch]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 2
+
+[apache-fakegooglebot]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 1
+
+[apache-modsecurity]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/error.log
+maxretry = 2
+
+[apache-shellshock]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 1
+
+[php-url-fopen]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 1
+
+[nginx-http-auth]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/error.log
+maxretry = 3
+
+[nginx-limit-req]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 3
+
+[nginx-botsearch]
+enabled = true
+port = http,https
+logpath = /usr/local/lsws/logs/access.log
+maxretry = 2
+
+[cyberpanel]
+enabled = true
+port = 8090
+logpath = /usr/local/CyberCP/logs/error.log
+maxretry = 3
+bantime = 3600
+"""
+
+        # Write jail.local configuration
+        with open('/etc/fail2ban/jail.local', 'w') as f:
+            f.write(jail_config)
+        
+        logging.info("Created fail2ban jail.local configuration")
+        
+        # Set proper permissions
+        run_command('chmod 644 /etc/fail2ban/jail.local', 'Setting jail.local permissions')
+        run_command('chown root:root /etc/fail2ban/jail.local', 'Setting jail.local ownership')
+        
+        return True
+    except Exception as e:
+        logging.error(f"Error creating fail2ban configuration: {str(e)}")
+        return False
+
+def create_plugin_config():
+    """Create plugin configuration file"""
+    try:
+        config = {
+            "plugin_name": "fail2ban_plugin",
+            "version": "1.0.0",
+            "enabled": True,
+            "settings": {
+                "auto_ban": True,
+                "ban_duration": 3600,
+                "max_retries": 3,
+                "email_notifications": False,
+                "log_level": "INFO"
+            },
+            "jails": {
+                "sshd": True,
+                "apache-auth": True,
+                "apache-badbots": True,
+                "cyberpanel": True
+            }
+        }
+        
+        config_path = '/usr/local/CyberCP/static/fail2ban_plugin/config.json'
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=4)
+        
+        run_command(f'chmod 644 {config_path}', 'Setting plugin config permissions')
+        run_command(f'chown root:root {config_path}', 'Setting plugin config ownership')
+        
+        logging.info("Created plugin configuration file")
+        return True
+    except Exception as e:
+        logging.error(f"Error creating plugin configuration: {str(e)}")
+        return False
+
+def enable_fail2ban_service():
+    """Enable and start fail2ban service"""
+    try:
+        # Enable fail2ban service
+        if not run_command('systemctl enable fail2ban', 'Enabling fail2ban service'):
+            logging.warning("Failed to enable fail2ban service")
+        
+        # Start fail2ban service
+        if not run_command('systemctl start fail2ban', 'Starting fail2ban service'):
+            logging.warning("Failed to start fail2ban service")
+        
+        # Check service status
+        if not run_command('systemctl is-active fail2ban', 'Checking fail2ban service status'):
+            logging.warning("Fail2ban service is not active")
+        else:
+            logging.info("Fail2ban service is running")
+        
+        return True
+    except Exception as e:
+        logging.error(f"Error managing fail2ban service: {str(e)}")
+        return False
+
+def setup_firewall_rules():
+    """Setup basic firewall rules for fail2ban"""
+    try:
+        # Check if firewalld is running
+        result = subprocess.run(['systemctl', 'is-active', 'firewalld'], capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.info("Firewalld is active, configuring fail2ban integration")
+            
+            # Reload firewalld
+            run_command('firewall-cmd --reload', 'Reloading firewall rules')
+            
+            # Add fail2ban service if not exists
+            run_command('firewall-cmd --permanent --add-service=fail2ban', 'Adding fail2ban service to firewall')
+            
+            # Reload again
+            run_command('firewall-cmd --reload', 'Reloading firewall rules after adding fail2ban service')
+        else:
+            logging.info("Firewalld is not active, skipping firewall configuration")
+        
+        return True
+    except Exception as e:
+        logging.error(f"Error setting up firewall rules: {str(e)}")
+        return False
+
+def create_database_tables():
+    """Create database tables for the plugin"""
+    try:
+        # Run Django migrations
+        if not run_command('cd /usr/local/CyberCP && python3 manage.py migrate fail2ban_plugin', 'Running database migrations'):
+            logging.warning("Failed to run database migrations")
+        
+        logging.info("Database tables created successfully")
+        return True
+    except Exception as e:
+        logging.error(f"Error creating database tables: {str(e)}")
+        return False
+
+def set_plugin_permissions():
+    """Set proper permissions for plugin files"""
+    try:
+        plugin_path = '/usr/local/CyberCP/fail2ban_plugin'
+        
+        # Set ownership to CyberPanel user
+        run_command(f'chown -R cyberpanel:cyberpanel {plugin_path}', 'Setting plugin ownership')
+        
+        # Set proper permissions
+        run_command(f'chmod -R 755 {plugin_path}', 'Setting plugin permissions')
+        
+        # Make scripts executable
+        run_command(f'chmod +x {plugin_path}/pre_install', 'Making pre_install executable')
+        run_command(f'chmod +x {plugin_path}/post_install', 'Making post_install executable')
+        
+        logging.info("Plugin permissions set successfully")
+        return True
+    except Exception as e:
+        logging.error(f"Error setting plugin permissions: {str(e)}")
+        return False
+
+def main():
+    """Main post-installation function"""
+    logging.info("Starting Fail2ban Plugin post-installation...")
+    
+    # Create fail2ban configuration
+    if not create_fail2ban_config():
+        logging.error("Failed to create fail2ban configuration")
+        sys.exit(1)
+    
+    # Create plugin configuration
+    if not create_plugin_config():
+        logging.error("Failed to create plugin configuration")
+        sys.exit(1)
+    
+    # Enable fail2ban service
+    if not enable_fail2ban_service():
+        logging.error("Failed to enable fail2ban service")
+        sys.exit(1)
+    
+    # Setup firewall rules
+    if not setup_firewall_rules():
+        logging.error("Failed to setup firewall rules")
+        sys.exit(1)
+    
+    # Create database tables
+    if not create_database_tables():
+        logging.error("Failed to create database tables")
+        sys.exit(1)
+    
+    # Set plugin permissions
+    if not set_plugin_permissions():
+        logging.error("Failed to set plugin permissions")
+        sys.exit(1)
+    
+    logging.info("Post-installation completed successfully")
+    logging.info("Fail2ban Security Manager Plugin is ready to use!")
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()

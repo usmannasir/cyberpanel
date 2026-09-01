@@ -1,0 +1,189 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Whitelist</h1>
+    <p>IPs that should never be banned.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="whitelist-container">
+    <div class="page-header">
+        <h1>⚪ Whitelist Management</h1>
+        <p>Manage IP addresses that should never be banned</p>
+    </div>
+
+    <div class="card">
+        <h3>Add IP to Whitelist</h3>
+        <form id="add-whitelist-form">
+            <div class="form-group">
+                <label for="ip-address">IP Address:</label>
+                <input type="text" id="ip-address" placeholder="192.168.1.100" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add to Whitelist</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Current Whitelist</h3>
+        <ul class="ip-list" id="whitelist-list">
+            <div class="loading">Loading whitelist...</div>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadWhitelist();
+    
+    document.getElementById('add-whitelist-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const ip = document.getElementById('ip-address').value;
+        addToWhitelist(ip);
+    });
+});
+
+async function loadWhitelist() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayWhitelist(data.data);
+        } else {
+            document.getElementById('whitelist-list').innerHTML = 
+                '<li style="color: #f56565;">Error loading whitelist: ' + data.error + '</li>';
+        }
+    } catch (error) {
+        console.error('Error loading whitelist:', error);
+        document.getElementById('whitelist-list').innerHTML = 
+            '<li style="color: #f56565;">Error loading whitelist</li>';
+    }
+}
+
+function displayWhitelist(ips) {
+    const container = document.getElementById('whitelist-list');
+    
+    if (ips.length === 0) {
+        container.innerHTML = '<li style="color: #718096; font-style: italic;">No whitelisted IPs</li>';
+        return;
+    }
+    
+    let html = '';
+    ips.forEach(ip => {
+        html += `
+            <li class="ip-item">
+                <span class="ip-address">${ip}</span>
+                <button class="btn btn-danger" onclick="removeFromWhitelist('${ip}')">
+                    Remove
+                </button>
+            </li>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+async function addToWhitelist(ip) {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ip: ip })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(`IP ${ip} added to whitelist`, 'success');
+            document.getElementById('ip-address').value = '';
+            loadWhitelist();
+        } else {
+            showAlert(`Failed to add IP: ${data.error}`, 'danger');
+        }
+    } catch (error) {
+        console.error('Error adding to whitelist:', error);
+        showAlert('Error adding to whitelist', 'danger');
+    }
+}
+
+async function removeFromWhitelist(ip) {
+    if (!confirm(`Are you sure you want to remove ${ip} from whitelist?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/whitelist/', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ip: ip })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(`IP ${ip} removed from whitelist`, 'success');
+            loadWhitelist();
+        } else {
+            showAlert(`Failed to remove IP: ${data.error}`, 'danger');
+        }
+    } catch (error) {
+        console.error('Error removing from whitelist:', error);
+        showAlert('Error removing from whitelist', 'danger');
+    }
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        max-width: 400px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: ${type === 'success' ? '#48bb78' : '#f56565'};
+    `;
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+  </div>
+</div>
+{% endblock %}

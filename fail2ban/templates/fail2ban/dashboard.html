@@ -1,0 +1,75 @@
+{% extends "baseTemplate/index.html" %}
+{% block title %}Fail2ban Security Manager{% endblock %}
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Fail2ban Security Manager</h1>
+    <p>Monitor jails, bans, and service health. Open Settings for auto-ban and full controls.</p>
+    <div class="cpui-meta">
+      <span class="cpui-chip">Dashboard</span>
+      <span class="cpui-chip" id="serviceChip">Service: …</span>
+    </div>
+    <div class="cpui-actions">
+      <a class="cpui-btn" href="/plugins/fail2ban/settings/">Open settings</a>
+      <button type="button" class="cpui-btn cpui-btn-ghost" id="btnRefresh">Refresh status</button>
+    </div>
+  </div>
+
+  <div class="cpui-grid" id="statusGrid">
+    <div class="cpui-card"><div class="cpui-stat-label">Service</div><div class="cpui-stat" id="serviceStatus">-</div></div>
+    <div class="cpui-card"><div class="cpui-stat-label">Jails</div><div class="cpui-stat" id="jailCount">-</div></div>
+    <div class="cpui-card"><div class="cpui-stat-label">Banned IPs</div><div class="cpui-stat" id="bannedCount">-</div></div>
+    <div class="cpui-card"><div class="cpui-stat-label">Failed attempts</div><div class="cpui-stat" id="failedCount">-</div></div>
+  </div>
+
+  <div class="cpui-section" style="margin-top:14px">
+    <div class="cpui-card">
+      <h2 style="margin-top:0">Quick links</h2>
+      <div class="cpui-actions">
+        <a class="cpui-btn cpui-btn-ghost" href="/plugins/fail2ban/settings/">Settings</a>
+        <a class="cpui-btn cpui-btn-ghost" href="/plugins/fail2ban/jails/">Jails</a>
+        <a class="cpui-btn cpui-btn-ghost" href="/plugins/fail2ban/banned-ips/">Banned IPs</a>
+        <a class="cpui-btn cpui-btn-ghost" href="/plugins/fail2ban/logs/">Logs</a>
+      </div>
+      <p id="dashMsg" class="cpui-sub" style="margin-top:12px"></p>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  async function api(url) {
+    const res = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+    const ct = (res.headers.get('content-type') || '');
+    if (!ct.includes('application/json')) {
+      throw new Error('Expected JSON from ' + url + ' (got ' + ct + ', HTTP ' + res.status + ')');
+    }
+    return res.json();
+  }
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (val === undefined || val === null || val === '') ? '-' : String(val);
+  }
+  async function loadStatus() {
+    const msg = document.getElementById('dashMsg');
+    try {
+      const data = await api('/plugins/fail2ban/api/status/');
+      if (!data || !data.success) throw new Error((data && data.error) || 'Status request failed');
+      const d = data.data || {};
+      const running = d.running || (d.status && String(d.status).toLowerCase().indexOf('run') >= 0);
+      setText('serviceStatus', running ? 'Running' : (d.status || 'Unknown'));
+      setText('jailCount', d.jail_count != null ? d.jail_count : (d.jails ? d.jails.length : '-'));
+      setText('bannedCount', d.banned_count != null ? d.banned_count : d.total_banned);
+      setText('failedCount', d.failed_count != null ? d.failed_count : d.total_failed);
+      const chip = document.getElementById('serviceChip');
+      if (chip) chip.textContent = 'Service: ' + (running ? 'Running' : 'Stopped');
+      if (msg) msg.textContent = '';
+    } catch (e) {
+      if (msg) msg.textContent = e.message || String(e);
+    }
+  }
+  document.getElementById('btnRefresh').addEventListener('click', loadStatus);
+  loadStatus();
+})();
+</script>
+{% endblock %}

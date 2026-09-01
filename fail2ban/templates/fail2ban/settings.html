@@ -1,0 +1,154 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Fail2ban settings</h1>
+    <p>Classic Fail2ban settings page.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="settings-container">
+    <div class="page-header">
+        <h1>⚙️ Settings Management</h1>
+        <p>Configure fail2ban settings and preferences</p>
+    </div>
+
+    <div class="card">
+        <h3>General Settings</h3>
+        <form id="settings-form">
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="email-notifications" checked>
+                    Enable Email Notifications
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="auto-ban-threshold">Auto Ban Threshold:</label>
+                <input type="number" id="auto-ban-threshold" value="5" min="1" max="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="ban-duration">Ban Duration (seconds):</label>
+                <input type="number" id="ban-duration" value="3600" min="60" max="86400">
+            </div>
+            
+            <div class="form-group">
+                <label for="enabled-jails">Enabled Jails (comma-separated):</label>
+                <input type="text" id="enabled-jails" value="sshd,openlitespeed,cyberpanel">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    
+    document.getElementById('settings-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveSettings();
+    });
+});
+
+async function loadSettings() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/settings/');
+        const data = await response.json();
+        
+        if (data.success) {
+            const settings = data.data;
+            document.getElementById('email-notifications').checked = settings.email_notifications;
+            document.getElementById('auto-ban-threshold').value = settings.auto_ban_threshold;
+            document.getElementById('ban-duration').value = settings.ban_duration;
+            document.getElementById('enabled-jails').value = settings.enabled_jails;
+        } else {
+            showAlert('Error loading settings: ' + data.error, 'danger');
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        showAlert('Error loading settings', 'danger');
+    }
+}
+
+async function saveSettings() {
+    try {
+        const settings = {
+            email_notifications: document.getElementById('email-notifications').checked,
+            auto_ban_threshold: parseInt(document.getElementById('auto-ban-threshold').value),
+            ban_duration: parseInt(document.getElementById('ban-duration').value),
+            enabled_jails: document.getElementById('enabled-jails').value
+        };
+        
+        const response = await fetch('/plugins/fail2ban/api/settings/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('Settings saved successfully', 'success');
+        } else {
+            showAlert('Failed to save settings: ' + data.error, 'danger');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showAlert('Error saving settings', 'danger');
+    }
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        max-width: 400px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: ${type === 'success' ? '#48bb78' : '#f56565'};
+    `;
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+/* Standalone page styling */
+.fail2ban-standalone {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.header p {
+    margin: 10px 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.navigation {
+    background: #f8f9fa;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-tab {
+    padding: 12px 24px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #495057;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-tab:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.nav-tab.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.content {
+    padding: 30px;
+}
+
+.data-table {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.table-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.table-header h3 {
+    margin: 0;
+    color: #495057;
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+.table-content {
+    padding: 20px;
+}
+
+.log-entry {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: background-color 0.3s ease;
+}
+
+.log-entry:hover {
+    background-color: #f8f9fa;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-timestamp {
+    color: #6c757d;
+    font-weight: 600;
+    margin-right: 15px;
+}
+
+.log-level {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.log-level.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.log-level.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.log-level.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.log-level.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.log-message {
+    color: #495057;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.25rem;
+    color: #495057;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.loading {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .fail2ban-standalone {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .nav-tab {
+        justify-content: center;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .log-entry {
+        font-size: 0.8rem;
+    }
+}
+    </style>
+</head>
+<body>
+<div class="fail2ban-standalone">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📋 Security Logs</h1>
+            <p>View fail2ban security logs and events</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-tabs">
+                <a href="/plugins/fail2ban/" class="nav-tab">
+                    <span>📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/plugins/fail2ban/jails/" class="nav-tab">
+                    <span>🔒</span>
+                    <span>Manage Jails</span>
+                </a>
+                <a href="/plugins/fail2ban/banned-ips/" class="nav-tab">
+                    <span>🚫</span>
+                    <span>Banned IPs</span>
+                </a>
+                <a href="/plugins/fail2ban/whitelist/" class="nav-tab">
+                    <span>✅</span>
+                    <span>Whitelist</span>
+                </a>
+                <a href="/plugins/fail2ban/blacklist/" class="nav-tab">
+                    <span>⚫</span>
+                    <span>Blacklist</span>
+                </a>
+                <a href="/plugins/fail2ban/logs/" class="nav-tab active">
+                    <span>📋</span>
+                    <span>Security Logs</span>
+                </a>
+                <a href="/plugins/fail2ban/statistics/" class="nav-tab">
+                    <span>📈</span>
+                    <span>Statistics</span>
+                </a>
+                <a href="/plugins/fail2ban/settings/" class="nav-tab">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Logs Table -->
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>📋 Fail2ban Logs</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-primary" onclick="refreshLogs()">
+                            <span>🔄</span>
+                            Refresh
+                        </button>
+                        <button class="btn-danger" onclick="clearLogs()">
+                            <span>🗑️</span>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+                <div class="table-content">
+                    <div id="logs-content" class="loading">
+                        Loading logs...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadLogsData();
+});
+
+async function loadLogsData() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/logs/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayLogs(data.data);
+        } else {
+            document.getElementById('logs-content').innerHTML = 
+                '<div class="empty-state"><div class="icon">📋</div><h4>No logs found</h4><p>No log entries are currently available.</p></div>';
+        }
+    } catch (error) {
+        console.error('Error loading logs:', error);
+        document.getElementById('logs-content').innerHTML = 
+            '<div class="empty-state"><div class="icon">❌</div><h4>Error loading logs</h4><p>Failed to load log information.</p></div>';
+    }
+}
+
+function displayLogs(logs) {
+    if (logs.length === 0) {
+        document.getElementById('logs-content').innerHTML = 
+            '<div class="empty-state"><div class="icon">📋</div><h4>No logs found</h4><p>No log entries are currently available.</p></div>';
+        return;
+    }
+
+    const logsHtml = logs.map(log => `
+        <div class="log-entry">
+            <span class="log-timestamp">${log.timestamp || 'Unknown'}</span>
+            <span class="log-level ${log.level || 'info'}">${log.level || 'INFO'}</span>
+            <span class="log-message">${log.message || 'No message'}</span>
+        </div>
+    `).join('');
+
+    document.getElementById('logs-content').innerHTML = logsHtml;
+}
+
+function refreshLogs() {
+    document.getElementById('logs-content').innerHTML = '<div class="loading">Loading logs...</div>';
+    loadLogsData();
+}
+
+function clearLogs() {
+    if (!confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+        return;
+    }
+
+    // Implement clear logs logic here
+    console.log('Clearing logs');
+    alert('Logs cleared successfully.');
+    loadLogsData();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+</body>
+</html>

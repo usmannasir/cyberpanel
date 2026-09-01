@@ -1,0 +1,160 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "pluginHolder/cpui_head.html" %}
+<div class="cpui" id="cpuiApp">
+  <div class="cpui-hero">
+    <h1>Banned IPs</h1>
+    <p>Currently banned addresses across jails.</p>
+    <div class="cpui-meta"><span class="cpui-chip">Security</span></div>
+  </div>
+  <div class="cpui-section">
+<div class="banned-ips-container">
+    <div class="page-header">
+        <h1>🚫 Banned IPs Management</h1>
+        <p>View and manage currently banned IP addresses</p>
+    </div>
+
+    <div class="table-container">
+        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0;">
+            <h3>Currently Banned IPs</h3>
+        </div>
+        <div id="banned-ips-table">
+            <div style="padding: 40px; text-align: center;">
+                <div class="loading"></div>
+                <p>Loading banned IPs...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadBannedIPs() {
+    try {
+        const response = await fetch('/plugins/fail2ban/api/banned-ips/');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBannedIPs(data.data);
+        } else {
+            document.getElementById('banned-ips-table').innerHTML = 
+                '<div style="padding: 40px; text-align: center; color: #f56565;">Error loading banned IPs: ' + data.error + '</div>';
+        }
+    } catch (error) {
+        console.error('Error loading banned IPs:', error);
+        document.getElementById('banned-ips-table').innerHTML = 
+            '<div style="padding: 40px; text-align: center; color: #f56565;">Error loading banned IPs</div>';
+    }
+}
+
+function displayBannedIPs(bannedIPs) {
+    const container = document.getElementById('banned-ips-table');
+    
+    if (bannedIPs.length === 0) {
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #718096;">No banned IPs found</div>';
+        return;
+    }
+    
+    let html = '<table class="table"><thead><tr><th>IP Address</th><th>Jail</th><th>Banned At</th><th>Actions</th></tr></thead><tbody>';
+    
+    bannedIPs.forEach(ip => {
+        html += `
+            <tr>
+                <td style="font-family: monospace; font-weight: 600;">${ip.ip}</td>
+                <td>${ip.jail}</td>
+                <td>${ip.banned_at}</td>
+                <td>
+                    <button class="btn btn-success" onclick="unbanIP('${ip.ip}', '${ip.jail}')">
+                        ✅ Unban
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+async function unbanIP(ip, jail) {
+    if (!confirm(`Are you sure you want to unban ${ip}?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/plugins/fail2ban/api/unban-ip/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                ip: ip,
+                jail: jail
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(`IP ${ip} unbanned successfully`, 'success');
+            loadBannedIPs();
+        } else {
+            showAlert(`Failed to unban IP: ${data.error}`, 'danger');
+        }
+    } catch (error) {
+        console.error('Error unbanning IP:', error);
+        showAlert('Error unbanning IP', 'danger');
+    }
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        max-width: 400px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: ${type === 'success' ? '#48bb78' : '#f56565'};
+    `;
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadBannedIPs();
+});
+</script>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+#!/usr/bin/python3
+"""
+Pre-installation script for Fail2ban Security Manager Plugin
+Executes before plugin installation to prepare the system
+"""
+
+import os
+import sys
+import subprocess
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('/var/log/cyberpanel/fail2ban_plugin_pre_install.log'),
+        logging.StreamHandler()
+    ]
+)
+
+def run_command(command, description):
+    """Run a system command and log the result"""
+    try:
+        logging.info(f"Executing: {description}")
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.info(f"Success: {description}")
+            if result.stdout:
+                logging.info(f"Output: {result.stdout}")
+        else:
+            logging.error(f"Failed: {description}")
+            logging.error(f"Error: {result.stderr}")
+            return False
+        return True
+    except Exception as e:
+        logging.error(f"Exception during {description}: {str(e)}")
+        return False
+
+def check_fail2ban_installed():
+    """Check if fail2ban is installed"""
+    try:
+        result = subprocess.run(['which', 'fail2ban-client'], capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.info("Fail2ban is already installed")
+            return True
+        else:
+            logging.warning("Fail2ban is not installed, will attempt to install")
+            return False
+    except Exception as e:
+        logging.error(f"Error checking fail2ban installation: {str(e)}")
+        return False
+
+def install_fail2ban():
+    """Install fail2ban if not present"""
+    try:
+        # Detect OS and install accordingly
+        if os.path.exists('/etc/redhat-release'):
+            # RHEL/CentOS/AlmaLinux
+            logging.info("Detected RHEL-based system")
+            if not run_command('dnf install -y fail2ban', 'Installing fail2ban via dnf'):
+                return False
+        elif os.path.exists('/etc/debian_version'):
+            # Debian/Ubuntu
+            logging.info("Detected Debian-based system")
+            if not run_command('apt-get update && apt-get install -y fail2ban', 'Installing fail2ban via apt'):
+                return False
+        else:
+            logging.warning("Unknown OS, attempting generic installation")
+            if not run_command('yum install -y fail2ban', 'Installing fail2ban via yum'):
+                return False
+        
+        return True
+    except Exception as e:
+        logging.error(f"Error installing fail2ban: {str(e)}")
+        return False
+
+def create_directories():
+    """Create necessary directories"""
+    directories = [
+        '/var/log/cyberpanel/fail2ban_plugin',
+        '/etc/fail2ban/jail.d',
+        '/usr/local/CyberCP/static/fail2ban_plugin',
+    ]
+    
+    for directory in directories:
+        try:
+            os.makedirs(directory, exist_ok=True)
+            logging.info(f"Created directory: {directory}")
+        except Exception as e:
+            logging.error(f"Error creating directory {directory}: {str(e)}")
+            return False
+    
+    return True
+
+def set_permissions():
+    """Set proper permissions for directories and files"""
+    try:
+        # Set permissions for log directory
+        run_command('chmod 755 /var/log/cyberpanel/fail2ban_plugin', 'Setting log directory permissions')
+        run_command('chown -R root:root /var/log/cyberpanel/fail2ban_plugin', 'Setting log directory ownership')
+        
+        # Set permissions for fail2ban directories
+        run_command('chmod 755 /etc/fail2ban/jail.d', 'Setting fail2ban jail.d permissions')
+        run_command('chown -R root:root /etc/fail2ban/jail.d', 'Setting fail2ban jail.d ownership')
+        
+        logging.info("Permissions set successfully")
+        return True
+    except Exception as e:
+        logging.error(f"Error setting permissions: {str(e)}")
+        return False
+
+def main():
+    """Main pre-installation function"""
+    logging.info("Starting Fail2ban Plugin pre-installation...")
+    
+    # Check if fail2ban is installed
+    if not check_fail2ban_installed():
+        logging.info("Installing fail2ban...")
+        if not install_fail2ban():
+            logging.error("Failed to install fail2ban")
+            sys.exit(1)
+    
+    # Create necessary directories
+    if not create_directories():
+        logging.error("Failed to create directories")
+        sys.exit(1)
+    
+    # Set permissions
+    if not set_permissions():
+        logging.error("Failed to set permissions")
+        sys.exit(1)
+    
+    logging.info("Pre-installation completed successfully")
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
