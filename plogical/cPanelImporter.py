@@ -39,6 +39,7 @@ class cPanelImporter:
     MdBox = 0
     mainBackupPath = '/home/backup/'
 
+
     def __init__(self, backupFile, logFile):
         self.backupFile = backupFile
         self.fileName = backupFile.split('/')[-1].replace('.tar.gz', '')
@@ -289,10 +290,8 @@ class cPanelImporter:
             message = 'self.MainSite[0] %s.' % (self.MainSite[0])
             logging.statusWriter(self.logFile, message, 1)
 
-            if self.MainSite[4].find('home/') > -1:
-                self.homeDir = self.MainSite[4].replace('/home/%s/' % (self.MainSite[0]), '')
-            else:
-                self.homeDir = self.MainSite[4].replace('/home2/%s/' % (self.MainSite[0]), '')
+            homePrefix = '/%s/' % self.MainSite[0]
+            self.homeDir = self.MainSite[4].split(homePrefix, 1)[-1]
 
             message = 'self.homeDir %s.' % (self.homeDir)
             logging.statusWriter(self.logFile, message, 1)
@@ -413,13 +412,8 @@ class cPanelImporter:
                     message = 'self.MainSite[0] %s.' % (self.MainSite[0])
                     logging.statusWriter(self.logFile, message, 1)
 
-                    if self.OtherDomains[counter][4].find('home/') > -1:
-                        ChildDocRoot = self.OtherDomains[counter][4].replace('/home/%s/' % (self.MainSite[0]), '')
-                    else:
-                        ChildDocRoot = self.OtherDomains[counter][4].replace('/home2/%s/' % (self.MainSite[0]), '')
-
-
-                    #ChildDocRoot = self.OtherDomains[counter][4].replace('/home/%s/' % (self.MainSite[0]), '')
+                    homePrefix = '/%s/' % self.MainSite[0]
+                    ChildDocRoot = self.OtherDomains[counter][4].split(homePrefix, 1)[-1]
 
                     message = 'ChildDocRoot %s.' % (ChildDocRoot)
                     logging.statusWriter(self.logFile, message, 1)
