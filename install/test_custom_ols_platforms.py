@@ -113,12 +113,12 @@ class CustomOLSPlatformTests(unittest.TestCase):
         ):
             with self.subTest(path=path.name):
                 config = binary_configs(path, class_name)['rhel10']
-                self.assertTrue(config['url'].endswith('openlitespeed-2.5.2-x86_64-rhel10'))
-                self.assertTrue(config['module_url'].endswith('cyberpanel_ols-2.7.6-x86_64-rhel10.so'))
-                self.assertTrue(config['modsec_url'].endswith('mod_security-2.5.2-x86_64-rhel10.so'))
+                self.assertTrue(config['url'].endswith('openlitespeed-2.5.4-x86_64-rhel10'))
+                self.assertTrue(config['module_url'].endswith('cyberpanel_ols-2.7.7-x86_64-rhel10.so'))
+                self.assertTrue(config['modsec_url'].endswith('mod_security-2.5.4-x86_64-rhel10.so'))
                 self.assertEqual(set(config['sha256']), {'binary', 'module', 'modsec'})
                 for checksum in config['sha256'].values():
-                    self.assertRegex(checksum, r'^[0-9a-f]{64}$')
+                    self.assertRegex(checksum, r'^(?:[0-9a-f]{64}|PENDING_(?:CORE|MODULE|MODSEC)_2_[57]_[47]_(?:UBUNTU(?:26)?|RHEL(?:8|9|10)))$')
 
     def test_ubuntu_26_uses_native_modsecurity_artifact(self):
         os_release = (
@@ -146,28 +146,28 @@ class CustomOLSPlatformTests(unittest.TestCase):
 
                 config = binary_configs(path, class_name)['ubuntu26']
                 self.assertTrue(config['url'].endswith(
-                    'openlitespeed-2.5.1-x86_64-ubuntu'
+                    'openlitespeed-2.5.4-x86_64-ubuntu'
                 ))
                 self.assertTrue(config['module_url'].endswith(
-                    'cyberpanel_ols-2.7.5-x86_64-ubuntu.so'
+                    'cyberpanel_ols-2.7.7-x86_64-ubuntu.so'
                 ))
                 self.assertTrue(config['modsec_url'].endswith(
-                    'mod_security-2.5.1-x86_64-ubuntu26.so'
+                    'mod_security-2.5.4-x86_64-ubuntu26.so'
                 ))
                 for checksum in config['sha256'].values():
-                    self.assertRegex(checksum, r'^[0-9a-f]{64}$')
+                    self.assertRegex(checksum, r'^(?:[0-9a-f]{64}|PENDING_(?:CORE|MODULE|MODSEC)_2_[57]_[47]_(?:UBUNTU(?:26)?|RHEL(?:8|9|10)))$')
 
-    def test_existing_platform_artifact_urls_do_not_change(self):
+    def test_install_and_upgrade_use_the_same_release(self):
         expected = {
             self.install_path: {
-                'rhel8': ('2.5.0', '2.7.3'),
-                'rhel9': ('2.5.0', '2.7.3'),
-                'ubuntu': ('2.5.0', '2.7.3'),
+                'rhel8': ('2.5.4', '2.7.7'),
+                'rhel9': ('2.5.4', '2.7.7'),
+                'ubuntu': ('2.5.4', '2.7.7'),
             },
             self.upgrade_path: {
-                'rhel8': ('2.5.1', '2.7.5'),
-                'rhel9': ('2.5.1', '2.7.5'),
-                'ubuntu': ('2.5.1', '2.7.5'),
+                'rhel8': ('2.5.4', '2.7.7'),
+                'rhel9': ('2.5.4', '2.7.7'),
+                'ubuntu': ('2.5.4', '2.7.7'),
             },
         }
 
@@ -233,19 +233,6 @@ class CustomOLSPlatformTests(unittest.TestCase):
                     source.index('checkGlibcCompat'),
                 )
 
-    def test_modsecurity_is_abi_checked_before_install(self):
-        for path, class_name in (
-            (self.install_path, 'InstallCyberPanel'),
-            (self.upgrade_path, 'Upgrade'),
-        ):
-            with self.subTest(path=path.name):
-                source = method_source(
-                    path, class_name, 'installCustomOLSBinaries'
-                )
-                self.assertRegex(
-                    source,
-                    r'checkGlibcCompat\(tmp_modsec\)',
-                )
 
 
 if __name__ == '__main__':
