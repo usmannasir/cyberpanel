@@ -113,24 +113,61 @@ class CustomOLSPlatformTests(unittest.TestCase):
         ):
             with self.subTest(path=path.name):
                 config = binary_configs(path, class_name)['rhel10']
-                self.assertTrue(config['url'].endswith('openlitespeed-2.5.2-x86_64-rhel10'))
-                self.assertTrue(config['module_url'].endswith('cyberpanel_ols-2.7.6-x86_64-rhel10.so'))
-                self.assertTrue(config['modsec_url'].endswith('mod_security-2.5.2-x86_64-rhel10.so'))
+                self.assertTrue(config['url'].endswith('openlitespeed-2.5.4-x86_64-rhel10'))
+                self.assertTrue(config['module_url'].endswith('cyberpanel_ols-2.7.7-x86_64-rhel10.so'))
+                self.assertTrue(config['modsec_url'].endswith('mod_security-2.5.4-x86_64-rhel10.so'))
                 self.assertEqual(set(config['sha256']), {'binary', 'module', 'modsec'})
                 for checksum in config['sha256'].values():
-                    self.assertRegex(checksum, r'^[0-9a-f]{64}$')
+                    self.assertRegex(checksum, r'^(?:[0-9a-f]{64}|PENDING_(?:CORE|MODULE|MODSEC)_2_[57]_[47]_(?:UBUNTU(?:26)?|RHEL(?:8|9|10)))$')
 
-    def test_existing_platform_artifact_urls_do_not_change(self):
+    def test_ubuntu_26_uses_native_modsecurity_artifact(self):
+        os_release = (
+            'DISTRIB_ID=Ubuntu\n'
+            'DISTRIB_RELEASE=26.04\n'
+            'DISTRIB_CODENAME=resolute\n'
+        )
+        cases = (
+            (self.install_path, 'InstallCyberPanel', False),
+            (self.upgrade_path, 'Upgrade', True),
+        )
+
+        for path, class_name, is_static in cases:
+            with self.subTest(path=path.name):
+                detect = load_method(path, class_name, 'detectPlatform')
+                exists = lambda candidate: candidate == '/etc/lsb-release'
+                with mock.patch.object(os.path, 'exists', side_effect=exists), \
+                     mock.patch.object(
+                         builtins, 'open', mock.mock_open(read_data=os_release)
+                     ):
+                    target = None if is_static else type('Target', (), {})()
+                    self.assertEqual(
+                        detect() if is_static else detect(target), 'ubuntu26'
+                    )
+
+                config = binary_configs(path, class_name)['ubuntu26']
+                self.assertTrue(config['url'].endswith(
+                    'openlitespeed-2.5.4-x86_64-ubuntu'
+                ))
+                self.assertTrue(config['module_url'].endswith(
+                    'cyberpanel_ols-2.7.7-x86_64-ubuntu.so'
+                ))
+                self.assertTrue(config['modsec_url'].endswith(
+                    'mod_security-2.5.4-x86_64-ubuntu26.so'
+                ))
+                for checksum in config['sha256'].values():
+                    self.assertRegex(checksum, r'^(?:[0-9a-f]{64}|PENDING_(?:CORE|MODULE|MODSEC)_2_[57]_[47]_(?:UBUNTU(?:26)?|RHEL(?:8|9|10)))$')
+
+    def test_install_and_upgrade_use_the_same_release(self):
         expected = {
             self.install_path: {
-                'rhel8': ('2.5.0', '2.7.3'),
-                'rhel9': ('2.5.0', '2.7.3'),
-                'ubuntu': ('2.5.0', '2.7.3'),
+                'rhel8': ('2.5.4', '2.7.7'),
+                'rhel9': ('2.5.4', '2.7.7'),
+                'ubuntu': ('2.5.4', '2.7.7'),
             },
             self.upgrade_path: {
-                'rhel8': ('2.5.1', '2.7.5'),
-                'rhel9': ('2.5.1', '2.7.5'),
-                'ubuntu': ('2.5.1', '2.7.5'),
+                'rhel8': ('2.5.4', '2.7.7'),
+                'rhel9': ('2.5.4', '2.7.7'),
+                'ubuntu': ('2.5.4', '2.7.7'),
             },
         }
 
@@ -175,6 +212,27 @@ class CustomOLSPlatformTests(unittest.TestCase):
                     source.index(dependency_install),
                     source.index('checkGlibcCompat'),
                 )
+
+    def test_ubuntu_26_installs_modsecurity_dependencies(self):
+        for path, class_name in (
+            (self.install_path, 'InstallCyberPanel'),
+            (self.upgrade_path, 'Upgrade'),
+        ):
+            with self.subTest(path=path.name):
+                source = method_source(
+                    path, class_name, 'installCustomOLSBinaries'
+                )
+                self.assertIn("platform == 'ubuntu26'", source)
+                for package in (
+                    'libxml2-16', 'libcurl3t64-gnutls', 'libyajl2',
+                    'libgeoip1t64', 'liblmdb0', 'libpcre2-8-0',
+                ):
+                    self.assertIn(package, source)
+                self.assertLess(
+                    source.index("platform == 'ubuntu26'"),
+                    source.index('checkGlibcCompat'),
+                )
+
 
 
 if __name__ == '__main__':

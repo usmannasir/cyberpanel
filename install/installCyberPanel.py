@@ -217,19 +217,30 @@ class InstallCyberPanel:
             return False
 
     def detectPlatform(self):
-        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
+        """Detect OS platform for binary selection."""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
                 with open('/etc/lsb-release', 'r') as f:
                     content = f.read()
                     if 'Ubuntu' in content or 'ubuntu' in content:
-                        # The 'ubuntu' artifact is built on 22.04 (needs GLIBC_2.34) and
-                        # does NOT run on Ubuntu 20.04 (glibc 2.31, ticket #OXHTOK7AH).
-                        # Skip the overlay there and keep stock OLS.
-                        if 'DISTRIB_RELEASE=20.04' in content:
-                            InstallCyberPanel.stdOut("Ubuntu 20.04 detected: custom OLS binary requires GLIBC_2.34 (22.04+); keeping stock OLS", 1)
+                        release = re.search(
+                            r'DISTRIB_RELEASE=(\d+)\.(\d+)', content
+                        )
+                        releaseVersion = (
+                            (int(release.group(1)), int(release.group(2)))
+                            if release else None
+                        )
+                        if releaseVersion and releaseVersion < (22, 4):
+                            InstallCyberPanel.stdOut(
+                                "Ubuntu %s.%s detected: custom OLS binary "
+                                "requires GLIBC_2.34 (Ubuntu 22.04+); keeping "
+                                "stock OLS" % release.groups(),
+                                1,
+                            )
                             return 'skip'
+                        if releaseVersion and releaseVersion[0] == 26:
+                            return 'ubuntu26'
                         return 'ubuntu'
 
             # Check for RHEL-based distributions
@@ -295,15 +306,9 @@ class InstallCyberPanel:
             return False
 
     def verifyChecksum(self, file_path, expected_sha256):
-        """Verify a downloaded file against an expected SHA256.
-
-        Returns True when the hash matches OR when no expected hash is
-        configured (verification is then skipped and the size-check still
-        applies). Returns False only on a real mismatch, so callers can
-        abort and keep the existing/stock binary.
-        """
-        if not expected_sha256:
-            return True  # no published hash to check against; skip
+        """Require a published SHA256 before accepting a release artifact."""
+        if not expected_sha256 or not re.fullmatch(r'[0-9a-fA-F]{64}', expected_sha256):
+            return False
         try:
             import hashlib
             h = hashlib.sha256()
@@ -367,53 +372,41 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut("Custom binary installation skipped for this platform; using standard OLS", 1)
                 return True  # Not a failure, just skip
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v2.5.0 — all features config-driven, static linking)
+            # Paired core 2.5.4 and module 2.7.7 release artifacts.
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
-            # Module v2.7.3: preserves Content-Encoding on LSCache hits
+            # The ABI marker prevents incompatible stock-core loading.
             # EL10 uses its dedicated ABI-matched release set. Existing platform
-            # mappings remain pinned to their previously published artifacts.
-            BINARY_CONFIGS = {
-                'rhel8': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-rhel8',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-rhel8.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.0-x86_64-rhel8.so',
-                    'sha256': {
-                        'binary': '48c8423edfaec3fe1b6eee118925ed3ac55314c53e9bdf2e5bdd4960c4806a62',
-                        'module': '83111c8a3310b40e998070b07002a205975a06e09c6e0f8e8054e8d18b8682e1',
-                        'modsec': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2',
-                    },
-                },
-                'rhel9': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-rhel9',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-rhel9.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.0-x86_64-rhel9.so',
-                    'sha256': {
-                        'binary': '780163ee7c0304c9b1db6abaeeaca2e58dbfc05436de776e921ca1d493462596',
-                        'module': 'a189da7ec5c09c5ba836209aa10746b691bbef21010cbe4c4c622614cf03c5e1',
-                        'modsec': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629',
-                    },
-                },
-                'rhel10': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.2-x86_64-rhel10',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.6-x86_64-rhel10.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.2-x86_64-rhel10.so',
-                    'sha256': {
-                        'binary': '09de31ba2c2c24f30445a0d8565598b9a1758bd2d8abbe4149b4ad35eb60beda',
-                        'module': 'bc84649087112e3dab79bf2b203ec68f08e2d1b23f31d415fd9ee6e4035ff952',
-                        'modsec': '3e4b86a2bcb929c1dd2be4da6191448d67c2db39a5659d544015b9dbc024698f',
-                    },
-                },
-                'ubuntu': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.0-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.3-x86_64-ubuntu.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.0-x86_64-ubuntu.so',
-                    'sha256': {
-                        'binary': '2a836d4bf17fe5152d15dd60fd3817c1d3c294b48b35f12b776fa2efb7771422',
-                        'module': 'f1c1ab881625fa6fe6545e45283220e86245a1e3c96e29c4d86af9ab15fd6c2b',
-                        'modsec': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd',
-                    },
-                }
-            }
+            # mappings use the same release with native runtime dependencies.
+            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel8',
+                       'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel8.so',
+                       'sha256': {'binary': 'b28184b052a190af7036e809e672782454fc4e2feaa3ef46ca9806dbdefd0a6d',
+                                  'module': 'dd2285e97a7d1a5352a27e1f2384d33ff7aa67b0e210894b4cb1e15acd5fb0d9',
+                                  'modsec': 'cfdf61bb3e0115fbcd172a5dd55fe107a8e17888711a31eec25d34b94df3bb6c'}},
+             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel9',
+                       'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel9.so',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel9.so',
+                       'sha256': {'binary': 'efa6d755a714dc334b9e7a1f92cc7da6685b925ca369f0738c03f8e971b19987',
+                                  'module': '69e7ef1c4edadd013c9fcc656fd19150cb92a04e2b96bd6d133cf58d4a08ef42',
+                                  'modsec': 'eb67cce467b29b73f70f798db8e5097b13e8c264a83b146bac601bbd62399b0f'}},
+             'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel10',
+                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel10.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel10.so',
+                        'sha256': {'binary': '9b40f76a9a184cbe0cbaff0368e77b22c28729842fe5f723a81343cabf1d79f8',
+                                   'module': 'edb2b56e21d320a39780cb8d07088399ca57a23cd16851937c5258c0b11f4f4f',
+                                   'modsec': 'a7d8131bf7fa9b14286a088a1a9eb8f0bca15de991c79d6173ac0f274dcd9bcf'}},
+             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-ubuntu',
+                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu.so',
+                        'sha256': {'binary': '6f6730cbadddde643fe10462050fa3f1eb5a8e156b76f1267866fc0018b1d0ae',
+                                   'module': '9d51e9fa5d46a21a171ae870e72d23ad2ff785fe4635a900627dac16ec012bbe',
+                                   'modsec': '0714c9e43781d51ffab5ee4faf2b4506b68cc0f9483285bfa8a8d334d0f96172'}},
+             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-ubuntu',
+                          'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu26.so',
+                          'sha256': {'binary': '6f6730cbadddde643fe10462050fa3f1eb5a8e156b76f1267866fc0018b1d0ae',
+                                     'module': '9d51e9fa5d46a21a171ae870e72d23ad2ff785fe4635a900627dac16ec012bbe',
+                                     'modsec': '5f2f285b667611a6fd3dcb91f5790ead0b096afc43ca5f5507345dd05f2bd8a5'}}}
 
             config = BINARY_CONFIGS.get(platform)
             if not config:
@@ -427,182 +420,135 @@ class InstallCyberPanel:
                     1,
                 )
                 self.install_package('udns')
+            elif platform == 'ubuntu26':
+                InstallCyberPanel.stdOut(
+                    "Installing Ubuntu 26 ModSecurity runtime dependencies...",
+                    1,
+                )
+                for package in (
+                    'libxml2-16', 'libcurl3t64-gnutls', 'libyajl2',
+                    'libgeoip1t64', 'liblmdb0', 'libpcre2-8-0',
+                ):
+                    self.install_package(package)
 
-            OLS_BINARY_URL = config['url']
-            MODULE_URL = config['module_url']
-            MODSEC_URL = config.get('modsec_url')
-            SHA256 = config.get('sha256', {})
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
+            control = '/usr/local/lsws/bin/lswsctrl'
+            # A fresh installation includes WAF; upgrades preserve its installed state.
+            required = [
+                ('binary', config.get('url'), OLS_BINARY_PATH, 0o755, 'openlitespeed.backup'),
+                ('module', config.get('module_url'), MODULE_PATH, 0o644, 'cyberpanel_ols.so.backup'),
+            ]
+            required.append(('modsec', config.get('modsec_url'), MODSEC_PATH,
+                             0o644, 'mod_security.so.backup'))
 
-            # Create backup
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            backup_dir = f"/usr/local/lsws/backup-{timestamp}"
+            import tempfile
+            import re
 
-            try:
-                os.makedirs(backup_dir, exist_ok=True)
-                if os.path.exists(OLS_BINARY_PATH):
-                    shutil.copy2(OLS_BINARY_PATH, f"{backup_dir}/openlitespeed.backup")
-                    InstallCyberPanel.stdOut(f"Backup created at: {backup_dir}", 1)
-                # Also backup existing ModSecurity if it exists
-                if os.path.exists(MODSEC_PATH):
-                    shutil.copy2(MODSEC_PATH, f"{backup_dir}/mod_security.so.backup")
-            except Exception as e:
-                InstallCyberPanel.stdOut(f"WARNING: Could not create backup: {e}", 1)
+            def running():
+                result = subprocess.run([control, 'status'], stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
+                match = re.search(r'is running with PID ([1-9][0-9]*)\.', result.stdout or '')
+                if not match:
+                    if 'is not running.' in (result.stdout or ''):
+                        return False
+                    raise RuntimeError('Cannot determine OpenLiteSpeed service state')
+                try:
+                    if os.path.samefile('/proc/%s/exe' % match.group(1), OLS_BINARY_PATH):
+                        return True
+                except OSError:
+                    pass
+                raise RuntimeError('OpenLiteSpeed PID does not identify the installed executable')
 
-            # Download binaries to temp location
-            tmp_binary = "/tmp/openlitespeed-custom"
-            tmp_module = "/tmp/cyberpanel_ols.so"
-            tmp_modsec = "/tmp/mod_security.so"
+            # Keep downloads private and validate the complete required set before
+            # stopping the service or replacing any live bundle file.
+            with tempfile.TemporaryDirectory(prefix='cyberpanel-ols-') as staging:
+                downloads = {}
+                for kind, url, target, mode, backup_name in required:
+                    candidate = os.path.join(staging, kind)
+                    if (not url or not self.downloadCustomBinary(url, candidate) or
+                            not self.verifyChecksum(candidate, config['sha256'].get(kind)) or
+                            not self.checkGlibcCompat(candidate)):
+                        InstallCyberPanel.stdOut('ERROR: Required %s failed download, checksum or ABI verification; keeping the existing OLS bundle' % kind, 1)
+                        return False
+                    downloads[kind] = candidate
 
-            InstallCyberPanel.stdOut("Downloading custom binaries...", 1)
-
-            # Download OpenLiteSpeed binary
-            if not self.downloadCustomBinary(OLS_BINARY_URL, tmp_binary):
-                InstallCyberPanel.stdOut("ERROR: Failed to download or verify OLS binary", 1)
-                InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
-                return True  # Not fatal, continue with standard OLS
-
-            # Verify integrity (SHA256) and ABI compatibility (ldd) before touching the live install
-            if not self.verifyChecksum(tmp_binary, SHA256.get('binary')):
-                InstallCyberPanel.stdOut("ERROR: OLS binary failed checksum verification; keeping stock OLS", 1)
-                return True  # Not fatal, continue with standard OLS
-            if not self.checkGlibcCompat(tmp_binary):
-                InstallCyberPanel.stdOut("ERROR: OLS binary is not ABI-compatible with this OS; keeping stock OLS", 1)
-                return True  # Not fatal, continue with standard OLS
-
-            # Download module (if available)
-            module_downloaded = False
-            if MODULE_URL:
-                if not self.downloadCustomBinary(MODULE_URL, tmp_module):
-                    InstallCyberPanel.stdOut("ERROR: Failed to download or verify module", 1)
-                    InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
-                    return True  # Not fatal, continue with standard OLS
-                if not self.verifyChecksum(tmp_module, SHA256.get('module')):
-                    InstallCyberPanel.stdOut("ERROR: Module failed checksum verification; keeping stock OLS", 1)
-                    return True  # Not fatal, continue with standard OLS
-                module_downloaded = True
-            else:
-                InstallCyberPanel.stdOut("Note: No CyberPanel module for this platform", 1)
-
-            # Download the matching ModSecurity WAF module (ABI-compatible with the
-            # custom OLS binary). Non-fatal: if it fails the rest of the install proceeds.
-            modsec_downloaded = False
-            if MODSEC_URL:
-                InstallCyberPanel.stdOut("Downloading ModSecurity WAF module...", 1)
-                if self.downloadCustomBinary(MODSEC_URL, tmp_modsec):
-                    if self.verifyChecksum(tmp_modsec, SHA256.get('modsec')):
-                        modsec_downloaded = True
+                # Backups and replacement files share the installation filesystem,
+                # so a successful backup is mandatory and every replacement is atomic.
+                from datetime import datetime
+                backup_dir = tempfile.mkdtemp(
+                    prefix='backup-' + datetime.now().strftime('%Y%m%d-%H%M%S-'),
+                    dir='/usr/local/lsws')
+                previous = {}
+                for kind, url, target, mode, backup_name in required:
+                    previous[target] = os.path.exists(target)
+                    if previous[target]:
+                        shutil.copy2(target, os.path.join(backup_dir, backup_name))
                     else:
-                        InstallCyberPanel.stdOut("WARNING: ModSecurity failed checksum verification; continuing without it", 1)
-                else:
-                    InstallCyberPanel.stdOut("WARNING: Failed to download ModSecurity module; continuing without it", 1)
+                        with open(os.path.join(backup_dir, backup_name + '.absent'), 'w'):
+                            pass
+                    candidate = os.path.join(backup_dir, kind + '.new')
+                    shutil.copy2(downloads[kind], candidate)
+                    os.chmod(candidate, mode)
 
-            # Install OpenLiteSpeed binary
-            InstallCyberPanel.stdOut("Installing custom binaries...", 1)
-
-            # The package starts OpenLiteSpeed immediately. Stop it before replacing
-            # the mapped executable, otherwise Linux rejects the move with ETXTBSY.
-            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
-
-            try:
-                if os.path.exists(OLS_BINARY_PATH):
-                    os.remove(OLS_BINARY_PATH)
-                shutil.move(tmp_binary, OLS_BINARY_PATH)
-                os.chmod(OLS_BINARY_PATH, 0o755)
-                InstallCyberPanel.stdOut("Installed OpenLiteSpeed binary", 1)
-            except Exception as e:
-                InstallCyberPanel.stdOut(f"ERROR: Failed to install binary: {e}", 1)
-                logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - binary install]")
-                return False
-
-            # Install module (if downloaded)
-            if module_downloaded:
+                was_running = running()
+                stopped = False
+                touched = []
                 try:
-                    os.makedirs(os.path.dirname(MODULE_PATH), exist_ok=True)
-                    shutil.move(tmp_module, MODULE_PATH)
-                    os.chmod(MODULE_PATH, 0o644)
-                    InstallCyberPanel.stdOut("Installed CyberPanel module", 1)
-                except Exception as e:
-                    InstallCyberPanel.stdOut(f"ERROR: Failed to install module: {e}", 1)
-                    logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - module install]")
-                    return False
-
-            # Install ModSecurity WAF module (if downloaded)
-            if modsec_downloaded:
-                try:
-                    os.makedirs(os.path.dirname(MODSEC_PATH), exist_ok=True)
-                    shutil.move(tmp_modsec, MODSEC_PATH)
-                    os.chmod(MODSEC_PATH, 0o644)
-                    InstallCyberPanel.stdOut("Installed ModSecurity WAF module", 1)
-                except Exception as e:
-                    InstallCyberPanel.stdOut(f"WARNING: Failed to install ModSecurity: {e}", 1)
-                    logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - modsec install]")
-                    # Non-fatal, continue
-
-            # Verify installation - test the binary actually runs before declaring success
-            if os.path.exists(OLS_BINARY_PATH):
-                if not module_downloaded or os.path.exists(MODULE_PATH):
-                    InstallCyberPanel.stdOut("Verifying new binary...", 1)
-                    try:
-                        result = subprocess.run(
-                            [OLS_BINARY_PATH, '-v'],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            universal_newlines=True,
-                            timeout=10
-                        )
-                        if result.returncode != 0:
-                            raise Exception(f"Binary test failed with exit code {result.returncode}")
-                        version_output = result.stdout if result.stdout else result.stderr
-                        if 'LiteSpeed' in version_output or 'OpenLiteSpeed' in version_output:
-                            InstallCyberPanel.stdOut("Binary version check passed", 1)
-                        else:
-                            InstallCyberPanel.stdOut("WARNING: Could not verify binary version", 1)
-                    except Exception as e:
-                        # The custom binary doesn't run here - roll back to the stock binary
-                        # that was backed up so the install is left with a working OLS.
-                        InstallCyberPanel.stdOut(f"ERROR: Binary verification failed: {e}", 1)
-                        logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - verify]")
-                        backup_binary = f"{backup_dir}/openlitespeed.backup"
-                        if os.path.exists(backup_binary):
-                            InstallCyberPanel.stdOut("Rolling back to stock OpenLiteSpeed binary...", 1)
-                            try:
-                                shutil.copy2(backup_binary, OLS_BINARY_PATH)
-                                os.chmod(OLS_BINARY_PATH, 0o755)
-                                backup_modsec = f"{backup_dir}/mod_security.so.backup"
-                                if modsec_downloaded and os.path.exists(backup_modsec):
-                                    shutil.copy2(backup_modsec, MODSEC_PATH)
-                                InstallCyberPanel.stdOut("Rollback completed; using stock OLS", 1)
-                            except Exception as rollback_err:
-                                InstallCyberPanel.stdOut(f"WARNING: Rollback may have failed: {rollback_err}", 1)
-                                logging.InstallLog.writeToFile(str(rollback_err) + " [installCustomOLSBinaries - rollback]")
-                        return True  # Not fatal - stock OLS remains in place
-
-                    InstallCyberPanel.stdOut("=" * 50, 1)
-                    InstallCyberPanel.stdOut("Custom Binaries Installed Successfully", 1)
-                    InstallCyberPanel.stdOut("Features enabled:", 1)
-                    InstallCyberPanel.stdOut("  - Static-linked cross-platform binary", 1)
-                    if module_downloaded:
-                        InstallCyberPanel.stdOut("  - Apache-style .htaccess support", 1)
-                        InstallCyberPanel.stdOut("  - php_value/php_flag directives", 1)
-                        InstallCyberPanel.stdOut("  - Enhanced header control", 1)
-                    if modsec_downloaded:
-                        InstallCyberPanel.stdOut("  - ModSecurity WAF module", 1)
-                    InstallCyberPanel.stdOut(f"Backup: {backup_dir}", 1)
-                    InstallCyberPanel.stdOut("=" * 50, 1)
+                    if was_running:
+                        stopped = True
+                        result = subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, timeout=60)
+                        if result.returncode != 0 or running():
+                            raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                    for kind, url, target, mode, backup_name in required:
+                        os.makedirs(os.path.dirname(target), exist_ok=True)
+                        touched.append((target, backup_name))
+                        os.replace(os.path.join(backup_dir, kind + '.new'), target)
+                    result = subprocess.run([OLS_BINARY_PATH, '-v'], stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
+                    if result.returncode != 0 or 'LiteSpeed' not in ((result.stdout or '') + (result.stderr or '')):
+                        raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
+                    if was_running:
+                        result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, timeout=60)
+                        time.sleep(3)
+                        if result.returncode != 0 or not running():
+                            raise RuntimeError('OpenLiteSpeed did not start with the new bundle')
+                    InstallCyberPanel.stdOut('Custom OLS bundle installed; backup: ' + backup_dir, 1)
                     return True
-
-            InstallCyberPanel.stdOut("ERROR: Installation verification failed", 1)
+                except Exception as error:
+                    InstallCyberPanel.stdOut('ERROR: %s; restoring the previous OLS bundle' % error, 1)
+                    try:
+                        if touched:
+                            # Atomic restoration is safe even if a failed start left
+                            # a mapped executable; stop before restarting the old set.
+                            try:
+                                subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE, timeout=60)
+                            except Exception:
+                                pass  # Restore files even if the control command failed.
+                            for target, backup_name in reversed(touched):
+                                if previous[target]:
+                                    restored = os.path.join(backup_dir, backup_name + '.restore')
+                                    shutil.copy2(os.path.join(backup_dir, backup_name), restored)
+                                    os.replace(restored, target)
+                                elif os.path.exists(target):
+                                    os.remove(target)
+                        if was_running and stopped:
+                            result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE, timeout=60)
+                            time.sleep(3)
+                            if result.returncode != 0 or not running():
+                                raise RuntimeError('Previous bundle restored, but OpenLiteSpeed did not restart')
+                    except Exception as rollback_error:
+                        InstallCyberPanel.stdOut('ERROR: OLS rollback requires attention: %s; backup: %s' %
+                                      (rollback_error, backup_dir), 1)
+                    return False
+        except Exception as error:
+            InstallCyberPanel.stdOut('ERROR: Custom OLS overlay aborted: %s; existing bundle retained' % error, 1)
             return False
-
-        except Exception as msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installCustomOLSBinaries]")
-            InstallCyberPanel.stdOut(f"ERROR: {msg}", 1)
-            InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
-            return True  # Non-fatal error, continue
 
     def configureCustomModule(self):
         """Configure CyberPanel module in OpenLiteSpeed config"""

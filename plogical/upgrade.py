@@ -634,7 +634,7 @@ class Upgrade:
 
     @staticmethod
     def detectPlatform():
-        """Detect OS platform for binary selection (rhel8, rhel9, rhel10, ubuntu)"""
+        """Detect OS platform for binary selection."""
         try:
             # Check for Ubuntu
             if os.path.exists('/etc/lsb-release'):
@@ -648,6 +648,8 @@ class Upgrade:
                         if release and (int(release.group(1)), int(release.group(2))) < (22, 4):
                             Upgrade.stdOut(f"Ubuntu {release.group(1)}.{release.group(2)} detected: custom OLS binary requires GLIBC_2.34 (Ubuntu 22.04+); keeping stock OLS", 0)
                             return 'skip'
+                        if release and int(release.group(1)) == 26:
+                            return 'ubuntu26'
                         return 'ubuntu'
 
             # Check for RHEL-based distributions
@@ -713,15 +715,9 @@ class Upgrade:
 
     @staticmethod
     def verifyChecksum(file_path, expected_sha256):
-        """Verify a downloaded file against an expected SHA256.
-
-        Returns True when the hash matches OR when no expected hash is
-        configured (verification is then skipped and the size-check still
-        applies). Returns False only on a real mismatch, so callers can
-        abort and keep the existing/stock binary.
-        """
-        if not expected_sha256:
-            return True  # no published hash to check against; skip
+        """Require a published SHA256 before accepting a release artifact."""
+        if not expected_sha256 or not re.fullmatch(r'[0-9a-fA-F]{64}', expected_sha256):
+            return False
         try:
             import hashlib
             h = hashlib.sha256()
@@ -786,55 +782,43 @@ class Upgrade:
                 Upgrade.stdOut("Custom binary installation skipped for this platform; using standard OLS", 0)
                 return True  # Not a failure, just skip
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v2.5.1 — all features config-driven, static linking)
+            # Paired core 2.5.4 and module 2.7.7 release artifacts.
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
             # Core v2.5.1: HttpReq::getDocRoot NULL-vhost hardening — no module can crash the worker on unmatched-Host 4xx responses
-            # Module v2.7.5: fixes the 4xx segfault on requests whose Host maps to no vhost (2.7.0-2.7.3 all affected,
+            # The ABI marker prevents incompatible stock-core loading.
             #   Cloudflare 520 storms); adds a real `ls_enabled 0` kill-switch. NEVER ship 2.7.0-2.7.3 again.
             # EL10 uses its dedicated ABI-matched release set. Existing platform
-            # mappings remain pinned to their previously published artifacts.
-            BINARY_CONFIGS = {
-                'rhel8': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-rhel8',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-rhel8.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-rhel8.so',
-                    'sha256': {
-                        'binary': 'd4ea7459997b4bed06f4a48ebd153e9dd96321e5548b9344f45adb984dfc87a0',
-                        'module': '48450ea904623110d643b85fb064d7a7da2e7713f33b3b19b71fd61f3b9a693c',
-                        'modsec': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2',
-                    },
-                },
-                'rhel9': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-rhel9',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-rhel9.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-rhel9.so',
-                    'sha256': {
-                        'binary': '28423bf1076a2d36dab9955bab71e25768f69175f09edbf4f554ddfd5b9280a5',
-                        'module': 'ed1ab032484b05d00133c0f06e99f881e56bd33d8f145e1a5110e20215bc9aa0',
-                        'modsec': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629',
-                    },
-                },
-                'rhel10': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.2-x86_64-rhel10',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.6-x86_64-rhel10.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.2-x86_64-rhel10.so',
-                    'sha256': {
-                        'binary': '09de31ba2c2c24f30445a0d8565598b9a1758bd2d8abbe4149b4ad35eb60beda',
-                        'module': 'bc84649087112e3dab79bf2b203ec68f08e2d1b23f31d415fd9ee6e4035ff952',
-                        'modsec': '3e4b86a2bcb929c1dd2be4da6191448d67c2db39a5659d544015b9dbc024698f',
-                    },
-                },
-                'ubuntu': {
-                    'url': 'https://cyberpanel.net/openlitespeed-2.5.1-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.5-x86_64-ubuntu.so',
-                    'modsec_url': 'https://cyberpanel.net/mod_security-2.5.1-x86_64-ubuntu.so',
-                    'sha256': {
-                        'binary': 'd61e9c6f474495bcbe7803783ffe301779eaaeed833a5d607e7c65aa38ace5f2',
-                        'module': '61ef59ac7a46f3c9de7ec7156bbc4359a6dc5b12b3ffb03ea986a49895b70148',
-                        'modsec': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd',
-                    },
-                }
-            }
+            # mappings use the same release with native runtime dependencies.
+            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel8',
+                       'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel8.so',
+                       'sha256': {'binary': 'b28184b052a190af7036e809e672782454fc4e2feaa3ef46ca9806dbdefd0a6d',
+                                  'module': 'dd2285e97a7d1a5352a27e1f2384d33ff7aa67b0e210894b4cb1e15acd5fb0d9',
+                                  'modsec': 'cfdf61bb3e0115fbcd172a5dd55fe107a8e17888711a31eec25d34b94df3bb6c'}},
+             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel9',
+                       'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel9.so',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel9.so',
+                       'sha256': {'binary': 'efa6d755a714dc334b9e7a1f92cc7da6685b925ca369f0738c03f8e971b19987',
+                                  'module': '69e7ef1c4edadd013c9fcc656fd19150cb92a04e2b96bd6d133cf58d4a08ef42',
+                                  'modsec': 'eb67cce467b29b73f70f798db8e5097b13e8c264a83b146bac601bbd62399b0f'}},
+             'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel10',
+                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel10.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel10.so',
+                        'sha256': {'binary': '9b40f76a9a184cbe0cbaff0368e77b22c28729842fe5f723a81343cabf1d79f8',
+                                   'module': 'edb2b56e21d320a39780cb8d07088399ca57a23cd16851937c5258c0b11f4f4f',
+                                   'modsec': 'a7d8131bf7fa9b14286a088a1a9eb8f0bca15de991c79d6173ac0f274dcd9bcf'}},
+             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-ubuntu',
+                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu.so',
+                        'sha256': {'binary': '6f6730cbadddde643fe10462050fa3f1eb5a8e156b76f1267866fc0018b1d0ae',
+                                   'module': '9d51e9fa5d46a21a171ae870e72d23ad2ff785fe4635a900627dac16ec012bbe',
+                                   'modsec': '0714c9e43781d51ffab5ee4faf2b4506b68cc0f9483285bfa8a8d334d0f96172'}},
+             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-ubuntu',
+                          'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu26.so',
+                          'sha256': {'binary': '6f6730cbadddde643fe10462050fa3f1eb5a8e156b76f1267866fc0018b1d0ae',
+                                     'module': '9d51e9fa5d46a21a171ae870e72d23ad2ff785fe4635a900627dac16ec012bbe',
+                                     'modsec': '5f2f285b667611a6fd3dcb91f5790ead0b096afc43ca5f5507345dd05f2bd8a5'}}}
 
             config = BINARY_CONFIGS.get(platform)
             if not config:
@@ -854,206 +838,142 @@ class Upgrade:
                         0,
                     )
                     return True
+            elif platform == 'ubuntu26':
+                Upgrade.stdOut(
+                    "Installing Ubuntu 26 ModSecurity runtime dependencies...",
+                    0,
+                )
+                if subprocess.call([
+                    'apt-get', 'install', '-y', 'libxml2-16',
+                    'libcurl3t64-gnutls', 'libyajl2', 'libgeoip1t64',
+                    'liblmdb0', 'libpcre2-8-0',
+                ]) != 0:
+                    Upgrade.stdOut(
+                        "ERROR: Could not install Ubuntu 26 ModSecurity "
+                        "runtime dependencies; keeping the existing OLS set",
+                        0,
+                    )
+                    return True
 
-            OLS_BINARY_URL = config['url']
-            MODULE_URL = config['module_url']
-            MODSEC_URL = config.get('modsec_url')
-            SHA256 = config.get('sha256', {})
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
+            control = '/usr/local/lsws/bin/lswsctrl'
+            # A fresh installation includes WAF; upgrades preserve its installed state.
+            required = [
+                ('binary', config.get('url'), OLS_BINARY_PATH, 0o755, 'openlitespeed.backup'),
+                ('module', config.get('module_url'), MODULE_PATH, 0o644, 'cyberpanel_ols.so.backup'),
+            ]
+            if os.path.exists(MODSEC_PATH):
+                required.append(('modsec', config.get('modsec_url'), MODSEC_PATH,
+                                 0o644, 'mod_security.so.backup'))
 
-            # Create backup
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            backup_dir = f"/usr/local/lsws/backup-{timestamp}"
+            import tempfile
+            import re
 
-            try:
-                os.makedirs(backup_dir, exist_ok=True)
-                if os.path.exists(OLS_BINARY_PATH):
-                    shutil.copy2(OLS_BINARY_PATH, f"{backup_dir}/openlitespeed.backup")
-                    Upgrade.stdOut(f"Backup created at: {backup_dir}", 0)
-                # Also backup existing module/ModSecurity if they exist
-                if os.path.exists(MODULE_PATH):
-                    shutil.copy2(MODULE_PATH, f"{backup_dir}/cyberpanel_ols.so.backup")
-                if os.path.exists(MODSEC_PATH):
-                    shutil.copy2(MODSEC_PATH, f"{backup_dir}/mod_security.so.backup")
-            except Exception as e:
-                Upgrade.stdOut(f"WARNING: Could not create backup: {e}", 0)
+            def running():
+                result = subprocess.run([control, 'status'], stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
+                match = re.search(r'is running with PID ([1-9][0-9]*)\.', result.stdout or '')
+                if not match:
+                    if 'is not running.' in (result.stdout or ''):
+                        return False
+                    raise RuntimeError('Cannot determine OpenLiteSpeed service state')
+                try:
+                    if os.path.samefile('/proc/%s/exe' % match.group(1), OLS_BINARY_PATH):
+                        return True
+                except OSError:
+                    pass
+                raise RuntimeError('OpenLiteSpeed PID does not identify the installed executable')
 
-            # Download binaries to temp location
-            tmp_binary = "/tmp/openlitespeed-custom"
-            tmp_module = "/tmp/cyberpanel_ols.so"
-            tmp_modsec = "/tmp/mod_security.so"
+            # Keep downloads private and validate the complete required set before
+            # stopping the service or replacing any live bundle file.
+            with tempfile.TemporaryDirectory(prefix='cyberpanel-ols-') as staging:
+                downloads = {}
+                for kind, url, target, mode, backup_name in required:
+                    candidate = os.path.join(staging, kind)
+                    if (not url or not Upgrade.downloadCustomBinary(url, candidate) or
+                            not Upgrade.verifyChecksum(candidate, config['sha256'].get(kind)) or
+                            not Upgrade.checkGlibcCompat(candidate)):
+                        Upgrade.stdOut('ERROR: Required %s failed download, checksum or ABI verification; keeping the existing OLS bundle' % kind, 0)
+                        return False
+                    downloads[kind] = candidate
 
-            Upgrade.stdOut("Downloading custom binaries...", 0)
-
-            # Download OpenLiteSpeed binary
-            if not Upgrade.downloadCustomBinary(OLS_BINARY_URL, tmp_binary):
-                Upgrade.stdOut("ERROR: Failed to download or verify OLS binary", 0)
-                Upgrade.stdOut("Continuing with standard OLS", 0)
-                return True  # Not fatal, continue with standard OLS
-
-            # Verify integrity (SHA256) and ABI compatibility (ldd) before touching the live install
-            if not Upgrade.verifyChecksum(tmp_binary, SHA256.get('binary')):
-                Upgrade.stdOut("ERROR: OLS binary failed checksum verification; keeping stock OLS", 0)
-                return True  # Not fatal, continue with standard OLS
-            if not Upgrade.checkGlibcCompat(tmp_binary):
-                Upgrade.stdOut("ERROR: OLS binary is not ABI-compatible with this OS; keeping stock OLS", 0)
-                return True  # Not fatal, continue with standard OLS
-
-            # Download module (if available)
-            module_downloaded = False
-            if MODULE_URL:
-                if not Upgrade.downloadCustomBinary(MODULE_URL, tmp_module):
-                    Upgrade.stdOut("ERROR: Failed to download or verify module", 0)
-                    Upgrade.stdOut("Continuing with standard OLS", 0)
-                    return True  # Not fatal, continue with standard OLS
-                if not Upgrade.verifyChecksum(tmp_module, SHA256.get('module')):
-                    Upgrade.stdOut("ERROR: Module failed checksum verification; keeping stock OLS", 0)
-                    return True  # Not fatal, continue with standard OLS
-                module_downloaded = True
-            else:
-                Upgrade.stdOut("Note: No CyberPanel module for this platform", 0)
-
-            # Download compatible ModSecurity if existing ModSecurity is installed
-            # This prevents ABI incompatibility crashes (Signal 11/SIGSEGV)
-            modsec_downloaded = False
-            if os.path.exists(MODSEC_PATH) and MODSEC_URL:
-                Upgrade.stdOut("Existing ModSecurity detected - downloading compatible version...", 0)
-                if Upgrade.downloadCustomBinary(MODSEC_URL, tmp_modsec):
-                    if Upgrade.verifyChecksum(tmp_modsec, SHA256.get('modsec')):
-                        modsec_downloaded = True
+                # Backups and replacement files share the installation filesystem,
+                # so a successful backup is mandatory and every replacement is atomic.
+                from datetime import datetime
+                backup_dir = tempfile.mkdtemp(
+                    prefix='backup-' + datetime.now().strftime('%Y%m%d-%H%M%S-'),
+                    dir='/usr/local/lsws')
+                previous = {}
+                for kind, url, target, mode, backup_name in required:
+                    previous[target] = os.path.exists(target)
+                    if previous[target]:
+                        shutil.copy2(target, os.path.join(backup_dir, backup_name))
                     else:
-                        Upgrade.stdOut("WARNING: ModSecurity failed checksum verification; leaving existing ModSecurity in place", 0)
-                else:
-                    Upgrade.stdOut("WARNING: Failed to download compatible ModSecurity", 0)
-                    Upgrade.stdOut("ModSecurity may crash due to ABI incompatibility", 0)
-                    Upgrade.stdOut("Consider manually updating ModSecurity after upgrade", 0)
+                        with open(os.path.join(backup_dir, backup_name + '.absent'), 'w'):
+                            pass
+                    candidate = os.path.join(backup_dir, kind + '.new')
+                    shutil.copy2(downloads[kind], candidate)
+                    os.chmod(candidate, mode)
 
-            # Install OpenLiteSpeed binary
-            Upgrade.stdOut("Installing custom binaries...", 0)
-
-            # Full stop before touching the binaries: copying onto a running
-            # (mapped) executable fails with ETXTBSY, and a graceful restart
-            # does not reliably re-exec everything. Full stop/start required.
-            Upgrade.stdOut("Stopping OpenLiteSpeed for binary installation...", 0)
-            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
-
-            try:
-                if os.path.exists(OLS_BINARY_PATH):
-                    os.remove(OLS_BINARY_PATH)
-                shutil.move(tmp_binary, OLS_BINARY_PATH)
-                os.chmod(OLS_BINARY_PATH, 0o755)
-                Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
-            except Exception as e:
-                Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
-                Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH)
-                return False
-
-            # Install module (if downloaded)
-            if module_downloaded:
+                was_running = running()
+                stopped = False
+                touched = []
                 try:
-                    os.makedirs(os.path.dirname(MODULE_PATH), exist_ok=True)
-                    if os.path.exists(MODULE_PATH):
-                        os.remove(MODULE_PATH)
-                    shutil.move(tmp_module, MODULE_PATH)
-                    os.chmod(MODULE_PATH, 0o644)
-                    Upgrade.stdOut("Installed CyberPanel module", 0)
-                except Exception as e:
-                    Upgrade.stdOut(f"ERROR: Failed to install module: {e}", 0)
-                    Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH)
-                    return False
-
-            # Install compatible ModSecurity (if downloaded)
-            if modsec_downloaded:
-                try:
-                    if os.path.exists(MODSEC_PATH):
-                        os.remove(MODSEC_PATH)
-                    shutil.move(tmp_modsec, MODSEC_PATH)
-                    os.chmod(MODSEC_PATH, 0o644)
-                    Upgrade.stdOut("Installed compatible ModSecurity module", 0)
-                except Exception as e:
-                    Upgrade.stdOut(f"WARNING: Failed to install ModSecurity: {e}", 0)
-                    # Non-fatal, continue
-
-            # Verify installation - test binary before restart
-            if os.path.exists(OLS_BINARY_PATH):
-                if not module_downloaded or os.path.exists(MODULE_PATH):
-                    # Test 1: Verify binary is executable and shows version
-                    Upgrade.stdOut("Verifying new binary...", 0)
-                    try:
-                        result = subprocess.run(
-                            [OLS_BINARY_PATH, '-v'],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            universal_newlines=True,
-                            timeout=10
-                        )
-                        if result.returncode != 0:
-                            raise Exception(f"Binary test failed with exit code {result.returncode}")
-
-                        # Extract version info
-                        version_output = result.stdout if result.stdout else result.stderr
-                        if 'LiteSpeed' in version_output or 'OpenLiteSpeed' in version_output:
-                            Upgrade.stdOut(f"Binary version check passed", 0)
-                        else:
-                            Upgrade.stdOut("WARNING: Could not verify binary version", 0)
-                    except subprocess.TimeoutExpired:
-                        Upgrade.stdOut("WARNING: Binary version check timed out", 0)
-                    except Exception as e:
-                        Upgrade.stdOut(f"ERROR: Binary verification failed: {e}", 0)
-                        # Auto-rollback
-                        Upgrade.stdOut("Initiating auto-rollback...", 0)
-                        if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
-                            Upgrade.stdOut("Rollback completed successfully", 0)
-                        else:
-                            Upgrade.stdOut("WARNING: Rollback may have failed", 0)
-                        return False
-
-                    # Full start (counterpart of the full stop above)
-                    Upgrade.stdOut("Starting OpenLiteSpeed with new binaries...", 0)
-                    subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
-                    time.sleep(3)
-                    if subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode != 0:
-                        Upgrade.stdOut("ERROR: OpenLiteSpeed did not start with new binaries", 0)
-                        Upgrade.stdOut("Initiating auto-rollback...", 0)
-                        if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
-                            Upgrade.stdOut("Rollback completed successfully", 0)
-                        else:
-                            Upgrade.stdOut("WARNING: Rollback may have failed", 0)
-                        return False
-
-                    Upgrade.stdOut("=" * 50, 0)
-                    Upgrade.stdOut("Custom Binaries Installed Successfully", 0)
-                    Upgrade.stdOut("Features enabled:", 0)
-                    Upgrade.stdOut("  - Static-linked cross-platform binary", 0)
-                    if module_downloaded:
-                        Upgrade.stdOut("  - Apache-style .htaccess support", 0)
-                        Upgrade.stdOut("  - php_value/php_flag directives", 0)
-                        Upgrade.stdOut("  - Enhanced header control", 0)
-                    Upgrade.stdOut(f"Backup: {backup_dir}", 0)
-                    Upgrade.stdOut("=" * 50, 0)
+                    if was_running:
+                        stopped = True
+                        result = subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, timeout=60)
+                        if result.returncode != 0 or running():
+                            raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                    for kind, url, target, mode, backup_name in required:
+                        os.makedirs(os.path.dirname(target), exist_ok=True)
+                        touched.append((target, backup_name))
+                        os.replace(os.path.join(backup_dir, kind + '.new'), target)
+                    result = subprocess.run([OLS_BINARY_PATH, '-v'], stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
+                    if result.returncode != 0 or 'LiteSpeed' not in ((result.stdout or '') + (result.stderr or '')):
+                        raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
+                    if was_running:
+                        result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, timeout=60)
+                        time.sleep(3)
+                        if result.returncode != 0 or not running():
+                            raise RuntimeError('OpenLiteSpeed did not start with the new bundle')
+                    Upgrade.stdOut('Custom OLS bundle installed; backup: ' + backup_dir, 0)
                     return True
-
-            Upgrade.stdOut("ERROR: Installation verification failed", 0)
-            # Auto-rollback on verification failure
-            if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
-                Upgrade.stdOut("Rollback completed successfully", 0)
+                except Exception as error:
+                    Upgrade.stdOut('ERROR: %s; restoring the previous OLS bundle' % error, 0)
+                    try:
+                        if touched:
+                            # Atomic restoration is safe even if a failed start left
+                            # a mapped executable; stop before restarting the old set.
+                            try:
+                                subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE, timeout=60)
+                            except Exception:
+                                pass  # Restore files even if the control command failed.
+                            for target, backup_name in reversed(touched):
+                                if previous[target]:
+                                    restored = os.path.join(backup_dir, backup_name + '.restore')
+                                    shutil.copy2(os.path.join(backup_dir, backup_name), restored)
+                                    os.replace(restored, target)
+                                elif os.path.exists(target):
+                                    os.remove(target)
+                        if was_running and stopped:
+                            result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE, timeout=60)
+                            time.sleep(3)
+                            if result.returncode != 0 or not running():
+                                raise RuntimeError('Previous bundle restored, but OpenLiteSpeed did not restart')
+                    except Exception as rollback_error:
+                        Upgrade.stdOut('ERROR: OLS rollback requires attention: %s; backup: %s' %
+                                      (rollback_error, backup_dir), 0)
+                    return False
+        except Exception as error:
+            Upgrade.stdOut('ERROR: Custom OLS overlay aborted: %s; existing bundle retained' % error, 0)
             return False
-
-        except Exception as msg:
-            Upgrade.stdOut(f"ERROR: {msg} [installCustomOLSBinaries]", 0)
-            # If the failure happened after the full stop, don't leave lsws down
-            try:
-                subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
-            except Exception:
-                pass
-            Upgrade.stdOut("Continuing with standard OLS", 0)
-            return True  # Non-fatal error, continue
 
     @staticmethod
     def rollbackOLSBinary(backup_dir, binary_path, module_path=None):
@@ -1088,6 +1008,9 @@ class Upgrade:
                         shutil.copy2(backup_file, target)
                         os.chmod(target, 0o644)
                         Upgrade.stdOut(f"Restored {os.path.basename(target)} from backup", 0)
+                    elif os.path.exists(backup_file + '.absent') and os.path.exists(target):
+                        os.remove(target)
+                        Upgrade.stdOut(f"Removed {os.path.basename(target)} absent from previous bundle", 0)
 
                 # Start OLS after rollback
                 Upgrade.stdOut("Starting OpenLiteSpeed after rollback...", 0)
