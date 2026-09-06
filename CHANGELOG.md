@@ -4,6 +4,24 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.6 (build 6) — 2026-09-07
+
+Maintenance and security hardening for standalone webmail authentication.
+
+### Webmail authentication
+- The dedicated `/webmail/login` page and its login/logout APIs are reachable
+  without a CyberPanel administrator session, allowing ordinary mailbox users
+  to authenticate directly against IMAP.
+- Standalone mailbox sessions are isolated from CyberPanel administrator
+  sessions and are accepted only when all required mailbox-session fields are
+  present.
+- Standalone login rotates the session identifier, expires after 12 hours,
+  rate-limits repeated failures, and returns a generic authentication error.
+- Login and logout are POST-only and CSRF-protected. The login page now always
+  issues the CSRF cookie needed by the browser client.
+- Standalone users can access only their authenticated mailbox and now have a
+  dedicated sign-out action.
+
 ## v3.0.5 (build 5) — 2026-08-26
 
 Security update for API authentication and two-factor enforcement.

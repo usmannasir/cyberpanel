@@ -113,13 +113,17 @@ def _api_otp_cache_key(account, request):
     return 'cp_api_otp_%s' % hashlib.sha256(key_material.encode()).hexdigest()
 
 
-def _record_api_otp_failure(cache, cache_key):
-    if cache.add(cache_key, 1, API_OTP_FAILURE_WINDOW):
+def record_rate_limit_failure(cache, cache_key, window):
+    if cache.add(cache_key, 1, window):
         return
     try:
         cache.incr(cache_key)
     except ValueError:
-        cache.set(cache_key, 1, API_OTP_FAILURE_WINDOW)
+        cache.set(cache_key, 1, window)
+
+
+def _record_api_otp_failure(cache, cache_key):
+    record_rate_limit_failure(cache, cache_key, API_OTP_FAILURE_WINDOW)
 
 
 def api_two_factor_matches(account, request, data=None):
