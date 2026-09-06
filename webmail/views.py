@@ -1,6 +1,7 @@
 import json
 from django.shortcuts import redirect
 from django.http import HttpResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from loginSystem.views import loadLoginPage
 from .webmailManager import WebmailManager
@@ -16,6 +17,7 @@ def loadWebmail(request):
         return redirect(loadLoginPage)
 
 
+@ensure_csrf_cookie
 def loadLogin(request):
     wm = WebmailManager(request)
     return wm.loadLogin()

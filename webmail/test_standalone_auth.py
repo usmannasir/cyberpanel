@@ -3,7 +3,7 @@ from unittest import mock
 
 from django.contrib.sessions.backends.signed_cookies import SessionStore
 from django.http import HttpResponse
-from django.test import RequestFactory, SimpleTestCase
+from django.test import Client, RequestFactory, SimpleTestCase, tag
 from django.test import override_settings
 
 from CyberCP.secMiddleware import secMiddleware
@@ -28,15 +28,20 @@ class StandaloneWebmailMiddlewareTests(SimpleTestCase):
         request.session = session if session is not None else SessionStore()
         return request
 
-    def test_login_page_and_login_api_are_public(self):
+    def test_webmail_auth_endpoints_are_public(self):
         page = self.middleware(self.request('/webmail/login'))
         api = self.middleware(self.request(
             '/webmail/api/login',
             body={'email': 'user@example.com', 'password': 'secret'},
         ))
+        logout = self.middleware(self.request(
+            '/webmail/api/logout',
+            body={},
+        ))
 
         self.assertEqual(200, page.status_code)
         self.assertEqual(200, api.status_code)
+        self.assertEqual(200, logout.status_code)
 
     def test_mailbox_api_requires_authenticated_session(self):
         response = self.middleware(self.request(
@@ -83,6 +88,50 @@ class StandaloneWebmailMiddlewareTests(SimpleTestCase):
             'This request need session.',
             json.loads(response.content)['error_message'],
         )
+
+
+@tag('integration')
+class StandaloneWebmailRouteIntegrationTests(SimpleTestCase):
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_anonymous_auth_routes_reach_webmail_views(self):
+        with mock.patch(
+            'webmail.webmailManager.render',
+            return_value=HttpResponse('webmail login'),
+        ):
+            login_page = self.client.get('/webmail/login')
+        login_api = self.client.post(
+            '/webmail/api/login',
+            data=json.dumps({}),
+            content_type='application/json',
+        )
+        with mock.patch(
+            'webmail.webmailManager.WebmailManager.apiLogout',
+            return_value=HttpResponse(
+                json.dumps({'status': 1}),
+                content_type='application/json',
+            ),
+        ):
+            logout_api = self.client.post(
+                '/webmail/api/logout',
+                data=json.dumps({}),
+                content_type='application/json',
+            )
+
+        self.assertEqual(200, login_page.status_code)
+        self.assertIn('csrftoken', login_page.cookies)
+        self.assertEqual(
+            'Email and password are required.',
+            json.loads(login_api.content)['error_message'],
+        )
+        self.assertEqual(1, json.loads(logout_api.content)['status'])
+
+    def test_logout_rejects_get_requests(self):
+        response = self.client.get('/webmail/api/logout')
+
+        self.assertEqual(405, response.status_code)
 
 
 @override_settings(
@@ -173,6 +222,21 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
         self.assertEqual(1, payload['status'])
         self.assertEqual('user@example.com', payload['email'])
         self.assertEqual(['user@example.com'], payload['accounts'])
+
+    def test_logout_clears_standalone_mailbox_session(self):
+        session = SessionStore()
+        session.update({
+            'webmail_standalone': True,
+            'webmail_email': 'user@example.com',
+            'webmail_password': 'secret',
+        })
+
+        response = WebmailManager(self.request(session=session)).apiLogout()
+
+        self.assertEqual(1, json.loads(response.content)['status'])
+        self.assertNotIn('webmail_standalone', session)
+        self.assertNotIn('webmail_email', session)
+        self.assertNotIn('webmail_password', session)
 
     @mock.patch('webmail.webmailManager.IMAPClient', side_effect=Exception('denied'))
     @mock.patch('webmail.webmailManager.logging.CyberCPLogFileWriter.writeToFile')

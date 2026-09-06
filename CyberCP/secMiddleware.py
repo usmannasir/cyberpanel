@@ -31,6 +31,7 @@ class secMiddleware:
     WEBMAIL_PUBLIC_PATHS = (
         '/webmail/login',
         '/webmail/api/login',
+        '/webmail/api/logout',
     )
 
     @staticmethod
