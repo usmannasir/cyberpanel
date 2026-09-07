@@ -245,7 +245,7 @@ class BundleFixture:
         elif args[-1] == '-v':
             if self.failure == 'version-timeout':
                 raise subprocess.TimeoutExpired(args, 10)
-            stdout = 'OpenLiteSpeed/2.5.4'
+            stdout = 'OpenLiteSpeed/2.5.5'
         else:
             raise AssertionError('Unexpected command: ' + repr(args))
         return SimpleNamespace(returncode=code, stdout=stdout, stderr='')
