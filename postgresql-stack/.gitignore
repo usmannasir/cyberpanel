@@ -1,0 +1,9 @@
+config.php
+logs/
+tmp/
+*.log
+*.bak*
+__pycache__/
+.DS_Store
+*.tmp
+*.swp

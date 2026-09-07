@@ -1590,6 +1590,28 @@ systemctl restart lscpd
 
 }
 
+Post_Upgrade_PostgreSQL_Stack() {
+  local stack_dir="/usr/local/CyberCP/postgresql-stack"
+  if [[ ! -d "${stack_dir}" ]]; then
+    return 0
+  fi
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] PostgreSQL stack present at ${stack_dir}" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [[ ! -f "${stack_dir}/config.php" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] PostgreSQL stack not configured yet (no config.php); skip refresh" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    return 0
+  fi
+  if [[ -x "${stack_dir}/modules/47-pgadmin-patches.sh" ]]; then
+    bash "${stack_dir}/modules/47-pgadmin-patches.sh" >>/var/log/cyberpanel_upgrade_debug.log 2>&1 || true
+  fi
+  if [[ -x "${stack_dir}/reapply-tile.sh" ]]; then
+    bash "${stack_dir}/reapply-tile.sh" >>/var/log/cyberpanel_upgrade_debug.log 2>&1 || true
+  fi
+  if systemctl list-unit-files pgadmin4.service >/dev/null 2>&1; then
+    systemctl daemon-reload
+    systemctl restart pgadmin4 >>/var/log/cyberpanel_upgrade_debug.log 2>&1 || true
+  fi
+}
+
 Post_Install_Display_Final_Info() {
 
 Panel_Port=$(cat /usr/local/lscp/conf/bind.conf)
@@ -1673,6 +1695,8 @@ Pre_Upgrade_Required_Components
 Main_Upgrade
 
 Post_Upgrade_System_Tweak
+
+Post_Upgrade_PostgreSQL_Stack
 
 Restart_Web_Terminal
 

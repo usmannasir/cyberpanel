@@ -2,6 +2,23 @@
 <html lang="en">
 
 <head>
+    <!-- Apply saved panel theme before paint (shared key with dashboard) -->
+    <script>
+    (function () {
+        try {
+            var t = localStorage.getItem('cyberPanelTheme');
+            t = (t === 'dark') ? 'dark' : 'light';
+            var h = document.documentElement;
+            h.setAttribute('data-theme', t);
+            h.classList.toggle('cp-theme-dark', t === 'dark');
+            h.classList.toggle('cp-theme-light', t === 'light');
+            h.style.colorScheme = t;
+        } catch (e) {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.classList.add('cp-theme-light');
+        }
+    })();
+    </script>
     <style>
         .d-flex {
             display: flex;
@@ -57,6 +74,7 @@
         .col-login-right {
             background: #ffffff;
             justify-content: center;
+            position: relative;
         }
 
         .col-login-right .login-wrapper {
@@ -114,6 +132,122 @@
             padding-top: 1em;
             padding-bottom: 1em;
             border: 1px solid red;
+        }
+
+        .cp-login-theme-toggle {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            z-index: 20;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #e7e9ee;
+            background: #f6f7f9;
+            color: #2f3640;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .cp-login-theme-toggle:hover,
+        .cp-login-theme-toggle:focus {
+            outline: none;
+            border-color: #33CCCC;
+            color: #33CCCC;
+        }
+
+        .cp-remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 14px;
+            font-size: 14px;
+            color: #556070;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 500;
+        }
+
+        .cp-remember input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        /* Dark theme for login (shared cyberPanelTheme preference) */
+        html[data-theme="dark"],
+        html[data-theme="dark"] body {
+            background: #12141a !important;
+            color-scheme: dark;
+        }
+
+        html[data-theme="dark"] .col-login-right {
+            background: #12141a !important;
+        }
+
+        html[data-theme="dark"] .col-login-right h1 {
+            color: #33CCCC !important;
+        }
+
+        html[data-theme="dark"] .col-login-right .text-muted {
+            color: #9aa3b2 !important;
+        }
+
+        html[data-theme="dark"] .form-group .input-group input.form-control,
+        html[data-theme="dark"] .form-group .input-group select.form-control {
+            background: #1d1f26 !important;
+            color: #e8eaef !important;
+            border-color: #2c2f39 !important;
+        }
+
+        html[data-theme="dark"] .form-group .input-group input.form-control::placeholder {
+            color: #8b93a7 !important;
+        }
+
+        html[data-theme="dark"] .form-group .input-group .input-group-addon {
+            background: #23252d !important;
+            border-color: #2c2f39 !important;
+            color: #9aa3b2 !important;
+        }
+
+        html[data-theme="dark"] .cp-remember {
+            color: #c5cbd6;
+        }
+
+        html[data-theme="dark"] .alert.alert-danger {
+            background: #3b1515;
+            color: #fca5a5;
+            border-color: #7f1d1d;
+        }
+
+        html[data-theme="dark"] .cp-login-theme-toggle {
+            background: #1d1f26;
+            border-color: #2c2f39;
+            color: #e8eaef;
+        }
+
+        html[data-theme="dark"] .login-changelogs .card {
+            background-color: #1d1f26;
+            color: #e8eaef;
+            border: 1px solid #2c2f39;
+        }
+
+        html[data-theme="dark"] .login-changelogs .card .card-title,
+        html[data-theme="dark"] .login-changelogs .card .card-text {
+            color: #e8eaef;
+        }
+
+        html[data-theme="dark"] .spinner > div {
+            background-color: #9aa3b2;
+        }
+
+        html[data-theme="dark"] #loading {
+            background: #12141a;
         }
 
 
@@ -202,17 +336,7 @@
     <!-- Components theme -->
 
     <!-- JS Core -->
-
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
-
-    <script type="text/javascript">
-        $(window).load(function () {
-            setTimeout(function () {
-                $('#loading').fadeOut(400, "linear");
-            }, 300);
-        });
-    </script>
-
+    <!-- jQuery moved to bottom of page to load before other scripts -->
     <!-- JS Ends -->
 
     <style type="text/css">
@@ -288,6 +412,10 @@
     </div>
 
     <div ng-app="loginSystem" ng-controller="loginSystem" class="col-md-6 col-sm-12 col-login col-login-right" style="">
+        <button type="button" id="cp-login-theme-toggle" class="cp-login-theme-toggle"
+                title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+            <span id="cp-login-theme-icon" aria-hidden="true">☾</span>
+        </button>
         <div class="login-wrapper">
             <form id="loginForm" action="/" class="col-md-8 col-md-offset-2">
                 <h1 class="text-transform-upr text-center panel-body text-bold"
@@ -302,7 +430,8 @@
                             <div class="form-group">
                                 <div class="input-group">
                                     <input ng-model="username" type="text" class="form-control" name="username"
-                                           placeholder="Enter username" required style="height: 45px;">
+                                           placeholder="Enter username" required style="height: 45px;"
+                                           autocomplete="username" id="cp-login-username">
                                     <span class="input-group-addon bg-blue">
                       <i class="glyph-icon icon-envelope-o"></i>
                     </span>
@@ -323,13 +452,12 @@
                             <div ng-hide="verifyCode" class="form-group">
                                 <div class="input-group">
                                     <input ng-model="twofa" type="text" class="form-control" name="twofa"
-                                           placeholder="Authenticator or recovery code" required
-                                           style="height: 45px;">
+                                           placeholder="Enter code from Google Authenticator" required
+                                           style="height: 45px;" autocomplete="one-time-code">
                                     <span class="input-group-addon bg-blue">
                       <i class="glyph-icon icon-unlock-alt"></i>
                     </span>
                                 </div>
-                                <small class="text-muted">Enter the current authenticator code or one unused recovery code.</small>
                             </div>
 
 
@@ -357,11 +485,23 @@
                                     </select>
                                 </div>
                             </div>
-
-
-                            <button type="button" style="background-color: #33CCCC;" ng-click="verifyLoginCredentials()"
+<button type="button" style="background-color: #33CCCC;" ng-click="verifyLoginCredentials()"
                                     class="btn btn-success btn-block  btn-login">Sign In
                             </button>
+                            
+                            {% if passkey_login_available %}
+                            <!-- WebAuthn Passkey Login Button (only when at least one passkey is registered) -->
+                            <div id="webauthn-login-section" style="margin-top: 15px; display: none;">
+                                <button type="button" id="webauthn-login-btn" 
+                                        class="btn btn-primary btn-block btn-login" 
+                                        style="background-color: #5b5fcf; border-color: #5b5fcf;">
+                                    <i class="fas fa-fingerprint"></i> Login with Passkey
+                                </button>
+                                <div class="text-center" style="margin-top: 10px;">
+                                    <small class="text-muted">or</small>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -372,10 +512,198 @@
         </div>
     </div>
 </div>
+<!-- Ensure jQuery is loaded first -->
+<script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
+<!-- Then Angular -->
 <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
-<script src="{% static 'loginSystem/login-system.js' %}"></script>
+<!-- Then our custom scripts that depend on jQuery and Angular -->
+<script src="{% static 'loginSystem/login-system.js' %}?v=2.5.5-login2" data-cfasync="false"></script>
+<script>
+(function () {
+    'use strict';
 
+    function normalizeTheme(value) {
+        return value === 'dark' ? 'dark' : 'light';
+    }
+
+    function readTheme() {
+        try {
+            return normalizeTheme(localStorage.getItem('cyberPanelTheme'));
+        } catch (e) {
+            return 'light';
+        }
+    }
+
+    function applyLoginTheme(theme) {
+        theme = normalizeTheme(theme);
+        var root = document.documentElement;
+        root.setAttribute('data-theme', theme);
+        root.classList.toggle('cp-theme-dark', theme === 'dark');
+        root.classList.toggle('cp-theme-light', theme === 'light');
+        root.style.colorScheme = theme;
+        try {
+            localStorage.setItem('cyberPanelTheme', theme);
+        } catch (e) { /* private mode */ }
+
+        var icon = document.getElementById('cp-login-theme-icon');
+        if (icon) {
+            icon.textContent = theme === 'dark' ? '☀' : '☾';
+        }
+        var toggle = document.getElementById('cp-login-theme-toggle');
+        if (toggle) {
+            toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            toggle.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+            toggle.setAttribute('aria-label', toggle.title);
+        }
+        return theme;
+    }
+
+    function initLoginThemeToggle() {
+        applyLoginTheme(readTheme());
+        var toggle = document.getElementById('cp-login-theme-toggle');
+        if (!toggle || toggle.getAttribute('data-bound') === '1') {
+            return;
+        }
+        toggle.setAttribute('data-bound', '1');
+        toggle.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            var next = normalizeTheme(document.documentElement.getAttribute('data-theme')) === 'dark' ? 'light' : 'dark';
+            applyLoginTheme(next);
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLoginThemeToggle);
+    } else {
+        initLoginThemeToggle();
+    }
+})();
+</script>
+<!-- Optional: WebAuthn script (handle 403 gracefully) -->
+<script>
+    // Try to load webauthn.js, but don't fail if it's not available
+    (function() {
+        var script = document.createElement('script');
+        script.src = '{% static "loginSystem/webauthn.js" %}';
+        script.onerror = function() {
+            console.warn('WebAuthn script not available, continuing without it');
+        };
+        document.head.appendChild(script);
+    })();
+</script>
+<!-- Loading animation (requires jQuery) -->
+<script type="text/javascript">
+    // Ensure jQuery is loaded before using it
+    if (typeof jQuery !== 'undefined') {
+        jQuery(window).on('load', function () {
+            setTimeout(function () {
+                jQuery('#loading').fadeOut(400, "linear");
+            }, 300);
+        });
+    } else {
+        // Fallback if jQuery isn't loaded
+        window.addEventListener('load', function() {
+            setTimeout(function () {
+                var loadingEl = document.getElementById('loading');
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+            }, 300);
+        });
+    }
+</script>
+<script>
+// Initialize WebAuthn login functionality (passkey-first: no username required)
+document.addEventListener('DOMContentLoaded', function() {
+    const webauthnSection = document.getElementById('webauthn-login-section');
+    const webauthnBtn = document.getElementById('webauthn-login-btn');
+    
+    if (webauthnSection && webauthnBtn && window.cyberPanelWebAuthn && window.cyberPanelWebAuthn.isSupported()) {
+        webauthnSection.style.display = 'block';
+        webauthnBtn.disabled = false;
+        webauthnBtn.addEventListener('click', function() {
+            if (window.cyberPanelWebAuthn) {
+                window.cyberPanelWebAuthn.startPasskeyFirstLogin();
+            }
+        });
+    }
+});
+</script>
+
+
+<!-- Discord Authentication Plugin -->
+<script>
+(function() {
+    'use strict';
+    
+    // Check if Discord auth is enabled and inject button
+    fetch('/plugins/discordAuth/check/', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.enabled) {
+            return; // Discord auth not enabled
+        }
+        
+        // Load CSS
+        if (!document.getElementById('discord-auth-css')) {
+            const link = document.createElement('link');
+            link.id = 'discord-auth-css';
+            link.rel = 'stylesheet';
+            link.href = '/static/discordAuth/css/discord-auth.css';
+            document.head.appendChild(link);
+        }
+        
+        // Wait for login form to be ready
+        const checkForm = setInterval(function() {
+            const loginForm = document.getElementById('loginForm');
+            const submitButton = document.querySelector('#loginForm button[type="submit"]');
+            
+            if (loginForm && submitButton) {
+                clearInterval(checkForm);
+                
+                // Check if already injected
+                if (document.querySelector('.discord-login-container')) {
+                    return;
+                }
+                
+                // Create Discord button container
+                const discordContainer = document.createElement('div');
+                discordContainer.className = 'discord-login-container';
+                discordContainer.style.cssText = 'text-align: center; margin: 20px 0;';
+                
+                // Create divider
+                const divider = document.createElement('div');
+                divider.className = 'discord-login-divider';
+                divider.textContent = 'OR';
+                
+                // Create Discord button
+                const discordButton = document.createElement('a');
+                discordButton.href = '/plugins/discordAuth/login/';
+                discordButton.className = 'discord-login-btn';
+                discordButton.innerHTML = '<i class="fab fa-discord"></i> Login with Discord';
+                
+                // Insert after submit button
+                submitButton.parentNode.insertBefore(divider, submitButton.nextSibling);
+                submitButton.parentNode.insertBefore(discordContainer, divider.nextSibling);
+                discordContainer.appendChild(discordButton);
+            }
+        }, 100);
+        
+        // Timeout after 5 seconds
+        setTimeout(function() {
+            clearInterval(checkForm);
+        }, 5000);
+    })
+    .catch(function() {
+        // Silently fail if check endpoint is not available
+    });
+})();
+</script>
+<!-- End Discord Authentication Plugin -->
 </body>
 
 </html>
