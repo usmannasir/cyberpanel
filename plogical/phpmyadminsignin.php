@@ -3,11 +3,28 @@
 define("PMA_SIGNON_INDEX", 1);
 define('PMA_SIGNON_SESSIONNAME', 'SignonSession');
 define('PMA_DISABLE_SSL_PEER_VALIDATION', TRUE);
-if (!defined('PMA_HANDOFF_VALIDATION_URL')) {
-    define(
-        'PMA_HANDOFF_VALIDATION_URL',
-        'https://127.0.0.1:8090/dataBases/consumePHPMYAdminHandoff'
-    );
+
+function getPMAHandoffValidationURL($bindPath = '/usr/local/lscp/conf/bind.conf') {
+    $port = 8090;
+    if (file_exists($bindPath)) {
+        $binding = @file_get_contents($bindPath);
+        if ($binding === false) {
+            return false;
+        }
+        $binding = trim($binding, " \t\r\n");
+        if ($binding !== '') {
+            if (!preg_match('/\A\*:([0-9]{1,5})\z/', $binding, $matches)) {
+                return false;
+            }
+            $port = (int) $matches[1];
+            if ($port < 1 || $port > 65535) {
+                return false;
+            }
+        }
+    }
+
+    // Only the port comes from local LSCPD configuration, never request headers.
+    return 'https://127.0.0.1:' . $port . '/dataBases/consumePHPMYAdminHandoff';
 }
 
 function rejectSignon() {
@@ -36,7 +53,14 @@ function consumeHandoff($username, $token) {
         return false;
     }
 
-    $request = @curl_init(PMA_HANDOFF_VALIDATION_URL);
+    $validationURL = defined('PMA_HANDOFF_VALIDATION_URL')
+        ? PMA_HANDOFF_VALIDATION_URL
+        : getPMAHandoffValidationURL();
+    if ($validationURL === false) {
+        return false;
+    }
+
+    $request = @curl_init($validationURL);
     if ($request === false) {
         return false;
     }
