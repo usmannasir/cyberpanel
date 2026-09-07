@@ -782,41 +782,41 @@ class Upgrade:
                 Upgrade.stdOut("Custom binary installation skipped for this platform; using standard OLS", 0)
                 return True  # Not a failure, just skip
 
-            # Paired core 2.5.4 and module 2.7.7 release artifacts.
+            # Paired core 2.5.5 and module 2.7.7 release artifacts.
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
             # Core v2.5.1: HttpReq::getDocRoot NULL-vhost hardening — no module can crash the worker on unmatched-Host 4xx responses
             # The ABI marker prevents incompatible stock-core loading.
             #   Cloudflare 520 storms); adds a real `ls_enabled 0` kill-switch. NEVER ship 2.7.0-2.7.3 again.
             # EL10 uses its dedicated ABI-matched release set. Existing platform
             # mappings use the same release with native runtime dependencies.
-            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel8',
+            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel8',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel8.so',
-                       'sha256': {'binary': '966cead5669218916de8dfa70657fc70f6eaca3012ff84ada7bc155f9813da41',
+                       'sha256': {'binary': 'd12b66fe05fa483f61d3833d86053bb1c81c4cd3421a9be5ef610dffd3a87949',
                                   'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
                                   'modsec': 'cfdf61bb3e0115fbcd172a5dd55fe107a8e17888711a31eec25d34b94df3bb6c'}},
-             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel9',
+             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel9',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel9.so',
                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel9.so',
-                       'sha256': {'binary': '2aa1aa66ba01b83393f837aeac3a21ec19cd3023b2a7f4ab487a8e5c93f6e8ee',
+                       'sha256': {'binary': '1a6b9338d5dcc3153f15302f5a057faa0a369a90b6d850d72d07bfe3a41cb5be',
                                   'module': '7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb',
                                   'modsec': 'eb67cce467b29b73f70f798db8e5097b13e8c264a83b146bac601bbd62399b0f'}},
-             'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-rhel10',
+             'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel10',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel10.so',
                         'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel10.so',
-                        'sha256': {'binary': '441d89752f6e1f6e5b96f218c07c9ca1dd8c876403ec73bf17cfd8b12000394e',
+                        'sha256': {'binary': 'e51b81234ab46452268449cb8a694dee09898cfd2eadc252b176b87cd4039ab1',
                                    'module': 'edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2',
                                    'modsec': 'a7d8131bf7fa9b14286a088a1a9eb8f0bca15de991c79d6173ac0f274dcd9bcf'}},
-             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-ubuntu',
+             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-ubuntu',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
                         'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu.so',
-                        'sha256': {'binary': 'c15324fb082eecbc6d60d37d3698e05ad08c423cce83d6ab476833739fdc1f5e',
+                        'sha256': {'binary': '736eeb47bd3dc7b2a7206b95106dd735a80b3386118d0b4b17f39f9fa5324f8c',
                                    'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
                                    'modsec': '0714c9e43781d51ffab5ee4faf2b4506b68cc0f9483285bfa8a8d334d0f96172'}},
-             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.4-x86_64-ubuntu',
+             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-ubuntu',
                           'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
                           'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu26.so',
-                          'sha256': {'binary': 'c15324fb082eecbc6d60d37d3698e05ad08c423cce83d6ab476833739fdc1f5e',
+                          'sha256': {'binary': '736eeb47bd3dc7b2a7206b95106dd735a80b3386118d0b4b17f39f9fa5324f8c',
                                      'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
                                      'modsec': '5f2f285b667611a6fd3dcb91f5790ead0b096afc43ca5f5507345dd05f2bd8a5'}}}
 

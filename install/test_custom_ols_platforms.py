@@ -113,7 +113,7 @@ class CustomOLSPlatformTests(unittest.TestCase):
         ):
             with self.subTest(path=path.name):
                 config = binary_configs(path, class_name)['rhel10']
-                self.assertTrue(config['url'].endswith('openlitespeed-2.5.4-x86_64-rhel10'))
+                self.assertTrue(config['url'].endswith('openlitespeed-2.5.5-x86_64-rhel10'))
                 self.assertTrue(config['module_url'].endswith('cyberpanel_ols-2.7.7-x86_64-rhel10.so'))
                 self.assertTrue(config['modsec_url'].endswith('mod_security-2.5.4-x86_64-rhel10.so'))
                 self.assertEqual(set(config['sha256']), {'binary', 'module', 'modsec'})
@@ -146,7 +146,7 @@ class CustomOLSPlatformTests(unittest.TestCase):
 
                 config = binary_configs(path, class_name)['ubuntu26']
                 self.assertTrue(config['url'].endswith(
-                    'openlitespeed-2.5.4-x86_64-ubuntu'
+                    'openlitespeed-2.5.5-x86_64-ubuntu'
                 ))
                 self.assertTrue(config['module_url'].endswith(
                     'cyberpanel_ols-2.7.7-x86_64-ubuntu.so'
@@ -160,14 +160,14 @@ class CustomOLSPlatformTests(unittest.TestCase):
     def test_install_and_upgrade_use_the_same_release(self):
         expected = {
             self.install_path: {
-                'rhel8': ('2.5.4', '2.7.7'),
-                'rhel9': ('2.5.4', '2.7.7'),
-                'ubuntu': ('2.5.4', '2.7.7'),
+                'rhel8': ('2.5.5', '2.7.7'),
+                'rhel9': ('2.5.5', '2.7.7'),
+                'ubuntu': ('2.5.5', '2.7.7'),
             },
             self.upgrade_path: {
-                'rhel8': ('2.5.4', '2.7.7'),
-                'rhel9': ('2.5.4', '2.7.7'),
-                'ubuntu': ('2.5.4', '2.7.7'),
+                'rhel8': ('2.5.5', '2.7.7'),
+                'rhel9': ('2.5.5', '2.7.7'),
+                'ubuntu': ('2.5.5', '2.7.7'),
             },
         }
 
