@@ -14,6 +14,7 @@ import json
 from .models import Package
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
+from plogical import filesystemQuota
 
 class PackagesManager:
     def __init__(self, request = None):
@@ -357,7 +358,24 @@ class PackagesManager:
                     except:
                         pass  # Keep existing value
 
+                quota_plan = None
+                if modifyPack.enforceDiskLimits:
+                    try:
+                        modifyPack.diskSpace = filesystemQuota.limit(data['diskSpace'])
+                        modifyPack.inodeLimit = filesystemQuota.limit(data.get('inodeLimit', modifyPack.inodeLimit))
+                        quota_plan = filesystemQuota.prepare_package_quota(modifyPack)
+                    except Exception as error:
+                        return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                            'error_message': 'No package settings were changed. ' + str(error)}))
+
                 modifyPack.save()
+
+                if quota_plan is not None:
+                    try:
+                        filesystemQuota.apply_quota_plan(quota_plan)
+                    except Exception as error:
+                        return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                            'error_message': 'Package settings were saved, but disk/inode quotas were not fully applied. ' + str(error)}))
 
                 ## Fix https://github.com/usmannasir/cyberpanel/issues/998
 
