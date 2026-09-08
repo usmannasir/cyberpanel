@@ -2688,6 +2688,10 @@ class CloudManager:
 
     def SubmitCyberPanelUpgrade(self):
         try:
+            if os.path.lexists('/etc/csf'):
+                from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE
+                return self.ajaxPre(0, CSF_UPGRADE_MESSAGE)
+
             try:
                 mail = str(int(self.data['mail']))
             except:

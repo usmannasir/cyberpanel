@@ -417,7 +417,11 @@
                             <div ng-if="sslDetails" class="ssl-details-panel">
                                 <h4 class="ssl-details-header">{% trans "SSL Details" %}</h4>
                                 <div ng-if="sslDetails.hasSSL">
-                                    <p><strong>{% trans "Status:" %}</strong> <span style="color: var(--success-color, #10b981);">Active</span></p>
+                                    <p><strong title="{% trans 'Status reflects certificate dates, not browser trust.' %}">{% trans "Status:" %}</strong>
+                                        <span ng-if="sslDetails.validityStatus === 'valid'" style="color: var(--success-color, #10b981);">{% trans "Active" %}</span>
+                                        <span ng-if="sslDetails.validityStatus === 'expired'" style="color: var(--danger-color, #ef4444);">{% trans "Expired" %}</span>
+                                        <span ng-if="sslDetails.validityStatus === 'not_yet_valid'" style="color: var(--danger-color, #ef4444);">{% trans "Not yet valid" %}</span>
+                                    </p>
                                     <p><strong>{% trans "Issued By:" %}</strong> {$ sslDetails.authority $}</p>
                                     <p><strong>{% trans "Expiry Date:" %}</strong> {$ sslDetails.expiryDate $}</p>
                                     <p><strong>{% trans "Days Remaining:" %}</strong> {$ sslDetails.days $}</p>
