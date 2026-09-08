@@ -215,8 +215,8 @@ class MailServerManager(multi.Thread):
                     numberofEmails = int(result[0])
                     duration = result[1]
                 except:
-                    numberofEmails = 0
-                    duration = '0m'
+                    numberofEmails = None
+                    duration = None
 
                 dic = {'id': count, 'email': items.email, 'DiskUsage': '%sMB' % items.DiskUsage, 'numberofEmails': numberofEmails, 'duration': duration}
                 count = count + 1
