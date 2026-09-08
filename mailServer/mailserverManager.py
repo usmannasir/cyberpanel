@@ -260,7 +260,9 @@ class MailServerManager(multi.Thread):
             else:
                 return ACLManager.loadErrorJson()
 
-            mailUtilities.deleteEmailAccount(email)
+            result = mailUtilities.deleteEmailAccount(email)
+            if result[0] != 1:
+                raise ValueError(result[1])
 
             if emailOwnerDomain.eusers_set.all().count() == 0:
                 emailOwnerDomain.delete()
