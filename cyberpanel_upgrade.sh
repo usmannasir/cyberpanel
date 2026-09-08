@@ -18,6 +18,13 @@ Sudo_Test=$(set)
 # HOME. Git and Composer both require the root home during an upgrade.
 export HOME=/root
 
+Check_CSF_Migration() {
+  if [[ -e /etc/csf || -L /etc/csf ]]; then
+    echo "Upgrade stopped: CSF files were detected. Complete a reviewed manual firewall migration, verify replacement rules and SSH/panel access, then retry. CSF and its panel integration have not been removed." >&2
+    exit 1
+  fi
+}
+
 Set_Default_Variables() {
 
 # Set to 1 when upgrade.py fails, so the final banner reports the failure instead
@@ -35,22 +42,6 @@ echo -e "\n\n========================================" > /var/log/cyberpanel_upg
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting CyberPanel Upgrade Script" >> /var/log/cyberpanel_upgrade_debug.log
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Old log files have been cleared" >> /var/log/cyberpanel_upgrade_debug.log
 echo -e "========================================\n" >> /var/log/cyberpanel_upgrade_debug.log
-
-#### this is temp code for csf
-
-rm -Rfv /usr/local/CyberCP/configservercsf
-rm -fv /home/cyberpanel/plugins/configservercsf
-rm -Rfv /usr/local/CyberCP/public/static/configservercsf
-
-sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/settings.py
-sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py
-if [ ! -e /etc/cxs/cxs.pl ]; then
-    sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
-fi
-#systemctl restart lscpd
-### this is temp code for csf
-
-
 
 export LC_CTYPE=en_US.UTF-8
 echo -e "\nFetching latest data from CyberPanel server...\n"
@@ -1005,6 +996,9 @@ Download_Upgrade_Source() {
 
 Download_Upgrade_Source "plogical/upgrade.py" "upgrade.py" "^import " || exit 1
 Download_Upgrade_Source "cyberpanel_version.py" "cyberpanel_version.py" "^VERSION" || exit 1
+if grep -q '^from cyberpanel_firewall_migration import ' upgrade.py; then
+  Download_Upgrade_Source "cyberpanel_firewall_migration.py" "cyberpanel_firewall_migration.py" "^CSF_UPGRADE_MESSAGE" || exit 1
+fi
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py
@@ -1639,6 +1633,8 @@ if [[ ! -d /etc/cyberpanel ]] ; then
   echo -e "\n\nCan not detect CyberCP..."
   exit
 fi
+
+Check_CSF_Migration
 
 if [[ "$*" = *"--debug"* ]] ; then
   Debug="On"

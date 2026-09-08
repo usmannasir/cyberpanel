@@ -6,6 +6,7 @@ from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 from django.http import HttpResponse
 import json
+from datetime import datetime, timezone
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 
@@ -396,21 +397,35 @@ def getSSLDetails(request):
 
                 try:
                     import OpenSSL
-                    from datetime import datetime
                     filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHost)
-                    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                           open(filePath, 'rb').read())
+                    with open(filePath, 'rb') as certificate:
+                        x509 = OpenSSL.crypto.load_certificate(
+                            OpenSSL.crypto.FILETYPE_PEM, certificate.read())
                     expireData = x509.get_notAfter().decode('ascii')
-                    finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+                    finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
+                    startDate = datetime.strptime(
+                        x509.get_notBefore().decode('ascii'), '%Y%m%d%H%M%SZ'
+                    ).replace(tzinfo=timezone.utc)
 
-                    now = datetime.now()
+                    now = datetime.now(timezone.utc)
                     diff = finalDate - now
+                    # This describes certificate dates, not issuer or hostname trust.
+                    if now >= finalDate:
+                        validityStatus = 'expired'
+                    elif now < startDate:
+                        validityStatus = 'not_yet_valid'
+                    else:
+                        validityStatus = 'valid'
+                    issuer = dict(x509.get_issuer().get_components())
+                    authority = (issuer.get(b'O') or issuer.get(b'CN') or b'Unknown').decode(
+                        'utf-8', errors='replace')
                     
                     data_ret = {
                         'status': 1,
                         'hasSSL': True,
+                        'validityStatus': validityStatus,
                         'days': str(diff.days),
-                        'authority': x509.get_issuer().get_components()[1][1].decode('utf-8'),
+                        'authority': authority,
                         'expiryDate': finalDate.strftime('%Y-%m-%d %H:%M:%S')
                     }
                     

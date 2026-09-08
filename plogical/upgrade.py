@@ -8,6 +8,14 @@ import grp
 import re
 
 sys.path.append('/usr/local/CyberCP')
+from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE, requireCSFMigration
+
+
+# Reject direct command-line upgrades before loading database recovery code.
+if __name__ == '__main__':
+    requireCSFMigration()
+
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import shlex
 import subprocess
@@ -3864,6 +3872,9 @@ passdb {
     
     @staticmethod
     def downloadAndUpgrade(versionNumbring, branch):
+        if os.path.lexists('/etc/csf'):
+            return 0, CSF_UPGRADE_MESSAGE
+
         try:
             ## Download latest version.
 
@@ -5247,6 +5258,7 @@ pm.max_spare_servers = 3
 
     @staticmethod
     def upgrade(branch):
+        requireCSFMigration()
 
         if branch.find('SoftUpgrade') > -1:
             Upgrade.SoftUpgrade = 1
@@ -5496,27 +5508,6 @@ pm.max_spare_servers = 3
                 Upgrade.executioner(command, 'Start LSCPD', 0)
             except:
                 pass
-
-        # Remove CSF if installed and restore firewalld (CSF is being discontinued on August 31, 2025)
-        if os.path.exists('/etc/csf'):
-            print("CSF detected - removing CSF and restoring firewalld...")
-            print("Note: ConfigServer Firewall (CSF) is being discontinued on August 31, 2025")
-            
-            # Remove CSF and restore firewalld
-            execPath = "sudo /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/csf.py"
-            execPath = execPath + " removeCSF"
-            Upgrade.executioner(execPath, 'Remove CSF and restore firewalld', 0)
-            
-            print("CSF has been removed and firewalld has been restored.")
-
-
-
-        # Remove configservercsf directory if it exists
-        if os.path.exists('/usr/local/CyberCP/configservercsf'):
-            command = 'rm -rf /usr/local/CyberCP/configservercsf'
-            Upgrade.executioner(command, 'Remove configservercsf directory', 1)
-
-
 
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
