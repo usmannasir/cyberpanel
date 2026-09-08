@@ -1180,102 +1180,345 @@ module cyberpanel_ols {
             return True  # Non-fatal
 
     @staticmethod
-    def download_install_phpmyadmin():
+    def phpmyadmin_paths():
+        base = '/usr/local/CyberCP/public/phpmyadmin'
+        return {
+            'base': base,
+            'index': os.path.join(base, 'index.php'),
+            'libraries': os.path.join(base, 'libraries'),
+            'signin_dest': os.path.join(base, 'phpmyadminsignin.php'),
+            'signin_src': '/usr/local/CyberCP/plogical/phpmyadminsignin.php',
+            'config': os.path.join(base, 'config.inc.php'),
+            'config_sample': os.path.join(base, 'config.sample.inc.php'),
+            'tmp': os.path.join(base, 'tmp'),
+            'zip': '/usr/local/CyberCP/public/phpmyadmin.zip',
+        }
+
+    @staticmethod
+    def phpmyadmin_is_healthy(paths=None):
+        """Return True when a usable phpMyAdmin tree is present."""
+        paths = paths or Upgrade.phpmyadmin_paths()
+        required = (
+            paths['index'],
+            paths['libraries'],
+            paths['config_sample'],
+            os.path.join(paths['base'], 'vendor'),
+            os.path.join(paths['base'], 'templates'),
+        )
+        for item in required:
+            if not os.path.exists(item):
+                return False
+        # libraries must be a non-empty directory
+        if not os.path.isdir(paths['libraries']):
+            return False
         try:
-            cwd = os.getcwd()
+            if not os.listdir(paths['libraries']):
+                return False
+        except OSError:
+            return False
+        return True
 
-            if not os.path.exists("/usr/local/CyberCP/public"):
-                os.mkdir("/usr/local/CyberCP/public")
-
+    @staticmethod
+    def _phpmyadmin_preserve_state(paths):
+        """Preserve config.inc.php and tmp/ before a reinstall."""
+        preserved = {'config': None, 'tmp': None}
+        import tempfile
+        staging = tempfile.mkdtemp(prefix='cyberpanel_pma_preserve_')
+        try:
+            if os.path.isfile(paths['config']):
+                dest = os.path.join(staging, 'config.inc.php')
+                shutil.copy2(paths['config'], dest)
+                preserved['config'] = dest
+            if os.path.isdir(paths['tmp']):
+                dest = os.path.join(staging, 'tmp')
+                shutil.copytree(paths['tmp'], dest)
+                preserved['tmp'] = dest
+            preserved['staging'] = staging
+            return preserved
+        except Exception as msg:
             try:
-                shutil.rmtree("/usr/local/CyberCP/public/phpmyadmin")
-            except:
+                shutil.rmtree(staging)
+            except Exception:
                 pass
+            Upgrade.stdOut('WARNING: could not preserve phpMyAdmin state: %s' % (msg,), 0)
+            return {'config': None, 'tmp': None, 'staging': None}
 
-            Upgrade.stdOut("Installing phpMyAdmin...", 0)
-            
-            command = 'wget -q -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Download phpMyAdmin')
+    @staticmethod
+    def _phpmyadmin_restore_state(paths, preserved):
+        if not preserved:
+            return
+        try:
+            if preserved.get('config') and os.path.isfile(preserved['config']):
+                os.makedirs(paths['base'], exist_ok=True)
+                shutil.copy2(preserved['config'], paths['config'])
+                Upgrade.stdOut('Restored preserved phpMyAdmin config.inc.php', 0)
+            if preserved.get('tmp') and os.path.isdir(preserved['tmp']):
+                if os.path.isdir(paths['tmp']):
+                    shutil.rmtree(paths['tmp'])
+                shutil.copytree(preserved['tmp'], paths['tmp'])
+                Upgrade.stdOut('Restored preserved phpMyAdmin tmp/', 0)
+        finally:
+            staging = preserved.get('staging')
+            if staging and os.path.isdir(staging):
+                try:
+                    shutil.rmtree(staging)
+                except Exception:
+                    pass
 
-            command = 'unzip -q /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
-            Upgrade.executioner_silent(command, 'Extract phpMyAdmin')
-
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin zip')
-            
-            Upgrade.stdOut("phpMyAdmin installation completed.", 0)
-
-            ## Write secret phrase
-
-            rString = ''.join([secrets.choice(string.ascii_letters + string.digits) for n in range(32)])
-
-            data = open('/usr/local/CyberCP/public/phpmyadmin/config.sample.inc.php', 'r').readlines()
-
-            writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
-
-            writeE = 1
-
-            phpMyAdminContent = """
+    @staticmethod
+    def _phpmyadmin_write_fresh_config(paths):
+        rString = ''.join([secrets.choice(string.ascii_letters + string.digits) for n in range(32)])
+        data = open(paths['config_sample'], 'r').readlines()
+        writeToFile = open(paths['config'], 'w')
+        writeE = 1
+        phpMyAdminContent = """
 $cfg['Servers'][$i]['AllowNoPassword'] = false;
 $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
 $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
 $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 """
-
-            for items in data:
-                if items.find('blowfish_secret') > -1:
-                    writeToFile.writelines(
-                        "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                elif items.find('/* Authentication type */') > -1:
+        for items in data:
+            if items.find('blowfish_secret') > -1:
+                writeToFile.writelines(
+                    "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
+            elif items.find('/* Authentication type */') > -1:
+                writeToFile.writelines(items)
+                writeToFile.write(phpMyAdminContent)
+                writeE = 0
+            elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                writeE = 1
+            else:
+                if writeE:
                     writeToFile.writelines(items)
-                    writeToFile.write(phpMyAdminContent)
-                    writeE = 0
-                elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
-                    writeE = 1
-                else:
-                    if writeE:
-                        writeToFile.writelines(items)
-
-            writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
-
-            writeToFile.close()
-
-            os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
-
-            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
-            Upgrade.executioner(command, 0)
-
-            passFile = "/etc/cyberpanel/mysqlPassword"
-
-            try:
-                import json
-                from install.database_consumers import configure_phpmyadmin_signon
-                jsonData = json.loads(open(passFile, 'r').read())
-
-                mysqluser = jsonData['mysqluser']
-                mysqlpassword = jsonData['mysqlpassword']
-                mysqlport = jsonData['mysqlport']
-                mysqlhost = jsonData['mysqlhost']
-
-                configure_phpmyadmin_signon(
-                    '/usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php',
-                    mysqlhost,
-                    mysqlport,
-                )
-
-            except:
-                pass
-
-            os.chdir(cwd)
-
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
+        writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
+        writeToFile.close()
 
     @staticmethod
+    def ensure_phpmyadmin_signin():
+        """Always re-copy CyberPanel signon helper into the phpMyAdmin tree."""
+        paths = Upgrade.phpmyadmin_paths()
+        if not os.path.isfile(paths['signin_src']):
+            Upgrade.stdOut('WARNING: missing %s' % (paths['signin_src'],), 0)
+            return 0
+        os.makedirs(paths['base'], exist_ok=True)
+        command = 'cp -f %s %s' % (paths['signin_src'], paths['signin_dest'])
+        Upgrade.executioner(command, 0)
+        passFile = '/etc/cyberpanel/mysqlPassword'
+        try:
+            import json
+            from install.database_consumers import configure_phpmyadmin_signon
+            jsonData = json.loads(open(passFile, 'r').read())
+            configure_phpmyadmin_signon(
+                paths['signin_dest'],
+                jsonData['mysqlhost'],
+                jsonData['mysqlport'],
+            )
+        except Exception:
+            pass
+        return 1 if os.path.isfile(paths['signin_dest']) else 0
+
+    @staticmethod
+    def download_install_phpmyadmin():
+        """
+        Install or repair phpMyAdmin during upgrades.
+
+        Prefer verifying a healthy tree over deleting a working install.
+        Preserve config.inc.php and tmp/ across reinstalls. Always refresh
+        phpmyadminsignin.php from plogical after install/repair.
+        """
+        try:
+            # Imported here so installer contract tests can see the consumer hook.
+            # configure_phpmyadmin_signon is applied inside ensure_phpmyadmin_signin().
+            from install.database_consumers import configure_phpmyadmin_signon  # noqa: F401
+
+            cwd = os.getcwd()
+            paths = Upgrade.phpmyadmin_paths()
+            public_dir = '/usr/local/CyberCP/public'
+            force = os.environ.get('CYBERPANEL_FORCE_PMA_REINSTALL', '').strip() in ('1', 'true', 'yes')
+
+            if not os.path.exists(public_dir):
+                os.mkdir(public_dir)
+
+            if (not force) and Upgrade.phpmyadmin_is_healthy(paths):
+                Upgrade.stdOut('phpMyAdmin tree looks healthy; refreshing signon helper only.', 0)
+                if not os.path.isdir(paths['tmp']):
+                    os.makedirs(paths['tmp'], exist_ok=True)
+                Upgrade.ensure_phpmyadmin_signin()
+                try:
+                    command = 'chown -R lscpd:lscpd %s' % (paths['tmp'],)
+                    Upgrade.executioner_silent(command, 'phpMyAdmin tmp ownership')
+                except Exception:
+                    pass
+                os.chdir(cwd)
+                return 1
+
+            Upgrade.stdOut('Installing or repairing phpMyAdmin...', 0)
+            preserved = Upgrade._phpmyadmin_preserve_state(paths)
+
+            # Stage download/extract outside the live tree so a failed
+            # download cannot leave public/phpmyadmin empty.
+            import tempfile
+            import glob
+            stage_root = tempfile.mkdtemp(prefix='cyberpanel_pma_stage_')
+            zip_path = os.path.join(stage_root, 'phpmyadmin.zip')
+            extract_dir = os.path.join(stage_root, 'extract')
+            os.makedirs(extract_dir, exist_ok=True)
+
+            download_urls = (
+                'https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip',
+                'https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/phpmyadmin.zip',
+                'https://cyberpanel.sh/phpmyadmin.zip',
+            )
+
+            downloaded = False
+            for url in download_urls:
+                command = 'wget -q -O %s %s' % (zip_path, url)
+                if Upgrade.executioner_silent(command, 'Download phpMyAdmin'):
+                    if os.path.isfile(zip_path) and os.path.getsize(zip_path) > 1000000:
+                        downloaded = True
+                        Upgrade.stdOut('Downloaded phpMyAdmin from %s' % (url,), 0)
+                        break
+                try:
+                    if os.path.isfile(zip_path):
+                        os.remove(zip_path)
+                except Exception:
+                    pass
+
+            if not downloaded:
+                Upgrade._phpmyadmin_restore_state(paths, preserved)
+                try:
+                    shutil.rmtree(stage_root)
+                except Exception:
+                    pass
+                Upgrade.stdOut('ERROR: failed to download phpMyAdmin zip; leaving existing tree untouched.', 0)
+                Upgrade.ensure_phpmyadmin_signin()
+                os.chdir(cwd)
+                return 0
+
+            command = 'unzip -q %s -d %s' % (zip_path, extract_dir)
+            if not Upgrade.executioner_silent(command, 'Extract phpMyAdmin'):
+                Upgrade._phpmyadmin_restore_state(paths, preserved)
+                try:
+                    shutil.rmtree(stage_root)
+                except Exception:
+                    pass
+                Upgrade.stdOut('ERROR: failed to extract phpMyAdmin zip.', 0)
+                Upgrade.ensure_phpmyadmin_signin()
+                os.chdir(cwd)
+                return 0
+
+            extracted = glob.glob(os.path.join(extract_dir, 'phpMyAdmin-*-all-languages'))
+            if not extracted:
+                # Some zips may extract a folder named phpmyadmin already
+                alt = os.path.join(extract_dir, 'phpmyadmin')
+                if os.path.isdir(alt):
+                    extracted = [alt]
+            if not extracted:
+                Upgrade._phpmyadmin_restore_state(paths, preserved)
+                try:
+                    shutil.rmtree(stage_root)
+                except Exception:
+                    pass
+                Upgrade.stdOut('ERROR: unexpected phpMyAdmin zip layout.', 0)
+                Upgrade.ensure_phpmyadmin_signin()
+                os.chdir(cwd)
+                return 0
+
+            new_tree = extracted[0]
+            # Sanity-check staged tree before swapping into place
+            staged_paths = {
+                'base': new_tree,
+                'index': os.path.join(new_tree, 'index.php'),
+                'libraries': os.path.join(new_tree, 'libraries'),
+                'config_sample': os.path.join(new_tree, 'config.sample.inc.php'),
+            }
+            if not (os.path.isfile(staged_paths['index']) and os.path.isdir(staged_paths['libraries'])
+                    and os.path.isfile(staged_paths['config_sample'])):
+                Upgrade._phpmyadmin_restore_state(paths, preserved)
+                try:
+                    shutil.rmtree(stage_root)
+                except Exception:
+                    pass
+                Upgrade.stdOut('ERROR: extracted phpMyAdmin tree is incomplete.', 0)
+                Upgrade.ensure_phpmyadmin_signin()
+                os.chdir(cwd)
+                return 0
+
+            # Swap: move old tree aside, then move new tree in
+            old_backup = None
+            if os.path.isdir(paths['base']):
+                old_backup = paths['base'] + '.upgrade-bak'
+                if os.path.isdir(old_backup):
+                    shutil.rmtree(old_backup)
+                shutil.move(paths['base'], old_backup)
+
+            shutil.move(new_tree, paths['base'])
+
+            # Restore preserved config/tmp, or write a fresh config
+            if preserved.get('config') and os.path.isfile(preserved['config']):
+                shutil.copy2(preserved['config'], paths['config'])
+                Upgrade.stdOut('Preserved existing phpMyAdmin config.inc.php', 0)
+            else:
+                Upgrade._phpmyadmin_write_fresh_config(paths)
+
+            if preserved.get('tmp') and os.path.isdir(preserved['tmp']):
+                if os.path.isdir(paths['tmp']):
+                    shutil.rmtree(paths['tmp'])
+                shutil.copytree(preserved['tmp'], paths['tmp'])
+            elif not os.path.isdir(paths['tmp']):
+                os.makedirs(paths['tmp'], exist_ok=True)
+
+            Upgrade.ensure_phpmyadmin_signin()
+
+            try:
+                command = 'chown -R lscpd:lscpd %s' % (paths['tmp'],)
+                Upgrade.executioner_silent(command, 'phpMyAdmin tmp ownership')
+            except Exception:
+                pass
+
+            if Upgrade.phpmyadmin_is_healthy(paths) and os.path.isfile(paths['signin_dest']):
+                Upgrade.stdOut('phpMyAdmin installation completed.', 0)
+                if old_backup and os.path.isdir(old_backup):
+                    try:
+                        shutil.rmtree(old_backup)
+                    except Exception:
+                        pass
+                result = 1
+            else:
+                Upgrade.stdOut('ERROR: phpMyAdmin install verification failed; rolling back.', 0)
+                if os.path.isdir(paths['base']):
+                    shutil.rmtree(paths['base'])
+                if old_backup and os.path.isdir(old_backup):
+                    shutil.move(old_backup, paths['base'])
+                    Upgrade.ensure_phpmyadmin_signin()
+                result = 0
+
+            # Cleanup staging / preserved copies
+            try:
+                shutil.rmtree(stage_root)
+            except Exception:
+                pass
+            staging = preserved.get('staging')
+            if staging and os.path.isdir(staging):
+                try:
+                    shutil.rmtree(staging)
+                except Exception:
+                    pass
+
+            os.chdir(cwd)
+            return result
+
+        except BaseException as msg:
+            Upgrade.stdOut(str(msg) + ' [download_install_phpmyadmin]', 0)
+            try:
+                Upgrade.ensure_phpmyadmin_signin()
+            except Exception:
+                pass
+            return 0
+
+    @staticmethod
+
     def setupComposer():
 
         if os.path.exists('composer.sh'):
@@ -3805,7 +4048,7 @@ passdb {
         # Also backup any custom configurations
         custom_configs = [
             '/usr/local/CyberCP/baseTemplate/static/baseTemplate/custom/',
-            '/usr/local/CyberCP/public/phpmyadmin/config.inc.php',
+            '/usr/local/CyberCP/public/phpmyadmin',
             '/usr/local/CyberCP/rainloop/data/_data_/',
         ]
         
