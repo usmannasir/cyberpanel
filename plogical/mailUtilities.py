@@ -120,6 +120,9 @@ class mailUtilities:
 
             emailDomain = Domains.objects.get(domain=domain)
 
+            from plogical import storageQuota
+            storageQuota.ensure_mail_domain(emailDomain, website.master if ChildCheck else website)
+
             #emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=hash.hexdigest())
 
             CentOSPath = '/etc/redhat-release'
