@@ -254,17 +254,29 @@ class MailServerManager(multi.Thread):
 
             emailOwnerDomain = eUser.emailOwner
 
+            website = emailOwnerDomain.domainOwner
+            if emailOwnerDomain.childOwner_id is not None:
+                childOwner = emailOwnerDomain.childOwner
+                if website is not None and website.pk != childOwner.master_id:
+                    raise ValueError('Mail domain has inconsistent website ownership.')
+                website = childOwner.master
+            if website is None:
+                raise ValueError('Mail domain has no website owner.')
+
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+            if ACLManager.checkOwnership(website.domain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            from plogical import storageQuota
+            retainDomain = storageQuota.has_enrollment(website)
 
             result = mailUtilities.deleteEmailAccount(email)
             if result[0] != 1:
                 raise ValueError(result[1])
 
-            if emailOwnerDomain.eusers_set.all().count() == 0:
+            if not retainDomain and emailOwnerDomain.eusers_set.all().count() == 0:
                 emailOwnerDomain.delete()
 
             data_ret = {'status': 1, 'deleteEmailStatus': 1, 'error_message': "None"}
