@@ -1446,6 +1446,10 @@ app.controller('EmailLimitsNew', function ($scope, $http) {
         $scope.couldNotConnect = true;
         $scope.notifyBox = true;
 
+        $scope.emailLimitAvailable = false;
+        $scope.numberofEmails = null;
+        $scope.duration = null;
+
         // Given email to search for
         var givenEmail = $scope.selectedEmail;
 
@@ -1457,6 +1461,8 @@ app.controller('EmailLimitsNew', function ($scope, $http) {
 
                 $scope.numberofEmails = numberofEmails;
                 $scope.duration = duration;
+                $scope.emailLimitAvailable = typeof numberofEmails === 'number' &&
+                    typeof duration === 'string';
 
                 // Use numberofEmails and duration as needed
                 console.log("Number of emails:", numberofEmails);
