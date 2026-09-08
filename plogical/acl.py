@@ -32,7 +32,7 @@ class ACLManager:
                '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
                '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
                ' "restoreBackup": 1, "addDeleteDestinations": 1, "scheduleBackups": 1, "remoteBackups": 1, "googleDriveBackups": 1, "manageSSL": 1, ' \
-               '"hostnameSSL": 1, "mailServerSSL": 1 }'
+               '"hostnameSSL": 1, "mailServerSSL": 1, "sslReconcile": 1 }'
 
     ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
                   '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -44,7 +44,7 @@ class ACLManager:
                   '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
-              '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
+              '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 0, "deleteWebsite": 1, ' \
               '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
               '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
@@ -152,13 +152,8 @@ class ACLManager:
 
     @staticmethod
     def fetchIP():
-        try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            return ipData.split('\n', 1)[0]
-        except BaseException:
-            return "192.168.100.1"
+        from plogical.machine_ip import read_machine_ip
+        return read_machine_ip("192.168.100.1")
 
     ## GitHub and GitLab allow dots in a repository name (repo.ltd), the default
     ## validateInput pattern does not, so attaching such a repo failed the security
@@ -191,6 +186,41 @@ class ACLManager:
                 return 0
         except BaseException as msg:
             logging.writeToFile('%s. [32:commandInjectionCheck]' % (str(msg)))
+
+    @staticmethod
+    def isPathInsideHome(path, home_path):
+        """
+        Check if path is inside the allowed home directory. Uses normpath to correctly
+        allow filenames like 'file..name.txt' while rejecting path traversal (e.g. ../../etc).
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            path = os.path.normpath(path)
+            if not os.path.isabs(path):
+                return False
+            base = os.path.realpath(home_path)
+            if base == '/':
+                return True
+            return path == base or path.startswith(base + os.sep)
+        except (OSError, TypeError) as msg:
+            logging.writeToFile('%s. [isPathInsideHome]' % (str(msg)))
+            return False
+
+    @staticmethod
+    def isFilePathSafeForShell(path):
+        """
+        Check if path is safe for shell when passed in single quotes. Only blocks
+        characters that break single-quoted strings: quote, null, newline.
+        Allows ( ) : & [ ] etc. since they are harmless inside single quotes.
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            return "'" not in path and '\0' not in path and '\n' not in path
+        except (TypeError, AttributeError) as msg:
+            logging.writeToFile('%s. [isFilePathSafeForShell]' % (str(msg)))
+            return False
 
     @staticmethod
     def loadedACL(val):
@@ -250,10 +280,10 @@ class ACLManager:
 
             ## DNS Management
 
-            finalResponse['createNameServer'] = config['createNameServer']
-            finalResponse['createDNSZone'] = config['createDNSZone']
-            finalResponse['deleteZone'] = config['deleteZone']
-            finalResponse['addDeleteRecords'] = config['addDeleteRecords']
+            finalResponse['createNameServer'] = config.get('createNameServer', 0)
+            finalResponse['createDNSZone'] = config.get('createDNSZone', 0)
+            finalResponse['deleteZone'] = config.get('deleteZone', 0)
+            finalResponse['addDeleteRecords'] = config.get('addDeleteRecords', 0)
 
             ## Email Management
 
@@ -284,6 +314,18 @@ class ACLManager:
             finalResponse['manageSSL'] = config['manageSSL']
             finalResponse['hostnameSSL'] = config['hostnameSSL']
             finalResponse['mailServerSSL'] = config['mailServerSSL']
+            finalResponse['sslReconcile'] = config.get('sslReconcile', 0)
+
+            ## Plugin management (Plugin Store / installed plugins UI and APIs)
+
+            _mpv = config.get('managePlugins', 0)
+            if _mpv in (1, True, '1', 'true'):
+                finalResponse['managePlugins'] = 1
+            else:
+                try:
+                    finalResponse['managePlugins'] = 1 if int(_mpv) else 0
+                except (TypeError, ValueError):
+                    finalResponse['managePlugins'] = 0
 
         return finalResponse
 
@@ -1090,10 +1132,46 @@ class ACLManager:
 
     @staticmethod
     def GetServerIP():
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        return ipData.split('\n', 1)[0]
+        from plogical.machine_ip import read_machine_ip
+        return read_machine_ip()
+
+    @staticmethod
+    def GetServerIPv6():
+        """
+        Get the server's primary IPv6 address (non-link-local, non-loopback)
+        Returns None if no IPv6 address is found
+        """
+        try:
+            import ipaddress
+            import subprocess
+            # Get IPv6 addresses and filter loopback/link-local with proper IP parsing.
+            result = subprocess.run(
+                ['ip', '-6', 'addr', 'show'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if 'inet6' not in line:
+                        continue
+                    # Expected format: "inet6 2a02:c207:2139:8929::1/64 scope global ..."
+                    parts = line.strip().split()
+                    if len(parts) < 2:
+                        continue
+                    ipv6 = parts[1].split('/')[0]
+                    try:
+                        ip_obj = ipaddress.ip_address(ipv6)
+                    except ValueError:
+                        continue
+                    if ip_obj.version == 6 and not ip_obj.is_loopback and not ip_obj.is_link_local:
+                        return str(ip_obj)
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error getting IPv6 address: {str(e)}')
+        
+        return None
 
     @staticmethod
     def CheckForPremFeature(feature):
@@ -1286,6 +1364,8 @@ class ACLManager:
 
             for command in legacy_data_permission_commands():
                 ProcessUtilities.executioner(command, 'root', True)
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail"
+            ProcessUtilities.executioner(command, 'root', True)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
             ProcessUtilities.executioner(command, 'root', True)

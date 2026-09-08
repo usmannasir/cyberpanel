@@ -1,0 +1,351 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Plugin Help - " %}{{ plugin_name }} - CyberPanel{% endblock %}
+
+{% block header_scripts %}
+<style>
+    /* Plugin Help Page Styles */
+    .plugin-help-wrapper {
+        background: transparent;
+        padding: 20px;
+    }
+    
+    .plugin-help-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    /* Page Header */
+    .help-page-header {
+        background: var(--bg-primary, white);
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.08));
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-left: 4px solid #5856d6;
+    }
+    
+    .help-page-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin: 0 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .help-page-header .help-icon {
+        width: 48px;
+        height: 48px;
+        background: #5856d6;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(88,86,214,0.3);
+    }
+    
+    .help-page-header .plugin-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 10px;
+    }
+    
+    .help-page-header .plugin-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-primary, #e8e9ff);
+        font-size: 14px;
+        color: var(--text-secondary, #64748b);
+    }
+    
+    .help-page-header .plugin-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .help-page-header .plugin-meta-item strong {
+        color: var(--text-primary, #2f3640);
+    }
+    
+    /* Content Section */
+    .help-content-section {
+        background: var(--bg-primary, white);
+        border-radius: 12px;
+        padding: 35px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.08));
+        border: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .help-content {
+        line-height: 1.8;
+        color: var(--text-primary, #2f3640);
+        font-size: 15px;
+    }
+    
+    /* Help content styling for HTML */
+    .help-content h1,
+    .help-content h2,
+    .help-content h3,
+    .help-content h4,
+    .help-content h5,
+    .help-content h6 {
+        color: var(--text-primary, #2f3640);
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    
+    .help-content h1 {
+        font-size: 28px;
+        border-bottom: 2px solid #5856d6;
+        padding-bottom: 10px;
+    }
+    
+    .help-content h2 {
+        font-size: 24px;
+        color: #5856d6;
+    }
+    
+    .help-content h3 {
+        font-size: 20px;
+    }
+    
+    .help-content p {
+        margin-bottom: 15px;
+    }
+    
+    .help-content ul,
+    .help-content ol {
+        margin-left: 25px;
+        margin-bottom: 15px;
+    }
+    
+    .help-content li {
+        margin-bottom: 8px;
+    }
+    
+    .help-content code {
+        background: var(--bg-secondary, #f8f9ff);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        color: #5856d6;
+    }
+    
+    .help-content pre {
+        background: var(--bg-secondary, #f8f9ff);
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        border-left: 4px solid #5856d6;
+        margin-bottom: 15px;
+    }
+    
+    .help-content pre code {
+        background: none;
+        padding: 0;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .help-content blockquote {
+        border-left: 4px solid #5856d6;
+        padding-left: 20px;
+        margin-left: 0;
+        margin-bottom: 15px;
+        color: var(--text-secondary, #64748b);
+        font-style: italic;
+    }
+    
+    .help-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+    
+    .help-content table th,
+    .help-content table td {
+        padding: 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        text-align: left;
+    }
+    
+    .help-content table th {
+        background: var(--bg-secondary, #f8f9ff);
+        font-weight: 600;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .help-content a {
+        color: #5856d6;
+        text-decoration: none;
+        border-bottom: 1px dotted #5856d6;
+    }
+    
+    .help-content a:hover {
+        color: #4a48c4;
+        border-bottom: 1px solid #4a48c4;
+    }
+    
+    .help-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 15px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Actions Section */
+    .help-actions {
+        background: var(--bg-primary, white);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.08));
+        border: 1px solid var(--border-primary, #e8e9ff);
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .help-action-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .help-action-btn-primary {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .help-action-btn-primary:hover {
+        background: #4a48c4;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(88,86,214,0.3);
+    }
+    
+    .help-action-btn-secondary {
+        background: var(--bg-secondary, #f8f9ff);
+        color: var(--text-secondary, #64748b);
+        border: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .help-action-btn-secondary:hover {
+        background: var(--bg-hover, #f0f1ff);
+        color: #5856d6;
+        border-color: #5856d6;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .plugin-help-wrapper {
+            padding: 15px;
+        }
+        
+        .help-page-header {
+            padding: 20px;
+        }
+        
+        .help-page-header h1 {
+            font-size: 24px;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .help-content-section {
+            padding: 20px;
+        }
+        
+        .help-actions {
+            flex-direction: column;
+        }
+        
+        .help-action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<div class="plugin-help-wrapper">
+    <div class="plugin-help-container">
+        <!-- Page Header -->
+        <div class="help-page-header">
+            <h1>
+                <div class="help-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                {% trans "Module Help" %}
+            </h1>
+            <div class="plugin-title">{{ plugin_name }}</div>
+            {% if plugin_description %}
+            <p style="color: var(--text-secondary, #64748b); margin: 10px 0 0 0;">
+                {{ plugin_description }}
+            </p>
+            {% endif %}
+            <div class="plugin-meta">
+                <div class="plugin-meta-item">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>{% trans "Version:" %}</strong> {{ plugin_version }}
+                </div>
+                <div class="plugin-meta-item">
+                    <i class="fas fa-user"></i>
+                    <strong>{% trans "Author:" %}</strong> {{ plugin_author }}
+                </div>
+                {% if installed %}
+                <div class="plugin-meta-item">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>{% trans "Status:" %}</strong> <span style="color: #28a745;">{% trans "Installed" %}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Help Content -->
+        <div class="help-content-section">
+            <div class="help-content">
+                {{ help_content|safe }}
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="help-actions">
+            {% if installed %}
+            <a href="/plugins/{{ plugin_name_dir }}/" class="help-action-btn help-action-btn-primary">
+                <i class="fas fa-cog"></i>
+                {% trans "Plugin Settings" %}
+            </a>
+            {% endif %}
+            <a href="/plugins/installed" class="help-action-btn help-action-btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                {% trans "Back to Plugins" %}
+            </a>
+            <a href="https://github.com/master3395/cyberpanel-plugins/tree/main/{{ plugin_name_dir }}" target="_blank" class="help-action-btn help-action-btn-secondary">
+                <i class="fab fa-github"></i>
+                {% trans "View on GitHub" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

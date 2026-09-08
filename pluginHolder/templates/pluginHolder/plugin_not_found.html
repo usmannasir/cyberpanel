@@ -1,0 +1,93 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Plugin Not Found - CyberPanel" %}{% endblock %}
+
+{% block header_scripts %}
+<style>
+    .error-wrapper {
+        background: transparent;
+        padding: 20px;
+    }
+    
+    .error-container {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .error-icon {
+        font-size: 72px;
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+    
+    .error-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 15px;
+    }
+    
+    .error-message {
+        font-size: 16px;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 30px;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .error-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .error-btn-primary {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .error-btn-primary:hover {
+        background: #4a48c4;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-wrapper">
+    <div class="error-container">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1 class="error-title">{% trans "Plugin Not Found" %}</h1>
+        <p class="error-message">
+            {% if plugin_name %}
+                {% trans "The plugin" %} "<strong>{{ plugin_name }}</strong>" {% trans "could not be found." %}
+            {% else %}
+                {% trans "The requested plugin could not be found." %}
+            {% endif %}
+            {% if error %}
+                <br><small style="color: #dc3545;">{{ error }}</small>
+            {% endif %}
+        </p>
+        <div class="error-actions">
+            <a href="/plugins/installed" class="error-btn error-btn-primary">
+                <i class="fas fa-arrow-left"></i>
+                {% trans "Back to Plugins" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

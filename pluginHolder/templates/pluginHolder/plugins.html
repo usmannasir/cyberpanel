@@ -125,7 +125,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
     
     .plugin-icon {
@@ -143,6 +143,7 @@
     
     .plugin-info {
         flex: 1;
+        min-width: 0;
     }
     
     .plugin-name {
@@ -150,6 +151,14 @@
         font-weight: 700;
         color: var(--text-primary, #2f3640);
         margin-bottom: 5px;
+        word-wrap: break-word;
+    }
+    
+    .plugin-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
     }
     
     .plugin-type {
@@ -158,33 +167,10 @@
         background: var(--purple-light, #e8e6ff);
         color: #5856d6;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
-    
-    .plugin-description {
-        font-size: 14px;
-        color: var(--text-secondary, #64748b);
-        line-height: 1.6;
-        margin-bottom: 15px;
-    }
-    
-    .plugin-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 15px;
-        border-top: 1px solid var(--border-primary, #e8e9ff);
-    }
-    
-    .plugin-version {
-        font-size: 13px;
-        color: var(--text-muted, #94a3b8);
-        display: flex;
-        align-items: center;
-        gap: 5px;
     }
     
     .plugin-version-number {
@@ -192,7 +178,174 @@
         padding: 3px 8px;
         border-radius: 4px;
         font-weight: 600;
+        font-size: 11px;
         color: var(--text-secondary, #64748b);
+    }
+    
+    .plugin-pricing-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    
+    .plugin-pricing-badge.free {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .freshness-badge-new, .freshness-badge-stable, .freshness-badge-stale {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: 4px;
+    }
+    .freshness-badge-new {
+        background: #fef08a;
+        color: #854d0e;
+    }
+    .freshness-badge-stable {
+        background: #bbf7d0;
+        color: #166534;
+    }
+    .freshness-badge-stale {
+        background: #fecaca;
+        color: #991b1b;
+    }
+    .freshness-badge-unstable {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+    
+    .plugin-pricing-badge.paid {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .paid-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+    
+    .paid-badge i {
+        margin-right: 4px;
+    }
+    
+    .plugin-description {
+        font-size: 13px;
+        color: var(--text-secondary, #64748b);
+        line-height: 1.6;
+        margin-bottom: 15px;
+        min-height: 40px;
+    }
+    
+    .plugin-status-section {
+        padding: 12px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .plugin-status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 12px;
+    }
+    
+    .plugin-status-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .plugin-status-row .label {
+        color: var(--text-secondary, #64748b);
+        font-weight: 600;
+    }
+    
+    .status-installed-small {
+        display: inline-block;
+        padding: 3px 8px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .status-not-installed-small {
+        display: inline-block;
+        padding: 3px 8px;
+        background: #f8f9fa;
+        color: #6c757d;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .active-status {
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .active-status.active-yes {
+        color: #28a745;
+    }
+    
+    .active-status.active-no {
+        color: #dc3545;
+    }
+    
+    .active-status.active-na {
+        color: #6c757d;
+        font-size: 12px;
+    }
+    
+    .plugin-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .plugin-links {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .btn-link-small {
+        padding: 4px 10px;
+        font-size: 11px;
+        white-space: nowrap;
     }
     
     /* Table View (Alternative) */
@@ -261,11 +414,115 @@
         margin: 0 auto;
     }
     
-    /* View Toggle */
+    /* View Toggle and Bulk Actions */
+    .view-toggle-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
     .view-toggle {
         display: flex;
         gap: 10px;
-        margin-bottom: 20px;
+    }
+    /* Sort/Filter bar for Grid and Table view */
+    .installed-sort-filter-bar {
+        flex-basis: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--border-primary, #e2e8f0);
+    }
+    .installed-sort-filter-bar .installed-filter-row,
+    .installed-sort-filter-bar .installed-sort-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+    .installed-sort-filter-bar .sort-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        margin-right: 4px;
+    }
+    .installed-sort-filter-bar .sort-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .installed-sort-filter-bar .sort-btn {
+        padding: 6px 14px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-sort-filter-bar .sort-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-sort-filter-bar .sort-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    .bulk-actions-header {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    .bulk-actions-header .btn-bulk {
+        margin: 0;
+        flex-shrink: 0;
+    }
+    .btn-bulk {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-activate-all {
+        background: #28a745;
+        color: white;
+        border-color: #218838;
+    }
+    .btn-activate-all:hover:not(:disabled) {
+        background: #218838;
+    }
+    .btn-activate-all:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .btn-deactivate-all {
+        background: #ffc107;
+        color: #212529;
+        border-color: #e0a800;
+    }
+    .btn-deactivate-all:hover:not(:disabled) {
+        background: #e0a800;
+    }
+    .btn-deactivate-all:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     
     .view-btn {
@@ -290,6 +547,21 @@
     }
     
     .view-btn:hover:not(.active) {
+        background: var(--bg-hover, #f8f9ff);
+        color: #5856d6;
+        border-color: #5856d6;
+    }
+    
+    /* Style links that use view-btn class */
+    a.view-btn {
+        color: var(--text-secondary, #64748b);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    a.view-btn:hover {
         background: var(--bg-hover, #f8f9ff);
         color: #5856d6;
         border-color: #5856d6;
@@ -321,6 +593,644 @@
         color: var(--alert-danger-icon, #ef4444);
     }
     
+    /* Plugin Store Styles */
+    .store-notice {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+        position: relative;
+    }
+    
+    .notice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: #856404;
+    }
+    
+    .notice-close {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #856404;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    
+    .notice-close:hover {
+        background: rgba(0,0,0,0.1);
+    }
+    
+    .notice-content p {
+        margin: 10px 0;
+        color: #856404;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .warning-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #ff6b00 !important;
+        font-weight: 600;
+        margin-top: 15px !important;
+    }
+    
+    .warning-text i {
+        font-size: 18px;
+    }
+    
+    .store-loading {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #5856d6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .category-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    
+    .category-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .category-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    
+    .category-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    
+    .category-btn i {
+        font-size: 14px;
+    }
+    
+    .store-search-bar {
+        position: relative;
+        margin-bottom: 15px;
+        max-width: 480px;
+    }
+    
+    /* Search bar in page header (same row as Activate/Deactivate All) */
+    .header-search-bar {
+        margin-bottom: 0;
+        min-width: 220px;
+        max-width: 320px;
+        margin-left: 8px;
+        padding-left: 16px;
+        border-left: 2px solid #e2e8f0;
+    }
+    
+    .store-search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 16px;
+        pointer-events: none;
+        z-index: 1;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .store-search-input {
+        width: 100%;
+        padding-left: 46px;
+        padding-right: 40px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #f8fafc;
+        color: #1e293b;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    
+    .store-search-input:focus {
+        outline: none;
+        border-color: #5856d6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.15);
+    }
+    
+    .store-search-input::placeholder {
+        color: #64748b;
+    }
+    
+    .store-search-clear {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted, #94a3b8);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: color 0.2s, background 0.2s;
+    }
+    
+    .store-search-clear:hover {
+        color: #5856d6;
+        background: var(--bg-secondary, #f8f9ff);
+    }
+    
+    .alphabet-filter-wrapper {
+        margin-bottom: 20px;
+    }
+    
+    .alphabet-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .alphabet-toggle-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    
+    .alphabet-toggle-btn[aria-expanded="true"] .alphabet-chevron {
+        transform: rotate(180deg);
+    }
+    
+    .alphabet-chevron {
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    
+    .alphabet-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    
+    /* Collapsible Category Filter for Grid/Table (installed view) - same style as A-Å filter */
+    .installed-category-filter-wrapper {
+        margin-top: 12px;
+        margin-bottom: 0;
+    }
+    .installed-category-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .installed-category-toggle-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-toggle-btn[aria-expanded="true"] .installed-category-chevron {
+        transform: rotate(180deg);
+    }
+    .installed-category-chevron {
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    .installed-category-filter {
+        display: block;
+        margin-top: 12px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    .installed-category-filter .installed-filter-row,
+    .installed-category-filter .installed-sort-row {
+        margin-bottom: 12px;
+    }
+    .installed-category-filter .installed-sort-row:last-of-type {
+        margin-bottom: 0;
+    }
+    .installed-category-filter-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .installed-category-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-category-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    
+    .alpha-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        min-width: 36px;
+        text-align: center;
+    }
+    
+    .alpha-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    
+    .alpha-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    
+    .store-table-wrapper {
+        overflow-x: auto;
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .store-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .store-table th {
+        background: #2f3640;
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #1a1d2e;
+    }
+    
+    .store-table td {
+        padding: 18px 15px;
+        border-bottom: 1px solid var(--border-primary, #e8e9ff);
+        font-size: 14px;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .store-table tr:hover {
+        background: var(--bg-hover, #f8f9ff);
+    }
+    
+    .store-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .status-action {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .status-installed {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .btn-install {
+        padding: 8px 16px;
+        background: #5856d6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-install:hover:not(:disabled) {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-install:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-upgrade {
+        padding: 8px 16px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-upgrade:hover:not(:disabled) {
+        background: #d97706;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(245,158,11,0.3);
+    }
+    
+    .btn-upgrade:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .upgrades-badge {
+        display: inline-block;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        margin-left: 6px;
+        background: #f59e0b;
+        color: white;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+    }
+    
+    .upgrades-view-notice {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .upgrades-view-notice i {
+        color: #2563eb;
+        font-size: 20px;
+        margin-top: 2px;
+    }
+    
+    .btn-link {
+        padding: 6px 12px;
+        background: var(--bg-secondary, #f8f9ff);
+        color: var(--text-secondary, #64748b);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-link:hover {
+        background: var(--bg-hover, #f0f1ff);
+        color: #5856d6;
+    }
+    
+    /* Status and Action Columns */
+    .status-installed {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-not-installed {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #f8f9fa;
+        color: #6c757d;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .btn-action {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-install {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .btn-install:hover:not(:disabled) {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-revert {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-revert:hover:not(:disabled) {
+        background: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(108,117,125,0.3);
+    }
+    
+    .btn-uninstall {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-uninstall:hover:not(:disabled) {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+    }
+
+    .btn-delete-source {
+        background: #b45309;
+        color: white;
+    }
+
+    .btn-delete-source:hover:not(:disabled) {
+        background: #92400e;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(180, 83, 9, 0.35);
+    }
+    
+    .btn-activate {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-activate:hover:not(:disabled) {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+    }
+    
+    .btn-deactivate {
+        background: #ffc107;
+        color: #212529;
+    }
+    
+    .btn-deactivate:hover:not(:disabled) {
+        background: #e0a800;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(255,193,7,0.3);
+    }
+    
+    .btn-settings {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .btn-settings:hover {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .plugin-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Active Column */
+    .active-column {
+        text-align: center;
+    }
+    
+    .active-status {
+        font-size: 18px;
+        display: inline-block;
+    }
+    
+    .active-status.active-yes {
+        color: #28a745;
+    }
+    
+    .active-status.active-no {
+        color: #dc3545;
+    }
+    
+    .active-status.active-na {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .plugins-wrapper {
@@ -346,13 +1256,24 @@
         }
         
         .view-toggle {
-            display: none;
+            flex-wrap: wrap;
+        }
+        
+        .alphabet-filter {
+            padding: 10px;
+        }
+        
+        .alpha-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            min-width: 32px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- plugins-v2026-02-02-no-patreon-front -->
 {% load static %}
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -360,13 +1281,48 @@
     <div class="plugins-container">
         <!-- Page Header -->
         <div class="page-header">
-            <h1>
-                <div class="icon">
-                    <i class="fas fa-plug"></i>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <h1>
+                        <div class="icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        {% trans "Installed Plugins" %}
+                    </h1>
+                    <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
                 </div>
-                {% trans "Installed Plugins" %}
-            </h1>
-            <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
+                <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-check-circle" style="color: #28a745; font-size: 18px;"></i>
+                        <span style="font-weight: 600; color: var(--text-primary, #2f3640);">
+                            {% trans "Installed:" %} {{ installed_count|default:0 }}
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-power-off" style="color: #007bff; font-size: 18px;"></i>
+                        <span style="font-weight: 600; color: var(--text-primary, #2f3640);">
+                            {% trans "Active:" %} {{ active_count|default:0 }}
+                        </span>
+                    </div>
+                    {% if plugins %}
+                    <div id="installedPluginsSearchWrapper" class="header-search-bar store-search-bar">
+                        <i class="fas fa-search store-search-icon"></i>
+                        <input type="text" id="installedPluginSearchInput" class="store-search-input" placeholder="{% trans 'Search plugins by name or description...' %}" aria-label="{% trans 'Search installed plugins' %}">
+                        <button type="button" class="store-search-clear" id="installedPluginSearchClear" onclick="clearInstalledPluginSearch()" style="display: none;" aria-label="{% trans 'Clear search' %}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="bulk-actions-header" style="display: flex; gap: 10px; margin-left: 8px; padding-left: 16px; border-left: 2px solid #e2e8f0;">
+                        <button type="button" class="btn-bulk btn-activate-all" onclick="activateAllPlugins()" title="{% trans 'Activate all installed plugins' %}">
+                            <i class="fas fa-toggle-on"></i> {% trans "Activate All Plugins" %}
+                        </button>
+                        <button type="button" class="btn-bulk btn-deactivate-all" onclick="deactivateAllPlugins()" title="{% trans 'Deactivate all installed plugins' %}">
+                            <i class="fas fa-toggle-off"></i> {% trans "Deactivate All Plugins" %}
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <!-- Plugins Section -->
@@ -375,38 +1331,131 @@
             
             {% if plugins %}
             <!-- View Toggle -->
-            <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('grid')">
-                    <i class="fas fa-th-large"></i>
-                    {% trans "Grid View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('table')">
-                    <i class="fas fa-list"></i>
-                    {% trans "Table View" %}
-                </button>
+            <div class="view-toggle-wrapper">
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="toggleView('grid', true)">
+                        <i class="fas fa-th-large"></i>
+                        {% trans "Grid View" %}
+                    </button>
+                    <button class="view-btn" onclick="toggleView('table', true)">
+                        <i class="fas fa-list"></i>
+                        {% trans "Table View" %}
+                    </button>
+                    <button class="view-btn" id="viewBtnUpgrades" onclick="toggleView('upgrades', true)">
+                        <i class="fas fa-arrow-circle-up"></i>
+                        {% trans "Upgrades Available" %}
+                        <span id="upgradesBadge" class="upgrades-badge" style="display: none;">0</span>
+                    </button>
+                    <button class="view-btn" onclick="toggleView('store', true)">
+                        <i class="fas fa-store"></i>
+                        {% trans "CyberPanel Plugin Store" %}
+                    </button>
+                    <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                        <i class="fas fa-book"></i>
+                        {% trans "Plugin Development Guide" %}
+                    </a>
+                </div>
+                <!-- Filter + Sort bar for Grid and Table view (visible when grid or table is active). All controls in collapsible "Filter". -->
+                <div id="installedSortFilterBar" class="installed-sort-filter-bar" style="display: none;"
+                     data-trans-name-asc="{% trans 'Name A-Å' %}" data-trans-name-desc="{% trans 'Name Å-A' %}"
+                     data-trans-date-newest="{% trans 'Date (newest)' %}" data-trans-date-oldest="{% trans 'Date (oldest)' }}">
+                    <div class="installed-category-filter-wrapper">
+                        <button type="button" class="installed-category-toggle-btn" id="installedCategoryToggleBtn" onclick="toggleInstalledCategoryFilter()" aria-expanded="false">
+                            <i class="fas fa-filter"></i>
+                            <span>{% trans "Filter" %}</span>
+                            <i class="fas fa-chevron-down installed-category-chevron"></i>
+                        </button>
+                        <div class="installed-category-filter" id="installedCategoryFilter" aria-hidden="true" style="display: none;">
+                            <div class="installed-filter-row">
+                                <span class="sort-label">{% trans "Show:" %}</span>
+                                <div class="filter-btns sort-btns">
+                                    <button type="button" class="sort-btn filter-btn active" data-filter="all" id="installedFilterBtnAll" onclick="setInstalledFilter('all')" title="{% trans 'Show all plugins' %}">
+                                        <i class="fas fa-th-list"></i> <span class="filter-btn-label">{% trans "All" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="installed" id="installedFilterBtnInstalled" onclick="setInstalledFilter('installed')" title="{% trans 'Show only installed plugins' %}">
+                                        <i class="fas fa-check-circle"></i> <span class="filter-btn-label">{% trans "Installed only" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="active" id="installedFilterBtnActive" onclick="setInstalledFilter('active')" title="{% trans 'Show only active (enabled) plugins' %}">
+                                        <i class="fas fa-power-off"></i> <span class="filter-btn-label">{% trans "Active only" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="premium" id="installedFilterBtnPremium" onclick="setInstalledFilter('premium')" title="{% trans 'Show only premium (paid) plugins' %}">
+                                        <i class="fas fa-crown"></i> <span class="filter-btn-label">{% trans "Premium" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-sort-row">
+                                <span class="sort-label">{% trans "Sort by:" %}</span>
+                                <div class="sort-btns">
+                                    <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
+                                        <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
+                                        <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
+                                        <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-category-filter-btns">
+                                <button type="button" class="installed-category-btn active" data-category="all" onclick="filterByCategoryInstalled('all', event)">{% trans "All" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Utility" onclick="filterByCategoryInstalled('Utility', event)"><i class="fas fa-tools"></i> {% trans "Utility" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Security" onclick="filterByCategoryInstalled('Security', event)"><i class="fas fa-shield-alt"></i> {% trans "Security" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Backup" onclick="filterByCategoryInstalled('Backup', event)"><i class="fas fa-save"></i> {% trans "Backup" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Performance" onclick="filterByCategoryInstalled('Performance', event)"><i class="fas fa-rocket"></i> {% trans "Performance" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Monitoring" onclick="filterByCategoryInstalled('Monitoring', event)"><i class="fas fa-heartbeat"></i> {% trans "Monitoring" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Integration" onclick="filterByCategoryInstalled('Integration', event)"><i class="fas fa-plug"></i> {% trans "Integration" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Email" onclick="filterByCategoryInstalled('Email', event)"><i class="fas fa-envelope"></i> {% trans "Email" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Development" onclick="filterByCategoryInstalled('Development', event)"><i class="fas fa-code"></i> {% trans "Development" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Analytics" onclick="filterByCategoryInstalled('Analytics', event)"><i class="fas fa-chart-bar"></i> {% trans "Analytics" %}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
-                <div class="plugin-card">
+                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}" data-is-paid="{% if plugin.is_paid|default:False|default_if_none:False %}true{% else %}false{% endif %}">
                     <div class="plugin-header">
                         <div class="plugin-icon">
-                            {% if plugin.type == "Security" %}
+                            {% if plugin.type|lower == "security" %}
                                 <i class="fas fa-shield-alt"></i>
-                            {% elif plugin.type == "Performance" %}
+                            {% elif plugin.type|lower == "performance" %}
                                 <i class="fas fa-rocket"></i>
-                            {% elif plugin.type == "Utility" %}
+                            {% elif plugin.type|lower == "utility" %}
                                 <i class="fas fa-tools"></i>
-                            {% elif plugin.type == "Backup" %}
+                            {% elif plugin.type|lower == "backup" %}
                                 <i class="fas fa-save"></i>
+                            {% elif plugin.type|lower == "monitoring" %}
+                                <i class="fas fa-heartbeat"></i>
+                            {% elif plugin.type|lower == "integration" %}
+                                <i class="fas fa-plug"></i>
+                            {% elif plugin.type|lower == "email" %}
+                                <i class="fas fa-envelope"></i>
+                            {% elif plugin.type|lower == "development" %}
+                                <i class="fas fa-code"></i>
+                            {% elif plugin.type|lower == "analytics" %}
+                                <i class="fas fa-chart-bar"></i>
                             {% else %}
                                 <i class="fas fa-puzzle-piece"></i>
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}</h3>
+                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Premium plugin - activate in Settings' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
+                            <div class="plugin-meta">
+                            {% if plugin.freshness_badge %}
+                            <span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
+                            {% endif %}
                             <span class="plugin-type">{{ plugin.type }}</span>
+                                <span class="plugin-version-number">v{{ plugin.version }}</span>
+                                {% if plugin.is_paid|default:False|default_if_none:False %}
+                                    <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
+                                {% else %}
+                                    <span class="plugin-pricing-badge free">{% trans "Free" %}</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     
@@ -414,14 +1463,87 @@
                         {{ plugin.desc }}
                     </div>
                     
-                    <div class="plugin-footer">
-                        <div class="plugin-version">
-                            <span>{% trans "Version" %}</span>
-                            <span class="plugin-version-number">{{ plugin.version }}</span>
+                    <div class="plugin-status-section">
+                        <div class="plugin-status-row">
+                            <span class="label">{% trans "Status:" %}</span>
+                            {% if plugin.installed %}
+                                <span class="status-installed-small">{% trans "Installed" %}</span>
+                            {% else %}
+                                <span class="status-not-installed-small">{% trans "Not Installed" %}</span>
+                            {% endif %}
                         </div>
+                        <div class="plugin-status-row">
+                            <span class="label">{% trans "Active:" %}</span>
+                            {% if plugin.installed %}
+                                {% if plugin.enabled %}
+                                    <span class="active-status active-yes"><i class="fas fa-check-circle"></i> {% trans "Yes" %}</span>
+                                {% else %}
+                                    <span class="active-status active-no"><i class="fas fa-times-circle"></i> {% trans "No" %}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="active-status active-na">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="plugin-footer">
+                        <div class="plugin-actions">
+                            {% if plugin.builtin %}
+                                <span class="status-installed-small" style="margin-right: 8px;">{% trans "Built-in" %}</span>
+                                {% if plugin.manage_url %}
+                                    <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Settings' %}">
+                                        <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                    </a>
+                                {% endif %}
+                            {% elif plugin.installed %}
+                                {% if plugin.manage_url %}
+                                    <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Plugin Settings' %}">
+                                        <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                    </a>
+                                {% endif %}
+                                {% if plugin.enabled %}
+                                    <button class="btn-action btn-deactivate btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                        <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
+                                    </button>
+                                {% else %}
+                                    <button class="btn-action btn-activate btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                        <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
+                                    </button>
+                                {% endif %}
+                                <button class="btn-action btn-revert btn-small" onclick="showRevertDialog('{{ plugin.plugin_dir }}')" title="{% trans 'Revert to Previous Version' %}">
+                                    <i class="fas fa-undo"></i> {% trans "Revert Version" %}
+                                </button>
+                                <button class="btn-action btn-uninstall btn-small" onclick="uninstallPlugin('{{ plugin.plugin_dir }}')">
+                                    <i class="fas fa-trash"></i> {% trans "Uninstall" %}
+                                </button>
+                            {% else %}
+                                <button class="btn-action btn-install btn-small" onclick="installPlugin('{{ plugin.plugin_dir }}')">
+                                    <i class="fas fa-download"></i> {% trans "Install" %}
+                                </button>
+                                {% if plugin.has_local_source %}
+                                <button type="button" class="btn-action btn-delete-source btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deletePluginLocalSource('{{ plugin.plugin_dir }}')">
+                                    <i class="fas fa-folder-minus"></i> {% trans "Delete local copy" %}
+                                </button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if not plugin.builtin %}
+                        <div class="plugin-links">
+                            <a href="/plugins/{{ plugin.plugin_dir }}/help/" class="btn-link btn-link-small" title="{% trans 'Plugin Help' %}">
+                                <i class="fas fa-question-circle"></i> {% trans "Help" %}
+                            </a>
+                            <a href="https://github.com/master3395/cyberpanel-plugins/tree/main/{{ plugin.plugin_dir }}" target="_blank" class="btn-link btn-link-small" title="{% trans 'About Plugin' %}">
+                                <i class="fas fa-info-circle"></i> {% trans "About" %}
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
+                <div id="installedPluginsNoResultsGrid" class="installed-no-results" style="display: none; grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-secondary, #64748b);">
+                    <i class="fas fa-search" style="font-size: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
+                    <p style="margin: 0;">{% trans "No plugins match your search." %}</p>
+                </div>
             </div>
             
             <!-- Table View -->
@@ -430,31 +1552,114 @@
                     <table class="plugins-table">
                         <thead>
                             <tr>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Type" %}</th>
-                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Plugin Name" %}</th>
                                 <th>{% trans "Version" %}</th>
+                                <th>{% trans "Modify Date" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Action" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Help" %}</th>
+                                <th>{% trans "About" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for plugin in plugins %}
-                            <tr>
+                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}" data-is-paid="{% if plugin.is_paid|default:False|default_if_none:False %}true{% else %}false{% endif %}">
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
+                                    {% if plugin.freshness_badge %}
+                                    <br><span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
+                                    {% endif %}
                                 </td>
-                                <td>
-                                    <span class="plugin-type">{{ plugin.type }}</span>
-                                </td>
-                                <td>{{ plugin.desc }}</td>
                                 <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
+                                    {% if plugin.is_paid|default:False|default_if_none:False %}
+                                        <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
+                                    {% else %}
+                                        <span class="plugin-pricing-badge free">{% trans "Free" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small style="color: var(--text-secondary, #64748b);">
+                                        {{ plugin.modify_date|default:"N/A" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if plugin.installed %}
+                                        <span class="status-installed">{% trans "Installed" %}</span>
+                                    {% else %}
+                                        <span class="status-not-installed">{% trans "Not Installed" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="plugin-actions">
+                                        {% if plugin.installed %}
+                                            {% if plugin.manage_url %}
+                                                <a href="{{ plugin.manage_url }}" class="btn-action btn-settings" title="{% trans 'Plugin Settings' %}">
+                                                    <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                                </a>
+                                            {% endif %}
+                                            {% if plugin.enabled %}
+                                                <button class="btn-action btn-deactivate" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                                    <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
+                                                </button>
+                                            {% else %}
+                                                <button class="btn-action btn-activate" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                                    <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
+                                                </button>
+                                            {% endif %}
+                                            <button class="btn-action btn-revert" onclick="showRevertDialog('{{ plugin.plugin_dir }}')" title="{% trans 'Revert to Previous Version' %}">
+                                                <i class="fas fa-undo"></i> {% trans "Revert Version" %}
+                                            </button>
+                                            <button class="btn-action btn-uninstall" onclick="uninstallPlugin('{{ plugin.plugin_dir }}')">
+                                                <i class="fas fa-trash"></i> {% trans "Uninstall" %}
+                                            </button>
+                                        {% else %}
+                                            <button class="btn-action btn-install" onclick="installPlugin('{{ plugin.plugin_dir }}')">
+                                                <i class="fas fa-download"></i> {% trans "Install" %}
+                                            </button>
+                                            {% if plugin.has_local_source %}
+                                            <button type="button" class="btn-action btn-delete-source" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deletePluginLocalSource('{{ plugin.plugin_dir }}')">
+                                                <i class="fas fa-folder-minus"></i> {% trans "Delete local copy" %}
+                                            </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="active-column">
+                                    {% if plugin.builtin or plugin.installed %}
+                                        {% if plugin.enabled %}
+                                            <span class="active-status active-yes"><i class="fas fa-check-circle"></i></span>
+                                        {% else %}
+                                            <span class="active-status active-no"><i class="fas fa-times-circle"></i></span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="active-status active-na">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/plugins/{{ plugin.plugin_dir }}/help/" class="btn-link" title="{% trans 'Plugin Help' %}">
+                                        <i class="fas fa-question-circle"></i> {% trans "Help" %}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="https://github.com/master3395/cyberpanel-plugins/tree/main/{{ plugin.plugin_dir }}" target="_blank" class="btn-link" title="{% trans 'About Plugin' %}">
+                                        <i class="fas fa-info-circle"></i> {% trans "About" %}
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
+                            <tr id="installedPluginsNoResultsTable" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-secondary, #64748b);">
+                                    <i class="fas fa-search" style="font-size: 24px; margin-bottom: 8px; opacity: 0.6;"></i>
+                                    <p style="margin: 0;">{% trans "No plugins match your search." %}</p>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+            
             {% else %}
             <!-- Empty State -->
             <div class="empty-state">
@@ -464,33 +1669,2033 @@
                 <h3 class="empty-title">{% trans "No Plugins Installed" %}</h3>
                 <p class="empty-description">{% trans "You haven't installed any plugins yet. Plugins extend CyberPanel's functionality with additional features." %}</p>
             </div>
+            
+            <!-- View Toggle (only shown when no plugins installed) -->
+            <div class="view-toggle" style="margin-top: 25px;">
+                <button class="view-btn" onclick="toggleView('grid', true)">
+                    <i class="fas fa-th-large"></i>
+                    {% trans "Grid View" %}
+                </button>
+                <button class="view-btn" onclick="toggleView('table', true)">
+                    <i class="fas fa-list"></i>
+                    {% trans "Table View" %}
+                </button>
+                <button class="view-btn" id="viewBtnUpgradesNoPlugins" onclick="toggleView('upgrades', true)">
+                    <i class="fas fa-arrow-circle-up"></i>
+                    {% trans "Upgrades Available" %}
+                    <span id="upgradesBadgeNoPlugins" class="upgrades-badge" style="display: none;">0</span>
+                </button>
+                <button class="view-btn active" onclick="toggleView('store', true)">
+                    <i class="fas fa-store"></i>
+                    {% trans "CyberPanel Plugin Store" %}
+                </button>
+                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                    <i class="fas fa-book"></i>
+                    {% trans "Plugin Development Guide" %}
+                </a>
+            </div>
             {% endif %}
             
-            <div ng-controller="listWebsites" id="listFail" class="alert alert-danger" style="display: none;">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
-                <span>{% trans "Cannot list plugins. Error message:" %} {$ errorMessage $}</span>
+            <!-- Upgrades Available (plugins with newer version in store) -->
+            <div id="upgradesView" style="display: none;">
+                <div class="upgrades-view-notice">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>{% trans "Upgrades Available" %}</strong>
+                        <p style="margin: 8px 0 0 0; color: var(--text-secondary, #64748b); font-size: 14px;">{% trans "The following installed plugins have a newer version available in the CyberPanel Plugin Store. Before upgrading, please read the about information for the release and ensure you have a current backup of your website." %}</p>
+                    </div>
+                </div>
+                <div id="upgradesLoading" class="store-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> {% trans "Checking for upgrades..." %}
+                </div>
+                <div id="upgradesError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <span id="upgradesErrorText"></span>
+                </div>
+                <div id="upgradesContent" style="display: block;">
+                    <span id="transNoUpgrades" style="display: none;">{% trans "No upgrades available. All installed plugins are up to date." %}</span>
+                    <div class="store-table-wrapper">
+                        <table class="store-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Plugin Name" %}</th>
+                                    <th>{% trans "Your Version" %}</th>
+                                    <th>{% trans "New Version" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Status / Action" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="upgradesTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+            
+            <!-- CyberPanel Plugin Store (always available) -->
+            <div id="storeView" style="display: {% if not plugins %}block{% else %}none{% endif %};">
+                <!-- Loading Indicator -->
+                <div id="storeLoading" class="store-loading" style="display: {% if not plugins %}block{% else %}none{% endif %};">
+                    <i class="fas fa-spinner fa-spin"></i> {% trans "Loading plugins from store..." %}
+                </div>
+                
+                <!-- Store Error -->
+                <div id="storeError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <span id="storeErrorText"></span>
+                </div>
+                
+                <!-- Notice Section (similar to CMSMS Module Manager) -->
+                <div class="store-notice" id="pluginStoreNotice">
+                    <div class="notice-header">
+                        <strong>{% trans "Notice" %}</strong>
+                        <button class="notice-close" onclick="dismissNotice()" aria-label="{% trans 'Close notice' %}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="notice-content">
+                        <p>{% trans "The versions displayed here represent the latest plugins from the CyberPanel Plugin Store repository. They may or may not represent the latest available versions. Additionally, the plugin repository may only contain plugins released within the last few months." %}</p>
+                        <p style="color: var(--text-secondary, #64748b); font-size: 13px; margin-top: 10px; padding: 10px; background: var(--bg-secondary, #f8f9ff); border-radius: 6px; border-left: 3px solid #5856d6;">
+                            <i class="fas fa-info-circle" style="color: #5856d6;"></i>
+                            <strong>{% trans "Cache Information:" %}</strong>
+                            {% trans "Plugin store data is cached for 1 hour to improve performance and reduce GitHub API rate limits. New plugins may take up to 1 hour to appear after being published." %}
+                            {% if cache_expiry_timestamp %}
+                                <br><strong>{% trans "Next cache update:" %}</strong> <span id="cacheExpiryTime" style="font-family: monospace;" data-timestamp="{{ cache_expiry_timestamp }}" data-expired="{% if cache_expired %}1{% else %}0{% endif %}" data-refresh-started="{% if cache_refresh_started %}1{% else %}0{% endif %}">{% trans "Calculating..." %}</span>
+                            {% endif %}
+                        </p>
+                        <p class="warning-text">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>{% trans "Use at Your Own Risk" %}</strong>
+                        </p>
+                        <p>{% trans "The plugins displayed here are contributed by both the CyberPanel Developers and independent third parties. We make no guarantees that the plugins available here are functional, tested, or compatible with your system. You are encouraged to read the information found in the help and about links for each plugin before attempting the installation." %}</p>
+                    </div>
+                </div>
+                
+                <!-- Search Bar (always visible in store view) -->
+                <div class="store-search-bar">
+                    <i class="fas fa-search store-search-icon"></i>
+                    <input type="text" id="pluginSearchInput" class="store-search-input" placeholder="{% trans 'Search plugins by name or description...' %}" aria-label="{% trans 'Search plugins' %}">
+                    <button type="button" class="store-search-clear" id="pluginSearchClear" onclick="clearPluginSearch()" style="display: none;" aria-label="{% trans 'Clear search' %}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- Category Filter (always visible in store view) - v2026-02-01 no Plugin category -->
+                <div class="category-filter">
+                    <button class="category-btn active" onclick="filterByCategory('all', event)" data-category="all">
+                        <i class="fas fa-th"></i>
+                        {% trans "All Categories" %}
+                    </button>
+                    <button class="category-btn" onclick="filterByCategory('Utility', event)" data-category="Utility">
+                        <i class="fas fa-wrench"></i>
+                        {% trans "Utility" %}
+                    </button>
+                    <button class="category-btn" onclick="filterByCategory('Security', event)" data-category="Security">
+                        <i class="fas fa-shield-alt"></i>
+                        {% trans "Security" %}
+                    </button>
+                    <button class="category-btn" onclick="filterByCategory('Backup', event)" data-category="Backup">
+                        <i class="fas fa-archive"></i>
+                        {% trans "Backup" %}
+                    </button>
+                        <button class="category-btn" onclick="filterByCategory('Performance', event)" data-category="Performance">
+                            <i class="fas fa-rocket"></i>
+                            {% trans "Performance" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Monitoring', event)" data-category="Monitoring">
+                            <i class="fas fa-heartbeat"></i>
+                            {% trans "Monitoring" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Integration', event)" data-category="Integration">
+                            <i class="fas fa-plug"></i>
+                            {% trans "Integration" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Email', event)" data-category="Email">
+                            <i class="fas fa-envelope"></i>
+                            {% trans "Email" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Development', event)" data-category="Development">
+                            <i class="fas fa-code"></i>
+                            {% trans "Development" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Analytics', event)" data-category="Analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            {% trans "Analytics" %}
+                        </button>
+                    </div>
+                
+                <!-- Letter filter (A-Å, collapsible, hidden by default) -->
+                <div class="alphabet-filter-wrapper">
+                    <button type="button" class="alphabet-toggle-btn" id="alphabetToggleBtn" onclick="toggleAlphabetFilter()" aria-expanded="false">
+                        <i class="fas fa-sort-alpha-down alphabet-toggle-icon"></i>
+                        <span>A-Å {% trans "Filter" %}</span>
+                        <i class="fas fa-chevron-down alphabet-chevron"></i>
+                    </button>
+                    <div class="alphabet-filter" id="alphabetFilter" aria-hidden="true" style="display: none;">
+                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            <button class="alpha-btn" onclick="filterByLetter('{{ letter }}', event)">{{ letter }}</button>
+                        {% endfor %}
+                        <button class="alpha-btn" onclick="filterByLetter('Æ', event)">Æ</button>
+                        <button class="alpha-btn" onclick="filterByLetter('Ø', event)">Ø</button>
+                        <button class="alpha-btn" onclick="filterByLetter('Å', event)">Å</button>
+                        <button class="alpha-btn active" onclick="filterByLetter('all', event)">{% trans "All" %}</button>
+                    </div>
+                </div>
+                
+                <!-- Store Content (table area) -->
+                <div id="storeContent" style="display: block;">
+                    <div class="store-table-wrapper">
+                        <table class="store-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Icon" %}</th>
+                                    <th>{% trans "Plugin Name" %}</th>
+                                    <th>{% trans "Category" %}</th>
+                                    <th>{% trans "Version" %}</th>
+                                    <th>{% trans "Pricing" %}</th>
+                                    <th>{% trans "Modify Date" %}</th>
+                                    <th>{% trans "Action" %}</th>
+                                    <th>{% trans "Help" %}</th>
+                                    <th>{% trans "About" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storeTableBody">
+                                <!-- Plugin rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Plugin store errors shown in storeError div; listWebsites controller removed - not applicable to plugins page -->
         </div>
     </div>
 </div>
 
 <script>
-function toggleView(view) {
+// Cache-busting version: 28.03.2026-v3 - Hash sync for installed filters (#grid?show=premium&sort=…)
+let storePlugins = [];
+let currentFilter = 'all';
+let currentCategory = 'all';
+let currentSearchQuery = '';
+let isSettingHash = false; // Flag to prevent infinite loops
+let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
+let currentInstalledFilter = 'all';    // all, installed, active, premium
+let currentInstalledCategory = 'all';  // all, Utility, Security, ...
+let applyingInstalledHash = false;
+let installedSearchHashDebounce = null;
+
+var INSTALLED_HASH_VALID_VIEWS = ['grid', 'table', 'upgrades', 'store'];
+var INSTALLED_HASH_SHOW_VALUES = { all: 1, installed: 1, active: 1, premium: 1 };
+var INSTALLED_HASH_SORT_VALUES = { 'name-asc': 1, 'name-desc': 1, 'type': 1, 'date-desc': 1, 'date-asc': 1 };
+
+function parsePluginsHashFragment(raw) {
+    raw = (raw || '').trim();
+    var empty = { view: 'grid', show: 'all', sort: 'name-asc', cat: 'all', q: '' };
+    if (!raw) return empty;
+    var qIdx = raw.indexOf('?');
+    var viewPart = (qIdx >= 0 ? raw.slice(0, qIdx) : raw).trim();
+    var qs = qIdx >= 0 ? raw.slice(qIdx + 1) : '';
+    var view = viewPart || 'grid';
+    if (INSTALLED_HASH_VALID_VIEWS.indexOf(view) === -1) {
+        view = 'grid';
+        qs = '';
+    }
+    var params = new URLSearchParams(qs);
+    var show = params.get('show') || 'all';
+    var sort = params.get('sort') || 'name-asc';
+    var cat = params.get('cat') || 'all';
+    var q = params.get('q') || '';
+    if (!INSTALLED_HASH_SHOW_VALUES[show]) show = 'all';
+    if (!INSTALLED_HASH_SORT_VALUES[sort]) sort = 'name-asc';
+    return { view: view, show: show, sort: sort, cat: cat, q: q };
+}
+
+function buildPluginsHashString(view) {
+    if (view === 'store' || view === 'upgrades') {
+        return '#' + view;
+    }
+    var parts = [];
+    if (currentInstalledFilter && currentInstalledFilter !== 'all') {
+        parts.push('show=' + encodeURIComponent(currentInstalledFilter));
+    }
+    if (currentInstalledSort && currentInstalledSort !== 'name-asc') {
+        parts.push('sort=' + encodeURIComponent(currentInstalledSort));
+    }
+    if (currentInstalledCategory && currentInstalledCategory !== 'all') {
+        parts.push('cat=' + encodeURIComponent(currentInstalledCategory));
+    }
+    var qEl = document.getElementById('installedPluginSearchInput');
+    var qv = qEl && qEl.value ? String(qEl.value).trim() : '';
+    if (qv) parts.push('q=' + encodeURIComponent(qv));
+    if (parts.length) return '#' + view + '?' + parts.join('&');
+    return '#' + view;
+}
+
+function getCurrentInstalledGridOrTableView() {
+    var gv = document.getElementById('gridView');
+    var tv = document.getElementById('tableView');
+    if (gv && gv.style.display === 'grid') return 'grid';
+    if (tv && tv.style.display === 'block') return 'table';
+    return null;
+}
+
+function updateInstalledPluginsHashIfNeeded() {
+    if (applyingInstalledHash) return;
+    var v = getCurrentInstalledGridOrTableView();
+    if (!v) return;
+    isSettingHash = true;
+    var h = buildPluginsHashString(v);
+    var newUrl = window.location.pathname + window.location.search + h;
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', newUrl);
+    } else {
+        window.location.hash = h.replace(/^#/, '');
+    }
+    setTimeout(function() { isSettingHash = false; }, 100);
+}
+
+function scheduleInstalledSearchHashUpdate() {
+    if (installedSearchHashDebounce) clearTimeout(installedSearchHashDebounce);
+    installedSearchHashDebounce = setTimeout(function() {
+        installedSearchHashDebounce = null;
+        updateInstalledPluginsHashIfNeeded();
+    }, 450);
+}
+
+function applyInstalledStateFromHash(parsed) {
+    if (!parsed || (parsed.view !== 'grid' && parsed.view !== 'table')) return;
+    applyingInstalledHash = true;
+    try {
+        currentInstalledFilter = parsed.show;
+        currentInstalledSort = parsed.sort;
+        currentInstalledCategory = parsed.cat;
+        var inp = document.getElementById('installedPluginSearchInput');
+        if (inp) {
+            inp.value = parsed.q;
+            var clr = document.getElementById('installedPluginSearchClear');
+            if (clr) clr.style.display = parsed.q ? 'block' : 'none';
+        }
+        var bar = document.getElementById('installedSortFilterBar');
+        if (bar) {
+            bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.toggle('active', (btn.getAttribute('data-filter') || '') === currentInstalledFilter);
+            });
+        }
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        document.querySelectorAll('.installed-category-btn').forEach(function(btn) {
+            btn.classList.toggle('active', (btn.getAttribute('data-category') || '') === currentInstalledCategory);
+        });
+        if (typeof filterInstalledPlugins === 'function') filterInstalledPlugins();
+    } catch (e) {
+        console.warn('applyInstalledStateFromHash', e);
+    } finally {
+        applyingInstalledHash = false;
+    }
+}
+
+// Get CSRF cookie helper function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function toggleView(view, updateHash = true) {
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
+    const storeView = document.getElementById('storeView');
+    const upgradesView = document.getElementById('upgradesView');
     const viewBtns = document.querySelectorAll('.view-btn');
     
     viewBtns.forEach(btn => btn.classList.remove('active'));
     
+    // Update URL hash only if explicitly requested (user clicked a button, not initial load)
+    if (updateHash) {
+        isSettingHash = true;
+        const hash = buildPluginsHashString(view);
+        if (window.history && window.history.replaceState) {
+            const newUrl = window.location.pathname + window.location.search + hash;
+            window.history.replaceState(null, null, newUrl);
+        } else {
+            window.location.hash = hash.replace(/^#/, '');
+        }
+        setTimeout(() => { isSettingHash = false; }, 100);
+    }
+    
+    const installedSearchWrapper = document.getElementById('installedPluginsSearchWrapper');
+    const installedSortFilterBar = document.getElementById('installedSortFilterBar');
+    
+    // Add null checks to prevent errors if elements don't exist
+    if (!gridView || !tableView || !storeView) {
+        console.warn('toggleView: One or more view elements not found');
+        return;
+    }
+    
+    // Index of view buttons: 0=Grid, 1=Table, 2=Upgrades Available, 3=Store, 4=Dev Guide (or 3 when no plugins)
+    const upgradesBtnIndex = viewBtns.length >= 4 ? 2 : -1;
+    const storeBtnIndex = viewBtns.length >= 4 ? 3 : 2;
+    
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
-        viewBtns[0].classList.add('active');
-    } else {
+        storeView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'none';
+        if (viewBtns[0]) viewBtns[0].classList.add('active');
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        filterInstalledPlugins();
+    } else if (view === 'table') {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
-        viewBtns[1].classList.add('active');
+        storeView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'none';
+        if (viewBtns[1]) viewBtns[1].classList.add('active');
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        filterInstalledPlugins();
+    } else if (view === 'upgrades') {
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'none';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'none';
+        gridView.style.display = 'none';
+        tableView.style.display = 'none';
+        storeView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'block';
+        if (upgradesBtnIndex >= 0 && viewBtns[upgradesBtnIndex]) viewBtns[upgradesBtnIndex].classList.add('active');
+        else if (document.getElementById('viewBtnUpgrades')) document.getElementById('viewBtnUpgrades').classList.add('active');
+        else if (document.getElementById('viewBtnUpgradesNoPlugins')) document.getElementById('viewBtnUpgradesNoPlugins').classList.add('active');
+        
+        if (storePlugins.length === 0) {
+            // Lazy-load: only fetch when upgrades view is opened by user action (not initial render).
+            if (updateHash) loadPluginStore(true);
+        } else {
+            displayUpgradesAvailable();
+        }
+    } else if (view === 'store') {
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'none';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'none';
+        gridView.style.display = 'none';
+        tableView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'none';
+        storeView.style.display = 'block';
+        if (storeBtnIndex >= 0 && viewBtns[storeBtnIndex]) viewBtns[storeBtnIndex].classList.add('active');
+        else if (viewBtns[2]) viewBtns[2].classList.add('active');
+        
+        // Load plugins from store if not already loaded
+        if (storePlugins.length === 0) {
+            loadPluginStore(false);
+        } else {
+            displayStorePlugins();
+        }
     }
 }
+
+function updateUpgradesBadge() {
+    const count = (storePlugins && storePlugins.filter(p => p.update_available).length) || 0;
+    const badge = document.getElementById('upgradesBadge');
+    const badgeNoPlugins = document.getElementById('upgradesBadgeNoPlugins');
+    if (badge) {
+        badge.textContent = String(count);
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    if (badgeNoPlugins) {
+        badgeNoPlugins.textContent = String(count);
+        badgeNoPlugins.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+}
+
+function displayUpgradesAvailable() {
+    const tbody = document.getElementById('upgradesTableBody');
+    const loading = document.getElementById('upgradesLoading');
+    const errorDiv = document.getElementById('upgradesError');
+    const errorText = document.getElementById('upgradesErrorText');
+    const content = document.getElementById('upgradesContent');
+    if (!tbody) return;
+    
+    if (loading) loading.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (content) content.style.display = 'block';
+    
+    const upgrades = (storePlugins || []).filter(p => p.update_available);
+    if (upgrades.length === 0) {
+        const noUpgradesEl = document.getElementById('transNoUpgrades');
+        const noUpgradesMsg = (noUpgradesEl && noUpgradesEl.textContent) ? noUpgradesEl.textContent : 'No upgrades available. All installed plugins are up to date.';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-secondary, #64748b);"><i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i>' + escapeHtml(noUpgradesMsg) + '</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    upgrades.forEach(plugin => {
+        const dir = (plugin.plugin_dir || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        const name = escapeHtml(plugin.name || plugin.plugin_dir || '');
+        const newVer = escapeHtml(plugin.version || '');
+        const yourVer = escapeHtml(plugin.installed_version || 'Unknown');
+        const date = formatPluginModifyDateDisplay(plugin);
+        const curVer = (plugin.installed_version || 'Unknown').replace(/'/g, '&#39;');
+        const nVer = (plugin.version || 'Unknown').replace(/'/g, '&#39;');
+        const actionHtml = '<button type="button" class="btn-action btn-upgrade" data-plugin-dir="' + dir + '" data-current-version="' + escapeHtml(curVer) + '" data-new-version="' + escapeHtml(nVer) + '" onclick="upgradePlugin(this.getAttribute(\'data-plugin-dir\'), this.getAttribute(\'data-current-version\'), this.getAttribute(\'data-new-version\'))"><i class="fas fa-arrow-up"></i> Upgrade</button>';
+        html += '<tr><td><strong>' + name + '</strong></td><td>' + yourVer + '</td><td>' + newVer + '</td><td>' + date + '</td><td>' + actionHtml + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function loadPluginStore(forUpgradesView) {
+    const storeLoading = document.getElementById('storeLoading');
+    const storeError = document.getElementById('storeError');
+    const storeErrorText = document.getElementById('storeErrorText');
+    const storeContent = document.getElementById('storeContent');
+    const storeTableBody = document.getElementById('storeTableBody');
+    const upgradesLoading = document.getElementById('upgradesLoading');
+    if (!storeLoading || !storeError || !storeErrorText || !storeContent) return;
+    
+    storeLoading.style.display = 'block';
+    storeError.style.display = 'none';
+    storeContent.style.display = 'block';
+    if (upgradesLoading) upgradesLoading.style.display = forUpgradesView ? 'block' : 'none';
+    
+    fetch('/plugins/api/store/plugins/', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('Session expired or access denied. Please refresh the page and log in again.');
+            }
+            if (response.redirected || response.status >= 400) {
+                throw new Error('Could not load plugin store. Your session may have expired. Please refresh the page and log in again.');
+            }
+            throw new Error('Server returned invalid response. Please refresh the page and try again.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        storeLoading.style.display = 'none';
+        const upgradesLoadingEl = document.getElementById('upgradesLoading');
+        if (upgradesLoadingEl) upgradesLoadingEl.style.display = 'none';
+        
+        if (data.success) {
+            storePlugins = data.plugins;
+            if (typeof updateUpgradesBadge === 'function') updateUpgradesBadge();
+            const upgradesViewEl = document.getElementById('upgradesView');
+            if (upgradesViewEl && upgradesViewEl.style.display === 'block' && typeof displayUpgradesAvailable === 'function') {
+                displayUpgradesAvailable();
+            } else {
+                displayStorePlugins();
+            }
+            storeContent.style.display = 'block';
+        } else {
+            storeErrorText.textContent = data.error || 'Failed to load plugins from store';
+            storeError.style.display = 'block';
+            const upgradesError = document.getElementById('upgradesError');
+            const upgradesErrorText = document.getElementById('upgradesErrorText');
+            if (upgradesError && upgradesErrorText) {
+                upgradesErrorText.textContent = data.error || 'Failed to load plugin store';
+                upgradesError.style.display = 'block';
+            }
+        }
+    })
+    .catch(error => {
+        storeLoading.style.display = 'none';
+        const upgradesLoadingEl = document.getElementById('upgradesLoading');
+        if (upgradesLoadingEl) upgradesLoadingEl.style.display = 'none';
+        storeErrorText.textContent = error.message || 'Error loading plugin store. Please refresh the page and try again.';
+        storeError.style.display = 'block';
+        storeContent.style.display = 'block';
+        const upgradesError = document.getElementById('upgradesError');
+        const upgradesErrorText = document.getElementById('upgradesErrorText');
+        if (upgradesError && upgradesErrorText) {
+            upgradesErrorText.textContent = error.message || 'Error checking for upgrades.';
+            upgradesError.style.display = 'block';
+        }
+        if (storeTableBody && storeTableBody.innerHTML === '') {
+            storeTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">Unable to load plugins. Please check your connection and try again.</td></tr>';
+        }
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Format meta.xml mtime for display: browser timezone + locale (nb-NO style DD.MM.YYYY, 24h).
+ * Uses modify_timestamp (Unix sec) from API when present; else legacy modify_date string.
+ */
+function formatPluginModifyDateDisplay(plugin) {
+    if (!plugin) return '';
+    const rawTs = plugin.modify_timestamp;
+    if (rawTs !== null && rawTs !== undefined && rawTs !== '') {
+        const sec = Number(rawTs);
+        if (!isNaN(sec)) {
+            const d = new Date(sec * 1000);
+            if (!isNaN(d.getTime())) {
+                const loc = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'nb-NO';
+                try {
+                    const s = d.toLocaleString(loc, {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hourCycle: 'h23',
+                    });
+                    return escapeHtml(s);
+                } catch (e) {
+                    try {
+                        return escapeHtml(d.toLocaleString('nb-NO', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+                        }));
+                    } catch (e2) {
+                        /* fall through */
+                    }
+                }
+            }
+        }
+    }
+    return escapeHtml(plugin.modify_date || '');
+}
+
+function getFreshnessBadgeHtml(freshnessFromApi, modifyDate, modifyTimestamp) {
+    // Use API data if available
+    if (freshnessFromApi && freshnessFromApi.badge && freshnessFromApi.class) {
+        return `<br><span class="${escapeHtml(freshnessFromApi.class)}" title="${escapeHtml(freshnessFromApi.title || '')}">${escapeHtml(freshnessFromApi.badge)}</span>`;
+    }
+    // Compute from instant when we have Unix timestamp (correct vs browser)
+    if (modifyTimestamp !== null && modifyTimestamp !== undefined && modifyTimestamp !== '') {
+        const sec = Number(modifyTimestamp);
+        if (!isNaN(sec)) {
+            const d = new Date(sec * 1000);
+            if (!isNaN(d.getTime())) {
+                const daysAgo = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+                if (daysAgo <= 90) {
+                    return '<br><span class="freshness-badge-new" title="This plugin was released/updated within the last 3 months">NEW</span>';
+                } else if (daysAgo <= 365) {
+                    return '<br><span class="freshness-badge-stable" title="This plugin was updated within the last year">Stable</span>';
+                } else if (daysAgo < 730) {
+                    return '<br><span class="freshness-badge-unstable" title="This plugin has not been updated in over 1 year">Unstable</span>';
+                }
+                return '<br><span class="freshness-badge-stale" title="This plugin has not been updated in over 2 years">STALE</span>';
+            }
+        }
+    }
+    // Compute from modify_date (for cached data without freshness_badge or timestamp)
+    if (!modifyDate || modifyDate === 'N/A') return '';
+    try {
+        const m = modifyDate.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (!m) return '';
+        const d = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]), parseInt(m[4]), parseInt(m[5]), parseInt(m[6]));
+        const daysAgo = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+        if (daysAgo <= 90) {
+            return '<br><span class="freshness-badge-new" title="This plugin was released/updated within the last 3 months">NEW</span>';
+        } else if (daysAgo <= 365) {
+            return '<br><span class="freshness-badge-stable" title="This plugin was updated within the last year">Stable</span>';
+        } else if (daysAgo < 730) {
+            return '<br><span class="freshness-badge-unstable" title="This plugin has not been updated in over 1 year">Unstable</span>';
+        } else {
+            return '<br><span class="freshness-badge-stale" title="This plugin has not been updated in over 2 years">STALE</span>';
+        }
+    } catch (e) {}
+    return '';
+}
+
+function displayStorePlugins() {
+    // Version: 2026-01-27-v1 - Added category filtering support
+    // CRITICAL: This function MUST create exactly 8 columns (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+    const tbody = document.getElementById('storeTableBody');
+    if (!tbody) {
+        console.error('storeTableBody not found!');
+        return;
+    }
+    tbody.innerHTML = '';
+    
+    if (!storePlugins || storePlugins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
+        return;
+    }
+    
+    let filteredPlugins = storePlugins;
+    
+    // Apply category filter (case-insensitive); plugins without category are excluded
+    if (currentCategory !== 'all') {
+        const categoryLower = currentCategory.toLowerCase();
+        filteredPlugins = filteredPlugins.filter(plugin => {
+            const pluginType = ((plugin.type || '') + '').trim().toLowerCase();
+            return pluginType && pluginType === categoryLower;
+        });
+    }
+    
+    // Apply search filter (name + description)
+    if ((currentSearchQuery || '').trim()) {
+        const searchLower = (currentSearchQuery || '').trim().toLowerCase();
+        const searchTerms = searchLower.split(/\s+/).filter(t => t.length > 0);
+        filteredPlugins = filteredPlugins.filter(plugin => {
+            const name = (plugin.name || '').toLowerCase();
+            const desc = (plugin.description || '').toLowerCase();
+            const combined = name + ' ' + desc + ' ' + (plugin.plugin_dir || '');
+            return searchTerms.every(term => combined.includes(term));
+        });
+    }
+    
+    // Apply alphabetical filter
+    if (currentFilter !== 'all') {
+        filteredPlugins = filteredPlugins.filter(plugin => 
+            (plugin.name || '').charAt(0).toUpperCase() === currentFilter
+        );
+    }
+    
+    if (filteredPlugins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins match your filters. Try adjusting the category, search, or letter filter.</td></tr>';
+        return;
+    }
+    
+    filteredPlugins.forEach(plugin => {
+        const row = document.createElement('tr');
+        
+        // Plugin icon - based on plugin type (same logic as Grid/Table views)
+        const pluginType = ((plugin.type || '') + '').trim().toLowerCase() || 'utility';
+        let iconClass = 'fas fa-puzzle-piece'; // Default icon
+        if (pluginType.includes('security')) {
+            iconClass = 'fas fa-shield-alt';
+        } else if (pluginType.includes('performance')) {
+            iconClass = 'fas fa-rocket';
+        } else if (pluginType.includes('utility')) {
+            iconClass = 'fas fa-tools';
+        } else if (pluginType.includes('backup')) {
+            iconClass = 'fas fa-save';
+        } else if (pluginType.includes('monitoring')) {
+            iconClass = 'fas fa-heartbeat';
+        } else if (pluginType.includes('integration')) {
+            iconClass = 'fas fa-plug';
+        } else if (pluginType.includes('email')) {
+            iconClass = 'fas fa-envelope';
+        } else if (pluginType.includes('development')) {
+            iconClass = 'fas fa-code';
+        } else if (pluginType.includes('analytics')) {
+            iconClass = 'fas fa-chart-bar';
+        }
+        const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
+            <i class="${iconClass}"></i>
+        </div>`;
+        
+        // Action column - Store view only shows Install/Installed/Upgrade (no Deactivate/Uninstall)
+        // NOTE: Store view should NOT show Deactivate/Uninstall buttons - users manage from Grid/Table views
+        let actionHtml = '';
+        if (plugin.installed) {
+            // Check if update is available
+            if (plugin.update_available) {
+                // Show Upgrade button
+                actionHtml = `<button class="btn-action btn-upgrade" onclick="upgradePlugin('${plugin.plugin_dir}', '${plugin.installed_version || 'Unknown'}', '${plugin.version || 'Unknown'}')">
+                    <i class="fas fa-arrow-up"></i> Upgrade
+                </button>`;
+            } else {
+                // Show "Installed" text
+                actionHtml = '<span class="status-installed">Installed</span>';
+            }
+        } else {
+            // Show Install button
+            actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${escapeHtml(plugin.plugin_dir)}')">
+                <i class="fas fa-download"></i> Install
+            </button>`;
+            if (plugin.has_local_source && !plugin.builtin) {
+                actionHtml += ` <button type="button" class="btn-action btn-delete-source" onclick="deletePluginLocalSource('${escapeHtml(plugin.plugin_dir)}')">
+                    <i class="fas fa-folder-minus"></i> Delete local copy
+                </button>`;
+            }
+        }
+        
+        // Help column - always use consistent help URL
+        const helpUrl = `/plugins/${plugin.plugin_dir}/help/`;
+        const helpHtml = `<a href="${helpUrl}" class="btn-link" title="Plugin Help">
+            <i class="fas fa-question-circle"></i> Help
+        </a>`;
+        
+        // About column
+        const aboutUrl = plugin.about_url || plugin.github_url || '#';
+        const aboutHtml = `<a href="${aboutUrl}" target="_blank" class="btn-link" title="About Plugin">
+            <i class="fas fa-info-circle"></i> About
+        </a>`;
+        
+        // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
+        const modifyDateHtml = (plugin.modify_timestamp != null || (plugin.modify_date && plugin.modify_date !== 'N/A'))
+            ? `<small style="color: var(--text-secondary, #64748b);">${formatPluginModifyDateDisplay(plugin)}</small>`
+            : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
+        
+        // Freshness badge (NEW/Stable/STALE) - use API data or compute from modify_date
+        const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date, plugin.modify_timestamp);
+        
+        // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
+        // Version: 2026-01-25-v4 - Normalize is_paid to handle all possible values
+        let isPaid = false;
+        if (plugin.is_paid !== undefined && plugin.is_paid !== null) {
+            const isPaidValue = plugin.is_paid;
+            if (isPaidValue === true || isPaidValue === 'true' || isPaidValue === 'True' || isPaidValue === 1 || isPaidValue === '1' || String(isPaidValue).toLowerCase() === 'true') {
+                isPaid = true;
+            }
+        }
+        const pricingBadge = isPaid 
+            ? '<span class="plugin-pricing-badge paid">Paid</span>'
+            : '<span class="plugin-pricing-badge free">Free</span>';
+        
+        // Version: 2026-01-27-v1 - Added Category column; category is required, no default
+        const pluginCategory = ((plugin.type || '') + '').trim() || '—';
+        const categoryBadge = `<span class="plugin-type">${escapeHtml(pluginCategory.toUpperCase())}</span>`;
+        
+        row.innerHTML = `
+            <td style="text-align: center;">${iconHtml}</td>
+            <td>
+                <strong>${escapeHtml(plugin.name)}</strong>
+                ${freshnessBadgeHtml}
+            </td>
+            <td>${categoryBadge}</td>
+            <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
+            <td>${pricingBadge}</td>
+            <td>${modifyDateHtml}</td>
+            <td>${actionHtml}</td>
+            <td>${helpHtml}</td>
+            <td>${aboutHtml}</td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function filterByCategory(category, evt) {
+    currentCategory = category;
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    categoryBtns.forEach(btn => btn.classList.remove('active'));
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.category-btn')));
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    } else {
+        categoryBtns.forEach(btn => {
+            if (btn.getAttribute('data-category') === category) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    displayStorePlugins();
+}
+
+function filterByLetter(letter, evt) {
+    currentFilter = letter;
+    const alphaBtns = document.querySelectorAll('.alpha-btn');
+    alphaBtns.forEach(btn => btn.classList.remove('active'));
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.alpha-btn')));
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    } else {
+        const label = letter === 'all' ? 'All' : letter;
+        alphaBtns.forEach(btn => {
+            if (btn.textContent.trim() === label) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    displayStorePlugins();
+}
+
+function clearPluginSearch() {
+    const input = document.getElementById('pluginSearchInput');
+    const clearBtn = document.getElementById('pluginSearchClear');
+    if (input) {
+        input.value = '';
+        currentSearchQuery = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        displayStorePlugins();
+        input.focus();
+    }
+}
+
+function setInstalledFilter(filter) {
+    currentInstalledFilter = filter;
+    var bar = document.getElementById('installedSortFilterBar');
+    if (bar) {
+        try {
+            bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.toggle('active', (btn.getAttribute('data-filter') || '') === filter);
+            });
+        } catch (e) { console.warn('setInstalledFilter: filter buttons', e); }
+    }
+    try {
+        filterInstalledPlugins();
+    } catch (e) { console.warn('setInstalledFilter: filterInstalledPlugins', e); }
+    updateInstalledPluginsHashIfNeeded();
+}
+
+function filterInstalledPlugins() {
+    const query = (document.getElementById('installedPluginSearchInput') && document.getElementById('installedPluginSearchInput').value) || '';
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(function(t) { return t.length > 0; });
+    const filter = currentInstalledFilter || 'all';
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+    const noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
+    const noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    if (!gridView && !tableView) return;
+    var visibleCount = 0;
+    function matchesFilter(installed, enabled, isPaid) {
+        if (filter === 'all') return true;
+        if (filter === 'installed') return installed === 'true';
+        if (filter === 'active') return installed === 'true' && enabled === 'true';
+        if (filter === 'premium') return isPaid === 'true';
+        return true;
+    }
+    var cat = (typeof currentInstalledCategory !== 'undefined' ? currentInstalledCategory : 'all');
+    function matchesCategory(typeAttr) {
+        if (cat === 'all') return true;
+        var t = (typeAttr || '').trim().toLowerCase();
+        return t === (cat || '').trim().toLowerCase();
+    }
+    if (gridView) {
+        var cards = gridView.querySelectorAll('.plugin-card');
+        cards.forEach(function(card) {
+            var name = (card.getAttribute('data-plugin-name') || '').toLowerCase();
+            var desc = (card.getAttribute('data-plugin-desc') || '').toLowerCase();
+            var type = (card.getAttribute('data-plugin-type') || '').toLowerCase();
+            var combined = name + ' ' + desc + ' ' + type;
+            var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+            var installed = card.getAttribute('data-installed') || 'false';
+            var enabled = card.getAttribute('data-enabled') || 'false';
+            var isPaid = card.getAttribute('data-is-paid') || 'false';
+            var filterMatch = matchesFilter(installed, enabled, isPaid);
+            var categoryMatch = matchesCategory(card.getAttribute('data-plugin-type'));
+            var show = searchMatch && filterMatch && categoryMatch;
+            card.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+    }
+    if (tableView) {
+        var tbody = tableView.querySelector('.plugins-table-wrapper tbody');
+        if (tbody) {
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row) {
+                if (row.id === 'installedPluginsNoResultsTable') return;
+                var name = (row.getAttribute('data-plugin-name') || '').toLowerCase();
+                var desc = (row.getAttribute('data-plugin-desc') || '').toLowerCase();
+                var type = (row.getAttribute('data-plugin-type') || '').toLowerCase();
+                var combined = name + ' ' + desc + ' ' + type;
+                var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+                var installed = row.getAttribute('data-installed') || 'false';
+                var enabled = row.getAttribute('data-enabled') || 'false';
+                var isPaid = row.getAttribute('data-is-paid') || 'false';
+                var filterMatch = matchesFilter(installed, enabled, isPaid);
+                var categoryMatch = matchesCategory(row.getAttribute('data-plugin-type'));
+                var show = searchMatch && filterMatch && categoryMatch;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+        }
+    }
+    var hasFilterOrSearch = terms.length > 0 || (filter !== 'all') || (cat !== 'all');
+    if (noResultsGrid) {
+        noResultsGrid.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'block' : 'none';
+    }
+    if (noResultsTable) {
+        noResultsTable.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'table-row' : 'none';
+    }
+}
+
+function clearInstalledPluginSearch() {
+    var input = document.getElementById('installedPluginSearchInput');
+    var clearBtn = document.getElementById('installedPluginSearchClear');
+    if (input) {
+        input.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        filterInstalledPlugins();
+        input.focus();
+    }
+    updateInstalledPluginsHashIfNeeded();
+}
+
+function toggleInstalledSort(field) {
+    if (field === 'name') {
+        currentInstalledSort = currentInstalledSort === 'name-asc' ? 'name-desc' : 'name-asc';
+    } else if (field === 'date') {
+        currentInstalledSort = currentInstalledSort === 'date-desc' ? 'date-asc' : 'date-desc';
+    } else {
+        currentInstalledSort = 'type';
+    }
+    updateInstalledSortButtons();
+    doApplyInstalledSort();
+    updateInstalledPluginsHashIfNeeded();
+}
+
+function updateInstalledSortButtons() {
+    var bar = document.getElementById('installedSortFilterBar');
+    var transNameAsc = bar && bar.getAttribute('data-trans-name-asc') || 'Name A-Å';
+    var transNameDesc = bar && bar.getAttribute('data-trans-name-desc') || 'Name Å-A';
+    var transDateNewest = bar && bar.getAttribute('data-trans-date-newest') || 'Date (newest)';
+    var transDateOldest = bar && bar.getAttribute('data-trans-date-oldest') || 'Date (oldest)';
+    var nameBtn = document.getElementById('installedSortBtnName');
+    var typeBtn = document.getElementById('installedSortBtnType');
+    var dateBtn = document.getElementById('installedSortBtnDate');
+    if (nameBtn) {
+        nameBtn.classList.toggle('active', currentInstalledSort === 'name-asc' || currentInstalledSort === 'name-desc');
+        var nameLabel = nameBtn.querySelector('.sort-btn-label');
+        var nameIcon = nameBtn.querySelector('i');
+        if (nameLabel) nameLabel.textContent = currentInstalledSort === 'name-desc' ? transNameDesc : transNameAsc;
+        if (nameIcon) nameIcon.className = currentInstalledSort === 'name-desc' ? 'fas fa-sort-alpha-down-alt' : 'fas fa-sort-alpha-down';
+    }
+    if (typeBtn) typeBtn.classList.toggle('active', currentInstalledSort === 'type');
+    if (dateBtn) {
+        dateBtn.classList.toggle('active', currentInstalledSort === 'date-asc' || currentInstalledSort === 'date-desc');
+        var dateLabel = dateBtn.querySelector('.sort-btn-label');
+        var dateIcon = dateBtn.querySelector('i');
+        if (dateLabel) dateLabel.textContent = currentInstalledSort === 'date-asc' ? transDateOldest : transDateNewest;
+        if (dateIcon) dateIcon.className = currentInstalledSort === 'date-asc' ? 'fas fa-calendar' : 'fas fa-calendar-alt';
+    }
+}
+
+function doApplyInstalledSort() {
+    var sortKey = currentInstalledSort;
+    var gridView = document.getElementById('gridView');
+    var tableView = document.getElementById('tableView');
+    var noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
+    var noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    function compareCards(a, b) {
+        var nameA = (a.getAttribute('data-plugin-name') || '').toLowerCase();
+        var nameB = (b.getAttribute('data-plugin-name') || '').toLowerCase();
+        var typeA = (a.getAttribute('data-plugin-type') || '').toLowerCase();
+        var typeB = (b.getAttribute('data-plugin-type') || '').toLowerCase();
+        var dateA = a.getAttribute('data-modify-date') || '0000-00-00 00:00:00';
+        var dateB = b.getAttribute('data-modify-date') || '0000-00-00 00:00:00';
+        if (sortKey === 'name-asc') return nameA.localeCompare(nameB);
+        if (sortKey === 'name-desc') return nameB.localeCompare(nameA);
+        if (sortKey === 'type') { var c = typeA.localeCompare(typeB); return c !== 0 ? c : nameA.localeCompare(nameB); }
+        if (sortKey === 'date-desc') return dateB.localeCompare(dateA);
+        if (sortKey === 'date-asc') return dateA.localeCompare(dateB);
+        return 0;
+    }
+    if (gridView) {
+        var cards = Array.prototype.slice.call(gridView.querySelectorAll('.plugin-card'));
+        cards.sort(compareCards);
+        cards.forEach(function(card) { gridView.appendChild(card); });
+        if (noResultsGrid) gridView.appendChild(noResultsGrid);
+    }
+    if (tableView) {
+        var tbody = tableView.querySelector('.plugins-table-wrapper tbody');
+        if (tbody) {
+            var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+            var dataRows = rows.filter(function(r) { return r.id !== 'installedPluginsNoResultsTable'; });
+            dataRows.sort(compareCards);
+            dataRows.forEach(function(row) { tbody.appendChild(row); });
+            if (noResultsTable) tbody.appendChild(noResultsTable);
+        }
+    }
+}
+
+function toggleAlphabetFilter() {
+    const filter = document.getElementById('alphabetFilter');
+    const toggleBtn = document.getElementById('alphabetToggleBtn');
+    if (!filter || !toggleBtn) return;
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    filter.style.display = isExpanded ? 'none' : 'flex';
+    filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function toggleInstalledCategoryFilter() {
+    const filter = document.getElementById('installedCategoryFilter');
+    const toggleBtn = document.getElementById('installedCategoryToggleBtn');
+    if (!filter || !toggleBtn) return;
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    filter.style.display = isExpanded ? 'none' : 'block';
+    filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function filterByCategoryInstalled(category, evt) {
+    currentInstalledCategory = category;
+    const btns = document.querySelectorAll('.installed-category-btn');
+    btns.forEach(function(btn) { btn.classList.remove('active'); });
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.installed-category-btn')));
+    if (clickedBtn) clickedBtn.classList.add('active');
+    else {
+        btns.forEach(function(btn) {
+            if ((btn.getAttribute('data-category') || '') === category) btn.classList.add('active');
+        });
+    }
+    try { filterInstalledPlugins(); } catch (e) { console.warn('filterByCategoryInstalled', e); }
+    updateInstalledPluginsHashIfNeeded();
+}
+
+function upgradePlugin(pluginName, currentVersion, newVersion) {
+    // Show confirmation dialog with backup warning
+    const message = `⚠️ WARNING: Plugin Upgrade\n\n` +
+        `You are about to upgrade ${pluginName} from version ${currentVersion} to ${newVersion}.\n\n` +
+        `⚠️ IMPORTANT: You could lose data during the upgrade process.\n\n` +
+        `Please ensure you have backed up:\n` +
+        `• Plugin configuration files\n` +
+        `• Plugin data and databases\n` +
+        `• Any custom modifications\n\n` +
+        `Do you want to continue with the upgrade?`;
+    
+    if (!confirm(message)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-upgrade') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upgrading...';
+    
+    fetch(`/plugins/api/store/upgrade/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Upgrade Successful!',
+                    text: data.message || `Plugin ${pluginName} upgraded successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} upgraded successfully`));
+            }
+            // Refetch store so upgrades list and badge update (plugin no longer shows as upgradable)
+            if (typeof loadPluginStore === 'function') {
+                const upgradesViewEl = document.getElementById('upgradesView');
+                const shouldShowUpgrades = upgradesViewEl && upgradesViewEl.style.display === 'block';
+                loadPluginStore(shouldShowUpgrades);
+            }
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Upgrade Failed!',
+                    text: data.error || 'Failed to upgrade plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to upgrade plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to upgrade plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to upgrade plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function installFromStore(pluginName) {
+    if (!confirm(`Install ${pluginName} from the CyberPanel Plugin Store?`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-install') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+    
+    fetch(`/plugins/api/store/install/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} installed successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} installed successfully`));
+            }
+            
+            // Reload plugins
+            loadPluginStore();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Installation Failed!',
+                    text: data.error || 'Failed to install plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to install plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to install plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to install plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function uninstallPluginFromStore(pluginName) {
+    if (!confirm(`Are you sure you want to uninstall ${pluginName}? All data from this plugin will be deleted.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-uninstall') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uninstalling...';
+    
+    fetch(`/plugins/api/uninstall/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} uninstalled successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} uninstalled successfully`));
+            }
+            
+            // Reload plugins
+            loadPluginStore();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Uninstall Failed!',
+                    text: data.error || 'Failed to uninstall plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to uninstall plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to uninstall plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to uninstall plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function installPlugin(pluginName) {
+    if (!confirm(`Install ${pluginName}?`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-install') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+    
+    const headers = {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+    };
+    
+    function showError(msg) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Installation Failed!', text: msg || 'Failed to install plugin', type: 'error' });
+        } else {
+            alert('Error: ' + (msg || 'Failed to install plugin'));
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+    
+    function tryLocalInstall() {
+        return fetch(`/plugins/api/install/${pluginName}/`, { method: 'POST', headers: headers })
+            .then(function(r) { return r.json().then(function(data) { return { response: r, data: data }; }); });
+    }
+    
+    function tryStoreInstall() {
+        return fetch(`/plugins/api/store/install/${pluginName}/`, { method: 'POST', headers: headers })
+            .then(function(r) { return r.json().then(function(data) { return { response: r, data: data }; }); });
+    }
+    
+    tryLocalInstall()
+    .then(function(result) {
+        if (result.data.success) {
+            location.reload();
+            return;
+        }
+        var err = result.data.error || '';
+        if (result.response.status === 404 || (err && err.indexOf('Plugin source not found') !== -1)) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing from store...';
+            return tryStoreInstall();
+        }
+        showError(err);
+    })
+    .then(function(result) {
+        if (!result || !result.data) return;
+        if (result.data.success) {
+            location.reload();
+        } else {
+            showError(result.data.error || 'Failed to install plugin');
+        }
+    })
+    .catch(function(error) {
+        showError(error && error.message ? error.message : 'Failed to install plugin');
+    });
+}
+
+function showRevertDialog(pluginName) {
+    // Fetch available backups
+    fetch(`/plugins/api/backups/${pluginName}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: data.error || 'Failed to load backups',
+                        type: 'error'
+                    });
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to load backups'));
+                }
+                return;
+            }
+            
+            if (!data.backups || data.backups.length === 0) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'No Backups Available',
+                        text: `No backups found for ${pluginName}. Backups are automatically created before upgrades.`,
+                        type: 'info'
+                    });
+                } else {
+                    alert(`No backups found for ${pluginName}. Backups are automatically created before upgrades.`);
+                }
+                return;
+            }
+            
+            // Show backup selection dialog
+            let backupList = 'Available backups:\n\n';
+            data.backups.forEach((backup, index) => {
+                const version = backup.version || 'unknown';
+                const timestamp = backup.timestamp || backup.created_at || 'unknown';
+                backupList += `${index + 1}. Version ${version} (${timestamp})\n`;
+            });
+            
+            backupList += '\n⚠️ WARNING: Reverting will replace the current plugin version with the selected backup.\n';
+            backupList += 'This action cannot be undone. Continue?';
+            
+            if (!confirm(backupList)) {
+                return;
+            }
+            
+            // Ask which backup to restore (for now, restore the most recent)
+            // In a more advanced UI, you could show a dropdown
+            const selectedBackup = data.backups[0]; // Most recent backup
+            
+            if (!confirm(`Revert ${pluginName} to version ${selectedBackup.version}?\n\nThis will replace the current installation.`)) {
+                return;
+            }
+            
+            // Perform revert
+            revertPlugin(pluginName, selectedBackup.backup_path);
+        })
+        .catch(error => {
+            const errorMessage = error && error.message ? error.message : (error ? String(error) : 'Unknown error');
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error!',
+                    text: 'Failed to load backups: ' + errorMessage,
+                    type: 'error'
+                });
+            } else {
+                alert('Error: Failed to load backups - ' + errorMessage);
+            }
+        });
+}
+
+function revertPlugin(pluginName, backupPath) {
+    // Find the revert button for this plugin (if it exists)
+    let btn = null;
+    let originalText = '';
+    
+    // Try to find button by looking for onclick attribute containing the plugin name
+    const revertButtons = document.querySelectorAll('.btn-revert');
+    for (let button of revertButtons) {
+        const onclickAttr = button.getAttribute('onclick') || '';
+        if (onclickAttr.includes(pluginName)) {
+            btn = button;
+            originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reverting...';
+            break;
+        }
+    }
+    
+    // Show loading notification if button not found
+    if (!btn) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Reverting...',
+                text: `Reverting ${pluginName} to previous version...`,
+                type: 'info'
+            });
+        }
+    }
+    
+    fetch(`/plugins/api/revert/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            backup_path: backupPath
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Revert Successful!',
+                    text: data.message || `Plugin ${pluginName} reverted successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} reverted successfully`));
+            }
+            // Reload page after short delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Revert Failed!',
+                    text: data.error || 'Failed to revert plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to revert plugin'));
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to revert plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to revert plugin - ' + error.message);
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+}
+
+function deletePluginLocalSource(pluginName) {
+    const msg1 =
+        'Permanently delete the local copy of "' + pluginName + '" on this server?\n\n' +
+        'Use this only after Uninstall, if you want a clean reinstall from the Plugin Store.\n' +
+        'This removes the plugin folder under the local source paths (not /usr/local/CyberCP).\n' +
+        'This cannot be undone.';
+    if (!confirm(msg1)) {
+        return;
+    }
+    if (!confirm('Final confirmation: delete all local source files for "' + pluginName + '"?')) {
+        return;
+    }
+    let btn = null;
+    try {
+        if (typeof event !== 'undefined' && event && event.target) {
+            btn = event.target.closest('.btn-delete-source') || event.target;
+        }
+    } catch (e) {
+        btn = null;
+    }
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+    }
+    fetch('/plugins/api/delete-source/' + encodeURIComponent(pluginName) + '/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Deleted',
+                        text: data.message || 'Local plugin files removed.',
+                        type: 'success',
+                    });
+                }
+                setTimeout(() => location.reload(), 800);
+            } else {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Delete failed',
+                        text: data.error || 'Could not delete local copy',
+                        type: 'error',
+                    });
+                } else {
+                    alert('Error: ' + (data.error || 'Could not delete local copy'));
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        })
+        .catch((error) => {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Delete failed: ' + error.message,
+                    type: 'error',
+                });
+            } else {
+                alert('Error: Delete failed — ' + error.message);
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+}
+
+function uninstallPlugin(pluginName) {
+    if (!confirm(`Are you sure you want to uninstall ${pluginName}? All data from this plugin will be deleted.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-uninstall') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uninstalling...';
+    
+    fetch(`/plugins/api/uninstall/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Uninstall Failed!',
+                    text: data.error || 'Failed to uninstall plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to uninstall plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to uninstall plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to uninstall plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function activatePlugin(pluginName) {
+    const btn = event.target.closest('.btn-activate') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+    
+    fetch(`/plugins/api/enable/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} activated successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} activated successfully`));
+            }
+            // Reload page to update UI
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Activation Failed!',
+                    text: data.error || 'Failed to activate plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to activate plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to activate plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to activate plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function deactivatePlugin(pluginName) {
+    if (!confirm(`Deactivate ${pluginName}? The plugin will be disabled but remain installed.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-deactivate') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deactivating...';
+    
+    fetch(`/plugins/api/disable/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} deactivated successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} deactivated successfully`));
+            }
+            // Reload page to update UI
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Deactivation Failed!',
+                    text: data.error || 'Failed to deactivate plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to deactivate plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to deactivate plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to deactivate plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function activateAllPlugins() {
+    const btns = document.querySelectorAll('#gridView .btn-activate[data-plugin-dir], #tableView .btn-activate[data-plugin-dir]');
+    const plugins = Array.from(btns).map(b => b.getAttribute('data-plugin-dir')).filter(Boolean);
+    if (plugins.length === 0) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Info', text: 'No inactive plugins to activate.', type: 'info' });
+        } else {
+            alert('No inactive plugins to activate.');
+        }
+        return;
+    }
+    const activateAllBtn = document.querySelector('.btn-activate-all');
+    if (activateAllBtn) activateAllBtn.disabled = true;
+    let done = 0;
+    const run = () => {
+        if (done >= plugins.length) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success!', text: `Activated ${plugins.length} plugin(s).`, type: 'success' });
+            } else {
+                alert(`Activated ${plugins.length} plugin(s).`);
+            }
+            setTimeout(() => location.reload(), 800);
+            return;
+        }
+        const name = plugins[done];
+        fetch(`/plugins/api/enable/${name}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success && typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Warning', text: `${name}: ${data.error || 'failed'}`, type: 'error' });
+            }
+            done++;
+            run();
+        })
+        .catch(() => { done++; run(); });
+    };
+    run();
+}
+
+function deactivateAllPlugins() {
+    const btns = document.querySelectorAll('#gridView .btn-deactivate[data-plugin-dir], #tableView .btn-deactivate[data-plugin-dir]');
+    const plugins = Array.from(btns).map(b => b.getAttribute('data-plugin-dir')).filter(Boolean);
+    if (plugins.length === 0) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Info', text: 'No active plugins to deactivate.', type: 'info' });
+        } else {
+            alert('No active plugins to deactivate.');
+        }
+        return;
+    }
+    if (!confirm(`Deactivate ${plugins.length} plugin(s)? They will be disabled but remain installed.`)) return;
+    const deactivateAllBtn = document.querySelector('.btn-deactivate-all');
+    if (deactivateAllBtn) deactivateAllBtn.disabled = true;
+    let done = 0;
+    const run = () => {
+        if (done >= plugins.length) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success!', text: `Deactivated ${plugins.length} plugin(s).`, type: 'success' });
+            } else {
+                alert(`Deactivated ${plugins.length} plugin(s).`);
+            }
+            setTimeout(() => location.reload(), 800);
+            return;
+        }
+        const name = plugins[done];
+        fetch(`/plugins/api/disable/${name}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success && typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Warning', text: `${name}: ${data.error || 'failed'}`, type: 'error' });
+            }
+            done++;
+            run();
+        })
+        .catch(() => { done++; run(); });
+    };
+    run();
+}
+
+function dismissNotice() {
+    const notice = document.getElementById('pluginStoreNotice');
+    if (notice) {
+        notice.style.display = 'none';
+        localStorage.setItem('pluginStoreNoticeDismissed', 'true');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Check if notice was previously dismissed
+if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
+    const notice = document.getElementById('pluginStoreNotice');
+    if (notice) {
+        notice.style.display = 'none';
+    }
+}
+
+// Initialize view on page load
+// Convert cache expiry timestamp to local time
+function updateCacheExpiryTime() {
+    const expiryElement = document.getElementById('cacheExpiryTime');
+    if (!expiryElement) return;
+    
+    const timestamp = expiryElement.getAttribute('data-timestamp');
+    if (!timestamp) return;
+    
+    try {
+        // Convert Unix timestamp (seconds) to milliseconds for JavaScript Date
+        const timestampMs = parseFloat(timestamp) * 1000;
+        const expiryDate = new Date(timestampMs);
+        
+        // Check if date is valid
+        if (isNaN(expiryDate.getTime())) {
+            expiryElement.textContent = 'Invalid timestamp';
+            return;
+        }
+        
+        // Always use Norwegian format for NO-facing UI: DD.MM.YYYY kl. HH:MM
+        const locale = 'nb-NO';
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // Format date and time according to user's locale
+        const dateOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+        
+        const timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        };
+        
+        // Format date and time separately for better readability
+        const dateStr = expiryDate.toLocaleDateString(locale, dateOptions);
+        const timeStr = expiryDate.toLocaleTimeString(locale, timeOptions);
+        
+        // Combine with timezone abbreviation
+        const formatted = dateStr + ' kl. ' + timeStr;
+        const expired = expiryElement.getAttribute('data-expired') === '1';
+        const refreshStarted = expiryElement.getAttribute('data-refresh-started') === '1';
+
+        if (expired) {
+            expiryElement.textContent = refreshStarted
+                ? ('Expired (' + formatted + ') - updating in background')
+                : ('Expired (' + formatted + ')');
+        } else {
+            expiryElement.textContent = formatted;
+        }
+        expiryElement.title = 'Lokal tid: ' + formatted + ' | Tidssone: ' + timezone;
+    } catch (e) {
+        console.error('Error formatting cache expiry time:', e);
+        expiryElement.textContent = 'Error calculating time';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Update cache expiry time to local timezone
+    updateCacheExpiryTime();
+    
+    // Respect ?view=store in URL (e.g. from sidebar "Plugin Store" link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedView = urlParams.get('view');
+    if (requestedView === 'store') {
+        toggleView('store');
+    } else {
+        // Search input listener (debounced)
+        const searchInput = document.getElementById('pluginSearchInput');
+        const searchClearBtn = document.getElementById('pluginSearchClear');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                currentSearchQuery = this.value;
+                if (searchClearBtn) {
+                    searchClearBtn.style.display = currentSearchQuery.trim() ? 'block' : 'none';
+                }
+                displayStorePlugins();
+            });
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    clearPluginSearch();
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Installed plugins search (Grid View and Table View)
+        const installedSearchInput = document.getElementById('installedPluginSearchInput');
+        const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
+        if (installedSearchInput) {
+            installedSearchInput.addEventListener('input', function() {
+                if (installedSearchClearBtn) {
+                    installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
+                }
+                filterInstalledPlugins();
+                scheduleInstalledSearchHashUpdate();
+            });
+            installedSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    clearInstalledPluginSearch();
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // URL hash: #grid | #table | #store | #upgrades, optional ?show=&sort=&cat=&q= for grid/table
+        const hashRaw = window.location.hash.substring(1);
+        const parsedHash = parsePluginsHashFragment(hashRaw);
+        const validViews = ['grid', 'table', 'upgrades', 'store'];
+        
+        const gridView = document.getElementById('gridView');
+        const tableView = document.getElementById('tableView');
+        const storeView = document.getElementById('storeView');
+        const upgradesViewEl = document.getElementById('upgradesView');
+        
+        if (gridView && tableView && storeView) {
+            let initialView = 'grid';
+            if (hashRaw.length > 0 && validViews.indexOf(parsedHash.view) !== -1) {
+                initialView = parsedHash.view;
+            } else if (hashRaw.length === 0) {
+                if (gridView.children.length > 0) {
+                    initialView = 'grid';
+                } else {
+                    initialView = 'store';
+                }
+            }
+            
+            const hadHash = hashRaw.length > 0;
+            try {
+                if (initialView === 'grid' || initialView === 'table') {
+                    currentInstalledFilter = parsedHash.show;
+                    currentInstalledSort = parsedHash.sort;
+                    currentInstalledCategory = parsedHash.cat;
+                    var insPre = document.getElementById('installedPluginSearchInput');
+                    var clrPre = document.getElementById('installedPluginSearchClear');
+                    if (insPre) {
+                        insPre.value = parsedHash.q;
+                        if (clrPre) clrPre.style.display = parsedHash.q ? 'block' : 'none';
+                    }
+                }
+                toggleView(initialView, false);
+                if (initialView === 'grid' || initialView === 'table') {
+                    applyInstalledStateFromHash(parsedHash);
+                }
+                if (hadHash && (initialView === 'grid' || initialView === 'table' || initialView === 'upgrades' || initialView === 'store')) {
+                    updateInstalledPluginsHashIfNeeded();
+                }
+            } catch (e) {
+                console.warn('plugins: toggleView on load failed', e);
+                if (storeView) storeView.style.display = 'block';
+                if (gridView) gridView.style.display = 'none';
+                if (tableView) tableView.style.display = 'none';
+            }
+        } else {
+            if (storeView) {
+                storeView.style.display = 'block';
+            }
+        }
+    }
+    
+    // Load store plugins if store view is visible (either from toggleView or already displayed)
+    setTimeout(function() {
+        const storeViewCheck = document.getElementById('storeView');
+        if (storeViewCheck && storeViewCheck.style.display !== 'none' && storePlugins.length === 0) {
+            loadPluginStore();
+        }
+    }, 100); // Small delay to ensure DOM is ready
+});
+
+// Handle hash changes (back/forward browser buttons)
+window.addEventListener('hashchange', function() {
+    if (isSettingHash) {
+        return;
+    }
+    const raw = window.location.hash.substring(1);
+    const parsed = parsePluginsHashFragment(raw);
+    var validViews = ['grid', 'table', 'upgrades', 'store'];
+    if (validViews.indexOf(parsed.view) !== -1) {
+        toggleView(parsed.view, false);
+        if (parsed.view === 'grid' || parsed.view === 'table') {
+            applyInstalledStateFromHash(parsed);
+        }
+    }
+});
 </script>
 {% endblock %}
