@@ -833,6 +833,10 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
+            existingWebsite = Websites.objects.filter(domain=masterDomain).first()
+            if existingWebsite is not None:
+                from plogical import storageQuota
+                storageQuota.assert_restore_allowed(existingWebsite)
             backup_version = backupMetaData.find('VERSION').text
             backup_build = backupMetaData.find('BUILD').text
 
@@ -2028,6 +2032,9 @@ class backupUtilities:
 
     def SubmitCloudBackupRestore(self):
         try:
+            from plogical import storageQuota
+            self.website = Websites.objects.get(domain=self.extraArgs['domain'])
+            storageQuota.assert_restore_allowed(self.website)
             import json
             if os.path.exists(backupUtilities.CloudBackupConfigPath):
                 result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
@@ -2206,6 +2213,9 @@ class backupUtilities:
     def SubmitS3BackupRestore(self):
 
         try:
+            from plogical import storageQuota
+            self.website = Websites.objects.get(domain=self.extraArgs['domain'])
+            storageQuota.assert_restore_allowed(self.website)
             import json
             if os.path.exists(backupUtilities.CloudBackupConfigPath):
                 result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())

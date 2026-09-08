@@ -13,6 +13,7 @@ from cli import cyberPanel as cli
 from mailServer import mailserverManager as manager
 from mailServer import views
 from plogical import mailUtilities as mail_module
+from plogical import storageQuota
 
 
 class EmailDeletionStatusTests(unittest.TestCase):
@@ -24,6 +25,9 @@ class EmailDeletionStatusTests(unittest.TestCase):
         self.request.session = {'userID': 7}
         self.domain = Mock()
         self.domain.domainOwner.domain = 'example.test'
+        self.domain.domainOwner.pk = 31
+        self.domain.childOwner_id = None
+        self.domain.childOwner = None
         self.domain.eusers_set.all.return_value.count.return_value = 0
         self.mailbox = SimpleNamespace(emailOwner=self.domain)
         self.denied = HttpResponse(json.dumps({'status': 0, 'deleteEmailStatus': 0,
@@ -39,6 +43,7 @@ class EmailDeletionStatusTests(unittest.TestCase):
             'mailbox': patch.object(manager.EUsers.objects, 'get', return_value=self.mailbox),
             'admin': patch.object(manager.Administrator.objects, 'get', return_value=SimpleNamespace(pk=7)),
             'delete': patch.object(manager.mailUtilities, 'deleteEmailAccount', return_value=(1, 'None')),
+            'enrollment': patch.object(storageQuota, 'has_enrollment', return_value=False),
             'cli_logger': patch.object(cli.logger, 'writeforCLI'),
         }
         self.mocks = {}
@@ -87,6 +92,38 @@ class EmailDeletionStatusTests(unittest.TestCase):
     def test_ui_success_keeps_domain_with_remaining_mailbox(self):
         self.domain.eusers_set.all.return_value.count.return_value = 1
         self.assertEqual(1, self.response()['deleteEmailStatus'])
+        self.domain.delete.assert_not_called()
+
+    def test_last_mailbox_deletion_preserves_enrolled_domain_storage_scope(self):
+        self.mocks['enrollment'].return_value = True
+        self.assertEqual(1, self.response()['deleteEmailStatus'])
+        self.mocks['enrollment'].assert_called_once_with(self.domain.domainOwner)
+        self.mocks['delete'].assert_called_once_with(self.address)
+        self.domain.delete.assert_not_called()
+
+    def test_unreadable_quota_registry_refuses_before_mailbox_deletion(self):
+        self.mocks['enrollment'].side_effect = ValueError('Quota registry unavailable')
+        self.assertEqual(0, self.response()['deleteEmailStatus'])
+        self.mocks['delete'].assert_not_called()
+        self.domain.delete.assert_not_called()
+
+    def test_child_mail_domain_checks_master_ownership_and_enrollment(self):
+        website = self.domain.domainOwner
+        self.domain.domainOwner = None
+        self.domain.childOwner_id = 8
+        self.domain.childOwner = SimpleNamespace(master_id=31, master=website)
+        self.mocks['enrollment'].return_value = True
+        self.assertEqual(1, self.response()['deleteEmailStatus'])
+        self.assertEqual('example.test', self.mocks['ownership'].call_args[0][0])
+        self.mocks['enrollment'].assert_called_once_with(website)
+        self.domain.delete.assert_not_called()
+
+    def test_conflicting_child_owner_refuses_before_deletion(self):
+        self.domain.childOwner_id = 8
+        self.domain.childOwner = SimpleNamespace(master_id=44, master=SimpleNamespace(pk=44))
+        self.assertEqual(0, self.response()['deleteEmailStatus'])
+        self.mocks['enrollment'].assert_not_called()
+        self.mocks['delete'].assert_not_called()
         self.domain.delete.assert_not_called()
 
     def test_cli_success_keeps_existing_response(self):

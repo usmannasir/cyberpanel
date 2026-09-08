@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from django.http import HttpResponse
 from packages import packagesManager as module
 from plogical import filesystemQuota as quota
+from plogical import storageQuota
 
 
 class PackageQuotaPropagationTests(unittest.TestCase):
@@ -14,6 +15,10 @@ class PackageQuotaPropagationTests(unittest.TestCase):
         self.admin = NS(pk=1)
         self.package = NS(pk=3, admin=self.admin, enforceDiskLimits=1,
                           diskSpace=10, inodeLimit=20, save=Mock())
+        self.site = NS(pk=4, domain='owned.test', package=self.package)
+        self.package.websites_set = NS(all=Mock(return_value=[self.site]))
+        self.project_prepare = Mock(return_value=None)
+        self.project_apply = Mock()
         self.data = {'packageName': 'owned', 'diskSpace': 50, 'bandwidth': 100,
                      'ftpAccounts': 1, 'dataBases': 1, 'emails': 1,
                      'allowedDomains': 1, 'enforceDiskLimits': 1, 'inodeLimit': 70}
@@ -30,6 +35,8 @@ class PackageQuotaPropagationTests(unittest.TestCase):
                 patch.object(module.PackagesManager, 'checkAddonAccess', return_value=True),
                 patch.object(quota, 'prepare_package_quota', self.preflight),
                 patch.object(quota, 'apply_quota_plan', self.apply),
+                patch.object(storageQuota, 'prepare_policy', self.project_prepare),
+                patch.object(storageQuota, 'apply_policy', self.project_apply),
                 patch('plogical.processUtilities.ProcessUtilities.outputExecutioner', self.process)):
             item.start()
             self.addCleanup(item.stop)
@@ -101,3 +108,43 @@ class PackageQuotaPropagationTests(unittest.TestCase):
                 self.package.save.assert_not_called()
                 self.preflight.assert_not_called()
 
+    def test_enrolled_scope_is_prepared_before_save_and_applied_after_legacy_quota(self):
+        self.project_prepare.return_value = {'site_id': 4}
+        calls = Mock()
+        for child, name in ((self.preflight, 'legacy_prepare'), (self.project_prepare, 'project_prepare'),
+                            (self.package.save, 'save'), (self.apply, 'legacy_apply'),
+                            (self.project_apply, 'project_apply')):
+            calls.attach_mock(child, name)
+        self.assertEqual(1, self.save()['saveStatus'])
+        self.assertEqual(['legacy_prepare', 'project_prepare', 'save', 'legacy_apply', 'project_apply'],
+                         [call[0] for call in calls.mock_calls])
+        self.project_prepare.assert_called_once_with(self.site, 50, 70, enforce=True)
+
+    def test_disable_explicitly_clears_registered_project_policy_but_preserves_legacy_user_quota(self):
+        self.data['enforceDiskLimits'] = 0
+        self.project_prepare.return_value = {'site_id': 4, 'enforce': False}
+        self.assertEqual(1, self.save()['saveStatus'])
+        self.project_prepare.assert_called_once_with(self.site, 50, 70, enforce=False)
+        self.project_apply.assert_called_once_with(self.project_prepare.return_value)
+        self.preflight.assert_not_called()
+        self.apply.assert_not_called()
+
+    def test_project_preflight_failure_does_not_change_package_or_kernel_limits(self):
+        self.project_prepare.side_effect = storageQuota.StorageQuotaError('Maintenance enrollment is pending')
+        response = self.save()
+        self.assertEqual(0, response['saveStatus'])
+        self.assertIn('No package settings were changed', response['error_message'])
+        self.package.save.assert_not_called()
+        self.apply.assert_not_called()
+        self.project_apply.assert_not_called()
+
+    def test_project_application_failure_reports_saved_package_and_affected_domain(self):
+        self.project_prepare.return_value = {'site_id': 4}
+        self.project_apply.side_effect = storageQuota.StorageQuotaError('Readback failed')
+        response = self.save()
+        self.assertEqual(0, response['saveStatus'])
+        self.assertIn('Package settings were saved', response['error_message'])
+        self.assertIn('owned.test', response['error_message'])
+        self.package.save.assert_called_once()
+        self.apply.assert_called_once()
+        self.process.assert_not_called()

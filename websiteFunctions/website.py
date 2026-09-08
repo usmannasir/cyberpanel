@@ -55,6 +55,64 @@ import requests
 from plogical.wordpressInstallerUtilities import select_wordpress_version
 
 
+def storage_card_context(website, now=None):
+    """Present only recent, verified website/mail statistics and quota status."""
+    from datetime import datetime, timezone
+    now = now or datetime.now(timezone.utc)
+    try:
+        cached = json.loads(website.config)
+        if not isinstance(cached, dict):
+            cached = {}
+    except (TypeError, ValueError):
+        cached = {}
+
+    def recent(value):
+        try:
+            timestamp = datetime.fromisoformat(value)
+            if timestamp.tzinfo is None:
+                return None
+            # The installed statistics schedule runs daily. Allow a delayed run
+            # without indefinitely presenting a stopped scheduler as current.
+            if not 0 <= (now - timestamp).total_seconds() <= 36 * 60 * 60:
+                return None
+            return timestamp.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+        except (TypeError, ValueError, OverflowError):
+            return None
+
+    allowance = max(0, int(website.package.diskSpace))
+    measured_at = recent(cached.get('storageUsageCheckedAt'))
+    usage = cached.get('DiskUsage')
+    available = (cached.get('storageUsageStatus') == 'available' and measured_at is not None
+                 and type(usage) is int and usage >= 0)
+    quota = cached.get('storageQuotaStatus')
+    quota_state = 'unavailable'
+    if isinstance(quota, dict) and recent(quota.get('checked_at')):
+        state = quota.get('state')
+        if state in ('unconfigured', 'pending', 'unsupported', 'unavailable'):
+            quota_state = state
+        elif state == 'active':
+            expected = {
+                'disk_space': allowance,
+                'inode_limit': int(website.package.inodeLimit),
+                'enforce': bool(website.package.enforceDiskLimits),
+            }
+            if (quota.get('enforced') is True and quota.get('policy') == expected
+                    and quota.get('scope') == 'website_and_owned_mail'
+                    and expected['enforce'] and (allowance or expected['inode_limit'])):
+                quota_state = 'active'
+            else:
+                quota_state = 'pending'
+    return {
+        'storageUsageAvailable': available,
+        'storageUsageState': 'available' if available else 'unavailable',
+        'storageUsageCheckedAt': measured_at if available else '',
+        'storageQuotaState': quota_state,
+        'diskInMB': usage if available else None,
+        'diskUsage': min(100, usage * 100 // allowance) if available and allowance else 0,
+        'diskInMBTotal': allowance,
+    }
+
+
 def get_wordpress_version(output):
     value = str(output or '').strip()
     if re.fullmatch(r'\d+(?:\.\d+){1,3}(?:[-+._a-zA-Z0-9]+)?', value):
@@ -3488,7 +3546,7 @@ context /cyberpanel_suspension_page.html {
 
     def saveWebsiteChanges(self, userID=None, data=None):
         try:
-            from plogical import filesystemQuota
+            from plogical import filesystemQuota, storageQuota
             domain = data['domain']
             package = data['packForWeb']
             email = data['email']
@@ -3521,6 +3579,14 @@ context /cyberpanel_suspension_page.html {
                     return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
                         'error_message': 'No website settings were changed. ' + str(error)}))
 
+            try:
+                storage_plan = storageQuota.prepare_policy(
+                    modifyWeb, webpack.diskSpace, webpack.inodeLimit,
+                    enforce=bool(webpack.enforceDiskLimits))
+            except Exception as error:
+                return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                    'error_message': 'No website settings were changed. ' + str(error)}))
+
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
             completePathToConfigFile = confPath + "/vhost.conf"
 
@@ -3545,6 +3611,13 @@ context /cyberpanel_suspension_page.html {
                 except Exception as error:
                     return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
                         'error_message': 'Website settings were saved, but disk/inode quotas were not fully applied. ' + str(error)}))
+
+            if storage_plan is not None:
+                try:
+                    storageQuota.apply_policy(storage_plan)
+                except Exception as error:
+                    return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                        'error_message': 'Website settings were saved, but the combined website/mail quota was not applied. ' + str(error)}))
 
             ## Fix https://github.com/usmannasir/cyberpanel/issues/998
 
@@ -3608,6 +3681,7 @@ context /cyberpanel_suspension_page.html {
             Data['diskUsage'] = DiskUsagePercentage
             Data['diskInMB'] = DiskUsage
             Data['diskInMBTotal'] = website.package.diskSpace
+            Data.update(storage_card_context(website))
 
             Data['phps'] = PHPManager.findPHPVersions()
             import os
@@ -3853,6 +3927,7 @@ context /cyberpanel_suspension_page.html {
             Data['diskUsage'] = DiskUsagePercentage
             Data['diskInMB'] = DiskUsage
             Data['diskInMBTotal'] = website.package.diskSpace
+            Data.update(storage_card_context(website))
 
             Data['phps'] = PHPManager.findPHPVersions()
 

@@ -1247,58 +1247,63 @@ Automatic backup failed for %s on %s.
 
     @staticmethod
     def CalculateAndUpdateDiskUsage():
+        from datetime import datetime, timezone
+        from django.db import transaction
+        from plogical.storageAccounting import measure_website_storage
+
         for website in Websites.objects.all():
             try:
-                try:
-                    config = json.loads(website.config)
-                except:
+                config = json.loads(website.config)
+                if not isinstance(config, dict):
                     config = {}
+            except (TypeError, ValueError):
+                config = {}
 
-                eDomains = website.domains_set.all()
+            try:
+                from plogical import storageQuota
+                quota_status = storageQuota.status(website)
+                if not isinstance(quota_status, dict):
+                    raise ValueError('Storage quota returned an invalid status')
+                config['storageQuotaStatus'] = dict(quota_status)
+                config['storageQuotaStatus'].setdefault('checked_at', datetime.now(timezone.utc).isoformat())
+            except Exception as error:
+                config['storageQuotaStatus'] = {
+                    'state': 'unavailable',
+                    'enforced': False,
+                    'reason': 'Unable to verify storage quota; check the server log.',
+                    'checked_at': datetime.now(timezone.utc).isoformat(),
+                }
+                logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:storageQuota]' % str(error))
 
-                for eDomain in eDomains:
-                    for email in eDomain.eusers_set.all():
-                        emailPath = '/home/vmail/%s/%s' % (website.domain, email.email.split('@')[0])
-                        email.DiskUsage = virtualHostUtilities.getDiskUsageofPath(emailPath)
-                        email.save()
-                        print('Disk Usage of %s is %s' % (email.email, email.DiskUsage))
-
-                config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
-                    "/home/" + website.domain, website.package.diskSpace)
-
-                # if website.package.enforceDiskLimits:
-                #     spaceString = f'{website.package.diskSpace}M {website.package.diskSpace}M'
-                #     command = f'setquota -u {website.externalApp} {spaceString} 0 0 /'
-                #     ProcessUtilities.executioner(command)
-                #     if config['DiskUsagePercentage'] >= 100:
-                #         command = 'chattr -R +i /home/%s/' % (website.domain)
-                #         ProcessUtilities.executioner(command)
-                #
-                #         command = 'chattr -R -i /home/%s/logs/' % (website.domain)
-                #         ProcessUtilities.executioner(command)
-                #
-                #         command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
-                #         ProcessUtilities.executioner(command)
-                #
-                #         command = 'chattr -R -i /home/%s/backup/' % (website.domain)
-                #         ProcessUtilities.executioner(command)
-                #
-                #         command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
-                #         ProcessUtilities.executioner(command)
-                #     else:
-                #         command = 'chattr -R -i /home/%s/' % (website.domain)
-                #         ProcessUtilities.executioner(command)
-
-                ## Calculate bw usage
-
+            try:
+                storage = measure_website_storage(website)
+                updated = dict(config)
+                updated['DiskUsage'] = storage['disk_usage_mb']
+                updated['DiskUsagePercentage'] = storage['disk_usage_percentage']
+                updated['storageUsageStatus'] = 'available'
+                updated['storageUsageCheckedAt'] = datetime.now(timezone.utc).isoformat()
+                updated.pop('storageUsageError', None)
                 from plogical.vhost import vhost
-                config['bwInMB'], config['bwUsage'] = vhost.findDomainBW(website.domain, int(website.package.bandwidth))
+                updated['bwInMB'], updated['bwUsage'] = vhost.findDomainBW(
+                    website.domain, int(website.package.bandwidth))
 
-                website.config = json.dumps(config)
-                website.save()
-
-            except BaseException as msg:
-                logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
+                with transaction.atomic():
+                    for email, usage in storage['mailbox_usage']:
+                        email.DiskUsage = usage
+                        email.save(update_fields=['DiskUsage'])
+                    website.config = json.dumps(updated)
+                    website.save(update_fields=['config'])
+            except Exception as error:
+                logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % str(error))
+                config['storageUsageStatus'] = 'unavailable'
+                config['storageUsageCheckedAt'] = datetime.now(timezone.utc).isoformat()
+                config['storageUsageError'] = (
+                    'Unable to measure website and mail storage; check the server log.')
+                try:
+                    website.config = json.dumps(config)
+                    website.save(update_fields=['config'])
+                except Exception as save_error:
+                    logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:storageStatus]' % str(save_error))
 
     @staticmethod
     def WPUpdates():
