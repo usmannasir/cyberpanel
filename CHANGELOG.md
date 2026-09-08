@@ -6,7 +6,22 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## v3.0.6 (build 6) — 2026-09-07
 
-Maintenance and security hardening for standalone webmail authentication.
+Maintenance and security hardening for standalone webmail authentication,
+plus phpMyAdmin upgrade resilience and localhost bind.conf signon support.
+
+### phpMyAdmin upgrade resilience
+- Upgrade no longer blindly deletes a working `public/phpmyadmin` tree before
+  download completes. The installer stages the zip, verifies required files
+  (`index.php`, `libraries/`, and related paths), then swaps in place.
+- Existing `config.inc.php` and `tmp/` are preserved across reinstalls.
+- `plogical/phpmyadminsignin.php` is always re-copied into
+  `public/phpmyadmin/phpmyadminsignin.php` after install or repair.
+- Healthy installs are left in place and only refreshed (signon helper),
+  unless `CYBERPANEL_FORCE_PMA_REINSTALL=1` is set.
+- Pre-upgrade backup now preserves the full `public/phpmyadmin` directory
+  across the clean re-clone path.
+- Signon handoff accepts `127.0.0.1:PORT` and `0.0.0.0:PORT` in
+  `/usr/local/lscp/conf/bind.conf` (in addition to `*:PORT`).
 
 ### Webmail authentication
 - The dedicated `/webmail/login` page and its login/logout APIs are reachable

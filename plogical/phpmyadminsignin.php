@@ -13,7 +13,10 @@ function getPMAHandoffValidationURL($bindPath = '/usr/local/lscp/conf/bind.conf'
         }
         $binding = trim($binding, " \t\r\n");
         if ($binding !== '') {
-            if (!preg_match('/\A\*:([0-9]{1,5})\z/', $binding, $matches)) {
+            // Accept *:PORT (upstream default) and host:PORT (e.g. 127.0.0.1:5003
+            // when LSCPD is bound to localhost only). Only the port is used;
+            // validation always targets 127.0.0.1.
+            if (!preg_match('/\A(?:\*|127\.0\.0\.1|0\.0\.0\.0):([0-9]{1,5})\z/', $binding, $matches)) {
                 return false;
             }
             $port = (int) $matches[1];

@@ -1081,33 +1081,70 @@ class preFlightsChecks:
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            pma_base = '/usr/local/CyberCP/public/phpmyadmin'
+            pma_config = os.path.join(pma_base, 'config.inc.php')
+            pma_tmp = os.path.join(pma_base, 'tmp')
+            preserved_config = None
+            preserved_tmp = None
+            import tempfile
+            import glob
+            preserve_root = tempfile.mkdtemp(prefix='cyberpanel_pma_preserve_')
+            try:
+                if os.path.isfile(pma_config):
+                    preserved_config = os.path.join(preserve_root, 'config.inc.php')
+                    shutil.copy2(pma_config, preserved_config)
+                if os.path.isdir(pma_tmp):
+                    preserved_tmp = os.path.join(preserve_root, 'tmp')
+                    shutil.copytree(pma_tmp, preserved_tmp)
+            except Exception:
+                preserved_config = None
+                preserved_tmp = None
+
+            stage_root = tempfile.mkdtemp(prefix='cyberpanel_pma_stage_')
+            zip_path = os.path.join(stage_root, 'phpmyadmin.zip')
+            extract_dir = os.path.join(stage_root, 'extract')
+            os.makedirs(extract_dir, exist_ok=True)
+
+            command = 'wget -O %s https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip' % (zip_path,)
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public'
+            command = 'unzip %s -d %s' % (zip_path, extract_dir)
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True)
+            extracted = glob.glob(os.path.join(extract_dir, 'phpMyAdmin-*-all-languages'))
+            if not extracted:
+                alt = os.path.join(extract_dir, 'phpmyadmin')
+                if os.path.isdir(alt):
+                    extracted = [alt]
+            if not extracted:
+                raise RuntimeError('phpMyAdmin zip did not contain an expected directory')
 
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
+            new_tree = extracted[0]
+            if os.path.isdir(pma_base):
+                shutil.rmtree(pma_base)
+            shutil.move(new_tree, pma_base)
+
+            command = 'rm -rf %s' % (stage_root,)
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            ## Write secret phrase
+            ## Write secret phrase (or restore preserved config)
 
-            rString = install_utils.generate_random_string(32)
+            if preserved_config and os.path.isfile(preserved_config):
+                shutil.copy2(preserved_config, pma_config)
+            else:
+                rString = install_utils.generate_random_string(32)
 
-            data = open('/usr/local/CyberCP/public/phpmyadmin/config.sample.inc.php', 'r').readlines()
+                data = open('/usr/local/CyberCP/public/phpmyadmin/config.sample.inc.php', 'r').readlines()
 
-            writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
+                writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
 
-            writeE = 1
+                writeE = 1
 
-            phpMyAdminContent = """
+                phpMyAdminContent = """
 $cfg['Servers'][$i]['AllowNoPassword'] = false;
 $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
@@ -1115,31 +1152,41 @@ $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
 $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 """
 
-            for items in data:
-                if items.find('blowfish_secret') > -1:
-                    writeToFile.writelines(
-                        "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                elif items.find('/* Authentication type */') > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.write(phpMyAdminContent)
-                    writeE = 0
-                elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
-                    writeE = 1
-                else:
-                    if writeE:
+                for items in data:
+                    if items.find('blowfish_secret') > -1:
+                        writeToFile.writelines(
+                            "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
+                    elif items.find('/* Authentication type */') > -1:
                         writeToFile.writelines(items)
+                        writeToFile.write(phpMyAdminContent)
+                        writeE = 0
+                    elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                        writeE = 1
+                    else:
+                        if writeE:
+                            writeToFile.writelines(items)
 
-            writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
+                writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
 
-            writeToFile.close()
+                writeToFile.close()
 
-            os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
+            if preserved_tmp and os.path.isdir(preserved_tmp):
+                if os.path.isdir(pma_tmp):
+                    shutil.rmtree(pma_tmp)
+                shutil.copytree(preserved_tmp, pma_tmp)
+            elif not os.path.isdir(pma_tmp):
+                os.mkdir(pma_tmp)
+
+            try:
+                shutil.rmtree(preserve_root)
+            except Exception:
+                pass
 
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin'
             preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
-            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            command = 'cp -f /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.remotemysql == 'ON':
@@ -1153,6 +1200,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
             return 0
+
 
     ###################################################### Email setup
 

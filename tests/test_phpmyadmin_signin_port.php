@@ -58,6 +58,8 @@ $validBindings = array(
     array('*:1', 1, 'lowest valid port'),
     array('*:65535', 65535, 'highest valid port'),
     array('*:00080', 80, 'decimal port with leading zeroes'),
+    array('127.0.0.1:5687', 5687, 'localhost-only LSCPD bind'),
+    array('0.0.0.0:5687', 5687, 'all-interfaces numeric bind'),
 );
 foreach ($validBindings as $case) {
     file_put_contents($bindingPath, $case[0]);
@@ -77,7 +79,6 @@ $invalidBindings = array(
     array('5687', 'missing bind address'),
     array('* :5687', 'space inside address'),
     array('*: 5687', 'space inside port'),
-    array('127.0.0.1:5687', 'unsupported address syntax'),
     array('[::1]:5687', 'unsupported IPv6 address syntax'),
     array('https://attacker.invalid:5687', 'URL instead of bind configuration'),
     array('*:5687@attacker.invalid', 'userinfo-style destination'),
