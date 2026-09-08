@@ -313,10 +313,18 @@
                     </h4>
                     <div ng-if="sslDetails.hasSSL">
                         <div class="ssl-detail-item">
-                            <strong>Status:</strong>
-                            <span class="ssl-status active">
+                            <strong title="{% trans 'Status reflects certificate dates, not browser trust.' %}">Status:</strong>
+                            <span ng-if="sslDetails.validityStatus === 'valid'" class="ssl-status active">
                                 <i class="fas fa-check-circle"></i>
                                 Active
+                            </span>
+                            <span ng-if="sslDetails.validityStatus === 'expired'" class="ssl-status inactive">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {% trans "Expired" %}
+                            </span>
+                            <span ng-if="sslDetails.validityStatus === 'not_yet_valid'" class="ssl-status inactive">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {% trans "Not yet valid" %}
                             </span>
                         </div>
                         <div class="ssl-detail-item">
@@ -327,7 +335,7 @@
                         </div>
                         <div class="ssl-detail-item">
                             <strong>Days Remaining:</strong> 
-                            <span style="color: var(--success-color, #16a34a); font-weight: 600;">{$ sslDetails.days $} days</span>
+                            <span ng-style="{'color': sslDetails.validityStatus === 'valid' ? 'var(--success-color, #16a34a)' : 'var(--danger-color, #dc2626)'}" style="font-weight: 600;">{$ sslDetails.days $} days</span>
                         </div>
                     </div>
                     <div ng-if="!sslDetails.hasSSL">
