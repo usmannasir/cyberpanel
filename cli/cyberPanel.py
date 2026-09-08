@@ -572,7 +572,7 @@ class cyberPanel:
             if result[0] == 1:
                 self.printStatus(1, 'None')
             else:
-                self.printStatus(1, result[1])
+                self.printStatus(0, result[1])
         except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
