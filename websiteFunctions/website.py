@@ -3488,6 +3488,7 @@ context /cyberpanel_suspension_page.html {
 
     def saveWebsiteChanges(self, userID=None, data=None):
         try:
+            from plogical import filesystemQuota
             domain = data['domain']
             package = data['packForWeb']
             email = data['email']
@@ -3510,6 +3511,16 @@ context /cyberpanel_suspension_page.html {
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
+            modifyWeb = Websites.objects.get(domain=domain)
+            webpack = Package.objects.get(packageName=package)
+            quota_plan = None
+            if webpack.enforceDiskLimits:
+                try:
+                    quota_plan = filesystemQuota.prepare_package_quota(webpack, [modifyWeb])
+                except Exception as error:
+                    return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                        'error_message': 'No website settings were changed. ' + str(error)}))
+
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
             completePathToConfigFile = confPath + "/vhost.conf"
 
@@ -3521,9 +3532,6 @@ context /cyberpanel_suspension_page.html {
 
             newOwner = Administrator.objects.get(userName=newUser)
 
-            modifyWeb = Websites.objects.get(domain=domain)
-            webpack = Package.objects.get(packageName=package)
-
             modifyWeb.package = webpack
             modifyWeb.adminEmail = email
             modifyWeb.phpSelection = phpVersion
@@ -3531,11 +3539,12 @@ context /cyberpanel_suspension_page.html {
 
             modifyWeb.save()
 
-            ## Update disk quota when package changes - Fix for GitHub issue #1442
-            if webpack.enforceDiskLimits:
-                spaceString = f'{webpack.diskSpace}M {webpack.diskSpace}M'
-                command = f'setquota -u {modifyWeb.externalApp} {spaceString} 0 0 /'
-                ProcessUtilities.executioner(command)
+            if quota_plan is not None:
+                try:
+                    filesystemQuota.apply_quota_plan(quota_plan)
+                except Exception as error:
+                    return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                        'error_message': 'Website settings were saved, but disk/inode quotas were not fully applied. ' + str(error)}))
 
             ## Fix https://github.com/usmannasir/cyberpanel/issues/998
 
