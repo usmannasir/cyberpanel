@@ -74,8 +74,16 @@ class ACLManager:
     def VerifyRecordOwner(currentACL, record, domain):
         if currentACL['admin'] == 1:
             return 1
-        elif record.domainOwner.name == domain:
+        elif record.domainOwner is not None and record.domainOwner.name == domain:
             return 1
+        elif record.domainOwner is None:
+            # Records created outside the panel (acme.sh, pdnsutil) can have a
+            # NULL domainOwner — compare through the native PowerDNS domain_id.
+            try:
+                from dns.models import Domains
+                return 1 if Domains.objects.get(id=record.domain_id).name == domain else 0
+            except Domains.DoesNotExist:
+                return 0
         else:
             return 0
 
