@@ -222,6 +222,10 @@
             <div class="icon-wrapper"><i class="fab fa-wordpress"></i></div>
             <span>{% trans "WordPress" %}</span>
         </a>
+        <a href="{% url 'ConfigurePlugins' %}" class="menu-item">
+            <div class="icon-wrapper"><i class="fas fa-layer-group"></i></div>
+            <span>{% trans "Plugin/Theme Bundles" %}</span>
+        </a>
         <a href="{% url 'cpHub' 'email' %}" class="menu-item">
             <div class="icon-wrapper"><i class="fas fa-envelope"></i></div>
             <span>{% trans "Email" %}</span>
@@ -334,6 +338,7 @@
             {l:'{% trans "Dashboard" %}', h:'{% url "index" %}', i:'fa-gauge-high', g:'{% trans "Sites" %}'},
             {l:'{% trans "Websites" %}', h:'{% url "listWebsites" %}', i:'fa-globe', g:'{% trans "Sites" %}'},
             {l:'{% trans "WordPress Sites" %}', h:'{% url "ListWPSites" %}', i:'fab fa-wordpress', g:'{% trans "Sites" %}'},
+            {l:'{% trans "Plugin/Theme Bundles" %}', h:'{% url "ConfigurePlugins" %}', i:'fa-layer-group', g:'{% trans "Sites" %}'},
             {l:'{% trans "Sub / Addon Domains" %}', h:'{% url "listChildDomains" %}', i:'fa-diagram-project', g:'{% trans "Sites" %}'},
             {l:'{% trans "Create Sub / Addon Domain" %}', h:'{% url "CreateNewDomain" %}', i:'fa-circle-plus', g:'{% trans "Sites" %}'},
             // Email
