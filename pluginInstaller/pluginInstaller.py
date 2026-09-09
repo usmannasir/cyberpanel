@@ -75,20 +75,36 @@ class pluginInstaller:
         subprocess.call(shlex.split(command))
 
     @staticmethod
-    def addInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
+    def addInterfaceLink(pluginName,
+                         templatePath="/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html"):
+        """Append the plugin's sidebar link after the {# pluginsList #} marker.
 
-        for items in data:
-            if items.find("{# pluginsList #}") > -1:
-                writeToFile.writelines(items)
-                writeToFile.writelines("                                ")
-                writeToFile.writelines(
-                    '<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>\n')
-            else:
-                writeToFile.writelines(items)
+        Returns True when the marker was found and the link written; returns
+        False and leaves the template untouched when it was not. The v3
+        sidebar redesign dropped the marker, which made installs report
+        "Interface link added" while writing nothing — so callers now get to
+        surface the failure instead of silently shipping a plugin with no
+        menu entry.
+        """
+        if not isinstance(pluginName, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', pluginName):
+            return False
 
-        writeToFile.close()
+        with open(templatePath, 'r') as templateFile:
+            data = templateFile.readlines()
+
+        markerFound = False
+        with open(templatePath, 'w') as writeToFile:
+            for items in data:
+                writeToFile.writelines(items)
+                if items.find("{# pluginsList #}") > -1:
+                    markerFound = True
+                    # Single line so the line-scoped removeInterfaceLink keeps working.
+                    writeToFile.writelines(
+                        '        <a href="{% url \'' + pluginName + '\' %}" class="menu-item">'
+                        '<div class="icon-wrapper"><i class="fas fa-puzzle-piece"></i></div>'
+                        '<span>{% trans "' + pluginName + '" %}</span></a>\n')
+
+        return markerFound
 
     @staticmethod
     def staticContent():
@@ -189,8 +205,13 @@ class pluginInstaller:
             ##
 
             pluginInstaller.stdOut('Adding interface link..')
-            pluginInstaller.addInterfaceLink(pluginName)
-            pluginInstaller.stdOut('Interface link added.')
+            if pluginInstaller.addInterfaceLink(pluginName):
+                pluginInstaller.stdOut('Interface link added.')
+            else:
+                pluginInstaller.stdOut(
+                    'WARNING: {# pluginsList #} marker not found in the sidebar template, the plugin link was NOT added. '
+                    'Add it manually in the HOSTING section of baseTemplate/templates/baseTemplate/index.html '
+                    '(and file a bug so the marker gets restored).')
 
             ##
 
@@ -282,16 +303,26 @@ class pluginInstaller:
             os.remove(pluginFile)
 
     @staticmethod
-    def removeInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
+    def removeInterfaceLink(pluginName,
+                            templatePath="/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html"):
+        if not isinstance(pluginName, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', pluginName):
+            return False
 
-        for items in data:
-            if items.find(pluginName) > -1 and items.find('<li>') > -1:
-                continue
-            else:
+        removed = False
+        with open(templatePath, 'r') as templateFile:
+            data = templateFile.readlines()
+
+        with open(templatePath, 'w') as writeToFile:
+            for items in data:
+                # Both the legacy nested-sidebar <li> entry and the flat v3
+                # menu-item entry are injected as single lines, so a
+                # line-scoped match removes exactly the plugin's own link.
+                if pluginName in items and ('<li>' in items or 'class="menu-item"' in items):
+                    removed = True
+                    continue
                 writeToFile.writelines(items)
-        writeToFile.close()
+
+        return removed
 
     @staticmethod
     def removeMigrations(pluginName):

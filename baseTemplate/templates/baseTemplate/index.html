@@ -234,6 +234,8 @@
             <div class="icon-wrapper"><i class="fas fa-shield-halved"></i></div>
             <span>{% trans "Backups" %}</span>
         </a>
+        {# Installed plugins append their sidebar link right after the pluginsList marker (pluginInstaller.addInterfaceLink). Keep this marker on its own line. #}
+        {# pluginsList #}
 
         <!-- Build Services: prominent, available to everyone -->
         <a href="{% url 'buildServices' %}" class="menu-item menu-item-promo">
