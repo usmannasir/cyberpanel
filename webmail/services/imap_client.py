@@ -6,6 +6,10 @@ import re
 from .mime_utils import decode_mime_header
 
 
+class IMAPOperationError(Exception):
+    """A mail operation could not be completed with a verified outcome."""
+
+
 class IMAPClient:
     """Wrapper around imaplib.IMAP4_SSL for Dovecot IMAP operations.
 
@@ -48,10 +52,9 @@ class IMAPClient:
             self.conn.login(email_address, password)
 
     def close(self):
-        try:
-            self.conn.close()
-        except Exception:
-            pass
+        # IMAP CLOSE expunges every message marked \Deleted in the selected
+        # mailbox. Leaving a context, including a failed operation, must not
+        # permanently remove messages selected by another client.
         try:
             self.conn.logout()
         except Exception:
@@ -289,42 +292,130 @@ class IMAPClient:
         return None
 
     def move_messages(self, folder, uids, target_folder):
-        self._select(folder)
-        uid_str = ','.join(str(u) for u in uids)
-        # Quote target folder name for folders with spaces (e.g. "INBOX.Deleted Items")
-        quoted_target = '"%s"' % target_folder
+        uid_str = self._delete_uid_set(uids)
+        quoted_folder = self._delete_mailbox(folder)
+        quoted_target = self._delete_mailbox(target_folder)
+        if folder == target_folder:
+            raise IMAPOperationError('Select a different destination folder before moving messages.')
+        uncertain = ('The mail server did not confirm the message move. '
+                     'Refresh the source and destination folders before retrying.')
         try:
-            status, _ = self.conn.uid('move', uid_str, quoted_target)
-            if status == 'OK':
-                return True
-        except Exception:
-            pass
-        status, _ = self.conn.uid('copy', uid_str, quoted_target)
-        if status == 'OK':
-            self.conn.uid('store', uid_str, '+FLAGS', '(\\Deleted)')
-            self.conn.expunge()
+            capabilities = self._selected_message_capabilities(quoted_folder, uid_str)
+            self._delete_require_ok(self.conn.status(quoted_target, '(UIDVALIDITY)'),
+                                    'Unable to open the destination folder. Refresh before retrying.')
+            self._move_selected_messages(uid_str, quoted_target, capabilities, uncertain)
             return True
-        return False
+        except IMAPOperationError:
+            raise
+        except Exception as error:
+            raise IMAPOperationError(uncertain) from error
+
+    @staticmethod
+    def _delete_uid_set(uids):
+        if not isinstance(uids, list) or not uids:
+            raise ValueError('Select explicit message UIDs before changing messages.')
+        selected = []
+        for uid in uids:
+            if (isinstance(uid, bool) or not isinstance(uid, (int, str))
+                    or not re.fullmatch(r'[1-9][0-9]*', str(uid))
+                    or not 1 <= int(uid) <= 4294967295):
+                raise ValueError('Message UIDs must be positive integers.')
+            value = str(int(uid))
+            if value not in selected:
+                selected.append(value)
+        return ','.join(selected)
+
+    @staticmethod
+    def _delete_mailbox(folder):
+        if (not isinstance(folder, str) or not folder
+                or any(ord(char) < 32 or ord(char) == 127 for char in folder)):
+            raise ValueError('Select a valid folder before changing messages.')
+        return '"%s"' % folder.replace('\\', '\\\\').replace('"', '\\"')
+
+    @staticmethod
+    def _delete_require_ok(response, message):
+        if not isinstance(response, tuple) or len(response) != 2 or response[0] != 'OK':
+            raise IMAPOperationError(message)
+        return response[1]
+
+    def _selected_message_capabilities(self, quoted_folder, uid_str):
+        self._delete_require_ok(self.conn.select(quoted_folder),
+                                'Unable to open the selected folder. Refresh before retrying.')
+        # Capabilities can change after login; older imaplib releases keep
+        # only their pre-authentication capability list on the connection.
+        data = self._delete_require_ok(self.conn.capability(),
+                                       'Unable to verify the mail server capabilities.')
+        capabilities = set()
+        for line in data:
+            if isinstance(line, bytes):
+                line = line.decode('ascii', errors='strict')
+            capabilities.update(line.upper().split())
+        # Confirm that the explicit UIDs are still in this selected folder
+        # before creating a Trash folder or changing any message state.
+        data = self._delete_require_ok(self.conn.uid('search', None, 'UID', uid_str),
+                                       'Unable to verify the selected messages. Refresh before retrying.')
+        found = set()
+        for line in data:
+            if isinstance(line, bytes):
+                line = line.decode('ascii', errors='strict')
+            found.update(line.split())
+        if found != set(uid_str.split(',')):
+            raise IMAPOperationError('The selected messages changed. Refresh the folder before retrying.')
+
+        return capabilities
+
+    def _move_selected_messages(self, uid_str, target, capabilities, uncertain):
+        if not capabilities.intersection({'MOVE', 'UIDPLUS'}):
+            raise IMAPOperationError('The mail server does not support moving only the selected messages.')
+        if 'MOVE' in capabilities:
+            # A rejected or interrupted MOVE may be partially complete.
+            # Never retry it as COPY or switch destinations automatically.
+            self._delete_require_ok(self.conn.uid('move', uid_str, target), uncertain)
+        else:
+            self._delete_require_ok(self.conn.uid('copy', uid_str, target), uncertain)
+            self._delete_require_ok(self.conn.uid('store', uid_str, '+FLAGS', '(\\Deleted)'), uncertain)
+            self._delete_require_ok(self.conn.uid('expunge', uid_str), uncertain)
 
     def delete_messages(self, folder, uids):
-        self._select(folder)
-        uid_str = ','.join(str(u) for u in uids)
-        # CyberPanel/Dovecot uses "INBOX.Deleted Items" as trash
-        trash_folders = ['INBOX.Deleted Items', 'INBOX.Trash', 'Trash']
-        if folder not in trash_folders:
+        uid_str = self._delete_uid_set(uids)
+        quoted_folder = self._delete_mailbox(folder)
+        uncertain = ('The mail server did not confirm message deletion. '
+                     'Refresh the source folder and Trash before retrying.')
+        try:
+            capabilities = self._selected_message_capabilities(quoted_folder, uid_str)
+
+            trash_folders = ['INBOX.Deleted Items', 'INBOX.Trash', 'Trash']
+            if folder in trash_folders:
+                if 'UIDPLUS' not in capabilities:
+                    raise IMAPOperationError('The mail server does not support deleting only the selected messages.')
+                self._delete_require_ok(self.conn.uid('store', uid_str, '+FLAGS', '(\\Deleted)'), uncertain)
+                self._delete_require_ok(self.conn.uid('expunge', uid_str), uncertain)
+                return True
+
+            if not capabilities.intersection({'MOVE', 'UIDPLUS'}):
+                raise IMAPOperationError('The mail server does not support moving only the selected messages to Trash.')
+            target = None
             for trash in trash_folders:
-                try:
-                    status, _ = self.conn.uid('copy', uid_str, '"%s"' % trash)
-                    if status == 'OK':
-                        self.conn.uid('store', uid_str, '+FLAGS', '(\\Deleted)')
-                        self.conn.expunge()
-                        return True
-                except Exception:
-                    continue
-        # Already in trash or no trash folder found - permanently delete
-        self.conn.uid('store', uid_str, '+FLAGS', '(\\Deleted)')
-        self.conn.expunge()
-        return True
+                quoted_trash = self._delete_mailbox(trash)
+                status, _ = self.conn.status(quoted_trash, '(UIDVALIDITY)')
+                if status == 'OK':
+                    target = quoted_trash
+                    break
+                if status != 'NO':
+                    raise IMAPOperationError('Unable to verify the Trash folder.')
+            if target is None:
+                target = self._delete_mailbox(trash_folders[0])
+                self._delete_require_ok(self.conn.create(target),
+                                        'Unable to create the Trash folder. No messages were deleted.')
+                self._delete_require_ok(self.conn.status(target, '(UIDVALIDITY)'),
+                                        'Unable to verify the Trash folder. No messages were deleted.')
+
+            self._move_selected_messages(uid_str, target, capabilities, uncertain)
+            return True
+        except IMAPOperationError:
+            raise
+        except Exception as error:
+            raise IMAPOperationError(uncertain) from error
 
     def set_flags(self, folder, uids, flags, action='add'):
         self._select(folder)

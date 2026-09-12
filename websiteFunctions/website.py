@@ -2974,7 +2974,23 @@ Require valid-user
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
-            ProcessUtilities.popenExecutioner(execPath)
+            from plogical.websiteDeletion import wait_for_deletion
+            state = wait_for_deletion(execPath, ProcessUtilities.outputExecutioner,
+                                      lambda message: logging.CyberCPLogFileWriter.writeToFile(
+                                          '%s: %s' % (websiteName, message)))
+            if state == 'pending':
+                return HttpResponse(json.dumps({
+                    'status': 1, 'websiteDeleteStatus': 2, 'state': 'pending',
+                    'error_message': 'Deletion is still running. Wait and refresh the website list before taking another action.'}))
+            if (state == 'completed' and Websites.objects.filter(domain=websiteName).exists()
+                    and ACLManager.FindIfChild() == 1):
+                return HttpResponse(json.dumps({
+                    'status': 1, 'websiteDeleteStatus': 2, 'state': 'awaiting_primary',
+                    'error_message': 'Local website removal completed on the failover server. The shared website record is retained; complete or verify deletion on the primary server.'}))
+            if state != 'completed' or Websites.objects.filter(domain=websiteName).exists():
+                return HttpResponse(json.dumps({
+                    'status': 0, 'websiteDeleteStatus': 0, 'state': 'failed',
+                    'error_message': 'Website deletion did not complete. Some resources may already have been removed. Check the panel log before retrying.'}))
 
             ### delete site from dgdrive backups
 
@@ -2985,7 +3001,7 @@ Require valid-user
             except:
                 pass
 
-            data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'state': 'completed', 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

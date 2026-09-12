@@ -38,13 +38,12 @@
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
     <!-- QRious is only used by 2FA QR codes; load it without blocking parse -->
     <script defer src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}"></script>
+    <!-- Load the pinned local chart library before dashboard controllers initialize. -->
+    <script src="{% static 'baseTemplate/vendor/chartjs-4.5.1/chart.umd.min.js' %}"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}-dashboard-acl-2"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Chart.js — only used by post-load controllers; defer so it never blocks paint -->
-    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- PNotify -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
@@ -505,7 +504,7 @@
          build services, site workspace) override this block to skip ~1.1MB. -->
     {% block module_scripts %}
     <script defer src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}"></script>
-    <script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}"></script>
+    <script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>
     <script defer src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}"></script>
     <script defer src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}"></script>
     <script defer src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}"></script>

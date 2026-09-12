@@ -1478,34 +1478,16 @@ class BackupManager:
             time.sleep(3)
 
             command = "sudo cat " + shlex.quote(backupLogPath)
-            status = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, retRequired=True)
+            if not result or len(result) != 2 or result[0] != 1 or not result[1]:
+                return HttpResponse(json.dumps({
+                    'remoteTransferStatus': 0, 'complete': 0, 'status': 'None',
+                    'error_message': 'Restore progress could not be read. Check the retained transfer directory and panel log.'}))
+            status = result[1]
 
 
-            if status.find("Error") > -1:
-                Error_find = "There was an error during the backup process. Please review the log for more information."
-                status = status + Error_find
-
-
-
-            if status.find("completed[success]") > -1:
-                command = "rm -rf " + shlex.quote(removalPath)
-                ProcessUtilities.executioner(command)
-                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            elif status.find("[5010]") > -1:
-                command = "sudo rm -rf " + shlex.quote(removalPath)
-                ProcessUtilities.executioner(command)
-                data = {'remoteTransferStatus': 0, 'error_message': status,
-                        "status": "None", "complete": 0}
-                json_data = json.dumps(data)
-                return HttpResponse(json_data)
-
-            else:
-                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            from plogical.remoteRestoreBatch import batch_status
+            return HttpResponse(json.dumps(batch_status(status)))
 
         except BaseException as msg:
             data = {'remoteTransferStatus': 0, 'error_message': str(msg), "status": "None", "complete": 0}

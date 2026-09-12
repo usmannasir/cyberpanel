@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import json
 import os
 import os.path
 import re
@@ -826,13 +827,7 @@ class virtualHostUtilities:
 
             ###
 
-            spaceString = f'{selectedPackage.diskSpace}M {selectedPackage.diskSpace}M'
-
-            if selectedPackage.enforceDiskLimits:
-                command = f'setquota -u {virtualHostUser} {spaceString} 0 0 /'
-                ProcessUtilities.executioner(command)
-
-            # Apply OpenLiteSpeed cgroups v2 resource limits and inode quotas
+            # Apply OpenLiteSpeed cgroups v2 resource limits separately from quotas.
             if selectedPackage.enforceDiskLimits:
                 try:
                     from plogical.resourceLimits import resource_manager
@@ -842,13 +837,28 @@ class virtualHostUtilities:
                     if not success:
                         logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set resource limits for user {virtualHostUser}")
 
-                    # Set inode limit using filesystem quotas
-                    success = resource_manager.set_inode_limit(virtualHostName, virtualHostUser, selectedPackage.inodeLimit)
-                    if not success:
-                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set inode limit for {virtualHostName}")
-
                 except Exception as e:
                     logging.CyberCPLogFileWriter.writeToFile(f"Error applying resource limits for {virtualHostName}: {str(e)}")
+
+            if selectedPackage.enforceDiskLimits:
+                try:
+                    from plogical import filesystemQuota
+
+                    quotaWebsite = Websites.objects.get(domain=virtualHostName)
+                    if (quotaWebsite.externalApp != virtualHostUser
+                            or quotaWebsite.package_id != selectedPackage.pk):
+                        raise ValueError('Website identity or package changed during creation.')
+                    quotaPlan = filesystemQuota.prepare_package_quota(selectedPackage, [quotaWebsite])
+                    filesystemQuota.apply_quota_plan(quotaPlan)
+                except Exception as error:
+                    # The site is already configured. Preserve it rather than
+                    # entering the outer handler's website-deletion rollback.
+                    message = ('Website was created, but its disk/inode quota could not be verified. '
+                               'Check the server log, then save its website/package settings to retry.')
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'Initial filesystem quota failed for {virtualHostName}: {error}')
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message + ' [404]')
+                    return 0, message
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
@@ -863,39 +873,25 @@ class virtualHostUtilities:
 
     @staticmethod
     def issueSSL(virtualHost, path, adminEmail, forceIssue=False):
+        from plogical.sslOutcome import RESULT_PREFIX, result_payload
         try:
-
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path, forceIssue=forceIssue)
-
-            if retValues[0] == 0:
-                # Enhanced error reporting
-                error_msg = str(retValues[1])
-                logging.CyberCPLogFileWriter.writeToFile(f"SSL issuance failed for {virtualHost}: {error_msg}")
-                
-                # Parse and format the error message for better readability
-                from plogical.sslUtilities import sslUtilities as sslUtil
-                parsed_error = sslUtil.parseACMEError(error_msg)
-                
-                print("0," + parsed_error)
-                return 0, parsed_error
-
-            installUtilities.installUtilities.reStartLiteSpeed()
-
-            command = 'systemctl restart postfix'
-            ProcessUtilities.executioner(command)
-
-            command = 'doveadm reload'
-            ProcessUtilities.executioner(command)
-
-            print("1,None")
-            logging.CyberCPLogFileWriter.writeToFile(f"SSL successfully issued for {virtualHost}")
-            return 1, None
-
-        except BaseException as msg:
-            error_detail = f"Exception in issueSSL for {virtualHost}: {str(msg)}"
-            logging.CyberCPLogFileWriter.writeToFile(error_detail + " [issueSSL]")
-            print("0," + str(msg))
-            return 0, str(msg)
+            result = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path, forceIssue=forceIssue)
+            if result[0] in (1, 2):
+                installUtilities.installUtilities.reStartLiteSpeed()
+                ProcessUtilities.executioner('systemctl restart postfix')
+                ProcessUtilities.executioner('doveadm reload')
+            payload = result_payload(result)
+            logging.CyberCPLogFileWriter.writeToFile(
+                'SSL result for %s: %s: %s' % (virtualHost, payload['outcome'], payload['message']))
+            if result[0] == 1:
+                print("1,None")
+            print(RESULT_PREFIX + json.dumps(payload))
+            return result[0], result[1]
+        except BaseException as error:
+            payload = result_payload([0, str(error)])
+            logging.CyberCPLogFileWriter.writeToFile('SSL failed for %s: %s' % (virtualHost, error))
+            print(RESULT_PREFIX + json.dumps(payload))
+            return 0, str(error)
 
     @staticmethod
     def issueSSLv2(virtualHost, path, adminEmail, forceIssue=False):
@@ -1105,9 +1101,9 @@ class virtualHostUtilities:
 
             retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path, None, isHostname=True)
 
-            if retValues[0] == 0:
+            if retValues[0] != 1:
                 print("0," + str(retValues[1]))
-                return 0, retValues[1]
+                return retValues[0], retValues[1]
 
             command = 'chmod 600 %s' % (destPrivKey)
             ProcessUtilities.normalExecutioner(command)
@@ -1192,9 +1188,9 @@ class virtualHostUtilities:
             adminEmail = "email@" + virtualHost
             retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path, None, isHostname=True)
 
-            if retValues[0] == 0:
+            if retValues[0] != 1:
                 print("0," + str(retValues[1]))
-                return 0, retValues[1]
+                return retValues[0], retValues[1]
 
             ## MailServer specific functions
 
@@ -1366,6 +1362,10 @@ class virtualHostUtilities:
         try:
 
             retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
+
+            if retValues[0] != 1:
+                print("0," + str(retValues[1]))
+                return retValues[0], retValues[1]
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -2188,15 +2188,20 @@ def main():
         except:
             tempStatusPath = '/home/cyberpanel/fakePath'
 
-        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion,
+        creationResult = virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion,
                                                args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir,
                                                args.websiteOwner, args.package, apache, tempStatusPath,
                                                int(args.mailDomain))
+        if creationResult[0] == 0:
+            sys.exit(1)
     elif args.function == "setupAutoDiscover":
         admin = Administrator.objects.get(userName=args.websiteOwner)
         virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', args.virtualHostName, admin)
     elif args.function == "deleteVirtualHostConfigurations":
-        vhost.deleteVirtualHostConfigurations(args.virtualHostName)
+        from plogical.websiteDeletion import RESULT_PREFIX
+        completed = vhost.deleteVirtualHostConfigurations(args.virtualHostName) == 1
+        print(RESULT_PREFIX + json.dumps({'completed': completed}))
+        raise SystemExit(0 if completed else 1)
     elif args.function == "createDomain":
         try:
             dkimCheck = int(args.dkimCheck)

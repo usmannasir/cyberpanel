@@ -43,7 +43,7 @@ $valid = isset($_COOKIE['cyberpanel_sessionid'])
     && $_POST['token'] === 'one-time-token';
 http_response_code($valid ? 200 : 403);
 header('Content-Type: application/json');
-echo json_encode(array('status' => $valid ? 1 : 0));
+echo json_encode(array('status' => $valid ? 1 : 0, 'grant' => str_repeat('a', 64)));
 PHP
 );
 
