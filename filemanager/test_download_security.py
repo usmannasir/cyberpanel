@@ -253,6 +253,9 @@ class FileDownloadSpecialCharacterTests(unittest.TestCase):
 class RootFileDownloadSecurityTests(unittest.TestCase):
     def setUp(self):
         self.factory = RequestFactory()
+        entitlement = mock.patch('plogical.premiumEntitlements.ACLManager.CheckForPremFeature', return_value=1)
+        entitlement.start()
+        self.addCleanup(entitlement.stop)
 
     def make_request(self, file_path):
         request = self.factory.get(
