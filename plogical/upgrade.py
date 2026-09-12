@@ -1145,6 +1145,7 @@ module cyberpanel_ols {
 $cfg['Servers'][$i]['AllowNoPassword'] = false;
 $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
+$cfg['Servers'][$i]['SignonScript'] = __DIR__ . '/phpmyadminsession.php';
 $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
 $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 """
@@ -1170,6 +1171,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
 
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            Upgrade.executioner(command, 0)
+            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsession.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsession.php'
             Upgrade.executioner(command, 0)
 
             passFile = "/etc/cyberpanel/mysqlPassword"

@@ -4669,8 +4669,9 @@ To manage n8n:
             website_manager = WebsiteManager()
             delete_result = website_manager.submitWebsiteDeletion(self.admin.pk, {'websiteName': domain_name})
 
-            if delete_result['status'] == 0:
-                return self.ajaxPre(0, delete_result['error_message'])
+            deletion = json.loads(delete_result.content)
+            if deletion.get('websiteDeleteStatus') != 1 or deletion.get('state') != 'completed':
+                return self.ajaxPre(0, deletion.get('error_message', 'Website deletion has not completed.'))
 
             # Clean up status files
             status_file_path = f'/home/cyberpanel/n8n_install_{domain_name.replace(".", "_")}_status'

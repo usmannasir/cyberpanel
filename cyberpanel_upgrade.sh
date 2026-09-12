@@ -27,8 +27,8 @@ Check_CSF_Migration() {
 
 Set_Default_Variables() {
 
-# Set to 1 when upgrade.py fails, so the final banner reports the failure instead
-# of claiming success just because the panel still answers on its port.
+# Set to 1 when a required upgrade stage fails. A responding panel alone
+# cannot establish that source, dependencies and runtime work completed.
 UPGRADE_FAILED=0
 
 # Clear old log files
@@ -591,27 +591,93 @@ fi
 #all pre-upgrade operation for openEuler
 }
 
+Run_Upgrade_Command() {
+  "$@" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  local -a command_status=("${PIPESTATUS[@]}")
+  if [[ "${command_status[0]}" -ne 0 ]]; then
+    return "${command_status[0]}"
+  fi
+  [[ "${command_status[1]}" -eq 0 ]]
+}
+
+Install_Panel_Runtime_Requirements() {
+  local runtime_python="$1"
+  local requirements_file="$2"
+  local attempt
+
+  if [[ ! -x "$runtime_python" || ! -s "$requirements_file" ]] \
+      || ! grep -q '^Django==' "$requirements_file"; then
+    echo 'Panel runtime interpreter or requirements are unavailable.' >&2
+    return 1
+  fi
+  if ! Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip install --upgrade setuptools packaging; then
+    return 1
+  fi
+  for attempt in 1 2; do
+    if Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip install --default-timeout=3600 --ignore-installed -r "$requirements_file" \
+        && Validate_Python_Requirements "$runtime_python" "$requirements_file" \
+        && Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -c 'import django, docker, CloudFlare'; then
+      return 0
+    fi
+    echo "Panel runtime requirements attempt $attempt failed." >&2
+  done
+  return 1
+}
+
+Build_Panel_LSWSGI() {
+  local runtime_python="$1"
+  local destination="$2"
+  local build_directory
+  local build_status
+  local staged_binary="${destination}.upgrade.$$"
+
+  [[ -x "$runtime_python" ]] || return 1
+  build_directory=$(mktemp -d /tmp/cyberpanel-lswsgi.XXXXXX) || return 1
+  (
+    cd "$build_directory" || exit 1
+    Run_Upgrade_Command wget -q -O wsgi-lsapi-2.1.tgz https://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz || exit 1
+    Run_Upgrade_Command tar xf wsgi-lsapi-2.1.tgz || exit 1
+    cd wsgi-lsapi-2.1 || exit 1
+    Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" ./configure.py || exit 1
+    Run_Upgrade_Command make || exit 1
+    [[ -s lswsgi && -x lswsgi ]] || exit 1
+    # A failed download/build must not remove an existing destination binary.
+    install -m 755 lswsgi "$staged_binary" || exit 1
+    mv -f "$staged_binary" "$destination" || exit 1
+  )
+  build_status=$?
+  rm -f "$staged_binary"
+  rm -rf "$build_directory"
+  return "$build_status"
+}
+
 Download_Requirement() {
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting Download_Requirement function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-for i in {1..50};
-  do
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
-   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  else
-   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements-old.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  local requirements_file="${1:-/usr/local/requirments.txt}"
+  local temporary_requirements
+  local requirements_name=requirments-old.txt
+  local attempt
+
+  if [[ "$Server_OS_Version" = "22" || "$Server_OS_Version" = "24" || "$Server_OS_Version" = "26" \
+      || "$Server_OS_Version" = "9" || "$Server_OS_Version" = "10" ]]; then
+    requirements_name=requirments.txt
   fi
-  if grep -q "Django==" /usr/local/requirments.txt ; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Requirements file downloaded successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
-    break
-  else
-    echo -e "\n Requirement list has failed to download for $i times..."
-    echo -e "Wait for 30 seconds and try again...\n"
-    sleep 30
-  fi
-done
-#special made function for Gitee.com, for whatever reason sometimes it fails to download this file
+  temporary_requirements=$(mktemp "${requirements_file}.download.XXXXXX") || return 1
+  for attempt in {1..50}; do
+    if Run_Upgrade_Command wget -O "$temporary_requirements" "${Git_Content_URL}/${Branch_Name}/${requirements_name}" \
+        && grep -q '^Django==' "$temporary_requirements"; then
+      if mv -f "$temporary_requirements" "$requirements_file"; then
+        return 0
+      fi
+      break
+    fi
+    echo "Requirements download failed (attempt $attempt/50)." >&2
+    if [[ "$attempt" -lt 50 ]]; then
+      sleep 30
+    fi
+  done
+  rm -f "$temporary_requirements"
+  echo 'Unable to download valid requirements for the selected release.' >&2
+  return 1
 }
 
 Validate_Python_Requirements() {
@@ -626,9 +692,12 @@ Validate_Python_Requirements() {
     return 1
   fi
 
-  actual_django=$(
-    "$runtime_python" -c 'import django; print(django.get_version())' 2>/dev/null
-  )
+  if ! actual_django=$(
+    env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -c 'import django; print(django.get_version())' 2>/dev/null
+  ); then
+    echo "ERROR: Django verification failed in $runtime_python" >&2
+    return 1
+  fi
   if [[ "$actual_django" != "$expected_django" ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: $runtime_python loaded Django ${actual_django:-unavailable}; expected $expected_django" | tee -a /var/log/cyberpanel_upgrade_debug.log
     return 1
@@ -643,98 +712,46 @@ Validate_Python_Requirements() {
 # See PEP 668 (https://peps.python.org/pep-0668/) — Debian/Ubuntu and others ship EXTERNALLY-MANAGED;
 # pip needs --break-system-packages or PIP_BREAK_SYSTEM_PACKAGES=1 for intentional system-wide installs.
 Install_CyberCP_Runtime_Python_Requirements() {
-  local req_hint="${1:-}"
-  local log=/var/log/cyberpanel_upgrade_debug.log
-  _rt_log() { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] $*" | tee -a "$log"; }
+  local requirements_file="${1:-/etc/cyberpanel/cyberpanel-requirments-runtime.txt}"
+  # Check_OS selects Python 3.12 on Ubuntu 26. Never select an activated
+  # upgrade-tool virtualenv through PATH for the system LSCPD runtime.
+  local runtime_python="${CyberPanel_Python:-/usr/bin/python3}"
+  local install_status
+  local -a pip_extra=()
 
-  local py_cmd=""
-  if command -v python3 >/dev/null 2>&1; then
-    py_cmd="$(command -v python3)"
-  elif [[ -x /usr/bin/python3 ]]; then
-    py_cmd=/usr/bin/python3
-  else
-    for p in /usr/bin/python3.12 /usr/bin/python3.11 /usr/bin/python3.10 /usr/local/bin/python3; do
-      [[ -x "$p" ]] && py_cmd="$p" && break
-    done
+  if [[ ! -x "$runtime_python" || ! -s "$requirements_file" ]] \
+      || ! grep -q '^Django==' "$requirements_file"; then
+    echo 'System runtime interpreter or release requirements are unavailable.' >&2
+    return 1
   fi
-  if [[ -z "$py_cmd" ]]; then
-    _rt_log "Runtime pip: no python3 found; skipping system-site copy (install python3)."
-    return 0
+  if ! env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip --version >/dev/null 2>&1; then
+    Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m ensurepip --upgrade || return 1
   fi
-  _rt_log "Runtime pip: selected interpreter: $py_cmd"
-
-  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
-    _rt_log "Runtime pip: pip module missing; trying ensurepip (stdlib)..."
-    "$py_cmd" -m ensurepip --upgrade >/dev/null 2>&1 || true
+  if ! env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip --version >/dev/null 2>&1; then
+    echo 'The selected system runtime has no usable pip module.' >&2
+    return 1
   fi
-  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
-    _rt_log "Runtime pip: WARNING: pip still not available after ensurepip. On Debian/Ubuntu install python3-pip; on RHEL use python3-pip."
+  if compgen -G '/usr/lib/python3.*/EXTERNALLY-MANAGED' >/dev/null 2>&1 \
+      || compgen -G '/usr/lib64/python3.*/EXTERNALLY-MANAGED' >/dev/null 2>&1; then
+    pip_extra+=(--break-system-packages)
   fi
-
-  local req_file=""
-  if [[ -n "$req_hint" && -f "$req_hint" ]] && grep -q "Django==" "$req_hint" 2>/dev/null; then
-    req_file="$req_hint"
-  elif [[ -f /etc/cyberpanel/cyberpanel-requirments-runtime.txt ]] && grep -q "Django==" /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then
-    req_file="/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
-  elif [[ -f /usr/local/requirments.txt ]] && grep -q "Django==" /usr/local/requirments.txt 2>/dev/null; then
-    req_file="/usr/local/requirments.txt"
-  else
-    local tdir="/tmp/cyberpanel-req-runtime.$$"
-    mkdir -p "$tdir" || tdir="/tmp"
-    if [[ -n "${Git_Content_URL:-}" && -n "${Branch_Name:-}" ]]; then
-      if wget -q -O "$tdir/req-dl.txt" "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>/dev/null && grep -q "Django==" "$tdir/req-dl.txt" 2>/dev/null; then
-        req_file="$tdir/req-dl.txt"
-      elif wget -q -O "$tdir/req-dl.txt" "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>/dev/null && grep -q "Django==" "$tdir/req-dl.txt" 2>/dev/null; then
-        req_file="$tdir/req-dl.txt"
-      fi
-    fi
-    if [[ -z "$req_file" ]] && wget -q -O "$tdir/req-stable.txt" "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt" 2>/dev/null \
-      && grep -q "Django==" "$tdir/req-stable.txt" 2>/dev/null; then
-      req_file="$tdir/req-stable.txt"
-    fi
+  Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --upgrade pip setuptools wheel packaging "${pip_extra[@]}" || return 1
+  Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --default-timeout=3600 --ignore-installed "${pip_extra[@]}" -r "$requirements_file"
+  install_status=$?
+  if [[ "$install_status" -ne 0 ]]; then
+    Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_BREAK_SYSTEM_PACKAGES=1 "$runtime_python" -m pip install --default-timeout=3600 --ignore-installed --break-system-packages -r "$requirements_file"
+    install_status=$?
   fi
-
-  if [[ -z "$req_file" || ! -f "$req_file" ]]; then
-    _rt_log "Runtime pip: could not locate a valid requirements file (hint: ${req_hint:-none}); skipping system install."
-    return 0
+  if [[ "$install_status" -ne 0 ]]; then
+    echo "System runtime requirements installation failed with exit $install_status." >&2
+    return "$install_status"
   fi
-  _rt_log "Runtime pip: using requirements file: $req_file"
-
-  local -a PIP_EXTRA=()
-  if compgen -G "/usr/lib/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1 \
-    || compgen -G "/usr/lib64/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1; then
-    PIP_EXTRA+=(--break-system-packages)
+  Validate_Python_Requirements "$runtime_python" "$requirements_file" || return 1
+  if ! Run_Upgrade_Command env PYTHONHOME=/usr PYTHONPATH= "$runtime_python" -c 'import django, docker, CloudFlare'; then
+    echo 'Required modules cannot be imported in the system LSCPD runtime.' >&2
+    return 1
   fi
-
-  local pepmsg="none"
-  ((${#PIP_EXTRA[@]})) && pepmsg="${PIP_EXTRA[*]}"
-  _rt_log "Runtime pip: installing for lswsgi (PYTHONHOME=/usr). PEP 668 overrides: $pepmsg"
-
-  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --upgrade pip setuptools wheel packaging "${PIP_EXTRA[@]}" 2>&1 | tee -a "$log" || true
-
-  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file" 2>&1 | tee -a "$log"
-  local rt=${PIPESTATUS[0]}
-
-  if [[ $rt -ne 0 ]]; then
-    _rt_log "Runtime pip: first attempt exit $rt (often PEP 668); retrying with PIP_BREAK_SYSTEM_PACKAGES=1 ..."
-    PIP_EXTRA=(--break-system-packages)
-    env PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_BREAK_SYSTEM_PACKAGES=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file" 2>&1 | tee -a "$log"
-    rt=${PIPESTATUS[0]}
-  fi
-
-  if [[ $rt -ne 0 ]]; then
-    _rt_log "Runtime pip: ERROR: system pip install failed with exit $rt — lscpd may not start until: $py_cmd -m pip install -r $req_file --break-system-packages"
-    return 0
-  fi
-
-  if env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django, docker" 2>/dev/null; then
-    _rt_log "Runtime pip: verify OK (django, docker) with PYTHONHOME=/usr."
-  else
-    _rt_log "Runtime pip: WARNING: django/docker not importable under PYTHONHOME=/usr with $py_cmd."
-  fi
-  if ! env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import CloudFlare" 2>/dev/null; then
-    _rt_log "Runtime pip: WARNING: CloudFlare SDK not importable (expect cloudflare 2.x / import CloudFlare)."
-  fi
+  return 0
 }
 
 Configure_LSCPD_Python_Environment() {
@@ -956,7 +973,7 @@ if ! /usr/local/CyberPanel/bin/python -m pip install --upgrade setuptools packag
   exit 1
 fi
 
-Download_Requirement
+Download_Requirement || exit 1
 
 if ! /usr/local/CyberPanel/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Unable to install CyberPanel upgrade requirements" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1088,9 +1105,7 @@ FALLBACK_CODE=1
 if [[ ! -x /usr/local/CyberPanelTemp/bin/python ]]; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Unable to create the isolated fallback environment" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
-  Download_Requirement
-
-  if /usr/local/CyberPanelTemp/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt \
+  if Download_Requirement && /usr/local/CyberPanelTemp/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt \
       && Validate_Python_Requirements /usr/local/CyberPanelTemp/bin/python /usr/local/requirments.txt; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
     /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1208,86 +1223,27 @@ fi
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old requirements file..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -f /usr/local/requirments.txt
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading new requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-Download_Requirement
-
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing Python packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-if [ "$Server_OS" = "Ubuntu" ]; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu detected, activating virtual environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  # shellcheck disable=SC1091
-  . /usr/local/CyberCP/bin/activate 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  ACTIVATE_CODE=$?
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Activate returned code: $ACTIVATE_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-  Check_Return
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrading setuptools and packaging..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip install --upgrade setuptools packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  PIP_CODE=$?
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-  Check_Return
-else
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Non-Ubuntu OS, activating virtual environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  # shellcheck disable=SC1091
-  source /usr/local/CyberCP/bin/activate 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  ACTIVATE_CODE=$?
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Activate returned code: $ACTIVATE_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-  Check_Return
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  /usr/local/CyberCP/bin/pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  PIP_CODE=$?
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
-  Check_Return
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading and installing panel runtime requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if ! Download_Requirement \
+    || ! Install_Panel_Runtime_Requirements /usr/local/CyberCP/bin/python /usr/local/requirments.txt; then
+  UPGRADE_FAILED=1
+  echo 'ERROR: Panel runtime requirements could not be installed and verified.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Verifying Django installation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-# Test if Django is installed
-if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Django not found, installing requirements again..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  
-  # Re-activate virtual environment
-  source /usr/local/CyberCP/bin/activate
-  
-  # Re-install requirements
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-installing Python requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip install --upgrade pip setuptools wheel packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-else
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Django is properly installed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+# Keep the existing repair sequence available even after an earlier stage
+# failed, but never convert its failure to an upgrade-success result.
+if ! Build_Panel_LSWSGI /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/lswsgi; then
+  UPGRADE_FAILED=1
+  echo 'ERROR: Panel WSGI build or installation failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing WSGI-LSAPI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-
-# Save current directory
-UPGRADE_CWD=$(pwd)
-
-cd /tmp || exit
-rm -rf wsgi-lsapi-2.1*
-
-wget -q https://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-tar xf wsgi-lsapi-2.1.tgz
-cd wsgi-lsapi-2.1 || exit
-
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring WSGI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-/usr/local/CyberPanel/bin/python ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-make 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing lswsgi binary..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-rm -f /usr/local/CyberCP/bin/lswsgi
-cp lswsgi /usr/local/CyberCP/bin/
-
-# Return to original directory
-cd "$UPGRADE_CWD" || cd /root
-
-# Final verification
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running final verification..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-if /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null && [[ -f /usr/local/CyberCP/bin/lswsgi ]]; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] All components successfully installed!" | tee -a /var/log/cyberpanel_upgrade_debug.log
-else
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Some components may be missing, check logs" | tee -a /var/log/cyberpanel_upgrade_debug.log
+if ! Validate_Python_Requirements /usr/local/CyberCP/bin/python /usr/local/requirments.txt \
+    || ! env -u PYTHONHOME -u PYTHONPATH /usr/local/CyberCP/bin/python -c 'import django, docker, CloudFlare' 2>/dev/null \
+    || [[ ! -x /usr/local/CyberCP/bin/lswsgi || ! -s /usr/local/CyberCP/bin/lswsgi ]]; then
+  UPGRADE_FAILED=1
+  echo 'ERROR: Final panel runtime verification failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
-
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Main_Upgrade function completed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+[[ "$UPGRADE_FAILED" -eq 0 ]]
 }
 
 Post_Upgrade_System_Tweak() {
@@ -1417,8 +1373,13 @@ fi
 rm -f /usr/local/composer.sh
 # Keep a copy for system-Python install (lswsgi uses PYTHONHOME=/usr on many platforms); remove original after use below.
 mkdir -p /etc/cyberpanel
-if [[ -f /usr/local/requirments.txt ]]; then
-  cp -f /usr/local/requirments.txt /etc/cyberpanel/cyberpanel-requirments-runtime.txt
+local runtime_requirements_ready=0
+if [[ -s /usr/local/requirments.txt ]] && grep -q '^Django==' /usr/local/requirments.txt \
+    && cp -f /usr/local/requirments.txt /etc/cyberpanel/cyberpanel-requirments-runtime.txt; then
+  runtime_requirements_ready=1
+else
+  UPGRADE_FAILED=1
+  echo 'ERROR: Current release requirements could not be preserved for the system runtime.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 rm -f /usr/local/requirments.txt
 
@@ -1549,8 +1510,14 @@ else
 fi
 
 if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
-    Configure_LSCPD_Python_Environment
-    Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+    if ! Configure_LSCPD_Python_Environment; then
+      UPGRADE_FAILED=1
+    fi
+    if [[ "$runtime_requirements_ready" -ne 1 ]] \
+        || ! Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"; then
+      UPGRADE_FAILED=1
+      echo 'ERROR: Required system runtime preparation failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
   else
     # Uncomment and use the following lines if necessary for other OS versions
     # rsync -av --ignore-existing /usr/lib64/python3.9/ /usr/local/CyberCP/lib64/python3.9/
@@ -1561,8 +1528,14 @@ fi
 # Any host with pythonenv.conf already pointing at system Python (incl. Ubuntu 22, openEuler, manual edits)
 # must have packages in system site-packages; cover partial failures and OS branches that skip the block above.
 if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /usr/local/lscp/conf/pythonenv.conf 2>/dev/null; then
-  if ! env PYTHONHOME=/usr PYTHONPATH= "$(command -v python3 2>/dev/null || echo /usr/bin/python3)" -c "import django" 2>/dev/null; then
-    Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+  if [[ "$runtime_requirements_ready" -ne 1 ]]; then
+    UPGRADE_FAILED=1
+  elif ! Validate_Python_Requirements "${CyberPanel_Python:-/usr/bin/python3}" "/etc/cyberpanel/cyberpanel-requirments-runtime.txt" \
+      || ! env PYTHONHOME=/usr PYTHONPATH= "${CyberPanel_Python:-/usr/bin/python3}" -c "import django, docker, CloudFlare" 2>/dev/null; then
+    if ! Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt"; then
+      UPGRADE_FAILED=1
+      echo 'ERROR: Required system runtime preparation failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
   fi
 fi
 
@@ -1600,7 +1573,7 @@ if [[ "${UPGRADE_FAILED:-0}" -ne 0 ]] ; then
   echo "###################################################################"
   echo "                CyberPanel UPGRADE FAILED                          "
   echo "###################################################################"
-  echo -e "\nupgrade.py did not complete. The panel runtime was restored, but source files or database state may be partially updated."
+  echo -e "\nA required upgrade stage did not complete. Source files, dependencies or database state may be partially updated."
   echo -e "Do not treat this run as a completed upgrade. Check /var/log/cyberpanel_upgrade_debug.log, correct the failure, then re-run the upgrade.\n"
   rm -rf /root/cyberpanel_upgrade_tmp
   exit 1
@@ -1611,7 +1584,9 @@ if [[ "$Panel_HTTP_Code" =~ ^(200|302|401|403)$ ]] ; then
   echo "                CyberPanel Upgraded                                "
   echo "###################################################################"
 else
-  echo -e "\nSeems something wrong with upgrade, please check...\n"
+  echo -e "\nPanel verification failed after the upgrade. Check the upgrade log.\n"
+  rm -rf /root/cyberpanel_upgrade_tmp
+  return 1
 fi
 rm -rf /root/cyberpanel_upgrade_tmp
 }
@@ -1666,9 +1641,13 @@ Pre_Upgrade_Setup_Git_URL
 
 Pre_Upgrade_Required_Components
 
-Main_Upgrade
+if ! Main_Upgrade; then
+  UPGRADE_FAILED=1
+fi
 
-Post_Upgrade_System_Tweak
+if ! Post_Upgrade_System_Tweak; then
+  UPGRADE_FAILED=1
+fi
 
 Restart_Web_Terminal
 

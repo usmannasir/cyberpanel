@@ -8,7 +8,7 @@
 
 if (($argv[1] ?? '') !== '--capture') {
     $cases = array('custom_success', 'custom_connection_failure', 'custom_http_failure',
-        'redirect_response', 'invalid_json', 'rejected_token',
+        'redirect_response', 'invalid_json', 'rejected_token', 'missing_grant', 'malformed_grant',
         'malformed', 'unreadable', 'missing', 'empty', 'runtime_change');
     foreach ($cases as $case) {
         // A fresh PHP process without configured extensions lets this harness
@@ -49,7 +49,7 @@ $options = array('CURLOPT_POST', 'CURLOPT_POSTFIELDS', 'CURLOPT_COOKIE', 'CURLOP
     'CURLOPT_SSL_VERIFYPEER', 'CURLOPT_SSL_VERIFYHOST', 'CURLINFO_RESPONSE_CODE');
 foreach ($options as $number => $name) { define($name, 1000 + $number); }
 $GLOBALS['requests'] = array();
-$GLOBALS['response'] = '{"status":1}';
+$GLOBALS['response'] = json_encode(array('status' => 1, 'grant' => str_repeat('a', 64)));
 $GLOBALS['response_status'] = 200;
 
 if (!extension_loaded('curl')) {
@@ -113,6 +113,8 @@ if ($case === 'custom_http_failure') $GLOBALS['response_status'] = 503;
 if ($case === 'redirect_response') $GLOBALS['response_status'] = 302;
 if ($case === 'invalid_json') $GLOBALS['response'] = 'not-json';
 if ($case === 'rejected_token') $GLOBALS['response'] = '{"status":0}';
+if ($case === 'missing_grant') $GLOBALS['response'] = '{"status":1}';
+if ($case === 'malformed_grant') $GLOBALS['response'] = '{"status":1,"grant":"invalid"}';
 if ($case === 'malformed') PMABindFileTransport::$content = '*:5687@attacker.invalid';
 if ($case === 'unreadable') PMABindFileTransport::$readable = false;
 if ($case === 'missing') PMABindFileTransport::$exists = false;
@@ -159,10 +161,10 @@ if ($case === 'malformed' || $case === 'unreadable') {
     assertTransport($requestOptions[CURLOPT_CONNECTTIMEOUT] === 2 && $requestOptions[CURLOPT_TIMEOUT] === 5, 'timeouts changed');
     assertTransport($requests[0]['execs'] === 1, 'handoff repeated its request');
     $failure = in_array($case, array('custom_connection_failure', 'custom_http_failure',
-        'redirect_response', 'invalid_json', 'rejected_token'), true);
-    assertTransport($result === !$failure, 'handoff result does not match the backend response');
+        'redirect_response', 'invalid_json', 'rejected_token', 'missing_grant', 'malformed_grant'), true);
+    assertTransport($result === ($failure ? false : str_repeat('a', 64)), 'handoff result does not match the backend response');
     if ($case === 'runtime_change') {
-        assertTransport($secondResult === true, 'handoff failed after configured port change');
+        assertTransport($secondResult === str_repeat('a', 64), 'handoff failed after configured port change');
         assertTransport($requests[1]['url'] === 'https://127.0.0.1:7080/dataBases/consumePHPMYAdminHandoff',
             'subsequent handoff did not read the changed port');
         assertTransport($requests[1]['execs'] === 1, 'changed-port handoff repeated its request');

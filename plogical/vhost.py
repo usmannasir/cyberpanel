@@ -383,13 +383,121 @@ class vhost:
                 return [0, "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
 
     @staticmethod
+    def _wait_for_php_workers(externalApp, account):
+        # Detached PHP can outlive the vhost's graceful reload. Do not race
+        # userdel against those workers, or terminate unrelated user jobs.
+        import re
+        import stat
+        import time
+
+        def identity(entry):
+            return (entry.pw_name, entry.pw_uid, entry.pw_gid, entry.pw_dir)
+
+        expected = identity(account)
+        if (expected[0] != externalApp or expected[1] <= 0 or expected[2] <= 0
+                or not os.path.isabs(expected[3])):
+            raise RuntimeError('Cannot verify the website Unix account identity.')
+
+        def check_identity():
+            if identity(pwd.getpwnam(externalApp)) != expected:
+                raise RuntimeError('Website Unix account changed while waiting for PHP workers.')
+
+        def status_fields(path):
+            with open(path + '/status') as source:
+                fields = dict(line.split(':', 1) for line in source if ':' in line)
+            uids = tuple(int(value) for value in fields['Uid'].split())
+            if len(uids) != 4:
+                raise RuntimeError('Cannot verify process user IDs before account deletion.')
+            return fields, uids
+
+        def process_start(path):
+            with open(path + '/stat') as source:
+                raw = source.read()
+            head, separator, tail = raw.rpartition(')')
+            columns = tail.split()
+            if (not separator or head.split(' ', 1)[0] != path.rsplit('/', 1)[1]
+                    or len(columns) < 20 or not columns[19].isdigit()):
+                raise RuntimeError('Cannot verify process start time before account deletion.')
+            return int(columns[19])
+
+        deadline = time.monotonic() + 60
+        while True:
+            check_identity()
+            busy = False
+            for pid in os.listdir('/proc'):
+                if not pid.isdigit():
+                    continue
+                path = '/proc/' + pid
+                try:
+                    started = process_start(path)
+                    fields, uids = status_fields(path)
+                    if expected[1] not in uids:
+                        continue
+                    gids = tuple(int(value) for value in fields['Gid'].split())
+                    if uids != (expected[1],) * 4 or gids != (expected[2],) * 4:
+                        raise RuntimeError('Website Unix account has a process with unexpected user or group IDs.')
+                    executable = os.readlink(path + '/exe')
+                    if not re.fullmatch(r'/usr/local/lsws/lsphp[0-9]{2,3}/bin/lsphp', executable):
+                        raise RuntimeError('Website Unix account has a process other than a normal PHP worker.')
+                    running = os.stat(path + '/exe')
+                    installed = os.stat(executable)
+                    if (not stat.S_ISREG(running.st_mode) or running.st_uid != 0
+                            or running.st_mode & 0o022 or not running.st_mode & 0o111
+                            or (running.st_dev, running.st_ino) != (installed.st_dev, installed.st_ino)):
+                        raise RuntimeError('Cannot verify the website PHP worker executable.')
+                    current_fields, current_uids = status_fields(path)
+                    if (current_uids != uids or current_fields['Gid'] != fields['Gid']
+                            or process_start(path) != started):
+                        raise RuntimeError('Website process identity changed during account deletion.')
+                    busy = True
+                except FileNotFoundError:
+                    # A process may exit between proc reads. Missing metadata
+                    # on a still-existing process must not be treated as idle.
+                    try:
+                        os.stat(path)
+                    except FileNotFoundError:
+                        continue
+                    raise RuntimeError('Cannot verify live process metadata before account deletion.')
+            check_identity()
+            if not busy:
+                return
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise RuntimeError('Website PHP workers are still running after 60 seconds; Unix account retained.')
+            time.sleep(min(1, remaining))
+
+
+    @staticmethod
+    def _delete_unix_account(externalApp, userCommand):
+        # The privileged command transport can report success after userdel
+        # fails. Verify the requested state before reporting full deletion.
+        for kind, lookup, command in (
+                ('user', pwd.getpwnam, userCommand),
+                ('group', grp.getgrnam, 'groupdel %s' % externalApp)):
+            try:
+                account = lookup(externalApp)
+            except KeyError:
+                continue
+            if kind == 'user':
+                vhost._wait_for_php_workers(externalApp, account)
+            ProcessUtilities.executioner(command)
+            try:
+                lookup(externalApp)
+            except KeyError:
+                continue
+            raise RuntimeError('Website Unix %s %s remains after cleanup; some website resources may already be removed.'
+                               % (kind, externalApp))
+        return 1
+
+    @staticmethod
     def deleteVirtualHostConfigurations(virtualHostName):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
 
                 ## Deleting master conf
                 numberOfSites = str(Websites.objects.count() + ChildDomains.objects.count())
-                vhost.deleteCoreConf(virtualHostName, numberOfSites)
+                if vhost.deleteCoreConf(virtualHostName, numberOfSites) == 0:
+                    raise RuntimeError('Failed to remove the website configuration.')
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
@@ -405,7 +513,8 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
-                    vhost.deleteCoreConf(items.domain, numberOfSites)
+                    if vhost.deleteCoreConf(items.domain, numberOfSites) == 0:
+                        raise RuntimeError('Failed to remove a child website configuration.')
 
                     ### Delete ACME Folder
 
@@ -449,7 +558,8 @@ class vhost:
                             shutil.rmtree('/home/docker/%s' % (virtualHostName))
 
                     for items in databases:
-                        mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+                        if mysqlUtilities.deleteDatabase(items.dbName, items.dbUser) != 1:
+                            raise RuntimeError('Failed to remove a website database; panel metadata retained.')
 
                     delWebsite.delete()
 
@@ -472,12 +582,7 @@ class vhost:
                 else:
                     command = 'deluser %s' % (externalApp)
 
-                ProcessUtilities.executioner(command)
-
-                #
-
-                command = 'groupdel %s' % (externalApp)
-                ProcessUtilities.executioner(command)
+                vhost._delete_unix_account(externalApp, command)
 
                 ## Remove git conf folder if present
 
@@ -506,7 +611,8 @@ class vhost:
             try:
                 ## Deleting master conf
                 numberOfSites = str(Websites.objects.count() + ChildDomains.objects.count())
-                vhost.deleteCoreConf(virtualHostName, numberOfSites)
+                if vhost.deleteCoreConf(virtualHostName, numberOfSites) == 0:
+                    raise RuntimeError('Failed to remove the website configuration.')
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
@@ -524,7 +630,8 @@ class vhost:
 
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
-                    vhost.deleteCoreConf(items.domain, numberOfSites)
+                    if vhost.deleteCoreConf(items.domain, numberOfSites) == 0:
+                        raise RuntimeError('Failed to remove a child website configuration.')
 
 
                 ## child check to make sure no database entires are being deleted from child server
@@ -546,7 +653,8 @@ class vhost:
                         logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
 
                     for items in databases:
-                        mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+                        if mysqlUtilities.deleteDatabase(items.dbName, items.dbUser) != 1:
+                            raise RuntimeError('Failed to remove a website database; panel metadata retained.')
 
                     delWebsite.delete()
 
@@ -568,12 +676,7 @@ class vhost:
                 else:
                     command = 'deluser %s' % (externalApp)
 
-                ProcessUtilities.executioner(command)
-
-                #
-
-                command = 'groupdel %s' % (externalApp)
-                ProcessUtilities.executioner(command)
+                vhost._delete_unix_account(externalApp, command)
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")

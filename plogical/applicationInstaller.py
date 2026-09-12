@@ -629,19 +629,16 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
                 return 0
 
-            result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
+            result = mysqlUtilities.createDatabaseAndRegister(dbName, dbUser, dbPassword, website)
 
-            if result == 1:
+            if result[0] == 1:
                 pass
             else:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines(
-                    "Not able to create database." + " [404]")
+                    result[1] + " [404]")
                 statusFile.close()
                 return 0
-
-            db = Databases(website=website, dbName=dbName, dbUser=dbUser)
-            db.save()
 
             return dbName, dbUser, dbPassword
 

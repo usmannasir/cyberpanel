@@ -197,12 +197,10 @@ class mailUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def deleteEmailAccount(email):
+    def deleteEmailAccount(email, authorize=None):
         try:
-
-            email = EUsers(email=email)
-            email.delete()
-
+            from plogical.mailDomainDeletion import delete_mailbox
+            delete_mailbox(email, authorize=authorize)
             return 1, 'None'
 
         except BaseException as msg:
