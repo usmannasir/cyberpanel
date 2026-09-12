@@ -27,6 +27,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import get_mysql_upgrade_status_path
 from django.views.decorators.http import require_POST
 from databases.phpmyadmin_handoff import consume_handoff, create_handoff
+from databases.phpmyadmin_session import issue_grant, panel_ip_allowed, validate_grant
 
 
 # Create your views here.
@@ -266,16 +267,47 @@ def generateAccess(request):
 @require_POST
 def consumePHPMYAdminHandoff(request):
     try:
-        request.session['userID']
-    except KeyError:
+        username = request.POST.get('username', '')
+        token = request.POST.get('token', '')
+        # Always consume the one-use token, including a refused authorization.
+        if not consume_handoff(request.session, username, token):
+            return JsonResponse({'status': 0}, status=403)
+        admin, database_user, is_admin = _phpmyadmin_principal(request, username)
+        if database_user.token != token:
+            return JsonResponse({'status': 0}, status=403)
+        grant = issue_grant(request.session, admin.pk, username, database_user.token, is_admin)
+        return JsonResponse({'status': 1, 'grant': grant})
+    except Exception:
         return JsonResponse({'status': 0}, status=403)
 
-    username = request.POST.get('username', '')
-    token = request.POST.get('token', '')
-    if not consume_handoff(request.session, username, token):
-        return JsonResponse({'status': 0}, status=403)
 
-    return JsonResponse({'status': 1})
+def _phpmyadmin_principal(request, username):
+    """Check current panel identity and database permission without a DB login."""
+    admin = Administrator.objects.get(pk=request.session['userID'])
+    if admin.state != 'ACTIVE':
+        raise ValueError('Inactive principal')
+    client_ip = request.META.get('HTTP_CF_CONNECTING_IP', request.META.get('REMOTE_ADDR'))
+    if not panel_ip_allowed(request.session, client_ip, admin.securityLevel):
+        raise ValueError('Panel session address changed')
+    permissions = json.loads(admin.acl.config)
+    is_admin = permissions.get('adminStatus') == 1
+    if not is_admin and (permissions.get('listDatabases') != 1 or username != admin.userName):
+        raise ValueError('Database access is no longer authorized')
+    return admin, GlobalUserDB.objects.get(username=admin.userName), is_admin
+
+
+@csrf_exempt
+@require_POST
+def validatePHPMYAdminSession(request):
+    try:
+        username = request.POST.get('username', '')
+        admin, database_user, is_admin = _phpmyadmin_principal(request, username)
+        if validate_grant(request.session, admin.pk, username, request.POST.get('grant', ''),
+                          database_user.token, is_admin):
+            return JsonResponse({'status': 1})
+    except Exception:
+        pass
+    return JsonResponse({'status': 0}, status=403)
 
 
 @csrf_exempt

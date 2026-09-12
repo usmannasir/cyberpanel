@@ -280,143 +280,18 @@ class remoteTransferUtilities:
 
     @staticmethod
     def remoteBackupRestore(backupDir, dir):
-        try:
-
-            ## dir is transfer-###
-            # backupDir is /home/backup/transfer-###
-
-            backupLogPath = backupDir + "/backup_log"
-
-            writeToFile = open(backupLogPath, "a+")
-
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("############################\n")
-            writeToFile.writelines("      Starting Backup Restore\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
-            writeToFile.writelines("############################\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.close()
-
-            if os.path.exists(backupDir):
-                pass
-            else:
-                writeToFile = open(backupLogPath, "w+")
-                writeToFile.writelines(
-                    "No such directory found (Local directory where backups are placed does not exists)' [5010]" + "\n")
-                writeToFile.close()
-                return
-
-            p = Process(target=remoteTransferUtilities.startRestore, args=(backupDir, backupLogPath, dir,))
-            p.start()
-
-            pid = open(backupDir + '/pid', "w")
-            pid.write(str(p.pid))
-            pid.close()
-
-            return
-
-        except BaseException as msg:
-            backupLogPath = backupDir + "/backup_log"
-            writeToFile = open(backupLogPath, "w+")
-            writeToFile.writelines(str(msg) + " [5010]" + "\n")
-            writeToFile.close()
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteRestore]")
-            return [0, msg]
+        backupLogPath = os.path.join(backupDir, 'backup_log')
+        process = Process(target=remoteTransferUtilities.startRestore,
+                          args=(backupDir, backupLogPath, dir))
+        process.start()
+        # The locked worker owns its log and PID. Concurrent starts must not
+        # overwrite another attempt's evidence.
 
     @staticmethod
     def startRestore(backupDir, backupLogPath, dir):
-        try:
-            ext = ".tar.gz"
-
-            backups = sorted(
-                backup for backup in os.listdir(backupDir)
-                if backup.endswith(ext)
-                and os.path.isfile(os.path.join(backupDir, backup))
-                and not os.path.islink(os.path.join(backupDir, backup))
-            )
-            if not backups:
-                raise RuntimeError('No backup archives were found in the transfer directory')
-
-            restoreFailed = False
-
-            for backup in backups:
-                remoteTransferUtilities._appendRestoreLog(
-                    backupLogPath, "Starting restore for: " + backup + "."
-                )
-
-                path, statusPath = remoteTransferUtilities._restoreStatusPath(
-                    backupDir, backup
-                )
-                if os.path.exists(path):
-                    rmtree(path)
-
-                execArgs = [
-                    'sudo', 'nice', '-n', '10',
-                    '/usr/local/CyberCP/bin/python',
-                    virtualHostUtilities.cyberPanel + '/plogical/backupUtilities.py',
-                    'submitRestore', '--backupFile', backup, '--dir', str(dir),
-                ]
-                restoreLauncher = subprocess.Popen(execArgs)
-                statusDeadline = time.monotonic() + remoteTransferUtilities.RESTORE_STATUS_TIMEOUT
-
-                while not os.path.exists(statusPath):
-                    if time.monotonic() >= statusDeadline:
-                        exitCode = restoreLauncher.poll()
-                        raise RuntimeError(
-                            'Restore status was not created for %s within %s seconds '
-                            '(launcher exit code: %s)' % (
-                                backup,
-                                remoteTransferUtilities.RESTORE_STATUS_TIMEOUT,
-                                str(exitCode),
-                            )
-                        )
-                    time.sleep(remoteTransferUtilities.RESTORE_POLL_INTERVAL)
-
-                while True:
-                    with open(statusPath, 'r') as statusFile:
-                        status = statusFile.read()
-
-                    if status.find("Done") > -1:
-                        rmtree(path)
-                        remoteTransferUtilities._appendRestoreLog(
-                            backupLogPath, "Restore completed for: " + backup + "."
-                        )
-                        break
-                    elif status.find("[5009]") > -1:
-                        restoreFailed = True
-                        remoteTransferUtilities._appendRestoreLog(
-                            backupLogPath,
-                            "Restore aborted for: " + backup + ". Error message: " + status,
-                        )
-                        break
-                    else:
-                        remoteTransferUtilities._appendRestoreLog(
-                            backupLogPath, "Waiting for restore to complete: " + backup + "."
-                        )
-                        time.sleep(4)
-
-            if restoreFailed:
-                remoteTransferUtilities._appendRestoreLog(
-                    backupLogPath, "Backup restore finished with errors."
-                )
-                with open(backupLogPath, "a") as writeToFile:
-                    writeToFile.writelines("completed[failed]")
-            else:
-                remoteTransferUtilities._appendRestoreLog(
-                    backupLogPath, "Backup restore complete."
-                )
-                with open(backupLogPath, "a") as writeToFile:
-                    writeToFile.writelines("completed[success]")
-
-        except BaseException as msg:
-            remoteTransferUtilities._appendRestoreLog(
-                backupLogPath, "Backup restore failed: " + str(msg)
-            )
-            with open(backupLogPath, "a") as writeToFile:
-                writeToFile.writelines("completed[failed]")
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
+        from plogical.remoteRestoreBatch import run_restore_batch
+        return run_restore_batch(backupDir, backupLogPath, dir,
+                                 virtualHostUtilities.cyberPanel)
 
 
 def main():

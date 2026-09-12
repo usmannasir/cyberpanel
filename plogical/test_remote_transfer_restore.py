@@ -44,12 +44,12 @@ class RemoteTransferRestoreTests(SimpleTestCase):
         return archive
 
     def launcher_with_status(self, status):
-        def launch(unused_args):
+        def launch(unused_args, **unused_kwargs):
             restore_dir = os.path.join(self.backup_dir, 'backup-example')
             os.mkdir(restore_dir)
             with open(os.path.join(restore_dir, 'status'), 'w') as status_file:
                 status_file.write(status)
-            return mock.Mock()
+            return mock.Mock(poll=mock.Mock(return_value=0))
         return launch
 
     @mock.patch('plogical.remoteTransferUtilities.subprocess.Popen')
@@ -65,7 +65,7 @@ class RemoteTransferRestoreTests(SimpleTestCase):
             result = log_file.read()
         self.assertIn('completed[success]', result)
         self.assertNotIn('completed[failed]', result)
-        self.assertFalse(os.path.exists(os.path.join(self.backup_dir, 'backup-example')))
+        self.assertTrue(os.path.exists(os.path.join(self.backup_dir, 'backup-example')))
 
     @mock.patch('plogical.remoteTransferUtilities.subprocess.Popen')
     def test_failed_restore_is_not_reported_as_success(self, popen):
@@ -78,7 +78,7 @@ class RemoteTransferRestoreTests(SimpleTestCase):
 
         with open(self.backup_log) as log_file:
             result = log_file.read()
-        self.assertIn('completed[failed]', result)
+        self.assertIn('[5010]', result)
         self.assertNotIn('completed[success]', result)
         self.assertTrue(os.path.exists(os.path.join(self.backup_dir, 'backup-example')))
 
@@ -91,7 +91,7 @@ class RemoteTransferRestoreTests(SimpleTestCase):
         with open(self.backup_log) as log_file:
             result = log_file.read()
         self.assertIn('No backup archives were found', result)
-        self.assertIn('completed[failed]', result)
+        self.assertIn('[5010]', result)
 
 
 class RemoteTransferDeliveryTests(SimpleTestCase):

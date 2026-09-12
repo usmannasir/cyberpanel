@@ -196,23 +196,12 @@ def issueSSL(request):
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path + " --force 1"
                 output = ProcessUtilities.outputExecutioner(execPath)
 
-                if output.find("1,None") > -1:
-                    pass
-                else:
-                    data_ret = {'status': 0, "SSL": 0,
-                                'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                ## ssl issue ends
-
-                website.ssl = 1
-                website.save()
-
-                data_ret = {'status': 1, "SSL": 1,
-                            'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                from plogical.sslOutcome import parse_output
+                outcome = parse_output(output)
+                if outcome['SSL'] == 1:
+                    website.ssl = 1
+                    website.save()
+                return HttpResponse(json.dumps(outcome))
 
         except BaseException as msg:
             data_ret = {'status': 0, "SSL": 0,
