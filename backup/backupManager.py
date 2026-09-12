@@ -16,6 +16,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
 from plogical.acl import ACLManager
+from plogical.premiumEntitlements import premium_entitlement_required
 import plogical.CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, GDrive, GDriveSites
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -80,6 +81,7 @@ class BackupManager:
         proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName, 'BackupStat': BackupStat}, 'createBackup')
         return proc.render()
 
+    @premium_entitlement_required('all', label='Backup V2', page_redirect='ConfigureV2Backup')
     def CreateV2backupSite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)

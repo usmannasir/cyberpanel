@@ -40,6 +40,7 @@ except:
 import re
 import os
 from plogical.processUtilities import ProcessUtilities
+from plogical.premiumEntitlements import premium_entitlement_required
 from plogical.legacyWebmail import legacy_data_permission_commands
 import bcrypt
 import threading as multi
@@ -1914,6 +1915,8 @@ protocol sieve {
 
     ### emails for sites
 
+    @premium_entitlement_required('all', label='Email Limits',
+                                  page_redirect='https://cyberpanel.net/cyberpanel-addons')
     def EmailLimits(self):
 
         userID = self.request.session['userID']
@@ -1927,34 +1930,14 @@ protocol sieve {
         websitesName = ACLManager.findAllSites(currentACL, userID)
         websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-        try:
-            from plogical.processUtilities import ProcessUtilities
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-
-                url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-                data = {
-                    "name": "all",
-                    "IP": ACLManager.fetchIP()
-                }
-
-                import requests
-                response = requests.post(url, data=json.dumps(data))
-                Status = response.json()['status']
-
-                if (Status == 1):
-                    template = 'mailServer/EmailLimits.html'
-                else:
-                    return redirect("https://cyberpanel.net/cyberpanel-addons")
-            else:
-                template = 'mailServer/EmailLimits.html'
-        except BaseException as msg:
-            template = 'mailServer/EmailLimits.html'
+        template = 'mailServer/EmailLimits.html'
 
 
         proc = httpProc(self.request, template,
                         {'websiteList': websitesName, "status": 1}, 'emailForwarding')
         return proc.render()
 
+    @premium_entitlement_required('all', label='Email Limits', flags=('createStatus',))
     def SaveEmailLimitsNew(self):
         try:
             userID = self.request.session['userID']

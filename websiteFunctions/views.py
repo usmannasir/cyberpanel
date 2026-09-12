@@ -2160,6 +2160,13 @@ def get_terminal_jwt(request):
             return JsonResponse({'status': 0, 'error_message': 'Not authenticated'})
         from websiteFunctions.models import Websites
         from plogical.acl import ACLManager
+        try:
+            entitlement = ACLManager.CheckForPremFeature('all')
+        except Exception:
+            entitlement = 0
+        if type(entitlement) is not int or entitlement != 1:
+            return JsonResponse({'status': 0,
+                                 'error_message': 'An active Add-ons bundle is required for Web Terminal.'})
         from loginSystem.models import Administrator
         admin = Administrator.objects.get(pk=user_id)
         currentACL = ACLManager.loadedACL(user_id)
@@ -2183,6 +2190,7 @@ def get_terminal_jwt(request):
             'nbf': now,
             'sub': str(user_id),
             'ssh_user': ssh_user,
+            'web_terminal': True,
             'jti': create_terminal_request(user_id, ssh_user),
             'exp': now + timedelta(minutes=10)
         }

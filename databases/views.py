@@ -19,6 +19,7 @@ import json
 from plogical.processUtilities import ProcessUtilities
 from loginSystem.models import Administrator
 from plogical.acl import ACLManager
+from plogical.premiumEntitlements import premium_entitlement_required
 from databases.models import GlobalUserDB
 from plogical import randomPassword
 from cryptography.fernet import Fernet
@@ -482,6 +483,7 @@ def restartMySQL(request):
         return redirect(loadLoginPage)
 
 
+@premium_entitlement_required('Filemanager', label='MySQL Manager')
 def generateRecommendations(request):
     try:
         userID = request.session['userID']
@@ -507,6 +509,7 @@ def generateRecommendations(request):
         return redirect(loadLoginPage)
 
 
+@premium_entitlement_required('Filemanager', label='MySQL Manager')
 def applyMySQLChanges(request):
     try:
 
@@ -538,6 +541,7 @@ SUPPORTED_MARIADB_UPGRADE_VERSIONS = frozenset(('10.6', '10.11'))
 
 
 @require_POST
+@premium_entitlement_required('Filemanager', label='MySQL Manager')
 def upgrademysqlnow(request):
     try:
         from plogical.virtualHostUtilities import virtualHostUtilities

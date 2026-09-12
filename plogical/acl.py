@@ -1117,10 +1117,21 @@ class ACLManager:
             }
 
             import requests
-            response = requests.post(url, data=json.dumps(data))
-            return response.json()['status']
-        except:
-            return 1
+            response = requests.post(
+                url, data=json.dumps(data), timeout=(3.05, 10),
+                allow_redirects=False,
+            )
+            if response.status_code != 200:
+                return 0
+            payload = response.json()
+            # The addon service returns integer 0/1. A failed lookup or a
+            # truthy malformed value must never enable paid functionality.
+            if not isinstance(payload, dict):
+                return 0
+            status = payload.get('status')
+            return int(type(status) is int and status == 1)
+        except Exception:
+            return 0
 
     @staticmethod
     def CheckIPBackupObjectOwner(currentACL, backupobj, user):
