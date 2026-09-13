@@ -1372,15 +1372,15 @@ class BackupManager:
             data = json.loads(r.text)
 
             if data['fetchStatus'] == 1:
-                if data['status'].find("Backups are successfully generated and received on") > -1:
+                if data['status'].find("[5010]") > -1:
+                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
+                            'backupsSent': 0}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+                elif data['status'].find("Backups are successfully generated and received on") > -1:
 
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],
                             'backupsSent': 1}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                elif data['status'].find("[5010]") > -1:
-                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
-                            'backupsSent': 0}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
                 else:
