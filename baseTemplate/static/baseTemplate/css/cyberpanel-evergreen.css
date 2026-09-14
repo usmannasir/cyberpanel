@@ -1,0 +1,1526 @@
+/*
+ * CyberPanel / Evergreen
+ * The website's cream, evergreen, mint and orange identity, adapted for work.
+ * This is a presentation layer: routing, Angular state, Bootstrap visibility,
+ * editor surfaces and semantic status colours remain owned by their modules.
+ * Legacy page styles use !important; matching declarations here are limited
+ * to the shared visual properties those styles otherwise prevent us changing.
+ */
+
+@font-face {
+    font-family: "Inter";
+    src: url("../brand/Inter-var-latin.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+html.cp-evergreen:root {
+    font-size: 16px;
+    --cp-cream: #faf7f0;
+    --cp-ink: #061711;
+    --cp-mint: #dceddc;
+    --cp-action: #fe5706;
+    --cp-action-hover: #ec4e00;
+    --cp-action-text: #061711;
+    --cp-rail-width: 248px;
+    --cp-header-height: 68px;
+    --cp-radius: 6px;
+    --cp-radius-lg: 8px;
+    --cp-surface: #fffdf9;
+    --cp-selection: #dceddc;
+    --cp-selection-text: #163c2b;
+    --cp-border-strong: #b8c5b6;
+    --cp-shadow: 0 2px 4px rgb(6 23 17 / 3%);
+    --cp-shadow-popover: 0 16px 48px rgb(6 23 17 / 15%);
+    --bg-primary: #faf7f0;
+    --bg-secondary: #fffdf9;
+    --bg-tertiary: #f2f1e9;
+    --bg-sidebar: #f4f2e9;
+    --bg-sidebar-item: transparent;
+    --bg-hover: #ecf0e6;
+    --bg-muted: #f3f3eb;
+    --bg-code: #edf0e7;
+    --bg-light: #f3f3eb;
+    --text-primary: #24382c;
+    --text-secondary: #5e6d61;
+    --text-muted: #69766c;
+    --text-heading: #061711;
+    --text-dark: #061711;
+    --border-color: #dce1d5;
+    --border-soft: #e8eadf;
+    --border-light: #e8eadf;
+    --shadow-color: rgb(6 23 17 / 5%);
+    --shadow-light: rgb(6 23 17 / 4%);
+    --shadow-medium: rgb(6 23 17 / 9%);
+    --accent-color: #194b33;
+    --accent-hover: #103825;
+    --accent-bg: #e5efdf;
+    --accent-light: #e5efdf;
+    --accent-soft-bg: #dceddc;
+    --accent-shadow: rgb(25 75 51 / 12%);
+    --primary-color: #194b33;
+    --primary-hover: #103825;
+    --primary-light: #e5efdf;
+    --primary-bg: #e5efdf;
+    --purple-bg: #e5efdf;
+    --purple-color: #194b33;
+    --purple-text: #194b33;
+    --text-on-accent: #fffdf9;
+    --table-head-bg: #f0f2e9;
+    --table-head-text: #526355;
+    --focus-ring: #2d6644;
+    --success-color: #248143;
+    --success-hover: #196532;
+    --success-accent: #248143;
+    --success-soft-bg: #e2f1df;
+    --success-soft-text: #226532;
+    --success-bg: #e2f1df;
+    --success-text: #226532;
+    --success-border: #bcd8b7;
+    --danger-color: #c33432;
+    --danger-hover: #a62826;
+    --danger-accent: #c33432;
+    --danger-soft-bg: #fce7e2;
+    --danger-soft-text: #a42a28;
+    --danger-bg: #fce7e2;
+    --danger-text: #a42a28;
+    --danger-border: #efc4bb;
+    --warning-color: #a56b08;
+    --warning-bg: #fbefcf;
+    --warning-text: #805209;
+    --warning-border: #e6d49c;
+    --warn-soft-bg: #fbefcf;
+    --warn-soft-text: #805209;
+    --info-color: #266782;
+    --info-bg: #e2eff1;
+    --info-text: #21566d;
+    --info-border: #bfdade;
+    --info-soft-bg: #e2eff1;
+    --info-soft-text: #21566d;
+    --bar-ok: #34864a;
+    --bar-warn: #b17c10;
+    --bar-crit: #c33432;
+    --skeleton-base: #e6e9dd;
+    --skeleton-shine: #f2f4eb;
+    --ai-banner-bg: #dceddc;
+    --bg-card: var(--bg-secondary);
+    --bg-gradient-primary: var(--bg-muted);
+    --bg-gradient: var(--cp-selection);
+    --gradient-blue: var(--cp-selection);
+    --text-on-gradient: var(--cp-selection-text);
+    --text-accent: var(--accent-color);
+    --icon-color: var(--text-secondary);
+    --input-bg: var(--bg-secondary);
+    --input-border: var(--cp-border-strong);
+    --input-focus-border: var(--accent-color);
+    --border-hover: var(--cp-border-strong);
+    --table-header-bg: var(--table-head-bg);
+    --command-bg: var(--bg-code);
+    --package-type-bg: var(--cp-selection);
+    --version-badge-bg: var(--bg-muted);
+    --lock-hover-bg: var(--bg-hover);
+    --empty-icon-bg: var(--bg-muted);
+    --accent-focus: var(--accent-shadow);
+    --shadow-primary: var(--cp-shadow);
+    --shadow-accent: var(--accent-shadow);
+    --bg-radial-overlay: transparent;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 8px;
+    --radius-2xl: 8px;
+    color-scheme: light;
+    scroll-padding-top: 88px;
+}
+
+html.cp-evergreen[data-theme="dark"] {
+    --cp-surface: #17251d;
+    --cp-selection: #2b4230;
+    --cp-selection-text: #dceddc;
+    --cp-border-strong: #56715c;
+    --cp-shadow: 0 2px 4px rgb(0 0 0 / 10%);
+    --cp-shadow-popover: 0 18px 48px rgb(0 0 0 / 40%);
+    --bg-primary: #0c1912;
+    --bg-secondary: #17251d;
+    --bg-tertiary: #1c2d22;
+    --bg-sidebar: #102017;
+    --bg-sidebar-item: transparent;
+    --bg-hover: #24392a;
+    --bg-muted: #1b2b20;
+    --bg-code: #112017;
+    --bg-light: #1b2b20;
+    --text-primary: #dce7d7;
+    --text-secondary: #a7b7a5;
+    --text-muted: #95a790;
+    --text-heading: #f5f5e9;
+    --text-dark: #f5f5e9;
+    --border-color: #304234;
+    --border-soft: #273b2d;
+    --border-light: #273b2d;
+    --shadow-color: rgb(0 0 0 / 18%);
+    --shadow-light: rgb(0 0 0 / 12%);
+    --shadow-medium: rgb(0 0 0 / 22%);
+    --accent-color: #b5d9ac;
+    --accent-hover: #d6edcb;
+    --accent-bg: #2a422e;
+    --accent-light: #2a422e;
+    --accent-soft-bg: #2b4230;
+    --accent-shadow: rgb(162 202 151 / 12%);
+    --primary-color: #b5d9ac;
+    --primary-hover: #d6edcb;
+    --primary-light: #2a422e;
+    --primary-bg: #2a422e;
+    --purple-bg: #2a422e;
+    --purple-color: #b5d9ac;
+    --purple-text: #b5d9ac;
+    --text-on-accent: #0c1912;
+    --table-head-bg: #1c2e22;
+    --table-head-text: #b5c4ae;
+    --focus-ring: #b5d9ac;
+    --success-color: #8fca83;
+    --success-hover: #addc9e;
+    --success-accent: #8fca83;
+    --success-soft-bg: #243e29;
+    --success-soft-text: #b1dda4;
+    --success-bg: #243e29;
+    --success-text: #b1dda4;
+    --success-border: #3d5e3e;
+    --danger-color: #f19c8d;
+    --danger-hover: #ffb4a6;
+    --danger-accent: #f19c8d;
+    --danger-soft-bg: #462926;
+    --danger-soft-text: #ffc1b5;
+    --danger-bg: #462926;
+    --danger-text: #ffc1b5;
+    --danger-border: #68413b;
+    --warning-color: #e3bc67;
+    --warning-bg: #3c3320;
+    --warning-text: #edcd88;
+    --warning-border: #645435;
+    --warn-soft-bg: #3c3320;
+    --warn-soft-text: #edcd88;
+    --info-color: #94c6d5;
+    --info-bg: #223840;
+    --info-text: #aed8e1;
+    --info-border: #3b5660;
+    --info-soft-bg: #223840;
+    --info-soft-text: #aed8e1;
+    --bar-ok: #8fca83;
+    --bar-warn: #e3bc67;
+    --bar-crit: #f19c8d;
+    --skeleton-base: #293b2d;
+    --skeleton-shine: #344b36;
+    --ai-banner-bg: #2b4230;
+    color-scheme: dark;
+}
+
+/* Foundation. Editors retain their own monospace faces. */
+html.cp-evergreen body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+html.cp-evergreen :is(button, input, select, textarea) { font-family: inherit; }
+html.cp-evergreen :is(h1, h2, h3, h4, h5, h6) { font-family: inherit; }
+html.cp-evergreen a { color: var(--accent-color); }
+html.cp-evergreen a:hover { color: var(--accent-hover); }
+html.cp-evergreen ::selection { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+html.cp-evergreen .skip-link { background: var(--cp-mint); color: var(--cp-ink); }
+
+/* Permanent navigation and header. Mobile .show remains owned by the shell. */
+html.cp-evergreen #sidebar {
+    width: var(--cp-rail-width);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    padding: 0 0 24px;
+    box-shadow: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cp-border-strong) transparent;
+}
+html.cp-evergreen #sidebar .sidebar-logo {
+    height: 92px;
+    padding: 25px 22px;
+    margin: 0;
+    gap: 10px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+html.cp-evergreen .cp-brand-wordmark { width: 184px; max-width: 100%; height: auto; }
+html.cp-evergreen .cp-brand-dark { display: none; }
+html.cp-evergreen[data-theme="dark"] .cp-brand-light { display: none; }
+html.cp-evergreen[data-theme="dark"] .cp-brand-dark { display: block; }
+html.cp-evergreen #sidebar .sidebar-logo .logo-icon { width: 34px; height: 34px; border-radius: 0; }
+html.cp-evergreen #sidebar .sidebar-logo .brand { font-size: 20px; font-weight: 680; letter-spacing: -.6px; }
+html.cp-evergreen #sidebar .sidebar-logo .tagline { font-size: 10px; letter-spacing: .02em; }
+html.cp-evergreen #sidebar .sidebar-search { margin: 0 16px 18px; }
+html.cp-evergreen #sidebar .sidebar-search input {
+    height: 38px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--cp-radius);
+    font-size: 12px;
+    box-shadow: none;
+}
+html.cp-evergreen #sidebar .sidebar-search input:focus { border-color: var(--cp-border-strong); }
+html.cp-evergreen #sidebar .sidebar-search i { font-size: 12px; color: var(--text-secondary); }
+html.cp-evergreen #sidebar .sidebar-search-empty { font-size: 12px; padding: 8px 20px; }
+html.cp-evergreen #sidebar .server-info {
+    margin: 0 16px 22px;
+    padding: 12px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--cp-radius);
+    box-shadow: none;
+    background: transparent;
+    gap: 9px;
+}
+html.cp-evergreen #sidebar .server-info .server-icon {
+    width: 30px;
+    height: 32px;
+    font-size: 15px;
+    color: var(--accent-color);
+    background: var(--cp-selection);
+    border-radius: 4px;
+}
+html.cp-evergreen #sidebar .server-info .info-line { font-size: 10px; line-height: 1.8; }
+html.cp-evergreen #sidebar .server-info .ip-value { font-weight: 600; }
+html.cp-evergreen #sidebar .section-header {
+    margin: 21px 22px 8px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-secondary);
+    text-align: left;
+    font-size: 9px;
+    line-height: 1.5;
+    letter-spacing: 1.35px;
+    font-weight: 650;
+}
+html.cp-evergreen #sidebar .menu-item {
+    min-height: 40px;
+    margin: 3px 12px;
+    padding: 9px 11px;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    box-shadow: none;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: background-color .15s ease, border-color .15s ease;
+}
+html.cp-evergreen #sidebar .menu-item:hover { background: var(--bg-hover); box-shadow: none; color: var(--text-heading); }
+html.cp-evergreen #sidebar .menu-item.active,
+html.cp-evergreen #sidebar .submenu .menu-item.active {
+    background: var(--cp-selection);
+    border-color: transparent;
+    color: var(--cp-selection-text);
+    font-weight: 650;
+    box-shadow: none;
+}
+html.cp-evergreen #sidebar .menu-item.active::before { background: var(--accent-color); width: 2px; top: 11px; bottom: 11px; border-radius: 1px; }
+html.cp-evergreen #sidebar .menu-item .icon-wrapper,
+html.cp-evergreen #sidebar .menu-item.active .icon-wrapper,
+html.cp-evergreen #sidebar .menu-item:hover .icon-wrapper { width: 19px; height: 20px; background: transparent; border-radius: 0; }
+html.cp-evergreen #sidebar .menu-item i { font-size: 14px; color: var(--text-secondary); }
+html.cp-evergreen #sidebar .menu-item.active i { color: var(--cp-selection-text); }
+html.cp-evergreen #sidebar .menu-item .chevron { font-size: 9px; }
+html.cp-evergreen #sidebar .menu-item-promo { border-color: var(--border-color); margin-top: 14px; }
+html.cp-evergreen #sidebar .menu-item.menu-item-promo > span { color: var(--text-primary); }
+html.cp-evergreen #sidebar .menu-item.menu-item-promo > span:not(.badge) { flex: 1 1 auto; white-space: nowrap; }
+html.cp-evergreen #sidebar .menu-item.menu-item-promo > .badge { flex: 0 0 auto; color: var(--cp-selection-text); }
+html.cp-evergreen #sidebar .menu-item .badge-promo {
+    background: var(--cp-selection);
+    color: var(--cp-selection-text);
+    font-size: 8px;
+    border-radius: 3px;
+    padding: 3px 5px;
+    letter-spacing: .4px;
+}
+html.cp-evergreen #sidebar .submenu { padding: 4px 12px; }
+html.cp-evergreen #sidebar .submenu .menu-item { margin: 2px 0; padding-left: 24px; min-height: 34px; }
+html.cp-evergreen #header {
+    left: var(--cp-rail-width);
+    height: var(--cp-header-height);
+    padding: 0 34px;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: none;
+}
+html.cp-evergreen #header-right { gap: 10px; }
+html.cp-evergreen .cp-header-context { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+html.cp-evergreen .cp-header-eyebrow { color: var(--text-secondary); font-size: 8px; font-weight: 600; letter-spacing: 1.35px; }
+html.cp-evergreen .cp-header-title { color: var(--text-heading); font-size: 12px; font-weight: 550; margin-top: 2px; }
+html.cp-evergreen #header :is(.theme-toggle, .cp-notif-btn, #mobile-menu-toggle) {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    box-shadow: none;
+}
+html.cp-evergreen #header :is(.theme-toggle, .cp-notif-btn):hover { background: var(--cp-selection); border-color: var(--cp-border-strong); color: var(--text-heading); transform: none; }
+html.cp-evergreen #header-right .social-links { gap: 3px; margin-right: 7px; }
+html.cp-evergreen #header-right .social-links a { width: 26px; height: 30px; font-size: 13px; border-radius: 4px; }
+html.cp-evergreen #header-right .social-links a:hover { background: var(--bg-hover); color: var(--accent-color); box-shadow: none; transform: none; }
+html.cp-evergreen #header-right .logout-btn { padding: 8px 11px; min-height: 33px; font-size: 11px; font-weight: 550; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-primary); }
+html.cp-evergreen #header-right .logout-btn:hover { background: var(--cp-selection); color: var(--cp-selection-text); box-shadow: none; }
+html.cp-evergreen #main-content { margin-left: var(--cp-rail-width); padding: 99px 34px 48px; background: var(--bg-primary); }
+html.cp-evergreen #main-content .cp-breadcrumb { margin: 0 0 22px; font-size: 11px; color: var(--text-secondary); }
+html.cp-evergreen #main-content .cp-bc-page { color: var(--text-primary); font-weight: 550; }
+html.cp-evergreen #main-content .cp-bc-chevron { opacity: .55; }
+
+/* Page rhythm. Keep module visibility and local grid behavior intact. */
+html.cp-evergreen #main-content :is(.dashboard-wrapper, .page-wrapper, .wp-wrapper, .services-wrapper, .cyberpanel-website-page) { padding: 0; background: transparent; }
+html.cp-evergreen #main-content :is(.dashboard-container, .page-container, .modern-container, .wp-container, .services-container, .security-container, .backup-container, .logs-container, .settings-container, .applications-container, .docker-content-container) {
+    width: 100%;
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    min-width: 0;
+    background: transparent;
+}
+html.cp-evergreen #main-content .page-wrapper[ng-controller="createWebsite"] .page-container { max-width: 1120px; }
+/* Bootstrap 3's viewport-sized .container otherwise protrudes past the rail. */
+html.cp-evergreen #main-content > .container { width: 100%; max-width: 100%; margin: 0; padding: 0; }
+html.cp-evergreen #main-content .container { width: 100%; max-width: 100%; }
+html.cp-evergreen #main-content iframe[src*="youtube.com/embed"] { width: min(100%, 790px); height: auto; aspect-ratio: 16 / 9; }
+html.cp-evergreen #main-content .page-header {
+    margin: 0 0 28px;
+    padding: 0 0 23px;
+    background: transparent !important;
+    color: var(--text-heading);
+    text-align: left;
+    border: 0;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
+    box-shadow: none !important;
+}
+html.cp-evergreen #main-content .page-header::before { content: none; }
+html.cp-evergreen #main-content :is(.page-title, .page-header h1, .title-hero) {
+    margin: 0 0 8px;
+    color: var(--text-heading) !important;
+    font-size: 30px;
+    line-height: 1.22;
+    letter-spacing: -1.05px;
+    font-weight: 550;
+    text-transform: none;
+    justify-content: flex-start;
+    gap: 13px;
+}
+html.cp-evergreen #main-content :is(.page-subtitle, .page-header p) {
+    max-width: 760px;
+    margin: 0;
+    color: var(--text-secondary) !important;
+    font-size: 13px;
+    line-height: 1.7;
+    letter-spacing: 0;
+    text-align: left;
+}
+html.cp-evergreen #main-content .page-header :is(.icon, .firewall-icon, .security-icon, .backup-icon, .header-icon) {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    background: var(--cp-selection) !important;
+    color: var(--cp-selection-text) !important;
+    border-radius: 5px;
+    box-shadow: none;
+    font-size: 19px;
+}
+html.cp-evergreen #main-content :is(.header-actions, .page-actions, .button-group, .form-actions) { gap: 10px; }
+html.cp-evergreen #main-content :is(.card-title, .section-title, .content-box-header, .cyber-section-title, .panel-title, .form-section-title) {
+    color: var(--text-heading) !important;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: -.25px;
+    text-transform: none;
+    margin-top: 0;
+}
+html.cp-evergreen #main-content :is(.card-title, .section-title, .content-box-header, .cyber-section-title)::before { content: none; }
+html.cp-evergreen #main-content :is(.card-title, .section-title) { margin-bottom: 20px; }
+html.cp-evergreen #main-content .content-box-header { background: transparent !important; border-bottom-color: var(--border-color); padding: 18px 22px; }
+
+/* Common surfaces across account, hosting and server modules. */
+html.cp-evergreen #main-content :is(.content-card, .main-card, .card, .cyber-card, .wp-section, .wp-panel, .content-section, .section-card, .data-card, .stats-card, .content-box-wrapper, .example-box-wrapper, .info-card, .form-card, .config-card, .status-panel, .rules-panel, .security-panel, .settings-panel, .backup-panel, .panel.panel-body, .website-selector-card, .package-selector-card, .nameserver-card, .database-info-card, .ram-info-card, .os-card, .install-card) {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--cp-radius-lg);
+    box-shadow: var(--cp-shadow) !important;
+}
+html.cp-evergreen #main-content :is(.content-card, .cyber-card, .wp-section, .content-section, .info-card, .form-card, .config-card, .section-card) { padding: 24px; margin-bottom: 22px; }
+html.cp-evergreen #main-content :is(.card-header, .main-card .card-header, .panel-header, .status-header, .container-header, .selector-header, .nameserver-header) {
+    background: var(--bg-muted) !important;
+    color: var(--text-heading) !important;
+    border-color: var(--border-color) !important;
+    border-radius: 7px 7px 0 0;
+    padding: 18px 22px;
+}
+html.cp-evergreen #main-content :is(.card-header, .panel-header, .status-header) :is(h2, h3, h4) { color: var(--text-heading); font-size: 15px; font-weight: 600; }
+html.cp-evergreen #main-content :is(.card-body, .container-body) { background: var(--bg-secondary) !important; color: var(--text-primary) !important; padding: 24px; }
+html.cp-evergreen #main-content :is(.info-box, .stats-box, .info-panel, .settings-group, .config-section, .form-section-box, .details-box) {
+    background: var(--bg-muted) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    border-radius: var(--cp-radius);
+    box-shadow: none !important;
+}
+html.cp-evergreen #main-content :is(.info-card-title, .config-card-title, .function-title, .service-name, .app-name) { color: var(--text-heading); font-weight: 600; letter-spacing: -.3px; }
+html.cp-evergreen #main-content :is(.help-block, .help-text, .form-help, .form-text, .info-card-description, .info-card-text, .config-description) { color: var(--text-secondary) !important; font-size: 13px; line-height: 1.65; margin-top: 7px; }
+html.cp-evergreen #main-content .docs-link { background: var(--bg-secondary) !important; color: var(--accent-color) !important; border: 1px solid var(--border-color); border-radius: 5px; box-shadow: none; padding: 7px 11px; font-size: 11px; }
+
+/* Inputs retain native selects, named fields and Angular validation states. */
+html.cp-evergreen #main-content :is(.form-group, .form-field) { margin-bottom: 19px; row-gap: 0; }
+html.cp-evergreen #main-content :is(.form-label, .control-label, .form-group > label, .form-field > label) {
+    margin-bottom: 7px;
+    color: var(--text-primary) !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-transform: none;
+    letter-spacing: 0;
+}
+html.cp-evergreen #main-content :is(.form-control, .form-select),
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal :is(.form-control, .form-select) {
+    min-height: 44px;
+    height: auto;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-primary) !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--cp-border-strong) !important;
+    border-radius: 5px;
+    box-shadow: none !important;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+html.cp-evergreen #main-content :is(.form-control, .form-select):focus,
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal :is(.form-control, .form-select):focus { border-color: var(--accent-color) !important; box-shadow: 0 0 0 3px var(--accent-shadow) !important; }
+html.cp-evergreen #main-content :is(.form-control, .form-select):disabled { background: var(--bg-muted) !important; color: var(--text-secondary) !important; cursor: not-allowed; opacity: .7; }
+html.cp-evergreen #main-content .form-control::placeholder { color: var(--text-muted) !important; font-size: inherit; opacity: .85; }
+html.cp-evergreen #main-content .form-control:hover { border-color: var(--accent-color) !important; }
+html.cp-evergreen #main-content select.form-control,
+html.cp-evergreen #main-content select.form-select,
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal select.form-control { appearance: auto; -webkit-appearance: auto; padding-right: 28px; }
+html.cp-evergreen #main-content select option { background: var(--bg-secondary); color: var(--text-primary); }
+html.cp-evergreen #main-content textarea.form-control { min-height: 112px; resize: vertical; }
+html.cp-evergreen #main-content :is(.form-row, .form-grid) { gap: 20px; margin-bottom: 19px; }
+html.cp-evergreen #main-content :is(.form-row, .form-grid) > .form-group { margin-bottom: 0; }
+html.cp-evergreen #main-content .form-section { margin-bottom: 25px; }
+html.cp-evergreen #main-content .form-section-title { padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 19px; font-size: 13px; }
+html.cp-evergreen #main-content .input-group-addon { background: var(--bg-muted); color: var(--text-secondary); border-color: var(--cp-border-strong); font-size: 12px; }
+html.cp-evergreen #main-content .input-group-btn .btn { min-height: 44px; }
+html.cp-evergreen #main-content input:is([type="checkbox"], [type="radio"]) { accent-color: var(--accent-color); }
+html.cp-evergreen #main-content .checkbox-label { color: var(--text-primary); font-size: 12px; font-weight: 500; }
+html.cp-evergreen #main-content .checkbox-group { padding: 0; background: transparent; border: 0; border-radius: 0; }
+html.cp-evergreen #main-content .checkbox-wrapper { padding: 13px 15px; background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .checkbox-wrapper:hover { background: var(--bg-hover); border-color: var(--cp-border-strong); }
+html.cp-evergreen #main-content :is(.search-input, .filter-select, .nameserver-input, .domain-select, .domain-input, .editable-input) {
+    min-height: 44px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--cp-border-strong);
+    border-radius: 5px;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    box-shadow: none;
+}
+html.cp-evergreen #main-content :is(.search-input, .filter-select, .nameserver-input, .domain-select, .domain-input, .editable-input):focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-shadow); }
+html.cp-evergreen #main-content .form-field :is(input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea) {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--cp-border-strong);
+    border-radius: 5px;
+    box-shadow: none;
+}
+html.cp-evergreen #main-content .form-field :is(input, select, textarea):focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-shadow); }
+html.cp-evergreen #main-content :is(.field-error, .error-message, .has-error .help-block) { color: var(--danger-soft-text) !important; }
+html.cp-evergreen #main-content .has-error .form-control { border-color: var(--danger-color) !important; }
+html.cp-evergreen #main-content :is(.switch, .toggle-switch) input:checked + .slider { background: var(--accent-color); }
+
+/* Actions: orange is reserved for the next primary action. */
+html.cp-evergreen #main-content :is(.btn, .cyber-btn, .action-btn, .btn-action, .save-btn, .btn-install, .install-btn, .btn-generate, .cp-build-btn, .hero-btn, .view-activity-btn),
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal .btn {
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -.1px;
+    line-height: 1.5;
+    padding: 9px 15px;
+    min-height: 40px;
+    height: auto;
+    box-shadow: none !important;
+    text-shadow: none;
+    text-decoration: none;
+}
+html.cp-evergreen #main-content :is(.btn-primary, .save-btn, .btn-install, .cp-build-btn.primary),
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal .btn-primary {
+    background: var(--cp-action) !important;
+    color: var(--cp-action-text) !important;
+    border: 1px solid var(--cp-action) !important;
+}
+html.cp-evergreen #main-content :is(.btn-primary, .save-btn, .btn-install, .cp-build-btn.primary):hover,
+html.cp-evergreen #main-content :is(.btn-primary, .save-btn, .btn-install, .cp-build-btn.primary):focus,
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal .btn-primary:hover { background: var(--cp-action-hover) !important; color: var(--cp-action-text) !important; border-color: var(--cp-action-hover) !important; }
+html.cp-evergreen #main-content :is(.btn-secondary, .btn-default, .btn-outline, .btn-outline-primary, .btn-border, .btn-gray, .btn-purple, .btn-blue-alt, .btn-alt, .btn-generate, .install-btn, .view-activity-btn),
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal :is(.btn-secondary, .btn-default) {
+    background: var(--bg-secondary) !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--cp-border-strong) !important;
+}
+html.cp-evergreen #main-content :is(.btn-secondary, .btn-default, .btn-outline, .btn-outline-primary, .btn-border, .btn-gray, .btn-purple, .btn-blue-alt, .btn-alt, .btn-generate, .install-btn, .view-activity-btn):hover,
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal :is(.btn-secondary, .btn-default):hover { background: var(--cp-selection) !important; color: var(--cp-selection-text) !important; border-color: var(--cp-border-strong) !important; }
+html.cp-evergreen #main-content :is(.btn-danger, .btn-delete, .delete-btn, .btn-outline-danger),
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal .btn-danger { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text) !important; border: 1px solid var(--danger-border) !important; }
+html.cp-evergreen #main-content :is(.btn-danger, .btn-delete, .delete-btn, .btn-outline-danger):hover { background: var(--danger-soft-bg) !important; border-color: var(--danger-color) !important; }
+html.cp-evergreen #main-content .btn-success { background: var(--success-soft-bg) !important; color: var(--success-soft-text) !important; border: 1px solid var(--success-border) !important; }
+html.cp-evergreen #main-content .btn-warning { background: var(--warn-soft-bg) !important; color: var(--warn-soft-text) !important; border: 1px solid var(--warning-border) !important; }
+html.cp-evergreen #main-content .btn-info { background: var(--info-soft-bg) !important; color: var(--info-soft-text) !important; border: 1px solid var(--info-border) !important; }
+html.cp-evergreen #main-content .btn-link { background: transparent !important; border-color: transparent !important; color: var(--accent-color) !important; box-shadow: none; }
+html.cp-evergreen #main-content :is(.btn-save, .btn-create, .btn-add-record, .btn-create-zone, .submit-btn, .primary-btn, .create-docker-btn, .docker-btn-primary, .fetch-plans-btn, .modal-btn.primary, .action-btn.primary, .action-btn.create) {
+    background: var(--cp-action);
+    color: var(--cp-action-text);
+    border: 1px solid var(--cp-action);
+    border-radius: 5px;
+    padding: 10px 16px;
+    min-height: 40px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 600;
+    box-shadow: none;
+}
+html.cp-evergreen #main-content :is(.btn-save, .btn-create, .btn-add-record, .btn-create-zone, .submit-btn, .primary-btn, .create-docker-btn, .docker-btn-primary, .fetch-plans-btn, .modal-btn.primary, .action-btn.primary, .action-btn.create):hover { background: var(--cp-action-hover); color: var(--cp-action-text); border-color: var(--cp-action-hover); box-shadow: none; }
+html.cp-evergreen #main-content :is(.btn-edit, .btn-action, .manage-btn, .btn-configure, .view-message-btn, .btn-back, .access-btn, .learn-more-btn) { background: var(--bg-secondary); color: var(--accent-color); border: 1px solid var(--cp-border-strong); border-radius: 5px; box-shadow: none; }
+html.cp-evergreen #main-content :is(.btn-edit, .btn-action, .manage-btn, .btn-configure, .view-message-btn, .btn-back, .access-btn, .learn-more-btn):hover { background: var(--cp-selection); color: var(--cp-selection-text); box-shadow: none; }
+html.cp-evergreen #main-content .btn-sm { font-size: 12px; padding: 8px 11px; min-height: 36px; height: auto; }
+html.cp-evergreen #main-content .btn-lg { font-size: 12px; padding: 11px 19px; min-height: 42px; }
+html.cp-evergreen #main-content :is(.btn-primary, .btn-secondary, .btn-default, .btn-danger, .btn-success, .btn-warning, .btn-info):not(.btn):not(.ng-hide):not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 9px 15px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 600;
+    border-radius: 5px;
+    text-decoration: none;
+}
+html.cp-evergreen #main-content :is(.btn, .action-btn):disabled,
+html.cp-evergreen #main-content .btn.disabled { opacity: .5; cursor: not-allowed; }
+
+/* Tables use quiet headers; status chips and cell-specific colours survive. */
+html.cp-evergreen #main-content :is(.table, .modern-table, .data-table, .stats-table, .cyber-table, .activity-table, .process-table, .processes-table, .rules-table, .keys-table, .log-table, .logs-table, .ftp-table, .plugins-table, .package-table, .destinations-table, .backups-table, .custom-table, .rule-files-table, .scanner-table, .queue-table, .ed-table) {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    font-size: 12px;
+    border-color: var(--border-color);
+    border-radius: 0;
+}
+html.cp-evergreen #main-content :is(.table, .modern-table, .data-table, .stats-table, .cyber-table, .activity-table, .process-table, .processes-table, .rules-table, .keys-table, .log-table, .logs-table, .ftp-table, .plugins-table, .package-table, .destinations-table, .backups-table, .custom-table, .rule-files-table, .scanner-table, .queue-table, .ed-table) :is(thead, th) {
+    background: var(--table-head-bg) !important;
+    color: var(--table-head-text) !important;
+    border-color: var(--border-color) !important;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .55px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    line-height: 1.5;
+}
+html.cp-evergreen #main-content :is(.table, .modern-table, .data-table, .stats-table, .cyber-table, .activity-table, .process-table, .processes-table, .rules-table, .keys-table, .log-table, .logs-table, .ftp-table, .plugins-table, .package-table, .destinations-table, .backups-table, .custom-table, .rule-files-table, .scanner-table, .queue-table, .ed-table) td {
+    padding: 14px 16px;
+    border-color: var(--border-color) !important;
+    vertical-align: middle;
+    line-height: 1.55;
+}
+html.cp-evergreen #main-content :is(.table, .modern-table, .data-table, .stats-table, .cyber-table, .activity-table, .process-table, .rules-table, .logs-table, .ftp-table, .plugins-table, .package-table, .backups-table, .scanner-table, .queue-table) tbody tr:hover { background: var(--bg-hover) !important; }
+html.cp-evergreen #main-content .table-striped > tbody > tr:nth-of-type(odd) { background: var(--bg-muted) !important; }
+html.cp-evergreen #main-content :is(.table-container, .table-wrapper, .plugins-table-wrapper, .table-responsive) { border-color: var(--border-color); border-radius: 6px; max-width: 100%; }
+/* Legacy tables often have no responsive wrapper. Scroll their direct
+   containing box, preserving native table layout and every action column. */
+html.cp-evergreen #main-content :is(.example-box-wrapper, .card-body, .main-card, .content-box-wrapper, .panel-body, .col-md-12, .col-sm-12, .col-lg-12):has(> table) {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cp-border-strong) var(--bg-muted);
+}
+html.cp-evergreen #main-content :is(.pagination-section, .pagination-container, .pagination-info) { background: var(--bg-muted); color: var(--text-secondary); border-color: var(--border-color); border-radius: 5px; font-size: 11px; }
+html.cp-evergreen #main-content :is(.pagination-btn, .pagination > li > a, .pagination > li > span) { background: var(--bg-secondary); color: var(--accent-color); border-color: var(--border-color); border-radius: 4px; font-size: 11px; box-shadow: none; }
+html.cp-evergreen #main-content .pagination > .active > :is(a, span) { background: var(--cp-selection); color: var(--cp-selection-text); border-color: var(--cp-border-strong); }
+html.cp-evergreen #main-content :is(.code-badge, .code-chip, .mono-badge, code) { background: var(--bg-code); color: var(--text-primary); border-color: var(--border-color); border-radius: 4px; }
+
+/* Alerts keep established success / warning / error meanings. */
+html.cp-evergreen #main-content .alert,
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal .alert { padding: 13px 16px; border-radius: 5px; font-size: 12px; line-height: 1.65; box-shadow: none !important; }
+html.cp-evergreen #main-content .alert-success { background: var(--success-soft-bg) !important; color: var(--success-soft-text) !important; border-color: var(--success-border) !important; }
+html.cp-evergreen #main-content :is(.alert-danger, .alert-error) { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text) !important; border-color: var(--danger-border) !important; }
+html.cp-evergreen #main-content .alert-warning { background: var(--warn-soft-bg) !important; color: var(--warn-soft-text) !important; border-color: var(--warning-border) !important; }
+html.cp-evergreen #main-content .alert-info { background: var(--info-soft-bg) !important; color: var(--info-soft-text) !important; border-color: var(--info-border) !important; }
+html.cp-evergreen #main-content .empty-state { padding: 36px 24px; background: var(--bg-muted) !important; color: var(--text-secondary) !important; border: 1px dashed var(--cp-border-strong); border-radius: 6px; }
+html.cp-evergreen #main-content .empty-state h3 { font-size: 16px; color: var(--text-heading); }
+html.cp-evergreen #main-content .empty-state p { font-size: 12px; }
+
+/* Dashboard: a compact operating overview, with a clear reading order. */
+html.cp-evergreen #main-content .dashboard-greeting { margin-bottom: 25px !important; }
+html.cp-evergreen #main-content .dashboard-greeting .section-title { font-size: 30px; font-weight: 550; letter-spacing: -1.05px; line-height: 1.2; margin-bottom: 10px !important; }
+html.cp-evergreen #main-content .dashboard-greeting p { font-size: 12px; line-height: 1.65; }
+html.cp-evergreen #main-content :is(.cp-eyebrow, .cp-dashboard-eyebrow) { font-size: 9px; line-height: 1.5; font-weight: 650; letter-spacing: 1.7px; color: var(--text-secondary); margin: 0 0 13px; }
+html.cp-evergreen #main-content .cp-quick-actions { gap: 10px; margin-bottom: 24px; grid-template-columns: repeat(auto-fit, minmax(154px, 1fr)); }
+html.cp-evergreen #main-content .cp-qa-card { padding: 14px 13px; gap: 11px; border-radius: 6px; box-shadow: none; border-color: var(--border-color); background: var(--bg-secondary); }
+html.cp-evergreen #main-content .cp-qa-card:hover { border-color: var(--cp-border-strong); background: var(--bg-hover); box-shadow: none; transform: none; }
+html.cp-evergreen #main-content .cp-qa-ic { width: 32px; height: 34px; border-radius: 4px; font-size: 15px; background: var(--cp-selection) !important; color: var(--cp-selection-text) !important; }
+html.cp-evergreen #main-content .cp-qa-title { font-size: 11px; font-weight: 600; color: var(--text-heading); }
+html.cp-evergreen #main-content .cp-qa-sub { font-size: 10px; margin-top: 3px; }
+html.cp-evergreen #main-content :is(.overview-section, .insights-section, .activity-section) { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 22px; box-shadow: none; margin-bottom: 23px; }
+html.cp-evergreen #main-content :is(.overview-section, .insights-section, .activity-section) > .section-title { font-size: 13px; font-weight: 600; letter-spacing: -.2px; margin-bottom: 20px; }
+html.cp-evergreen #main-content .stats-grid { gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+html.cp-evergreen #main-content .stat-card { border-radius: 6px; background: var(--bg-muted); border: 1px solid var(--border-color); padding: 20px; box-shadow: none; }
+html.cp-evergreen #main-content .stat-card:hover { border-color: var(--cp-border-strong); box-shadow: none; }
+html.cp-evergreen #main-content .stat-card-header { margin-bottom: 20px; }
+html.cp-evergreen #main-content .stat-card-title { font-size: 10px; letter-spacing: .8px; color: var(--text-secondary); font-weight: 600; }
+html.cp-evergreen #main-content .stat-card-value { font-size: 20px; font-weight: 550; letter-spacing: -.6px; }
+html.cp-evergreen #main-content .stat-card-info { font-size: 10px; line-height: 1.6; margin-top: 13px; }
+html.cp-evergreen #main-content :is(.progress-bar-container, .resource-progress, .cyber-progress) { background: var(--border-color); border-radius: 3px; }
+html.cp-evergreen #main-content :is(.progress-bar, .progress-bar-fill, .resource-progress-bar, .cyber-progress-bar) { border-radius: 3px; }
+html.cp-evergreen #main-content .progress-bar.bar-ok { background: var(--bar-ok) !important; }
+html.cp-evergreen #main-content .progress-bar.bar-warn { background: var(--bar-warn) !important; }
+html.cp-evergreen #main-content .progress-bar.bar-crit { background: var(--bar-crit) !important; }
+html.cp-evergreen #main-content .stat-card-value.bar-ok { color: var(--bar-ok); }
+html.cp-evergreen #main-content .stat-card-value.bar-warn { color: var(--bar-warn); }
+html.cp-evergreen #main-content .stat-card-value.bar-crit { color: var(--bar-crit); }
+html.cp-evergreen #main-content .insights-grid { gap: 12px; }
+html.cp-evergreen #main-content .insight-card { border-radius: 6px; background: var(--bg-secondary); border-color: var(--border-color); padding: 20px 15px; text-align: left; }
+html.cp-evergreen #main-content .insight-card:hover { background: var(--bg-muted); border-color: var(--cp-border-strong); box-shadow: none; transform: none; }
+html.cp-evergreen #main-content .insight-icon { width: 31px; height: 31px; margin: 0 0 20px; border-radius: 4px; font-size: 14px; background: var(--cp-selection) !important; color: var(--cp-selection-text) !important; }
+html.cp-evergreen #main-content .insight-value { font-size: 29px; font-weight: 550; line-height: 1.15; letter-spacing: -.9px; color: var(--text-heading); }
+html.cp-evergreen #main-content .insight-label { font-size: 10px; margin-top: 7px; }
+html.cp-evergreen #main-content .activity-header { gap: 16px; margin-bottom: 20px; }
+html.cp-evergreen #main-content .activity-tabs { border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-muted); padding: 3px; }
+html.cp-evergreen #main-content .activity-tab { font-size: 11px; padding: 8px 13px; border-radius: 3px; }
+html.cp-evergreen #main-content .activity-tab.active { background: var(--cp-selection); color: var(--cp-selection-text); box-shadow: none; }
+html.cp-evergreen #main-content .chart-container { border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-muted); }
+html.cp-evergreen #main-content .cp-onboarding { border-radius: 8px; padding: 23px; }
+html.cp-evergreen #main-content .cp-ob-step { border-radius: 5px; background: var(--bg-muted); padding: 12px 14px; }
+html.cp-evergreen #main-content .cp-ob-num { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; }
+html.cp-evergreen #main-content .cp-ob-step .cp-ob-title { font-size: 12px; }
+html.cp-evergreen #main-content .cp-ob-step .cp-ob-sub { font-size: 11px; }
+
+/* Hubs, workspace navigation and the existing development-services area. */
+html.cp-evergreen #main-content :is(.cp-tile, .cp-bs-svc, .cp-bs-steps, .cp-bs-cta, .cp-site-head) { border-radius: 6px; box-shadow: none; border-color: var(--border-color); }
+html.cp-evergreen #main-content .cp-tile-grid { gap: 13px; }
+html.cp-evergreen #main-content .cp-tile { padding: 20px; gap: 14px; background: var(--bg-secondary); }
+html.cp-evergreen #main-content .cp-tile:hover { background: var(--bg-hover); border-color: var(--cp-border-strong); box-shadow: none; transform: none; }
+html.cp-evergreen #main-content .cp-tile .cp-tile-ic { width: 34px; height: 34px; background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; font-size: 15px; }
+html.cp-evergreen #main-content .cp-tile-title { font-size: 12px; color: var(--text-heading); font-weight: 600; }
+html.cp-evergreen #main-content .cp-tile-sub { font-size: 11px; margin-top: 4px; line-height: 1.55; }
+html.cp-evergreen #main-content .cp-site-head { padding: 24px; background: var(--cp-selection); }
+html.cp-evergreen #main-content .cp-site-head h1 { font-size: 25px; letter-spacing: -.7px; font-weight: 550; }
+html.cp-evergreen #main-content .cp-site-favicon { background: var(--bg-secondary); color: var(--accent-color); border-radius: 5px; }
+html.cp-evergreen #main-content .cp-tabs { gap: 5px; margin-bottom: 24px; border-color: var(--border-color); }
+html.cp-evergreen #main-content .cp-tab { font-size: 11px; padding: 12px 14px; border-radius: 4px 4px 0 0; }
+html.cp-evergreen #main-content .cp-tab.active { background: transparent; color: var(--accent-color); border-color: transparent; border-bottom: 2px solid var(--accent-color); font-weight: 650; }
+html.cp-evergreen #main-content :is(.cp-build-card, .cp-bs-hero) { background: var(--cp-selection); color: var(--cp-selection-text); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: none; padding: 23px 26px; }
+html.cp-evergreen #main-content :is(.cp-build-card, .cp-bs-hero) :is(h1, h3) { color: var(--text-heading); font-size: 21px; font-weight: 550; letter-spacing: -.55px; }
+html.cp-evergreen #main-content :is(.cp-build-card, .cp-bs-hero) p { color: var(--text-primary); font-size: 12px; line-height: 1.7; }
+html.cp-evergreen #main-content .cp-build-card .cp-build-bg { color: var(--accent-color); opacity: .08; font-size: 130px; }
+html.cp-evergreen #main-content .cp-build-card .cp-build-x { background: transparent; color: var(--text-primary); border: 1px solid var(--cp-border-strong); border-radius: 4px; width: 40px; height: 40px; line-height: 20px !important; }
+html.cp-evergreen #main-content :is(.cp-build-btn.ghost, .cp-bs-hero .cp-build-btn) { background: var(--bg-secondary); color: var(--accent-color); border: 1px solid var(--cp-border-strong); }
+html.cp-evergreen #main-content .cp-bs-svc { padding: 22px; }
+html.cp-evergreen #main-content .cp-bs-svc .cp-bs-ic { background: var(--cp-selection); color: var(--cp-selection-text); width: 42px; height: 42px; border-radius: 5px; font-size: 18px; }
+
+/* WordPress create, list and manager. No controller-driven display changes. */
+html.cp-evergreen #main-content .content-row { gap: 24px; grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr); }
+html.cp-evergreen #main-content .wp-wrapper .info-card { position: static; background: var(--cp-selection) !important; border-color: var(--border-color); padding: 24px; }
+html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-section > .form-group { min-width: 0; }
+html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .input-group .form-control { min-width: 0; }
+html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .input-group .btn { min-height: 44px; }
+html.cp-evergreen #main-content .feature-list li { font-size: 11px; padding: 13px 0; line-height: 1.6; border-color: var(--cp-border-strong); color: var(--text-primary); }
+html.cp-evergreen #main-content .feature-list i { color: var(--accent-color); font-size: 13px; }
+html.cp-evergreen #main-content .stats-box { text-align: left; padding: 18px; border: 1px solid var(--border-color); }
+html.cp-evergreen #main-content .stats-box .stat-label { color: var(--text-secondary); font-size: 9px; letter-spacing: .65px; }
+html.cp-evergreen #main-content .stats-box .stat-value { font-size: 21px; font-weight: 550; letter-spacing: -.6px; color: var(--text-heading); }
+html.cp-evergreen #main-content :is(.search-bar, .search-section) { padding: 17px; background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: none; gap: 13px; }
+html.cp-evergreen #main-content .wp-site-item { background: var(--bg-secondary) !important; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: none; }
+html.cp-evergreen #main-content .wp-site-header { padding: 18px 20px; background: var(--bg-muted); border-color: var(--border-color); }
+html.cp-evergreen #main-content .wp-site-header :is(h3, h4, .site-title) { font-size: 14px; font-weight: 600; color: var(--text-heading); letter-spacing: -.25px; }
+html.cp-evergreen #main-content .wp-site-content { padding: 21px; background: var(--bg-secondary); }
+html.cp-evergreen #main-content :is(.site-preview, .site-preview-card, .quick-actions-card, .wp-stat-card, .wp-action-card, .setting-item) { background: var(--bg-muted) !important; color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 20px; box-shadow: none; }
+html.cp-evergreen #main-content .site-preview img { border: 1px solid var(--border-color); border-radius: 4px; }
+html.cp-evergreen #main-content .wp-page-header { background: var(--cp-selection); color: var(--cp-selection-text); padding: 25px 28px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 24px; box-shadow: none; }
+html.cp-evergreen #main-content .wp-page-header::before { content: none; }
+html.cp-evergreen #main-content .wp-page-header h2 { color: var(--text-heading); font-size: 29px; font-weight: 550; line-height: 1.2; letter-spacing: -.9px; margin-bottom: 11px; }
+html.cp-evergreen #main-content .wp-page-header p { color: var(--text-primary); font-size: 12px; }
+html.cp-evergreen #main-content .wp-page-header .status-badge { background: var(--success-soft-bg); color: var(--success-soft-text); border: 1px solid var(--success-border); font-size: 10px; border-radius: 4px; padding: 4px 9px; }
+html.cp-evergreen #main-content .wp-panel-header { padding: 18px 23px; font-size: 14px; font-weight: 600; background: var(--bg-secondary); color: var(--text-heading); border-color: var(--border-color); }
+html.cp-evergreen #main-content .wp-panel-header::before { content: none; }
+html.cp-evergreen #main-content .wp-nav-tabs { padding: 0 15px; background: var(--bg-secondary); border-color: var(--border-color); }
+html.cp-evergreen #main-content .wp-nav-tabs li a { font-size: 11px; padding: 14px 15px; background: transparent; color: var(--text-secondary); border-radius: 0; }
+html.cp-evergreen #main-content .wp-nav-tabs li.active a { background: transparent; color: var(--accent-color); font-weight: 650; }
+html.cp-evergreen #main-content .wp-nav-tabs li.active a::after { background: var(--accent-color); height: 2px; }
+html.cp-evergreen #main-content .wp-tab-content { padding: 23px; background: var(--bg-secondary); }
+html.cp-evergreen #main-content .wp-stat-card::before { background: var(--cp-border-strong); height: 2px; }
+html.cp-evergreen #main-content :is(.stat-icon, .setting-icon) { background: var(--cp-selection); color: var(--cp-selection-text); width: 36px; height: 36px; border-radius: 4px; font-size: 16px; }
+html.cp-evergreen #main-content .wp-stat-card:hover .stat-icon { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content .setting-item { padding: 16px; }
+html.cp-evergreen #main-content .setting-info h6 { color: var(--text-heading); font-size: 12px; font-weight: 600; }
+html.cp-evergreen #main-content .setting-info p { color: var(--text-secondary); font-size: 11px; }
+html.cp-evergreen #main-content .action-links-grid a { background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--accent-color); border-radius: 5px; padding: 11px 13px; font-size: 11px; }
+html.cp-evergreen #main-content .action-links-grid a:hover { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content .preview-link { background: var(--cp-action); color: var(--cp-action-text); border-radius: 5px; font-size: 12px; }
+html.cp-evergreen #main-content .preview-link:hover { background: var(--cp-action-hover); color: var(--cp-action-text); }
+
+/* WordPress manager workspace. Bootstrap continues to own tab activation and
+   panel visibility; these selectors only change the presentation. */
+html.cp-evergreen #main-content .wp-container[ng-controller="WPsiteHome"] .wp-page-header { padding: 0 0 24px; margin-bottom: 24px; background: transparent !important; border: 0; border-bottom: 1px solid var(--border-color); border-radius: 0; box-shadow: none; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-page-header h2 { margin: 0 0 12px; font-size: 32px; line-height: 1.25; letter-spacing: -1px; overflow-wrap: anywhere; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-page-header p { flex-wrap: wrap; gap: 12px; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-page-header p > span:first-child { overflow-wrap: anywhere; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-panel { padding: 0; border-radius: 8px; overflow: hidden; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-panel-header { padding: 22px 24px 16px; border: 0; font-size: 16px; line-height: 1.5; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin: 0 24px 24px; padding: 6px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-muted); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs::before,
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs::after { content: none; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li { float: none; margin: 0; min-width: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li > a { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; margin: 0; padding: 12px 14px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; line-height: 20px; text-align: center; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li > a i { width: 18px; font-size: 16px; text-align: center; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li > a::after { content: none; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li:not(.active) > a:hover { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li.active > a,
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li.active > a:hover,
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li.active > a:focus { background: var(--accent-color); color: var(--text-on-accent); border-color: var(--accent-color); box-shadow: 0 2px 4px var(--shadow-color); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li > a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-tab-content { padding: 0 24px 28px; min-height: 360px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 28px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 14px; align-content: center; min-height: 106px; padding: 20px; background: var(--bg-muted) !important; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card .stat-icon { grid-row: 1 / 3; align-self: center; width: 40px; height: 40px; margin: 0; font-size: 18px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card .stat-value { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: -.5px; overflow-wrap: anywhere; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card .stat-label { margin: 0; font-size: 10px; line-height: 1.5; letter-spacing: .5px; color: var(--text-secondary); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.wp-stat-card, .setting-item, .btn, .btn-refresh):hover { transform: none; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card::before { content: none; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .section-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 28px 0 18px; padding: 0 0 12px; border-bottom: 1px solid var(--border-color); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .tab-pane > .section-header:first-child,
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.staging-section, .backup-section) > .section-header:first-child { margin-top: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .section-header h4 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.4; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .section-header p { width: 100%; margin: 0; font-size: 13px; line-height: 1.6; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .site-overview-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-bottom: 28px; align-items: start; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .site-preview-card { padding: 0; overflow: hidden; background: var(--bg-secondary) !important; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .preview-header { padding: 14px 20px; margin: 0; border-bottom: 1px solid var(--border-color); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .preview-header h6 { font-size: 14px; font-weight: 600; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .btn-refresh { width: 38px; height: 38px; padding: 8px; border-radius: 4px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .preview-container { border-radius: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .preview-container:focus-within .preview-overlay { opacity: 1; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .quick-actions-card { padding: 22px; background: var(--bg-secondary) !important; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .quick-actions-card h5 { margin: 0 0 18px; font-size: 15px; font-weight: 600; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-links-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-links-grid a { min-height: 46px; padding: 12px; font-size: 12px; line-height: 1.5; background: var(--bg-muted); }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-item { padding: 18px; gap: 14px; background: var(--bg-secondary) !important; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-content { min-width: 0; gap: 16px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-info { flex: 1; min-width: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-info h6 { font-size: 13px; margin: 0 0 6px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-info p { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-content > .checkbox-inline { display: inline-flex; justify-content: center; align-items: center; flex: 0 0 36px; min-height: 36px; padding: 0; margin: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .setting-content > .checkbox-inline > input { position: static; margin: 0; width: 18px; height: 18px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] #prsswdprodata { flex-shrink: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .tab-action-area { align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; padding: 0 0 20px; background: transparent; border-bottom: 1px solid var(--border-color); border-radius: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-buttons .btn { min-height: 40px; padding: 10px 14px; font-size: 12px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(#tab2, #tab3) { overflow-x: auto; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(#tab2, #tab3) > table { min-width: 640px; margin: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .table :is(th, td) { padding: 14px 16px; vertical-align: middle; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .table thead th { font-size: 11px; font-weight: 600; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .table td { font-size: 13px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.create-staging-form, .backup-form) { width: 100%; max-width: 800px; margin: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .form-card { padding: 24px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .form-text { display: block; margin-top: 8px; line-height: 1.6; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.create-staging-form, .backup-form) .form-card > .form-group.row { margin-left: 0; margin-right: 0; margin-bottom: 22px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.create-staging-form, .backup-form) .form-card > .form-group.row > :is(.control-label, .col-sm-9) { float: none; width: 100%; padding-left: 0; padding-right: 0; text-align: left; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.create-staging-form, .backup-form) .form-card > .form-group.row > .control-label { padding-top: 0; margin-bottom: 8px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.create-staging-form, .backup-form) .form-card > .form-group.row > .col-sm-12 { padding: 0; text-align: left; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.create-staging-form, .backup-form) .form-card > .form-group.row:last-child { margin-bottom: 0; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-action-card { padding: 24px; margin-bottom: 20px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-card-title { font-size: 16px; gap: 10px; margin-bottom: 18px; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] #databaseDetails { overflow-x: auto; }
+html.cp-evergreen #main-content [ng-controller="WPsiteHome"] #databaseInfoTable code { overflow-wrap: anywhere; }
+@media (max-width: 1180px) {
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .site-overview-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-page-header h2 { font-size: 28px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-panel-header { padding: 18px 18px 14px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs { margin: 0 16px 22px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-nav-tabs > li > a { padding: 12px 8px; font-size: 13px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-tab-content { padding: 0 16px 22px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stats-grid { gap: 12px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 9px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card .stat-icon { grid-row: auto; width: 34px; height: 34px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stat-card .stat-value { font-size: 20px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .settings-grid { grid-template-columns: minmax(0, 1fr); }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] :is(.setting-item, .quick-actions-card, .form-card, .wp-action-card) { padding: 18px; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-links-grid { grid-template-columns: minmax(0, 1fr); }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-buttons { width: 100%; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .action-buttons .btn { flex: 1 1 auto; justify-content: center; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] #databaseInfoTable { table-layout: fixed; width: 100%; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] #databaseInfoTable th { width: 45% !important; }
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] #databaseInfoTable :is(th, td) { padding: 12px; }
+}
+@media (max-width: 360px) {
+    html.cp-evergreen #main-content [ng-controller="WPsiteHome"] .wp-stats-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* WordPress inventory: separate toolbars from filters and keep native checkboxes
+   in the label flow instead of Bootstrap's negative-margin absolute position. */
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-section { padding: 28px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-section > div:first-child { margin-bottom: 24px; row-gap: 18px !important; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .section-title { margin: 0; font-size: 18px; line-height: 1.4; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .header-actions { gap: 12px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .header-actions .btn { min-height: 40px; padding: 9px 14px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .search-bar { padding: 18px; gap: 16px; margin-bottom: 24px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-item { margin-bottom: 24px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-header { padding: 20px 24px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-content { padding: 24px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-content > div { grid-template-columns: minmax(210px, 1fr) minmax(0, 3fr) !important; gap: 24px !important; align-items: start; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .site-preview > div { gap: 12px !important; flex-wrap: wrap; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .info-grid { gap: 16px; margin-bottom: 24px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .info-box { padding: 20px 16px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .info-box label { margin-bottom: 9px; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-grid { gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-group { padding: 20px; display: grid; gap: 8px; align-content: start; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-group .checkbox { margin: 0; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-group .checkbox label { display: flex; align-items: center; gap: 12px; min-height: 40px; margin: 0; padding: 8px 0; font-size: 14px; line-height: 1.5; }
+html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-group input[type="checkbox"] { position: static; flex: 0 0 18px; width: 18px; height: 18px; margin: 0; }
+@media (max-width: 1120px) {
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-content > div { grid-template-columns: minmax(0, 1fr) !important; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .site-preview { width: 100%; max-width: 320px; }
+}
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-section { padding: 18px; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-header { padding: 18px; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .wp-site-content { padding: 18px; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .settings-group { padding: 16px; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .search-bar { padding: 16px; }
+    html.cp-evergreen #main-content [ng-controller="listWordPressSites"] .search-bar > div { width: 100% !important; }
+}
+
+/* Website inventory and the full settings workspace. */
+/* Adjacent header actions need their own gap; a heading's margin must not be
+   responsible for separating the whole row from the next section. */
+html.cp-evergreen #main-content .page-header > .page-subtitle + .header-actions { margin-top: 16px; }
+html.cp-evergreen #main-content .search-box:has(> :is(.search-icon, i.fa-search)) > .search-input { padding-left: 40px; }
+html.cp-evergreen #main-content .search-box:has(> :is(.search-icon, i.fa-search)) > .search-input::placeholder { color: var(--text-muted); opacity: 1; }
+html.cp-evergreen #main-content [ng-controller="listEmails"] button[ng-click="fixMailSSL()"] { margin-bottom: 20px; }
+html.cp-evergreen #main-content [ng-controller="listDBs"] .modern-table td > .btn-action { margin: 4px 8px 4px 0; }
+html.cp-evergreen #main-content [ng-controller="websitePages"] :is(.col-sm-6, .col-sm-9):has(> button:is([ng-click="fetchLogs(3)"], [ng-click="fetchErrorLogs(3)"])) { display: flex; flex-wrap: wrap; gap: 10px; }
+html.cp-evergreen #uploadBox .mt-4:has(> button[ng-click="uploader.uploadAll()"] ) { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+html.cp-evergreen #main-content :is([ng-controller="listWebsites"] .wp-sites-section, [ng-controller="manageGIT"]) .checkbox { padding: 0; margin: 0; }
+html.cp-evergreen #main-content :is([ng-controller="listWebsites"] .wp-sites-section, [ng-controller="manageGIT"]) .checkbox + .checkbox { margin-top: 12px; }
+html.cp-evergreen #main-content :is([ng-controller="listWebsites"] .wp-sites-section, [ng-controller="manageGIT"]) .checkbox > label:has(> input[type="checkbox"]) { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 8px 0; margin: 0; line-height: 1.5; }
+html.cp-evergreen #main-content :is([ng-controller="listWebsites"] .wp-sites-section, [ng-controller="manageGIT"]) .checkbox > label > input[type="checkbox"] { position: static; flex: 0 0 18px; width: 18px; height: 18px; margin: 0; }
+html.cp-evergreen #main-content .websites-container { border-radius: 6px; background: var(--bg-secondary); border-color: var(--border-color); box-shadow: none; }
+html.cp-evergreen #main-content .website-row { padding: 20px 22px; background: var(--bg-secondary); border-color: var(--border-color); }
+html.cp-evergreen #main-content .website-row:hover { background: var(--bg-muted); }
+html.cp-evergreen #main-content :is(.row-actions, .website-actions) { flex-wrap: wrap; gap: 8px; min-width: 0; }
+html.cp-evergreen #main-content .website-domain { color: var(--text-heading); font-size: 14px; font-weight: 600; }
+html.cp-evergreen #main-content .website-details { padding: 23px; background: var(--bg-muted); border-color: var(--border-color); }
+html.cp-evergreen #main-content .info-table { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; }
+html.cp-evergreen #main-content .info-cell { padding: 16px; border-color: var(--border-color); }
+html.cp-evergreen #main-content .info-label { color: var(--text-secondary); font-size: 9px; letter-spacing: .65px; font-weight: 550; }
+html.cp-evergreen #main-content .info-value { color: var(--text-heading); font-size: 12px; font-weight: 550; }
+html.cp-evergreen #main-content .ssl-badge { border-radius: 4px; padding: 4px 8px; font-size: 9px; }
+html.cp-evergreen #main-content .ssl-badge.valid { background: var(--success-soft-bg); color: var(--success-soft-text); }
+html.cp-evergreen #main-content .ssl-badge:is(.warning, .self-signed) { background: var(--warn-soft-bg); color: var(--warn-soft-text); }
+html.cp-evergreen #main-content .ssl-badge:is(.expired, .expiring) { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+html.cp-evergreen #main-content .ssl-badge.none { background: var(--bg-muted); color: var(--text-secondary); }
+html.cp-evergreen #main-content .cyberpanel-website-page .domain-hero { background: var(--cp-selection) !important; color: var(--cp-selection-text); border: 1px solid var(--border-color); border-radius: 8px; padding: 28px; box-shadow: none !important; }
+html.cp-evergreen #main-content .domain-hero::before,
+html.cp-evergreen #main-content .domain-hero::after { content: none; }
+html.cp-evergreen #main-content .domain-name { color: var(--text-heading); font-size: 30px; font-weight: 550; letter-spacing: -.9px; gap: 16px; }
+html.cp-evergreen #main-content .domain-description { color: var(--text-primary); font-size: 12px; }
+html.cp-evergreen #main-content .domain-status { background: var(--success-soft-bg); color: var(--success-soft-text); font-size: 10px; border: 1px solid var(--success-border); border-radius: 4px; padding: 4px 10px; letter-spacing: 0; }
+html.cp-evergreen #main-content .hero-btn { background: var(--bg-secondary); color: var(--accent-color); border-color: var(--cp-border-strong); }
+html.cp-evergreen #main-content .hero-btn.primary { background: var(--cp-action); color: var(--cp-action-text); border-color: var(--cp-action); }
+html.cp-evergreen #main-content .hero-btn:hover { background: var(--bg-hover); color: var(--accent-color); }
+html.cp-evergreen #main-content .hero-btn.primary:hover { background: var(--cp-action-hover); color: var(--cp-action-text); }
+html.cp-evergreen #main-content .quick-actions { background: var(--bg-secondary); padding: 15px 18px; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: none; }
+html.cp-evergreen #main-content .cyberpanel-website-page .action-btn { background: var(--bg-secondary) !important; color: var(--accent-color) !important; border: 1px solid var(--cp-border-strong) !important; box-shadow: none !important; font-size: 11px; }
+html.cp-evergreen #main-content .cyberpanel-website-page .action-btn:hover { background: var(--cp-selection) !important; color: var(--cp-selection-text) !important; }
+html.cp-evergreen #main-content .cyberpanel-website-page .action-btn::before { content: none; }
+html.cp-evergreen #main-content .resource-card { background: var(--bg-secondary) !important; border: 1px solid var(--border-color); padding: 21px; border-radius: 6px; box-shadow: none !important; }
+html.cp-evergreen #main-content .resource-card:not(.ssl)::before { background: var(--cp-border-strong); height: 2px; }
+html.cp-evergreen #main-content .resource-icon { width: 37px; height: 37px; background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; font-size: 17px; }
+html.cp-evergreen #main-content .resource-card.bandwidth .resource-icon { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content .resource-value { font-size: 26px; font-weight: 550; letter-spacing: -.8px; }
+html.cp-evergreen #main-content .resource-title { font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+html.cp-evergreen #main-content .resource-limit { font-size: 10px; }
+html.cp-evergreen #main-content .resource-progress-bar { background: var(--accent-color); }
+html.cp-evergreen #main-content .cyberpanel-website-page .app-installer-section { background: var(--bg-secondary) !important; color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 27px; box-shadow: none !important; }
+html.cp-evergreen #main-content .app-installer-section::before { content: none; }
+html.cp-evergreen #main-content .app-installer-title { color: var(--text-heading) !important; font-size: 24px; font-weight: 550; letter-spacing: -.65px; }
+html.cp-evergreen #main-content .app-installer-subtitle { color: var(--text-secondary) !important; font-size: 12px; }
+html.cp-evergreen #main-content .app-card { background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: 6px; padding: 22px; box-shadow: none; }
+html.cp-evergreen #main-content .app-card::before { background: var(--cp-border-strong); }
+html.cp-evergreen #main-content .app-card:hover .install-btn { background: var(--cp-selection) !important; color: var(--cp-selection-text) !important; }
+html.cp-evergreen #main-content .app-icon-wrapper { border-radius: 6px; }
+html.cp-evergreen #main-content .app-card.mautic .app-icon-wrapper { background: var(--cp-selection); }
+html.cp-evergreen #main-content .feature-tag { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 3px; font-size: 9px; }
+html.cp-evergreen #main-content .form-horizontal.bordered-row { padding: 24px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary); box-shadow: none; }
+
+/* Service, security, mail, backup, account and container component families. */
+html.cp-evergreen #main-content :is(.service-card, .container-card, .package-card, .backup-card, .destination-card, .feature-card, .function-card, .config-item, .rule-card, .plugin-card, .application-card, .metric-card) {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    border-radius: 6px;
+    box-shadow: none;
+    padding: 22px;
+}
+html.cp-evergreen #main-content :is(.service-card, .container-card, .package-card, .backup-card, .destination-card, .feature-card, .function-card, .plugin-card, .application-card):hover { box-shadow: var(--cp-shadow); }
+html.cp-evergreen #main-content .service-card.running { border-top-color: var(--success-color); }
+html.cp-evergreen #main-content .service-card.stopped { border-top-color: var(--danger-color); }
+html.cp-evergreen #main-content .service-icon { width: 57px; height: 57px; background: var(--bg-muted); padding: 10px; border-radius: 6px; margin-bottom: 16px; }
+html.cp-evergreen #main-content .service-name { font-size: 17px; }
+html.cp-evergreen #main-content :is(.services-grid, .backup-grid, .features-grid, .config-grid, .applications-grid) { gap: 16px; }
+html.cp-evergreen #main-content :is(.info-card-icon, .config-card-icon, .feature-icon, .function-icon, .plugin-icon, .package-icon, .form-section-icon, .selector-icon) { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 5px; box-shadow: none; }
+html.cp-evergreen #main-content :is(.status-title, .settings-title, .rules-title, .selector-title) { font-size: 14px; font-weight: 600; color: var(--text-heading); }
+html.cp-evergreen #main-content :is(.status-body, .rules-body, .settings-body, .panel-body) { border-color: var(--border-color); }
+html.cp-evergreen #main-content :is(.nav-tabs, .tabs-nav, .tab-nav, .tabs-header) { background: var(--bg-secondary); border-color: var(--border-color); border-radius: 5px 5px 0 0; }
+html.cp-evergreen #main-content .nav-tabs > li > a { color: var(--text-secondary); font-size: 12px; padding: 12px 16px; border-radius: 4px 4px 0 0; }
+html.cp-evergreen #main-content .nav-tabs > li.active > a,
+html.cp-evergreen #main-content .nav-tabs > li.active > a:hover,
+html.cp-evergreen #main-content .nav-tabs > li.active > a:focus { background: var(--bg-secondary); color: var(--accent-color); border-color: var(--border-color); border-bottom-color: var(--bg-secondary); font-weight: 600; }
+html.cp-evergreen #main-content .nav-pills > li.active > a { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content :is(.tab-item, .tab-btn, .tab-button, .modern-tab, .record-tab, .nav-button, .view-btn) { border-radius: 4px; color: var(--text-secondary); box-shadow: none; }
+html.cp-evergreen #main-content :is(.tab-item, .tab-btn, .tab-button, .modern-tab, .record-tab, .nav-button, .view-btn).active { background: var(--cp-selection); color: var(--cp-selection-text); border-color: var(--cp-border-strong); box-shadow: none; }
+html.cp-evergreen #main-content :is(.tab-item, .modern-tab, .record-tab).active::after { background: var(--accent-color); }
+html.cp-evergreen #main-content :is(.tab-item, .tab-btn, .tab-button, .modern-tab, .record-tab, .nav-button, .view-btn):hover { color: var(--accent-color); background: var(--bg-hover); }
+html.cp-evergreen #main-content :is(.install-icon, .progress-icon, .detail-icon, .section-icon, .image-icon, .email-icon, .port-info-icon, .info-icon, .destination-icon, .nameserver-icon, .preview-server-icon, .action-icon) { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 5px; box-shadow: none; }
+html.cp-evergreen #main-content :is(.domain-badge, .directory-badge, .destination-badge, .file-badge, .plugin-type, .frequency-badge, .image-badge, .option-badge, .php-badge, .info-badge, .records-count, .badge-primary, .package-name-preview, .name-preview) { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; border-color: var(--cp-border-strong); }
+html.cp-evergreen #main-content :is(.loading-spinner, .spinner-border) { border-top-color: var(--accent-color); }
+html.cp-evergreen #main-content :is(.progress-bar-fill, .docker-progress-bar, .progress-fill) { background: var(--accent-color); }
+html.cp-evergreen #main-content :is(.log-debug, .log-type) { color: var(--info-soft-text); }
+html.cp-evergreen #main-content .config-table th { background: var(--table-head-bg); color: var(--table-head-text); border-color: var(--border-color); }
+html.cp-evergreen #main-content :is(.ssl-docs-link, .learn-more-link, .test-connection-link, .generate-link, .install-link, .test-email-link) { color: var(--accent-color); }
+html.cp-evergreen #main-content :is(.ssl-docs-link, .learn-more-link, .test-connection-link):hover { color: var(--accent-hover); background: var(--bg-hover); }
+html.cp-evergreen #main-content .record-type-tabs li.active a { color: var(--accent-color); }
+html.cp-evergreen #main-content .record-type-tabs li.active::after { background: var(--accent-color); }
+html.cp-evergreen #main-content input:checked + .toggle-slider { background: var(--accent-color); }
+
+/* Firewall controls and rule entry are operations, with their own semantics. */
+html.cp-evergreen #main-content .status-content { padding: 22px; gap: 12px; }
+html.cp-evergreen #main-content .control-btn { min-height: 42px; padding: 10px 17px; border: 1px solid var(--cp-border-strong); border-radius: 5px; font-size: 13px; line-height: 1.5; box-shadow: none; }
+html.cp-evergreen #main-content .btn-start,
+html.cp-evergreen #main-content .btn-start:hover { background: var(--success-soft-bg); color: var(--success-soft-text); border-color: var(--success-border); box-shadow: none; }
+html.cp-evergreen #main-content .btn-stop,
+html.cp-evergreen #main-content .btn-stop:hover { background: var(--warn-soft-bg); color: var(--warn-soft-text); border-color: var(--warning-border); box-shadow: none; }
+html.cp-evergreen #main-content .btn-reload,
+html.cp-evergreen #main-content .btn-reload:hover { background: var(--bg-secondary); color: var(--accent-color); border-color: var(--cp-border-strong); box-shadow: none; }
+html.cp-evergreen #main-content :is(.add-rule-section, .rules-table-section) { padding: 24px; background: var(--bg-secondary); border-color: var(--border-color); }
+html.cp-evergreen #main-content .add-rule-section { background: var(--bg-muted); }
+html.cp-evergreen #main-content .rule-form { gap: 17px; }
+html.cp-evergreen #main-content .rule-form .form-group { margin-bottom: 0; min-width: 0; }
+html.cp-evergreen #main-content .btn-add,
+html.cp-evergreen #main-content .btn-add:hover { min-height: 44px; padding: 10px 16px; background: var(--cp-action); color: var(--cp-action-text); border: 1px solid var(--cp-action); border-radius: 5px; font-size: 13px; font-weight: 600; line-height: 1.5; box-shadow: none; }
+html.cp-evergreen #main-content .rules-table .port-number { color: var(--text-primary); font-size: 12px; }
+html.cp-evergreen #main-content .rules-table .ip-address { color: var(--text-primary); background: var(--bg-muted); border-radius: 4px; }
+html.cp-evergreen #main-content .status-badge.status-active { background: var(--success-soft-bg); color: var(--success-soft-text); }
+html.cp-evergreen #main-content .status-badge.status-inactive { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+
+/* DNS uses its own vocabulary rather than Bootstrap form cards. */
+html.cp-evergreen #main-content .dns-manager { padding: 0; background: transparent; }
+html.cp-evergreen #main-content .dns-container { max-width: 1440px; padding: 0; }
+html.cp-evergreen #main-content .dns-header { margin-bottom: 25px; gap: 16px; }
+html.cp-evergreen #main-content .dns-title { color: var(--text-heading); font-size: 30px; font-weight: 550; letter-spacing: -1.05px; }
+html.cp-evergreen #main-content .dns-subtitle { color: var(--text-secondary); font-size: 13px; }
+html.cp-evergreen #main-content .dns-content-card { border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); box-shadow: none; }
+html.cp-evergreen #main-content .domain-selector-section { padding: 24px; background: var(--bg-muted); border-color: var(--border-color); }
+html.cp-evergreen #main-content .domain-selector-wrapper { max-width: 660px; margin: 0; }
+html.cp-evergreen #main-content .domain-selector-label { font-size: 12px; line-height: 1.5; font-weight: 600; color: var(--text-primary); letter-spacing: 0; text-transform: none; margin-bottom: 7px; }
+html.cp-evergreen #main-content .record-type-tabs { background: var(--bg-secondary); border-color: var(--border-color); padding: 0 12px; }
+html.cp-evergreen #main-content .record-type-tabs a { padding: 15px 16px; font-size: 12px; }
+html.cp-evergreen #main-content .record-type-badge { background: var(--bg-muted); color: var(--text-secondary); border-radius: 4px; }
+html.cp-evergreen #main-content .record-type-tabs li.active .record-type-badge { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content :is(.add-record-form, .records-table-section) { padding: 24px; background: var(--bg-secondary); border-color: var(--border-color); }
+html.cp-evergreen #main-content .record-form-grid { gap: 18px; }
+html.cp-evergreen #main-content .record-form-grid .form-field { margin-bottom: 0; min-width: 0; }
+html.cp-evergreen #main-content .records-table-title { color: var(--text-heading); font-size: 15px; font-weight: 600; }
+html.cp-evergreen #main-content .modern-dns-table { background: var(--bg-secondary); border-color: var(--border-color); font-size: 13px; }
+html.cp-evergreen #main-content .modern-dns-table :is(thead, th) { background: var(--table-head-bg); color: var(--table-head-text); font-size: 10px; font-weight: 600; padding: 12px 16px; letter-spacing: .5px; border-color: var(--border-color); }
+html.cp-evergreen #main-content .modern-dns-table td { padding: 14px 16px; color: var(--text-primary); border-color: var(--border-color); }
+html.cp-evergreen #main-content .modern-dns-table tbody tr:hover { background: var(--bg-hover); }
+html.cp-evergreen #main-content .modern-dns-table .type-badge { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; }
+html.cp-evergreen #main-content .modern-dns-table .editable-input { min-width: 72px; min-height: 38px; padding: 7px 9px; font-size: 13px; }
+html.cp-evergreen #main-content .dns-alert-success { background: var(--success-soft-bg); color: var(--success-soft-text); border-color: var(--success-border); }
+html.cp-evergreen #main-content .dns-alert-error { background: var(--danger-soft-bg); color: var(--danger-soft-text); border-color: var(--danger-border); }
+
+/* Modals and floating tools: visual properties only, never visibility. */
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal-content { background: var(--bg-secondary) !important; color: var(--text-primary) !important; border: 1px solid var(--cp-border-strong); border-radius: 8px; box-shadow: var(--cp-shadow-popover); }
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) :is(.modal-header, .modal-footer) { background: var(--bg-secondary) !important; color: var(--text-primary) !important; border-color: var(--border-color) !important; border-radius: 0; padding: 18px 22px; }
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal-header { border-radius: 7px 7px 0 0; }
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal-footer { border-radius: 0 0 7px 7px; }
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal-body { padding: 22px; }
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal-title { color: var(--text-heading); font-size: 17px; font-weight: 550; letter-spacing: -.4px; }
+html.cp-evergreen:not(.cp-auth):not(.cp-filemanager):not(.cp-fileeditor) .modal .close { color: var(--text-secondary); background: transparent; text-shadow: none; }
+/* The optional modern file manager supplies inline radii and field padding.
+   Override those presentation values without changing dialog visibility. */
+html.cp-evergreen #main-content .fm-container .modal-content { border-radius: 6px !important; }
+html.cp-evergreen #main-content .fm-container .modal-header { background: var(--bg-muted) !important; border-radius: 5px 5px 0 0 !important; }
+html.cp-evergreen #main-content .fm-container .modal-footer { border-top: 1px solid var(--border-color) !important; border-radius: 0 0 5px 5px !important; }
+html.cp-evergreen #main-content .fm-container .modal .form-control { padding: 10px 12px !important; border-radius: 5px !important; }
+html.cp-evergreen :is(.cp-notif-panel, .cp-cmdk) { border: 1px solid var(--cp-border-strong); border-radius: 8px; background: var(--bg-secondary); box-shadow: var(--cp-shadow-popover); }
+html.cp-evergreen .cp-notif-panel { top: 46px; }
+html.cp-evergreen .cp-notif-title { font-size: 12px; font-weight: 600; }
+html.cp-evergreen .cp-notif-desc { font-size: 11px; }
+html.cp-evergreen .cp-notif-ic { border-radius: 4px; width: 31px; height: 31px; font-size: 13px; }
+html.cp-evergreen .cp-notif-ic.ic-accent { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen .cp-notif-action { color: var(--accent-color); background: var(--bg-muted); font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; }
+html.cp-evergreen .cp-notif-action:hover { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen .cp-cmdk-search { padding: 19px 22px; }
+html.cp-evergreen .cp-cmdk-search input { font-size: 14px; }
+html.cp-evergreen .cp-cmdk-item { font-size: 12px; padding: 10px 13px; border-radius: 5px; }
+html.cp-evergreen .cp-cmdk-item .cp-cmdk-ic { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; }
+html.cp-evergreen .cp-cmdk-item.active { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen .cp-cmdk-group-label { font-size: 9px; letter-spacing: 1px; }
+html.cp-evergreen .ui-pnotify-container { border-radius: 6px; box-shadow: var(--cp-shadow-popover); font-family: inherit; }
+
+/* Responsive layouts follow the existing 768px sidebar behavior. */
+@media (min-width: 1101px) {
+    html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-section:not(.ng-hide):not([hidden]) {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px 20px;
+        margin-bottom: 27px;
+    }
+    html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-section > .form-section-title { grid-column: 1 / -1; margin-bottom: 0; }
+    html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-section > .form-group { margin-bottom: 0; }
+    html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-group:has(input[name="password"]),
+    html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-group:has(.switch-group) { grid-column: 1 / -1; }
+}
+@media (min-width: 1600px) {
+    html.cp-evergreen #main-content .wp-wrapper[ng-controller="createWordpress"] .form-section:has(select[ng-model="autoupdates"]) { grid-template-columns: 1.5fr 1fr 1fr; }
+}
+@media (min-width: 1700px) {
+    html.cp-evergreen #main-content { padding-right: 48px; padding-left: 48px; }
+    html.cp-evergreen #header { padding-right: 48px; padding-left: 48px; }
+}
+@media (min-width: 769px) and (max-width: 1120px) {
+    html.cp-evergreen:root { --cp-rail-width: 220px; }
+    html.cp-evergreen #header { padding-right: 23px; padding-left: 23px; }
+    html.cp-evergreen #main-content { padding-right: 23px; padding-left: 23px; }
+    html.cp-evergreen #sidebar .sidebar-logo { padding-right: 19px; padding-left: 19px; }
+    html.cp-evergreen .cp-brand-wordmark { width: 175px; }
+    html.cp-evergreen #main-content .content-row { grid-template-columns: minmax(0, 1fr); }
+    html.cp-evergreen #main-content .cp-quick-actions { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    html.cp-evergreen #main-content .stats-grid { gap: 10px; }
+    html.cp-evergreen #main-content .stat-card { padding: 16px; }
+    html.cp-evergreen #main-content .stat-card-header { flex-wrap: wrap; gap: 8px; }
+}
+@media (max-width: 768px) {
+    html.cp-evergreen:root { --cp-rail-width: 248px; --cp-header-height: 60px; }
+    html.cp-evergreen #sidebar { width: var(--cp-rail-width); top: 60px; height: calc(100vh - 60px); height: calc(100dvh - 60px); }
+    html.cp-evergreen #header { left: 0; padding: 0 15px; gap: 12px; }
+    html.cp-evergreen #header-right { gap: 6px; }
+    html.cp-evergreen #header-right .social-links { gap: 0; margin-right: 0; }
+    html.cp-evergreen #header-right .social-links a { width: 22px; font-size: 11px; }
+    html.cp-evergreen #header :is(.theme-toggle, .cp-notif-btn, #mobile-menu-toggle) { width: 40px; height: 40px; font-size: 13px; }
+    html.cp-evergreen .cp-header-eyebrow { font-size: 7px; letter-spacing: .8px; }
+    html.cp-evergreen .cp-header-title { font-size: 10px; }
+    html.cp-evergreen #main-content { margin-left: 0; padding: 83px 18px 34px; }
+    html.cp-evergreen #main-content .cp-breadcrumb { margin-bottom: 19px; font-size: 10px; }
+    html.cp-evergreen #main-content :is(.page-title, .page-header h1, .title-hero, .dashboard-greeting .section-title, .domain-name, .wp-page-header h2) { font-size: 26px; letter-spacing: -.75px; }
+    html.cp-evergreen #main-content .page-header { padding-bottom: 20px; margin-bottom: 22px; }
+    html.cp-evergreen #main-content .content-row { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    html.cp-evergreen #main-content :is(.content-card, .cyber-card, .wp-section, .content-section, .info-card, .form-card, .config-card, .section-card, .overview-section, .insights-section, .activity-section, .card-body, .wp-tab-content) { padding: 19px; }
+    html.cp-evergreen #main-content :is(.stats-grid, .services-grid) { grid-template-columns: minmax(0, 1fr); }
+    html.cp-evergreen #main-content .insights-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    html.cp-evergreen #main-content .cp-quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    html.cp-evergreen #main-content .cp-qa-card { padding: 13px 10px; }
+    html.cp-evergreen #main-content .cp-qa-title { font-size: 10px; }
+    html.cp-evergreen #main-content .cp-qa-sub { font-size: 9px; }
+    html.cp-evergreen #main-content .stat-card { padding: 18px; }
+    html.cp-evergreen #main-content .stat-card-header { margin-bottom: 14px; }
+    html.cp-evergreen #main-content .cp-tile-grid { grid-template-columns: minmax(0, 1fr); }
+    html.cp-evergreen #main-content .cp-tabs { gap: 2px; }
+    html.cp-evergreen #main-content .cp-tab { padding: 11px 9px; font-size: 10px; }
+    html.cp-evergreen #main-content .cyberpanel-website-page .domain-hero,
+    html.cp-evergreen #main-content :is(.wp-page-header, .cp-site-head, .cp-build-card, .cp-bs-hero) { padding: 21px; }
+    html.cp-evergreen #main-content .wp-nav-tabs { padding: 0 9px; }
+    html.cp-evergreen #main-content .wp-nav-tabs li a { padding: 12px 10px; font-size: 10px; }
+    html.cp-evergreen #main-content .website-row { padding: 17px; }
+    html.cp-evergreen #main-content .btn-sm { min-height: 36px; padding: 8px 12px; }
+    html.cp-evergreen #main-content .website-row :is(.row-left, .row-actions, .website-actions) { width: 100%; max-width: 100%; }
+    html.cp-evergreen #main-content .website-row :is(.row-actions, .website-actions) { justify-content: flex-start; }
+    html.cp-evergreen #main-content .website-row .row-left { flex-wrap: wrap; }
+    html.cp-evergreen #main-content :is(.domain-selector-section, .add-record-form, .records-table-section, .add-rule-section, .rules-table-section) { padding: 18px; }
+    html.cp-evergreen #main-content .dns-title { font-size: 26px; letter-spacing: -.75px; }
+    html.cp-evergreen #main-content .rules-table-section { overflow-x: auto; }
+    html.cp-evergreen #main-content :is(.website-details, .wp-site-content) { padding: 17px; }
+    html.cp-evergreen #main-content .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    html.cp-evergreen .cp-notif-panel { position: fixed; top: 66px; right: 12px; width: min(360px, calc(100vw - 24px)); }
+}
+@media (max-width: 480px) {
+    html.cp-evergreen #header { flex-wrap: wrap; height: 100px; padding-top: 6px; padding-bottom: 6px; gap: 4px 10px; }
+    html.cp-evergreen #header-right { width: 100%; justify-content: flex-end; gap: 7px; }
+    html.cp-evergreen #header-right .social-links { margin-right: auto; }
+    html.cp-evergreen #header-right .logout-btn { min-height: 40px; padding: 8px 9px; font-size: 11px; }
+    html.cp-evergreen #header-right .social-links a { width: 30px; height: 40px; font-size: 13px; }
+    html.cp-evergreen #header :is(.theme-toggle, .cp-notif-btn) { height: 40px; }
+    html.cp-evergreen #main-content { padding-top: 122px; }
+    html.cp-evergreen #sidebar { top: 100px; height: calc(100vh - 100px); height: calc(100dvh - 100px); }
+    html.cp-evergreen .cp-notif-panel { top: 106px; }
+    html.cp-evergreen #main-content .cp-qa-card { gap: 8px; }
+    html.cp-evergreen #main-content .cp-qa-ic { width: 27px; height: 30px; font-size: 13px; }
+    html.cp-evergreen #main-content :is(.form-row, .form-grid) { grid-template-columns: minmax(0, 1fr); }
+    html.cp-evergreen #main-content .page-header :is(.icon, .firewall-icon, .security-icon, .backup-icon, .header-icon) { width: 32px; height: 32px; min-width: 32px; font-size: 15px; }
+}
+
+
+/* Final audit: consistent control fit in older modules and narrow form rows. */
+html.cp-evergreen #main-content .btn.btn-border.btn-link { min-height: 40px; height: auto; padding: 9px 12px; line-height: 20px; }
+html.cp-evergreen #main-content :is(.activity-tab, .refresh-btn, .terminal-btn) { min-height: 40px; height: auto; padding: 9px 12px; line-height: 20px; }
+html.cp-evergreen #main-content :is(.btn-delete, .delete-btn) { min-height: 36px; height: auto; padding: 8px 12px; line-height: 18px; }
+html.cp-evergreen #main-content :is(.dismiss-btn, .announcement-dismiss, .promo-dismiss, .cp-build-x),
+html.cp-evergreen #main-content button[onclick="dismissCyberMailBanner()"] { min-width: 40px; min-height: 40px; padding: 8px !important; line-height: 24px !important; }
+html.cp-evergreen #main-content :is(select.custom-select, input[ng-model="backupRetention"]) { width: 100%; max-width: 100%; min-height: 44px; height: auto; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-primary); background: var(--bg-secondary); font-size: 14px; line-height: 1.55; }
+html.cp-evergreen #main-content input[ng-model="backupRetention"] { max-width: 240px; }
+html.cp-evergreen #main-content .dynamic-header { flex-wrap: wrap; gap: 12px; }
+html.cp-evergreen #main-content .dynamic-header > div { min-width: 0; max-width: 100%; flex-wrap: wrap; gap: 8px; }
+html.cp-evergreen #main-content .php-selector { padding: 20px; gap: 16px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .php-selector .selector-content { min-width: 0; flex-wrap: wrap; gap: 8px 16px; }
+html.cp-evergreen #main-content .php-selector .selector-content .select-control { min-width: 0; width: 200px; max-width: 100%; }
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content .php-selector { flex-wrap: wrap; padding: 16px; }
+    html.cp-evergreen #main-content .php-selector .selector-content { flex-basis: 100%; }
+    html.cp-evergreen #main-content .php-selector .selector-content .select-control { width: 100%; }
+}
+
+/* Optional modern and integrated file browsers share the panel's visual system.
+ * Their Angular visibility, selection, tree expansion, and modal states remain
+ * controlled by the existing scripts and component styles. */
+html.cp-evergreen #main-content .fm-container { padding: 0; background: transparent; min-height: 0; }
+html.cp-evergreen #main-content :is(.fm-container, .file-manager-wrapper) { color: var(--text-primary); }
+html.cp-evergreen #main-content :is(.fm-toolbar, .fm-path, .fm-sidebar, .fm-content, .file-manager-wrapper) { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: none; }
+html.cp-evergreen #main-content .fm-toolbar { padding: 16px; margin-bottom: 20px; gap: 12px 20px; overflow: visible; }
+html.cp-evergreen #main-content .fm-toolbar::before { background: none; }
+html.cp-evergreen #main-content .fm-toolbar-group { gap: 8px; min-width: 0; flex-wrap: wrap; }
+html.cp-evergreen #main-content .fm-toolbar-group::after { background: var(--border-color); }
+html.cp-evergreen #main-content .fm-btn { min-height: 40px; padding: 9px 12px; font-size: 13px; line-height: 20px; font-weight: 500; border-radius: 4px; background: var(--bg-muted) !important; color: var(--text-primary); border-color: var(--border-color); box-shadow: none; }
+html.cp-evergreen #main-content .fm-btn::before { background: transparent; }
+html.cp-evergreen #main-content .fm-btn:hover:not(:disabled) { background: var(--bg-hover) !important; color: var(--accent-color); border-color: var(--cp-border-strong); box-shadow: none; }
+html.cp-evergreen #main-content .fm-btn.primary { background: var(--cp-action) !important; color: #061711; border-color: var(--cp-action); }
+html.cp-evergreen #main-content .fm-btn.primary:hover:not(:disabled) { background: var(--cp-action-hover) !important; color: #061711; border-color: var(--cp-action-hover); }
+html.cp-evergreen #main-content .fm-btn.danger { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text); border-color: var(--danger-border); }
+html.cp-evergreen #main-content .fm-btn.danger:hover:not(:disabled) { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text); border-color: var(--danger-color); }
+html.cp-evergreen #main-content .fm-path { padding: 14px 18px; margin-bottom: 20px; }
+html.cp-evergreen #main-content .fm-path-item { color: var(--text-secondary); }
+html.cp-evergreen #main-content .fm-path-item:hover { color: var(--accent-color); }
+html.cp-evergreen #main-content .fm-path-separator { color: var(--text-muted); }
+html.cp-evergreen #main-content .fm-main { gap: 20px; min-height: 420px; }
+html.cp-evergreen #main-content .fm-sidebar { width: 240px; padding: 18px; }
+html.cp-evergreen #main-content .fm-sidebar.collapsed { width: 60px; padding: 10px; }
+html.cp-evergreen #main-content .fm-tree-header { padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); }
+html.cp-evergreen #main-content .fm-tree-title { color: var(--text-heading); font-size: 15px; font-weight: 600; }
+html.cp-evergreen #main-content .fm-tree-link { padding: 10px; min-height: 40px; border-radius: 4px; color: var(--text-secondary); }
+html.cp-evergreen #main-content .fm-tree-link:is(:hover, .active) { background: var(--bg-muted); color: var(--accent-color); }
+html.cp-evergreen #main-content .fm-content { min-width: 0; }
+html.cp-evergreen #main-content .fm-content-header { padding: 14px 16px; background: var(--bg-secondary); border-color: var(--border-color); flex-wrap: wrap; gap: 12px; }
+html.cp-evergreen #main-content .fm-view-toggle { padding: 3px; border-radius: 5px; background: var(--bg-muted); border-color: var(--border-color); }
+html.cp-evergreen #main-content .fm-view-btn { min-height: 36px; padding: 6px 12px; border-radius: 3px; color: var(--text-secondary); }
+html.cp-evergreen #main-content .fm-view-btn:hover:not(.active) { color: var(--accent-color); background: var(--bg-hover); }
+html.cp-evergreen #main-content .fm-view-btn.active { background: var(--bg-secondary); color: var(--accent-color); box-shadow: none; }
+html.cp-evergreen #main-content .fm-search { width: 240px; min-width: 140px; max-width: 100%; }
+html.cp-evergreen #main-content .fm-search input { min-height: 44px; font-size: 14px; line-height: 20px; padding: 10px 36px; border-radius: 4px; border-color: var(--border-color); background: var(--bg-primary); color: var(--text-primary); }
+html.cp-evergreen #main-content .fm-search input:focus { background: var(--bg-secondary); border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-shadow); }
+html.cp-evergreen #main-content .fm-search input::placeholder { color: var(--text-muted); }
+html.cp-evergreen #main-content .fm-search-icon { color: var(--text-muted); }
+html.cp-evergreen #main-content .fm-search input:focus ~ .fm-search-icon { color: var(--accent-color); }
+html.cp-evergreen #main-content .fm-grid { padding: 18px; gap: 14px; }
+html.cp-evergreen #main-content .fm-grid-item { padding: 20px 12px; border-radius: 5px; border-color: var(--border-color); background: var(--bg-secondary); min-height: 140px; }
+html.cp-evergreen #main-content .fm-grid-item:hover { background: var(--bg-primary); border-color: var(--cp-border-strong); box-shadow: 0 3px 9px #06171108; }
+html.cp-evergreen #main-content .fm-grid-item.selected { background: var(--bg-muted); border-color: var(--accent-color); box-shadow: none; }
+html.cp-evergreen #main-content :is(.fm-grid-item-icon, .fm-list-icon) { color: var(--accent-color); }
+html.cp-evergreen #main-content .fm-grid-item-name { color: var(--text-primary); width: 100%; font-weight: 500; }
+html.cp-evergreen #main-content .fm-grid-item-size { color: var(--text-secondary); font-size: 12px; }
+html.cp-evergreen #main-content :is(.fm-grid-item-checkbox, .fm-list-checkbox) { accent-color: var(--accent-color); }
+html.cp-evergreen #main-content .fm-list { min-width: 0; overflow-x: auto; }
+html.cp-evergreen #main-content :is(.fm-list-header, .fm-list-item) { grid-template-columns: 30px minmax(160px, 1fr) 100px 130px 90px; min-width: 600px; padding: 14px 18px; gap: 8px; }
+html.cp-evergreen #main-content .fm-list-header { background: var(--bg-muted); color: var(--text-secondary); font-size: 11px; }
+html.cp-evergreen #main-content .fm-list-item { border-color: var(--border-color); }
+html.cp-evergreen #main-content .fm-list-item:hover { background: var(--bg-primary); }
+html.cp-evergreen #main-content .fm-list-item.selected { background: var(--bg-muted); }
+html.cp-evergreen #main-content .fm-list-name { color: var(--text-primary); }
+html.cp-evergreen #main-content :is(.fm-list-size, .fm-list-modified, .fm-list-permissions) { color: var(--text-secondary); font-size: 13px; }
+html.cp-evergreen #main-content .fm-empty { padding: 32px 24px; }
+html.cp-evergreen #main-content .fm-empty-icon { color: var(--text-muted); }
+html.cp-evergreen #main-content .fm-empty-text { color: var(--text-primary); font-size: 17px; font-weight: 600; }
+html.cp-evergreen #main-content .fm-empty-subtext { color: var(--text-secondary); font-size: 13px; }
+html.cp-evergreen #main-content .fm-context-menu { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; box-shadow: 0 8px 24px #06171120; }
+html.cp-evergreen #main-content .fm-context-item { min-height: 40px; padding: 10px 12px; border-radius: 3px; color: var(--text-primary); font-size: 13px; }
+html.cp-evergreen #main-content .fm-context-item:hover { background: var(--bg-muted); color: var(--accent-color); }
+html.cp-evergreen #main-content .fm-context-item.danger { color: var(--danger-soft-text); }
+html.cp-evergreen #main-content .fm-context-item.danger:hover { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+html.cp-evergreen #main-content .fm-context-divider { background: var(--border-color); }
+html.cp-evergreen #main-content .fm-upload-zone { background: #123824f2; }
+html.cp-evergreen #main-content .fm-container .modal .close { color: var(--text-primary) !important; }
+html.cp-evergreen #main-content .fm-container .modal .alert { border-radius: 4px !important; }
+
+html.cp-evergreen #main-content .file-manager-wrapper { padding: 20px; }
+html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar { background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar .nav { padding: 0; margin: 0; border: 0; background: transparent; box-shadow: none; }
+html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar .nav-link { min-height: 40px; padding: 10px 12px; font-size: 13px; border-radius: 4px; color: var(--text-primary); }
+html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar .nav-link:hover { background: var(--bg-muted); color: var(--accent-color); box-shadow: none; }
+html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar a[ng-click="showUploadBox()"] { background: var(--cp-action); color: #061711; }
+html.cp-evergreen #main-content .file-manager-wrapper #deleteFile .nav-link { color: var(--danger-soft-text); }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView { width: 250px; flex-shrink: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView .content-box { border: 0; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView .card-header { background: var(--bg-muted); padding: 16px; border-color: var(--border-color); }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView .list-group-item { color: var(--text-primary); border-radius: 4px; padding: 10px; }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView .list-group-item:hover { background: var(--bg-muted); }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView .list-group-item a { color: var(--text-primary); font-size: 13px; }
+html.cp-evergreen #main-content .file-manager-wrapper #treeView .list-group-item i { color: var(--accent-color); }
+html.cp-evergreen #main-content .file-manager-wrapper .file-list-section { min-width: 0; }
+html.cp-evergreen #main-content .file-manager-wrapper .file-nav { padding: 8px; gap: 4px; flex-wrap: wrap; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .file-manager-wrapper .file-nav a { min-height: 40px; padding: 10px; font-size: 13px; color: var(--text-primary); border-radius: 4px; }
+html.cp-evergreen #main-content .file-manager-wrapper .file-nav a:hover { background: var(--bg-muted); color: var(--accent-color); }
+html.cp-evergreen #main-content .file-manager-wrapper .file-table-wrapper { min-width: 0; overflow: auto; border-color: var(--border-color); background: var(--bg-secondary); border-radius: 5px; }
+html.cp-evergreen #main-content .file-manager-wrapper .file-table-wrapper .table { min-width: 540px; }
+html.cp-evergreen #main-content .page-wrapper[ng-controller="fileManagerCtrl"] #rightClick { background: var(--bg-secondary); border-color: var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .page-wrapper[ng-controller="fileManagerCtrl"] #rightClick .list-group-item { padding: 12px 16px; border-color: var(--border-color); background: var(--bg-secondary); color: var(--text-primary); }
+html.cp-evergreen #main-content .page-wrapper[ng-controller="fileManagerCtrl"] #rightClick a { color: var(--text-primary); }
+html.cp-evergreen #main-content .page-wrapper[ng-controller="fileManagerCtrl"] #rightClick i { color: var(--accent-color); }
+html.cp-evergreen #main-content .page-wrapper[ng-controller="fileManagerCtrl"] #rightClick .list-group-item:hover { background: var(--bg-muted); }
+
+@media (max-width: 1100px) {
+    html.cp-evergreen #main-content .fm-container .fm-sidebar { width: 210px; padding: 14px; }
+    html.cp-evergreen #main-content .fm-container .fm-sidebar.collapsed { width: 60px; padding: 10px; }
+    html.cp-evergreen #main-content .fm-container .fm-toolbar { gap: 12px; }
+    html.cp-evergreen #main-content .fm-container .fm-toolbar-group::after { background: none; }
+    html.cp-evergreen #main-content .file-manager-wrapper { padding: 16px; }
+    html.cp-evergreen #main-content .file-manager-wrapper #treeView { width: 210px; }
+}
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content .fm-container .fm-toolbar { padding: 12px; }
+    html.cp-evergreen #main-content .fm-main { height: auto; min-height: 0; }
+    html.cp-evergreen #main-content .fm-content { min-height: 460px; }
+    html.cp-evergreen #main-content .fm-content-header { padding: 12px; }
+    html.cp-evergreen #main-content .fm-container .fm-sidebar { width: 100%; }
+    html.cp-evergreen #main-content .fm-search { width: 100%; }
+    html.cp-evergreen #main-content .fm-grid { padding: 12px; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 12px; }
+    html.cp-evergreen #main-content :is(.fm-list-header, .fm-list-item) { grid-template-columns: 26px minmax(135px, 1fr) 85px; min-width: 0; padding: 12px; }
+    html.cp-evergreen #main-content .file-manager-wrapper { padding: 12px; }
+    html.cp-evergreen #main-content .file-manager-wrapper #treeView { width: 100%; }
+}
+
+
+/* Keep long security instructions and legacy card grids inside the viewport. */
+html.cp-evergreen #main-content :is(.info-alert-content, .alert-content) code { overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+html.cp-evergreen #main-content .content-card:has(> table) { overflow-x: auto; }
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content [ng-controller="securityrule"] .tagcontainer { flex-wrap: wrap; gap: 20px; }
+    html.cp-evergreen #main-content [ng-controller="securityrule"] .tagcontainer > div { flex: 1 1 100%; min-width: 0; max-width: 100%; }
+    html.cp-evergreen #main-content [ng-controller="securityrule"] .tags-container { width: 100%; min-width: 0; }
+    html.cp-evergreen #main-content [ng-controller="securityrule"] .tags-container .search-input { width: 100%; max-width: 100%; }
+    html.cp-evergreen #main-content [ng-controller="launchChild"] .panel-body > .row > :is(.col-md-3, .col-md-4) { width: 50%; max-width: 50%; flex-basis: 50%; min-width: 0; margin-bottom: 16px; padding: 0 8px; }
+    html.cp-evergreen #main-content [ng-controller="launchChild"] .panel-body > .row > :is(.col-md-3, .col-md-4) > a { flex-direction: column; justify-content: center; gap: 8px; padding: 14px; min-height: 108px; }
+    html.cp-evergreen #main-content [ng-controller="launchChild"] .panel-body > .row > :is(.col-md-3, .col-md-4) > a .h4 { margin: 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; text-align: center; }
+}
+html.cp-evergreen #main-content .alert :is(h1, h2, h3, h4, p) { overflow-wrap: anywhere; }
+html.cp-evergreen #main-content .selector:has(> select.custom-select) { width: 100% !important; max-width: 240px; }
+
+/* Webmail has its own body-loaded stylesheet; keep its workspace on the same
+   spacing scale without changing message, compose or account visibility. */
+html.cp-evergreen #main-content .webmail-container { margin: 0; height: calc(100vh - 142px); height: calc(100dvh - 142px); min-height: 660px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); }
+html.cp-evergreen #main-content .webmail-container :is(.wm-layout, .wm-detail-pane, .wm-message-list, .wm-field, .wm-account-switch) { min-width: 0; }
+html.cp-evergreen #main-content .webmail-container #cybermailBanner > div { padding: 14px 18px !important; gap: 12px !important; flex-wrap: wrap; background: var(--cp-selection) !important; color: var(--cp-selection-text); border-bottom: 1px solid var(--border-color); }
+html.cp-evergreen #main-content .webmail-container #cybermailBanner > div > div:nth-child(2) { flex-basis: 260px !important; color: var(--text-primary) !important; line-height: 1.6; }
+html.cp-evergreen #main-content .webmail-container #cybermailBanner :is(span, strong, a) { color: var(--text-primary) !important; }
+html.cp-evergreen #main-content .webmail-container #cybermailBanner > div > a { display: inline-flex; align-items: center; min-height: 38px; padding: 9px 14px !important; border: 1px solid var(--cp-border-strong); border-radius: 4px !important; background: var(--bg-secondary) !important; }
+html.cp-evergreen #main-content .webmail-container #cybermailBanner button { min-width: 36px; min-height: 36px; color: var(--text-secondary) !important; }
+html.cp-evergreen #main-content .webmail-container .wm-account-bar { padding: 14px 18px; gap: 12px; flex-wrap: wrap; }
+html.cp-evergreen #main-content .webmail-container .wm-account-current { font-size: 13px; overflow-wrap: anywhere; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-account-select, .wm-search-input, .wm-move-dropdown select) { min-height: 44px; min-width: 0; max-width: 100%; padding: 10px 12px; border: 1px solid var(--cp-border-strong); border-radius: 5px; background: var(--bg-secondary); color: var(--text-primary); font: inherit; font-size: 14px; line-height: 1.5; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-account-select, .wm-search-input):focus { border-color: var(--accent-color); outline: 2px solid var(--accent-shadow); outline-offset: 2px; }
+html.cp-evergreen #main-content .webmail-container .wm-sidebar { width: 182px; min-width: 182px; padding: 16px 0; background: var(--bg-muted); }
+html.cp-evergreen #main-content .webmail-container .wm-compose-btn { margin: 0 12px 16px; min-height: 44px; border-radius: 4px; }
+html.cp-evergreen #main-content .webmail-container .wm-compose-btn:hover { transform: none; box-shadow: none; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-folder-item, .wm-nav-link) { min-height: 42px; margin: 2px 8px; padding: 10px 12px; border-radius: 4px; font-size: 13px; gap: 9px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-folder-item, .wm-nav-link).active { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content .webmail-container .wm-badge { background: var(--cp-selection); color: var(--cp-selection-text); border-radius: 4px; padding: 2px 6px; }
+html.cp-evergreen #main-content .webmail-container .wm-message-list { width: 340px; min-width: 280px; }
+html.cp-evergreen #main-content .webmail-container .wm-search-bar { padding: 14px 12px; gap: 8px; }
+html.cp-evergreen #main-content .webmail-container .wm-search-btn { min-width: 44px; min-height: 44px; border-radius: 5px; padding: 10px; background: var(--accent-color); color: var(--text-on-accent, #fff); }
+html.cp-evergreen #main-content .webmail-container .wm-bulk-actions { padding: 8px 10px; gap: 4px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-action-btn, .wm-star-btn, .wm-editor-toolbar button) { min-width: 36px; min-height: 36px; padding: 8px; border-radius: 4px; line-height: 20px; }
+html.cp-evergreen #main-content .webmail-container .wm-checkbox-label { min-width: 24px; min-height: 36px; justify-content: center; }
+html.cp-evergreen #main-content .webmail-container .wm-msg-row { display: grid; grid-template-columns: 24px 36px minmax(0, 1fr) auto; gap: 1px 7px; padding: 12px; }
+html.cp-evergreen #main-content .webmail-container .wm-msg-row > :is(.wm-checkbox-label, .wm-star-btn) { grid-row: 1 / 3; }
+html.cp-evergreen #main-content .webmail-container .wm-msg-from { width: auto; min-width: 0; grid-column: 3; grid-row: 1; }
+html.cp-evergreen #main-content .webmail-container .wm-msg-subject { grid-column: 3 / -1; grid-row: 2; min-width: 0; line-height: 1.6; }
+html.cp-evergreen #main-content .webmail-container .wm-msg-date { grid-column: 4; grid-row: 1; }
+html.cp-evergreen #main-content .webmail-container .wm-msg-row.selected { background: var(--cp-selection); }
+html.cp-evergreen #main-content .webmail-container .wm-unstarred { color: var(--text-muted); }
+html.cp-evergreen #main-content .webmail-container .wm-empty-detail { opacity: 1; min-height: 240px; color: var(--text-secondary); padding: 24px; text-align: center; }
+html.cp-evergreen #main-content .webmail-container .wm-empty-detail i { opacity: .5; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-read-toolbar, .wm-editor-toolbar, .wm-compose-actions, .wm-form-actions, .wm-section-header) { flex-wrap: wrap; gap: 8px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-section-header, .wm-read-toolbar) .btn { min-height: 40px; padding: 9px 14px; font-size: 12px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-compose-view, .wm-contacts-view, .wm-rules-view, .wm-settings-view, .wm-read-header, .wm-read-body) { padding: 24px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-contact-form, .wm-rule-form, .wm-settings-form) { padding: 22px; margin-top: 22px; border: 1px solid var(--border-color); border-radius: 6px; }
+html.cp-evergreen #main-content .webmail-container .wm-field { margin-bottom: 20px; }
+html.cp-evergreen #main-content .webmail-container .wm-field label { margin-bottom: 7px; color: var(--text-primary); font-size: 12px; font-weight: 600; line-height: 1.5; }
+html.cp-evergreen #main-content .webmail-container .wm-field-row { gap: 20px; }
+html.cp-evergreen #main-content .webmail-container .wm-field .form-control { width: 100%; max-width: 100%; }
+html.cp-evergreen #main-content .webmail-container .wm-editor-toolbar { border-radius: 5px 5px 0 0; padding: 8px; }
+html.cp-evergreen #main-content .webmail-container .wm-editor { background: var(--bg-secondary); color: var(--text-primary); border-radius: 0 0 5px 5px; padding: 16px; }
+html.cp-evergreen #main-content .webmail-container .wm-editor:focus { outline: 2px solid var(--accent-shadow); outline-offset: 1px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-attach-btn, .wm-attachment a, .wm-toggle-link) { min-height: 38px; display: inline-flex; align-items: center; border-radius: 4px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-contact-item, .wm-rule-item) { padding: 14px 16px; gap: 12px; border: 1px solid var(--border-color); border-radius: 5px; }
+html.cp-evergreen #main-content .webmail-container :is(.wm-contact-email, .wm-rule-desc, .wm-read-meta, .wm-read-subject) { overflow-wrap: anywhere; }
+@media (max-width: 1120px) {
+    html.cp-evergreen #main-content .webmail-container { height: auto; min-height: 660px; }
+    html.cp-evergreen #main-content .webmail-container .wm-layout { flex-wrap: wrap; }
+    html.cp-evergreen #main-content .webmail-container .wm-sidebar { width: 100%; min-width: 0; flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; padding: 12px; border-right: 0; border-bottom: 1px solid var(--border-color); }
+    html.cp-evergreen #main-content .webmail-container .wm-compose-btn { margin: 0; }
+    html.cp-evergreen #main-content .webmail-container .wm-folder-list { display: flex; gap: 4px; flex: 1 1 220px; overflow-x: auto; max-width: 100%; }
+    html.cp-evergreen #main-content .webmail-container .wm-folder-item { flex-shrink: 0; margin: 0; white-space: nowrap; }
+    html.cp-evergreen #main-content .webmail-container .wm-sidebar-divider { display: none; }
+    html.cp-evergreen #main-content .webmail-container .wm-sidebar-nav { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; }
+    html.cp-evergreen #main-content .webmail-container .wm-nav-link { margin: 0; }
+    html.cp-evergreen #main-content .webmail-container .wm-message-list { width: 40%; min-width: 260px; flex: 1 1 40%; max-height: 540px; }
+    html.cp-evergreen #main-content .webmail-container .wm-detail-pane { flex: 1 1 50%; min-width: 260px; }
+}
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content .webmail-container { min-height: 0; }
+    html.cp-evergreen #main-content .webmail-container .wm-layout { flex-direction: column; }
+    html.cp-evergreen #main-content .webmail-container :is(.wm-message-list, .wm-detail-pane) { width: 100%; min-width: 0; flex: 0 1 auto; }
+    html.cp-evergreen #main-content .webmail-container .wm-message-list { max-height: 440px; border-right: 0; }
+    html.cp-evergreen #main-content .webmail-container .wm-detail-pane { min-height: 260px; }
+    html.cp-evergreen #main-content .webmail-container .wm-account-switch { width: 100%; }
+    html.cp-evergreen #main-content .webmail-container .wm-account-select { width: 100%; }
+    html.cp-evergreen #main-content .webmail-container :is(.wm-compose-view, .wm-contacts-view, .wm-rules-view, .wm-settings-view, .wm-read-header, .wm-read-body) { padding: 18px; }
+    html.cp-evergreen #main-content .webmail-container :is(.wm-contact-form, .wm-rule-form, .wm-settings-form) { padding: 16px; }
+    html.cp-evergreen #main-content .webmail-container .wm-field-row { gap: 0; }
+    html.cp-evergreen #main-content .webmail-container :is(.wm-contact-item, .wm-rule-item) { flex-wrap: wrap; }
+    html.cp-evergreen #main-content .webmail-container .wm-read-toolbar { padding: 12px; }
+}
+
+html.cp-evergreen #main-content .cyberpanel-website-page .quick-actions,
+html.cp-evergreen #main-content .cyberpanel-website-page .quick-actions .action-group { flex-wrap: wrap; }
+html.cp-evergreen #main-content .cyberpanel-website-page .quick-actions .action-group { min-width: 0; max-width: 100%; }
+
+/* Panel tabs share spacing and selected-state styling. Existing Bootstrap,
+   Angular and page-specific handlers continue to control their content. */
+html.cp-evergreen #main-content :is(.cp-tabs, .modern-tabs, .tab-nav, .activity-tabs, .destination-tabs, .ed-tabs, .record-tabs, .record-type-tabs > ul, .nav-tabs:not(.wp-nav-tabs)) {
+    display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px;
+    min-width: 0; max-width: 100%; margin: 0 0 24px; padding: 6px;
+    background: var(--bg-muted); border: 1px solid var(--border-color);
+    border-radius: 8px; box-shadow: none; overflow: visible;
+}
+html.cp-evergreen #main-content :is(.nav-tabs:not(.wp-nav-tabs), .record-type-tabs > ul)::before,
+html.cp-evergreen #main-content :is(.nav-tabs:not(.wp-nav-tabs), .record-type-tabs > ul)::after { content: none; }
+html.cp-evergreen #main-content :is(.nav-tabs:not(.wp-nav-tabs), .record-type-tabs > ul) > li {
+    flex: 1 1 auto; float: none; width: auto; min-width: 0; margin: 0; padding: 0;
+}
+html.cp-evergreen #main-content :is(.cp-tabs > .cp-tab, .modern-tabs > .tab-item, .modern-tabs > .modern-tab, .tab-nav > .tab-btn, .activity-tabs > .activity-tab, .destination-tabs > .tab-button, .ed-tabs > .ed-tab, .record-tabs > .record-tab, .record-type-tabs > ul > li > a, .nav-tabs:not(.wp-nav-tabs) > li > a) {
+    display: flex; flex: 1 1 auto; align-items: center; justify-content: center; gap: 8px;
+    min-width: 0; min-height: 46px; height: auto; margin: 0; padding: 12px 16px;
+    border: 1px solid transparent; border-radius: 5px;
+    background: transparent; color: var(--text-secondary); box-shadow: none;
+    font-size: 13px; font-weight: 600; line-height: 20px; text-align: center;
+    white-space: normal; overflow-wrap: anywhere; transform: none; text-decoration: none;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+html.cp-evergreen #main-content :is(.cp-tabs > .cp-tab, .modern-tabs > .tab-item, .modern-tabs > .modern-tab, .tab-nav > .tab-btn, .activity-tabs > .activity-tab, .destination-tabs > .tab-button, .ed-tabs > .ed-tab, .record-tabs > .record-tab, .record-type-tabs > ul > li > a, .nav-tabs:not(.wp-nav-tabs) > li > a):hover {
+    color: var(--cp-selection-text); background: var(--cp-selection);
+}
+html.cp-evergreen #main-content :is(.cp-tabs > .cp-tab, .modern-tabs > .tab-item, .modern-tabs > .modern-tab, .tab-nav > .tab-btn, .activity-tabs > .activity-tab, .destination-tabs > .tab-button, .ed-tabs > .ed-tab, .record-tabs > .record-tab).active,
+html.cp-evergreen #main-content :is(.cp-tabs > .cp-tab, .modern-tabs > .tab-item, .modern-tabs > .modern-tab, .tab-nav > .tab-btn, .activity-tabs > .activity-tab, .destination-tabs > .tab-button, .ed-tabs > .ed-tab, .record-tabs > .record-tab).active:hover,
+html.cp-evergreen #main-content :is(.record-type-tabs > ul, .nav-tabs:not(.wp-nav-tabs)) > li.active > a,
+html.cp-evergreen #main-content :is(.record-type-tabs > ul, .nav-tabs:not(.wp-nav-tabs)) > li.active > a:hover,
+html.cp-evergreen #main-content :is(.record-type-tabs > ul, .nav-tabs:not(.wp-nav-tabs)) > li.active > a:focus {
+    background: var(--accent-color); color: var(--text-on-accent);
+    border-color: var(--accent-color); box-shadow: 0 2px 4px var(--shadow-color);
+}
+html.cp-evergreen #main-content :is(.cp-tabs > .cp-tab, .modern-tabs > .tab-item, .modern-tabs > .modern-tab, .tab-nav > .tab-btn, .activity-tabs > .activity-tab, .destination-tabs > .tab-button, .ed-tabs > .ed-tab, .record-tabs > .record-tab)::after,
+html.cp-evergreen #main-content .record-type-tabs li::after { content: none; }
+html.cp-evergreen #main-content :is(.cp-tabs, .modern-tabs, .tab-nav, .activity-tabs, .destination-tabs, .ed-tabs) > :is(a, button, .tab-btn) > i { flex-shrink: 0; margin: 0; font-size: 15px; }
+html.cp-evergreen #main-content [ng-controller="dashboardStatsController"] .activity-tabs { margin-bottom: 0; }
+html.cp-evergreen #main-content .record-type-tabs { padding: 18px 24px 0; border: 0; overflow: visible; }
+html.cp-evergreen #main-content [ng-controller="addModifyDNSRecords"] .record-type-tabs > ul { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 0; }
+html.cp-evergreen #main-content .record-type-tabs .record-type-badge { flex-shrink: 0; min-width: 28px; width: auto; height: 28px; margin-right: 0; padding: 0 5px; border-radius: 4px; white-space: nowrap; }
+html.cp-evergreen #main-content [ng-controller="addModifyDNSRecords"] .record-type-tabs > ul > li > a { height: 100%; padding: 8px 12px; }
+html.cp-evergreen #main-content .record-type-tabs li.active .record-type-badge { background: var(--cp-selection); color: var(--cp-selection-text); }
+
+/* Git's provider navigation uses an icon list instead of .nav-tabs. */
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 24px; padding: 6px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-muted); }
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons::before,
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons::after { content: none; }
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons > li { list-style: none; flex: 1 1 140px; float: none; width: auto; min-width: 0; margin: 0; padding: 0; }
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons > li > a[data-toggle="tab"] { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; height: 100%; margin: 0; padding: 12px 16px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; line-height: 20px; text-decoration: none; box-shadow: none; }
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons > li > a[data-toggle="tab"] > i { display: inline; margin: 0; font-size: 15px; color: inherit; }
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons > li > a[data-toggle="tab"]:hover { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons > li.active > a[data-toggle="tab"] { background: var(--accent-color); color: var(--text-on-accent); border-color: var(--accent-color); }
+
+html.cp-evergreen #main-content [ng-controller="scheduleBackupInc"] .modal .form-group > .checkbox { padding-left: 15px; padding-right: 15px; }
+html.cp-evergreen #main-content [ng-controller="scheduleBackupInc"] .modal .checkbox > label { display: inline-flex; align-items: center; gap: 10px; min-height: 36px; padding-left: 0; }
+html.cp-evergreen #main-content [ng-controller="scheduleBackupInc"] .modal .checkbox > label > input { position: static; margin: 0; width: 18px; height: 18px; }
+
+html.cp-evergreen #main-content [ng-controller="setupGit"] ul.list-group-icons .fa-git { font-family: "Font Awesome 6 Brands" !important; font-weight: 400; }
+
+/* Populated delivery tabs need local table scrolling, including dynamic rows. */
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] { font-family: inherit; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] :is(.ed-card, .ed-usage, .ed-stat-box) { max-width: 100%; background: var(--bg-secondary); border-color: var(--border-color); border-radius: 8px; box-shadow: none; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-card:has(> .ed-table) { overflow-x: auto; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-card-head { flex-wrap: wrap; gap: 12px; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-stat-val.purple { background: none; color: var(--accent-color); -webkit-text-fill-color: currentColor; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-bar-fill { background: var(--accent-color); }
+html.cp-evergreen[data-theme="dark"] #main-content [ng-controller="emailDeliveryCtrl"] .ed-tabs > .ed-tab.active { color: var(--text-on-accent) !important; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-btn { min-height: 40px; padding: 9px 14px; font-size: 12px; line-height: 20px; border-radius: 5px; }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-btn-primary { background: var(--cp-action); color: var(--cp-action-text); }
+html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] :is(.ed-btn-outline, .ed-btn-ghost):hover { background: var(--cp-selection); color: var(--cp-selection-text); border-color: var(--cp-border-strong); }
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content [ng-controller="emailDeliveryCtrl"] .ed-bar-wrap { width: 100%; flex-basis: auto; }
+}
+
+/* This legacy PHP tab list leaves .active on the original anchor. Derive its
+   paint from the pane that Bootstrap actually selects, without changing JS. */
+html.cp-evergreen #main-content [ng-controller="editPHPConfig"] .config-panel .modern-tabs > .tab-item { background: transparent; color: var(--text-secondary); border-color: transparent; box-shadow: none; }
+html.cp-evergreen #main-content [ng-controller="editPHPConfig"] .config-panel .modern-tabs > .tab-item:hover { background: var(--cp-selection); color: var(--cp-selection-text); }
+html.cp-evergreen #main-content [ng-controller="editPHPConfig"] .config-panel:has(#basic-tab.active) .modern-tabs > a[href="#basic-tab"],
+html.cp-evergreen #main-content [ng-controller="editPHPConfig"] .config-panel:has(#advanced-tab.active) .modern-tabs > a[href="#advanced-tab"] { background: var(--accent-color); color: var(--text-on-accent); border-color: var(--accent-color); box-shadow: 0 2px 4px var(--shadow-color); }
+
+@media (max-width: 1180px) {
+    html.cp-evergreen #main-content [ng-controller="addModifyDNSRecords"] .record-type-tabs > ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+    html.cp-evergreen #main-content :is(.cp-tabs > .cp-tab, .modern-tabs > .tab-item, .modern-tabs > .modern-tab, .tab-nav > .tab-btn, .activity-tabs > .activity-tab, .destination-tabs > .tab-button, .ed-tabs > .ed-tab) { flex-basis: 120px; padding: 12px; }
+    html.cp-evergreen #main-content .record-type-tabs { padding: 16px 16px 0; }
+    html.cp-evergreen #main-content [ng-controller="addModifyDNSRecords"] .record-type-tabs > ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

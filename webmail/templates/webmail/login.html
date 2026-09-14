@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" ng-app="CyberCP">
+<html class="cp-evergreen cp-auth" lang="en" ng-app="CyberCP">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -106,6 +106,8 @@
             font-size: 14px;
         }
     </style>
+    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen.css' %}?v=20260914-1">
+    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen-standalone.css' %}?v=20260914-1">
 </head>
 <body>
     <div class="wm-login-card" ng-controller="webmailLoginCtrl">
