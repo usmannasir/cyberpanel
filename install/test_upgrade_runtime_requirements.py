@@ -156,6 +156,15 @@ chmod 755 lswsgi
         self.assertTrue(any(line.endswith('|/usr|') for line in lines))
         self.assertNotIn('WRONG-PATH-COMMAND', self.trace.read_text())
 
+    def test_externally_managed_runtime_preserves_distribution_pip(self):
+        result = self.run_shell(
+            'compgen() { return 0; }; Install_CyberCP_Runtime_Python_Requirements '
+            + shlex.quote(str(self.requirements)))
+        self.assertEqual(0, result.returncode, result.stderr)
+        trace = self.trace.read_text()
+        self.assertNotIn('install --upgrade pip ', trace)
+        self.assertIn('install --upgrade --ignore-installed setuptools wheel packaging --break-system-packages', trace)
+
     def test_system_install_and_validation_failures_are_nonzero(self):
         for scenario in ({'FAKE_INSTALL_EXIT':29}, {'FAKE_IMPORT_EXIT':7},
                          {'FAKE_DJANGO':'3.1.3'}, {'FAKE_VERSION_EXIT':8}, {'FAKE_PIP_MISSING':1},
