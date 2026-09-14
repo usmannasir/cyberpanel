@@ -691,7 +691,10 @@ class DNSManager:
             cfPath = '%s%s' % (DNS.CFPath, admin.userName)
 
             writeToFile = open(cfPath, 'w')
-            writeToFile.write('%s\n%s\n%s' % (cfEmail, cfToken, cfSync))
+            cfAuthType = data.get('cfAuthType', 'global_key')
+            if cfAuthType not in DNS.VALID_CF_AUTH_TYPES:
+                cfAuthType = 'global_key'
+            writeToFile.write('%s\n%s\n%s\n%s' % (cfAuthType, cfEmail, cfToken, cfSync))
             writeToFile.close()
 
             os.chmod(cfPath, 0o600)
@@ -728,7 +731,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page':50}
-            cf = CloudFlare.CloudFlare(email=self.email,token=self.key)
+            cf = DNS.createCloudFlareClient(self.email, self.key, getattr(self, "auth_type", None))
 
             try:
                 zones = cf.zones.get(params=params)
@@ -834,7 +837,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = DNS.createCloudFlareClient(self.email, self.key, getattr(self, "auth_type", None))
 
             try:
                 zones = cf.zones.get(params=params)
@@ -886,7 +889,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = DNS.createCloudFlareClient(self.email, self.key, getattr(self, "auth_type", None))
 
             try:
                 zones = cf.zones.get(params=params)
@@ -1109,7 +1112,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = DNS.createCloudFlareClient(self.email, self.key, getattr(self, "auth_type", None))
 
             ## Get zone
 
