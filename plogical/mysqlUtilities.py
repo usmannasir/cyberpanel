@@ -124,7 +124,9 @@ class mysqlUtilities:
             return 0, 0
 
     @staticmethod
-    def createDatabase(dbname,dbuser,dbpassword, dbcreate = 1, host = None):
+    def createDatabase(dbname,dbuser,dbpassword, dbcreate = 1, host = None, progress=None):
+        connection = None
+        record = progress or (lambda stage: None)
         try:
             connection, cursor = mysqlUtilities.setupConnection()
 
@@ -145,7 +147,9 @@ class mysqlUtilities:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(query)
 
+                record('creating_database')
                 cursor.execute(query)
+                record('database_created')
 
             ## create user
 
@@ -158,7 +162,9 @@ class mysqlUtilities:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(query)
 
+                record('creating_user_' + hostToUse)
                 cursor.execute(query, (dbuser, hostToUse, dbpassword))
+                record('user_created_' + hostToUse)
 
                 if mysqlUtilities.RDS == 0:
                     grant = "GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % (
@@ -166,7 +172,9 @@ class mysqlUtilities:
                 else:
                     grant = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % (
                         mysqlUtilities.quoteIdentifier(dbname))
+                record('granting_user_' + hostToUse)
                 cursor.execute(grant, (dbuser, hostToUse))
+                record('user_granted_' + hostToUse)
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(grant)
 
@@ -176,10 +184,11 @@ class mysqlUtilities:
                 try:
                     createUserForHost('127.0.0.1')
                 except BaseException as msg:
+                    if progress is not None:
+                        raise
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDatabase:127.0.0.1]")
 
-            connection.close()
-
+            record('sql_ready')
             return 1
 
         except BaseException as msg:
@@ -187,8 +196,11 @@ class mysqlUtilities:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile('Deleting database because failed to create %s' % (dbname))
                 #mysqlUtilities.deleteDatabase(dbname, dbuser)
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
+            logging.CyberCPLogFileWriter.writeToFile('SQL creation failed for %s [createDatabase]' % dbname)
             return 0
+        finally:
+            if connection:
+                connection.close()
 
     @staticmethod
     def createDBUser(dbuser, dbpassword):
@@ -523,24 +535,29 @@ password=%s
                     )
                     return 0
 
-                # Build restore command
-                mysql_cmd = f'mysql --defaults-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} {databaseName}'
-
+                mysql_command = ['mysql', '--defaults-file=/home/cyberpanel/.my.cnf',
+                                 '-u', mysqluser, '--host=%s' % mysqlhost,
+                                 '--port', str(mysqlport), databaseName]
                 if backup_format['compressed']:
-                    # Handle compressed backup
-                    restore_cmd = f"gunzip -c {backup_file} | {mysql_cmd}"
-                    result = ProcessUtilities.executioner(restore_cmd, shell=True)
-
-                    # Don't rely solely on exit code, MySQL import usually succeeds
-                    # The passwordCheck logic below will verify database integrity
+                    decompress = subprocess.Popen(['gunzip', '-c', backup_file], stdout=subprocess.PIPE,
+                                                  stderr=subprocess.DEVNULL)
+                    importer = None
+                    try:
+                        importer = subprocess.Popen(mysql_command, stdin=decompress.stdout,
+                                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        decompress.stdout.close()
+                        importer.communicate()
+                    finally:
+                        if decompress.stdout and not decompress.stdout.closed:
+                            decompress.stdout.close()
+                        decompress.wait()
+                    result = 0 if importer and importer.returncode == 0 and decompress.returncode == 0 else 1
                 else:
-                    # Handle uncompressed backup (legacy)
-                    cmd = shlex.split(mysql_cmd)
-                    with open(backup_file, 'r') as f:
-                        result = subprocess.call(cmd, stdin=f)
-
-                    # Don't fail on non-zero exit as MySQL may return warnings
-                    # The passwordCheck logic below will verify database integrity
+                    with open(backup_file, 'rb') as stream:
+                        result = subprocess.call(mysql_command, stdin=stream)
+                if result != 0:
+                    logging.CyberCPLogFileWriter.writeToFile('Database import failed for %s.' % databaseName)
+                    return 0
 
                 if passwordCheck == None:
 
@@ -566,6 +583,61 @@ password=%s
             return 0
 
     @staticmethod
+    def databaseNamesExist(dbName, dbUsername):
+        connection, cursor = mysqlUtilities.setupConnection()
+        if connection == 0:
+            raise RuntimeError('Cannot check the SQL namespace.')
+        try:
+            cursor.execute('SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = %s', (dbName,))
+            database_exists = bool(cursor.fetchall())
+            cursor.execute('SELECT User, Host FROM mysql.user WHERE User = %s', (dbUsername,))
+            return database_exists or bool(cursor.fetchall())
+        finally:
+            connection.close()
+
+    @staticmethod
+    def prepareDatabaseForRestore(dbName, dbUsername, website):
+        existing = Databases.objects.filter(dbName=dbName).first()
+        if existing is None:
+            return mysqlUtilities.createDatabaseAndRegister(dbName, dbUsername, 'cyberpanel', website)
+        if existing.website_id != website.pk or existing.dbUser != dbUsername:
+            return 0, 'Database registration belongs to another website or user; existing data was preserved.'
+        connection, cursor = mysqlUtilities.setupConnection()
+        if connection == 0:
+            return 0, 'Cannot verify the registered SQL database.'
+        try:
+            cursor.execute('SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = %s', (dbName,))
+            if not cursor.fetchall():
+                return 0, 'Panel registration exists but the SQL database is missing; administrator review is required.'
+            return 1, 'None'
+        finally:
+            connection.close()
+
+    @staticmethod
+    def restoreDatabaseUser(dbName, dbUser, password, dbHost):
+        # Reuse an existing account only when it already has this database grant.
+        connection, cursor = mysqlUtilities.setupConnection()
+        if connection == 0:
+            return 0
+        try:
+            cursor.execute('SELECT User FROM mysql.user WHERE User = %s AND Host = %s', (dbUser, dbHost))
+            exists = bool(cursor.fetchall())
+            if exists:
+                cursor.execute('SELECT Db FROM mysql.db WHERE User = %s AND Host = %s', (dbUser, dbHost))
+                if dbName not in [row[0] for row in cursor.fetchall()]:
+                    return 0
+        finally:
+            connection.close()
+        if not exists and mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost) != 1:
+            return 0
+        return mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+
+    @staticmethod
+    def createDatabaseAndRegister(dbName, dbUsername, dbPassword, website):
+        from plogical.databaseProvisioning import create_and_register
+        return create_and_register(dbName, dbUsername, dbPassword, website, mysqlUtilities, Databases)
+
+    @staticmethod
     def submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite):
         try:
 
@@ -584,17 +656,7 @@ password=%s
             if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(dbUser=dbUsername).exists():
                 raise BaseException("This database or user is already taken.")
 
-            result = mysqlUtilities.createDatabase(dbName, dbUsername, dbPassword)
-
-            if result == 1:
-                pass
-            else:
-                raise BaseException(result)
-
-            db = Databases(website=website, dbName=dbName, dbUser=dbUsername)
-            db.save()
-
-            return 1,'None'
+            return mysqlUtilities.createDatabaseAndRegister(dbName, dbUsername, dbPassword, website)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))

@@ -13,6 +13,7 @@ from loginSystem.views import loadLoginPage
 from plogical.Backupsv2 import CPBackupsV2
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
+from plogical.premiumEntitlements import premium_entitlement_required
 from plogical.backupV2Repository import repository_names
 from plogical.httpProc import httpProc
 from plogical.processUtilities import ProcessUtilities as pu
@@ -768,6 +769,7 @@ def ConfigureV2Backup(request):
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def ConfigureV2BackupSetup(request):
     try:
         userID = request.session['userID']
@@ -835,6 +837,7 @@ def DeleteRepoV2(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def CreateV2BackupButton(request):
     try:
         userID = request.session['userID']
@@ -896,6 +899,7 @@ def RestoreV2backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def RestorePathV2(request):
     try:
         userID = request.session['userID']
@@ -941,6 +945,7 @@ def RestorePathV2(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def DeleteSnapshotV2Final(request):
     try:
         userID = request.session['userID']
@@ -984,6 +989,7 @@ def DeleteSnapshotV2Final(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def selectwebsiteRetorev2(request):
     try:
         userID = request.session['userID']
@@ -1017,6 +1023,7 @@ def selectwebsiteRetorev2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def ConfigureSftpV2Backup(request):
     try:
         userID = request.session['userID']
@@ -1075,6 +1082,7 @@ def ConfigureSftpV2Backup(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def selectwebsiteCreatev2(request):
     try:
         userID = request.session['userID']
@@ -1117,6 +1125,7 @@ def selectwebsiteCreatev2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def selectreporestorev2(request):
     try:
         userID = request.session['userID']
@@ -1196,6 +1205,7 @@ def DeleteScheduleV2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
 def CreateScheduleV2(request):
     try:
         userID = request.session['userID']

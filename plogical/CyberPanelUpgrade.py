@@ -41,6 +41,11 @@ class UpgradeCyberPanel:
         Upgrade.fixPermissions()
 
     def UpgardeNow(self):
+        from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE
+
+        if os.path.lexists('/etc/csf'):
+            self.PostStatus(CSF_UPGRADE_MESSAGE + ' [404]')
+            return 0
 
         from plogical.upgrade import Upgrade
 
@@ -121,8 +126,8 @@ def main():
     args = parser.parse_args()
 
     uc = UpgradeCyberPanel(args.branch,int(args.mail),int(args.dns),int(args.ftp))
-    uc.UpgardeNow()
+    return 1 if uc.UpgardeNow() == 0 else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

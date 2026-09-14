@@ -130,6 +130,8 @@ class remoteTransferUtilities:
             try:
                 ## dir is without forward slash
 
+                allBackupsSent = bool(accountsToTransfer)
+
                 for virtualHost in accountsToTransfer:
                     try:
 
@@ -162,22 +164,27 @@ class remoteTransferUtilities:
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
 
-                            remoteTransferUtilities.sendBackup(completedPathToSend, ipAddress, str(folderNumber),
-                                                               writeToFile)
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+                            sent = remoteTransferUtilities.sendBackup(
+                                completedPathToSend, ipAddress, str(folderNumber), writeToFile)
+                            if sent:
+                                writeToFile.writelines("[" + time.strftime(
+                                    "%m.%d.%Y_%H-%M-%S") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+                            else:
+                                allBackupsSent = False
 
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " #############################################" + "\n")
 
                             writeToFile.close()
                         else:
+                            allBackupsSent = False
                             writeToFile = open(backupLogPath, "a")
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + "Failed to generate local backup for: " + virtualHost + ". Error message: %s\n" % (retValue[1]))
                             writeToFile.close()
 
                     except BaseException as msg:
+                        allBackupsSent = False
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
                         pass
 
@@ -188,8 +195,12 @@ class remoteTransferUtilities:
                     pass
 
                 writeToFile = open(backupLogPath, "a")
-                writeToFile.writelines("[" + time.strftime(
-                    "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
+                if allBackupsSent:
+                    writeToFile.writelines("[" + time.strftime(
+                        "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
+                else:
+                    writeToFile.writelines("[" + time.strftime(
+                        "%m.%d.%Y_%H-%M-%S") + "] Backups were not fully generated or transferred. [5010]\n")
                 writeToFile.close()
 
                 ## removing local directory where backups were generated
@@ -232,11 +243,13 @@ class remoteTransferUtilities:
                     "%m.%d.%Y_%H-%M-%S") + "]" + " Transfer of " + completedPathToSend + " completed successfully.\n")
                 ## Only remove the local copy once the transfer is confirmed.
                 os.remove(completedPathToSend)
+                return True
             else:
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Remote backup transfer FAILED (scp exit %s): %s" % (return_Code, completedPathToSend))
                 writeToFile.writelines("[" + time.strftime(
                     "%m.%d.%Y_%H-%M-%S") + "]" + " Transfer of " + completedPathToSend + " FAILED (scp exit code " + str(return_Code) + "). Local copy kept. [5010]\n")
+                return False
 
         except BaseException as msg:
             try:
@@ -245,136 +258,22 @@ class remoteTransferUtilities:
             except:
                 pass
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendBackup]")
+            return False
 
     @staticmethod
     def remoteBackupRestore(backupDir, dir):
-        try:
-
-            ## dir is transfer-###
-            # backupDir is /home/backup/transfer-###
-
-            backupLogPath = backupDir + "/backup_log"
-
-            writeToFile = open(backupLogPath, "a+")
-
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("############################\n")
-            writeToFile.writelines("      Starting Backup Restore\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
-            writeToFile.writelines("############################\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.close()
-
-            if os.path.exists(backupDir):
-                pass
-            else:
-                writeToFile = open(backupLogPath, "w+")
-                writeToFile.writelines(
-                    "No such directory found (Local directory where backups are placed does not exists)' [5010]" + "\n")
-                writeToFile.close()
-                return
-
-            p = Process(target=remoteTransferUtilities.startRestore, args=(backupDir, backupLogPath, dir,))
-            p.start()
-
-            pid = open(backupDir + '/pid', "w")
-            pid.write(str(p.pid))
-            pid.close()
-
-            return
-
-        except BaseException as msg:
-            backupLogPath = backupDir + "/backup_log"
-            writeToFile = open(backupLogPath, "w+")
-            writeToFile.writelines(str(msg) + " [5010]" + "\n")
-            writeToFile.close()
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteRestore]")
-            return [0, msg]
+        backupLogPath = os.path.join(backupDir, 'backup_log')
+        process = Process(target=remoteTransferUtilities.startRestore,
+                          args=(backupDir, backupLogPath, dir))
+        process.start()
+        # The locked worker owns its log and PID. Concurrent starts must not
+        # overwrite another attempt's evidence.
 
     @staticmethod
     def startRestore(backupDir, backupLogPath, dir):
-        try:
-            ext = ".tar.gz"
-
-            for backup in os.listdir(backupDir):
-
-                if backup.endswith(ext):
-
-                    writeToFile = open(backupLogPath, "a")
-
-                    writeToFile.writelines("\n")
-                    writeToFile.writelines("\n")
-                    writeToFile.writelines("[" + time.strftime(
-                        "%m.%d.%Y_%H-%M-%S") + "]" + " Starting restore for: " + backup + ".\n")
-                    writeToFile.close()
-
-                    backupFile = backup
-                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-                    execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
-                    subprocess.Popen(shlex.split(execPath))
-                    time.sleep(4)
-
-                    while (1):
-                        time.sleep(1)
-
-                        backupFile = backup.strip(".tar.gz")
-                        path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
-                        status = open(path + "/status", 'r').read()
-
-                        if status.find("Done") > -1:
-                            command = "sudo rm -rf " + path
-                            ProcessUtilities.normalExecutioner(command)
-
-                            writeToFile = open(backupLogPath, "a")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Restore Completed for: " + backup + ".\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " #########################################\n")
-                            writeToFile.close()
-                            break
-                        elif status.find("[5009]") > -1:
-                            ## removing temporarily generated files while restoring
-                            command = "sudo rm -rf " + path
-                            ProcessUtilities.normalExecutioner(command)
-
-                            writeToFile = open(backupLogPath, "a")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Restore aborted for: " + backup + ". Error message: " +
-                                                   status + "\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " #########################################\n")
-                            writeToFile.close()
-                            break
-                        else:
-                            writeToFile = open(backupLogPath, "a")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("\n")
-                            writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + " Waiting for restore to complete.\n")
-                            writeToFile.close()
-                            time.sleep(3)
-                            pass
-
-            writeToFile = open(backupLogPath, "a")
-
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore complete\n")
-            writeToFile.writelines("completed[success]")
-
-        except BaseException as msg:
-            writeToFile = open(backupLogPath, "a")
-            writeToFile.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore Failed\n")
-            writeToFile.writelines("Error[Failed]")
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
+        from plogical.remoteRestoreBatch import run_restore_batch
+        return run_restore_batch(backupDir, backupLogPath, dir,
+                                 virtualHostUtilities.cyberPanel)
 
 
 def main():

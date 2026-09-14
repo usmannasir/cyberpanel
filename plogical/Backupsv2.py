@@ -871,44 +871,15 @@ team_drive =
 
                             first = 0
 
-                            try:
-                                dbExist = Databases.objects.get(dbName=dbName)
-                                logging.CyberCPLogFileWriter.writeToFile('Database exists, changing Database password.. %s' % (dbName))
+                            result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(dbName, dbUser, self.website)
+                            if result[0] != 1:
+                                raise RuntimeError(result[1])
 
-                                if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost) == 0:
-                                    logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
-                                else:
-                                    logging.CyberCPLogFileWriter.writeToFile('Password successfully changed for database: %s.' % (dbName))
-
-                            except:
-
-                                logging.CyberCPLogFileWriter.writeToFile('Database did not exist, creating new.. %s' % (dbName))
-
-                                if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                                    logging.CyberCPLogFileWriter.writeToFile('Failed the creation of database: %s' % (dbName))
-                                else:
-                                    logging.CyberCPLogFileWriter.writeToFile('Database: %s successfully created.' % (dbName))
-
-                                mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1)
-
-                                if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1) == 0:
-                                    logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
-                                else:
-                                    logging.CyberCPLogFileWriter.writeToFile(
-                                                         'Password successfully changed for database: %s.' % (dbName))
-
-                                try:
-                                    newDB = Databases(website=self.website, dbName=dbName, dbUser=dbUser)
-                                    newDB.save()
-                                except:
-                                    pass
-
-                        ## This function will not create database, only database user is created as third value is 0 for createDB
-
-                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
-                        mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+                        if mysqlUtilities.mysqlUtilities.restoreDatabaseUser(dbName, dbUser, password, dbHost) != 1:
+                            raise RuntimeError('Database account restore failed: %s' % dbName)
             except BaseException as msg:
                 self.UpdateStatus(f'Error in RestoreConfig while restoring database config. Error: {str(msg)}', CPBackupsV2.RUNNING)
+                return 0, str(msg)
 
             return 1, None
 

@@ -10,6 +10,7 @@ django.setup()
 from django.http import HttpResponse
 import json
 from plogical.acl import ACLManager
+from plogical.premiumEntitlements import premium_entitlement_required
 import plogical.CyberCPLogFileWriter as logging
 from plogical.mysqlUtilities import mysqlUtilities
 from websiteFunctions.models import Websites
@@ -99,35 +100,13 @@ class DatabaseManager:
         proc = httpProc(request, template, {'websitesList': websitesName}, 'deleteDatabase')
         return proc.render()
 
-    def MySQLManager(self, request = None, userID = None):
-
-        try:
-
-            from plogical.processUtilities import ProcessUtilities
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-
-                url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-                data = {
-                    "name": "Filemanager",
-                    "IP": ACLManager.fetchIP()
-                }
-
-                import requests
-                response = requests.post(url, data=json.dumps(data))
-                Status = response.json()['status']
-
-                if (Status == 1):
-                    template = 'baseTemplate/FileManager.html'
-                else:
-                    return redirect("https://cyberpanel.net/cyberpanel-addons")
-            else:
-                template = 'databases/mysqlmanager.html'
-        except BaseException as msg:
-            template = 'databases/mysqlmanager.html'
-
-        template = 'databases/mysqlmanager.html'
-        proc = httpProc(request, template, None, 'admin')
+    @premium_entitlement_required('Filemanager', label='MySQL Manager',
+                                  page_redirect='https://cyberpanel.net/cyberpanel-addons')
+    def MySQLManager(self, request=None, userID=None):
+        proc = httpProc(request, 'databases/mysqlmanager.html', None, 'admin')
         return proc.render()
+    @premium_entitlement_required('Filemanager', label='MySQL Manager',
+                                  page_redirect='https://cyberpanel.net/cyberpanel-addons')
     def OptimizeMySQL(self, request = None, userID = None):
         from cloudAPI.cloudManager import CloudManager
         cm = CloudManager()
@@ -143,6 +122,8 @@ class DatabaseManager:
         proc = httpProc(request, template, data, 'admin')
         return proc.render()
 
+    @premium_entitlement_required('Filemanager', label='MySQL Manager',
+                                  page_redirect='https://cyberpanel.net/cyberpanel-addons')
     def Upgardemysql(self, request = None, userID = None):
         data={}
         data['mysqlversions']=['10.6','10.11']

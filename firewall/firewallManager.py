@@ -1431,13 +1431,10 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " removeCSF"
-            ProcessUtilities.popenExecutioner(execPath)
-
-            time.sleep(2)
-
-            data_ret = {"installStatus": 1}
+            data_ret = {
+                "installStatus": 0,
+                "error_message": CSF.migrationRequiredMessage,
+            }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

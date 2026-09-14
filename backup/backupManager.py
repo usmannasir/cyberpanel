@@ -16,6 +16,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
 from plogical.acl import ACLManager
+from plogical.premiumEntitlements import premium_entitlement_required
 import plogical.CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, GDrive, GDriveSites
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -78,6 +79,7 @@ class BackupManager:
         proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName, 'BackupStat': BackupStat}, 'createBackup')
         return proc.render()
 
+    @premium_entitlement_required('all', label='Backup V2', page_redirect='ConfigureV2Backup')
     def CreateV2backupSite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
@@ -1370,15 +1372,15 @@ class BackupManager:
             data = json.loads(r.text)
 
             if data['fetchStatus'] == 1:
-                if data['status'].find("Backups are successfully generated and received on") > -1:
+                if data['status'].find("[5010]") > -1:
+                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
+                            'backupsSent': 0}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+                elif data['status'].find("Backups are successfully generated and received on") > -1:
 
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],
                             'backupsSent': 1}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                elif data['status'].find("[5010]") > -1:
-                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
-                            'backupsSent': 0}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
                 else:
@@ -1478,34 +1480,16 @@ class BackupManager:
             time.sleep(3)
 
             command = "sudo cat " + shlex.quote(backupLogPath)
-            status = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, retRequired=True)
+            if not result or len(result) != 2 or result[0] != 1 or not result[1]:
+                return HttpResponse(json.dumps({
+                    'remoteTransferStatus': 0, 'complete': 0, 'status': 'None',
+                    'error_message': 'Restore progress could not be read. Check the retained transfer directory and panel log.'}))
+            status = result[1]
 
 
-            if status.find("Error") > -1:
-                Error_find = "There was an error during the backup process. Please review the log for more information."
-                status = status + Error_find
-
-
-
-            if status.find("completed[success]") > -1:
-                command = "rm -rf " + shlex.quote(removalPath)
-                ProcessUtilities.executioner(command)
-                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            elif status.find("[5010]") > -1:
-                command = "sudo rm -rf " + shlex.quote(removalPath)
-                ProcessUtilities.executioner(command)
-                data = {'remoteTransferStatus': 0, 'error_message': status,
-                        "status": "None", "complete": 0}
-                json_data = json.dumps(data)
-                return HttpResponse(json_data)
-
-            else:
-                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            from plogical.remoteRestoreBatch import batch_status
+            return HttpResponse(json.dumps(batch_status(status)))
 
         except BaseException as msg:
             data = {'remoteTransferStatus': 0, 'error_message': str(msg), "status": "None", "complete": 0}

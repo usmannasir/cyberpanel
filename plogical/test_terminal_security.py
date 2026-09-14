@@ -2,6 +2,7 @@ import importlib
 import json
 import os
 import pathlib
+import re
 import stat
 import sys
 import tempfile
@@ -27,10 +28,19 @@ class TerminalSecretTests(unittest.TestCase):
             pathlib.Path(__file__).parents[1]
             / "cyberpanel_upgrade.sh"
         ).read_text(encoding="utf-8")
-        main_upgrade_call = upgrade_script.rfind("\nMain_Upgrade\n")
-        terminal_restart_call = upgrade_script.rfind("\nRestart_Web_Terminal\n")
-        self.assertGreater(main_upgrade_call, 0)
-        self.assertGreater(terminal_restart_call, main_upgrade_call)
+        main_upgrade_calls = list(re.finditer(
+            r"^(?:Main_Upgrade|if ! Main_Upgrade; then)$",
+            upgrade_script,
+            re.MULTILINE,
+        ))
+        terminal_restart_calls = list(re.finditer(
+            r"^Restart_Web_Terminal$", upgrade_script, re.MULTILINE,
+        ))
+        self.assertEqual(len(main_upgrade_calls), 1)
+        self.assertEqual(len(terminal_restart_calls), 1)
+        self.assertGreater(
+            terminal_restart_calls[0].start(), main_upgrade_calls[0].start(),
+        )
         self.assertIn(
             "if [[ -x /usr/local/CyberCP/bin/python ]]",
             upgrade_script,
@@ -204,6 +214,7 @@ class TerminalTokenTests(unittest.TestCase):
             "sub": "1",
             "ssh_user": "example",
             "jti": "t" * 43,
+            "web_terminal": True,
         }
         payload.update(overrides)
         return jwt.encode(payload, self.secret, algorithm="HS256")
@@ -297,6 +308,7 @@ class TerminalTokenTests(unittest.TestCase):
         ):
             self.assertEqual(self.server.get_ssh_port(), 22)
 
+    @mock.patch("plogical.acl.ACLManager.CheckForPremFeature", return_value=1)
     @mock.patch(
         "websiteFunctions.models.Websites.objects.get",
         return_value=SimpleNamespace(externalApp="example"),
@@ -322,7 +334,8 @@ class TerminalTokenTests(unittest.TestCase):
             unused_ownership,
             unused_acl,
             unused_admin,
-            unused_website):
+            unused_website,
+            entitlement):
         from django.test import RequestFactory
         from websiteFunctions.views import get_terminal_jwt
 
@@ -348,6 +361,8 @@ class TerminalTokenTests(unittest.TestCase):
         self.assertEqual(payload["sub"], "7")
         self.assertEqual(payload["ssh_user"], "example")
         create_request.assert_called_once_with(7, "example")
+        entitlement.assert_called_once_with("all")
+        self.assertIs(payload["web_terminal"], True)
 
     def make_account(self, home):
         return SimpleNamespace(

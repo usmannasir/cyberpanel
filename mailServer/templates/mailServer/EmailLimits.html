@@ -341,7 +341,8 @@
                             
                             <div class="preview-box">
                                 <i class="fas fa-info-circle"></i>
-                                <span>{$ selectedEmail $} {% trans "will be able to send" %} <strong>{$ numberofEmails $}</strong> {% trans "emails every" %} <strong>{$ duration $}</strong>.</span>
+                                <span ng-if="emailLimitAvailable">{$ selectedEmail $} — {% trans "Rate limit setting" %}: <strong>{$ numberofEmails $}</strong> {% trans "emails every" %} <strong>{$ duration $}</strong>.</span>
+                                <span ng-if="!emailLimitAvailable">{% trans "A saved rate limit could not be read for this mailbox. This does not mean unlimited sending or a zero allowance." %}</span>
                             </div>
 
                             <div class="limits-form">

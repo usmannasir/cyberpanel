@@ -1,28 +1,23 @@
-import pathlib
+"""Unpaid navigation goes to pricing instead of offering a free installer."""
 import unittest
+try:
+    from .test_wordpress_entitlements import load_wordpress_manager
+except ImportError:
+    from test_wordpress_entitlements import load_wordpress_manager
 
 
-class FreeWordPressNavigationTests(unittest.TestCase):
-
-    def test_free_flow_selects_an_existing_website(self):
-        repository = pathlib.Path(__file__).parents[1]
-        template = (
-            repository
-            / 'websiteFunctions'
-            / 'templates'
-            / 'websiteFunctions'
-            / 'freeWordpressInstall.html'
-        ).read_text(encoding='utf-8')
-        self.assertIn('{% for domain in websiteList %}', template)
-        self.assertIn("{% url 'wordpressInstall' domain %}", template)
-        self.assertNotIn("{% url 'pricing' %}", template)
-
-    def test_wordpress_create_no_longer_redirects_free_users_to_pricing(self):
-        repository = pathlib.Path(__file__).parents[1]
-        source = (repository / 'websiteFunctions' / 'website.py').read_text(encoding='utf-8')
-        method = source[source.index('    def WPCreate('):source.index('    def ListWPSites(')]
-        self.assertIn('freeWordpressInstall.html', method)
-        self.assertNotIn("reverse('pricing')", method)
+class PaidWordPressNavigationTests(unittest.TestCase):
+    def test_create_and_existing_site_pages_redirect_unpaid_users(self):
+        manager, _, services = load_wordpress_manager()
+        services['ACLManager'].CheckForPremFeature.return_value = 0
+        for name in ('WPCreate', 'wordpressInstall', 'WPHome'):
+            with self.subTest(page=name):
+                result = getattr(manager(domain='owned.example'), name)(userID=7)
+                self.assertEqual(result.status_code, 302)
+                self.assertEqual(result.url, 'pricing')
+        services['httpProc'].assert_not_called()
+        services['Administrator'].objects.get.assert_not_called()
+        services['ApplicationInstaller'].assert_not_called()
 
 
 if __name__ == '__main__':

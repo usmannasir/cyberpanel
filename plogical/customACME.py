@@ -330,16 +330,8 @@ class CustomACME:
                 return True
             elif response.status_code == 429:
                 logging.CyberCPLogFileWriter.writeToFile(
-                    'Rate limit hit for account creation. Using staging environment...')
-                self.staging = True
-                self.acme_directory = "https://acme-staging-v02.api.letsencrypt.org/directory"
-                # Get new directory and nonce for staging
-                if not self._get_directory():
-                    return False
-                if not self._get_nonce():
-                    return False
-                # Try one more time with staging
-                return self._create_account()
+                    'Rate limit hit for account creation. Keeping the requested ACME environment.')
+                return False
             elif response.status_code == 400 and "badNonce" in response.text:
                 logging.CyberCPLogFileWriter.writeToFile('Bad nonce, getting new nonce and retrying...')
                 if not self._get_nonce():
@@ -1032,19 +1024,9 @@ class CustomACME:
             logging.CyberCPLogFileWriter.writeToFile('Step 4: Creating account')
             if not self._create_account():
                 logging.CyberCPLogFileWriter.writeToFile('Failed to create account')
-                # If we failed to create account and we're not in staging, try staging
-                if not self.staging:
-                    logging.CyberCPLogFileWriter.writeToFile('Switching to staging environment...')
-                    self.staging = True
-                    self.acme_directory = "https://acme-staging-v02.api.letsencrypt.org/directory"
-                    if not self._get_directory():
-                        return False
-                    if not self._get_nonce():
-                        return False
-                    if not self._create_account():
-                        return False
-                else:
-                    return False
+                # A production failure must not install an untrusted staging certificate.
+                # Test issuance remains available through the explicit staging argument.
+                return False
 
             # Create order with only valid domains
             logging.CyberCPLogFileWriter.writeToFile('Step 5: Creating order')

@@ -22,7 +22,7 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
 
     $scope.fetchSSLDetails = function() {
         if (!$scope.virtualHost) return;
-        
+
         var url = "/manageSSL/getSSLDetails";
         var data = {
             virtualHost: $scope.virtualHost
@@ -84,7 +84,7 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
                 $scope.couldNotConnect = true;
                 $scope.sslDomain = $scope.virtualHost;
                 $scope.fetchSSLDetails(); // Refresh SSL details after issuing
-                
+
                 // Show success notification
                 new PNotify({
                     title: 'Success',
@@ -98,12 +98,15 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
                 $scope.canNotIssue = false;
                 $scope.sslIssued = true;
                 $scope.couldNotConnect = true;
-                
+
                 // Enhanced error handling
                 $scope.errorMessage = response.data.error_message || 'SSL issuance failed';
+                if (response.data.retained_existing || response.data.outcome === 'self_signed') {
+                    $scope.fetchSSLDetails();
+                }
                 $scope.technicalDetails = response.data.technicalDetails || '';
                 $scope.sslLogs = response.data.sslLogs || '';
-                
+
                 // Show detailed error notification
                 var errorText = response.data.error_message || 'Unknown error occurred';
                 if (response.data.technicalDetails) {
@@ -112,18 +115,18 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
                 if (response.data.sslLogs) {
                     console.error('SSL Logs:', response.data.sslLogs);
                 }
-                
+
                 new PNotify({
-                    title: 'SSL Issuance Failed',
+                    title: response.data.warning ? (response.data.outcome === 'self_signed' ? 'Self-signed certificate fallback' : 'Existing certificate retained') : 'SSL Issuance Failed',
                     text: errorText,
-                    type: 'error',
+                    type: response.data.warning ? 'warning' : 'error',
                     delay: 10000,  // Show for 10 seconds
                     buttons: {
                         closer: true,
                         sticker: true
                     }
                 });
-                
+
                 // Check for specific error types and provide helpful suggestions
                 if (errorText.toLowerCase().includes('rate limit')) {
                     $scope.errorSuggestion = 'You have hit the Let\'s Encrypt rate limit. Please wait before retrying or use a different domain.';
@@ -149,7 +152,7 @@ app.controller('sslIssueCtrl', function ($scope, $http) {
             $scope.canNotIssue = true;
             $scope.sslIssued = true;
             $scope.couldNotConnect = false;
-            
+
             // Show connection error
             new PNotify({
                 title: 'Connection Error',
@@ -176,7 +179,7 @@ app.controller('sslIssueCtrlV2', function ($scope, $http) {
 
     $scope.fetchSSLDetails = function() {
         if (!$scope.virtualHost) return;
-        
+
         var url = "/manageSSL/getSSLDetails";
         var data = {
             virtualHost: $scope.virtualHost

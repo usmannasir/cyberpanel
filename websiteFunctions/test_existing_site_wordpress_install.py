@@ -31,6 +31,9 @@ class ExistingSiteWordPressInstallTests(unittest.TestCase):
         }
 
         with mock.patch(
+            'websiteFunctions.wordpressEntitlements.ACLManager.CheckForPremFeature',
+            return_value=1,
+        ), mock.patch(
             'websiteFunctions.website.ACLManager.loadedACL',
             return_value={'admin': 1},
         ), mock.patch(

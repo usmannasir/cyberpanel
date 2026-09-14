@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
 from .models import Contact, ContactGroup, ContactGroupMembership, WebmailSettings, SieveRule
-from .services.imap_client import IMAPClient
+from .services.imap_client import IMAPClient, IMAPOperationError
 from .services.smtp_client import SMTPClient
 from .services.email_composer import EmailComposer
 from .services.email_parser import EmailParser
@@ -525,30 +525,40 @@ class WebmailManager:
 
     def apiDeleteMessages(self):
         data = self._get_post_data()
-        folder = data.get('folder', 'INBOX')
+        folder = data.get('folder')
         uids = data.get('uids', [])
         if not uids:
             return self._error('No messages selected.')
         try:
             with self._get_imap() as imap:
-                imap.delete_messages(folder, uids)
+                if imap.delete_messages(folder, uids) is not True:
+                    return self._error('The mail server did not confirm message deletion. Refresh before retrying.')
             return self._success()
-        except Exception as e:
-            return self._error(str(e))
+        except IMAPOperationError as error:
+            logging.CyberCPLogFileWriter.writeToFile('Webmail deletion failed: %s' % error)
+            return self._error(str(error))
+        except Exception as error:
+            logging.CyberCPLogFileWriter.writeToFile('Webmail deletion failed: %s' % error)
+            return self._error('Unable to delete messages. Refresh the source folder and Trash before retrying.')
 
     def apiMoveMessages(self):
         data = self._get_post_data()
-        folder = data.get('folder', 'INBOX')
+        folder = data.get('folder')
         uids = data.get('uids', [])
         target = data.get('targetFolder', '')
         if not uids or not target:
             return self._error('Messages and target folder are required.')
         try:
             with self._get_imap() as imap:
-                imap.move_messages(folder, uids, target)
+                if imap.move_messages(folder, uids, target) is not True:
+                    return self._error('The mail server did not confirm the message move. Refresh before retrying.')
             return self._success()
-        except Exception as e:
-            return self._error(str(e))
+        except IMAPOperationError as error:
+            logging.CyberCPLogFileWriter.writeToFile('Webmail move failed: %s' % error)
+            return self._error(str(error))
+        except Exception as error:
+            logging.CyberCPLogFileWriter.writeToFile('Webmail move failed: %s' % error)
+            return self._error('Unable to move messages. Refresh the source and destination folders before retrying.')
 
     def apiMarkRead(self):
         data = self._get_post_data()

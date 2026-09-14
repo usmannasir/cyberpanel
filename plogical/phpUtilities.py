@@ -10,7 +10,7 @@ import os
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheVhosts import ApacheVhost
-from managePHP.phpConfig import matches_directive
+from managePHP.phpConfig import fpm_service_for_ini, matches_directive
 
 import json
 from django.urls import reverse
@@ -223,13 +223,12 @@ class phpUtilities:
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                phpService = f'php{phpVers}-php-fpm'
-            else:
-                phpService = f"php{phpVers.split('/')[3]}-fpm"
-
-            command = f"systemctl restart {phpService}"
-            ProcessUtilities.normalExecutioner(command)
+            phpService = fpm_service_for_ini(phpVers)
+            if phpService is not None:
+                command = f"systemctl restart {phpService}"
+                if ProcessUtilities.normalExecutioner(command) != 1:
+                    raise RuntimeError(
+                        f"PHP configuration saved, but restarting {phpService} failed.")
 
             print("1,None")
         except BaseException as msg:

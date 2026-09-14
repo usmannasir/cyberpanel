@@ -14,6 +14,11 @@ from plogical.processUtilities import ProcessUtilities
 class CSF(multi.Thread):
     installLogPath = "/home/cyberpanel/csfInstallLog"
     csfURL = 'https://download.configserver.com/csf.tgz'
+    migrationRequiredMessage = (
+        'Automatic CSF removal is disabled. No firewall changes were made. '
+        'A reviewed manual migration is required to preserve your firewall rules '
+        'and SSH/panel access; verify the replacement firewall before removing CSF.'
+    )
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -25,7 +30,7 @@ class CSF(multi.Thread):
             if self.installApp == 'installCSF':
                 self.installCSF()
             elif self.installApp == 'removeCSF':
-                self.removeCSF()
+                return self.removeCSF()
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [CSF.run]')
 
@@ -1022,36 +1027,9 @@ echo
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installCSF]")
 
     def removeCSF(self):
-        try:
-
-            ##
-
-            os.chdir('/etc/csf')
-
-            command = './uninstall.sh'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
-
-            os.chdir('/usr/local/CyberCP')
-
-            #
-
-            command = 'systemctl unmask firewalld'
-            subprocess.call(shlex.split(command))
-
-            #
-
-            command = 'systemctl start firewalld'
-            subprocess.call(shlex.split(command))
-
-            ##
-
-            command = 'systemctl enable firewalld'
-            subprocess.call(shlex.split(command))
-
-            return 1
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[removeCSF]")
+        # CSF policies cannot be safely replaced by starting an empty firewalld.
+        print(self.migrationRequiredMessage, file=sys.stderr)
+        return 0
 
     @staticmethod
     def fetchCSFSettings():
@@ -1240,7 +1218,7 @@ def main():
         CSF.installCSF()
     elif args.function == 'removeCSF':
         controller = CSF(args.function, {})
-        controller.run()
+        return 0 if controller.run() == 1 else 1
     elif args.function == 'changeStatus':
         CSF.changeStatus(args.controller, args.status)
     elif args.function == 'modifyPorts':
@@ -1248,4 +1226,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

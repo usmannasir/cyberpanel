@@ -1058,7 +1058,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                         return [0, "SSL renewed but deployment to the live path failed"]
 
                     if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
-                        return [1, "SSL successfully renewed"]
+                        return [1, "SSL successfully renewed", {"outcome": "renewed", "certificate_validity": "valid"}]
                 else:
                     # Parse ACME error details
                     error_output = result.stderr if hasattr(result, 'stderr') and result.stderr else result.stdout
@@ -1068,7 +1068,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
         if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain, isHostname, forceIssue) == 1:
             if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
-                return [1, "None"]
+                return [1, "None", {"outcome": "issued", "certificate_validity": "valid"}]
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
         else:
@@ -1076,36 +1076,48 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
             pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
 
-            #### if in any case ssl failed to obtain and CyberPanel try to issue self-signed ssl, first check if ssl already present.
-            ### if so, dont issue self-signed ssl, as it may override some existing ssl
-
-            if os.path.exists(pathToStoreSSLFullChain):
+            # Failed issuance must never overwrite existing certificate material.
+            certificate_present = os.path.exists(pathToStoreSSLFullChain) or os.path.lexists(pathToStoreSSLFullChain)
+            key_present = os.path.exists(pathToStoreSSLPrivKey) or os.path.lexists(pathToStoreSSLPrivKey)
+            if certificate_present or key_present:
                 import OpenSSL
-                SSLProvider = 'Denial'
+                from datetime import datetime, timezone
+                metadata = {'outcome': 'existing_certificate',
+                            'certificate_validity': 'unknown', 'retained_existing': True}
+                if not certificate_present or not key_present:
+                    return [0, 'New SSL issuance failed. Existing certificate material is incomplete and has been preserved.', metadata]
                 try:
-                    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
-                                                           open(pathToStoreSSLFullChain, 'rb').read())
-                    SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
-                except Exception as msg:
-                    ## Unparseable existing cert must not abort here — fall through and
-                    ## replace it with a self-signed cert below.
+                    with open(pathToStoreSSLFullChain, 'rb') as certificate:
+                        x509 = OpenSSL.crypto.load_certificate(
+                            OpenSSL.crypto.FILETYPE_PEM, certificate.read())
+                    starts = datetime.strptime(x509.get_notBefore().decode('ascii'), '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
+                    expires = datetime.strptime(x509.get_notAfter().decode('ascii'), '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
+                    now = datetime.now(timezone.utc)
+                    validity = 'expired' if now >= expires else ('not_yet_valid' if now < starts else 'valid')
+                    metadata['certificate_validity'] = validity
+                    if validity != 'valid':
+                        return [0, 'New SSL issuance failed. The existing certificate is %s and has been preserved.' % validity, metadata]
+                    if x509.get_issuer().get_components() == x509.get_subject().get_components():
+                        return [0, 'New SSL issuance failed. The existing self-signed certificate has been preserved.', metadata]
+                except Exception as error:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        f'Could not parse existing certificate for {domain}: {str(msg)}')
+                        'Could not validate existing certificate for %s: %s' % (domain, error))
+                    return [0, 'New SSL issuance failed. The existing certificate could not be validated and has been preserved.', metadata]
 
-                if SSLProvider != 'Denial':
-                    if sslUtilities.installSSLForDomain(domain) == 1:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www).")
-                        return [1,
-                                "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www)." + " [issueSSLForDomain]"]
+                if sslUtilities.installSSLForDomain(domain) != 1:
+                    return [0, 'New SSL issuance failed and the existing certificate could not be installed. Existing certificate files have been preserved.', metadata]
+                warning = 'New SSL issuance failed. The existing date-valid certificate remains installed; its names and public TLS response should be checked.'
+                logging.CyberCPLogFileWriter.writeToFile('%s: %s' % (domain, warning))
+                return [2, warning, metadata]
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)
-            subprocess.call(cmd)
+            if subprocess.call(cmd) != 0:
+                return [0, 'Public SSL issuance failed and the self-signed fallback could not be created.']
 
             if sslUtilities.installSSLForDomain(domain) == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Self signed SSL issued for " + domain + ".")
-                return [1, "Self signed certificate was issued. [issueSSLForDomain]"]
+                return [2, "Public SSL issuance failed. A self-signed certificate was installed.", {"outcome": "self_signed", "certificate_validity": "valid"}]
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 

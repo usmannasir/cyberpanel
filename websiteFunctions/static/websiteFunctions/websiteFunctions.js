@@ -542,7 +542,7 @@ function DeployToProductionInitial(vall) {
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
     var CheckBoxpasssword = 0;
-    
+
     $scope.wordpresshomeloading = true;
     $scope.stagingDetailsForm = false;
     $scope.installationProgress = true;
@@ -587,10 +587,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 if (response.data.ret_data.debugging === 1) {
                     $('#debugging').prop('checked', true);
                 }
-                
+
                 // Set search index state
                 $scope.searchIndex = response.data.ret_data.searchIndex;
-                
+
                 if (response.data.ret_data.maintenanceMode === 1) {
                     $('#maintenanceMode').prop('checked', true);
                 }
@@ -1164,7 +1164,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     var statusFile; // Declare statusFile at controller scope
-    
+
     $scope.CreateStagingNow = function () {
         $('#wordpresshomeloading').show();
 
@@ -1203,7 +1203,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             $scope.wordpresshomeloading = true;
             return;
         }
-        
+
         var data = {
             StagingName: stagingName,
             StagingDomain: domainNameCreate,
@@ -1386,11 +1386,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
                     $('#StagingBody').html('');
                     console.log('Staging response:', response.data);
-                    
+
                     try {
                         var staging = JSON.parse(response.data.wpsites);
                         console.log('Parsed staging data:', staging);
-                        
+
                         if (staging && staging.length > 0) {
                             staging.forEach(function(site, index) {
                                 console.log('Processing staging site ' + index + ':', site);
@@ -1527,21 +1527,21 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     function AddStagings(value, index, array) {
         console.log('Adding staging site:', value);
-        
+
         // Ensure all required properties exist
         if (!value || !value.id) {
             console.error('Invalid staging site data:', value);
             return;
         }
-        
+
         // Check if table exists
         if ($('#StagingBody').length === 0) {
             console.error('StagingBody table not found');
             return;
         }
-        
+
         var FinalMarkup = '<tr>';
-        
+
         // Add columns in correct order: Name, Domain, Path, Actions
         FinalMarkup += '<td><a href="/websites/WPHome?ID=' + (value.id || '') + '">' + (value.name || 'Unnamed') + '</a></td>';
         FinalMarkup += '<td>' + (value.Domain || '') + '</td>';
@@ -1551,9 +1551,9 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             '<i class="fas fa-rocket"></i> Deploy to Production</button>' +
             '<button onclick="deleteStagingGlobal(' + value.id + ')" aria-label="" class="btn btn-danger btn-sm" type="button"><i class="fas fa-trash"></i> Delete</button>' +
             '</td>';
-        
+
         FinalMarkup += '</tr>';
-        
+
         console.log('Appending markup to table:', FinalMarkup);
         AppendToTable('#StagingBody', FinalMarkup);
         console.log('Table content after append:', $('#StagingBody').html());
@@ -1677,7 +1677,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
     };
-    
+
     function getCreationStatus() {
         $('#wordpresshomeloading').show();
 
@@ -1715,11 +1715,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $scope.installPercentage = "100";
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
-                    
+
                     // Re-enable buttons
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // For backup operations, refresh the backup list
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Backup created successfully!</span>');
@@ -1755,11 +1755,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-                    
+
                     // Re-enable buttons on error
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // Show error status
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> ' + response.data.error_message + '</span>');
@@ -1775,19 +1775,19 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
-                
+
                 // Update status displays with progress
                 var statusHtml = '<i class="fas fa-spinner fa-pulse"></i> ' + response.data.currentStatus;
                 if (response.data.installationProgress) {
                     statusHtml += ' (' + response.data.installationProgress + '%)';
                 }
-                
+
                 if (statusFile && statusFile.includes('backup')) {
                     $('#backupStatus').html(statusHtml);
                 } else {
                     $('#stagingStatus').html(statusHtml);
                 }
-                
+
                 $timeout(getCreationStatus, 1000);
 
             }
@@ -1978,7 +1978,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     $scope.submitPasswordProtection = function() {
         console.log('submitPasswordProtection called');
         console.log('Current WP:', $scope.currentWP);
-        
+
         if (!$scope.currentWP) {
             console.error('No WordPress site selected');
             new PNotify({
@@ -2084,12 +2084,12 @@ function AppendToTable(table, markup) {
             console.error('Table element not found:', table);
             return false;
         }
-        
+
         console.log('Appending to table:', table);
         console.log('Markup:', markup);
-        
+
         $(table).append(markup);
-        
+
         console.log('Successfully appended. Table now has', $(table).find('tr').length, 'rows');
         return true;
     } catch (e) {
@@ -2270,11 +2270,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $scope.installPercentage = "100";
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
-                    
+
                     // Re-enable buttons
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // For backup operations, refresh the backup list
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Backup created successfully!</span>');
@@ -2314,11 +2314,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-                    
+
                     // Re-enable buttons on error
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // Show error status
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> ' + response.data.error_message + '</span>');
@@ -2335,19 +2335,19 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                 $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
-                
+
                 // Update status displays with progress
                 var statusHtml = '<i class="fas fa-spinner fa-pulse"></i> ' + response.data.currentStatus;
                 if (response.data.installationProgress) {
                     statusHtml += ' (' + response.data.installationProgress + '%)';
                 }
-                
+
                 if (statusFile && statusFile.includes('backup')) {
                     $('#backupStatus').html(statusHtml);
                 } else {
                     $('#stagingStatus').html(statusHtml);
                 }
-                
+
                 $timeout(getCreationStatus, 1000);
 
             }
@@ -2777,12 +2777,12 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     // Function to get SSL tooltip text
     $scope.getSslTooltip = function(web) {
         if (!web.ssl) return '';
-        
+
         var tooltip = '';
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
-        
+
         if (web.ssl.days !== undefined) {
             if (tooltip) tooltip += ' | ';
             if (web.ssl.days < 0) {
@@ -2791,18 +2791,18 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 tooltip += 'Valid for ' + web.ssl.days + ' days';
             }
         }
-        
+
         if (web.ssl.is_wildcard) {
             if (tooltip) tooltip += ' | ';
             tooltip += 'Wildcard Certificate';
         }
-        
+
         if (web.ssl.status === 'none') {
             tooltip = 'No SSL certificate installed. Click "Issue SSL" to secure this site.';
         } else if (web.ssl.status === 'self-signed') {
             tooltip = 'Self-signed certificate detected. Not trusted by browsers.';
         }
-        
+
         return tooltip;
     };
 
@@ -2848,7 +2848,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);
-        
+
         // Make sure domain is defined
         if (!domain) {
             console.error('Domain is undefined');
@@ -2870,7 +2870,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         // Toggle visibility
         site.showWPSites = !site.showWPSites;
-        
+
         // If we're hiding, just return
         if (!site.showWPSites) {
             site.loadingWPSites = false;
@@ -3055,7 +3055,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         $http.post(url, data, config).then(function(response) {
             $('#wordpresshomeloading').hide();
-            
+
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
@@ -3088,7 +3088,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.togglePasswordProtection = function(wp) {
         console.log('togglePasswordProtection called for:', wp);
         console.log('Current password protection state:', wp.passwordProtection);
-        
+
         if (wp.passwordProtection) {
             // Show modal for credentials
             console.log('Showing modal for credentials');
@@ -3105,7 +3105,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 setting: 'password-protection',
                 value: 0
             };
-            
+
             var config = {
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
@@ -3144,7 +3144,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.submitPasswordProtection = function() {
         console.log('submitPasswordProtection called');
         console.log('Current WP:', $scope.currentWP);
-        
+
         if (!$scope.currentWP) {
             console.error('No WordPress site selected');
             new PNotify({
@@ -3905,7 +3905,7 @@ function DeployToProductionInitial(vall) {
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
     var CheckBoxpasssword = 0;
-    
+
     $scope.wordpresshomeloading = true;
     $scope.stagingDetailsForm = false;
     $scope.installationProgress = true;
@@ -3950,10 +3950,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 if (response.data.ret_data.debugging === 1) {
                     $('#debugging').prop('checked', true);
                 }
-                
+
                 // Set search index state
                 $scope.searchIndex = response.data.ret_data.searchIndex;
-                
+
                 if (response.data.ret_data.maintenanceMode === 1) {
                     $('#maintenanceMode').prop('checked', true);
                 }
@@ -4647,11 +4647,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-                    
+
                     // Re-enable buttons on error
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // Show error status
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> ' + response.data.error_message + '</span>');
@@ -4668,19 +4668,19 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
-                
+
                 // Update status displays with progress
                 var statusHtml = '<i class="fas fa-spinner fa-pulse"></i> ' + response.data.currentStatus;
                 if (response.data.installationProgress) {
                     statusHtml += ' (' + response.data.installationProgress + '%)';
                 }
-                
+
                 if (statusFile && statusFile.includes('backup')) {
                     $('#backupStatus').html(statusHtml);
                 } else {
                     $('#stagingStatus').html(statusHtml);
                 }
-                
+
                 $timeout(getCreationStatus, 1000);
 
             }
@@ -4756,11 +4756,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
                     $('#StagingBody').html('');
                     console.log('Staging response:', response.data);
-                    
+
                     try {
                         var staging = JSON.parse(response.data.wpsites);
                         console.log('Parsed staging data:', staging);
-                        
+
                         if (staging && staging.length > 0) {
                             staging.forEach(function(site, index) {
                                 console.log('Processing staging site ' + index + ':', site);
@@ -4897,7 +4897,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     function AddStagings(value, index, array) {
         console.log('AddStagings function called with:', value);
-        
+
         // Check if table element exists
         if ($('#stagingListBody').length === 0) {
             console.error('stagingListBody not found! Looking for StagingBody...');
@@ -4912,10 +4912,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         } else {
             var tableSelector = '#stagingListBody';
         }
-        
+
         var stagingUrl = 'http://' + value.Domain;
         var createdDate = new Date().toLocaleDateString();
-        
+
         var FinalMarkup = '<tr>';
         FinalMarkup += '<td><a href="/websites/WPHome?ID=' + value.id + '">' + value.name + '</a></td>';
         FinalMarkup += '<td><a href="' + stagingUrl + '" target="_blank" rel="noopener">' + stagingUrl + '</a></td>';
@@ -4925,7 +4925,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         FinalMarkup += '<button class="btn btn-sm btn-danger" onclick="deleteStagingGlobal(' + value.id + ')"><i class="fas fa-trash"></i> Delete</button>';
         FinalMarkup += '</td>';
         FinalMarkup += '</tr>';
-        
+
         console.log('Appending to:', tableSelector);
         $(tableSelector).append(FinalMarkup);
         console.log('Rows in table after append:', $(tableSelector).find('tr').length);
@@ -5374,11 +5374,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $scope.installPercentage = "100";
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
-                    
+
                     // Re-enable buttons
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // For backup operations, refresh the backup list
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Backup created successfully!</span>');
@@ -5418,11 +5418,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-                    
+
                     // Re-enable buttons on error
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // Show error status
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> ' + response.data.error_message + '</span>');
@@ -5439,19 +5439,19 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                 $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
-                
+
                 // Update status displays with progress
                 var statusHtml = '<i class="fas fa-spinner fa-pulse"></i> ' + response.data.currentStatus;
                 if (response.data.installationProgress) {
                     statusHtml += ' (' + response.data.installationProgress + '%)';
                 }
-                
+
                 if (statusFile && statusFile.includes('backup')) {
                     $('#backupStatus').html(statusHtml);
                 } else {
                     $('#stagingStatus').html(statusHtml);
                 }
-                
+
                 $timeout(getCreationStatus, 1000);
 
             }
@@ -6104,12 +6104,12 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     // Function to get SSL tooltip text
     $scope.getSslTooltip = function(web) {
         if (!web.ssl) return '';
-        
+
         var tooltip = '';
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
-        
+
         if (web.ssl.days !== undefined) {
             if (tooltip) tooltip += ' | ';
             if (web.ssl.days < 0) {
@@ -6118,18 +6118,18 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 tooltip += 'Valid for ' + web.ssl.days + ' days';
             }
         }
-        
+
         if (web.ssl.is_wildcard) {
             if (tooltip) tooltip += ' | ';
             tooltip += 'Wildcard Certificate';
         }
-        
+
         if (web.ssl.status === 'none') {
             tooltip = 'No SSL certificate installed. Click "Issue SSL" to secure this site.';
         } else if (web.ssl.status === 'self-signed') {
             tooltip = 'Self-signed certificate detected. Not trusted by browsers.';
         }
-        
+
         return tooltip;
     };
 
@@ -6175,7 +6175,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);
-        
+
         // Make sure domain is defined
         if (!domain) {
             console.error('Domain is undefined');
@@ -6197,7 +6197,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         // Toggle visibility
         site.showWPSites = !site.showWPSites;
-        
+
         // If we're hiding, just return
         if (!site.showWPSites) {
             site.loadingWPSites = false;
@@ -6383,7 +6383,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         $http.post(url, data, config).then(function(response) {
             $('#wordpresshomeloading').hide();
-            
+
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
@@ -6416,7 +6416,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.togglePasswordProtection = function(wp) {
         console.log('togglePasswordProtection called for:', wp);
         console.log('Current password protection state:', wp.passwordProtection);
-        
+
         if (wp.passwordProtection) {
             // Show modal for credentials
             console.log('Showing modal for credentials');
@@ -6433,7 +6433,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 setting: 'password-protection',
                 value: 0
             };
-            
+
             var config = {
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
@@ -6472,7 +6472,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.submitPasswordProtection = function() {
         console.log('submitPasswordProtection called');
         console.log('Current WP:', $scope.currentWP);
-        
+
         if (!$scope.currentWP) {
             console.error('No WordPress site selected');
             new PNotify({
@@ -7011,7 +7011,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
     $scope.deleteChildDomain = function () {
         console.log("Delete child domain called for:", DeleteDomain);
         console.log("Delete doc root:", $scope.DeleteDocRoot);
-        
+
         $scope.cyberPanelLoading = false;
         url = "/websites/submitDomainDeletion";
 
@@ -7114,7 +7114,13 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.websiteDeleteStatus === 0) {
+            if (response.data.websiteDeleteStatus === 2 && (response.data.state === 'pending' || response.data.state === 'awaiting_primary')) {
+                $("#websiteDeleteFailure").hide();
+                $("#websiteDeleteSuccess").hide();
+                $("#deleteWebsiteButton").hide();
+                $("#deleteLoading").hide();
+                new PNotify({title: response.data.state === 'awaiting_primary' ? 'Primary server action required' : 'Deletion in progress', text: response.data.error_message, type: 'info'});
+            } else if (response.data.websiteDeleteStatus !== 1 || response.data.state !== 'completed') {
                 $scope.errorMessage = response.data.error_message;
                 $("#websiteDeleteFailure").fadeIn();
                 $("#websiteDeleteSuccess").hide();
@@ -7136,6 +7142,11 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $("#deleteLoading").hide();
+            $("#websiteDeleteSuccess").hide();
+            $("#deleteWebsiteButton").hide();
+            $scope.errorMessage = 'The deletion result is unknown. Wait and refresh the website list before retrying.';
+            $("#websiteDeleteFailure").fadeIn();
         }
 
 
@@ -7680,7 +7691,7 @@ function DeployToProductionInitial(vall) {
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
     var CheckBoxpasssword = 0;
-    
+
     $scope.wordpresshomeloading = true;
     $scope.stagingDetailsForm = false;
     $scope.installationProgress = true;
@@ -7725,10 +7736,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 if (response.data.ret_data.debugging === 1) {
                     $('#debugging').prop('checked', true);
                 }
-                
+
                 // Set search index state
                 $scope.searchIndex = response.data.ret_data.searchIndex;
-                
+
                 if (response.data.ret_data.maintenanceMode === 1) {
                     $('#maintenanceMode').prop('checked', true);
                 }
@@ -8422,11 +8433,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-                    
+
                     // Re-enable buttons on error
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // Show error status
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> ' + response.data.error_message + '</span>');
@@ -8443,19 +8454,19 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
-                
+
                 // Update status displays with progress
                 var statusHtml = '<i class="fas fa-spinner fa-pulse"></i> ' + response.data.currentStatus;
                 if (response.data.installationProgress) {
                     statusHtml += ' (' + response.data.installationProgress + '%)';
                 }
-                
+
                 if (statusFile && statusFile.includes('backup')) {
                     $('#backupStatus').html(statusHtml);
                 } else {
                     $('#stagingStatus').html(statusHtml);
                 }
-                
+
                 $timeout(getCreationStatus, 1000);
 
             }
@@ -8531,11 +8542,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
                     $('#StagingBody').html('');
                     console.log('Staging response:', response.data);
-                    
+
                     try {
                         var staging = JSON.parse(response.data.wpsites);
                         console.log('Parsed staging data:', staging);
-                        
+
                         if (staging && staging.length > 0) {
                             staging.forEach(function(site, index) {
                                 console.log('Processing staging site ' + index + ':', site);
@@ -8673,7 +8684,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     function AddStagings(value, index, array) {
         var stagingUrl = 'http://' + value.Domain;
         var createdDate = new Date().toLocaleDateString();
-        
+
         var FinalMarkup = '<tr>';
         FinalMarkup += '<td><a href="/websites/WPHome?ID=' + value.id + '">' + value.name + '</a></td>';
         FinalMarkup += '<td><a href="' + stagingUrl + '" target="_blank" rel="noopener">' + stagingUrl + '</a></td>';
@@ -8683,7 +8694,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         FinalMarkup += '<button class="btn btn-sm btn-danger" onclick="deleteStagingGlobal(' + value.id + ')"><i class="fas fa-trash"></i> Delete</button>';
         FinalMarkup += '</td>';
         FinalMarkup += '</tr>';
-        
+
         console.log('Appending to #stagingListBody');
         if ($('#stagingListBody').length === 0) {
             console.error('stagingListBody not found! Looking for StagingBody...');
@@ -8992,7 +9003,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     $scope.submitPasswordProtection = function() {
         console.log('submitPasswordProtection called');
         console.log('Current WP:', $scope.currentWP);
-        
+
         if (!$scope.currentWP) {
             console.error('No WordPress site selected');
             new PNotify({
@@ -9268,11 +9279,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $scope.installPercentage = "100";
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
-                    
+
                     // Re-enable buttons
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // For backup operations, refresh the backup list
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Backup created successfully!</span>');
@@ -9312,11 +9323,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-                    
+
                     // Re-enable buttons on error
                     $('#createbackupbutton').prop('disabled', false).html('<i class="fas fa-download"></i> Create Backup');
                     $('button[ng-click="CreateStagingNow()"]').prop('disabled', false).html('<i class="fas fa-clone"></i> Create Staging Site');
-                    
+
                     // Show error status
                     if (statusFile && statusFile.includes('backup')) {
                         $('#backupStatus').html('<span style="color: #ef4444;"><i class="fas fa-times-circle"></i> ' + response.data.error_message + '</span>');
@@ -9333,19 +9344,19 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
                 $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
-                
+
                 // Update status displays with progress
                 var statusHtml = '<i class="fas fa-spinner fa-pulse"></i> ' + response.data.currentStatus;
                 if (response.data.installationProgress) {
                     statusHtml += ' (' + response.data.installationProgress + '%)';
                 }
-                
+
                 if (statusFile && statusFile.includes('backup')) {
                     $('#backupStatus').html(statusHtml);
                 } else {
                     $('#stagingStatus').html(statusHtml);
                 }
-                
+
                 $timeout(getCreationStatus, 1000);
 
             }
@@ -9775,12 +9786,12 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     // Function to get SSL tooltip text
     $scope.getSslTooltip = function(web) {
         if (!web.ssl) return '';
-        
+
         var tooltip = '';
         if (web.ssl.issuer && web.ssl.issuer !== '') {
             tooltip += 'Issuer: ' + web.ssl.issuer;
         }
-        
+
         if (web.ssl.days !== undefined) {
             if (tooltip) tooltip += ' | ';
             if (web.ssl.days < 0) {
@@ -9789,18 +9800,18 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 tooltip += 'Valid for ' + web.ssl.days + ' days';
             }
         }
-        
+
         if (web.ssl.is_wildcard) {
             if (tooltip) tooltip += ' | ';
             tooltip += 'Wildcard Certificate';
         }
-        
+
         if (web.ssl.status === 'none') {
             tooltip = 'No SSL certificate installed. Click "Issue SSL" to secure this site.';
         } else if (web.ssl.status === 'self-signed') {
             tooltip = 'Self-signed certificate detected. Not trusted by browsers.';
         }
-        
+
         return tooltip;
     };
 
@@ -9846,7 +9857,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);
-        
+
         // Make sure domain is defined
         if (!domain) {
             console.error('Domain is undefined');
@@ -9868,7 +9879,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
 
         // Toggle visibility
         site.showWPSites = !site.showWPSites;
-        
+
         // If we're hiding, just return
         if (!site.showWPSites) {
             site.loadingWPSites = false;
@@ -10157,7 +10168,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.togglePasswordProtection = function(wp) {
         console.log('togglePasswordProtection called for:', wp);
         console.log('Current password protection state:', wp.passwordProtection);
-        
+
         if (wp.passwordProtection) {
             // Show modal for credentials
             console.log('Showing modal for credentials');
@@ -10174,7 +10185,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 setting: 'password-protection',
                 value: 0
             };
-            
+
             var config = {
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
@@ -10213,7 +10224,7 @@ app.controller('listWebsites', function ($scope, $http, $window) {
     $scope.submitPasswordProtection = function() {
         console.log('submitPasswordProtection called');
         console.log('Current WP:', $scope.currentWP);
-        
+
         if (!$scope.currentWP) {
             console.error('No WordPress site selected');
             new PNotify({
@@ -10704,7 +10715,13 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.websiteDeleteStatus === 0) {
+            if (response.data.websiteDeleteStatus === 2 && (response.data.state === 'pending' || response.data.state === 'awaiting_primary')) {
+                $("#websiteDeleteFailure").hide();
+                $("#websiteDeleteSuccess").hide();
+                $("#deleteWebsiteButton").hide();
+                $("#deleteLoading").hide();
+                new PNotify({title: response.data.state === 'awaiting_primary' ? 'Primary server action required' : 'Deletion in progress', text: response.data.error_message, type: 'info'});
+            } else if (response.data.websiteDeleteStatus !== 1 || response.data.state !== 'completed') {
                 $scope.errorMessage = response.data.error_message;
                 $("#websiteDeleteFailure").fadeIn();
                 $("#websiteDeleteSuccess").hide();
@@ -10726,6 +10743,11 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $("#deleteLoading").hide();
+            $("#websiteDeleteSuccess").hide();
+            $("#deleteWebsiteButton").hide();
+            $scope.errorMessage = 'The deletion result is unknown. Wait and refresh the website list before retrying.';
+            $("#websiteDeleteFailure").fadeIn();
         }
 
 
@@ -14039,7 +14061,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
 
     $scope.showWPSites = function(domain) {
         console.log('showWPSites called for domain:', domain);
-        
+
         // Make sure domain is defined
         if (!domain) {
             console.error('Domain is undefined');
@@ -14061,7 +14083,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
 
         // Toggle visibility
         site.showWPSites = !site.showWPSites;
-        
+
         // If we're hiding, just return
         if (!site.showWPSites) {
             site.loadingWPSites = false;
@@ -15595,7 +15617,7 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
 
     $scope.openWebTerminal = function() {
         $('#web-terminal-modal').modal('show');
-    
+
         if ($scope.term) {
             $scope.term.dispose();
         }
@@ -15608,7 +15630,7 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
         $scope.term = term;
         term.open(document.getElementById('xterm-container'));
         term.focus();
-    
+
         // Fetch JWT from backend with CSRF token
         var domain = $("#domainName").text();
         var csrftoken = getCookie('csrftoken');
@@ -15624,7 +15646,7 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
                 var socket = new WebSocket(wsUrl);
                 socket.binaryType = 'arraybuffer';
                 $scope.terminalSocket = socket;
-    
+
                 socket.onopen = function() {
                     term.write('\x1b[32mConnected.\x1b[0m\r\n');
                 };
@@ -17427,20 +17449,20 @@ app.controller('createDockerPackage', function ($scope, $http, $window) {
             if (response.data.status === 1) {
                 // Log the exact structure to understand the response
                 console.log('Response error_message:', response.data.error_message);
-                
+
                 // Handle different possible response formats
                 var packageData = response.data.error_message;
                 if (packageData) {
                     // Check if data is nested in obj property or direct
                     var data = packageData.obj || packageData;
-                    
+
                     $scope.U_Name = data.Name;
                     $scope.U_CPU = data.CPU || data.CPUs;
                     $scope.U_Memory = data.Memory || data.Ram;
                     $scope.U_Bandwidth = data.Bandwidth;
                     $scope.U_DiskSpace = data.DiskSpace;
                     $scope.EditID = packid;
-                    
+
                     console.log('Set modal data:', {
                         Name: $scope.U_Name,
                         CPU: $scope.U_CPU,
@@ -17448,12 +17470,12 @@ app.controller('createDockerPackage', function ($scope, $http, $window) {
                         Bandwidth: $scope.U_Bandwidth,
                         DiskSpace: $scope.U_DiskSpace
                     });
-                    
+
                     // Force Angular to update the view
                     if (!$scope.$$phase) {
                         $scope.$apply();
                     }
-                    
+
                     // Also manually update the form fields as a fallback
                     setTimeout(function() {
                         $('#EditPackage input[ng-model="U_Name"]').val($scope.U_Name);
@@ -17461,15 +17483,15 @@ app.controller('createDockerPackage', function ($scope, $http, $window) {
                         $('#EditPackage input[ng-model="U_Memory"]').val($scope.U_Memory);
                         $('#EditPackage input[ng-model="U_Bandwidth"]').val($scope.U_Bandwidth);
                         $('#EditPackage input[ng-model="U_DiskSpace"]').val($scope.U_DiskSpace);
-                        
+
                         console.log('Manually updated form fields');
-                        
+
                         // Ensure Angular knows about the manual updates
                         $('#EditPackage').find('input[ng-model="U_CPU"]').trigger('input');
                         $('#EditPackage').find('input[ng-model="U_Memory"]').trigger('input');
                         $('#EditPackage').find('input[ng-model="U_Bandwidth"]').trigger('input');
                         $('#EditPackage').find('input[ng-model="U_DiskSpace"]').trigger('input');
-                        
+
                         // Show the modal
                         $('#EditPackage').modal('show');
                     }, 200);
@@ -17558,22 +17580,22 @@ app.controller('createDockerPackage', function ($scope, $http, $window) {
     $scope.Deletepackage = function (url) {
         FinalDeletepackageURL = url;
         console.log('Delete URL set to:', FinalDeletepackageURL);
-        
+
         // Show the delete confirmation modal
         $('#packagedelete').modal('show');
     }
 
     $scope.ConfirmDelete = function () {
         console.log('Confirming delete with URL:', FinalDeletepackageURL);
-        
+
         if (!FinalDeletepackageURL) {
             console.error('No delete URL set');
             return;
         }
-        
+
         // Hide modal and redirect after a small delay
         $('#packagedelete').modal('hide');
-        
+
         setTimeout(function() {
             window.location.href = FinalDeletepackageURL;
         }, 300);
@@ -17608,7 +17630,7 @@ app.controller('AssignPackage', function ($scope, $http,) {
                     text: 'Successfully saved.',
                     type: 'success'
                 });
-                
+
                 // Reload page to show new assignment
                 setTimeout(function() {
                     location.reload();

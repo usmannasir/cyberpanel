@@ -307,6 +307,12 @@ def upgrade(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
+        if os.path.lexists('/etc/csf'):
+            from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE
+            return HttpResponse(json.dumps({
+                'upgrade': 0, 'error_message': CSF_UPGRADE_MESSAGE,
+            }))
+
         from plogical.applicationInstaller import ApplicationInstaller
 
         extraArgs = {}

@@ -260,8 +260,15 @@
         </div>
     </div>
     
+    {% if admin %}
+    <div class="alert alert-warning" ng-show="adminWidgetsError" role="alert" ng-cloak>
+        {% trans "Could not verify access to system activity. Reload the page to try again." %}
+    </div>
     <!-- Activity Board -->
-    <div class="activity-section">
+    <div class="activity-section" ng-hide="hideSystemCharts" ng-cloak>
+        <div class="alert alert-warning" ng-show="systemChartsError" role="alert" ng-cloak>
+            {% trans "Charts could not load. Reload the page to try again. Other activity widgets remain available." %}
+        </div>
         <div class="activity-header">
             <h2 class="section-title">{% trans "ACTIVITY BOARD" %}</h2>
             <div class="activity-tabs" role="tablist" aria-label="{% trans 'Activity views' %}">
@@ -521,21 +528,21 @@
         
         <!-- Traffic Tab -->
         <div id="traffic" class="tab-content" ng-hide="hideSystemCharts" role="tabpanel" aria-labelledby="tab-traffic" tabindex="0">
-            <div class="chart-container">
+            <div class="chart-container" ng-hide="systemChartsError">
                 <canvas id="trafficChart"></canvas>
             </div>
         </div>
         
         <!-- Disk IO Tab -->
         <div id="diskio" class="tab-content" ng-hide="hideSystemCharts" role="tabpanel" aria-labelledby="tab-diskio" tabindex="0">
-            <div class="chart-container">
+            <div class="chart-container" ng-hide="systemChartsError">
                 <canvas id="diskIOChart"></canvas>
             </div>
         </div>
         
         <!-- CPU Usage Tab -->
         <div id="cpu-usage" class="tab-content" ng-hide="hideSystemCharts" role="tabpanel" aria-labelledby="tab-cpu-usage" tabindex="0">
-            <div class="chart-container">
+            <div class="chart-container" ng-hide="systemChartsError">
                 <canvas id="cpuChart"></canvas>
             </div>
         </div>
@@ -688,6 +695,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     </div>
 </div>
 

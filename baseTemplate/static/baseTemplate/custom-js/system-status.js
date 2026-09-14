@@ -924,14 +924,18 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.totalFTPUsers = 0;
     $scope.statsLoaded = false;
 
-    // Hide system charts for non-admin users
-    $scope.hideSystemCharts = false;
+    // Admin widgets stay disabled until the permission lookup succeeds.
+    $scope.hideSystemCharts = true;
+    $scope.adminWidgetsError = false;
+    $scope.systemChartsError = false;
+    var chartsReady = false;
 
     // Top Processes
     $scope.topProcesses = [];
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
     $scope.refreshTopProcesses = function() {
+        if ($scope.hideSystemCharts) return;
         $scope.loadingTopProcesses = true;
         $http.get('/base/getTopProcesses').then(function (response) {
             $scope.loadingTopProcesses = false;
@@ -1012,6 +1016,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     };
     
     $scope.refreshSSHLogins = function() {
+        if ($scope.hideSystemCharts) return;
         $scope.loadingSSHLogins = true;
         $http.get('/base/getRecentSSHLogins').then(function (response) {
             $scope.loadingSSHLogins = false;
@@ -1105,6 +1110,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     };
     
     $scope.refreshSSHLogs = function() {
+        if ($scope.hideSystemCharts) return;
         $scope.loadingSSHLogs = true;
         $http.get('/base/getRecentSSHLogs').then(function (response) {
             $scope.loadingSSHLogs = false;
@@ -1217,11 +1223,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             });
         }
     };
-
-    // Initial fetch
-    $scope.refreshTopProcesses();
-    $scope.refreshSSHLogins();
-    $scope.refreshSSHLogs();
 
     // Chart.js chart objects
     var trafficChart, diskIOChart, cpuChart;
@@ -1392,7 +1393,17 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     function setupCharts() {
         console.log('setupCharts called, initializing charts...');
-        var trafficCtx = document.getElementById('trafficChart').getContext('2d');
+        var canvases = ['trafficChart', 'diskIOChart', 'cpuChart'].map(function(id) {
+            return document.getElementById(id);
+        });
+        if (canvases.some(function(canvas) { return !canvas; })) {
+            throw new Error('Dashboard chart canvas is unavailable.');
+        }
+        var contexts = canvases.map(function(canvas) { return canvas.getContext('2d'); });
+        if (contexts.some(function(context) { return !context; })) {
+            throw new Error('Dashboard chart context is unavailable.');
+        }
+        var trafficCtx = contexts[0];
         trafficChart = new Chart(trafficCtx, {
             type: 'line',
             data: {
@@ -1485,7 +1496,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 console.log('trafficChart resized and updated after setup.');
             }
         }, 500);
-        var diskCtx = document.getElementById('diskIOChart').getContext('2d');
+        var diskCtx = contexts[1];
         diskIOChart = new Chart(diskCtx, {
             type: 'line',
             data: {
@@ -1570,7 +1581,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             }
         });
-        var cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        var cpuCtx = contexts[2];
         cpuChart = new Chart(cpuCtx, {
             type: 'line',
             data: {
@@ -1668,32 +1679,58 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         });
     }
 
+    function initializeCharts() {
+        try {
+            if (typeof Chart !== 'function') throw new Error('Chart.js is unavailable.');
+            setupCharts();
+            chartsReady = true;
+        } catch (error) {
+            $scope.systemChartsError = true;
+            [trafficChart, diskIOChart, cpuChart].forEach(function(chart) {
+                if (chart) {
+                    try { chart.destroy(); } catch (cleanupError) { /* Keep the chart failure visible. */ }
+                }
+            });
+            trafficChart = diskIOChart = cpuChart = null;
+            window.trafficChart = null;
+        }
+    }
+
+    function pollAdminWidgets() {
+        if ($scope.hideSystemCharts) return;
+        $scope.refreshTopProcesses();
+        if (!chartsReady) return;
+        pollTraffic();
+        pollDiskIO();
+        pollCPU();
+    }
+
     // Initial setup
     $timeout(function() {
         // Check if user is admin before setting up charts
         $http.get('/base/getAdminStatus').then(function(response) {
             if (response.data && response.data.admin === 1) {
-                setupCharts();
+                $scope.hideSystemCharts = false;
+                initializeCharts();
+                $scope.refreshSSHLogins();
+                $scope.refreshSSHLogs();
+                pollAdminWidgets();
             } else {
                 $scope.hideSystemCharts = true;
+                $scope.adminWidgetsError = !response.data || response.data.admin !== 0;
             }
-        }).catch(function() {
-            // If error, assume non-admin and hide charts
+        }, function() {
+            // A failed permission lookup never grants access to admin widgets.
+            $scope.adminWidgetsError = true;
             $scope.hideSystemCharts = true;
         });
         
         // Immediately poll once so stats are updated on first load
         pollDashboardStats();
-        pollTraffic();
-        pollDiskIO();
-        pollCPU();
         // Start polling
         function pollAll() {
             pollDashboardStats();
-            pollTraffic();
-            pollDiskIO();
-            pollCPU();
-            $scope.refreshTopProcesses();
+            pollAdminWidgets();
             $timeout(pollAll, pollInterval);
         }
         pollAll();

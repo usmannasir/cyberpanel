@@ -13,6 +13,7 @@ from django.http import FileResponse, HttpResponse
 import json
 from websiteFunctions.models import Websites
 from plogical.acl import ACLManager
+from plogical.premiumEntitlements import premium_entitlement_required
 from .filemanager import FileManager as FM
 from plogical.securityUtils import FILE_DOWNLOAD_DIRECTORY, is_private_token_path
 from plogical.processUtilities import ProcessUtilities
@@ -344,44 +345,11 @@ def editFile(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('Filemanager', label='Root File Manager',
+                              page_redirect='https://cyberpanel.net/cyberpanel-addons')
 def FileManagerRoot(request):
-    ### Load Custom CSS
-    try:
-        from baseTemplate.models import CyberPanelCosmetic
-        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
-    except:
-        from baseTemplate.models import CyberPanelCosmetic
-        cosmetic = CyberPanelCosmetic()
-        cosmetic.save()
-
-    ipAddressLocal = ACLManager.fetchIP()
-
-    try:
-
-        from plogical.processUtilities import ProcessUtilities
-        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-
-            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-            data = {
-                "name": "Filemanager",
-                 "IP": ipAddressLocal
-            }
-
-            import requests
-            response = requests.post(url, data=json.dumps(data))
-            Status = response.json()['status']
-
-            if(Status == 1):
-                template = 'baseTemplate/FileManager.html'
-            else:
-              return  redirect("https://cyberpanel.net/cyberpanel-addons")
-        else:
-            template = 'baseTemplate/FileManager.html'
-    except BaseException as msg:
-        template = 'baseTemplate/FileManager.html'
-
     from plogical.httpProc import httpProc
-    proc = httpProc(request, template, None, 'admin')
+    proc = httpProc(request, 'baseTemplate/FileManager.html', None, 'admin')
     return proc.render()
 
 def downloadFile(request):
@@ -431,6 +399,7 @@ def downloadFile(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('Filemanager', label='Root File Manager')
 def RootDownloadFile(request):
     try:
         userID = request.session['userID']
