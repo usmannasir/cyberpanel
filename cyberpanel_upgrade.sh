@@ -717,6 +717,7 @@ Install_CyberCP_Runtime_Python_Requirements() {
   # upgrade-tool virtualenv through PATH for the system LSCPD runtime.
   local runtime_python="${CyberPanel_Python:-/usr/bin/python3}"
   local install_status
+  local externally_managed=0
   local -a pip_extra=()
 
   if [[ ! -x "$runtime_python" || ! -s "$requirements_file" ]] \
@@ -733,9 +734,18 @@ Install_CyberCP_Runtime_Python_Requirements() {
   fi
   if compgen -G '/usr/lib/python3.*/EXTERNALLY-MANAGED' >/dev/null 2>&1 \
       || compgen -G '/usr/lib64/python3.*/EXTERNALLY-MANAGED' >/dev/null 2>&1; then
+    externally_managed=1
     pip_extra+=(--break-system-packages)
   fi
-  Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --upgrade pip setuptools wheel packaging "${pip_extra[@]}" || return 1
+  if [[ "$externally_managed" -eq 1 ]]; then
+    # pip belongs to the OS package manager on Debian/Ubuntu. Trying to upgrade
+    # it makes pip uninstall the distro package and fails because it has no
+    # pip RECORD file. Leave that pip in place and overlay only our runtime
+    # build dependencies without uninstalling distro-owned files.
+    Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --upgrade --ignore-installed setuptools wheel packaging "${pip_extra[@]}" || return 1
+  else
+    Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --upgrade pip setuptools wheel packaging || return 1
+  fi
   Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --default-timeout=3600 --ignore-installed "${pip_extra[@]}" -r "$requirements_file"
   install_status=$?
   if [[ "$install_status" -ne 0 ]]; then
