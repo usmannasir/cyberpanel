@@ -1,6 +1,5 @@
-{% load i18n %}
 <!DOCTYPE html>
-<html class="cp-evergreen cp-auth" lang="en">
+<html lang="en">
 
 <head>
     <style>
@@ -228,8 +227,6 @@
         {{ cosmetic.MainDashboardCSS | safe }}
     </style>
 
-    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen.css' %}?v=20260914-1">
-    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen-standalone.css' %}?v=20260914-1">
 </head>
 
 <body>
@@ -295,7 +292,7 @@
             <form id="loginForm" action="/" class="col-md-8 col-md-offset-2">
                 <h1 class="text-transform-upr text-center panel-body text-bold"
                     style="padding-bottom: 0px; color: #33CCCC;">
-                    <img class="center-block text-center my-20" src="{% static 'baseTemplate/brand/cyberpanel-symbol.svg' %}">
+                    <img class="center-block text-center my-20" src="{% static 'baseTemplate/cyber-panel-logo.svg' %}">
                     CyberPanel
                 </h1>
                 <h4 class="text-muted text-center mb-10">Web Hosting Control Panel</h4>
@@ -303,9 +300,8 @@
                     <div class="mx-30">
                         <div class="content-box-wrapper panel-body my-10 mx-30">
                             <div class="form-group">
-                                <label class="cp-auth-field-label" for="cp-login-username">{% trans "Username" %}</label>
                                 <div class="input-group">
-                                    <input id="cp-login-username" ng-model="username" type="text" class="form-control" name="username"
+                                    <input ng-model="username" type="text" class="form-control" name="username"
                                            placeholder="Enter username" required style="height: 45px;">
                                     <span class="input-group-addon bg-blue">
                       <i class="glyph-icon icon-envelope-o"></i>
@@ -313,7 +309,6 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="cp-auth-field-label" for="password">{% trans "Password" %}</label>
                                 <div class="input-group">
                                     <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
                                            class="form-control" id="password" placeholder="Password" required
@@ -326,9 +321,8 @@
                             </div>
 
                             <div ng-hide="verifyCode" class="form-group">
-                                <label class="cp-auth-field-label" for="cp-login-twofa">{% trans "Authentication code" %}</label>
                                 <div class="input-group">
-                                    <input id="cp-login-twofa" ng-model="twofa" type="text" class="form-control" name="twofa"
+                                    <input ng-model="twofa" type="text" class="form-control" name="twofa"
                                            placeholder="Enter code from Google Authenticator" required
                                            style="height: 45px;">
                                     <span class="input-group-addon bg-blue">
@@ -339,9 +333,8 @@
 
 
                             <div class="form-group">
-                                <label class="cp-auth-field-label" for="cp-login-language">{% trans "Language" %}</label>
                                 <div class="input-group">
-                                    <select id="cp-login-language" ng-model="languageSelection" ng-init="languageSelection='english'"
+                                    <select ng-model="languageSelection" ng-init="languageSelection='english'"
                                             class="form-control">
                                         <option value="english">English</option>
                                         <option>Bangla</option>

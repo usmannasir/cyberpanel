@@ -1,6 +1,6 @@
 {% load i18n %}
 <!doctype html>
-<html class="cp-evergreen cp-fileeditor" lang="en">
+<html lang="en">
 <head>
     <title>{% trans "Editing File - CyberPanel" %}</title>
     <!-- Required meta tags -->
@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     {% load static %}
-    <link rel="icon" type="image/svg+xml" href="{% static 'baseTemplate/brand/favicon.svg' %}">
+    <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
@@ -49,8 +49,6 @@
 
     <!-- HTML Editor Include -->
 
-    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen.css' %}?v=20260914-1">
-    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen-standalone.css' %}?v=20260914-1">
 </head>
 <body ng-app="editFile" ng-controller="editFileCtrl">
 

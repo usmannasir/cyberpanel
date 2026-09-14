@@ -87,6 +87,30 @@
         </div>
     </div>
 
+    <!-- Dismissible Build Services promo card -->
+    <div class="cp-build-card" id="cp-build-card" hidden>
+        <button class="cp-build-x" type="button" id="cp-build-card-x" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times"></i></button>
+        <i class="fas fa-rocket cp-build-bg" aria-hidden="true"></i>
+        <h3>{% trans "Need an app or custom website built?" %}</h3>
+        <p>{% trans "CyberPanel offers professional development services — websites, web apps, Android & iOS apps, and custom software, delivered and deployed for you." %}</p>
+        <div class="cp-build-actions">
+            <a class="cp-build-btn primary" href="{% url 'buildServices' %}"><i class="fas fa-arrow-right"></i> {% trans "Explore Build Services" %}</a>
+            <a class="cp-build-btn ghost" href="https://cyberpanel.net/custom-development?utm_source=cyberpanel&utm_medium=panel&utm_campaign=dashboard_card" target="_blank" rel="noopener">{% trans "Get a quote" %}</a>
+        </div>
+    </div>
+    <script>
+    (function () {
+        try {
+            var card = document.getElementById('cp-build-card');
+            if (!card) { return; }
+            var KEY = 'cpBuildCardDismissed';
+            if (localStorage.getItem(KEY) !== 'true') { card.hidden = false; }
+            var x = document.getElementById('cp-build-card-x');
+            if (x) { x.addEventListener('click', function () { try { localStorage.setItem(KEY, 'true'); } catch (e) {} card.hidden = true; }); }
+        } catch (e) {}
+    })();
+    </script>
+
     <!-- Overview Section -->
     <div class="overview-section">
         <h2 class="section-title">{% trans "OVERVIEW" %}</h2>
@@ -525,30 +549,6 @@
         
     </div>
     
-    <!-- Dismissible Build Services promo card -->
-    <div class="cp-build-card" id="cp-build-card" hidden>
-        <button class="cp-build-x" type="button" id="cp-build-card-x" aria-label="{% trans 'Dismiss' %}"><i class="fas fa-times"></i></button>
-        <i class="fas fa-rocket cp-build-bg" aria-hidden="true"></i>
-        <h3>{% trans "Need an app or custom website built?" %}</h3>
-        <p>{% trans "CyberPanel offers professional development services — websites, web apps, Android & iOS apps, and custom software, delivered and deployed for you." %}</p>
-        <div class="cp-build-actions">
-            <a class="cp-build-btn primary" href="{% url 'buildServices' %}"><i class="fas fa-arrow-right"></i> {% trans "Explore Build Services" %}</a>
-            <a class="cp-build-btn ghost" href="https://cyberpanel.net/custom-development?utm_source=cyberpanel&utm_medium=panel&utm_campaign=dashboard_card" target="_blank" rel="noopener">{% trans "Get a quote" %}</a>
-        </div>
-    </div>
-    <script>
-    (function () {
-        try {
-            var card = document.getElementById('cp-build-card');
-            if (!card) { return; }
-            var KEY = 'cpBuildCardDismissed';
-            if (localStorage.getItem(KEY) !== 'true') { card.hidden = false; }
-            var x = document.getElementById('cp-build-card-x');
-            if (x) { x.addEventListener('click', function () { try { localStorage.setItem(KEY, 'true'); } catch (e) {} card.hidden = true; }); }
-        } catch (e) {}
-    })();
-    </script>
-
     <!-- SSH Activity Modal -->
     <div ng-show="showSSHActivityModal" ng-class="{'show': showSSHActivityModal}" class="modal-backdrop ng-cloak" id="ssh-activity-modal" role="dialog" aria-modal="true" aria-labelledby="ssh-modal-title" ng-click="closeModalOnBackdrop($event)">
         <div class="modal-content">
