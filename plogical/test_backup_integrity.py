@@ -10,9 +10,21 @@ from plogical.backupIntegrity import (
     UnsafeArchiveError,
     archive_is_ready,
     archive_is_valid,
+    backup_process_is_running,
     resolve_archive_path,
     safe_extract,
 )
+
+
+class BackupProcessDetectionTests(TestCase):
+    def test_matches_only_the_requested_domain_worker(self):
+        processes = 'python startBackup /home/other.example/backup/status'
+        self.assertFalse(backup_process_is_running(processes, 'wanted.example'))
+        self.assertTrue(backup_process_is_running(processes, 'other.example'))
+
+    def test_rejects_domain_text_without_a_backup_worker(self):
+        self.assertFalse(backup_process_is_running(
+            'tail -f /home/example.com/backup/status', 'example.com'))
 
 
 class BackupArchiveReadinessTests(TestCase):

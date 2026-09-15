@@ -5,6 +5,12 @@ import tarfile
 import time
 
 
+def backup_process_is_running(process_list, domain):
+    """Return whether the process list contains a backup worker for domain."""
+    has_backup_worker = 'startBackup' in process_list or 'BackupRoot' in process_list
+    return has_backup_worker and ('/%s/' % domain) in process_list
+
+
 class UnsafeArchiveError(tarfile.TarError):
     """Raised when an archive member could escape its extraction directory."""
 
