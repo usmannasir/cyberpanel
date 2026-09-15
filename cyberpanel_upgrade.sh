@@ -1166,7 +1166,10 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
   
   # First try using python3 -m venv (more reliable on Ubuntu 22.04)
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Attempting to create virtual environment using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  virtualenv_output=$("$CyberPanel_Python" -m venv --system-site-packages /usr/local/CyberCP 2>&1)
+  # Keep the panel runtime isolated. Inheriting distribution packages can make
+  # pip complete successfully while Python imports an older or partially
+  # replaced Django dependency from /usr/lib, causing verification to fail.
+  virtualenv_output=$("$CyberPanel_Python" -m venv /usr/local/CyberCP 2>&1)
   VENV_CODE=$?
   echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
   

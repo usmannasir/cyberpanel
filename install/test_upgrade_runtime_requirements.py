@@ -127,6 +127,14 @@ chmod 755 lswsgi
         self.assertTrue(all(line.endswith('|unset|unset') for line in lines))
         self.assertNotIn('WRONG-PATH-COMMAND', self.trace.read_text())
 
+    def test_primary_panel_runtime_is_isolated_from_system_packages(self):
+        creation = '"$CyberPanel_Python" -m venv /usr/local/CyberCP'
+        self.assertIn(creation, SOURCE)
+        self.assertNotIn(
+            '"$CyberPanel_Python" -m venv --system-site-packages /usr/local/CyberCP',
+            SOURCE,
+        )
+
     def test_panel_install_failure_is_nonzero_after_bounded_retry(self):
         self.assertNotEqual(0, self.install_panel(FAKE_INSTALL_EXIT=41).returncode)
         self.assertEqual('2', self.count.read_text().strip())
