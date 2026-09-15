@@ -14,7 +14,7 @@ from plogical.backupUtilities import backupUtilities
 from re import match,I,M
 from websiteFunctions.models import Backups, BackupJob, BackupJobLogs
 from plogical.processUtilities import ProcessUtilities
-from plogical.backupIntegrity import archive_is_ready, resolve_archive_path
+from plogical.backupIntegrity import archive_is_ready, backup_process_is_running, resolve_archive_path
 import json, requests
 from datetime import datetime
 import signal
@@ -119,7 +119,7 @@ class backupSchedule:
                     logging.CyberCPLogFileWriter.writeToFile(message)
 
 
-                if (ifRunning.find('startBackup') > -1 or ifRunning.find('BackupRoot') > -1) and ifRunning.find('/%s/' % (backupDomain)):
+                if backup_process_is_running(ifRunning, backupDomain):
                     if os.path.exists('/usr/local/CyberCP/debug'):
                         message = 'If running found.'
                         logging.CyberCPLogFileWriter.writeToFile(message)
