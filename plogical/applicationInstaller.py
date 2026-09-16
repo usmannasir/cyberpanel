@@ -31,7 +31,7 @@ from plogical.wordpressInstallerUtilities import (
     build_directory_probe,
     build_wordpress_core_install_command,
     directory_allows_install,
-    wordpress_php_change_required,
+    php_binary_for_selection,
 )
 from random import randint
 import hashlib
@@ -681,46 +681,34 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
 
-            #### Before installing wordpress change php to 8.0
-
-            from plogical.virtualHostUtilities import virtualHostUtilities
-
-            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
-
-            from plogical.phpUtilities import phpUtilities
-
             try:
-                phpPath = phpUtilities.GetPHPVersionFromFile(completePathToConfigFile)
-            except:
-                phpPath = '/usr/local/lsws/lsphp83/bin/php'
+                configured_site = ChildDomains.objects.get(domain=domainName)
+                php_selection = configured_site.phpSelection
+            except ChildDomains.DoesNotExist:
+                configured_site = Websites.objects.get(domain=domainName)
+                php_selection = configured_site.phpSelection
 
-            requiredPHPPath = '/usr/local/lsws/lsphp83/bin/php'
-            if wordpress_php_change_required(phpPath, requiredPHPPath):
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " changePHP --phpVersion 'PHP 8.3' --path " + completePathToConfigFile
-                ProcessUtilities.executioner(execPath)
-                try:
-                    phpPath = phpUtilities.GetPHPVersionFromFile(completePathToConfigFile)
-                except:
-                    phpPath = requiredPHPPath
-
-            ### lets first find php path
-
-            
-
-            command = "sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' /usr/local/lsws/lsphp83/etc/php/8.3/litespeed/php.ini"
-            ProcessUtilities.executioner(command)
-
-            command = "sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' /usr/local/lsws/lsphp83/etc/php.ini"
-            ProcessUtilities.executioner(command)
-
-            ### basically for now php 8.3 is being checked
-
-            if not os.path.exists(phpPath):
+            phpPath = php_binary_for_selection(php_selection)
+            if not os.path.isfile(phpPath):
                 statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('PHP 8.3 missing installing now..,20')
+                statusFile.writelines(
+                    '%s is selected for this website but is not installed. '
+                    'Install that PHP version or select an installed version before installing WordPress.[404]'
+                    % php_selection
+                )
                 statusFile.close()
-                phpUtilities.InstallSaidPHP('83')
+                return 0
+
+            php_code = PHPManager.getPHPString(php_selection)
+            php_ini_candidates = (
+                '/usr/local/lsws/lsphp%s/etc/php/%s.%s/litespeed/php.ini'
+                % (php_code, php_code[0], php_code[1:]),
+                '/usr/local/lsws/lsphp%s/etc/php.ini' % php_code,
+            )
+            for php_ini in php_ini_candidates:
+                if os.path.isfile(php_ini):
+                    command = "sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' %s" % shlex.quote(php_ini)
+                    ProcessUtilities.executioner(command)
 
 
             finalPath = ''
@@ -782,16 +770,7 @@ class ApplicationInstaller(multi.Thread):
             command = "rm -rf " + finalPath + "index.html"
             ProcessUtilities.executioner(command, externalApp)
 
-            # Always use PHP 8.3 for WordPress installation
-            FinalPHPPath = '/usr/local/lsws/lsphp83/bin/php'
-            
-            # Ensure PHP 8.3 is installed
-            if not os.path.exists(FinalPHPPath):
-                from plogical.phpUtilities import phpUtilities
-                phpUtilities.InstallSaidPHP('83')
-                if not os.path.exists(FinalPHPPath):
-                    # Fallback to detected PHP path if 8.3 install fails
-                    FinalPHPPath = phpPath
+            FinalPHPPath = phpPath
 
             ## Security Check
 
@@ -1988,10 +1967,6 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 website = Websites.objects.get(domain=DataToPass['domainName'])
-
-                if website.phpSelection == 'PHP 7.3' or website.phpSelection == 'PHP 8.2':
-                    website.phpSelection = 'PHP 8.3'
-                    website.save()
 
                 admin = Administrator.objects.get(pk=self.extraArgs['adminID'])
 

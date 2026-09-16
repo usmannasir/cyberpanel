@@ -1,10 +1,13 @@
+import os
 import shlex
 import unittest
 
 from plogical.wordpressInstallerUtilities import (
     build_directory_probe,
     build_wordpress_core_install_command,
+    change_php_succeeded,
     directory_allows_install,
+    php_binary_for_selection,
     select_wordpress_version,
     wordpress_php_change_required,
 )
@@ -73,6 +76,29 @@ class WordPressInstallerUtilitiesTests(unittest.TestCase):
                 '/usr/local/lsws/lsphp82/bin/php', php,
             )
         )
+
+    def test_php_selection_maps_to_the_exact_requested_runtime(self):
+        self.assertEqual(
+            '/usr/local/lsws/lsphp85/bin/php',
+            php_binary_for_selection('PHP 8.5'),
+        )
+        with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
+            php_binary_for_selection('PHP latest')
+
+    def test_change_php_requires_the_explicit_success_record(self):
+        self.assertTrue(change_php_succeeded('example.com\n1,None\n'))
+        self.assertFalse(change_php_succeeded('example.com\n0,missing runtime\n'))
+        self.assertFalse(change_php_succeeded(''))
+
+    def test_installer_does_not_force_existing_sites_to_php_83(self):
+        source_path = os.path.join(os.path.dirname(__file__), 'applicationInstaller.py')
+        with open(source_path, encoding='utf-8') as source_file:
+            source = source_file.read()
+        installer = source.split('    def installWordPress(self):', 1)[1].split(
+            '    def wordpressInstallNew(self):', 1
+        )[0]
+        self.assertNotIn("changePHP --phpVersion 'PHP 8.3'", installer)
+        self.assertNotIn("FinalPHPPath = '/usr/local/lsws/lsphp83/bin/php'", installer)
 
 
 if __name__ == '__main__':

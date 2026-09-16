@@ -429,6 +429,8 @@ class phpUtilities:
 
     @staticmethod
     def FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion):
+        # Preserve the requested version. Callers must surface an unavailable
+        # runtime instead of silently changing the website to another PHP.
         if vhFile != None:
             virtualHostName = vhFile.split('/')[6]
             result = phpUtilities.GetPHPVersionFromFile(vhFile, virtualHostName)
@@ -436,8 +438,7 @@ class phpUtilities:
             if os.path.exists(result):
                 return phpVersion
             else:
-                from managePHP.phpManager import PHPManager
-                return PHPManager.findPHPVersions()[-2]
+                return phpVersion
         else:
             from managePHP.phpManager import PHPManager
             php = PHPManager.getPHPString(phpVersion)
@@ -445,8 +446,7 @@ class phpUtilities:
             if os.path.exists(finalPath):
                 return phpVersion
             else:
-                from managePHP.phpManager import PHPManager
-                return PHPManager.findPHPVersions()[-2]
+                return phpVersion
 
 
     @staticmethod

@@ -4,6 +4,7 @@ import shlex
 
 
 WORDPRESS_VERSION = re.compile(r'^\d+\.\d+(?:\.\d+)?$')
+PHP_SELECTION = re.compile(r'^PHP\s+(\d+)\.(\d+)$')
 
 
 def select_wordpress_version(offers):
@@ -22,6 +23,19 @@ def wordpress_php_change_required(current_binary, required_binary):
     current = os.path.normpath(str(current_binary or ''))
     required = os.path.normpath(str(required_binary or ''))
     return not current or current != required
+
+
+def php_binary_for_selection(selection):
+    """Map a panel PHP selection to its exact LiteSpeed PHP CLI binary."""
+    match = PHP_SELECTION.fullmatch(str(selection or '').strip())
+    if match is None:
+        raise ValueError('Invalid PHP version selected.')
+    return '/usr/local/lsws/lsphp%s%s/bin/php' % match.groups()
+
+
+def change_php_succeeded(output):
+    """Only accept the explicit success record printed by changePHP."""
+    return any(line.strip() == '1,None' for line in str(output or '').splitlines())
 
 
 def build_directory_probe(path):
