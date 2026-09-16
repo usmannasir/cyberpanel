@@ -53,7 +53,11 @@ import validators
 from django.http import JsonResponse
 import ipaddress
 import requests
-from plogical.wordpressInstallerUtilities import select_wordpress_version
+from plogical.wordpressInstallerUtilities import (
+    change_php_succeeded,
+    php_binary_for_selection,
+    select_wordpress_version,
+)
 from plogical.cyberedge import (
     download_verified_plugin,
     public_edge_status,
@@ -4308,9 +4312,31 @@ context /cyberpanel_suspension_page.html {
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + self.domain
         completePathToConfigFile = confPath + "/vhost.conf"
 
+        try:
+            php_binary = php_binary_for_selection(phpVersion)
+        except ValueError as msg:
+            return HttpResponse(json.dumps({
+                'status': 0, 'changePHP': 0, 'error_message': str(msg),
+            }))
+        if not os.path.isfile(php_binary):
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'changePHP': 0,
+                'error_message': '%s is not installed on this server.' % phpVersion,
+            }))
+
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
-        ProcessUtilities.popenExecutioner(execPath)
+        output = ProcessUtilities.outputExecutioner(execPath)
+        if not change_php_succeeded(output):
+            logging.CyberCPLogFileWriter.writeToFile(
+                'PHP change failed for %s: %s' % (self.domain, output)
+            )
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'changePHP': 0,
+                'error_message': output or 'PHP change command failed.',
+            }))
 
         try:
             website = Websites.objects.get(domain=self.domain)
@@ -4327,9 +4353,17 @@ context /cyberpanel_suspension_page.html {
                     completePathToConfigFile = confPath + "/vhost.conf"
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                     execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
-                    ProcessUtilities.popenExecutioner(execPath)
+                    alias_output = ProcessUtilities.outputExecutioner(execPath)
+                    if not change_php_succeeded(alias_output):
+                        raise RuntimeError(alias_output or 'PHP change command failed.')
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(f'Error changing PHP for alias: {str(msg)}')
+                    return HttpResponse(json.dumps({
+                        'status': 0,
+                        'changePHP': 0,
+                        'error_message': 'PHP changed for the website, but failed for alias %s: %s'
+                                         % (alias.domain, msg),
+                    }))
 
 
         except:

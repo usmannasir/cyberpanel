@@ -799,9 +799,14 @@ class vhost:
 
         logging.CyberCPLogFileWriter.writeToFile(f"PHP version before making sure its available or not: {phpVersion} and vhFile: {vhFile}")
 
-        from plogical.phpUtilities import phpUtilities
-
-        phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(None, phpVersion)
+        php = PHPManager.getPHPString(phpVersion)
+        if not os.path.isfile('/usr/local/lsws/lsphp%s/bin/lsphp' % php):
+            message = 'This PHP version is not available on your CyberPanel.'
+            logging.CyberCPLogFileWriter.writeToFile(
+                '%s Requested version: %s [changePHP]' % (message, phpVersion)
+            )
+            print(0, message)
+            return [0, '[%s [changePHP]' % message]
 
         phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
