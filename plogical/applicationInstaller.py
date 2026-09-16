@@ -35,6 +35,8 @@ from plogical.wordpressInstallerUtilities import (
 )
 from random import randint
 import hashlib
+import shlex
+from plogical.cyberedge import download_verified_plugin
 
 
 class ApplicationInstaller(multi.Thread):
@@ -859,11 +861,17 @@ class ApplicationInstaller(multi.Thread):
             ##
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Installing LSCache Plugin,80')
+            statusFile.writelines('Installing CyberEdge Cache,80')
             statusFile.close()
 
-            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin install litespeed-cache --allow-root --path=" + finalPath
-            result = ProcessUtilities.outputExecutioner(command, externalApp)
+            plugin_archive = download_verified_plugin()
+            try:
+                command = '%s -d error_reporting=0 /usr/bin/wp plugin install %s --force --allow-root --path=%s' % (
+                    shlex.quote(FinalPHPPath), shlex.quote(plugin_archive), shlex.quote(finalPath))
+                result = ProcessUtilities.outputExecutioner(command, externalApp)
+            finally:
+                if os.path.exists(plugin_archive):
+                    os.unlink(plugin_archive)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(str(result))
@@ -872,10 +880,11 @@ class ApplicationInstaller(multi.Thread):
                 raise BaseException(result)
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Activating LSCache Plugin,90')
+            statusFile.writelines('Activating CyberEdge Cache,90')
             statusFile.close()
 
-            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate litespeed-cache --allow-root --path=" + finalPath
+            command = '%s -d error_reporting=0 /usr/bin/wp plugin activate cyberedge-cache --allow-root --path=%s' % (
+                shlex.quote(FinalPHPPath), shlex.quote(finalPath))
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):

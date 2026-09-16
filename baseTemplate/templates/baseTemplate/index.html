@@ -279,6 +279,32 @@
             <span class="cp-bc-chevron" aria-hidden="true">/</span>
             <span id="cp-bc-page" class="cp-bc-page" aria-current="page"></span>
         </nav>
+        <aside id="cyberedge-panel-promo" style="display:none;margin:0 24px 20px;padding:16px 18px;border:1px solid #cbd5e1;border-left:4px solid #ff5b2d;border-radius:8px;background:#fff;align-items:center;gap:16px;justify-content:space-between;" aria-label="{% trans 'CyberEdge Cache' %}">
+            <div>
+                <strong>{% trans "Make every WordPress site faster with CyberEdge Cache" %}</strong>
+                <div style="margin-top:4px;color:#64748b;">{% trans "Install from WordPress Manager, connect your account, and verify the live Edge route without leaving CyberPanel." %}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;white-space:nowrap;">
+                <a href="https://platform.cyberpersons.com/edge/get-started/" target="_blank" rel="noopener" class="btn btn-primary btn-sm">{% trans "Get CyberEdge" %}</a>
+                <button type="button" id="cyberedge-panel-promo-dismiss" class="btn btn-default btn-sm" aria-label="{% trans 'Dismiss CyberEdge promotion' %}">&times;</button>
+            </div>
+        </aside>
+        <script>
+        (function () {
+            var key = 'cyberedge-panel-promo-v1-dismissed';
+            var promo = document.getElementById('cyberedge-panel-promo');
+            if (!promo) return;
+            try {
+                if (window.localStorage.getItem(key) !== '1') promo.style.display = 'flex';
+            } catch (e) {
+                promo.style.display = 'flex';
+            }
+            document.getElementById('cyberedge-panel-promo-dismiss').addEventListener('click', function () {
+                promo.style.display = 'none';
+                try { window.localStorage.setItem(key, '1'); } catch (e) {}
+            });
+        }());
+        </script>
         {% block content %}{% endblock %}
     </main>
     

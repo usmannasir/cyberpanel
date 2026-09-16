@@ -581,9 +581,15 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
             if (response.data.status === 1) {
                 $('#WPVersion').text(response.data.ret_data.version);
-                if (response.data.ret_data.lscache === 1) {
-                    $('#lscache').prop('checked', true);
-                }
+                $scope.cyberedge = {
+                    installed: response.data.ret_data.cyberedge_installed === 1,
+                    active: response.data.ret_data.cyberedge_active === 1,
+                    connected: response.data.ret_data.cyberedge_connected === 1,
+                    routeState: response.data.ret_data.cyberedge_route_state,
+                    cache: response.data.ret_data.cyberedge_cache,
+                    node: response.data.ret_data.cyberedge_node,
+                    reason: response.data.ret_data.cyberedge_reason
+                };
                 if (response.data.ret_data.debugging === 1) {
                     $('#debugging').prop('checked', true);
                 }
@@ -691,6 +697,22 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 $scope.searchIndex = $scope.searchIndex === 1 ? 0 : 1;
             }
             console.error('Failed to update setting:', error);
+        });
+    };
+
+    $scope.InstallCyberEdge = function () {
+        $scope.wordpresshomeloading = false;
+        $http.post('/websites/UpdateWPSettings', {
+            siteId: $('#WPid').html(),
+            setting: 'cyberedge',
+            settingValue: 1
+        }, {headers: {'X-CSRFToken': getCookie('csrftoken')}}).then(function (response) {
+            if (response.data.status === 1) {
+                $scope.LoadWPdata();
+            } else {
+                $scope.wordpresshomeloading = true;
+                new PNotify({title: 'Installation failed', text: response.data.error_message, type: 'error'});
+            }
         });
     };
 
