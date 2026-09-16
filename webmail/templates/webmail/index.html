@@ -6,7 +6,7 @@
 
 <link rel="stylesheet" href="{% static 'webmail/webmail.css' %}">
 
-<div class="webmail-container" ng-controller="webmailCtrl" ng-init="init()">
+<div class="webmail-container" ng-class="{'wm-reading': viewMode === 'read'}" ng-controller="webmailCtrl" ng-init="init()">
 
     <div id="cybermailBanner" style="display:none;flex-shrink:0;">
       <div style="padding:10px 20px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);">
@@ -156,6 +156,9 @@
             <!-- Message Read View -->
             <div ng-if="viewMode === 'read' && openMsg" class="wm-read-view">
                 <div class="wm-read-toolbar">
+                    <button class="btn btn-sm btn-default wm-mobile-back" ng-click="setView('list')">
+                        <i class="fa fa-arrow-left"></i> {% trans "Back" %}
+                    </button>
                     <button class="btn btn-sm btn-default" ng-click="replyTo()">
                         <i class="fa fa-reply"></i> {% trans "Reply" %}
                     </button>

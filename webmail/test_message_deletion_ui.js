@@ -9,7 +9,7 @@ const source = fs.readFileSync(path.join(__dirname, 'static/webmail/webmail.js')
 function harness() {
     let controller;
     const requests = [], notices = [];
-    const scope = {};
+    const scope = {$on() {}};
     const sandbox = {
         app: {filter() {}, directive() {}, controller(name, parts) { controller = parts.at(-1); }},
         getCookie: () => 'test-token',
@@ -39,6 +39,40 @@ function harness() {
     }
     return {scope, requests, notices, respond, load, open, listData};
 }
+
+test('webmail starts a guarded inbox refresh after successful SSO', () => {
+    let controller, intervalCallback, intervalDelay;
+    const requests = [];
+    const scope = {$on() {}};
+    const sandbox = {
+        app: {filter() {}, directive() {}, controller(name, parts) { controller = parts.at(-1); }},
+        getCookie: () => 'test-token', PNotify() {}, console: {error() {}},
+        document: {hidden: false}, window: {}, setTimeout() {}, clearTimeout() {}
+    };
+    vm.runInNewContext(source, sandbox, {filename: 'webmail.js'});
+    const http = {post(url, payload) {
+        const request = {url, payload}; requests.push(request);
+        return {then(success, failure) { request.success = success; request.failure = failure; }};
+    }};
+    const interval = (callback, delay) => { intervalCallback = callback; intervalDelay = delay; return 1; };
+    interval.cancel = () => {};
+    controller(scope, http, {trustAsHtml: value => value}, callback => callback(), interval);
+    scope.init();
+    requests.at(-1).success({data: {status: 1, email: 'fixture@example.com', accounts: ['fixture@example.com']}});
+    assert.equal(intervalDelay, 30000);
+    const before = requests.length;
+    intervalCallback();
+    assert.deepEqual(requests.slice(before).map(r => r.url), ['/webmail/api/listMessages', '/webmail/api/listFolders']);
+});
+
+test('mobile webmail switches between the message list and read pane', () => {
+    const template = fs.readFileSync(path.join(__dirname, 'templates/webmail/index.html'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, 'static/webmail/webmail.css'), 'utf8');
+    assert.match(template, /ng-class="\{'wm-reading': viewMode === 'read'\}"/);
+    assert.match(template, /wm-mobile-back[^>]+ng-click="setView\('list'\)"/);
+    assert.match(css, /\.webmail-container\.wm-reading \.wm-message-list\s*\{\s*display: none/);
+    assert.match(css, /\.webmail-container\.wm-reading \.wm-detail-pane\s*\{\s*display: block/);
+});
 
 for (const action of ['bulk', 'single']) {
     test(action + ' delete exposes status-0 errors and preserves the current message', () => {

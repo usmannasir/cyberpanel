@@ -32,6 +32,21 @@ class FirewallStaticBundleTests(unittest.TestCase):
             with self.subTest(template=template), open(template, encoding='utf-8') as template_file:
                 self.assertIn(expected, template_file.read())
 
+    def test_security_page_spinners_follow_legacy_loading_flag_semantics(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        templates = (
+            ('modSecurity.html', 'modsecLoading'),
+            ('modSecurityRules.html', 'modsecLoading'),
+            ('modSecurityRulesPacks.html', 'modsecLoading'),
+            ('secureSSH.html', 'secureSSHLoading'),
+        )
+        for filename, flag in templates:
+            path = os.path.join(root, 'firewall', 'templates', 'firewall', filename)
+            with self.subTest(template=filename), open(path, encoding='utf-8') as template_file:
+                source = template_file.read()
+                self.assertIn('ng-hide="%s"' % flag, source)
+                self.assertNotIn('ng-show="%s"' % flag, source)
+
 
 if __name__ == '__main__':
     unittest.main()
