@@ -953,20 +953,22 @@
                         <h4>Site Settings</h4>
                     </div>
                     <div class="settings-grid">
-                        <div class="setting-item">
+                        <div class="setting-item" style="grid-column: 1 / -1;">
                             <div class="setting-icon">
                                 <i class="fas fa-rocket"></i>
                             </div>
                             <div class="setting-content">
                                 <div class="setting-info">
-                                    <h6>LSCache</h6>
-                                    <p>LiteSpeed caching for better performance</p>
+                                    <h6>CyberEdge Cache <span class="label label-success" ng-if="cyberedge.routeState === 'active'">Serving</span></h6>
+                                    <p ng-if="!cyberedge.installed">Global full-page caching is not installed on this WordPress site.</p>
+                                    <p ng-if="cyberedge.installed && !cyberedge.active">The plugin is installed but inactive.</p>
+                                    <p ng-if="cyberedge.active && !cyberedge.connected">The plugin is ready. Connect this site to your CyberEdge account.</p>
+                                    <p ng-if="cyberedge.connected && cyberedge.routeState !== 'active'">Connected, but the public Edge route is not active yet. Resume activation in CyberEdge.</p>
+                                    <p ng-if="cyberedge.routeState === 'active'">Public traffic is reaching node <strong>{$ cyberedge.node $}</strong>; latest cache result: <strong>{$ cyberedge.cache $}</strong><span ng-if="cyberedge.reason"> ({$ cyberedge.reason $})</span>.</p>
                                 </div>
-                                <label class="checkbox-inline">
-                                    <input ng-click="UpdateWPSettings('lscache')"
-                                           type="checkbox"
-                                           id="lscache">
-                                </label>
+                                <button type="button" class="btn btn-primary btn-sm" ng-if="!cyberedge.installed || !cyberedge.active" ng-click="InstallCyberEdge()">Install &amp; activate</button>
+                                <a class="btn btn-primary btn-sm" ng-if="cyberedge.active" target="_blank" rel="noopener" href="{% url 'AutoLogin' %}?id={{ wpsite.id }}&amp;next=cyberedge"><span ng-if="!cyberedge.connected">Connect</span><span ng-if="cyberedge.connected">Manage cache</span></a>
+                                <a class="btn btn-default btn-sm" ng-if="cyberedge.connected && cyberedge.routeState !== 'active'" target="_blank" rel="noopener" href="https://platform.cyberpersons.com/edge/">Resume activation</a>
                             </div>
                         </div>
                         <div class="setting-item">
