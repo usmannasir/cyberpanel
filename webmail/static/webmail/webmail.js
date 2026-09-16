@@ -104,7 +104,7 @@ app.directive('wmAutocomplete', ['$http', function($http) {
     };
 }]);
 
-app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($scope, $http, $sce, $timeout) {
+app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval', function($scope, $http, $sce, $timeout, $interval) {
 
     // ── State ────────────────────────────────────────────────
     $scope.currentEmail = '';
@@ -148,6 +148,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
 
     // Draft auto-save
     var draftTimer = null;
+    var inboxRefreshTimer = null;
     var messageRequest = 0;
     var openRequest = 0;
 
@@ -197,11 +198,29 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
                 $scope.managedAccounts = data.accounts || [];
                 $scope.loadFolders();
                 $scope.loadSettings();
+                startInboxRefresh();
             } else {
                 notify(data.error_message || 'No email accounts found. Create an email account first or use the standalone login.', 'error');
             }
         });
     };
+
+    function startInboxRefresh() {
+        if (inboxRefreshTimer) return;
+        inboxRefreshTimer = $interval(function() {
+            var tabVisible = !document.hidden;
+            var hasSelection = $scope.messages.some(function(msg) { return msg.selected; });
+            if (tabVisible && $scope.viewMode === 'list' && $scope.currentFolder === 'INBOX' &&
+                    $scope.currentPage === 1 && !$scope.loading && !hasSelection) {
+                $scope.loadMessages();
+                $scope.loadFolders(false);
+            }
+        }, 30000);
+    }
+
+    $scope.$on('$destroy', function() {
+        if (inboxRefreshTimer) $interval.cancel(inboxRefreshTimer);
+    });
 
     $scope.logoutStandalone = function() {
         apiCall('/webmail/api/logout', {}, function() {

@@ -414,6 +414,10 @@
     border-radius: 8px;
 }
 
+.wm-mobile-back {
+    display: none;
+}
+
 .wm-read-header {
     padding: 20px;
     border-bottom: 1px solid var(--border-color);
@@ -827,6 +831,11 @@
 }
 
 @media (max-width: 768px) {
+    .webmail-container {
+        height: calc(100dvh - 60px);
+        margin: -10px;
+        border-radius: 0;
+    }
     .wm-layout {
         flex-direction: column;
     }
@@ -859,12 +868,24 @@
     .wm-message-list {
         width: 100%;
         min-width: 100%;
-        max-height: 40vh;
+        max-height: none;
+        flex: 1;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
     }
     .wm-detail-pane {
-        min-height: 50vh;
+        display: none;
+        min-height: 0;
+    }
+    .webmail-container.wm-reading .wm-message-list {
+        display: none;
+    }
+    .webmail-container.wm-reading .wm-detail-pane {
+        display: block;
+        flex: 1;
+    }
+    .wm-mobile-back {
+        display: inline-block;
     }
     .wm-field-row {
         flex-direction: column;
