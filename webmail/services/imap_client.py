@@ -209,10 +209,19 @@ class IMAPClient:
                     'flags': flags,
                     'is_read': '\\Seen' in flags,
                     'is_flagged': '\\Flagged' in flags,
+                    'is_answered': '\\Answered' in flags,
                     'has_attachment': False,
                     'size': size,
                 })
             i += 1
+
+        # IMAP FETCH is free to return records in mailbox sequence order rather
+        # than in the order of the requested UID set. Preserve the order from
+        # SORT so Inbox, Sent and other folders remain correctly date-sorted.
+        message_by_uid = {message['uid']: message for message in messages}
+        messages = [message_by_uid[uid.decode() if isinstance(uid, bytes) else str(uid)]
+                    for uid in page_uids
+                    if (uid.decode() if isinstance(uid, bytes) else str(uid)) in message_by_uid]
 
         return {'messages': messages, 'total': total, 'page': page, 'pages': pages}
 

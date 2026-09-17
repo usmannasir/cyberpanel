@@ -221,6 +221,11 @@
     background: var(--accent-hover, #5A4BD1);
 }
 
+.wm-answered-icon {
+    color: var(--text-secondary);
+    margin-right: 5px;
+}
+
 /* Bulk Actions */
 .wm-bulk-actions {
     display: flex;
