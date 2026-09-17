@@ -137,7 +137,10 @@
                         <i class="fa" ng-class="msg.is_flagged ? 'fa-star wm-starred' : 'fa-star wm-unstarred'"></i>
                     </button>
                     <div class="wm-msg-from">{$ msg.from | limitTo:30 $}</div>
-                    <div class="wm-msg-subject">{$ msg.subject | limitTo:60 $}</div>
+                    <div class="wm-msg-subject">
+                        <i ng-if="msg.is_answered" class="fa fa-reply wm-answered-icon" title="{% trans 'Replied' %}"></i>
+                        {$ msg.subject | limitTo:60 $}
+                    </div>
                     <div class="wm-msg-date">{$ msg.date | wmDate $}</div>
                 </div>
                 <div class="wm-empty" ng-if="messages.length === 0 && !loading">
