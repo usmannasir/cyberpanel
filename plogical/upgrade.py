@@ -2046,10 +2046,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
-            try:
-                cursor.execute('ALTER TABLE loginSystem_administrator ADD defaultSite integer DEFAULT 0')
-            except:
-                pass
+            Upgrade.ensureAdministratorDefaultSiteColumn(connection, cursor)
 
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD twoFA integer DEFAULT 0')
@@ -2765,8 +2762,15 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 connection.close()
             except:
                 pass
-        except:
-            pass
+            return 1
+        except BaseException as msg:
+            Upgrade.stdOut('Login-system database migration failed: %s' % msg, 0)
+            return 0
+
+    @staticmethod
+    def ensureAdministratorDefaultSiteColumn(connection, cursor):
+        from plogical.schemaMigration import ensure_administrator_default_site
+        ensure_administrator_default_site(connection, cursor)
 
     @staticmethod
     def emailMarketingMigrationsa():
