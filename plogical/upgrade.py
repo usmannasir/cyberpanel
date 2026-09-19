@@ -3842,36 +3842,25 @@ passdb {
             '/etc/sysconfig/imunify360/integration.conf',
         ]
 
-        for imunify_path in imunify_paths:
-            if os.path.exists(imunify_path):
-                if os.path.isdir(imunify_path):
-                    custom_configs.append(imunify_path)
-                else:
-                    critical_files.append(imunify_path)
-        
         backed_up_files = {}
-        
-        for file_path in critical_files:
-            if os.path.exists(file_path):
-                try:
-                    backup_path = os.path.join(backup_dir, os.path.basename(file_path))
-                    shutil.copy2(file_path, backup_path)
-                    backed_up_files[file_path] = backup_path
-                    Upgrade.stdOut(f"Backed up {file_path}")
-                except Exception as e:
-                    raise RuntimeError(f"Failed to backup {file_path}: {str(e)}") from e
-        
-        # Backup directories
-        for dir_path in custom_configs:
-            if os.path.exists(dir_path):
-                try:
-                    backup_path = os.path.join(backup_dir, os.path.basename(os.path.normpath(dir_path)))
-                    shutil.copytree(dir_path, backup_path)
-                    backed_up_files[dir_path] = backup_path
-                    Upgrade.stdOut(f"Backed up directory {dir_path}")
-                except Exception as e:
-                    raise RuntimeError(f"Failed to backup {dir_path}: {str(e)}") from e
-        
+        for source_path in critical_files + custom_configs + imunify_paths:
+            source_path = os.path.normpath(source_path)
+            if not os.path.exists(source_path):
+                continue
+            try:
+                # Keep full paths under the private backup directory: two
+                # configurations named "config" must never overwrite each other.
+                backup_path = os.path.join(backup_dir, source_path.lstrip(os.sep))
+                os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+                if os.path.isdir(source_path):
+                    shutil.copytree(source_path, backup_path, symlinks=True)
+                else:
+                    shutil.copy2(source_path, backup_path)
+                backed_up_files[source_path] = backup_path
+                Upgrade.stdOut(f"Backed up {source_path}")
+            except Exception as e:
+                raise RuntimeError(f"Failed to backup {source_path}: {str(e)}") from e
+
         return backup_dir, backed_up_files
     
     @staticmethod

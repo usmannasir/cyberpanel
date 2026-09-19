@@ -22,16 +22,17 @@ class UpgradeRuntimeRepairTests(unittest.TestCase):
         }
 
         with patch('plogical.upgrade.os.path.exists',
-                   side_effect=lambda path: path in protected_files):
+                   side_effect=lambda path: path in protected_files), \
+                patch('plogical.upgrade.os.makedirs'):
             backup_dir, backed_up_files = Upgrade.backupCriticalFiles()
 
         self.assertEqual('/tmp/cyberpanel-backup', backup_dir)
         self.assertEqual(protected_files, set(backed_up_files))
         self.assertEqual(
             [
-                call('/usr/local/CyberCP/.env', '/tmp/cyberpanel-backup/.env'),
-                call('/usr/local/CyberCP/.env.backup', '/tmp/cyberpanel-backup/.env.backup'),
-                call('/usr/local/CyberCP/secret_key', '/tmp/cyberpanel-backup/secret_key'),
+                call('/usr/local/CyberCP/.env', '/tmp/cyberpanel-backup/usr/local/CyberCP/.env'),
+                call('/usr/local/CyberCP/.env.backup', '/tmp/cyberpanel-backup/usr/local/CyberCP/.env.backup'),
+                call('/usr/local/CyberCP/secret_key', '/tmp/cyberpanel-backup/usr/local/CyberCP/secret_key'),
             ],
             copy2.call_args_list,
         )
