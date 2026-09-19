@@ -579,7 +579,7 @@
                                 </td>
                                 <td style="text-align: center;">
                                     <button type="button" 
-                                            ng-click="removeDestination('SFTP', record.name)" 
+                                            ng-click="removeDestination('SFTP', record.name, record.id)"
                                             class="btn-danger">
                                         <i class="fas fa-trash"></i>
                                         {% trans "Delete" %}
@@ -622,7 +622,7 @@
                                 </td>
                                 <td style="text-align: center;">
                                     <button type="button" 
-                                            ng-click="removeDestination('local', record.name)" 
+                                            ng-click="removeDestination('local', record.name, record.id)"
                                             class="btn-danger">
                                         <i class="fas fa-trash"></i>
                                         {% trans "Delete" %}

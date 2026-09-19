@@ -792,6 +792,14 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('destStatus', 0)
 
+            name = data.get('name')
+            if not isinstance(name, str) or not name.strip():
+                raise ValueError('A backup destination name is required.')
+            name = name.strip()
+            # Schedules still resolve destinations by name, across both types.
+            if NormalBackupDests.objects.filter(name=name).exists():
+                raise ValueError('A backup destination with this name already exists. Choose a different name.')
+
             finalDic = {}
 
             if data['type'] == 'SFTP':
@@ -851,7 +859,7 @@ class BackupManager:
 
                     config = {'type': data['type'], 'ip': data['IPAddress'], 'username': data['userName'],
                               'port': data['backupSSHPort'], 'path': data['path']}
-                    nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
+                    nd = NormalBackupDests(name=name, config=json.dumps(config))
                     nd.save()
 
                     final_dic = {'status': 1, 'destStatus': 1, 'error_message': "None"}
@@ -869,7 +877,7 @@ class BackupManager:
                     return HttpResponse(json.dumps(final_dic))
 
                 config = {'type': data['type'], 'path': localPath}
-                nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
+                nd = NormalBackupDests(name=name, config=json.dumps(config))
                 nd.save()
 
                 final_dic = {'status': 1, 'destStatus': 1, 'error_message': "None"}
@@ -901,6 +909,7 @@ class BackupManager:
                 if config['type'] == data['type']:
                     if config['type'] == 'SFTP':
                         dic = {
+                            'id': items.pk,
                             'name': items.name,
                             'ip': config['ip'],
                             'username': config['username'],
@@ -909,6 +918,7 @@ class BackupManager:
                         }
                     else:
                         dic = {
+                            'id': items.pk,
                             'name': items.name,
                             'path': config['path'],
                         }
@@ -969,17 +979,46 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('delStatus', 0)
 
-            nameOrPath = data['nameOrPath']
-            type = data['type']
+            destinationType = data.get('type')
+            if destinationType not in ('SFTP', 'local'):
+                raise ValueError('Invalid backup destination type.')
 
-            NormalBackupDests.objects.get(name=nameOrPath).delete()
+            if 'destinationID' in data:
+                # Never fall back to a name when a supplied ID is invalid/stale.
+                destinationID = data['destinationID']
+                if (isinstance(destinationID, bool)
+                        or not isinstance(destinationID, (int, str))
+                        or not re.fullmatch(r'[0-9]+', str(destinationID))
+                        or int(destinationID) < 1):
+                    raise ValueError('Invalid backup destination ID.')
+                try:
+                    destination = NormalBackupDests.objects.get(pk=int(destinationID))
+                except NormalBackupDests.DoesNotExist:
+                    raise ValueError('Backup destination no longer exists. Refresh the destination list.')
+                if json.loads(destination.config).get('type') != destinationType:
+                    raise ValueError('Backup destination type does not match the selected destination.')
+            else:
+                # Older clients only send a name. Delete only an unambiguous
+                # match of the requested type; never pick an arbitrary duplicate.
+                name = data.get('nameOrPath')
+                if not isinstance(name, str) or not name:
+                    raise ValueError('A backup destination name or ID is required.')
+                matches = [destination for destination in NormalBackupDests.objects.filter(name=name)
+                           if json.loads(destination.config).get('type') == destinationType]
+                if not matches:
+                    raise ValueError('Backup destination no longer exists. Refresh the destination list.')
+                if len(matches) != 1:
+                    raise ValueError('Multiple backup destinations have this name. Refresh the page and select the destination again.')
+                destination = matches[0]
+
+            destination.delete()
 
             final_dic = {'status': 1, 'delStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'status': 0, 'delStatus': 1, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'delStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
