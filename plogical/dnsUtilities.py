@@ -68,63 +68,28 @@ class DNS:
     def cfTemplate(self, zoneDomain, admin, enableCheck=None):
         try:
             self.admin = admin
-            ## Get zone
+            if not self.loadCFKeys():
+                return 0, 'Cloudflare credentials not configured.'
+            if enableCheck is not None and self.status != 'Enable':
+                return 0, 'Sync not enabled.'
 
-            if self.loadCFKeys():
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            zones = cf.zones.get(params={'name': zoneDomain, 'per_page': 50})
+            if zones:
+                zone = sorted(zones, key=lambda item: item['name'])[0]['id']
+            else:
+                zone = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})['id']
 
-                if enableCheck == None:
-                    pass
-                else:
-                    if self.status == 'Enable':
-                        pass
-                    else:
-                        return 0, 'Sync not enabled.'
-
-                cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
-
-                try:
-                    params = {'name': zoneDomain, 'per_page': 50}
-                    zones = cf.zones.get(params=params)
-
-                    for zone in sorted(zones, key=lambda v: v['name']):
-                        zone = zone['id']
-
-                        domain = Domains.objects.get(name=zoneDomain)
-                        records = Records.objects.filter(domain_id=domain.id)
-
-                        for record in records:
-                            DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                          record.ttl)
-
-                        return 1, None
-
-
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
-
-                try:
-                    zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
-
-                    zone = zone_info['id']
-
-                    domain = Domains.objects.get(name=zoneDomain)
-                    records = Records.objects.filter(domain_id=domain.id)
-
-                    for record in records:
-                        DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                      record.ttl)
-
-                    return 1, None
-
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    return 0, str(e)
-                except Exception as e:
-                    return 0, str(e)
-
-        except BaseException as msg:
-            return 0, str(e)
+            domain = Domains.objects.get(name=zoneDomain)
+            for record in Records.objects.filter(domain_id=domain.id):
+                DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type,
+                                              record.content, record.prio, record.ttl)
+            return 1, None
+        except Exception as error:
+            # A failed lookup/update must not turn into an attempt to recreate
+            # the zone or a successful sync response.
+            logging.CyberCPLogFileWriter.writeToFile(str(error) + '. [cfTemplate]')
+            return 0, str(error)
 
     @staticmethod
     def dnsTemplate(domain, admin):
@@ -676,21 +641,66 @@ class DNS:
             return 0
 
     @staticmethod
+    def _cloudflareContent(record_type, value):
+        if record_type == 'TXT' and value.startswith('"'):
+            # PowerDNS/OpenDKIM can store one TXT value as quoted chunks.
+            # Cloudflare returns that same value as a single unquoted string.
+            return ''.join(shlex.split(value))
+        if record_type in ('CNAME', 'MX', 'NS', 'PTR'):
+            return value.rstrip('.').lower()
+        return value
+
+    @staticmethod
     def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
-        try:
+        # Cloudflare owns its SOA; it cannot be copied from PowerDNS.
+        if type == 'SOA':
+            return
+        name = name.rstrip('.').lower()
+        value = DNS._cloudflareContent(type, value)
+        dns_record = {'name': name, 'type': type, 'content': value}
+        if ttl > 0:
+            dns_record['ttl'] = ttl
+        if type == 'MX':
+            dns_record['priority'] = priority
 
-            if value.find('DKIM') > -1:
-                value = value.replace('\n\t', '')
-                value = value.replace('"', '')
+        records = []
+        page = 1
+        while True:
+            batch = cf.zones.dns_records.get(zone, params={
+                'name': name, 'type': type, 'page': page, 'per_page': 100,
+            })
+            records.extend(record for record in batch
+                           if record['name'].rstrip('.').lower() == name
+                           and record['type'] == type)
+            if len(batch) < 100:
+                break
+            page += 1
 
-            if ttl > 0:
-                dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
-            else:
-                dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
+        # These names represent one policy/key. Never add a second value or
+        # choose arbitrarily between existing policies managed outside the panel.
+        labels = name.split('.')
+        single_policy = type == 'TXT' and (
+            labels[0] == '_dmarc' or (len(labels) > 2 and labels[1] == '_domainkey'))
+        if single_policy and len(records) > 1:
+            raise ValueError('Multiple Cloudflare TXT records for %s; reconcile '
+                             'the existing mail policy/key records before syncing.' % name)
 
-            cf.zones.dns_records.post(zone, data=dns_record)
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
+        matching = [record for record in records
+                    if DNS._cloudflareContent(type, record['content']) == value
+                    and (type != 'MX' or record.get('priority') == priority)]
+        target = records[0] if single_policy and records else (matching[0] if matching else None)
+        if target is None:
+            return cf.zones.dns_records.post(zone, data=dns_record)
+
+        # PATCH only managed fields, preserving proxy status, comments and tags.
+        changes = {}
+        if DNS._cloudflareContent(type, target['content']) != value:
+            changes['content'] = value
+        if ttl > 0 and not target.get('proxied') and target.get('ttl') != ttl:
+            changes['ttl'] = ttl
+        if changes:
+            return cf.zones.dns_records.patch(zone, target['id'], data=changes)
+        return target
 
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
@@ -829,7 +839,7 @@ class DNS:
                         for zone in sorted(zones, key=lambda v: v['name']):
                             zone = zone['id']
 
-                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, ttl, priority)
+                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
                         logging.CyberCPLogFileWriter.writeToFile(str(e))
