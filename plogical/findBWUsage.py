@@ -2,6 +2,10 @@ import sys
 sys.path.append('/usr/local/CyberCP')
 import os
 import gc
+import hashlib
+import json
+import re
+import tempfile
 import time
 from plogical import CyberCPLogFileWriter as logging
 import shlex
@@ -16,128 +20,173 @@ class findBWUsage:
     MAX_LOG_LINES_PER_BATCH = 10000  # Process logs in batches
     MAX_FILE_SIZE_MB = 100  # Skip files larger than 100MB
     
+    HOME_DIRECTORY = "/home"
+    # Match the configured common/combined format, including empty or escaped requests.
+    LOG_RECORD = re.compile(
+        r'^\S+\s+\S+\s+\S+\s+\[[^\]]+\]\s+"(?:[^"\\]|\\.)*"'
+        r'\s+[0-9]{3}\s+([0-9]+|-)(?:\s|$)'
+    )
+
     @staticmethod
     def parse_last_digits(line):
-        """Safely parse log line and extract bandwidth data"""
+        """Return response bytes from a common/combined access-log record."""
+        if not isinstance(line, str):
+            return None
+        match = findBWUsage.LOG_RECORD.match(line)
+        if match is None:
+            return None
         try:
-            path = "/home/"+domainName+"/logs/"+domainName+".access_log"
+            return 0 if match[1] == '-' else int(match[1])
+        except ValueError:
+            return None
 
+    @staticmethod
+    def get_file_size_mb(filepath):
+        return os.path.getsize(filepath) / (1024 * 1024)
+
+    @staticmethod
+    def set_memory_limit():
+        """Cap the standalone worker without raising an existing process limit."""
+        try:
+            soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+            limit = findBWUsage.MAX_MEMORY_MB * 1024 * 1024
+            for existing in (soft, hard):
+                if existing != resource.RLIM_INFINITY:
+                    limit = min(limit, existing)
+            resource.setrlimit(resource.RLIMIT_AS, (limit, hard))
+        except (OSError, ValueError, AttributeError) as exc:
+            logging.CyberCPLogFileWriter.writeToFile(f"Failed to set memory limit: {exc}")
+
+    @staticmethod
+    def _checkpoint(logfile, offset):
+        """Recognize copy-truncated logs even if they have already grown again."""
+        logfile.seek(max(0, offset - 256))
+        digest = hashlib.sha256(logfile.read(min(offset, 256))).hexdigest()
+        logfile.seek(offset)
+        return digest
+
+    @staticmethod
+    def calculateBandwidth(domainName):
+        """Stream new complete records, preserving monthly totals across rotation."""
+        start_time = time.monotonic()
+        temporary = None
+        try:
+            path = os.path.join(findBWUsage.HOME_DIRECTORY, domainName, "logs",
+                                domainName + ".access_log")
+            bwmeta = os.path.join(findBWUsage.HOME_DIRECTORY, "cyberpanel", domainName + ".bwmeta")
             if not os.path.exists(path):
                 return 0
-                
-            # Check file size before processing
-            file_size_mb = findBWUsage.get_file_size_mb(path)
-            if file_size_mb > findBWUsage.MAX_FILE_SIZE_MB:
-                logging.CyberCPLogFileWriter.writeToFile(f"Skipping large file {path} ({file_size_mb:.2f}MB)")
+            if findBWUsage.get_file_size_mb(path) > findBWUsage.MAX_FILE_SIZE_MB:
+                logging.CyberCPLogFileWriter.writeToFile(f"Skipping large file {path}")
                 return 0
 
-            if not os.path.exists("/home/" + domainName + "/logs"):
-                return 0
-
-            bwmeta = "/home/cyberpanel/%s.bwmeta" % (domainName)
-            
-            # Initialize metadata
-            currentUsed = 0
-            currentLinesRead = 0
-            
-            # Read existing metadata
-            if os.path.exists(bwmeta):
-                try:
-                    with open(bwmeta, 'r') as f:
-                        data = f.readlines()
-                    if len(data) >= 2:
-                        currentUsed = int(data[0].strip("\n"))
-                        currentLinesRead = int(data[1].strip("\n"))
-                except (ValueError, IndexError):
-                    currentUsed = 0
-                    currentLinesRead = 0
-
-            # Process log file in streaming mode to avoid memory issues
+            currentUsed, currentLinesRead, cursor = 0, 0, None
             try:
-                with open(path, 'r', encoding='utf-8', errors='ignore') as logfile:
-                    # Skip to the last processed line
+                with open(bwmeta) as metadata:
+                    currentUsed = int(metadata.readline())
+                    currentLinesRead = int(metadata.readline())
+                    extra = metadata.readline()
+                    cursor = json.loads(extra) if extra.strip() else None
+                if currentUsed < 0 or currentLinesRead < 0:
+                    raise ValueError("Negative bandwidth metadata")
+            except FileNotFoundError:
+                pass
+
+            with open(path, 'rb') as logfile:
+                info = os.fstat(logfile.fileno())
+                # Only read the snapshot available at open; growing logs cannot extend a run.
+                size = info.st_size
+                if size > findBWUsage.MAX_FILE_SIZE_MB * 1024 * 1024:
+                    return 0
+                if cursor is not None:
+                    offset = cursor['offset']
+                    if not isinstance(offset, int) or offset < 0:
+                        raise ValueError("Invalid bandwidth cursor")
+                    same_log = (cursor['device'] == info.st_dev and cursor['inode'] == info.st_ino
+                                and offset <= size
+                                and cursor['tail'] == findBWUsage._checkpoint(logfile, offset))
+                    if same_log:
+                        logfile.seek(offset)
+                    else:
+                        currentLinesRead = 0
+                        logfile.seek(0)
+                else:
+                    # Upgrade legacy two-line metadata without recounting existing traffic.
                     for _ in range(currentLinesRead):
+                        if time.monotonic() - start_time >= findBWUsage.MAX_PROCESSING_TIME:
+                            return 0  # Keep the old cursor until migration can finish.
+                        remaining = size - logfile.tell()
+                        line = logfile.readline(remaining) if remaining > 0 else b''
+                        if not line or not line.endswith(b'\n'):
+                            currentLinesRead = 0
+                            logfile.seek(0)
+                            break
+
+                lines_processed = 0
+                while logfile.tell() < size:
+                    if time.monotonic() - start_time >= findBWUsage.MAX_PROCESSING_TIME:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Processing timeout for {domainName}")
+                        break
+                    offset = logfile.tell()
+                    line = logfile.readline(size - offset)
+                    if not line or not line.endswith(b'\n'):
+                        # Retry a partially written record on the next run.
+                        logfile.seek(offset)
+                        break
+                    bandwidth = findBWUsage.parse_last_digits(line.decode('utf-8', errors='replace'))
+                    if bandwidth is not None:
+                        currentUsed += bandwidth
+                    currentLinesRead += 1  # Blank/invalid records still advance the cursor.
+                    lines_processed += 1
+                    if lines_processed % findBWUsage.MAX_LOG_LINES_PER_BATCH == 0:
+                        gc.collect()
                         try:
-                            next(logfile)
-                        except StopIteration:
-                            break
-                    
-                    lines_processed = 0
-                    batch_size = 0
-                    
-                    for line in logfile:
-                        # Check processing time limit
-                        if time.time() - start_time > findBWUsage.MAX_PROCESSING_TIME:
-                            logging.CyberCPLogFileWriter.writeToFile(f"Processing timeout for {domainName}")
-                            break
-                        
-                        line = line.strip()
-                        if len(line) > 10:
-                            bandwidth = findBWUsage.parse_last_digits(line)
-                            if bandwidth is not None:
-                                currentUsed += bandwidth
-                            
-                            currentLinesRead += 1
-                            lines_processed += 1
-                            batch_size += 1
-                            
-                            # Process in batches to manage memory
-                            if batch_size >= findBWUsage.MAX_LOG_LINES_PER_BATCH:
-                                # Force garbage collection
-                                gc.collect()
-                                batch_size = 0
-                                
-                                # Check memory usage
-                                try:
-                                    import psutil
-                                    process = psutil.Process()
-                                    memory_mb = process.memory_info().rss / (1024 * 1024)
-                                    if memory_mb > findBWUsage.MAX_MEMORY_MB:
-                                        logging.CyberCPLogFileWriter.writeToFile(f"Memory limit reached for {domainName}")
-                                        break
-                                except ImportError:
-                                    pass  # psutil not available, continue processing
-                                
-            except (IOError, OSError) as e:
-                logging.CyberCPLogFileWriter.writeToFile(f"Error reading log file {path}: {str(e)}")
-                return 0
+                            import psutil
+                            if psutil.Process().memory_info().rss > findBWUsage.MAX_MEMORY_MB * 1024 * 1024:
+                                logging.CyberCPLogFileWriter.writeToFile(f"Memory limit reached for {domainName}")
+                                break
+                        except ImportError:
+                            pass
+                offset = logfile.tell()
+                cursor = {'device': info.st_dev, 'inode': info.st_ino, 'offset': offset,
+                          'tail': findBWUsage._checkpoint(logfile, offset)}
 
-            # Write updated metadata
-            try:
-                with open(bwmeta, 'w') as f:
-                    f.write(f"{currentUsed}\n{currentLinesRead}\n")
-                os.chmod(bwmeta, 0o600)
-            except (IOError, OSError) as e:
-                logging.CyberCPLogFileWriter.writeToFile(f"Error writing metadata {bwmeta}: {str(e)}")
-                return 0
-
-            # Log processing statistics
-            processing_time = time.time() - start_time
-            if processing_time > 10:  # Log if processing took more than 10 seconds
-                logging.CyberCPLogFileWriter.writeToFile(f"Processed {domainName}: {lines_processed} lines in {processing_time:.2f}s")
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [calculateBandwidth]")
+            # Existing readers consume the first two lines. The optional third line
+            # adds rotation detection and avoids rescanning on subsequent runs.
+            with tempfile.NamedTemporaryFile(mode='w', dir=os.path.dirname(bwmeta),
+                                             prefix='.' + domainName + '.bwmeta.', delete=False) as metadata:
+                temporary = metadata.name
+                metadata.write(f"{currentUsed}\n{currentLinesRead}\n{json.dumps(cursor)}\n")
+                metadata.flush()
+                os.fsync(metadata.fileno())
+            os.replace(temporary, bwmeta)
+            temporary = None
+            return 1
+        except Exception as exc:
+            logging.CyberCPLogFileWriter.writeToFile(f"{exc} [calculateBandwidth]")
             return 0
-
-        return 1
+        finally:
+            if temporary is not None:
+                try:
+                    os.unlink(temporary)
+                except OSError as exc:
+                    logging.CyberCPLogFileWriter.writeToFile(f"{exc} [bandwidth metadata cleanup]")
 
     @staticmethod
     def startCalculations():
-        """Start bandwidth calculations with resource protection"""
+        """Start the standalone bandwidth worker with resource protection."""
         try:
-            # Set memory limit
             findBWUsage.set_memory_limit()
-            
-            start_time = time.time()
-            domains_processed = 0
-            
-            for directories in os.listdir("/home"):
-                if validators.domain(directories):
-                    findBWUsage.calculateBandwidth(directories)
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startCalculations]")
+            for directory in os.listdir(findBWUsage.HOME_DIRECTORY):
+                if validators.domain(directory):
+                    try:
+                        findBWUsage.calculateBandwidth(directory)
+                    except Exception as exc:
+                        logging.CyberCPLogFileWriter.writeToFile(f"{exc} [bandwidth: {directory}]")
+        except Exception as exc:
+            logging.CyberCPLogFileWriter.writeToFile(f"{exc} [startCalculations]")
             return 0
+        return 1
 
     @staticmethod
     def findDomainBW(domainName, totalAllowed):
@@ -215,4 +264,5 @@ class findBWUsage:
         return 1
 
 
-findBWUsage.startCalculations()
+if __name__ == "__main__":
+    findBWUsage.startCalculations()
