@@ -28,6 +28,101 @@ import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
 
+from contextlib import contextmanager
+
+
+def _copy_path(source, destination):
+    if os.path.lexists(destination):
+        if os.path.isdir(destination) and not os.path.islink(destination):
+            shutil.rmtree(destination)
+        else:
+            os.unlink(destination)
+    os.makedirs(os.path.dirname(destination), exist_ok=True)
+    if os.path.islink(source):
+        os.symlink(os.readlink(source), destination)
+    elif os.path.isdir(source):
+        shutil.copytree(source, destination, symlinks=True)
+    else:
+        shutil.copy2(source, destination)
+        # Private settings must remain readable by the panel service account.
+        if os.geteuid() == 0:
+            source_stat = os.stat(source)
+            os.chown(destination, source_stat.st_uid, source_stat.st_gid)
+
+
+def preserve_installation_state(current, staged, backed_up_files):
+    """Copy only runtime components and explicitly backed-up private state.
+
+    Some installs keep the venv in CyberCP itself; others use a separate
+    /usr/local/CyberPanel venv (possibly reached through symlinks). Preserve
+    links verbatim so neither the external runtime nor its targets are copied.
+    """
+    embedded_runtime = os.path.isfile(os.path.join(current, 'pyvenv.cfg')) or (
+        os.path.isfile(os.path.join(current, 'bin', 'activate')) and
+        any(os.path.lexists(os.path.join(current, 'bin', executable))
+            for executable in ('python', 'python3', 'python2'))
+    )
+    if embedded_runtime:
+        for name in ('bin', 'lib', 'lib64', 'include', 'share', 'pyvenv.cfg'):
+            source = os.path.join(current, name)
+            if os.path.lexists(source):
+                _copy_path(source, os.path.join(staged, name))
+
+    for original, backup in backed_up_files.items():
+        relative = os.path.relpath(original, current)
+        if relative == '..' or relative.startswith('..' + os.sep):
+            continue  # External service configuration is not being replaced.
+        if relative == os.path.join('CyberCP', 'settings.py'):
+            continue  # Caller merges credentials into the new settings module.
+        _copy_path(backup, os.path.join(staged, relative))
+
+
+def protect_private_files(staged, panel_uid, panel_gid):
+    """Apply service-readable secret permissions before the panel uses them."""
+    for relative, uid, gid, mode in (
+        ('CyberCP/settings.py', 0, panel_gid, 0o640),
+        ('.env', 0, panel_gid, 0o640),
+        ('secret_key', 0, panel_gid, 0o640),
+        ('.env.backup', 0, 0, 0o600),
+        ('terminal_jwt_secret', panel_uid, panel_gid, 0o600),
+    ):
+        path = os.path.join(staged, relative)
+        if os.path.exists(path):
+            os.chown(path, uid, gid)
+            os.chmod(path, mode)
+
+
+@contextmanager
+def activate_source(current, staged):
+    """Activate a prepared tree, retaining the entire old tree for rollback.
+
+    All copies happen before this step. Both paths must be on the same volume;
+    a failed rename or post-activation preparation restores the original tree.
+    """
+    if os.path.islink(current) or not os.path.isdir(current):
+        raise RuntimeError('Expected an existing CyberPanel installation directory')
+    previous_parent = tempfile.mkdtemp(prefix='.cyberpanel-previous-',
+                                      dir=os.path.dirname(current))
+    previous = os.path.join(previous_parent, 'CyberCP')
+    moved_old = False
+    activated = False
+    try:
+        os.rename(current, previous)
+        moved_old = True
+        os.rename(staged, current)
+        activated = True
+        yield previous
+    except BaseException:
+        # The caller may be collecting static files inside the new tree.
+        os.chdir(os.path.dirname(current))
+        if activated:
+            os.rename(current, staged)
+        if moved_old:
+            os.rename(previous, current)
+        os.rmdir(previous_parent)
+        raise
+
+
 def update_all_config_files_with_password(new_password):
     """
     Update all configuration files that use the cyberpanel database password.
@@ -3730,6 +3825,7 @@ passdb {
             '/usr/local/CyberCP/.env',
             '/usr/local/CyberCP/.env.backup',
             '/usr/local/CyberCP/secret_key',
+            '/usr/local/CyberCP/terminal_jwt_secret',
         ]
         
         # Also backup any custom configurations
@@ -3763,18 +3859,18 @@ passdb {
                     backed_up_files[file_path] = backup_path
                     Upgrade.stdOut(f"Backed up {file_path}")
                 except Exception as e:
-                    Upgrade.stdOut(f"Failed to backup {file_path}: {str(e)}")
+                    raise RuntimeError(f"Failed to backup {file_path}: {str(e)}") from e
         
         # Backup directories
         for dir_path in custom_configs:
             if os.path.exists(dir_path):
                 try:
-                    backup_path = os.path.join(backup_dir, os.path.basename(dir_path))
+                    backup_path = os.path.join(backup_dir, os.path.basename(os.path.normpath(dir_path)))
                     shutil.copytree(dir_path, backup_path)
                     backed_up_files[dir_path] = backup_path
                     Upgrade.stdOut(f"Backed up directory {dir_path}")
                 except Exception as e:
-                    Upgrade.stdOut(f"Failed to backup {dir_path}: {str(e)}")
+                    raise RuntimeError(f"Failed to backup {dir_path}: {str(e)}") from e
         
         return backup_dir, backed_up_files
     
@@ -3812,114 +3908,48 @@ passdb {
             Upgrade.stdOut("Backing up critical configuration files...")
             backup_dir, backed_up_files = Upgrade.backupCriticalFiles()
 
-            ## CyberPanel DB Creds
-            dbName = settings.DATABASES['default']['NAME']
-            dbUser = settings.DATABASES['default']['USER']
-            password = settings.DATABASES['default']['PASSWORD']
-            host = settings.DATABASES['default']['HOST']
-            port = settings.DATABASES['default']['PORT']
-
-            ## Root DB Creds
-
-            rootdbName = settings.DATABASES['rootdb']['NAME']
-            rootdbdbUser = settings.DATABASES['rootdb']['USER']
-            rootdbpassword = settings.DATABASES['rootdb']['PASSWORD']
-
-            ## Complete db string
-
-            completDBString = """\nDATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': '%s',
-        'USER': '%s',
-        'PASSWORD': '%s',
-        'HOST': '%s',
-        'PORT':'%s'
-    },
-    'rootdb': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': '%s',
-        'USER': '%s',
-        'PASSWORD': '%s',
-        'HOST': '%s',
-        'PORT': '%s',
-    },
-}\n""" % (dbName, dbUser, password, host, port, rootdbName, rootdbdbUser, rootdbpassword, host, port)
-
-            settingsFile = '/usr/local/CyberCP/CyberCP/settings.py'
-
             Upgrade.stdOut("Critical files backed up to: " + backup_dir)
 
-            ## Always do a fresh clone for clean upgrade
-            
-            Upgrade.stdOut("Performing clean upgrade by removing and re-cloning CyberPanel...")
-            
-            # Set git config first
-            command = 'git config --global user.email "support@cyberpanel.net"'
-            if not Upgrade.executioner(command, command, 1):
-                return 0, 'Failed to execute %s' % (command)
+            # Prepare source, runtime and private state before replacing the live
+            # installation. CyberCP can itself be the Python virtualenv.
+            installation = '/usr/local/CyberCP'
+            with tempfile.TemporaryDirectory(prefix='.cyberpanel-upgrade-',
+                                             dir='/usr/local') as staging_dir:
+                staged = os.path.join(staging_dir, 'CyberCP')
+                Upgrade.stdOut("Cloning fresh CyberPanel repository into staging...")
+                command = 'git clone -- https://github.com/usmannasir/cyberpanel %s' % shlex.quote(staged)
+                if not Upgrade.executioner(command, 'Clone CyberPanel source', 0):
+                    return 0, 'Failed to clone CyberPanel repository'
 
-            command = 'git config --global user.name "CyberPanel"'
-            if not Upgrade.executioner(command, command, 1):
-                return 0, 'Failed to execute %s' % (command)
-            
-            # Change to parent directory
-            os.chdir('/usr/local')
+                command = 'git -C %s checkout %s --' % (shlex.quote(staged), shlex.quote(branch))
+                if not Upgrade.executioner(command, 'Checkout requested CyberPanel branch', 0):
+                    return 0, 'Failed to checkout CyberPanel branch %s' % branch
 
-            # Remove old CyberCP directory
-            if os.path.exists('CyberCP'):
-                Upgrade.stdOut("Removing old CyberCP directory...")
-                try:
-                    shutil.rmtree('CyberCP')
-                    Upgrade.stdOut("Old CyberCP directory removed successfully.")
-                except Exception as e:
-                    Upgrade.stdOut(f"Error removing CyberCP directory: {str(e)}")
-                    # Try to restore backup if removal fails
-                    Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
-                    return 0, 'Failed to remove old CyberCP directory'
+                preserve_installation_state(installation, staged, backed_up_files)
+                staged_settings = os.path.join(staged, 'CyberCP', 'settings.py')
+                with open(staged_settings) as settings_file:
+                    settingsData = settings_file.read()
 
-            # Clone the new repository directly to CyberCP
-            Upgrade.stdOut("Cloning fresh CyberPanel repository...")
-            command = 'git clone https://github.com/usmannasir/cyberpanel CyberCP'
-            if not Upgrade.executioner(command, command, 1):
-                # Try to restore backup if clone fails
-                Upgrade.stdOut("Clone failed, attempting to restore backup...")
-                Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
-                return 0, 'Failed to clone CyberPanel repository'
-            
-            # Checkout the correct branch
-            os.chdir('/usr/local/CyberCP')
-            command = 'git checkout %s' % (branch)
-            if not Upgrade.executioner(command, command, 1):
-                Upgrade.stdOut(f"Warning: Failed to checkout branch {branch}, continuing with default branch")
-            
-            # Restore all backed up configuration files (except settings.py)
-            Upgrade.stdOut("Restoring configuration files...")
-            Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
+                # Keep new applications/defaults while preserving DB credentials.
+                database_pattern = r'DATABASES\s*=\s*\{[^}]*\{[^}]*\}[^}]*\{[^}]*\}[^}]*\}'
+                import pprint
+                database_config = 'DATABASES = ' + pprint.pformat(dict(settings.DATABASES))
+                settingsData, replacements = re.subn(
+                    database_pattern, lambda match: database_config, settingsData,
+                    count=1, flags=re.DOTALL)
+                if replacements != 1:
+                    raise RuntimeError('Unable to locate database settings in new source')
+                with open(staged_settings, 'w') as settings_file:
+                    settings_file.write(settingsData)
+                panel_user = pwd.getpwnam('cyberpanel')
+                protect_private_files(staged, panel_user.pw_uid,
+                                      grp.getgrnam('cyberpanel').gr_gid)
 
-            ## Handle settings.py separately to preserve NEW INSTALLED_APPS while keeping old database credentials
-            
-            # Read the NEW settings file from the fresh clone (has new INSTALLED_APPS like 'aiScanner')
-            settingsData = open(settingsFile, 'r').read()
-            
-            # Replace only the DATABASES section with our saved credentials
-            import re
-            
-            # More precise pattern to match the entire DATABASES dictionary including nested dictionaries
-            # This pattern looks for DATABASES = { ... } including the 'default' and 'rootdb' nested dicts
-            database_pattern = r'DATABASES\s*=\s*\{[^}]*\{[^}]*\}[^}]*\{[^}]*\}[^}]*\}'
-            
-            # Replace the DATABASES section with our saved credentials from before upgrade
-            settingsData = re.sub(database_pattern, completDBString.strip(), settingsData, flags=re.DOTALL)
-            
-            # Write back the updated settings
-            writeToFile = open(settingsFile, 'w')
-            writeToFile.write(settingsData)
-            writeToFile.close()
-
-            Upgrade.stdOut('Settings file updated with database credentials while preserving new INSTALLED_APPS!')
-
-            Upgrade.staticContent()
+                os.chdir('/usr/local')
+                with activate_source(installation, staged) as previous:
+                    os.chdir(installation)
+                    Upgrade.staticContent()
+                Upgrade.stdOut('Previous installation retained at: ' + previous)
 
             Upgrade.ensurePostfixLoopbackNetworks()
             Upgrade.ensurePostfixDomainLookup()
