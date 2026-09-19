@@ -1878,7 +1878,7 @@ app.controller('backupDestinations', function ($scope, $http) {
 
     };
 
-    $scope.removeDestination = function (type, nameOrPath) {
+    $scope.removeDestination = function (type, nameOrPath, destinationID) {
         $scope.cyberpanelLoading = false;
 
 
@@ -1887,6 +1887,7 @@ app.controller('backupDestinations', function ($scope, $http) {
         var data = {
             type: type,
             nameOrPath: nameOrPath,
+            destinationID: destinationID,
         };
 
         var config = {
