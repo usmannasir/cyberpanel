@@ -280,5 +280,26 @@ class UpgradeEntryPointTests(unittest.TestCase):
         self.assertEqual('branding', (self.current / 'baseTemplate/static/baseTemplate/custom/brand.css').read_text())
 
 
+    def test_file_valued_custom_configuration_is_preserved(self):
+        config = self.current / 'public/phpmyadmin/config.inc.php'
+        self.write(config, '<?php $cfg["blowfish_secret"] = "existing-secret";')
+        original = config.read_text()
+        self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.6'))
+        self.assertTrue(config.is_file())
+        self.assertEqual(original, config.read_text())
+
+    def test_backup_paths_are_structured_and_do_not_flatten_directory_files(self):
+        self.write(self.current / '.git/config', 'git configuration')
+        self.write(self.current / 'baseTemplate/static/baseTemplate/custom/config', 'custom configuration')
+        self.write(self.current / 'public/phpmyadmin/config.inc.php', 'phpmyadmin configuration')
+        backup_dir, files = self.upgrade.backupCriticalFiles()
+        for original, backup in files.items():
+            self.assertEqual(Path(backup_dir) / original.lstrip(os.sep), Path(backup))
+        self.assertEqual('git configuration', Path(files[str(self.current / '.git/config')]).read_text())
+        custom = self.current / 'baseTemplate/static/baseTemplate/custom'
+        self.assertEqual('custom configuration', (Path(files[str(custom)]) / 'config').read_text())
+        self.assertEqual('phpmyadmin configuration', Path(files[str(self.current / 'public/phpmyadmin/config.inc.php')]).read_text())
+
+
 if __name__ == '__main__':
     unittest.main()
