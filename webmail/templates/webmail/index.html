@@ -196,7 +196,7 @@
             </div>
 
             <!-- Compose View -->
-            <div ng-if="viewMode === 'compose'" class="wm-compose-view">
+            <div ng-if="viewMode === 'compose'" class="wm-compose-view" wm-file-drop>
                 <div class="wm-compose-header">
                     <h3>{% trans "Compose" %}</h3>
                 </div>
@@ -247,9 +247,9 @@
                          ng-blur="updateComposeBody()"></div>
                     <div class="wm-compose-attachments">
                         <input type="file" id="wm-file-input" multiple
-                               onchange="angular.element(this).scope().addFiles(this.files)">
+                               onchange="angular.element(this).scope().addFiles(this.files); this.value = ''">
                         <label for="wm-file-input" class="wm-attach-btn">
-                            <i class="fa fa-paperclip"></i> {% trans "Attach files" %}
+                            <i class="fa fa-paperclip"></i> {% trans "Attach files or drop them here" %}
                         </label>
                         <div class="wm-file-list">
                             <span ng-repeat="f in compose.files" class="wm-file-tag">
@@ -434,8 +434,20 @@
                         <input type="text" ng-model="wmSettings.displayName" class="form-control">
                     </div>
                     <div class="wm-field">
-                        <label>{% trans "Signature" %}</label>
-                        <textarea ng-model="wmSettings.signatureHtml" class="form-control" rows="4"></textarea>
+                        <label id="wm-signature-label">{% trans "Signature" %}</label>
+                        <div class="wm-signature-field">
+                            <div class="wm-editor-toolbar" ng-mousedown="$event.preventDefault()" role="toolbar" aria-label="{% trans 'Signature formatting' %}">
+                                <button type="button" ng-click="execCmd('bold')" title="{% trans 'Bold' %}"><i class="fa fa-bold"></i></button>
+                                <button type="button" ng-click="execCmd('italic')" title="{% trans 'Italic' %}"><i class="fa fa-italic"></i></button>
+                                <button type="button" ng-click="execCmd('underline')" title="{% trans 'Underline' %}"><i class="fa fa-underline"></i></button>
+                                <button type="button" ng-click="execCmd('insertUnorderedList')" title="{% trans 'List' %}"><i class="fa fa-list-ul"></i></button>
+                                <button type="button" ng-click="insertLink()" title="{% trans 'Link' %}"><i class="fa fa-link"></i></button>
+                                <button type="button" ng-click="execCmd('removeFormat')" title="{% trans 'Clear formatting' %}"><i class="fa fa-eraser"></i></button>
+                            </div>
+                            <div class="wm-editor wm-signature-editor" contenteditable="true" wm-signature-editor
+                                 ng-model="wmSettings.signatureHtml" role="textbox" aria-multiline="true"
+                                 aria-labelledby="wm-signature-label"></div>
+                        </div>
                     </div>
                     <div class="wm-field">
                         <label>{% trans "Messages per page" %}</label>

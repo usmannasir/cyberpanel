@@ -15,11 +15,12 @@ class EmailComposer:
     @staticmethod
     def compose(from_addr, to_addrs, subject, body_html='', body_text='',
                 cc_addrs='', bcc_addrs='', attachments=None,
-                in_reply_to='', references=''):
+                in_reply_to='', references='', display_name=''):
         """Build a MIME message.
 
         Args:
             from_addr: sender email
+            display_name: optional sender display name
             to_addrs: comma-separated recipients
             subject: email subject
             body_html: HTML body content
@@ -62,7 +63,10 @@ class EmailComposer:
             elif not body_text:
                 msg.attach(MIMEText('', 'plain', 'utf-8'))
 
-        msg['From'] = from_addr
+        # Keep the mailbox separate for Message-ID generation and quote names safely.
+        if any(char in display_name for char in ('\r', '\n')):
+            raise ValueError('Display name must not contain line breaks.')
+        msg['From'] = formataddr((display_name, from_addr)) if display_name else from_addr
         msg['To'] = to_addrs
         if cc_addrs:
             msg['Cc'] = cc_addrs
