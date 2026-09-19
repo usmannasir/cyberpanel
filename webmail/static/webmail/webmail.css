@@ -593,6 +593,21 @@
     border-color: var(--accent-color);
 }
 
+.wm-signature-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.wm-signature-editor {
+    min-height: 120px;
+    max-height: 260px;
+}
+
+.wm-compose-view.wm-drag-over {
+    outline: 2px dashed var(--accent-color);
+    outline-offset: -4px;
+}
+
 .wm-compose-attachments {
     margin-top: 12px;
 }

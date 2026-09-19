@@ -104,6 +104,90 @@ app.directive('wmAutocomplete', ['$http', function($http) {
     };
 }]);
 
+// Handle native file drags on the whole composer, including its editable body.
+app.directive('wmFileDrop', function() {
+    return {
+        restrict: 'A',
+        link: function(scope, element) {
+            var depth = 0;
+            function isFileDrag(event) {
+                var transfer = (event.originalEvent || event).dataTransfer;
+                return transfer && (Array.prototype.indexOf.call(transfer.types || [], 'Files') >= 0 ||
+                    (transfer.files && transfer.files.length > 0));
+            }
+            function reset() {
+                depth = 0;
+                element.removeClass('wm-drag-over');
+            }
+            function enter(event) {
+                if (!isFileDrag(event)) return;
+                event.preventDefault();
+                depth++;
+                element.addClass('wm-drag-over');
+            }
+            function over(event) {
+                if (!isFileDrag(event)) return;
+                event.preventDefault();
+                (event.originalEvent || event).dataTransfer.dropEffect = 'copy';
+            }
+            function leave(event) {
+                if (!isFileDrag(event)) return;
+                event.preventDefault();
+                if (--depth <= 0) reset();
+            }
+            function drop(event) {
+                reset();
+                if (!isFileDrag(event)) return;
+                event.preventDefault();
+                event.stopPropagation();
+                scope.addFiles((event.originalEvent || event).dataTransfer.files);
+            }
+            element.on('dragenter', enter);
+            element.on('dragover', over);
+            element.on('dragleave', leave);
+            element.on('drop', drop);
+            scope.$on('$destroy', function() {
+                element.off('dragenter', enter);
+                element.off('dragover', over);
+                element.off('dragleave', leave);
+                element.off('drop', drop);
+            });
+        }
+    };
+});
+
+app.directive('wmSignatureEditor', function() {
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function(scope, element, attrs, model) {
+            // Saved values have been sanitized by the settings API.
+            model.$render = function() { element.html(model.$viewValue || ''); };
+            function read() {
+                scope.$evalAsync(function() { model.$setViewValue(element.html()); });
+            }
+            function paste(event) {
+                event.preventDefault();
+                var clipboard = (event.originalEvent || event).clipboardData;
+                if (clipboard) {
+                    // Never insert untrusted clipboard HTML into the live document.
+                    document.execCommand('insertText', false, clipboard.getData('text/plain'));
+                    read();
+                }
+            }
+            function drop(event) { event.preventDefault(); }
+            element.on('input blur', read);
+            element.on('paste', paste);
+            element.on('drop', drop);
+            scope.$on('$destroy', function() {
+                element.off('input blur', read);
+                element.off('paste', paste);
+                element.off('drop', drop);
+            });
+        }
+    };
+});
+
 app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval', function($scope, $http, $sce, $timeout, $interval) {
 
     // ── State ────────────────────────────────────────────────
@@ -244,6 +328,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
         $scope.contacts = [];
         $scope.filteredContacts = [];
         $scope.sieveRules = [];
+        $scope.wmSettings = {};
+        $scope.safeSignatureHtml = '';
 
         apiCall('/webmail/api/switchAccount', {email: newEmail}, function(data) {
             if (data.status === 1) {
@@ -455,6 +541,11 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
             .replace(/'/g, '&#39;');
     }
 
+    function signatureHtml() {
+        return $scope.safeSignatureHtml ? '<br><br><div class="wm-signature">-- <br>' +
+            $scope.safeSignatureHtml + '</div>' : '';
+    }
+
     // ── Compose ──────────────────────────────────────────────
     $scope.composeNew = function() {
         $scope.compose = {to: '', cc: '', bcc: '', subject: '', body: '', files: [], inReplyTo: '', references: ''};
@@ -463,11 +554,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                editor.innerHTML = '';
-                // Add signature if available
-                if ($scope.safeSignatureHtml) {
-                    editor.innerHTML = '<br><br><div class="wm-signature">-- <br>' + $scope.safeSignatureHtml + '</div>';
-                }
+                editor.innerHTML = signatureHtml();
             }
         }, 100);
         startDraftAutoSave();
@@ -490,7 +577,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                var sig = $scope.safeSignatureHtml ? '<br><br><div class="wm-signature">-- <br>' + $scope.safeSignatureHtml + '</div>' : '';
+                var sig = signatureHtml();
                 editor.innerHTML = '<br>' + sig + '<br><div class="wm-quoted">On ' + escapeHtml($scope.openMsg.date) + ', ' + escapeHtml($scope.openMsg.from) + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</blockquote></div>';
             }
         }, 100);
@@ -516,7 +603,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                editor.innerHTML = '<br><br><div class="wm-quoted">On ' + escapeHtml($scope.openMsg.date) + ', ' + escapeHtml($scope.openMsg.from) + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</blockquote></div>';
+                editor.innerHTML = '<br>' + signatureHtml() + '<br><div class="wm-quoted">On ' + escapeHtml($scope.openMsg.date) + ', ' + escapeHtml($scope.openMsg.from) + ' wrote:<br><blockquote>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</blockquote></div>';
             }
         }, 100);
         startDraftAutoSave();
@@ -539,7 +626,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                editor.innerHTML = '<br><br><div class="wm-forwarded">---------- Forwarded message ----------<br>From: ' + escapeHtml($scope.openMsg.from) + '<br>Date: ' + escapeHtml($scope.openMsg.date) + '<br>Subject: ' + escapeHtml($scope.openMsg.subject) + '<br>To: ' + escapeHtml($scope.openMsg.to) + '<br><br>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</div>';
+                editor.innerHTML = '<br>' + signatureHtml() + '<br><div class="wm-forwarded">---------- Forwarded message ----------<br>From: ' + escapeHtml($scope.openMsg.from) + '<br>Date: ' + escapeHtml($scope.openMsg.date) + '<br>Subject: ' + escapeHtml($scope.openMsg.subject) + '<br>To: ' + escapeHtml($scope.openMsg.to) + '<br><br>' + ($scope.openMsg.body_html || escapeHtml($scope.openMsg.body_text)) + '</div>';
             }
         }, 100);
         startDraftAutoSave();
@@ -558,15 +645,16 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
 
     $scope.insertLink = function() {
         var url = prompt('Enter URL:');
-        if (url) {
-            document.execCommand('createLink', false, url);
+        if (url && /^(https?:\/\/|mailto:)/i.test(url.trim())) {
+            document.execCommand('createLink', false, url.trim());
         }
     };
 
     $scope.addFiles = function(files) {
-        $scope.$apply(function() {
-            for (var i = 0; i < files.length; i++) {
-                $scope.compose.files.push(files[i]);
+        var selectedFiles = Array.prototype.slice.call(files || []);
+        $scope.$evalAsync(function() {
+            for (var i = 0; i < selectedFiles.length; i++) {
+                $scope.compose.files.push(selectedFiles[i]);
             }
         });
     };
@@ -870,10 +958,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
         $timeout(function() {
             var editor = document.getElementById('wm-compose-body');
             if (editor) {
-                editor.innerHTML = '';
-                if ($scope.safeSignatureHtml) {
-                    editor.innerHTML = '<br><br><div class="wm-signature">-- <br>' + $scope.safeSignatureHtml + '</div>';
-                }
+                editor.innerHTML = signatureHtml();
             }
         }, 100);
         startDraftAutoSave();
@@ -934,7 +1019,9 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
 
     // ── Settings ─────────────────────────────────────────────
     $scope.loadSettings = function() {
+        var account = $scope.currentEmail;
         apiCall('/webmail/api/getSettings', {}, function(data) {
+            if (account !== $scope.currentEmail) return;
             if (data.status === 1) {
                 $scope.wmSettings = data.settings;
                 $scope.safeSignatureHtml = data.settings.signatureHtml || '';
@@ -946,7 +1033,9 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
     };
 
     $scope.saveSettings = function() {
-        apiCall('/webmail/api/saveSettings', $scope.wmSettings, function(data) {
+        var account = $scope.currentEmail;
+        apiCall('/webmail/api/saveSettings', angular.copy($scope.wmSettings), function(data) {
+            if (account !== $scope.currentEmail) return;
             if (data.status === 1) {
                 $scope.wmSettings.signatureHtml = data.signatureHtml || '';
                 $scope.safeSignatureHtml = data.signatureHtml || '';

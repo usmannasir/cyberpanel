@@ -435,8 +435,10 @@ class WebmailManager:
             if not to:
                 return self._error('At least one recipient is required.')
 
+            settings = WebmailSettings.objects.filter(email_account=email_addr).first()
             mime_msg = EmailComposer.compose(
                 from_addr=email_addr,
+                display_name=settings.display_name if settings else '',
                 to_addrs=to,
                 subject=subject,
                 body_html=body_html,
@@ -463,7 +465,6 @@ class WebmailManager:
 
             # Auto-collect contacts
             try:
-                settings = WebmailSettings.objects.filter(email_account=email_addr).first()
                 if settings is None or settings.auto_collect_contacts:
                     self._auto_collect(email_addr, to, cc)
             except Exception:
