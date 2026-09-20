@@ -2,6 +2,7 @@ import imaplib
 import ssl
 import email
 import re
+import base64
 
 from .mime_utils import decode_mime_header
 
@@ -83,12 +84,37 @@ class IMAPClient:
         return None
 
     def _display_name(self, folder_name):
-        """Strip INBOX. prefix for display, keep INBOX as-is."""
+        """Return a readable label while keeping the wire mailbox unchanged."""
         if folder_name == 'INBOX':
             return 'Inbox'
         if folder_name.startswith(self.NS_PREFIX):
-            return folder_name[len(self.NS_PREFIX):]
-        return folder_name
+            folder_name = folder_name[len(self.NS_PREFIX):]
+        return self._decode_modified_utf7(folder_name)
+
+    @staticmethod
+    def _decode_modified_utf7(value):
+        """Decode the modified UTF-7 form required for IMAP mailbox names."""
+        if not isinstance(value, str) or '&' not in value:
+            return value
+
+        output = []
+        position = 0
+        for match in re.finditer(r'&([A-Za-z0-9+,]*)-', value):
+            output.append(value[position:match.start()])
+            token = match.group(1)
+            if not token:
+                output.append('&')
+            else:
+                try:
+                    encoded = token.replace(',', '/')
+                    encoded += '=' * (-len(encoded) % 4)
+                    output.append(base64.b64decode(encoded).decode('utf-16-be'))
+                except (ValueError, UnicodeError):
+                    # Preserve malformed server data rather than hiding a folder.
+                    output.append(match.group(0))
+            position = match.end()
+        output.append(value[position:])
+        return ''.join(output)
 
     def _folder_type(self, folder_name):
         """Identify special folder type for UI icon mapping."""
