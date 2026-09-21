@@ -1,0 +1,81 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Roundcube add-on" %} — CyberPanel{% endblock %}
+{% block content %}
+<div class="container-fluid" style="max-width:1100px;padding-top:24px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+        <span class="cp-tile-ic" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+        <div style="flex:1"><h2 style="margin:0 0 8px">{% trans "Roundcube" %} <small class="label label-info">{% trans "Paid add-on" %}</small></h2>
+            <p style="margin:0">{% trans "Give your mail users another way to access their inbox." %}</p></div>
+        <a href="/webmail/" class="btn btn-default">{% trans "Open integrated webmail" %}</a>
+    </div>
+    <div class="panel panel-default"><div class="panel-body" style="padding:24px">
+        <h3 style="margin-top:0">{% trans "Your choice of webmail" %}</h3>
+        <p>{% trans "Integrated webmail stays available at its existing address. Roundcube is an optional client for the same mailboxes; users sign in with their email address and mailbox password." %}</p>
+        <p>{% trans "Roundcube provides its own address book and preferences. These are separate from the contacts and settings in integrated webmail." %}</p>
+        {% if not roundcube_entitled %}
+        <div class="alert alert-info">{% trans "An active Roundcube add-on or an all-features license is required to install and use Roundcube. If you have just purchased access, refresh this page shortly." %}
+            <a href="https://platform.cyberpersons.com/" target="_blank" rel="noopener noreferrer">{% trans "Manage your license" %}</a></div>
+        {% endif %}
+        <div role="status" aria-live="polite" class="alert alert-info" id="roundcube-status">{{ message }}</div>
+        <p><strong>{% trans "Installed version:" %}</strong> <span id="roundcube-version">{{ version|default:"—" }}</span> · <strong>{% trans "Available version:" %}</strong> {{ available_version }}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
+            {% if roundcube_entitled %}<button type="button" class="btn btn-primary" data-roundcube-action="install">{% trans "Install / update Roundcube" %}</button>
+            <button type="button" class="btn btn-default" data-roundcube-action="enable">{% trans "Enable" %}</button>{% endif %}
+            <button type="button" class="btn btn-default" data-roundcube-action="disable">{% trans "Disable" %}</button>
+            <a class="btn btn-success" id="roundcube-open" href="/roundcube/" target="_blank" rel="noopener noreferrer" {% if not enabled or not roundcube_entitled %}style="display:none"{% endif %}>{% trans "Open Roundcube" %}</a>
+        </div>
+        <p style="margin-top:18px;margin-bottom:0">{% trans "Disabling Roundcube keeps its contacts and preferences. Mail remains on your mail server and is available through integrated webmail." %}</p>
+    </div></div>
+    <div class="panel panel-default"><div class="panel-body" style="padding:24px">
+        <h3 style="margin-top:0">{% trans "Before installation" %}</h3>
+        <p>{% trans "Roundcube needs working local IMAP and SMTP services, HTTPS access to your panel, and system PHP 8.1–8.5 with FPM, SQLite, XML, mbstring, intl and zip extensions. It runs in a separate service; it does not change website PHP versions." %}</p>
+        <p>{% trans "Your server administrator can follow docs/ROUNDCUBE_ADDON.md for package installation, verification, backup and recovery." %}</p>
+        <small>{% trans "Roundcube is open-source software. The paid add-on covers CyberPanel integration and management." %}</small>
+    </div></div>
+</div>
+<script>
+(function () {
+    'use strict';
+    var status = document.getElementById('roundcube-status');
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-roundcube-action]'));
+    var pending = false, polls = 0;
+    function message(text, error) {
+        status.textContent = text;
+        status.className = 'alert ' + (error ? 'alert-danger' : 'alert-info');
+    }
+    function refresh() {
+        fetch('/webmail/roundcube/status', {credentials: 'same-origin', cache: 'no-store'})
+            .then(function (response) {if (!response.ok) throw new Error('Could not load Roundcube status.'); return response.json();})
+            .then(function (data) {
+                message(data.message, data.phase === 'error');
+                document.getElementById('roundcube-version').textContent = data.version || '—';
+                document.getElementById('roundcube-open').style.display = data.enabled && data.entitled && data.running ? '' : 'none';
+                if (pending && (data.phase === 'installing' || polls < 2)) {
+                    polls += 1; window.setTimeout(refresh, 2000);
+                } else {
+                    pending = false; buttons.forEach(function (button) {button.disabled = false;});
+                }
+            }).catch(function (error) {message(error.message, true); pending = false; buttons.forEach(function (button) {button.disabled = false;});});
+    }
+    buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (pending) return;
+            pending = true; polls = 0;
+            buttons.forEach(function (item) {item.disabled = true;});
+            message('Starting Roundcube operation…', false);
+            var token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch('/webmail/roundcube/operate', {method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': token},
+                body: JSON.stringify({action: button.getAttribute('data-roundcube-action')})})
+                .then(function (response) {return response.json().then(function (data) {
+                    if (!response.ok) throw new Error(data.error_message || 'Roundcube operation failed.');
+                    window.setTimeout(refresh, 1500);
+                });}).catch(function (error) {message(error.message, true); pending = false; buttons.forEach(function (item) {item.disabled = false;});});
+        });
+    });
+    refresh();
+}());
+</script>
+<form hidden>{% csrf_token %}</form>
+{% endblock %}

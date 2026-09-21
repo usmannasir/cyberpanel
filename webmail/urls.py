@@ -1,7 +1,11 @@
 from django.urls import re_path
-from . import views
+from . import views, roundcube
 
 urlpatterns = [
+    re_path(r'^roundcube$', roundcube.manage, name='roundcubeManage'),
+    re_path(r'^roundcube/status$', roundcube.get_status, name='roundcubeStatus'),
+    re_path(r'^roundcube/operate$', roundcube.operate, name='roundcubeOperate'),
+
     # Pages
     re_path(r'^$', views.loadWebmail, name='loadWebmail'),
     re_path(r'^login$', views.loadLogin, name='loadWebmailLogin'),

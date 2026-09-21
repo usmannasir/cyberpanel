@@ -46,6 +46,7 @@ urlpatterns = [
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
     path('webmail/', include('webmail.urls')),
+    path('roundcube/', include('webmail.roundcube_urls')),
     path('emailDelivery/', include('emailDelivery.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
 ]

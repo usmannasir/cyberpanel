@@ -67,6 +67,9 @@ class secMiddleware:
         import re
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
+        # Roundcube owns mailbox authentication and CSRF; its gateway enforces
+        # server entitlement before forwarding to the private FPM socket.
+        roundcubeRequest = pathActual.startswith('/roundcube/')
         publicWebmailRequest = pathActual in self.WEBMAIL_PUBLIC_PATHS
         standaloneWebmailRequest = (
             pathActual.startswith('/webmail/')
@@ -74,7 +77,7 @@ class secMiddleware:
         )
 
         if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
-                or publicWebmailRequest or standaloneWebmailRequest\
+                or publicWebmailRequest or standaloneWebmailRequest or roundcubeRequest\
                 or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
             pass
         else:
@@ -132,7 +135,7 @@ class secMiddleware:
             pass
 
 
-        if bool(request.body):
+        if not roundcubeRequest and bool(request.body):
             try:
 
                 # Body scanning logging removed
@@ -338,7 +341,8 @@ class secMiddleware:
 
         response['X-XSS-Protection'] = "1; mode=block"
         response['X-Frame-Options'] = "sameorigin"
-        response['Content-Security-Policy'] = CONTENT_SECURITY_POLICY
+        if not response.has_header('Content-Security-Policy'):
+            response['Content-Security-Policy'] = CONTENT_SECURITY_POLICY
         response['X-Content-Type-Options'] = "nosniff"
         response['Referrer-Policy'] = "same-origin"
 
