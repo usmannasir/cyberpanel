@@ -137,6 +137,34 @@ class GatewayTests(unittest.TestCase):
             self.assertTrue(value['httponly'])
             self.assertEqual('Lax', value['samesite'])
 
+    def test_login_replaces_deleted_auth_cookie_without_stale_expiry(self):
+        # Actual Roundcube login first kills the old session, then regenerates
+        # its session ID and issues a fresh authentication cookie in one response.
+        raw = (b'Status: 302 Found\r\nLocation: ./?_task=mail\r\n'
+               b'Set-Cookie: cp_roundcube_auth=-del-; expires=Mon, 21 Sep 2026 05:00:00 GMT; Max-Age=0; path=/roundcube/; secure; HttpOnly\r\n'
+               b'Set-Cookie: cp_roundcube_session=new-session; path=/roundcube/; secure; HttpOnly\r\n'
+               b'Set-Cookie: cp_roundcube_auth=fresh-secret-1789980000; path=/roundcube/; secure; HttpOnly\r\n\r\n')
+        response = roundcube.cgi_response(raw)
+        auth = response.cookies['cp_roundcube_auth']
+        self.assertEqual('fresh-secret-1789980000', auth.value)
+        self.assertEqual('', auth['expires'])
+        self.assertEqual('', auth['max-age'])
+        self.assertEqual('/roundcube/', auth['path'])
+        self.assertTrue(auth['secure'])
+        self.assertTrue(auth['httponly'])
+        self.assertEqual('Lax', auth['samesite'])
+        self.assertEqual('new-session', response.cookies['cp_roundcube_session'].value)
+
+    def test_logout_can_still_expire_a_previously_set_auth_cookie(self):
+        raw = (b'Content-Type: text/html\r\n'
+               b'Set-Cookie: cp_roundcube_auth=fresh-secret; path=/roundcube/\r\n'
+               b'Set-Cookie: cp_roundcube_auth=-del-; expires=Mon, 21 Sep 2026 05:00:00 GMT; Max-Age=0; path=/roundcube/\r\n\r\n')
+        response = roundcube.cgi_response(raw)
+        auth = response.cookies['cp_roundcube_auth']
+        self.assertEqual('-del-', auth.value)
+        self.assertEqual('0', auth['max-age'])
+        self.assertNotEqual('', auth['expires'])
+
     def test_external_redirects_and_broken_headers_are_rejected(self):
         for raw in (b'Location: https://evil.test/\r\n\r\n', b'Location: //evil.test/\r\n\r\n',
                     b'invalid\r\n\r\n', b'no headers'):

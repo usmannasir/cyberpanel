@@ -211,6 +211,11 @@ def cgi_response(raw):
             for cookie_name, morsel in cookies.items():
                 if cookie_name not in COOKIE_NAMES:
                     continue
+                # Login can delete the old auth cookie, then issue a new one
+                # in this same response. SimpleCookie value assignment retains
+                # old expiry attributes, which would immediately delete the new
+                # credential; replace the entire morsel (last Set-Cookie wins).
+                response.cookies.pop(cookie_name, None)
                 response.cookies[cookie_name] = morsel.value
                 cookie = response.cookies[cookie_name]
                 cookie['path'] = '/roundcube/'
