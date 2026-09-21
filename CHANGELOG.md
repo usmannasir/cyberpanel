@@ -4,6 +4,26 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.7 (build 7) — 2026-09-21
+
+Feature release for optional Roundcube webmail and upgrade visibility.
+
+### Roundcube paid add-on
+- Added an optional, entitlement-gated Roundcube 1.7.4 integration while
+  retaining CyberPanel's integrated webmail as the default client.
+- Runs Roundcube behind the panel HTTPS endpoint in a dedicated PHP-FPM service
+  with a private Unix socket, restricted runtime state, and protected sessions.
+- Preserves contacts, preferences, database state, and the encryption key across
+  disable, re-enable, and install/update operations.
+- Blocks installer, configuration, SQL, arbitrary PHP, and traversal paths and
+  fails closed when the paid entitlement expires or cannot be verified.
+
+### Webmail and upgrades
+- Updated standalone integrated webmail with the current CyberPanel branding,
+  a focused mailbox layout, dark mode, and corrected mobile detail views.
+- Streams Python upgrader progress live while retaining the command exit status
+  and complete upgrade log.
+
 ## v3.0.6 (build 6) — 2026-09-07
 
 Maintenance and security hardening for standalone webmail authentication.
