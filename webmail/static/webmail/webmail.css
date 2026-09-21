@@ -900,7 +900,7 @@
     .webmail-container.wm-reading .wm-message-list {
         display: none;
     }
-    .webmail-container.wm-reading .wm-detail-pane {
+    .webmail-container.wm-detail-active .wm-detail-pane {
         display: block;
         flex: 1;
     }

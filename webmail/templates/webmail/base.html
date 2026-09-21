@@ -1,0 +1,32 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html class="cp-evergreen cp-webmail" lang="{{ LANGUAGE_CODE|default:'en' }}" ng-app="CyberCP">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% trans "Webmail - CyberPanel" %}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'baseTemplate/brand/favicon.svg' %}">
+    <link rel="stylesheet" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
+    <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen.css' %}?v=20260914-1">
+    <link rel="stylesheet" href="{% static 'webmail/standalone.css' %}?v=20260921-1">
+    <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
+    <script src="{% static 'webmail/standalone.js' %}?v=20260921-1"></script>
+</head>
+<body>
+    <a href="#main-content" class="wm-skip-link">{% trans "Skip to mailbox" %}</a>
+    <header class="wm-shell-header">
+        <a class="wm-shell-brand" href="/webmail/" aria-label="{% trans 'CyberPanel Webmail' %}">
+            <img class="cp-brand-wordmark cp-brand-light" src="{% static 'baseTemplate/brand/cyberpanel-logo.svg' %}" alt="CyberPanel" width="190" height="36">
+            <img class="cp-brand-wordmark cp-brand-dark" src="{% static 'baseTemplate/brand/cyberpanel-logo-reverse.svg' %}" alt="CyberPanel" width="190" height="36">
+        </a>
+        <span class="wm-shell-title">{% trans "Webmail" %}</span>
+        <div class="wm-shell-account"><span class="wm-shell-account-label">{% trans "Your mailbox" %}</span><span class="wm-shell-email">{{ email }}</span></div>
+        <button class="wm-theme-toggle" id="wm-theme-toggle" type="button" aria-label="{% trans 'Toggle dark mode' %}" aria-pressed="false"><i class="fas fa-moon" aria-hidden="true"></i></button>
+    </header>
+    <main id="main-content" tabindex="-1">{% block content %}{% endblock %}</main>
+</body>
+</html>

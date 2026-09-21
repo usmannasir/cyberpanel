@@ -269,6 +269,10 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('webmail/index.html', render_view.call_args.args[1])
         self.assertEqual(
+            'webmail/base.html',
+            render_view.call_args.args[2]['webmail_base_template'],
+        )
+        self.assertEqual(
             'user@example.com',
             render_view.call_args.args[2]['email'],
         )

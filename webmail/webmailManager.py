@@ -167,6 +167,7 @@ class WebmailManager:
                 'accounts': json.dumps([email]),
                 'show_picker': False,
                 'standalone_webmail': True,
+                'webmail_base_template': 'webmail/base.html',
             })
 
         if not email and accounts:

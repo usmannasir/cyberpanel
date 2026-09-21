@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{% static 'baseTemplate/brand/favicon.svg' %}">
     <title>{% trans "Webmail Login - CyberPanel" %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -112,8 +113,9 @@
 <body>
     <div class="wm-login-card" ng-controller="webmailLoginCtrl">
         <div class="wm-login-logo">
-            <i class="fa fa-envelope"></i>
-            <h2>{% trans "CyberPanel Webmail" %}</h2>
+            <img class="cp-brand-wordmark cp-brand-light" src="{% static 'baseTemplate/brand/cyberpanel-logo.svg' %}" alt="CyberPanel" width="190" height="36">
+            <img class="cp-brand-wordmark cp-brand-dark" src="{% static 'baseTemplate/brand/cyberpanel-logo-reverse.svg' %}" alt="CyberPanel" width="190" height="36">
+            <h2>{% trans "Welcome to webmail" %}</h2>
             <p>{% trans "Sign in to access your email" %}</p>
         </div>
 
@@ -123,12 +125,12 @@
 
         <form ng-submit="login()">
             <div class="wm-login-field">
-                <label>{% trans "Email Address" %}</label>
-                <input type="email" ng-model="email" placeholder="user@example.com" required autofocus>
+                <label for="webmail-email">{% trans "Email Address" %}</label>
+                <input id="webmail-email" autocomplete="username" type="email" ng-model="email" placeholder="user@example.com" required autofocus>
             </div>
             <div class="wm-login-field">
-                <label>{% trans "Password" %}</label>
-                <input type="password" ng-model="password" placeholder="{% trans 'Your email password' %}" required>
+                <label for="webmail-password">{% trans "Password" %}</label>
+                <input id="webmail-password" autocomplete="current-password" type="password" ng-model="password" placeholder="{% trans 'Your email password' %}" required>
             </div>
             <button type="submit" class="wm-login-btn" ng-disabled="loggingIn">
                 <span ng-if="!loggingIn">{% trans "Sign In" %}</span>

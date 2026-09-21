@@ -1,13 +1,14 @@
-{% extends "baseTemplate/index.html" %}
+{% extends webmail_base_template|default:"baseTemplate/index.html" %}
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Webmail - CyberPanel" %}{% endblock %}
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'webmail/webmail.css' %}">
+<link rel="stylesheet" href="{% static 'webmail/webmail.css' %}?v=20260921-1">
 
-<div class="webmail-container" ng-class="{'wm-reading': viewMode === 'read'}" ng-controller="webmailCtrl" ng-init="init()">
+<div class="webmail-container" ng-class="{'wm-reading': viewMode === 'read', 'wm-detail-active': viewMode !== 'list'}" ng-controller="webmailCtrl" ng-init="init()">
 
+    {% if not standalone_webmail %}
     <div id="cybermailBanner" style="display:none;flex-shrink:0;">
       <div style="padding:10px 20px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);">
         <div style="flex-shrink:0;font-size:22px;">&#9993;</div>
@@ -22,6 +23,8 @@
     (function(){if(!document.cookie.includes('cybermail_dismiss=1')){document.getElementById('cybermailBanner').style.display='';}})();
     function dismissCyberMailBanner(){document.getElementById('cybermailBanner').style.display='none';document.cookie='cybermail_dismiss=1; path=/; max-age='+7*86400;}
     </script>
+
+    {% endif %}
 
     <!-- Account Switcher Bar -->
     <div class="wm-account-bar" ng-show="managedAccounts.length > 1">

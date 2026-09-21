@@ -1,0 +1,28 @@
+/* The same Evergreen identity, with a mailbox-sized shell. */
+html.cp-webmail body { margin: 0; min-width: 320px; }
+html.cp-webmail .wm-shell-header { display: flex; align-items: center; gap: 22px; min-height: 82px; padding: 18px 28px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); }
+html.cp-webmail .wm-shell-brand { display: inline-flex; align-items: center; flex-shrink: 0; }
+html.cp-webmail .wm-shell-title { border-left: 1px solid var(--cp-border-strong); padding-left: 22px; font-size: 17px; font-weight: 600; color: var(--text-heading); }
+html.cp-webmail .wm-shell-account { margin-left: auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; }
+html.cp-webmail .wm-shell-account-label { font-size: 11px; color: var(--text-secondary); }
+html.cp-webmail .wm-shell-email { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }
+html.cp-webmail .wm-theme-toggle { flex-shrink: 0; width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); }
+html.cp-webmail .wm-theme-toggle:hover { background: var(--bg-hover); }
+html.cp-webmail #main-content { margin: 0; padding: 22px; width: 100%; max-width: none; }
+html.cp-webmail #main-content .webmail-container { height: calc(100vh - 128px); height: calc(100dvh - 128px); min-height: 480px; }
+html.cp-webmail .wm-skip-link { position: absolute; top: -60px; left: 16px; z-index: 10000; padding: 10px 16px; background: var(--cp-mint); color: var(--cp-ink); }
+html.cp-webmail .wm-skip-link:focus { top: 12px; }
+html.cp-webmail [ng-cloak] { display: none !important; }
+@media (max-width: 1120px) {
+    html.cp-webmail #main-content .webmail-container { height: auto; min-height: 600px; }
+}
+@media (max-width: 768px) {
+    html.cp-webmail .wm-shell-header { padding: 16px; gap: 12px; flex-wrap: wrap; }
+    html.cp-webmail .wm-shell-brand .cp-brand-wordmark { width: 155px; }
+    html.cp-webmail .wm-shell-title { font-size: 15px; padding-left: 12px; }
+    html.cp-webmail .wm-shell-account { order: 4; width: 100%; align-items: flex-start; }
+    html.cp-webmail .wm-shell-account-label { display: none; }
+    html.cp-webmail .wm-theme-toggle { margin-left: auto; }
+    html.cp-webmail #main-content { padding: 12px; }
+    html.cp-webmail #main-content .webmail-container { min-height: 0; }
+}
