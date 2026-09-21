@@ -63,4 +63,17 @@ assert.equal(attrs['aria-pressed'], 'true');
 handlers.click();
 assert.equal(attrs['data-theme'], 'light');
 assert.equal(attrs['aria-pressed'], 'false');
-console.log('Standalone module bootstrap, mailbox registration, CSRF and theme checks passed.');
+// The controller's detail modes must all reveal the pane on narrow screens.
+// A read-only selector previously left compose/settings/contacts invisible.
+const classExpression = mailbox.match(/class="webmail-container" ng-class="([^"]+)"/)[1];
+const css = fs.readFileSync(path.join(root, 'static/webmail/webmail.css'), 'utf8');
+const mobileCss = css.slice(css.indexOf('@media (max-width: 768px)'));
+const visiblePaneRule = mobileCss.match(/\.webmail-container\.([\w-]+)\s+\.wm-detail-pane\s*\{([^}]+)\}/);
+assert.ok(visiblePaneRule && /display:\s*block/.test(visiblePaneRule[2]));
+for (const mode of ['read', 'compose', 'contacts', 'rules', 'settings']) {
+    const classes = vm.runInNewContext('(' + classExpression + ')', {viewMode: mode});
+    assert.equal(classes[visiblePaneRule[1]], true, mode + ' must reveal the mobile pane');
+}
+const inboxClasses = vm.runInNewContext('(' + classExpression + ')', {viewMode: 'list'});
+assert.equal(inboxClasses[visiblePaneRule[1]], false, 'Inbox keeps the detail pane closed');
+console.log('Standalone module, CSRF, theme and mobile detail visibility checks passed.');
