@@ -32,6 +32,7 @@ STATE = CONFIG / 'state.json'
 ENABLED = CONFIG / 'enabled'
 SOCKET = '/run/cyberpanel-roundcube/php.sock'
 SERVICE = 'cyberpanel-roundcube.service'
+MASTER_LOG_DIR = Path('/var/log/cyberpanel-roundcube')
 UNIT = Path('/etc/systemd/system') / SERVICE
 USER = 'cp-roundcube'
 MAX_ARCHIVE = 32 * 1024 * 1024
@@ -166,11 +167,13 @@ ExecStart={fpm} --nodaemonize --fpm-config {CONFIG}/fpm.conf
 Restart=on-failure
 RuntimeDirectory=cyberpanel-roundcube
 RuntimeDirectoryMode=0755
-UMask=0027
+LogsDirectory=cyberpanel-roundcube
+LogsDirectoryMode=0700
+UMask=0077
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths={DATA} /run/cyberpanel-roundcube
+ReadWritePaths={DATA} /run/cyberpanel-roundcube {MASTER_LOG_DIR}
 NoNewPrivileges=true
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 [Install]
@@ -180,7 +183,7 @@ WantedBy=multi-user.target
 
 def pool_config():
     return f'''[global]
-error_log = /proc/self/fd/2
+error_log = {MASTER_LOG_DIR}/fpm.log
 daemonize = no
 [roundcube]
 user = {USER}
@@ -301,9 +304,30 @@ def backup_database(database, identity):
                 os.close(descriptor)
 
 
+def ensure_master_log():
+    """Keep the root FPM master's log outside the PHP user's writable tree."""
+    MASTER_LOG_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    directory = os.open(MASTER_LOG_DIR, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        os.fchown(directory, 0, 0)
+        os.fchmod(directory, 0o700)
+        descriptor = os.open('fpm.log', os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW,
+                             0o600, dir_fd=directory)
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise RuntimeError('Roundcube master log must be a regular file.')
+            os.fchown(descriptor, 0, 0)
+            os.fchmod(descriptor, 0o600)
+        finally:
+            os.close(descriptor)
+    finally:
+        os.close(directory)
+
+
 def install():
     fpm, cli = find_php()
     identity = ensure_identity()
+    ensure_master_log()
     status('installing', 'Downloading and verifying Roundcube.')
     ROOT.mkdir(parents=True, exist_ok=True, mode=0o755)
     release = ROOT / VERSION

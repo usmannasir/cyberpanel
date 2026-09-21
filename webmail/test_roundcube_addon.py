@@ -210,6 +210,31 @@ class RuntimeTests(unittest.TestCase):
             self.assertIn("$config['session_path'] = '/roundcube/';", first)
             self.assertIn("$config['smtp_user'] = '%u';", first)
 
+    def test_master_log_is_private_and_writable_through_the_service_sandbox(self):
+        config = runtime.pool_config()
+        service = runtime.service_config('/usr/sbin/php-fpm8.5')
+        self.assertNotIn('/proc/self/fd/', config)
+        self.assertIn(f'error_log = {runtime.MASTER_LOG_DIR}/fpm.log', config)
+        self.assertIn('LogsDirectory=cyberpanel-roundcube', service)
+        self.assertIn('LogsDirectoryMode=0700', service)
+        self.assertIn(f'ReadWritePaths={runtime.DATA} /run/cyberpanel-roundcube {runtime.MASTER_LOG_DIR}', service)
+        self.assertIn('ProtectSystem=strict', service)
+        self.assertIn('NoNewPrivileges=true', service)
+        self.assertIn('UMask=0077', service)
+        self.assertNotEqual(runtime.DATA, runtime.MASTER_LOG_DIR.parent)
+
+    def test_master_log_rejects_a_preplanted_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            logs = Path(directory) / 'logs'
+            logs.mkdir()
+            secret = Path(directory) / 'secret'
+            secret.write_text('do not modify')
+            (logs / 'fpm.log').symlink_to(secret)
+            with patch.object(runtime, 'MASTER_LOG_DIR', logs), patch.object(runtime.os, 'fchown'):
+                with self.assertRaises(OSError):
+                    runtime.ensure_master_log()
+            self.assertEqual('do not modify', secret.read_text())
+
     def test_fastcgi_stream_roundtrip(self):
         with tempfile.TemporaryDirectory() as directory:
             address = str(Path(directory) / 'php.sock')
@@ -278,7 +303,7 @@ class UpdateRollbackTests(unittest.TestCase):
                 (candidate / 'public_html').mkdir()
             failed_source = Mock()
             failed_source.backup.side_effect = sqlite3.OperationalError('disk full')
-            with patch.multiple(runtime, ROOT=root, DATA=data, CONFIG=config, STATE=config/'state.json', ENABLED=config/'enabled', UNIT=config/'unit.service'), patch.object(runtime, 'find_php', return_value=('/usr/sbin/php-fpm', '/usr/bin/php')), patch.object(runtime, 'ensure_identity', return_value=identity), patch.object(runtime, 'download'), patch.object(runtime, 'checked_extract', side_effect=fake_extract), patch.object(runtime, 'runtime_identity', side_effect=lambda _: nullcontext()), patch.object(runtime.os, 'chown'), patch.object(runtime.subprocess, 'run', return_value=types.SimpleNamespace(returncode=0)), patch.object(runtime.sqlite3, 'connect', return_value=failed_source), patch.object(runtime, 'run', return_value=types.SimpleNamespace(returncode=0)):
+            with patch.multiple(runtime, ROOT=root, DATA=data, CONFIG=config, STATE=config/'state.json', ENABLED=config/'enabled', UNIT=config/'unit.service'), patch.object(runtime, 'find_php', return_value=('/usr/sbin/php-fpm', '/usr/bin/php')), patch.object(runtime, 'ensure_identity', return_value=identity), patch.object(runtime, 'ensure_master_log'), patch.object(runtime, 'download'), patch.object(runtime, 'checked_extract', side_effect=fake_extract), patch.object(runtime, 'runtime_identity', side_effect=lambda _: nullcontext()), patch.object(runtime.os, 'chown'), patch.object(runtime.subprocess, 'run', return_value=types.SimpleNamespace(returncode=0)), patch.object(runtime.sqlite3, 'connect', return_value=failed_source), patch.object(runtime, 'run', return_value=types.SimpleNamespace(returncode=0)):
                 with self.assertRaises(sqlite3.OperationalError):
                     runtime.install()
             self.assertEqual(initial, database.read_bytes())
@@ -299,7 +324,7 @@ class UpdateRollbackTests(unittest.TestCase):
                         connection.execute('DELETE FROM contacts')
                     raise subprocess.CalledProcessError(1, argv)
                 return types.SimpleNamespace(returncode=0)
-            with patch.multiple(runtime, ROOT=root, DATA=data, CONFIG=config, STATE=config/'state.json', ENABLED=config/'enabled', UNIT=config/'unit.service'), patch.object(runtime, 'find_php', return_value=('/usr/sbin/php-fpm', '/usr/bin/php')), patch.object(runtime, 'ensure_identity', return_value=identity), patch.object(runtime, 'download'), patch.object(runtime, 'checked_extract', side_effect=fake_extract), patch.object(runtime, 'runtime_identity', side_effect=lambda _: nullcontext()), patch.object(runtime.os, 'chown'), patch.object(runtime, 'run', side_effect=fake_run), patch.object(runtime.subprocess, 'run', return_value=types.SimpleNamespace(returncode=0)):
+            with patch.multiple(runtime, ROOT=root, DATA=data, CONFIG=config, STATE=config/'state.json', ENABLED=config/'enabled', UNIT=config/'unit.service'), patch.object(runtime, 'find_php', return_value=('/usr/sbin/php-fpm', '/usr/bin/php')), patch.object(runtime, 'ensure_identity', return_value=identity), patch.object(runtime, 'ensure_master_log'), patch.object(runtime, 'download'), patch.object(runtime, 'checked_extract', side_effect=fake_extract), patch.object(runtime, 'runtime_identity', side_effect=lambda _: nullcontext()), patch.object(runtime.os, 'chown'), patch.object(runtime, 'run', side_effect=fake_run), patch.object(runtime.subprocess, 'run', return_value=types.SimpleNamespace(returncode=0)):
                 with self.assertRaises(subprocess.CalledProcessError):
                     runtime.install()
             with sqlite3.connect(database) as connection:

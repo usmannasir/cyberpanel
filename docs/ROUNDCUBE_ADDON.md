@@ -100,6 +100,7 @@ The installer creates:
 - dedicated unprivileged system account `cp-roundcube`;
 - private runtime state at `/var/lib/cyberpanel-roundcube`;
 - configuration and the retained encryption key at `/etc/cyberpanel/roundcube`;
+- a private root-owned FPM master log at `/var/log/cyberpanel-roundcube/fpm.log`;
 - `cyberpanel-roundcube.service`, an isolated PHP-FPM pool with a Unix socket at
   `/run/cyberpanel-roundcube/php.sock`, accessible only to the panel user.
 
@@ -142,7 +143,10 @@ journalctl -u cyberpanel-roundcube --since '10 minutes ago'
 cat /etc/cyberpanel/roundcube/state.json
 ```
 
-PHP/Roundcube error logs are under `/var/lib/cyberpanel-roundcube/logs`; restrict
+The root FPM master's startup/error log is `/var/log/cyberpanel-roundcube/fpm.log`
+(`0700` directory, `0600` file). It is deliberately separate from runtime-owned
+paths, and the service sandbox permits this dedicated log directory.
+PHP/Roundcube worker error logs are under `/var/lib/cyberpanel-roundcube/logs`; restrict
 access because mail-related failures can include private content. The UI only
 receives controlled status text. No automatic destructive uninstall is provided.
 
