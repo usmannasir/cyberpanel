@@ -14,6 +14,7 @@ from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
+from loginSystem.views import loadLoginPage
 from plogical.acl import ACLManager
 from plogical.httpProc import httpProc
 from plogical.roundcubeRuntime import ROOT, STATE, ENABLED, SOCKET, VERSION
@@ -72,7 +73,7 @@ def runtime_status():
 @require_GET
 def manage(request):
     if not request.session.get('userID'):
-        return redirect('loadLoginPage')
+        return redirect(loadLoginPage)
     if not administrator(request):
         return HttpResponse('Server administrator access is required.', status=403)
     data = runtime_status()

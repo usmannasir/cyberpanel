@@ -26,8 +26,9 @@ from django.conf import settings
 if not settings.configured:
     settings.configure(DEFAULT_CHARSET='utf-8', ALLOWED_HOSTS=['testserver'],
                        SECRET_KEY='roundcube-unit-tests-only', USE_TZ=True)
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from django.core.cache import cache
+from django.urls import path
 
 # The boundary test uses Django's real requests/responses. Project ACL/database
 # imports are replaced only while loading the isolated optional integration.
@@ -35,9 +36,15 @@ acl_module = types.ModuleType('plogical.acl')
 acl_module.ACLManager = Mock()
 http_module = types.ModuleType('plogical.httpProc')
 http_module.httpProc = Mock()
-with patch.dict(sys.modules, {'plogical.acl': acl_module, 'plogical.httpProc': http_module}):
+login_module = types.ModuleType('loginSystem.views')
+login_module.loadLoginPage = lambda request: None
+with patch.dict(sys.modules, {'plogical.acl': acl_module, 'plogical.httpProc': http_module,
+                             'loginSystem.views': login_module}):
     from webmail import roundcube
 from plogical import roundcubeRuntime as runtime
+
+# Match loginSystem.urls: the callable is loadLoginPage, but its name is adminLogin.
+urlpatterns = [path('', login_module.loadLoginPage, name='adminLogin')]
 
 
 class GatewayTests(unittest.TestCase):
@@ -48,6 +55,18 @@ class GatewayTests(unittest.TestCase):
 
     def request(self, path='/roundcube/', **kw):
         return self.factory.get(path, secure=True, **kw)
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_management_redirects_without_a_panel_login(self):
+        for session in ({}, {'webmail_standalone': True, 'webmail_email': 'user@example.com'}):
+            with self.subTest(session=session), patch.object(roundcube, 'runtime_status') as status, patch.object(roundcube, 'entitled') as entitlement:
+                request = self.request('/webmail/roundcube')
+                request.session = session
+                response = roundcube.manage(request)
+                self.assertEqual(302, response.status_code)
+                self.assertEqual('/', response.url)
+                status.assert_not_called()
+                entitlement.assert_not_called()
 
     def test_named_and_all_entitlements_accept_only_integer_one(self):
         for malformed in (True, '1', {'status': 1}, None, 0, -1):
