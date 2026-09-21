@@ -18,12 +18,17 @@ add-ons plan**, or available as a **$99 one-time standalone lifetime license**.
 The paid product covers CyberPanel integration and management of the open-source
 Roundcube client.
 
-The management page links to the existing premium plan purchase page at
-<https://cyberpanel.net/cyberpanel-addons> and the existing platform account at
-<https://platform.cyberpersons.com/> for license management. It does not invent
-a standalone checkout URL or reuse an unrelated Stripe product. The existing
-in-panel premium pricing page uses a platform-managed Stripe pricing table;
-its products and fulfillment are outside this repository.
+The management page provides distinct purchase links:
+
+- **$169 lifetime premium plan:** <https://cyberpanel.net/cyberpanel-addons>.
+- **$99 standalone Roundcube lifetime license:**
+  <https://platform.cyberpersons.com/order/roundcube/>.
+
+License management uses the existing platform account at
+<https://platform.cyberpersons.com/>. The standalone order route is owned by the
+platform; the existing in-panel premium pricing page uses a platform-managed
+Stripe pricing table. Products, payments and fulfillment are outside this
+repository.
 
 Before making the standalone offer purchasable, the platform/billing deployment
 must provide the $99 one-time Roundcube product and checkout, fulfill successful
@@ -31,9 +36,10 @@ purchases as the `roundcube` entitlement for the licensed server IP, and retain
 that grant without a recurring subscription expiry. Refunds and revocations
 must update that grant through the existing entitlement service. Verify the
 $169 lifetime product grants `all`, or explicitly grants `roundcube`, and update
-the public plan feature list to include Roundcube. Connect the verified
-standalone checkout to this page once it exists. These are external deployment
-requirements; this panel change creates no billing product, payment, or license.
+the public plan feature list to include Roundcube. Deploy and verify the
+standalone order route before releasing its panel purchase link. These are
+external deployment requirements; this panel change creates no billing product,
+payment, or license.
 
 ## Entitlement and access
 
