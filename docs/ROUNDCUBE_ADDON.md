@@ -11,14 +11,39 @@ address book and preferences. There is no mailbox migration and no SnappyMail
 installation. Roundcube itself is GPL software; the paid feature is its
 CyberPanel integration and management.
 
+## Pricing and purchase integration
+
+Roundcube integration is included in CyberPanel's **$169 lifetime premium
+add-ons plan**, or available as a **$99 one-time standalone lifetime license**.
+The paid product covers CyberPanel integration and management of the open-source
+Roundcube client.
+
+The management page links to the existing premium plan purchase page at
+<https://cyberpanel.net/cyberpanel-addons> and the existing platform account at
+<https://platform.cyberpersons.com/> for license management. It does not invent
+a standalone checkout URL or reuse an unrelated Stripe product. The existing
+in-panel premium pricing page uses a platform-managed Stripe pricing table;
+its products and fulfillment are outside this repository.
+
+Before making the standalone offer purchasable, the platform/billing deployment
+must provide the $99 one-time Roundcube product and checkout, fulfill successful
+purchases as the `roundcube` entitlement for the licensed server IP, and retain
+that grant without a recurring subscription expiry. Refunds and revocations
+must update that grant through the existing entitlement service. Verify the
+$169 lifetime product grants `all`, or explicitly grants `roundcube`, and update
+the public plan feature list to include Roundcube. Connect the verified
+standalone checkout to this page once it exists. These are external deployment
+requirements; this panel change creates no billing product, payment, or license.
+
 ## Entitlement and access
 
 The gateway and install/enable operations require an integer `1` from the
 existing premium checker for `all` or the new named feature `roundcube`. Existing
 all-features/lifetime/enterprise access follows the same checker as other paid
-features. The platform add-on service must explicitly grant `roundcube` for a
-standalone purchase. No price, billing SKU, payment, or subscription is created
-by this change.
+features. Existing recurring all-features access remains supported; the panel
+does not infer a billing amount or term from the `all` grant. The platform add-on
+service must explicitly grant `roundcube` for a standalone purchase. A standalone
+Roundcube purchase must not grant `all` or unlock unrelated premium features.
 
 Positive entitlement results have a maximum 60-second cache lifetime; negative
 results expire in 10 seconds. Lookup errors and malformed values fail closed.

@@ -13,8 +13,19 @@
         <h3 style="margin-top:0">{% trans "Your choice of webmail" %}</h3>
         <p>{% trans "Integrated webmail stays available at its existing address. Roundcube is an optional client for the same mailboxes; users sign in with their email address and mailbox password." %}</p>
         <p>{% trans "Roundcube provides its own address book and preferences. These are separate from the contacts and settings in integrated webmail." %}</p>
+        <div class="row" style="margin-top:20px">
+            <div class="col-sm-6">
+                <h4>{% trans "Included in the $169 lifetime plan" %}</h4>
+                <p>{% trans "Roundcube integration is included with CyberPanel's premium add-ons lifetime plan at no extra cost." %}</p>
+                <p><a href="https://cyberpanel.net/cyberpanel-addons" target="_blank" rel="noopener noreferrer">{% trans "View premium plans" %}</a></p>
+            </div>
+            <div class="col-sm-6">
+                <h4>{% trans "Roundcube standalone — $99 lifetime" %}</h4>
+                <p>{% trans "A one-time payment for the Roundcube integration, available separately from the premium add-ons plan." %}</p>
+            </div>
+        </div>
         {% if not roundcube_entitled %}
-        <div class="alert alert-info">{% trans "An active Roundcube add-on or an all-features license is required to install and use Roundcube. If you have just purchased access, refresh this page shortly." %}
+        <div class="alert alert-info">{% trans "Activate your Roundcube standalone license or premium plan for this server to install and use Roundcube. If you have just purchased access, refresh this page shortly." %}
             <a href="https://platform.cyberpersons.com/" target="_blank" rel="noopener noreferrer">{% trans "Manage your license" %}</a></div>
         {% endif %}
         <div role="status" aria-live="polite" class="alert alert-info" id="roundcube-status">{{ message }}</div>
