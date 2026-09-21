@@ -1073,19 +1073,33 @@ Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: /usr/local/CyberPanel/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-# Run upgrade.py and capture output
-upgrade_output=$(/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
-RETURN_CODE=$?
-echo "$upgrade_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
+# Stream progress immediately; command substitution hid the entire upgrade
+# until Python exited and made a working upgrade look stuck at this point.
+local upgrade_output_file
+local upgrade_status
+if ! upgrade_output_file=$(mktemp /tmp/cyberpanel-upgrade-output.XXXXXX); then
+    echo 'ERROR: Unable to create the upgrade output file.' >&2
+    UPGRADE_FAILED=1
+    return 1
+fi
+/usr/local/CyberPanel/bin/python -u upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log "$upgrade_output_file"
+upgrade_status=("${PIPESTATUS[@]}")
+RETURN_CODE=${upgrade_status[0]}
 
 # Check for TypeError specifically
-if echo "$upgrade_output" | grep -q "TypeError: expected string or bytes-like object"; then
+if grep -q "TypeError: expected string or bytes-like object" "$upgrade_output_file"; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: TypeError detected in upgrade.py, but continuing..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     # Check if upgrade actually completed despite the error
-    if echo "$upgrade_output" | grep -q "Upgrade Completed"; then
+    if grep -q "Upgrade Completed" "$upgrade_output_file"; then
         echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrade completed despite TypeError" | tee -a /var/log/cyberpanel_upgrade_debug.log
         RETURN_CODE=0
     fi
+fi
+rm -f "$upgrade_output_file"
+# A successful tee must not mask Python failures, nor may logging failures
+# turn into a successful upgrade.
+if [[ "$RETURN_CODE" -eq 0 && "${upgrade_status[1]}" -ne 0 ]]; then
+    RETURN_CODE=${upgrade_status[1]}
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Python upgrade.py returned code: $RETURN_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1118,7 +1132,7 @@ else
   if Download_Requirement && /usr/local/CyberPanelTemp/bin/python -m pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt \
       && Validate_Python_Requirements /usr/local/CyberPanelTemp/bin/python /usr/local/requirments.txt; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
-    /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    /usr/local/CyberPanelTemp/bin/python -u upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
     # upgrade.py is piped into tee, so read its status from PIPESTATUS.
     FALLBACK_CODE=${PIPESTATUS[0]}
   else
