@@ -41,6 +41,20 @@ and authenticated Postfix submission (127.0.0.1:25), a valid panel HTTPS endpoin
 Local IMAP and SMTP connections stay on loopback. The installer does not change
 Dovecot, Postfix, website PHP handlers, or the default webmail route.
 
+The ready state confirms the Roundcube PHP runtime is running; mailbox login and
+delivery still require the mail services to work. Dovecot must start successfully
+and provide Postfix's SASL authentication socket. A missing certificate referenced
+by any Dovecot `local_name` block can stop the entire mail service, including
+loopback IMAP and SMTP authentication. Each configured certificate path must
+exist, and its certificate must cover the corresponding mail hostname. Diagnose
+login or SMTP connection failures with `systemctl status dovecot postfix`,
+`doveconf -n`, and `journalctl -u dovecot -u postfix`; repair the mail-domain
+certificate configuration before repeating the browser mail test. Do not weaken
+TLS verification or enable unauthenticated relay to work around this failure.
+Public delivery also needs the usual matching forward/reverse DNS and mail
+authentication records; a successful local round trip does not prove external
+deliverability.
+
 The isolated service requires system PHP **8.1 through 8.5**, both CLI and FPM,
 with ctype, DOM, fileinfo, filter, iconv, intl, mbstring, OpenSSL, PDO SQLite,
 session, XML and zip. Roundcube 1.7.4's own Composer requirements support this
@@ -128,6 +142,8 @@ that snapshot again before marking it usable. A backup failure never replaces
 the live database. A migration/service failure restores the verified database,
 prior release link, PHP-FPM configuration and systemd unit, then starts the
 previous service when it was enabled. A fresh failed install remains disabled.
+If a failed install already registered the service for startup, rollback removes
+that registration when the previous installation was disabled or absent.
 
 The most recent same-version release is retained as `<version>.previous` and
 verified pre-update SQLite snapshots are retained as `pre-update-*.sqlite` under

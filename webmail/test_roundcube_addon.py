@@ -371,6 +371,44 @@ class UpdateRollbackTests(unittest.TestCase):
             self.assertEqual([unittest.mock.call(123), unittest.mock.call(0)], uid.call_args_list)
             self.assertEqual([unittest.mock.call(456), unittest.mock.call(0)], gid.call_args_list)
 
+    def test_failed_start_does_not_enable_a_previously_disabled_installation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, data, config, database = self.setup_tree(directory)
+            (config / 'enabled').unlink()
+            unit = config / 'unit.service'
+            unit.write_text('original unit')
+            identity = types.SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid())
+            commands = []
+
+            def fake_extract(archive, candidate):
+                (candidate / 'config').mkdir()
+                (candidate / 'public_html').mkdir()
+
+            def fake_run(argv, **kwargs):
+                commands.append(argv)
+                if argv[:3] == ['systemctl', 'enable', '--now']:
+                    # systemctl enables first, then can fail to start the unit.
+                    raise subprocess.CalledProcessError(1, argv)
+                return types.SimpleNamespace(returncode=0)
+
+            def rollback_run(argv, **kwargs):
+                commands.append(argv)
+                if argv[:2] == ['systemctl', 'disable']:
+                    self.assertTrue(unit.exists(), 'Disable while the new unit still exists')
+                return types.SimpleNamespace(returncode=0)
+
+            with patch.multiple(runtime, ROOT=root, DATA=data, CONFIG=config, STATE=config/'state.json', ENABLED=config/'enabled', UNIT=unit), patch.object(runtime, 'find_php', return_value=('/usr/sbin/php-fpm', '/usr/bin/php')), patch.object(runtime, 'ensure_identity', return_value=identity), patch.object(runtime, 'ensure_master_log'), patch.object(runtime, 'download'), patch.object(runtime, 'checked_extract', side_effect=fake_extract), patch.object(runtime, 'runtime_identity', side_effect=lambda _: nullcontext()), patch.object(runtime.os, 'chown'), patch.object(runtime, 'run', side_effect=fake_run), patch.object(runtime.subprocess, 'run', side_effect=rollback_run):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    runtime.install()
+            self.assertIn(['systemctl', 'disable', runtime.SERVICE], commands)
+            self.assertNotIn(['systemctl', 'start', runtime.SERVICE], commands)
+            self.assertFalse((config / 'enabled').exists())
+            self.assertTrue((root / 'current' / 'old-marker').is_file())
+            self.assertEqual('original unit', unit.read_text())
+            self.assertEqual('original fpm', (config / 'fpm.conf').read_text())
+            with sqlite3.connect(database) as connection:
+                self.assertEqual([('keep me',)], connection.execute('SELECT name FROM contacts').fetchall())
+
 
 @unittest.skipUnless(os.geteuid() == 0 and os.environ.get('CYBERPANEL_ROUNDCUBE_ROOT_TESTS') == '1',
                      'Opt-in disposable-node test requires root to exercise real Unix permissions')

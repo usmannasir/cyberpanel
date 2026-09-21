@@ -350,6 +350,7 @@ def install():
         backup = None
         database_migration_started = False
         release_moved_to_previous = False
+        service_enable_attempted = False
         preserved_config = {}
         for path in (CONFIG / 'fpm.conf', UNIT):
             preserved_config[path] = path.read_text() if path.exists() else None
@@ -387,6 +388,7 @@ def install():
             write_atomic(UNIT, service_config(fpm))
             run([fpm, '--test', '--fpm-config', str(CONFIG / 'fpm.conf')])
             run(['systemctl', 'daemon-reload'])
+            service_enable_attempted = True
             run(['systemctl', 'enable', '--now', SERVICE])
             run(['systemctl', 'is-active', '--quiet', SERVICE])
             write_atomic(ENABLED, VERSION + '\n')
@@ -394,6 +396,10 @@ def install():
         except Exception:
             ENABLED.unlink(missing_ok=True)
             subprocess.run(['systemctl', 'stop', SERVICE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if service_enable_attempted and not was_enabled:
+                # enable --now can register the unit even when starting fails.
+                # Remove that registration before restoring/removing its unit.
+                subprocess.run(['systemctl', 'disable', SERVICE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if backup is not None and database_migration_started:
                 # Keep root out of paths the PHP account can replace.
                 saved_database = backup.read_bytes()
