@@ -53,13 +53,14 @@ class remoteTransferUtilities:
 
     ## House keeping function to run remote backups
     @staticmethod
-    def remoteTransfer(ipAddress, dir, accountsToTransfer):
+    def remoteTransfer(ipAddress, dir, accountsToTransfer, sshPort='22'):
         try:
 
             destination = "/home/backup/transfer-" + dir
             backupLogPath = destination + "/backup_log"
 
-            data = open(accountsToTransfer, 'r').readlines()
+            with open(accountsToTransfer, 'r') as accounts:
+                data = accounts.readlines()
 
             accountsToTransfer = []
 
@@ -81,19 +82,19 @@ class remoteTransferUtilities:
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
 
-            if backupUtil.backupUtilities.checkIfHostIsUp(ipAddress) == 1:
-                checkConn = backupUtil.backupUtilities.checkConnection(ipAddress)
-                if checkConn[0] == 0:
-                    writeToFile.writelines("[" + time.strftime(
-                        "%m.%d.%Y_%H-%M-%S") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting. [5010]" + "\n")
-                    writeToFile.close()
-                    return
-                else:
-                    pass
-            else:
+            # Check the same key, account and per-transfer port used by scp.
+            # The scheduled-backup checker reads unrelated destination settings.
+            command = ['sudo', 'ssh', '-o', 'StrictHostKeyChecking=no',
+                       '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+                       '-i', '/root/.ssh/cyberpanel', '-p', str(sshPort),
+                       'root@' + ipAddress, 'true']
+            writeToFile.flush()
+            if subprocess.call(command, stdout=writeToFile, stderr=subprocess.STDOUT) != 0:
                 writeToFile.writelines("[" + time.strftime(
-                    "%m.%d.%Y_%H-%M-%S") + "]" + " Host:" + ipAddress + " could be  down, we are continuing..." + "\n")
+                    "%m.%d.%Y_%H-%M-%S") + "] Connection to:" + ipAddress +
+                    " on SSH port " + str(sshPort) + " failed. Check the SSH error above. [5010]\n")
                 writeToFile.close()
+                return
 
             writeToFile.close()
 
@@ -103,7 +104,7 @@ class remoteTransferUtilities:
             ## Array of domains to be transferred
 
             p = Process(target=remoteTransferUtilities.backupProcess,
-                        args=(ipAddress, destination, backupLogPath, dir, accountsToTransfer))
+                        args=(ipAddress, destination, backupLogPath, dir, accountsToTransfer, sshPort))
             p.start()
 
             pid = open(destination + '/pid', "w")
@@ -126,7 +127,7 @@ class remoteTransferUtilities:
     ## Array of domains to be transferred
 
     @staticmethod
-    def backupProcess(ipAddress, dir, backupLogPath, folderNumber, accountsToTransfer):
+    def backupProcess(ipAddress, dir, backupLogPath, folderNumber, accountsToTransfer, sshPort='22'):
             try:
                 ## dir is without forward slash
 
@@ -165,7 +166,7 @@ class remoteTransferUtilities:
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
 
                             sent = remoteTransferUtilities.sendBackup(
-                                completedPathToSend, ipAddress, str(folderNumber), writeToFile)
+                                completedPathToSend, ipAddress, str(folderNumber), writeToFile, sshPort)
                             if sent:
                                 writeToFile.writelines("[" + time.strftime(
                                     "%m.%d.%Y_%H-%M-%S") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
@@ -188,12 +189,6 @@ class remoteTransferUtilities:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
                         pass
 
-                portpath = "/home/cyberpanel/remote_port"
-                try:
-                    os.remove(portpath)
-                except OSError:
-                    pass
-
                 writeToFile = open(backupLogPath, "a")
                 if allBackupsSent:
                     writeToFile.writelines("[" + time.strftime(
@@ -215,27 +210,19 @@ class remoteTransferUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupProcess]")
 
     @staticmethod
-    def sendBackup(completedPathToSend, IPAddress, folderNumber,writeToFile):
+    def sendBackup(completedPathToSend, IPAddress, folderNumber, writeToFile, sshPort='22'):
         try:
             ## complete path is a path to the file need to send
-            portpath = "/home/cyberpanel/remote_port"
-
-            # Default to the standard SSH port when no custom port file is present,
-            # rather than failing the whole send. The file is a best-effort hint.
-            sshPort = "22"
-            try:
-                with open(portpath, 'r') as file:
-                    candidate = file.readline().strip()
-                if candidate.isdigit():
-                    sshPort = candidate
-            except (OSError, IOError):
-                pass
-
-            command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel -P "+ sshPort + " " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
-            return_Code = subprocess.call(shlex.split(command), stdout=writeToFile)
+            command = ['sudo', 'scp', '-o', 'StrictHostKeyChecking=no',
+                       '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+                       '-i', '/root/.ssh/cyberpanel', '-P', str(sshPort),
+                       completedPathToSend,
+                       'root@' + IPAddress + ':/home/backup/transfer-' + folderNumber + '/']
+            writeToFile.flush()
+            return_Code = subprocess.call(command, stdout=writeToFile, stderr=subprocess.STDOUT)
 
             if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile(command)
+                logging.CyberCPLogFileWriter.writeToFile(' '.join(shlex.quote(item) for item in command))
 
             if return_Code == 0:
                 logging.CyberCPLogFileWriter.writeToFile("Remote backup file sent: %s" % completedPathToSend)
@@ -288,6 +275,7 @@ def main():
     parser.add_argument('--ipAddress', help='')
     parser.add_argument('--dir', help='')
     parser.add_argument('--accountsToTransfer', help='')
+    parser.add_argument('--port', default='22', help='Destination SSH port for this transfer')
 
     ## remote backup restore arguments
 
@@ -300,7 +288,7 @@ def main():
     if args.function == "writeAuthKey":
         remoteTransferUtilities.writeAuthKey(args.pathToKey)
     elif args.function == "remoteTransfer":
-        remoteTransferUtilities.remoteTransfer(args.ipAddress,args.dir,args.accountsToTransfer)
+        remoteTransferUtilities.remoteTransfer(args.ipAddress,args.dir,args.accountsToTransfer,args.port)
     elif args.function == "remoteBackupRestore":
         remoteTransferUtilities.remoteBackupRestore(args.backupDirComplete,args.backupDir)
 
