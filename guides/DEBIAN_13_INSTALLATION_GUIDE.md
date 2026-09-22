@@ -273,7 +273,7 @@ free -h
 ## 📚 Additional Resources
 
 ### Documentation
-- [CyberPanel Official Docs](https://cyberpanel.net/docs/)
+- [CyberPanel Official Docs](https://cyberpanel.net/KnowledgeBase/)
 - [Debian 13 Release Notes](https://www.debian.org/releases/bookworm/releasenotes)
 - [Apache2 Configuration Guide](https://httpd.apache.org/docs/2.4/)
 
