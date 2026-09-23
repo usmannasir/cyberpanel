@@ -7867,7 +7867,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', page_redirect='pricing')
     def CreateDockerPackage(self, request=None, userID=None, data=None, DeleteID=None):
         Data = {}
 
@@ -7891,7 +7890,6 @@ StrictHostKeyChecking no
                         Data, 'createWebsite')
         return proc.render()
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', page_redirect='pricing')
     def AssignPackage(self, request=None, userID=None, data=None, DeleteID=None):
 
         currentACL = ACLManager.loadedACL(userID)
@@ -7916,7 +7914,6 @@ StrictHostKeyChecking no
                         Data, 'createWebsite')
         return proc.render()
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', page_redirect='pricing')
     def CreateDockersite(self, request=None, userID=None, data=None):
         adminNames = ACLManager.loadAllUsers(userID)
         Data = {'adminNames': adminNames}
@@ -7940,7 +7937,6 @@ StrictHostKeyChecking no
                         Data, 'createWebsite')
         return proc.render()
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', flags=('installStatus', 'createWebSiteStatus'))
     def AddDockerpackage(self, userID=None, data=None):
         try:
 
@@ -7970,7 +7966,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', flags=('installStatus', 'createWebSiteStatus'))
     def Getpackage(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -8004,7 +7999,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', flags=('installStatus', 'createWebSiteStatus'))
     def Updatepackage(self, userID=None, data=None):
         try:
 
@@ -8039,7 +8033,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', flags=('installStatus', 'createWebSiteStatus'))
     def AddAssignment(self, userID=None, data=None):
         try:
 
@@ -8078,7 +8071,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', flags=('installStatus', 'createWebSiteStatus'))
     def submitDockerSiteCreation(self, userID=None, data=None):
         try:
             admin = Administrator.objects.get(pk=userID)
@@ -8262,7 +8254,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    @premium_entitlement_required('docker-manager', label='Docker Manager', page_redirect='pricing')
     def Dockersitehome(self, request=None, userID=None, data=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
