@@ -1252,27 +1252,8 @@ class virtualHostUtilities:
 
             writeFile.close()
 
-            ## Update myhostname address postfix
-
-            filePath = "/etc/postfix/main.cf"
-
-            # Check if main.cf exists before trying to read it
-            if not os.path.exists(filePath):
-                logging.CyberCPLogFileWriter.writeToFile(f"{filePath} not found, skipping postfix hostname update")
-                print("1,Postfix main.cf not found")
-                return 1, 'Postfix main.cf not found'
-
-            data = open(filePath, 'r').readlines()
-
-            writeFile = open(filePath, 'w')
-
-            for items in data:
-                if items.find('myhostname') > -1:
-                    writeFile.writelines('myhostname = ' + virtualHost + '\n')
-                else:
-                    writeFile.writelines(items)
-
-            writeFile.close()
+            # Postfix myhostname is the shared server identity (including outbound
+            # HELO). Issuing a tenant certificate must not change main.cf.
 
             p = Process(target=mailUtilities.restartServices, args=())
             p.start()
