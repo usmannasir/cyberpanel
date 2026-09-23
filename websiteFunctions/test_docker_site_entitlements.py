@@ -1,4 +1,4 @@
-"""Paid Docker Site provisioning must be denied before manager work begins."""
+"""Docker App is free, while package administration still follows panel ACLs."""
 import json
 import unittest
 from unittest import mock
@@ -9,39 +9,34 @@ except ImportError:
     from test_wordpress_entitlements import load_wordpress_manager
 
 
-class DockerSiteEntitlementTests(unittest.TestCase):
-    def test_unpaid_pages_and_actions_do_not_load_data_or_start_work(self):
+class DockerSiteAccessTests(unittest.TestCase):
+    def test_create_page_is_available_without_a_paid_entitlement(self):
         cls, env, services = load_wordpress_manager()
-        manager = cls()
         services['ACLManager'].CheckForPremFeature.return_value = 0
-        pages = ('CreateDockerPackage', 'AssignPackage', 'CreateDockersite', 'Dockersitehome')
-        actions = ('AddDockerpackage', 'Getpackage', 'Updatepackage', 'AddAssignment', 'submitDockerSiteCreation')
-        for name in pages:
-            with self.subTest(page=name):
-                result = getattr(manager, name)(userID=7)
-                self.assertEqual(302, result.status_code)
-                self.assertEqual('pricing', result.url)
-        for name in actions:
-            with self.subTest(action=name):
-                result = json.loads(getattr(manager, name)(userID=7).content)
-                self.assertEqual(0, result['status'])
-                self.assertEqual(0, result['installStatus'])
-                self.assertEqual(0, result['createWebSiteStatus'])
-        services['ACLManager'].loadedACL.assert_not_called()
-        services['Administrator'].objects.get.assert_not_called()
+        services['ACLManager'].loadAllUsers.return_value = ['admin']
+        env['PackageAssignment'] = mock.Mock()
+        env['PackageAssignment'].objects.all.return_value.count.return_value = 1
+        expected = object()
+        services['httpProc'].return_value.render.return_value = expected
 
-    def test_license_does_not_override_package_admin_access(self):
+        self.assertIs(expected, cls().CreateDockersite(request=object(), userID=7))
+        self.assertEqual('websiteFunctions/CreateDockerSite.html',
+                         services['httpProc'].call_args.args[1])
+        services['ACLManager'].CheckForPremFeature.assert_not_called()
+
+    def test_free_access_does_not_override_package_admin_acl(self):
         cls, env, services = load_wordpress_manager()
-        services['ACLManager'].CheckForPremFeature.return_value = 1
+        services['ACLManager'].CheckForPremFeature.return_value = 0
         services['ACLManager'].loadedACL.return_value = {'admin': 0}
         denied = object()
         services['ACLManager'].loadError.return_value = denied
         self.assertIs(denied, cls().AddDockerpackage(userID=7, data={}))
         services['Administrator'].objects.get.assert_not_called()
+        services['ACLManager'].CheckForPremFeature.assert_not_called()
 
-    def test_paid_package_creation_preserves_values_and_response(self):
+    def test_free_package_creation_preserves_values_and_response(self):
         cls, env, services = load_wordpress_manager()
-        services['ACLManager'].CheckForPremFeature.return_value = 1
+        services['ACLManager'].CheckForPremFeature.return_value = 0
         services['ACLManager'].loadedACL.return_value = {'admin': 1}
         package = mock.Mock()
         env['DockerPackages'] = mock.Mock(return_value=package)
@@ -51,6 +46,7 @@ class DockerSiteEntitlementTests(unittest.TestCase):
         env['DockerPackages'].assert_called_once_with(Name='fixture-package', CPUs=2,
             Ram=1024, Bandwidth=100, DiskSpace=10, config='')
         package.save.assert_called_once_with()
+        services['ACLManager'].CheckForPremFeature.assert_not_called()
 
 
 if __name__ == '__main__':
