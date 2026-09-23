@@ -8269,7 +8269,6 @@ StrictHostKeyChecking no
                         {'dockerSite': ds})
         return proc.render()
         
-    @wordpress_entitlement_required()
     def fetchWPSitesForDomain(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
