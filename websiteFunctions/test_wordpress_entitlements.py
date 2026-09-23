@@ -24,7 +24,7 @@ ACTIONS = (
     'installwpcore', 'dataintegrity', 'UpdatePlugins', 'UpdateThemes',
     'DeletePlugins', 'DeleteThemes', 'ChangeStatus', 'ChangeStatusThemes',
     'CreateStagingNow', 'UpdateWPSettings', 'submitWorpressCreation',
-    'installWordpress', 'fetchWPSitesForDomain', 'fetchWPBackups',
+    'installWordpress', 'fetchWPBackups',
 )
 
 
@@ -207,6 +207,37 @@ class WordPressEntitlementTests(unittest.TestCase):
         self.acl.CheckStatusFilleLoc.return_value = False
         result = self.manager().installWordpressStatus(7, {'statusFile': '/invalid'})
         self.assertEqual(json.loads(result.content)['currentStatus'], 'Invalid status file.')
+        self.acl.CheckForPremFeature.assert_not_called()
+
+    def test_unpaid_website_listing_preserves_ownership_check(self):
+        self.acl.loadedACL.return_value = {'admin': 0}
+        self.services['Administrator'].objects.get.return_value = SimpleNamespace(pk=7)
+        website = SimpleNamespace(externalApp='owned-user', phpSelection='PHP 8.3')
+        self.services['Websites'].objects.get.return_value = website
+        denied = Response(json.dumps({'fetchStatus': 0, 'error_message': 'Not owned'}))
+        self.acl.loadErrorJson.return_value = denied
+        self.acl.checkOwnership.return_value = 0
+
+        result = self.manager().fetchWPSitesForDomain(7, {'domain': 'other.example'})
+
+        self.assertIs(result, denied)
+        self.acl.checkOwnership.assert_called_once()
+        self.services['WPSites'].objects.filter.assert_not_called()
+        self.acl.CheckForPremFeature.assert_not_called()
+
+    def test_unpaid_owner_can_expand_website_without_wordpress_sites(self):
+        self.acl.loadedACL.return_value = {'admin': 0}
+        self.services['Administrator'].objects.get.return_value = SimpleNamespace(pk=7)
+        website = SimpleNamespace(externalApp='owned-user', phpSelection='PHP 8.3')
+        self.services['Websites'].objects.get.return_value = website
+        self.services['WPSites'].objects.filter.return_value = []
+        self.acl.checkOwnership.return_value = 1
+
+        result = self.manager().fetchWPSitesForDomain(7, {'domain': 'owned.example'})
+
+        payload = json.loads(result.content)
+        self.assertEqual(payload['fetchStatus'], 1)
+        self.assertEqual(payload['sites'], [])
         self.acl.CheckForPremFeature.assert_not_called()
 
     def test_free_joomla_installer_still_starts_original_worker(self):
