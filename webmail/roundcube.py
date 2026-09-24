@@ -4,7 +4,6 @@ import re
 import socket
 import struct
 import subprocess
-import sys
 from http.cookies import SimpleCookie
 from pathlib import Path
 
@@ -23,6 +22,7 @@ MAX_REQUEST = 24 * 1024 * 1024
 MAX_RESPONSE = 64 * 1024 * 1024
 ENTITLEMENT_KEY = 'roundcube-entitlement-v1'
 COOKIE_NAMES = frozenset(('cp_roundcube_session', 'cp_roundcube_auth'))
+PANEL_PYTHON = '/usr/local/CyberCP/bin/python'
 
 
 def entitled():
@@ -92,6 +92,14 @@ def get_status(request):
     return response
 
 
+def _state_revision():
+    try:
+        info = STATE.stat()
+        return info.st_ino, info.st_mtime_ns
+    except OSError:
+        return None
+
+
 @require_POST
 def operate(request):
     if not administrator(request):
@@ -105,12 +113,21 @@ def operate(request):
     # Removal of access must remain possible even after a subscription expires.
     if action != 'disable' and not entitled():
         return JsonResponse({'error_message': 'An active Roundcube add-on or all-features entitlement is required.'}, status=403)
-    command = ['sudo', '-n', sys.executable, '/usr/local/CyberCP/plogical/roundcubeRuntime.py', action]
+    # LSWSGI embeds Python: sys.executable is not necessarily a CLI interpreter.
+    command = ['sudo', '-n', PANEL_PYTHON, '/usr/local/CyberCP/plogical/roundcubeRuntime.py', action]
+    previous_state = _state_revision()
     try:
         process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL, close_fds=True, start_new_session=True)
         try:
             if process.wait(timeout=0.2) != 0:
+                # A quick prerequisite failure already has a safe, actionable
+                # status. Do not replace it with a misleading sudo error or
+                # reuse an error left over from an earlier operation.
+                if _state_revision() != previous_state:
+                    current = runtime_status()
+                    if current.get('phase') == 'error' and current.get('message'):
+                        return JsonResponse({'error_message': current['message']}, status=503)
                 return JsonResponse({'error_message': 'Roundcube management could not start. Check the setup status and server sudo configuration.'}, status=503)
         except subprocess.TimeoutExpired:
             pass

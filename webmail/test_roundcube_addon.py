@@ -202,6 +202,35 @@ class GatewayTests(unittest.TestCase):
             self.assertEqual(403, roundcube.operate(request).status_code)
             process.assert_not_called()
 
+    def test_management_uses_panel_cli_when_running_under_embedded_wsgi(self):
+        request = self.factory.post('/webmail/roundcube/operate', data=json.dumps({'action': 'install'}), content_type='application/json')
+        request.session = {'userID': 1}
+        with patch.object(roundcube, 'administrator', return_value=True), patch.object(roundcube, 'entitled', return_value=True), patch.object(sys, 'executable', '/usr/local/CyberCP/bin/lswsgi'), patch.object(roundcube.subprocess, 'Popen') as process:
+            process.return_value.wait.side_effect = subprocess.TimeoutExpired('installer', 0.2)
+            self.assertEqual(202, roundcube.operate(request).status_code)
+            self.assertEqual(['sudo', '-n', '/usr/local/CyberCP/bin/python',
+                              '/usr/local/CyberCP/plogical/roundcubeRuntime.py', 'install'],
+                             process.call_args.args[0])
+
+    def test_fast_failure_reports_only_a_fresh_runtime_error(self):
+        request = self.factory.post('/webmail/roundcube/operate', data=json.dumps({'action': 'install'}), content_type='application/json')
+        request.session = {'userID': 1}
+        with tempfile.TemporaryDirectory() as directory, patch.object(roundcube, 'STATE', Path(directory) / 'state.json'), patch.object(roundcube, 'administrator', return_value=True), patch.object(roundcube, 'entitled', return_value=True), patch.object(roundcube.subprocess, 'Popen') as process:
+            message = 'Install system PHP 8.1–8.5 FPM/CLI with SQLite extensions.'
+            def fail_after_writing_status(**kwargs):
+                runtime.write_atomic(roundcube.STATE, json.dumps({'phase': 'error', 'message': message}))
+                return 1
+            process.return_value.wait.side_effect = fail_after_writing_status
+            response = roundcube.operate(request)
+            self.assertEqual(503, response.status_code)
+            self.assertEqual(message, json.loads(response.content)['error_message'])
+            # A later sudo/interpreter failure must not display the stale PHP error.
+            process.return_value.wait.side_effect = None
+            process.return_value.wait.return_value = 1
+            response = roundcube.operate(request)
+            self.assertEqual(503, response.status_code)
+            self.assertIn('could not start', json.loads(response.content)['error_message'])
+
     def test_expired_entitlement_can_still_disable_but_cannot_inject_commands(self):
         roundcube.ACLManager.loadedACL.return_value = {'admin': 1}
         with patch.object(roundcube, 'entitled', return_value=False), patch.object(roundcube.subprocess, 'Popen') as process:
