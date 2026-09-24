@@ -696,7 +696,8 @@ class vhost:
                 if os.path.exists(confPath):
                     shutil.rmtree(confPath)
 
-                data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+                with open("/usr/local/lsws/conf/httpd_config.conf") as configFile:
+                    data = configFile.readlines()
 
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
 
@@ -704,10 +705,15 @@ class vhost:
                 sslCheck = 1
 
                 for items in data:
+                    tokens = items.split()
+                    is_mapping = (len(tokens) >= 2 and tokens[0].lower() == 'map'
+                                  and tokens[1] == virtualHostName)
+                    is_vhost = (len(tokens) >= 2 and tokens[0].lower() == 'virtualhost'
+                                and tokens[1] == virtualHostName)
                     if numberOfSites == 1:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
+                        if is_mapping:
                             continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                        if is_vhost:
                             check = 0
                         if items.find("listener") > -1 and items.find("SSL") > -1:
                             sslCheck = 0
@@ -717,14 +723,16 @@ class vhost:
                             check = 1
                             sslCheck = 1
                     else:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
+                        if is_mapping:
                             continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                        if is_vhost:
                             check = 0
                         if (check == 1):
                             writeDataToFile.writelines(items)
                         if (items.find("}") > -1 and check == 0):
                             check = 1
+
+                writeDataToFile.close()
 
                 ## Delete Apache Conf
 
