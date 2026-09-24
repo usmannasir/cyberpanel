@@ -3110,6 +3110,8 @@ def main():
     checks.installCLScripts()
     # checks.disablePackegeUpdates()
     checks.fixCyberPanelPermissions()
+    from plogical.roundcubeSudo import provision as provision_roundcube_sudo
+    provision_roundcube_sudo()
     configure_jwt_secret()
 
     # Start services that were enabled but not started during installation

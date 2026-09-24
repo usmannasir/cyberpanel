@@ -5432,6 +5432,8 @@ pm.max_spare_servers = 3
         ## Upgrade version
 
         Upgrade.fixPermissions()
+        from plogical.roundcubeSudo import provision as provision_roundcube_sudo
+        provision_roundcube_sudo()
 
         ##
 

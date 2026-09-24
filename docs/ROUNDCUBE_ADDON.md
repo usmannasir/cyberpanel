@@ -69,6 +69,17 @@ with their email credentials; they do not need a CyberPanel administrator login.
 Use a supported CyberPanel installation with working local Dovecot (127.0.0.1:143)
 and authenticated Postfix submission (127.0.0.1:25), a valid panel HTTPS endpoint,
 `systemd`, and the existing `cyberpanel` system user/group and sudo configuration.
+Install and upgrade provision `/etc/sudoers.d/cyberpanel-roundcube` after
+normalizing core ownership. It grants `cyberpanel` and `lscpd` only the three
+fixed management operations through `/usr/local/CyberPanel/bin/python -I -S`.
+The provisioner checks root ownership and safe permissions along the interpreter
+and helper paths, validates the policy with `visudo`, and installs it atomically
+with mode `0440`. An existing equivalent legacy rule is adopted; an unrecognized
+custom rule is preserved and requires administrator review. The server's main
+sudoers policy must already include `/etc/sudoers.d`; provisioning never broadens
+that policy or grants general Python execution. Provisioning failures stop the
+install/upgrade before its success report.
+
 Local IMAP and SMTP connections stay on loopback. The installer does not change
 Dovecot, Postfix, website PHP handlers, or the default webmail route.
 
