@@ -208,7 +208,7 @@ class GatewayTests(unittest.TestCase):
         with patch.object(roundcube, 'administrator', return_value=True), patch.object(roundcube, 'entitled', return_value=True), patch.object(sys, 'executable', '/usr/local/CyberCP/bin/lswsgi'), patch.object(roundcube.subprocess, 'Popen') as process:
             process.return_value.wait.side_effect = subprocess.TimeoutExpired('installer', 0.2)
             self.assertEqual(202, roundcube.operate(request).status_code)
-            self.assertEqual(['sudo', '-n', '/usr/local/CyberCP/bin/python',
+            self.assertEqual(['sudo', '-n', '/usr/local/CyberPanel/bin/python', '-I', '-S',
                               '/usr/local/CyberCP/plogical/roundcubeRuntime.py', 'install'],
                              process.call_args.args[0])
 

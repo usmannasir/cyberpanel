@@ -22,7 +22,7 @@ MAX_REQUEST = 24 * 1024 * 1024
 MAX_RESPONSE = 64 * 1024 * 1024
 ENTITLEMENT_KEY = 'roundcube-entitlement-v1'
 COOKIE_NAMES = frozenset(('cp_roundcube_session', 'cp_roundcube_auth'))
-PANEL_PYTHON = '/usr/local/CyberCP/bin/python'
+PANEL_PYTHON = '/usr/local/CyberPanel/bin/python'
 
 
 def entitled():
@@ -113,8 +113,9 @@ def operate(request):
     # Removal of access must remain possible even after a subscription expires.
     if action != 'disable' and not entitled():
         return JsonResponse({'error_message': 'An active Roundcube add-on or all-features entitlement is required.'}, status=403)
+    # Use the isolated CLI invocation authorized by the Roundcube sudoers rule.
     # LSWSGI embeds Python: sys.executable is not necessarily a CLI interpreter.
-    command = ['sudo', '-n', PANEL_PYTHON, '/usr/local/CyberCP/plogical/roundcubeRuntime.py', action]
+    command = ['sudo', '-n', PANEL_PYTHON, '-I', '-S', '/usr/local/CyberCP/plogical/roundcubeRuntime.py', action]
     previous_state = _state_revision()
     try:
         process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
