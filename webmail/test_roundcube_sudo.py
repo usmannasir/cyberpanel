@@ -27,6 +27,20 @@ class PolicyTests(unittest.TestCase):
                        legacy.replace('cyberpanel ALL', 'other ALL'), legacy.replace(' disable', ' remove')):
             self.assertFalse(sudo.matching_legacy_policy(unsafe), unsafe)
 
+    def test_deployed_alias_policy_preserves_environment_restrictions(self):
+        command = '/usr/local/CyberPanel/bin/python -I -S /usr/local/CyberCP/plogical/roundcubeRuntime.py '
+        legacy = ('# Managed by CyberPanel: optional Roundcube lifecycle operations only.\n'
+                  'Cmnd_Alias CYBERPANEL_ROUNDCUBE = ' + ', '.join(command + action for action in ('install', 'enable', 'disable')) + '\n'
+                  'Defaults!CYBERPANEL_ROUNDCUBE env_reset, !setenv, secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"\n'
+                  'lscpd ALL=(root) NOPASSWD: NOSETENV: CYBERPANEL_ROUNDCUBE\n'
+                  'cyberpanel ALL=(root) NOPASSWD: NOSETENV: CYBERPANEL_ROUNDCUBE\n')
+        self.assertTrue(sudo.matching_legacy_policy(legacy))
+        self.assertEqual(legacy.splitlines()[1:], sudo.policy().splitlines()[1:])
+        for unsafe in (legacy.replace('!setenv', 'setenv'), legacy.replace('NOSETENV:', 'SETENV:'),
+                       legacy.replace(' -I -S ', ' '), legacy + 'other ALL=(root) NOPASSWD: ALL\n',
+                       legacy.replace(command + 'disable', '/bin/sh'), legacy.replace('env_reset', '!env_reset')):
+            self.assertFalse(sudo.matching_legacy_policy(unsafe), unsafe)
+
     def test_trusted_path_checks_ownership_modes_and_parents(self):
         for bad_uid, bad_mode in ((1000, 0o755), (0, 0o775), (0, 0o777)):
             def info(path):
@@ -76,7 +90,8 @@ class ProvisionTests(unittest.TestCase):
         observed = []
         def validate(argv, **kwargs):
             observed.append(argv)
-            self.assertFalse(self.target.exists())
+            if len(observed) < 3:
+                self.assertFalse(self.target.exists())
             if '-cf' in argv:
                 candidate = Path(argv[-1])
                 self.assertEqual(sudo.policy(), candidate.read_text())
@@ -85,7 +100,7 @@ class ProvisionTests(unittest.TestCase):
         sudo.provision()
         self.assertEqual(sudo.policy(), self.target.read_text())
         self.assertEqual(0o440, stat.S_IMODE(self.target.stat().st_mode))
-        self.assertEqual(['-c', '-cf'], [argv[1] for argv in observed])
+        self.assertEqual(['-c', '-cf', '-c'], [argv[1] for argv in observed])
         self.assertEqual([self.target], list(self.directory.iterdir()))
         for dependency in (sudo.PYTHON, sudo.HELPER, sudo.VISUDO, sudo.SUDOERS, sudo.DIRECTORY):
             self.trust.assert_any_call(dependency)
@@ -98,6 +113,21 @@ class ProvisionTests(unittest.TestCase):
             sudo.provision()
         self.assertEqual(previous, self.target.read_text())
         self.assertEqual([self.target], list(self.directory.iterdir()))
+
+    def test_global_alias_conflict_rolls_back_policy(self):
+        for existing in (False, True):
+            with self.subTest(existing=existing):
+                previous = sudo.policy().replace(sudo.MARKER, '# Legacy Roundcube rule\n')
+                if existing:
+                    self.target.write_text(previous)
+                self.run.side_effect = [None, None, subprocess.CalledProcessError(1, 'visudo')]
+                with self.assertRaises(subprocess.CalledProcessError):
+                    sudo.provision()
+                if existing:
+                    self.assertEqual(previous, self.target.read_text())
+                    self.assertEqual([self.target], list(self.directory.iterdir()))
+                else:
+                    self.assertEqual([], list(self.directory.iterdir()))
 
     def test_unmanaged_policy_and_symlinks_are_not_overwritten(self):
         self.target.write_text('other ALL=(ALL) NOPASSWD: ALL\n')

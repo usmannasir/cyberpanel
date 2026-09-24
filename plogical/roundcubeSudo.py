@@ -20,14 +20,23 @@ MARKER = '# Managed by CyberPanel: isolated Roundcube management.\n'
 
 
 def policy():
-    return MARKER + ''.join(
-        'cyberpanel,lscpd ALL=(root) NOPASSWD: %s -I -S %s %s\n' % (PYTHON, HELPER, action)
-        for action in ('install', 'enable', 'disable')
-    )
+    commands = ', '.join('%s -I -S %s %s' % (PYTHON, HELPER, action)
+                         for action in ('install', 'enable', 'disable'))
+    return (MARKER + 'Cmnd_Alias CYBERPANEL_ROUNDCUBE = ' + commands + '\n'
+            'Defaults!CYBERPANEL_ROUNDCUBE env_reset, !setenv, '
+            'secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"\n'
+            'lscpd ALL=(root) NOPASSWD: NOSETENV: CYBERPANEL_ROUNDCUBE\n'
+            'cyberpanel ALL=(root) NOPASSWD: NOSETENV: CYBERPANEL_ROUNDCUBE\n')
 
 
 def matching_legacy_policy(content):
     """Adopt only the same narrowly scoped grant, never arbitrary sudo syntax."""
+    # The released alias form is adopted only when its complete policy matches,
+    # including command-scoped environment restrictions and both user grants.
+    meaningful = lambda text: [line.strip() for line in text.splitlines()
+                               if line.strip() and not line.lstrip().startswith('#')]
+    if meaningful(content) == meaningful(policy()):
+        return True
     commands = {'%s -I -S %s %s' % (PYTHON, HELPER, action)
                 for action in ('install', 'enable', 'disable')}
     grants = set()
@@ -99,6 +108,7 @@ def provision():
             raise RuntimeError('Existing Roundcube sudoers policy is unmanaged; review it before provisioning.')
     subprocess.run([str(VISUDO), '-c'], check=True, capture_output=True, timeout=30)
     descriptor, temporary = tempfile.mkstemp(prefix='.cyberpanel-roundcube-', dir=str(DIRECTORY))
+    backup = None
     try:
         with os.fdopen(descriptor, 'w') as stream:
             os.fchown(stream.fileno(), 0, 0)
@@ -107,7 +117,24 @@ def provision():
             stream.flush()
             os.fsync(stream.fileno())
         subprocess.run([str(VISUDO), '-cf', temporary], check=True, capture_output=True, timeout=30)
+        if TARGET.exists():
+            backup_fd, backup = tempfile.mkstemp(prefix='.roundcube-policy-backup-', dir=str(DIRECTORY))
+            os.close(backup_fd)
+            os.unlink(backup)
+            os.link(TARGET, backup)
         os.replace(temporary, TARGET)
+        try:
+            # Validate in the complete policy too: aliases may conflict with
+            # another include even when this candidate is valid by itself.
+            subprocess.run([str(VISUDO), '-c'], check=True, capture_output=True, timeout=30)
+        except BaseException:
+            if backup is not None:
+                os.replace(backup, TARGET)
+            else:
+                TARGET.unlink()
+            raise
     finally:
+        if backup is not None and os.path.exists(backup):
+            os.unlink(backup)
         if os.path.exists(temporary):
             os.unlink(temporary)
