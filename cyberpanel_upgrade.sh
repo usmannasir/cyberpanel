@@ -624,6 +624,28 @@ Install_Panel_Runtime_Requirements() {
   return 1
 }
 
+# Keep the complete interpreter/dependency set together: preserving only lswsgi
+# is unsafe when it was built against a different Python version.
+Backup_Panel_Runtime() {
+  local runtime_root="$1" backup_directory="$2" component
+  for component in bin lib lib64 pyvenv.cfg; do
+    if [[ -e "$runtime_root/$component" || -L "$runtime_root/$component" ]]; then
+      cp -a "$runtime_root/$component" "$backup_directory/" || return 1
+    fi
+  done
+}
+
+Restore_Panel_Runtime() {
+  local runtime_root="$1" backup_directory="$2" component
+  [[ -d "$backup_directory" ]] || return 1
+  for component in bin lib lib64 pyvenv.cfg; do
+    rm -rf "$runtime_root/$component" || return 1
+    if [[ -e "$backup_directory/$component" || -L "$backup_directory/$component" ]]; then
+      cp -a "$backup_directory/$component" "$runtime_root/" || return 1
+    fi
+  done
+}
+
 Build_Panel_LSWSGI() {
   local runtime_python="$1"
   local destination="$2"
@@ -1160,6 +1182,17 @@ if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
   NEEDS_RECREATE=1
 fi
 
+# Snapshot before cleanup; network/package/compiler failures must not destroy
+# the previously installed panel runtime. Abort before deleting anything if the
+# snapshot cannot be completed (for example, when the disk is full).
+local runtime_backup runtime_failed=0
+runtime_backup=$(mktemp -d /usr/local/CyberCP/.runtime-backup.XXXXXX) || return 1
+if ! Backup_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
+  rm -rf "$runtime_backup"
+  echo 'ERROR: Cannot preserve the existing panel runtime; rebuild aborted.' >&2
+  return 1
+fi
+
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old CyberCP virtual environment directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -rf /usr/local/CyberCP/bin
 rm -rf /usr/local/CyberCP/lib
@@ -1224,7 +1257,7 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
       echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
     fi
     
-    if [[ -f /usr/local/CyberCP/bin/activate ]]; then
+    if [[ "$VENV_CODE" -eq 0 && -f /usr/local/CyberCP/bin/activate ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Virtual environment created successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
       VENV_SUCCESS=1
       VENV_CODE=0
@@ -1240,7 +1273,12 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
   if [[ $VENV_CODE -ne 0 ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Virtualenv creation failed with code $VENV_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
     echo -e "Virtualenv creation failed. Please check the logs at /var/log/cyberpanel_upgrade_debug.log"
-    exit $VENV_CODE
+    if Restore_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
+      rm -rf "$runtime_backup"
+    else
+      echo "ERROR: Runtime restore failed; backup retained at $runtime_backup" >&2
+    fi
+    return "$VENV_CODE"
   fi
 else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] CyberCP virtualenv already exists, skipping recreation" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1254,6 +1292,7 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading and installing panel runtime
 if ! Download_Requirement \
     || ! Install_Panel_Runtime_Requirements /usr/local/CyberCP/bin/python /usr/local/requirments.txt; then
   UPGRADE_FAILED=1
+  runtime_failed=1
   echo 'ERROR: Panel runtime requirements could not be installed and verified.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
@@ -1261,6 +1300,7 @@ fi
 # failed, but never convert its failure to an upgrade-success result.
 if ! Build_Panel_LSWSGI /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/lswsgi; then
   UPGRADE_FAILED=1
+  runtime_failed=1
   echo 'ERROR: Panel WSGI build or installation failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
@@ -1268,7 +1308,18 @@ if ! Validate_Python_Requirements /usr/local/CyberCP/bin/python /usr/local/requi
     || ! env -u PYTHONHOME -u PYTHONPATH /usr/local/CyberCP/bin/python -c 'import django, docker, CloudFlare' 2>/dev/null \
     || [[ ! -x /usr/local/CyberCP/bin/lswsgi || ! -s /usr/local/CyberCP/bin/lswsgi ]]; then
   UPGRADE_FAILED=1
+  runtime_failed=1
   echo 'ERROR: Final panel runtime verification failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+if [[ "$runtime_failed" -ne 0 ]]; then
+  if Restore_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
+    rm -rf "$runtime_backup"
+    echo 'Previous panel runtime restored after a failed rebuild.'
+  else
+    echo "ERROR: Runtime restore failed; backup retained at $runtime_backup" >&2
+  fi
+else
+  rm -rf "$runtime_backup"
 fi
 [[ "$UPGRADE_FAILED" -eq 0 ]]
 }

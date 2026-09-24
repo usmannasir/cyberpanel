@@ -96,7 +96,8 @@ chmod 755 lswsgi
         definitions = '\n'.join(self.function(name) for name in (
             'Run_Upgrade_Command', 'Validate_Python_Requirements',
             'Install_Panel_Runtime_Requirements', 'Install_CyberCP_Runtime_Python_Requirements',
-            'Download_Requirement', 'Build_Panel_LSWSGI'))
+            'Download_Requirement', 'Build_Panel_LSWSGI',
+            'Backup_Panel_Runtime', 'Restore_Panel_Runtime'))
         env = dict(self.environment)
         env.update({key:str(value) for key,value in environment.items()})
         return subprocess.run(['/bin/bash', '-c', definitions+'\n'+code],
@@ -230,6 +231,65 @@ chmod 755 lswsgi
         self.assertTrue(os.access(str(destination),os.X_OK))
         self.assertEqual([],list(self.root.glob('build.*')))
 
+    def test_rebuild_restores_complete_runtime_after_each_failed_stage(self):
+        main = self.function('Main_Upgrade')
+        tail = main[main.index('# Snapshot before cleanup;'):]
+        panel = self.runtime.parent.parent
+        tail = tail.replace('/usr/local/CyberCP', str(panel))
+        tail = tail.replace('/usr/local/requirments.txt', str(self.requirements))
+        creator = self.commands/'create-venv'
+        self.executable(creator, '''#!/bin/sh
+mkdir -p "$3/bin" "$3/lib"
+: > "$3/bin/activate"
+cp "$FAKE_INTERPRETER" "$3/bin/python"
+printf 'new dependency' > "$3/lib/dependency"
+exit "${FAIL_VENV:-0}"
+''')
+        self.executable(self.commands/'virtualenv', '#!/bin/sh\nexit 1\n')
+        code = '''
+Download_Requirement() { return "${FAIL_DOWNLOAD:-0}"; }
+Install_Panel_Runtime_Requirements() { return "${FAIL_INSTALL:-0}"; }
+Build_Panel_LSWSGI() {
+  printf '#!/bin/sh\\nexit 0\\n' > "$2"
+  chmod 755 "$2"
+  return "${FAIL_BUILD:-0}"
+}
+Validate_Python_Requirements() { return "${FAIL_VALIDATE:-0}"; }
+Main_Upgrade() {
+''' + tail + '\nUPGRADE_FAILED=0\nMain_Upgrade\n'
+        for stage in ('VENV', 'DOWNLOAD', 'INSTALL', 'BUILD', 'VALIDATE', 'SUCCESS'):
+            with self.subTest(stage=stage):
+                (panel/'lib').mkdir(exist_ok=True)
+                (panel/'lib/dependency').write_bytes(b'old dependency')
+                (panel/'pyvenv.cfg').write_bytes(b'old configuration')
+                (panel/'lib64').unlink(missing_ok=True)
+                (panel/'lib64').symlink_to('lib', target_is_directory=True)
+                binary = panel/'bin/lswsgi'
+                self.executable(binary, '#!/bin/sh\n# original binary\n')
+                result = self.run_shell(code, CyberPanel_Python=creator,
+                    FAKE_INTERPRETER=self.system_runtime, **{'FAIL_'+stage: 1})
+                self.assertEqual(stage == 'SUCCESS', result.returncode == 0, result.stderr)
+                if stage != 'SUCCESS':
+                    self.assertIn(b'original binary', binary.read_bytes())
+                    self.assertEqual(b'old dependency', (panel/'lib/dependency').read_bytes())
+                    self.assertEqual(b'old configuration', (panel/'pyvenv.cfg').read_bytes())
+                    self.assertEqual('lib', os.readlink(panel/'lib64'))
+                else:
+                    self.assertNotIn(b'original binary', binary.read_bytes())
+                    self.assertEqual(b'new dependency', (panel/'lib/dependency').read_bytes())
+                self.assertEqual([], list(panel.glob('.runtime-backup.*')))
+
+    def test_snapshot_failure_aborts_before_existing_runtime_is_deleted(self):
+        main = self.function('Main_Upgrade')
+        block = main[main.index('# Snapshot before cleanup;'):main.index('echo -e "[$(date', main.index('# Snapshot before cleanup;'))]
+        block = block.replace('/usr/local/CyberCP', str(self.runtime.parent.parent))
+        original = self.runtime.read_bytes()
+        result = self.run_shell('Backup_Panel_Runtime() { return 1; }\nMain_Upgrade() {\n'
+                                + block + '\nreturn 99\n}\nMain_Upgrade')
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(original, self.runtime.read_bytes())
+        self.assertEqual([], list(self.runtime.parent.parent.glob('.runtime-backup.*')))
+
     def test_main_runtime_failures_survive_later_successful_repair_steps(self):
         main=self.function('Main_Upgrade')
         start=main.index('echo -e "[$(date',main.index('rm -f /usr/local/requirments.txt'))
@@ -243,7 +303,9 @@ Download_Requirement() { return "${FAIL_DOWNLOAD:-0}"; }
 Install_Panel_Runtime_Requirements() { return "${FAIL_INSTALL:-0}"; }
 Build_Panel_LSWSGI() { return "${FAIL_BUILD:-0}"; }
 Validate_Python_Requirements() { return "${FAIL_VALIDATE:-0}"; }
+Restore_Panel_Runtime() { :; }
 Main_Upgrade() {
+local runtime_failed=0 runtime_backup=''
 '''+tail+'\nUPGRADE_FAILED=0\nMain_Upgrade\n'
                 result=self.run_shell(code,**{'FAIL_'+stage:1})
                 self.assertNotEqual(0,result.returncode)
