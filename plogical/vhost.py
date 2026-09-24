@@ -582,6 +582,13 @@ class vhost:
                 else:
                     command = 'deluser %s' % (externalApp)
 
+                ## Remove resource limits for this user (OLS cgroups)
+                try:
+                    from plogical.resourceLimits import resource_manager
+                    resource_manager.remove_user_limits(externalApp)
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove resource limits for user {externalApp}: {str(e)}")
+
                 vhost._delete_unix_account(externalApp, command)
 
                 ## Remove git conf folder if present
@@ -590,13 +597,6 @@ class vhost:
 
                 if os.path.exists(gitPath):
                     shutil.rmtree(gitPath)
-
-                ## Remove resource limits for this user (OLS cgroups)
-                try:
-                    from plogical.resourceLimits import resource_manager
-                    resource_manager.remove_user_limits(externalApp)
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove resource limits for user {externalApp}: {str(e)}")
 
                 ### Delete Acme folder
 

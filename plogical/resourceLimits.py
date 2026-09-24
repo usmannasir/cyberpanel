@@ -443,9 +443,8 @@ class ResourceLimitsManager:
             return False
 
         try:
-            # Use lscgctl to remove limits
-            # Format: lscgctl remove username
-            cmd = [self.LSCGCTL_PATH, 'remove', username]
+            # Reset this user's limits while its Unix account still exists.
+            cmd = [self.LSCGCTL_PATH, 'reset-user', username]
 
             logging.writeToFile(f"Removing resource limits for user {username}")
 
@@ -461,9 +460,9 @@ class ResourceLimitsManager:
                 return True
             else:
                 error_msg = result.stderr if result.stderr else result.stdout
-                # It's not critical if removal fails (user may not have had limits)
+                # Cleanup is best effort, but callers must be able to detect failure.
                 logging.writeToFile(f"Note: Could not remove limits for {username}: {error_msg}")
-                return True
+                return False
 
         except subprocess.TimeoutExpired:
             logging.writeToFile(f"Timeout removing resource limits for {username}")
