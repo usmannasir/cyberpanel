@@ -189,7 +189,7 @@ html.cp-evergreen.cp-auth .login-changelogs .card {
 
 html.cp-evergreen.cp-auth .login-changelogs .card > .row {
     display: grid;
-    grid-template-columns: 70px minmax(0, 1fr);
+    grid-template-columns: 140px minmax(0, 1fr);
     gap: 18px;
     margin: 0;
 }
@@ -206,8 +206,9 @@ html.cp-evergreen.cp-auth .login-changelogs .card > .row > div {
 
 html.cp-evergreen.cp-auth .login-changelogs .object-fit {
     height: 70px;
-    width: 70px;
-    object-fit: cover;
+    width: 140px;
+    object-fit: contain;
+    background: #faf7f0;
     border: 1px solid var(--cp-sa-line);
     border-radius: 3px;
 }
