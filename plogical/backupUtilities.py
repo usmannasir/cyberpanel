@@ -725,9 +725,9 @@ class backupUtilities:
 
             ## Create Configurations
 
-            # result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
-            #                                                 siteUser.userName, 'Default', 0)
-            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 1, 1, 0,
+            # Restore the archived certificate below, after account creation.
+            # DNS may still point at the source during a remote migration.
+            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
                                                    mail_domain)
 
