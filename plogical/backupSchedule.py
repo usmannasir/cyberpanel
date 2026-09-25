@@ -29,6 +29,7 @@ class backupSchedule:
     ERROR = 1
     backupLog = ''
     runningPath = '/home/cyberpanel/remoteBackupPID'
+    WORKER_GONE_MAX_CHECKS = 90
 
     @staticmethod
     def remoteBackupLogging(fileName, message, status = 0):
@@ -98,6 +99,7 @@ class backupSchedule:
             schedulerPath = '/home/cyberpanel/%s-backup.txt' % (virtualHost)
 
             killCounter = 0
+            workerGoneChecks = 0
 
             while (1):
 
@@ -120,6 +122,7 @@ class backupSchedule:
 
 
                 if backup_process_is_running(ifRunning, backupDomain):
+                    workerGoneChecks = 0
                     if os.path.exists('/usr/local/CyberCP/debug'):
                         message = 'If running found.'
                         logging.CyberCPLogFileWriter.writeToFile(message)
@@ -245,6 +248,21 @@ class backupSchedule:
                             command = 'rm -rf %s' % (tempStoragePath)
                             ProcessUtilities.normalExecutioner(command)
                             return 0, 'Backup process killed.'
+                        else:
+                            # The worker is gone but left an empty or unfinished status
+                            # (e.g. the site user is over its disk quota). Waiting on it
+                            # hung the whole scheduled job forever, every night.
+                            workerGoneChecks += 1
+                            if workerGoneChecks >= backupSchedule.WORKER_GONE_MAX_CHECKS:
+                                backupSchedule.removeBackupMarkers(statusPath, backupFileNamePath, pid)
+                                command = 'rm -rf %s' % (tempStoragePath)
+                                ProcessUtilities.normalExecutioner(command)
+                                backupSchedule.remoteBackupLogging(
+                                    backupLogPath,
+                                    'Backup worker for %s exited without a result. Last status: %s' % (
+                                        virtualHost, status.strip()[-200:] or 'empty'),
+                                    backupSchedule.ERROR)
+                                return 0, 'Backup worker exited without reporting a result.'
                     else:
                         if os.path.exists('/usr/local/CyberCP/debug'):
                             message = 'Status file does not exists.'
