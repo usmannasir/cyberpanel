@@ -43,8 +43,10 @@ class Renew:
 
             # Check if certificate is expired or needs renewal
             needs_renewal = diff.days < 15  # This handles both negative (expired) and soon-to-expire certs
-            
-            if not needs_renewal and ssl_provider != 'Denial':
+            # Staging certificates are untrusted whatever their validity window.
+            is_staging = '(STAGING)' in ssl_provider
+
+            if not needs_renewal and ssl_provider != 'Denial' and not is_staging:
                 logging.writeToFile(f'SSL exists for {domain} and is not ready to renew, skipping..', 0)
                 return
 
@@ -57,7 +59,7 @@ class Renew:
                     logging.writeToFile(f'SSL renewal FAILED for {domain}: {result[1]}', 1)
                 else:
                     logging.writeToFile(f'SSL renewal SUCCESSFUL for {domain}', 0)
-            elif ssl_provider == 'Denial' or ssl_provider == "Let's Encrypt":
+            elif ssl_provider == 'Denial' or ssl_provider == "Let's Encrypt" or is_staging:
                 logging.writeToFile(f'SSL exists for {domain} and ready to renew (expires in {diff.days} days)..', 0)
                 logging.writeToFile(f'Attempting SSL renewal for {domain}..', 0)
                 result = virtualHostUtilities.issueSSL(domain, path, admin_email)

@@ -989,6 +989,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
         if os.path.exists(existingCertPath):
             # Check if certificate is expired
             is_expired = False
+            is_staging = False
             try:
                 import OpenSSL
                 from datetime import datetime
@@ -999,6 +1000,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 now = datetime.now()
                 diff = final_date - now
                 is_expired = diff.days < 0
+                is_staging = any(b'(STAGING)' in value for _, value in x509.get_issuer().get_components())
                 logging.CyberCPLogFileWriter.writeToFile(f"Certificate for {domain} expires in {diff.days} days")
             except Exception as e:
                 logging.CyberCPLogFileWriter.writeToFile(f"Could not check certificate expiry: {str(e)}")
@@ -1022,10 +1024,13 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 # CyberPanel issues ECC (ec-256) certificates, so both the issue and
                 # renew commands must target the ECC cert (-k ec-256 / --ecc); without
                 # it acme.sh looks for a non-existent RSA cert and the renewal fails.
-                if is_expired:
+                # A staging-issued certificate must be re-issued against production:
+                # --renew reuses the domain's stored Le_API, i.e. the staging CA.
+                if is_expired or is_staging:
+                    reason = 'from the staging CA' if is_staging else 'expired'
                     logging.CyberCPLogFileWriter.writeToFile(
-                        f"Certificate is expired, using --issue --force for {domain}")
-                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html -k ec-256 --force'
+                        f"Certificate is {reason}, using --issue --force for {domain}")
+                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
                 else:
                     # Try to renew with explicit webroot
                     command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --ecc --force'
