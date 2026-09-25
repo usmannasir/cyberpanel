@@ -201,6 +201,15 @@ def restoreStatus(request):
         return redirect(loadLoginPage)
 
 
+def getBackupFileInfo(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.getBackupFileInfo(json.loads(request.body), userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def backupDestinations(request):
     try:
         userID = request.session['userID']
