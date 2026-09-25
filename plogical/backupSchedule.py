@@ -86,7 +86,7 @@ class backupSchedule:
             port = ProcessUtilities.fetchCurrentPort()
 
             finalData = json.dumps({'randomFile': requestToken, 'websiteToBeBacked': virtualHost})
-            r = requests.post("https://localhost:%s/backup/localInitiate" % (port), data=finalData, verify=False)
+            r = requests.post("https://localhost:%s/backup/localInitiate" % (port), data=finalData, verify=False, timeout=120)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(r.text)
