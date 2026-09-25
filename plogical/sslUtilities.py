@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import socket
+import tempfile
 from plogical.processUtilities import ProcessUtilities
 
 try:
@@ -882,11 +883,19 @@ context /.well-known/acme-challenge {
                         logging.CyberCPLogFileWriter.writeToFile(
                             f"www.{virtualHostName} has no DNS records, excluding from acme.sh SSL request")
 
-                    # Step 1: Issue the certificate (staging) - this stores config in /root/.acme.sh/
-                    command = acmePath + " --issue" + domain_list \
-                              + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging'
+                    # Step 1: Dry-run against staging in a throwaway config home. With the
+                    # real /root/.acme.sh home, a staging issue overwrote the domain's
+                    # saved Le_API; if production then failed, the renewal cron kept
+                    # installing untrusted staging certificates silently.
+                    stagingHome = tempfile.mkdtemp(prefix='acme-staging-probe-')
+                    try:
+                        command = acmePath + " --issue" + domain_list \
+                                  + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging' \
+                                  + ' --config-home ' + stagingHome
 
-                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True, env=acme_environment)
+                    finally:
+                        shutil.rmtree(stagingHome, ignore_errors=True)
 
                     if result.returncode == 0:
                         # Step 2: Issue the certificate (production) - this stores config in /root/.acme.sh/

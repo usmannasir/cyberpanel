@@ -238,7 +238,8 @@ class EnvironmentTests(unittest.TestCase):
             'Websites': SimpleNamespace(objects=SimpleNamespace(get=mock.Mock(side_effect=LookupError))),
             'subprocess': SimpleNamespace(PIPE=-1, call=lambda *a, **k: 1, run=run),
             'os': SimpleNamespace(path=SimpleNamespace(exists=exists, lexists=exists)),
-            'shlex': shlex, 'open': lambda name, mode: open(path(name), mode)}
+            'shlex': shlex, 'tempfile': tempfile, 'shutil': __import__('shutil'),
+            'open': lambda name, mode: open(path(name), mode)}
         exec(compile(ast.Module(body=[obtain, issue], type_ignores=[]), str(SOURCE / 'sslUtilities.py'), 'exec'), env)
         utility.obtainSSLForADomain = env['obtainSSLForADomain']
         # Keep the actual caller's local imports; only their external providers are inert.
@@ -267,6 +268,9 @@ class EnvironmentTests(unittest.TestCase):
         self.assertTrue(self.processes)
         self.assertTrue(all('--install-cert' not in command for command in self.processes))
         self.assertFalse(any(staging for staging, _, _ in self.network))
+        # The acme.sh staging dry-run must not write the domain's real config.
+        self.assertTrue(all('--config-home' in command
+                            for command in self.processes if '--staging' in command))
 
     def test_actual_caller_can_continue_to_second_production_provider(self):
         env, utility = self.caller(secondary_success=True)
