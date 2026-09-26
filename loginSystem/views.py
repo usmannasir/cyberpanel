@@ -15,6 +15,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
 from cyberpanel_version import BUILD, VERSION
+from CyberCP.sessionSecurity import get_client_ip, session_ip_key
 # Create your views here.
 
 
@@ -128,15 +129,7 @@ def verifyLogin(request):
                 request.session.cycle_key()
                 request.session['userID'] = admin.pk
 
-                ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
-                if ipAddr is None:
-                    ipAddr = request.META.get('REMOTE_ADDR')
-
-                if ipAddr.find(':') > -1:
-                    ipAddr = ':'.join(ipAddr.split(':')[:3])
-                    request.session['ipAddr'] = ipAddr
-                else:
-                    request.session['ipAddr'] = ipAddr
+                request.session['ipAddr'] = session_ip_key(get_client_ip(request))
 
                 request.session.set_expiry(43200)
                 # Persist before the browser follows the login response with a

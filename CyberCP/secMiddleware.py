@@ -6,6 +6,7 @@ from django.shortcuts import HttpResponse, render
 import json
 import re
 from loginSystem.models import Administrator
+from CyberCP.sessionSecurity import get_client_ip, session_ip_matches
 
 
 CONTENT_SECURITY_POLICY = (
@@ -42,11 +43,7 @@ class secMiddleware:
             and request.session.get('webmail_password')
         )
 
-    def get_client_ip(request):
-        ip = request.META.get('HTTP_CF_CONNECTING_IP')
-        if ip is None:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
+    get_client_ip = staticmethod(get_client_ip)
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -107,30 +104,26 @@ class secMiddleware:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
             ipAddr = secMiddleware.get_client_ip(request)
-
-            if ipAddr.find('.') > -1:
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
-                else:
-                    del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
-                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                                 "errorMessage": "Session reuse detected, IPAddress logged."}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-            else:
-                ipAddr = ':'.join(secMiddleware.get_client_ip(request).split(':')[:3])
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
-                else:
-                    del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
-                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                                 "errorMessage": "Session reuse detected, IPAddress logged."}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+            if admin.securityLevel != secMiddleware.LOW and not session_ip_matches(
+                request.session.get('ipAddr'), ipAddr
+            ):
+                request.session.flush()
+                logging.writeToFile('Panel session IP binding changed.')
+                # A stale cookie must not consume a valid login attempt, nor
+                # leave a browser navigation displaying a raw JSON error.
+                if pathActual not in ('/', '/verifyLogin', '/logout'):
+                    if request.method in ('GET', 'HEAD'):
+                        from django.shortcuts import redirect
+                        return redirect('/')
+                    message = (
+                        'Your IP address changed. Please sign in again. '
+                        'For a mobile or changing connection, ask your administrator '
+                        'to select LOW Security Level in Users > Modify User.'
+                    )
+                    return HttpResponse(json.dumps({
+                        'error_message': message, 'errorMessage': message,
+                        'sessionExpired': True,
+                    }), content_type='application/json')
         except:
             pass
 
