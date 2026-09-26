@@ -3770,7 +3770,7 @@ context /cyberpanel_suspension_page.html {
                 lscgctl_path = '/usr/local/lsws/lsns/bin/lscgctl'
                 if os.path.exists(lscgctl_path):
                     # Get the website username
-                    username = website.exsysUser
+                    username = website.externalApp
 
                     # Run lscgctl list-user command
                     result = subprocess.run(
