@@ -3760,70 +3760,8 @@ context /cyberpanel_suspension_page.html {
 
             Data['accessed_via_ip'] = bool(accessed_via_ip)
 
-            try:
-                from plogical.securityUtils import get_terminal_jwt_secret
-                get_terminal_jwt_secret(create_if_missing=True)
-            except Exception as error:
-                CyberCPLogFileWriter.writeToFile(
-                    f"Failed to configure Web Terminal authentication: {error}"
-                )
-
-            #####
-
-            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
-            # Ensure FastAPI SSH server systemd service file is in place
-            try:
-                service_path = '/etc/systemd/system/fastapi_ssh_server.service'
-                local_service_path = 'fastapi_ssh_server.service'
-                check_service = ProcessUtilities.outputExecutioner(f'test -f {service_path} && echo exists || echo missing')
-                if 'missing' in check_service:
-                    ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
-                    ProcessUtilities.outputExecutioner('systemctl daemon-reload')
-            except Exception as e:
-                CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
-            
-
-            #####
-
-            # Ensure FastAPI SSH server is running using ProcessUtilities
-            try:
-                ProcessUtilities.outputExecutioner('systemctl is-active --quiet fastapi_ssh_server')
-                ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
-                ProcessUtilities.outputExecutioner('systemctl start fastapi_ssh_server')
-
-                csfPath = '/etc/csf'
-
-                sshPort = '8888'
-
-                if os.path.exists(csfPath):
-                        dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
-
-                        # self.modifyPorts is a method in the firewallManager.py file so how can we call it here?
-                        # we need to call the method from the firewallManager.py file
-                        from firewall.firewallManager import FirewallManager
-                        firewallManager = FirewallManager()
-                        firewallManager.modifyPorts(dataIn)
-                        dataIn = {'protocol': 'TCP_OUT', 'ports': sshPort}
-                        firewallManager.modifyPorts(dataIn)
-                else:
-                    from plogical.firewallUtilities import FirewallUtilities
-                    from firewall.models import FirewallRules
-                    try:
-                        updateFW = FirewallRules.objects.get(name="WebTerminalPort")
-                        FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
-                        updateFW.port = sshPort
-                        updateFW.save()
-                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                    except:
-                        try:
-                            newFireWallRule = FirewallRules(name="WebTerminalPort", port=sshPort, proto="tcp")
-                            newFireWallRule.save()
-                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                        except BaseException as msg:
-                            CyberCPLogFileWriter.writeToFile(str(msg))
-
-            except Exception as e:
-                CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
+            # Terminal provisioning belongs to the SSH access setup flow.
+            # Rendering website settings must not reload the server firewall.
 
             # Fetch actual resource limits from lscgctl command if they exist
             Data['resource_limits'] = None
