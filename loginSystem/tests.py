@@ -75,6 +75,42 @@ class LoginSessionRegressionTests(SimpleTestCase):
 
     @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
     @mock.patch('loginSystem.views.Administrator.objects.get')
+    def test_invalid_client_ip_cannot_create_authenticated_session(
+        self, administrator_get, unused_password_check
+    ):
+        from loginSystem.views import verifyLogin
+        administrator_get.return_value = self.admin()
+        request = self.request({'username': 'admin', 'password': 'valid-password'})
+        request.META['HTTP_CF_CONNECTING_IP'] = 'not-an-ip'
+        self.assertEqual(0, json.loads(verifyLogin(request).content)['loginStatus'])
+        self.assertNotIn('userID', request.session)
+
+    @mock.patch('plogical.CyberCPLogFileWriter.CyberCPLogFileWriter.writeToFile')
+    @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
+    @mock.patch('loginSystem.views.Administrator.objects.get')
+    def test_mapped_ipv4_session_survives_cloudflare_request(
+        self, administrator_get, unused_password_check, unused_log
+    ):
+        from django.http import HttpResponse
+        from loginSystem.views import verifyLogin
+        from CyberCP.secMiddleware import secMiddleware
+        admin = self.admin()
+        admin.securityLevel = secMiddleware.HIGH
+        administrator_get.return_value = admin
+        request = self.request({'username': 'admin', 'password': 'valid-password'})
+        request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.1'
+        self.assertEqual(1, json.loads(verifyLogin(request).content)['loginStatus'])
+        next_request = self.factory.get('/base/')
+        next_request.session = request.session
+        next_request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.1'
+        middleware = secMiddleware(lambda unused: HttpResponse('dashboard-reached'))
+        self.assertEqual(b'dashboard-reached', middleware(next_request).content)
+        next_request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.2'
+        self.assertIn(b'Session reuse detected', middleware(next_request).content)
+        self.assertNotIn('userID', request.session)
+
+    @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
+    @mock.patch('loginSystem.views.Administrator.objects.get')
     def test_password_with_shell_metacharacters_can_authenticate(
         self, administrator_get, unused_password_check
     ):

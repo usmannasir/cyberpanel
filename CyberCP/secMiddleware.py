@@ -6,6 +6,7 @@ from django.shortcuts import HttpResponse, render
 import json
 import re
 from loginSystem.models import Administrator
+from CyberCP.session_ip import session_ip_matches
 
 
 CONTENT_SECURITY_POLICY = (
@@ -108,29 +109,14 @@ class secMiddleware:
             admin = Administrator.objects.get(pk=uID)
             ipAddr = secMiddleware.get_client_ip(request)
 
-            if ipAddr.find('.') > -1:
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
-                else:
-                    del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
-                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                                 "errorMessage": "Session reuse detected, IPAddress logged."}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-            else:
-                ipAddr = ':'.join(secMiddleware.get_client_ip(request).split(':')[:3])
-                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
-                    pass
-                else:
-                    del request.session['userID']
-                    del request.session['ipAddr']
-                    logging.writeToFile(secMiddleware.get_client_ip(request))
-                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                                 "errorMessage": "Session reuse detected, IPAddress logged."}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+            if (admin.securityLevel != secMiddleware.LOW
+                    and not session_ip_matches(request.session.get('ipAddr'), ipAddr)):
+                del request.session['userID']
+                request.session.pop('ipAddr', None)
+                logging.writeToFile(str(ipAddr))
+                final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
+                             "errorMessage": "Session reuse detected, IPAddress logged."}
+                return HttpResponse(json.dumps(final_dic))
         except:
             pass
 

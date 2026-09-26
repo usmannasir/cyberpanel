@@ -15,6 +15,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
 from cyberpanel_version import BUILD, VERSION
+from CyberCP.session_ip import session_ip_key
 # Create your views here.
 
 
@@ -123,20 +124,17 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
+                ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
+                if ipAddr is None:
+                    ipAddr = request.META.get('REMOTE_ADDR')
+                # Validate before storing authenticated state.
+                ipAddr = session_ip_key(ipAddr)
+
                 # Rotate a stale or pre-authentication session identifier before
                 # storing authenticated state.
                 request.session.cycle_key()
                 request.session['userID'] = admin.pk
-
-                ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
-                if ipAddr is None:
-                    ipAddr = request.META.get('REMOTE_ADDR')
-
-                if ipAddr.find(':') > -1:
-                    ipAddr = ':'.join(ipAddr.split(':')[:3])
-                    request.session['ipAddr'] = ipAddr
-                else:
-                    request.session['ipAddr'] = ipAddr
+                request.session['ipAddr'] = ipAddr
 
                 request.session.set_expiry(43200)
                 # Persist before the browser follows the login response with a
