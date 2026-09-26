@@ -111,12 +111,23 @@ class secMiddleware:
 
             if (admin.securityLevel != secMiddleware.LOW
                     and not session_ip_matches(request.session.get('ipAddr'), ipAddr)):
-                del request.session['userID']
-                request.session.pop('ipAddr', None)
-                logging.writeToFile(str(ipAddr))
-                final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
-                             "errorMessage": "Session reuse detected, IPAddress logged."}
-                return HttpResponse(json.dumps(final_dic))
+                request.session.flush()
+                logging.writeToFile('Panel session IP binding changed.')
+                # A stale cookie must not consume a valid login attempt, nor
+                # leave a browser navigation displaying a raw JSON error.
+                if pathActual not in ('/', '/verifyLogin', '/logout'):
+                    if request.method in ('GET', 'HEAD'):
+                        from django.shortcuts import redirect
+                        return redirect('/')
+                    message = (
+                        'Your IP address changed. Please sign in again. '
+                        'For a mobile or changing connection, ask your administrator '
+                        'to select LOW Security Level in Users > Modify User.'
+                    )
+                    return HttpResponse(json.dumps({
+                        'error_message': message, 'errorMessage': message,
+                        'sessionExpired': True,
+                    }), content_type='application/json')
         except:
             pass
 

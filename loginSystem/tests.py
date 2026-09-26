@@ -106,7 +106,9 @@ class LoginSessionRegressionTests(SimpleTestCase):
         middleware = secMiddleware(lambda unused: HttpResponse('dashboard-reached'))
         self.assertEqual(b'dashboard-reached', middleware(next_request).content)
         next_request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.2'
-        self.assertIn(b'Session reuse detected', middleware(next_request).content)
+        expired = middleware(next_request)
+        self.assertEqual(302, expired.status_code)
+        self.assertEqual('/', expired['Location'])
         self.assertNotIn('userID', request.session)
 
     @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
