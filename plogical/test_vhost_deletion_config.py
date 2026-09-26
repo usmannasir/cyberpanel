@@ -48,6 +48,18 @@ class VhostDeletionConfigTests(unittest.TestCase):
                 config = 'listener HTTP {\n' + mapping + neighbor + '}\n'
                 self.assertEqual('listener HTTP {\n' + neighbor + '}\n', self.cleanup(config))
 
+    def test_last_site_removes_ssl_listener_for_integer_and_string_counts(self):
+        http = 'listener HTTP {\n  address *:80\n}\n'
+        ssl = ('listener SSL {\n  address *:443\n'
+               '  keyFile /etc/letsencrypt/live/example.com/privkey.pem\n'
+               '  certFile /etc/letsencrypt/live/example.com/fullchain.pem\n}\n')
+        for count in (1, '1'):
+            with self.subTest(count=count):
+                self.assertEqual(http, self.cleanup(http + ssl, count))
+        for count in (2, '2'):
+            with self.subTest(count=count):
+                self.assertEqual(http + ssl, self.cleanup(http + ssl, count))
+
     def test_ignores_comments_mentioning_target(self):
         config = '# virtualhost example.com {\nlistener HTTP {\n  address *:80\n}\n'
         self.assertEqual(config, self.cleanup(config))

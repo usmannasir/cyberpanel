@@ -687,6 +687,7 @@ class vhost:
     def deleteCoreConf(virtualHostName, numberOfSites):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
+                numberOfSites = int(numberOfSites)
 
                 virtualHostPath = "/home/" + virtualHostName
                 if os.path.exists(virtualHostPath):
