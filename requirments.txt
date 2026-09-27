@@ -39,3 +39,6 @@ python-jose==3.4.0
 websockets==15.0.1
 PyJWT
 python-dotenv==1.0.0
+
+# The distribution virtualenv used by upgrade fallback requires filelock 3.x.
+filelock<4

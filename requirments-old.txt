@@ -38,3 +38,5 @@ python-jose
 websockets
 PyJWT
 python-dotenv
+# The distribution virtualenv used by upgrade fallback requires filelock 3.x.
+filelock<4

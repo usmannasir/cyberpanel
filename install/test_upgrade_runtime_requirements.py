@@ -33,10 +33,13 @@ class UpgradeRuntimeRequirementsTests(unittest.TestCase):
                                 Server_OS_Version='26', Git_Content_URL='https://invalid.example',
                                 Branch_Name='v3.0.6')
         fake_python = '''#!/bin/sh
-printf '%s|%s|%s|%s\n' "$0" "$*" "${PYTHONHOME-unset}" "${PYTHONPATH-unset}" >> "$AUDIT_TRACE"
+command_args=$(printf '%s' "$*" | tr '\\n' ' ')
+printf '%s|%s|%s|%s\n' "$0" "$command_args" "${PYTHONHOME-unset}" "${PYTHONPATH-unset}" >> "$AUDIT_TRACE"
 case "$*" in
   '-m pip --version') exit "${FAKE_PIP_MISSING:-0}" ;;
   '-m ensurepip --upgrade') exit "${FAKE_ENSUREPIP_EXIT:-0}" ;;
+  *'--no-deps filelock<4'*) exit "${FAKE_FILELOCK_INSTALL_EXIT:-0}" ;;
+  *'distribution("filelock")'*) exit "${FAKE_FILELOCK_REPAIR:-1}" ;;
   *'install --upgrade'*) exit "${FAKE_BOOTSTRAP_EXIT:-0}" ;;
   *'--ignore-installed'*)
     count=0
@@ -96,7 +99,7 @@ chmod 755 lswsgi
         definitions = '\n'.join(self.function(name) for name in (
             'Run_Upgrade_Command', 'Validate_Python_Requirements',
             'Install_Panel_Runtime_Requirements', 'Install_CyberCP_Runtime_Python_Requirements',
-            'Download_Requirement', 'Build_Panel_LSWSGI',
+            'Download_Requirement', 'Build_Panel_LSWSGI', 'Repair_Pip_Filelock_Compatibility',
             'Backup_Panel_Runtime', 'Restore_Panel_Runtime'))
         env = dict(self.environment)
         env.update({key:str(value) for key,value in environment.items()})
@@ -222,6 +225,24 @@ exit 0
         trace = self.trace.read_text()
         self.assertNotIn('install --upgrade pip ', trace)
         self.assertIn('install --upgrade --ignore-installed setuptools wheel packaging --break-system-packages', trace)
+
+    def test_pip_owned_filelock_conflict_is_downgraded_without_ignore_installed(self):
+        result = self.install_system(FAKE_FILELOCK_REPAIR=0)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        commands = [line for line in self.trace.read_text().splitlines()
+                    if '--no-deps filelock<4' in line]
+        self.assertEqual(1, len(commands))
+        self.assertNotIn('--ignore-installed', commands[0])
+
+    def test_failed_filelock_repair_stops_before_bulk_requirement_install(self):
+        result = self.install_system(FAKE_FILELOCK_REPAIR=0, FAKE_FILELOCK_INSTALL_EXIT=31)
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse(self.count.exists())
+
+    def test_compatible_or_distribution_owned_filelock_is_not_uninstalled(self):
+        result = self.install_system(FAKE_FILELOCK_REPAIR=1)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertNotIn('--no-deps filelock<4', self.trace.read_text())
 
     def test_system_install_and_validation_failures_are_nonzero(self):
         for scenario in ({'FAKE_INSTALL_EXIT':29}, {'FAKE_IMPORT_EXIT':7},
