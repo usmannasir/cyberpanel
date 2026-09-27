@@ -51,6 +51,8 @@ def verifyLogin(request):
                         user_Language = "br"
                     elif language_selection == "Portuguese":
                         user_Language = "pt"
+                    elif language_selection == "Portuguese (Brazil)":
+                        user_Language = "pt-br"
                     elif language_selection == "Japanese":
                         user_Language = "ja"
                     elif language_selection == "Bosnian":

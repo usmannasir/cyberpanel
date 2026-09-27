@@ -156,3 +156,53 @@ class LoginSessionRegressionTests(SimpleTestCase):
 
         self.assertEqual(1, json.loads(second.content)['loginStatus'])
         self.assertEqual(7, request.session['userID'])
+
+    @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
+    @mock.patch('loginSystem.views.Administrator.objects.get')
+    def test_brazilian_portuguese_cookie_survives_next_request(
+        self, administrator_get, unused_password_check
+    ):
+        from django.conf import settings
+        from django.http import HttpResponse
+        from django.middleware.locale import LocaleMiddleware
+        from django.utils import translation
+        from loginSystem.views import verifyLogin
+
+        administrator_get.return_value = self.admin()
+        request = self.request({
+            'username': 'admin', 'password': 'valid-password',
+            'languageSelection': 'Portuguese (Brazil)',
+        })
+        try:
+            response = verifyLogin(request)
+            self.assertEqual(1, json.loads(response.content)['loginStatus'])
+            self.assertEqual('pt-br', response.cookies[settings.LANGUAGE_COOKIE_NAME].value)
+            next_request = self.factory.get('/base/')
+            next_request.COOKIES[settings.LANGUAGE_COOKIE_NAME] = response.cookies[
+                settings.LANGUAGE_COOKIE_NAME
+            ].value
+            middleware = LocaleMiddleware(lambda unused: HttpResponse())
+            middleware.process_request(next_request)
+            self.assertEqual('pt-br', next_request.LANGUAGE_CODE)
+            self.assertEqual('Painel de Controle', translation.gettext('Dashboard'))
+        finally:
+            translation.deactivate()
+
+
+class RegionalCatalogRegressionTests(SimpleTestCase):
+
+    def test_regional_catalogs_are_discoverable(self):
+        import gettext
+        from pathlib import Path
+        from django.utils.translation import to_locale
+
+        locale_root = Path(__file__).resolve().parents[1] / 'locale'
+        for language in ('pt-br', 'ur-pk'):
+            with self.subTest(language=language):
+                expected = locale_root / to_locale(language) / 'LC_MESSAGES' / 'django.mo'
+                self.assertEqual(
+                    str(expected),
+                    gettext.find('django', localedir=str(locale_root), languages=[to_locale(language)]),
+                )
+                with expected.open('rb') as catalog:
+                    gettext.GNUTranslations(catalog)
