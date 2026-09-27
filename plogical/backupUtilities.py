@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import tempfile
 import paramiko
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -73,7 +74,29 @@ class backupUtilities:
         self.extraArgs = extraArgs
 
     @staticmethod
+    def cleanupBackupMeta(metaPath):
+        if not metaPath:
+            return
+        try:
+            try:
+                os.unlink(metaPath)
+            except FileNotFoundError:
+                pass
+            except PermissionError:
+                # A failed backup may leave the file owned by the site user in
+                # sticky /tmp. Use the existing privileged command transport.
+                result, output = ProcessUtilities.outputExecutioner(
+                    'rm -f -- %s' % shlex.quote(metaPath), 'root',
+                    shell=False, retRequired=True)
+                if result != 1:
+                    raise OSError('Unable to remove backup metadata: %s' % output)
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                '%s [cleanupBackupMeta: %s]' % (msg, metaPath))
+
+    @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath, FromInner=1):
+        metaPath = None
         try:
 
             website = Websites.objects.get(domain=backupDomain)
@@ -294,16 +317,16 @@ class backupUtilities:
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
-            metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
+            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
+            # Create exclusively with mode 0600 before writing any credentials.
+            # Keep /tmp accessible to the site user after the ownership handoff.
+            with tempfile.NamedTemporaryFile(mode='wb', prefix='cyberpanel-backup-meta-',
+                                             suffix='.xml', dir='/tmp', delete=False) as metaFile:
+                metaPath = metaFile.name
+                metaFile.write(xmlpretty)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'Path to meta file {metaPath}')
-
-            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
-            metaFile = open(metaPath, 'w')
-            metaFile.write(xmlpretty.decode())
-            metaFile.close()
-            os.chmod(metaPath, 0o600)
 
             ## meta generated
 
@@ -318,7 +341,8 @@ class backupUtilities:
             return 1, 'None', metaPath
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [207][5009]")
+            backupUtilities.cleanupBackupMeta(metaPath)
+            logging.CyberCPLogFileWriter.writeToFile(f"{backupDomain}: {str(msg)} [207][5009]")
             if FromInner:
                 #logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)), status)
                 command = f"echo '{status} [207][5009]' > {status}"
@@ -2271,6 +2295,7 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % str(msg))
 
 def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
+    metaPath = None
     try:
         ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
         ## backup-example.com-02.13.2018_10-24-52 -- backup name
@@ -2342,7 +2367,8 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             return 0
 
 
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
+        metaPath = result[2]
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, metaPath)
         ProcessUtilities.executioner(command)
 
         logging.CyberCPLogFileWriter.writeToFile(backupPath)
@@ -2397,12 +2423,12 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         #command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
         #ProcessUtilities.executioner(command)
 
-        command = f'rm -f {result[2]}'
-        ProcessUtilities.executioner(command, 'cyberpanel')
 
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
-            f"{str(msg)}  [submitBackupCreation]")
+            f"{backupDomain}: {str(msg)}  [submitBackupCreation]")
+    finally:
+        backupUtilities.cleanupBackupMeta(metaPath)
 
 def cancelBackupCreation(backupCancellationDomain, fileName):
     try:
