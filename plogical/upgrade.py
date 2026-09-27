@@ -560,12 +560,22 @@ class Upgrade:
                 os._exit(1)
 
     @staticmethod
-    def executioner(command, component, do_exit=0, shell=False):
+    def executioner(command, component, do_exit=0, shell=False, detach_output=False):
         try:
-            FNULL = open(os.devnull, 'w')
             count = 0
             while True:
-                if shell == False:
+                if detach_output:
+                    # Service launchers can leave stdout open in daemon children.
+                    # A regular file retains startup diagnostics without allowing
+                    # those children to hold the upgrade's tee pipe open forever.
+                    with tempfile.TemporaryFile() as output:
+                        arguments = command if shell else shlex.split(command)
+                        res = subprocess.call(arguments, stdout=output,
+                                              stderr=subprocess.STDOUT, shell=shell)
+                        output.seek(0)
+                        sys.stdout.write(output.read().decode('utf-8', errors='replace'))
+                        sys.stdout.flush()
+                elif shell == False:
                     res = subprocess.call(shlex.split(command), stderr=subprocess.STDOUT)
                 else:
                     res = subprocess.call(command, stderr=subprocess.STDOUT, shell=True)
@@ -5300,7 +5310,7 @@ pm.max_spare_servers = 3
                 command = '/usr/local/lsws/bin/lswsctrl stop'
                 Upgrade.executioner(command, 'Stop OpenLiteSpeed', 0)
                 command = '/usr/local/lsws/bin/lswsctrl start'
-                Upgrade.executioner(command, 'Start OpenLiteSpeed', 0)
+                Upgrade.executioner(command, 'Start OpenLiteSpeed', 0, detach_output=True)
 
                 # Verify OLS started successfully after restart
                 import time
