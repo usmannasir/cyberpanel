@@ -43,6 +43,7 @@ class mysqlUtilities:
             raise ValueError("identifier cannot be None")
         return "`" + str(identifier).replace("`", "``") + "`"
 
+
     @staticmethod
     def getPagination(records, toShow):
         pages = float(records) / float(toShow)
@@ -225,38 +226,37 @@ class mysqlUtilities:
 
     @staticmethod
     def deleteDatabase(dbname, dbuser):
+        connection = None
         try:
 
-            ## Remove possible git folder
-
-            dbPath = '/var/lib/mysql/%s/.git' % (dbname)
-
-            command = 'rm -rf %s' % (dbPath)
-            ProcessUtilities.executioner(command)
-
-            ##
+            # Let MySQL manage its data directory. A database name is an SQL
+            # identifier, never a filesystem path or part of a shell command.
+            # Unexpected files must make DROP fail safely for administrator review.
 
             connection, cursor = mysqlUtilities.setupConnection()
 
             if connection == 0:
                 return 0
 
-            cursor.execute("DROP DATABASE `%s`" % (dbname))
+            cursor.execute("DROP DATABASE IF EXISTS " + mysqlUtilities.quoteIdentifier(dbname))
 
             ## Try deleting all user who had priviliges on db
 
-            cursor.execute("select user,host from mysql.db where db='%s'" % (dbname))
+            cursor.execute("select user,host from mysql.db where db=%s", (dbname,))
             databaseUsers = cursor.fetchall()
 
             for databaseUser in databaseUsers:
-                cursor.execute("DROP USER '"+databaseUser[0]+"'@'%s'" % (databaseUser[1]))
-            connection.close()
+                cursor.execute("DROP USER IF EXISTS %s@%s", (databaseUser[0], databaseUser[1]))
 
             return 1
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
             return str(msg)
+        finally:
+            if connection:
+                connection.close()
+
 
     @staticmethod
     def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None,
@@ -565,13 +565,13 @@ password=%s
                 databaseToBeDeleted.delete()
                 return 1,'None'
             else:
-                databaseToBeDeleted.delete()
-                logging.CyberCPLogFileWriter.writeToFile('Deleted database with some errors. Error: %s' % (result))
-                return 1,'None'
+                logging.CyberCPLogFileWriter.writeToFile('Database deletion failed. Error: %s' % (result))
+                return 0, str(result)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
+
 
     @staticmethod
     def getDatabases(virtualHostName):
