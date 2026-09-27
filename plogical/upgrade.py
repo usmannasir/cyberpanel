@@ -31,6 +31,23 @@ from cyberpanel_version import BUILD, VERSION
 from contextlib import contextmanager
 
 
+def install_binary_atomically(source, destination):
+    """Keep the installed executable if a release artifact cannot be copied."""
+    if not os.path.isfile(source) or os.path.getsize(source) == 0:
+        raise RuntimeError('Required executable is missing or empty: %s' % source)
+    descriptor, temporary = tempfile.mkstemp(
+        prefix='.' + os.path.basename(destination) + '.upgrade-',
+        dir=os.path.dirname(destination))
+    os.close(descriptor)
+    try:
+        shutil.copyfile(source, temporary)
+        os.chmod(temporary, 0o755)
+        os.replace(temporary, destination)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 def _copy_path(source, destination):
     if os.path.lexists(destination):
         if os.path.isdir(destination) and not os.path.islink(destination):
@@ -3974,9 +3991,6 @@ passdb {
 
                 lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-                if os.path.exists(lscpdPath):
-                    os.remove(lscpdPath)
-
                 try:
                     try:
                         result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
@@ -4000,17 +4014,8 @@ passdb {
                         if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
 
-                command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
-                Upgrade.executioner(command, command, 0)
-
-                command = 'rm -f /usr/local/lscp/bin/lscpd'
-                Upgrade.executioner(command, command, 0)
-
-                command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
-                Upgrade.executioner(command, command, 0)
-
-                command = f'chmod 755 {lscpdPath}'
-                Upgrade.executioner(command, 'LSCPD Download.', 0)
+                install_binary_atomically(
+                    '/usr/local/CyberCP/' + lscpdSelection, lscpdPath)
 
                 command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
                 Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
@@ -4045,6 +4050,7 @@ passdb {
 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
+            raise
 
     ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
     @staticmethod
@@ -5206,6 +5212,20 @@ pm.max_spare_servers = 3
         return 1
 
     @staticmethod
+    def installPanelPHP():
+        destination = '/usr/local/lscp/fcgi-bin/lsphp'
+        for version in ('83', '84', '85', '82', '81', '80', '74'):
+            source = '/usr/local/lsws/lsphp%s/bin/lsphp' % version
+            if os.path.isfile(source) and os.access(source, os.X_OK):
+                install_binary_atomically(source, destination)
+                return
+        if os.path.isfile(destination) and os.access(destination, os.X_OK) \
+                and os.path.getsize(destination):
+            Upgrade.stdOut('Keeping the existing panel PHP executable.')
+            return
+        raise RuntimeError('No usable LSAPI PHP executable is available for the panel')
+
+    @staticmethod
     def upgrade(branch):
         requireCSFMigration()
 
@@ -5441,17 +5461,9 @@ pm.max_spare_servers = 3
 
         Upgrade.UpdateMaxSSLCons()
 
-        ## Update LSCPD PHP
-
-        phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
-
-        try:
-            os.remove(phpPath)
-        except:
-            pass
-
-        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
-        Upgrade.executioner(command, 0)
+        # Use an installed LSAPI PHP executable and replace it only after a
+        # complete copy. PHP 8.0 is absent on many supported installations.
+        Upgrade.installPanelPHP()
 
         if Upgrade.SoftUpgrade == 0:
             try:
