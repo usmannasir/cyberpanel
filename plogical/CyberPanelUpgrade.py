@@ -29,17 +29,6 @@ class UpgradeCyberPanel:
         except:
             pass
 
-    def RestoreOldCP(self):
-
-        from plogical.upgrade import Upgrade
-
-        command = 'rm -rf /usr/local/CyberCP'
-        Upgrade.executioner(command, command)
-
-        command = 'mv /usr/local/CyberCPBak /usr/local/CyberCP'
-        Upgrade.executioner(command, command)
-        Upgrade.fixPermissions()
-
     def UpgardeNow(self):
         from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE
 
@@ -53,22 +42,15 @@ class UpgradeCyberPanel:
 
         Upgrade.FromCloud = 1
 
-        ## Backup current CyberCP, incase of failure restore
-
-        self.PostStatus('Backing up current installation..,5')
-
-        command = 'cp -R /usr/local/CyberCP /usr/local/CyberCPBak'
-        Upgrade.executioner(command, command)
-
-        if not Upgrade.executioner(command, command, 1):
-            self.PostStatus('Failed to execute %s. [404]' % (command))
+        # downloadAndUpgrade stages source and private state before activation,
+        # and restores the original tree if activation fails. A second rollback
+        # through a fixed CyberCPBak directory could restore stale files.
 
         self.PostStatus('Upgrading/Downgrading to branch %s..,10' % (self.branch))
 
         status, message = Upgrade.downloadAndUpgrade(None, self.branch)
 
         if status == 0:
-            self.RestoreOldCP()
             self.PostStatus('Failed to upgrade, error %s.[404]' % (message))
             return 0
 
@@ -112,6 +94,7 @@ class UpgradeCyberPanel:
         command = 'systemctl restart lscpd'
         if not Upgrade.executioner(command, command, 1):
             self.PostStatus('Failed to execute %s. [404]' % (command))
+            return 0
 
         self.PostStatus('CyberPanel Upgraded/Downgraded to %s. [200]' % (self.branch))
 
