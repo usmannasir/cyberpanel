@@ -382,6 +382,7 @@ local runtime_failed=0 runtime_backup=''
 Main_Upgrade() { return "$FAKE_MAIN_EXIT"; }
 Post_Upgrade_System_Tweak() { return "$FAKE_SYSTEM_EXIT"; }
 Restart_Web_Terminal() { :; }
+Verify_Upgrade_Services() { return 0; }
 UPGRADE_FAILED=0
 '''+tail
                 result=self.run_shell(code,FAKE_MAIN_EXIT=main,FAKE_SYSTEM_EXIT=system)
