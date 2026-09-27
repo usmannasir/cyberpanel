@@ -588,6 +588,8 @@ class IncJobs(multi.Thread):
     ### Backup functions
 
     def prepareBackupMeta(self):
+        metaPath = None
+        from plogical.backupUtilities import backupUtilities
         try:
 
             ## Use the meta function from backup utils for future improvements.
@@ -595,7 +597,6 @@ class IncJobs(multi.Thread):
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile('Creating meta for %s. [IncBackupsControl.py]' % (self.website.domain))
 
-            from plogical.backupUtilities import backupUtilities
             status, message, metaPath = backupUtilities.prepareBackupMeta(self.website.domain, None, None, None, 0)
 
             ## meta generated
@@ -608,7 +609,10 @@ class IncJobs(multi.Thread):
                 ProcessUtilities.executioner(command)
 
                 command = 'mv %s %s' % (metaPath, metaPathNew)
-                ProcessUtilities.executioner(command, self.externalApp)
+                moved, output = ProcessUtilities.outputExecutioner(
+                    command, self.externalApp, shell=False, retRequired=True)
+                if moved != 1:
+                    raise OSError('Unable to move backup metadata: %s' % output)
                 return 1
             else:
                 logging.statusWriter(self.statusPath, "%s [544][5009]" % (message), 1)
@@ -617,6 +621,9 @@ class IncJobs(multi.Thread):
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [548][5009]" % (str(msg)), 1)
             return 0
+        finally:
+            if metaPath and metaPath != 'None':
+                backupUtilities.cleanupBackupMeta(metaPath)
 
     def backupData(self):
         try:
