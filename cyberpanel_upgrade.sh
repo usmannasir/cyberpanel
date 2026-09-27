@@ -1108,15 +1108,6 @@ fi
 upgrade_status=("${PIPESTATUS[@]}")
 RETURN_CODE=${upgrade_status[0]}
 
-# Check for TypeError specifically
-if grep -q "TypeError: expected string or bytes-like object" "$upgrade_output_file"; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: TypeError detected in upgrade.py, but continuing..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    # Check if upgrade actually completed despite the error
-    if grep -q "Upgrade Completed" "$upgrade_output_file"; then
-        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrade completed despite TypeError" | tee -a /var/log/cyberpanel_upgrade_debug.log
-        RETURN_CODE=0
-    fi
-fi
 rm -f "$upgrade_output_file"
 # A successful tee must not mask Python failures, nor may logging failures
 # turn into a successful upgrade.
@@ -1155,8 +1146,12 @@ else
       && Validate_Python_Requirements /usr/local/CyberPanelTemp/bin/python /usr/local/requirments.txt; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
     /usr/local/CyberPanelTemp/bin/python -u upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-    # upgrade.py is piped into tee, so read its status from PIPESTATUS.
-    FALLBACK_CODE=${PIPESTATUS[0]}
+    # Preserve failures from both the upgrader and its log writer.
+    upgrade_status=("${PIPESTATUS[@]}")
+    FALLBACK_CODE=${upgrade_status[0]}
+    if [[ "$FALLBACK_CODE" -eq 0 && "${upgrade_status[1]}" -ne 0 ]]; then
+      FALLBACK_CODE=${upgrade_status[1]}
+    fi
   else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback requirements could not be installed and validated" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi

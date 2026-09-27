@@ -118,6 +118,55 @@ chmod 755 lswsgi
         self.executable(self.commands/'tee', '#!/bin/sh\ncat >/dev/null\nexit 23\n')
         self.assertNotEqual(0, self.run_shell('Run_Upgrade_Command /bin/true').returncode)
 
+    def run_upgrade_attempts(self, **environment):
+        main = self.function('Main_Upgrade')
+        main = main[:main.index('echo -e "\\n[$(date', main.index('rm -rf /usr/local/CyberPanelTemp\n\nfi'))]
+        main += '\n[[ "$UPGRADE_FAILED" -eq 0 ]]\n}\n'
+        main = main.replace('/usr/local/CyberPanelTemp', str(self.root/'fallback'))
+        main = main.replace('/usr/local/CyberPanel/bin/python', str(self.runtime))
+        main = main.replace('/usr/local/requirments.txt', str(self.requirements))
+        main = main.replace('/tmp/cyberpanel-upgrade-output.XXXXXX', str(self.root/'output.XXXXXX'))
+        self.executable(self.runtime, "#!/bin/sh\nprintf 'Upgrade Completed\\nTypeError: expected string or bytes-like object\\n'\nexit 37\n")
+        self.executable(self.system_runtime, '''#!/bin/sh
+mkdir -p "$3/bin"
+cat > "$3/bin/python" <<'FAKEPYTHON'
+#!/bin/sh
+case "$*" in
+  *'upgrade.py'*) printf 'fallback-run\\n'; exit "${FAKE_FALLBACK_EXIT:-0}" ;;
+esac
+exit 0
+FAKEPYTHON
+chmod 755 "$3/bin/python"
+''')
+        return self.run_shell(main + '''
+Download_Requirement() { return 0; }
+Validate_Python_Requirements() { return 0; }
+UPGRADE_FAILED=0
+Main_Upgrade
+''', **environment)
+
+    def test_error_output_cannot_override_failed_upgrade_exit_status(self):
+        result = self.run_upgrade_attempts(FAKE_FALLBACK_EXIT=41)
+        self.assertNotEqual(0, result.returncode, result.stdout)
+        self.assertIn('fallback-run', result.stdout)
+        self.assertNotIn('First upgrade attempt successful', result.stdout)
+
+    def test_successful_fallback_can_recover_failed_initial_upgrade(self):
+        result = self.run_upgrade_attempts()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn('fallback-run', result.stdout)
+
+    def test_fallback_log_failure_cannot_claim_upgrade_success(self):
+        self.executable(self.commands/'tee', '''#!/bin/sh
+output=$(cat)
+printf '%s\\n' "$output"
+case "$output" in *fallback-run*) exit 23 ;; esac
+exit 0
+''')
+        result = self.run_upgrade_attempts()
+        self.assertNotEqual(0, result.returncode, result.stdout)
+        self.assertIn('Fallback upgrade returned code: 23', result.stdout)
+
     def test_panel_uses_its_interpreter_and_clears_ambient_python_environment(self):
         for operating_system in ('Ubuntu', 'CentOS', 'openEuler'):
             with self.subTest(operating_system=operating_system):
