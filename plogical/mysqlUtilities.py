@@ -43,6 +43,7 @@ class mysqlUtilities:
             raise ValueError("identifier cannot be None")
         return "`" + str(identifier).replace("`", "``") + "`"
 
+
     @staticmethod
     def getPagination(records, toShow):
         pages = float(records) / float(toShow)
@@ -248,14 +249,9 @@ class mysqlUtilities:
         connection = None
         try:
 
-            ## Remove possible git folder
-
-            dbPath = '/var/lib/mysql/%s/.git' % (dbname)
-
-            command = 'rm -rf %s' % (dbPath)
-            ProcessUtilities.executioner(command)
-
-            ##
+            # Let MySQL manage its data directory. A database name is an SQL
+            # identifier, never a filesystem path or part of a shell command.
+            # Unexpected files must make DROP fail safely for administrator review.
 
             connection, cursor = mysqlUtilities.setupConnection()
 
@@ -280,6 +276,7 @@ class mysqlUtilities:
         finally:
             if connection:
                 connection.close()
+
 
     @staticmethod
     def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None,
@@ -676,13 +673,13 @@ password=%s
                 databaseToBeDeleted.delete()
                 return 1,'None'
             else:
-                databaseToBeDeleted.delete()
-                logging.CyberCPLogFileWriter.writeToFile('Deleted database with some errors. Error: %s' % (result))
-                return 1,'None'
+                logging.CyberCPLogFileWriter.writeToFile('Database deletion failed. Error: %s' % (result))
+                return 0, str(result)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
+
 
     @staticmethod
     def getDatabases(virtualHostName):
