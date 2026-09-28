@@ -541,10 +541,11 @@
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-key" style="margin-right: 0.5rem;"></i>
-                                {% trans "Root Password" %}
+                                {% trans "Remote CyberPanel Admin Password" %}
                             </label>
                             <input ng-change="passwordEnter()" type="password" class="form-control" 
                                    ng-model="password" placeholder="••••••••" required>
+                            <small>{% trans "Enter the remote panel's admin password, not its root SSH password. API access must be enabled for the remote admin account." %}</small>
                         </div>
                     </div>
                 </div>

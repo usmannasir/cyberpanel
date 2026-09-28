@@ -1208,10 +1208,16 @@ class BackupManager:
                         data_ret = json.dumps(data_ret)
                         return HttpResponse(data_ret)
                 else:
+                    remote_error = data['error_message']
+                    if remote_error == 'Could not authorize access to API.':
+                        remote_error = (
+                            'The remote CyberPanel API rejected the admin account. '
+                            'Enter the remote panel admin password (not the root SSH password) '
+                            'and enable API access for that account on the remote panel.'
+                        )
                     data_ret = {'status': 0,
                                 'error_message': "Not able to fetch version of remote server. Error Message: " +
-                                                 data[
-                                                     'error_message'], "dir": "Null"}
+                                                 remote_error, "dir": "Null"}
                     data_ret = json.dumps(data_ret)
                     return HttpResponse(data_ret)
 
