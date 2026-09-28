@@ -330,8 +330,7 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(f"{backupDomain}: {str(msg)} [207][5009]")
             if FromInner:
                 #logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)), status)
-                command = f"echo '{status} [207][5009]' > {status}"
-                ProcessUtilities.executioner(command, website.externalApp)
+                logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % str(msg))
             return 0, str(msg), 'None'
 
     @staticmethod
@@ -2442,11 +2441,10 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
         if result[0] == 0:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1325')
-            writeToFile.close()
-            command = "echo '%s [1084][5009]' > %s" % (str(result[1]), status)
-            ProcessUtilities.executioner(command, website.externalApp)
+            error = 'Backup metadata preparation failed: %s [1084][5009]' % result[1]
+            with open(schedulerPath, 'w') as marker:
+                marker.write(error)
+            logging.CyberCPLogFileWriter.statusWriter(status, error)
             return 0
 
 
