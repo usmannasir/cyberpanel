@@ -410,7 +410,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">{% trans "Select PHP Version" %}</label>
-                        <select ng-model="phpSelection" class="form-control">
+                        <select ng-model="phpSelection" ng-init="phpSelection='{{ phps.0|escapejs }}'" class="form-control" required>
                             {% for php in phps %}
                                 <option>{{ php }}</option>
                             {% endfor %}
