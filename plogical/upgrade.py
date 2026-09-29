@@ -817,11 +817,19 @@ class Upgrade:
         try:
             Upgrade.stdOut(f"Downloading {os.path.basename(destination)}...", 0)
 
-            # Use wget for better progress display
-            command = f'wget -q --show-progress {url} -O {destination}'
-            res = subprocess.call(shlex.split(command))
+            # Browser upgrades inherit an output socket that may not be drained.
+            # Wget progress can fill it and block the download indefinitely.
+            # Bound both network retries and total runtime, and keep output out
+            # of that socket; report the checked result through the status log.
+            result = subprocess.run(
+                ['wget', '-q', '--timeout=30', '--tries=3', '-O', destination, '--', url],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+            if result.returncode != 0:
+                Upgrade.stdOut(f"ERROR: Download failed (wget exit {result.returncode})", 0)
+                return False
 
-            # Check if file was downloaded successfully by verifying it exists and has reasonable size
+            # A failed transfer can leave a large partial file. Only inspect size
+            # after wget succeeds; the caller still verifies the published SHA256.
             if os.path.exists(destination):
                 file_size = os.path.getsize(destination)
                 # Verify file size is reasonable (at least 10KB to avoid error pages/empty files)
