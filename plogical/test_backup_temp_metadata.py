@@ -35,7 +35,8 @@ class BackupTemporaryMetadataTests(unittest.TestCase):
             Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kw: self.website)),
             Backups=lambda **kw: self.row, ProcessUtilities=self.process,
             mysqlUtilities=SimpleNamespace(mysqlUtilities=SimpleNamespace(setupConnection=lambda: (None, None))),
-            logging=SimpleNamespace(CyberCPLogFileWriter=SimpleNamespace(writeToFile=self.logs.append)),
+            logging=SimpleNamespace(CyberCPLogFileWriter=SimpleNamespace(
+                writeToFile=self.logs.append, statusWriter=Mock())),
             build_dns_records_xml=lambda rows: ET.Element('dnsrecords'),
             build_email_accounts_xml=lambda rows: ET.Element('emails'),
             generate_pass=lambda n: 'fixture',
