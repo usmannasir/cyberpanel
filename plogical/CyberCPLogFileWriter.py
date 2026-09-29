@@ -115,6 +115,9 @@ Subject: %s
 
     @staticmethod
     def statusWriter(tempStatusPath, mesg, append = None):
+        # Some internal operations, including backup restores, have no UI status file.
+        if tempStatusPath is None:
+            return
         try:
             if os.path.exists('/usr/local/CyberCP/debug'):
                 print(mesg)
