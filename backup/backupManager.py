@@ -37,6 +37,7 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 from plogical.remoteTransferResponse import parse_remote_transfer_response
+from plogical.remoteTransferAddress import callback_address
 from plogical.normalBackupUtilities import (
     normalize_backup_retention_days,
     normalize_local_backup_path,
@@ -1318,17 +1319,8 @@ class BackupManager:
 
             try:
 
-                #this command is for enable permit root login over SSH:
-                command = "sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config && sudo service ssh restart"
-                ProcessUtilities.executioner(command, None, True)
-
-
-                # this command is for enable permit root login over SSH:
-                command = "sudo sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sudo systemctl restart sshd"
-                ProcessUtilities.executioner(command, None, True)
-
                 # this command is for get port of SSH:
-                command = """grep -oP '^Port \K\d+' /etc/ssh/sshd_config | head -n 1"""
+                command = r"""grep -oP '^Port \K\d+' /etc/ssh/sshd_config | head -n 1"""
                 output = ProcessUtilities.outputExecutioner(command)
                 port = output.strip('\n')
 
@@ -1343,6 +1335,7 @@ class BackupManager:
                 ipFile = os.path.join("/etc", "cyberpanel", "machineIP")
                 with open(ipFile) as ip_file:
                     ownIP = ip_file.read().strip()
+                ownIP = callback_address(ipAddress, ownIP)
 
                 finalData = json.dumps({'username': "admin", "password": password, "ipAddress": ownIP,
                                         "accountsToTransfer": accountsToTransfer, 'port': port})
