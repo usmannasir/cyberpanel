@@ -106,7 +106,7 @@ def provision():
         existing = TARGET.read_text()
         if not existing.startswith(MARKER) and not matching_legacy_policy(existing):
             raise RuntimeError('Existing Roundcube sudoers policy is unmanaged; review it before provisioning.')
-    subprocess.run([str(VISUDO), '-c'], check=True, capture_output=True, timeout=30)
+    subprocess.run([str(VISUDO), '-c'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
     descriptor, temporary = tempfile.mkstemp(prefix='.cyberpanel-roundcube-', dir=str(DIRECTORY))
     backup = None
     try:
@@ -116,7 +116,7 @@ def provision():
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
-        subprocess.run([str(VISUDO), '-cf', temporary], check=True, capture_output=True, timeout=30)
+        subprocess.run([str(VISUDO), '-cf', temporary], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
         if TARGET.exists():
             backup_fd, backup = tempfile.mkstemp(prefix='.roundcube-policy-backup-', dir=str(DIRECTORY))
             os.close(backup_fd)
@@ -126,7 +126,7 @@ def provision():
         try:
             # Validate in the complete policy too: aliases may conflict with
             # another include even when this candidate is valid by itself.
-            subprocess.run([str(VISUDO), '-c'], check=True, capture_output=True, timeout=30)
+            subprocess.run([str(VISUDO), '-c'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
         except BaseException:
             if backup is not None:
                 os.replace(backup, TARGET)

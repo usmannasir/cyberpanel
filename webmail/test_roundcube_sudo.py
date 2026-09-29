@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import stat
 import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -63,6 +64,9 @@ class PolicyTests(unittest.TestCase):
             sudo.trusted_path('/trusted/python')
 
 
+REAL_RUN = subprocess.run
+
+
 class ProvisionTests(unittest.TestCase):
     def setUp(self):
         self.stack = ExitStack()
@@ -104,6 +108,27 @@ class ProvisionTests(unittest.TestCase):
         self.assertEqual([self.target], list(self.directory.iterdir()))
         for dependency in (sudo.PYTHON, sudo.HELPER, sudo.VISUDO, sudo.SUDOERS, sudo.DIRECTORY):
             self.trust.assert_any_call(dependency)
+
+    def test_python36_subprocess_contract_and_repeated_upgrade(self):
+        # Python 3.6 forwards unknown run() options to Popen, which rejects
+        # capture_output/text. Keep a strict signature so modern test runners
+        # cannot hide that incompatibility behind a permissive mock.
+        def python36_run(argv, check, stdout, stderr, timeout):
+            self.assertTrue(check)
+            self.assertEqual(subprocess.PIPE, stdout)
+            self.assertEqual(subprocess.PIPE, stderr)
+            result = REAL_RUN(
+                [sys.executable, '-c', 'import sys; print("validated"); sys.stderr.write("diagnostic")'],
+                check=check, stdout=stdout, stderr=stderr, timeout=timeout)
+            self.assertEqual(b'validated\n', result.stdout)
+            self.assertEqual(b'diagnostic', result.stderr)
+            return result
+        self.run.side_effect = python36_run
+        for _ in range(2):
+            sudo.provision()
+            self.assertEqual(sudo.policy(), self.target.read_text())
+            self.assertEqual([self.target], list(self.directory.iterdir()))
+        self.assertEqual(6, self.run.call_count)
 
     def test_invalid_candidate_preserves_previous_policy_and_removes_temp(self):
         previous = sudo.policy()
