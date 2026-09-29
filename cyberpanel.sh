@@ -1538,10 +1538,10 @@ if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$S
       # For Ubuntu 22.04, install virtualenv via apt
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-virtualenv"
     fi
-    virtualenv -p "$CyberPanel_Python" /usr/local/CyberPanel
+    "$CyberPanel_Python" -m virtualenv -p "$CyberPanel_Python" /usr/local/CyberPanel
   fi
 else
-  virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+  /usr/bin/python3 -m virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
 fi
 
 # Verify virtual environment was created
@@ -2401,7 +2401,7 @@ if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$S
     echo -e "$CyberPanel_Python -m venv failed, trying virtualenv..."
     # Ensure virtualenv is properly installed
     pip3 install --upgrade virtualenv
-    virtualenv -p "$CyberPanel_Python" /usr/local/CyberCP
+    "$CyberPanel_Python" -m virtualenv -p "$CyberPanel_Python" /usr/local/CyberCP
   fi
 elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]) ; then
   echo -e "AlmaLinux/Rocky Linux 9/10 detected, using python3 -m venv..."
@@ -2413,10 +2413,10 @@ elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$
     pip3 install --upgrade virtualenv
     # Find the correct python3 path
     PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-    virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP
+    "$PYTHON_PATH" -m virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP
   fi
 else
-  virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+  /usr/bin/python3 -m virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 fi
 
 # Verify virtual environment was created
