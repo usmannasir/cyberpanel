@@ -3206,7 +3206,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             ## Ensure cyrus-sasl-plain is installed (needed for SMTP relay on RHEL/Alma/CentOS)
             if os.path.exists('/etc/redhat-release'):
                 command = 'dnf install -y cyrus-sasl-plain'
-                ProcessUtilities.executioner(command)
+                Upgrade.executioner(command, 'Install Cyrus SASL PLAIN', 0)
 
             import re
 
@@ -3388,11 +3388,11 @@ passdb {
 
             # Run webmail migrations
             Upgrade.executioner(
-                'python /usr/local/CyberCP/manage.py makemigrations webmail',
+                '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/manage.py makemigrations webmail',
                 'Webmail makemigrations', shell=True
             )
             Upgrade.executioner(
-                'python /usr/local/CyberCP/manage.py migrate',
+                '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/manage.py migrate',
                 'Webmail migrate', shell=True
             )
 
