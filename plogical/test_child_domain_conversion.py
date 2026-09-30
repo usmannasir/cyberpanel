@@ -285,6 +285,18 @@ class ConversionPreflightTests(unittest.TestCase):
         self.acl.websitesLimitCheck.assert_called_once()
         self.children.objects.filter.return_value.exclude.assert_called_once_with(pk=5)
 
+    def test_domain_matching_removes_only_complete_www_prefix(self):
+        for domain, normalized in (
+                ('www.example.test', 'example.test'),
+                ('ww.example.test', 'ww.example.test'),
+                ('web.example.test', 'web.example.test')):
+            with self.subTest(domain=domain):
+                self.child.domain = domain
+                self.data['domainName'] = domain
+                self.assertEqual(1, self.run_preflight()['createWebSiteStatus'])
+                self.websites.objects.filter.assert_called_with(domain__in=(domain, normalized))
+                self.children.objects.filter.assert_called_with(domain__in=(domain, normalized))
+
     def test_invalid_email_fails_before_conversion(self):
         self.validators.email.return_value = False
         result = self.run_preflight()

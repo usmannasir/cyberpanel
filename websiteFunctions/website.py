@@ -2336,7 +2336,7 @@ Require valid-user
                     raise ValueError('You do not have permission to convert this child domain.')
                 if conversionPreflight.domain != domain:
                     raise ValueError('Child domain changed during conversion.')
-                domains = (domain, domain.lstrip('www.'))
+                domains = (domain, domain[4:] if domain.startswith('www.') else domain)
                 if Websites.objects.filter(domain__in=domains).exists():
                     raise ValueError('This website already exists.')
                 if ChildDomains.objects.filter(domain__in=domains).exclude(
