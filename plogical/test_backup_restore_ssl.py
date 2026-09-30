@@ -137,7 +137,7 @@ class RestoreSSLTests(unittest.TestCase):
         self.assertTrue(installed())
         namespace['shutil'].which.assert_called_with('opendkim-genkey')
 
-    def run_mail_restore(self, mail_services=True, certificates=True):
+    def run_mail_restore(self, mail_services=True, certificates=True, include_leaf=True):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)
             extracted = root / 'fixture'
@@ -150,9 +150,16 @@ class RestoreSSLTests(unittest.TestCase):
                 <phpSelection>PHP 8.3</phpSelection><path>/home/example.test/mail.example.test</path>
                 </domain></ChildDomains></metaFile>''')
             if certificates:
+                archive_certificate = load_method('backupUtilities.py', 'backupUtilities',
+                    'copyCertificateFiles', dict(os=os, copy=shutil.copy))
                 for domain in domains:
-                    for name in ('cert.pem', 'fullchain.pem', 'privkey.pem'):
-                        (extracted / (domain + '.' + name)).write_text(domain + '.' + name)
+                    source = root / 'source-certs' / domain
+                    source.mkdir(parents=True)
+                    names = ('fullchain.pem', 'privkey.pem') + (('cert.pem',) if include_leaf else ())
+                    for name in names:
+                        (source / name).write_text(domain + '.' + name)
+                    archive_certificate(str(source), str(extracted), destinationPrefix=domain + '.')
+                    self.assertEqual(include_leaf, (extracted / (domain + '.cert.pem')).exists())
 
             # Map server paths into a fresh filesystem, including absent SSL parents.
             def local(path):
@@ -195,6 +202,8 @@ class RestoreSSLTests(unittest.TestCase):
                              copy=copy_certificate)
             namespace['Administrator'].objects.get.return_value = user
             namespace['backupUtilities'].createWebsiteFromBackup.return_value = (1, 'None')
+            namespace['backupUtilities'].copyCertificateFiles = load_method(
+                'backupUtilities.py', 'backupUtilities', 'copyCertificateFiles', namespace)
             restore = load_method('backupUtilities.py', 'backupUtilities', 'startRestore', namespace)
             modules = {'ApachController.ApacheController': Mock(),
                        'filemanager.filemanager': Mock()}
@@ -211,11 +220,28 @@ class RestoreSSLTests(unittest.TestCase):
                 for domain in domains:
                     self.assertEqual(domain + '.privkey.pem',
                         Path(local('/etc/letsencrypt/live/' + domain + '/privkey.pem')).read_text())
+                    self.assertEqual(include_leaf,
+                        Path(local('/etc/letsencrypt/live/' + domain + '/cert.pem')).exists())
             expected = domains if mail_services and certificates else ()
             self.assertEqual(list(expected), [call.args[2] for call in hosts.setupAutoDiscover.call_args_list])
 
     def test_restores_mail_child_and_certificate_before_configuring_sni(self):
         self.run_mail_restore()
+
+    def test_main_and_mail_certificates_round_trip_without_optional_leaf(self):
+        self.run_mail_restore(include_leaf=False)
+
+    def test_incomplete_certificate_pair_does_not_copy_partial_material(self):
+        copy_certificate = load_method('backupUtilities.py', 'backupUtilities',
+                                       'copyCertificateFiles', dict(os=os, copy=shutil.copy))
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            source = root / 'source'
+            source.mkdir()
+            (source / 'fullchain.pem').write_text('chain without private key')
+            with self.assertRaises(FileNotFoundError):
+                copy_certificate(str(source), str(root / 'archive'), destinationPrefix='example.test.')
+            self.assertFalse((root / 'archive').exists())
 
     def test_restore_does_not_configure_absent_mail_services(self):
         self.run_mail_restore(mail_services=False)

@@ -83,6 +83,20 @@ class backupUtilities:
         self.extraArgs = extraArgs
 
     @staticmethod
+    def copyCertificateFiles(sourceDir, destinationDir, sourcePrefix='', destinationPrefix=''):
+        # CustomACME saves fullchain.pem and privkey.pem without a separate leaf.
+        required = ('fullchain.pem', 'privkey.pem')
+        if not all(os.path.isfile(os.path.join(sourceDir, sourcePrefix + name)) for name in required):
+            raise FileNotFoundError('SSL fullchain and private key are required together.')
+        os.makedirs(destinationDir, exist_ok=True)
+        for name in required:
+            copy(os.path.join(sourceDir, sourcePrefix + name),
+                 os.path.join(destinationDir, destinationPrefix + name))
+        leaf = os.path.join(sourceDir, sourcePrefix + 'cert.pem')
+        if os.path.isfile(leaf):
+            copy(leaf, os.path.join(destinationDir, destinationPrefix + 'cert.pem'))
+
+    @staticmethod
     def cleanupBackupMeta(metaPath):
         if not metaPath:
             return
@@ -452,11 +466,8 @@ class backupUtilities:
         if os.path.exists(sslStoragePath):
             try:
 
-                copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(CPHomeStorage, domainName + ".cert.pem"))
-
-                copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(CPHomeStorage, domainName + ".fullchain.pem"))
-
-                copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(CPHomeStorage, domainName + ".privkey.pem"))
+                backupUtilities.copyCertificateFiles(sslStoragePath, CPHomeStorage,
+                                                     destinationPrefix=domainName + '.')
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(f'{str(msg)}. [283:startBackup]')
@@ -525,18 +536,11 @@ class backupUtilities:
                 if os.path.exists(sslStoragePath):
                     try:
 
-                        #copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
-                        copy(os.path.join(sslStoragePath, "cert.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".cert.pem"))
-
-                        #copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
-                        copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".fullchain.pem"))
-
-                        #copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
-                        copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".privkey.pem"))
-
-                        #make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar', sslStoragePath)
-                    except:
-                        pass
+                        backupUtilities.copyCertificateFiles(sslStoragePath, CPHomeStorage,
+                                                             destinationPrefix=actualChildDomain + '.')
+                    except BaseException as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'Could not archive SSL for %s: %s [startBackup]' % (actualChildDomain, msg))
                 ## no need to do this as on line 380 whole dir will be backuped up
 
                 # if childPath.find(f'/home/{domainName}/public_html') == -1:
@@ -871,17 +875,14 @@ class backupUtilities:
             if result[0] == 1:
                 ## Let us try to restore SSL.
 
-                sslStoragePath = completPath + "/" + masterDomain + ".cert.pem"
+                sslStoragePath = completPath + "/" + masterDomain + ".fullchain.pem"
 
                 if os.path.exists(sslStoragePath):
                     sslHome = '/etc/letsencrypt/live/' + masterDomain
 
                     try:
-                        os.makedirs(sslHome, exist_ok=True)
-
-                        copy(completPath + "/" + masterDomain + ".cert.pem", sslHome + "/cert.pem")
-                        copy(completPath + "/" + masterDomain + ".privkey.pem", sslHome + "/privkey.pem")
-                        copy(completPath + "/" + masterDomain + ".fullchain.pem", sslHome + "/fullchain.pem")
+                        backupUtilities.copyCertificateFiles(completPath, sslHome,
+                                                             sourcePrefix=masterDomain + '.')
 
                         sslUtilities.installSSLForDomain(masterDomain)
                     except BaseException as msg:
@@ -988,18 +989,14 @@ class backupUtilities:
 
 
 
-                            sslStoragePath = completPath + "/" + domain + ".cert.pem"
+                            sslStoragePath = completPath + "/" + domain + ".fullchain.pem"
 
                             if os.path.exists(sslStoragePath):
                                 sslHome = '/etc/letsencrypt/live/' + domain
 
                                 try:
-                                    os.makedirs(sslHome, exist_ok=True)
-
-                                    copy(completPath + "/" + domain + ".cert.pem", sslHome + "/cert.pem")
-                                    copy(completPath + "/" + domain + ".privkey.pem", sslHome + "/privkey.pem")
-                                    copy(completPath + "/" + domain + ".fullchain.pem",
-                                         sslHome + "/fullchain.pem")
+                                    backupUtilities.copyCertificateFiles(completPath, sslHome,
+                                                                         sourcePrefix=domain + '.')
 
                                     sslUtilities.installSSLForDomain(domain)
                                 except:
