@@ -185,6 +185,10 @@ class LoginSessionRegressionTests(SimpleTestCase):
             middleware.process_request(next_request)
             self.assertEqual('pt-br', next_request.LANGUAGE_CODE)
             self.assertEqual('Painel de Controle', translation.gettext('Dashboard'))
+            self.assertEqual('Bem-vindo de volta', translation.gettext('Welcome back'))
+            self.assertEqual(
+                'Seu espaço de hospedagem', translation.gettext('Your hosting workspace')
+            )
         finally:
             translation.deactivate()
 

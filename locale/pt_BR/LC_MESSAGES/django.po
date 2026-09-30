@@ -6705,3 +6705,1824 @@ msgstr "Não é necessário modificar as regras se você estiver usando o OpenLi
 
 #~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
 #~ msgstr "Configuração guardada. Reinicie o LiteSpeed para coloca-las em efeito."
+
+# Additional Brazilian Portuguese translations contributed by Fabio Zampirão, 2026.
+msgid "Imunify 360"
+msgstr "Imunify 360"
+
+msgid "SECURITY"
+msgstr "SEGURANÇA"
+
+msgid "AI Scanner"
+msgstr "Scanner de IA"
+
+msgid "Malware detection"
+msgstr "Detecção de malware"
+
+msgid "Manage rules"
+msgstr "Gerenciar regras"
+
+msgid "Harden SSH"
+msgstr "Reforçar segurança do SSH"
+
+msgid "WAF config"
+msgstr "Configuração do WAF"
+
+msgid "ModSec Rules"
+msgstr "Regras do ModSec"
+
+msgid "Edit rules"
+msgstr "Editar regras"
+
+msgid "Rule Packs"
+msgstr "Pacotes de regras"
+
+msgid "OWASP / Comodo"
+msgstr "OWASP / Comodo"
+
+msgid "Endpoint protection"
+msgstr "Proteção de endpoint"
+
+msgid "ImunifyAV"
+msgstr "ImunifyAV"
+
+msgid "Antivirus"
+msgstr "Antivírus"
+
+msgid "SSL CERTIFICATES"
+msgstr "CERTIFICADOS SSL"
+
+msgid "Site certificates"
+msgstr "Certificados do site"
+
+msgid "Panel hostname cert"
+msgstr "Certificado do hostname do painel"
+
+msgid "Mail Server SSL"
+msgstr "SSL do servidor de e-mail"
+
+msgid "Mail cert"
+msgstr "Certificado de e-mail"
+
+msgid "Learn more"
+msgstr "Saiba mais"
+
+msgid "Stop"
+msgstr "Parar"
+
+msgid "Connection Error"
+msgstr "Erro de conexão"
+
+msgid "of"
+msgstr "de"
+
+msgid "Choose a website..."
+msgstr "Escolha um site..."
+
+msgid "Restart"
+msgstr "Reiniciar"
+
+msgid "Add Record"
+msgstr "Adicionar registro"
+
+msgid "Backups"
+msgstr "Backups"
+
+msgid "Build services"
+msgstr "Serviços de construção"
+
+msgid "Postfix is disabled"
+msgstr "O Postfix está desativado"
+
+msgid "Enable Postfix Now"
+msgstr "Ativar o Postfix agora"
+
+msgid "Issuing SSL..."
+msgstr "Emitindo SSL..."
+
+msgid "Sites"
+msgstr "Sites"
+
+msgid "Learn More"
+msgstr "Saiba mais"
+
+msgid "Unlimited"
+msgstr "Ilimitado"
+
+msgid "Email Address"
+msgstr "Endereço de e-mail"
+
+msgid "Settings"
+msgstr "Configurações"
+
+msgid "Active"
+msgstr "Ativo"
+
+msgid "Use This Password"
+msgstr "Usar esta senha"
+
+msgid "Save Configuration"
+msgstr "Salvar configuração"
+
+msgid "Choose a domain..."
+msgstr "Escolha um domínio..."
+
+msgid "Installation Progress"
+msgstr "Progresso da instalação"
+
+msgid "Select Email Account"
+msgstr "Selecione a conta de e-mail"
+
+msgid "Select a package"
+msgstr "Selecione um pacote"
+
+msgid "CPU Cores"
+msgstr "Núcleos de CPU"
+
+msgid "Showing:"
+msgstr "Exibindo:"
+
+msgid "Success!"
+msgstr "Sucesso!"
+
+msgid "Documentation"
+msgstr "Documentação"
+
+msgid "Account"
+msgstr "Conta"
+
+msgid "Select a website"
+msgstr "Selecione um site"
+
+msgid "Last 50 lines"
+msgstr "Últimas 50 linhas"
+
+msgid "Live"
+msgstr "Ao vivo"
+
+msgid "Refresh Logs"
+msgstr "Atualizar logs"
+
+msgid "Backup Logs"
+msgstr "Logs de backup"
+
+msgid "Message"
+msgstr "Mensagem"
+
+msgid "View Logs"
+msgstr "Ver logs"
+
+msgid "Backup Frequency"
+msgstr "Frequência do backup"
+
+msgid "Yearly via Card"
+msgstr "Anual via cartão"
+
+msgid "Dismiss"
+msgstr "Dispensar"
+
+msgid "Quick actions"
+msgstr "Ações rápidas"
+
+msgid "Data"
+msgstr "Dados"
+
+msgid "PowerDNS is disabled"
+msgstr "O PowerDNS está desativado"
+
+msgid "DNS Documentation"
+msgstr "Documentação de DNS"
+
+msgid "Error:"
+msgstr "Erro:"
+
+msgid "Environment Variables"
+msgstr "Variáveis de ambiente"
+
+msgid "Warning:"
+msgstr "Aviso:"
+
+msgid "Apache Manager"
+msgstr "Gerenciador do Apache"
+
+msgid "PHP Version"
+msgstr "Versão do PHP"
+
+msgid "Monthly via Card"
+msgstr "Mensal via cartão"
+
+msgid "Webmail"
+msgstr "Webmail"
+
+msgid "Mail Queue"
+msgstr "Fila de e-mails"
+
+msgid "phpMyAdmin"
+msgstr "phpMyAdmin"
+
+msgid "MySQL Manager"
+msgstr "Gerenciador do MySQL"
+
+msgid "Deploy WordPress"
+msgstr "Implantar WordPress"
+
+msgid "Notifications"
+msgstr "Notificações"
+
+msgid "DNS Records"
+msgstr "Registros de DNS"
+
+msgid "New Password"
+msgstr "Nova senha"
+
+msgid "Enter new password"
+msgstr "Digite a nova senha"
+
+msgid "Enable PowerDNS"
+msgstr "Ativar PowerDNS"
+
+msgid "Confirm Deletion"
+msgstr "Confirmar exclusão"
+
+msgid "Select Repo"
+msgstr "Selecione o repositório"
+
+msgid "Repo Name"
+msgstr "Nome do repositório"
+
+msgid "Choose an email account..."
+msgstr "Escolha uma conta de e-mail..."
+
+msgid "Off"
+msgstr "Desligado"
+
+msgid "On"
+msgstr "Ligado"
+
+msgid "Error"
+msgstr "Erro"
+
+msgid "Number of FTP accounts"
+msgstr "Número de contas FTP"
+
+msgid "Number of email accounts"
+msgstr "Número de contas de e-mail"
+
+msgid "Advanced Resource Limits"
+msgstr "Limites avançados de recursos"
+
+msgid "Memory Usage:"
+msgstr "Uso de memória:"
+
+msgid "per page"
+msgstr "por página"
+
+msgid "Backup Documentation"
+msgstr "Documentação de backup"
+
+msgid "Success"
+msgstr "Sucesso"
+
+msgid "Add Sites for Backup"
+msgstr "Adicionar sites para backup"
+
+msgid "Add Site"
+msgstr "Adicionar site"
+
+msgid "Last Run"
+msgstr "Última execução"
+
+msgid "Page"
+msgstr "Página"
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "Backup File Retention"
+msgstr "Retenção de arquivos de backup"
+
+msgid "Email Debugger"
+msgstr "Depurador de e-mail"
+
+msgid "Open phpMyAdmin"
+msgstr "Abrir phpMyAdmin"
+
+msgid "One-Click Backups"
+msgstr "Backups em um clique"
+
+msgid "Change Port"
+msgstr "Alterar porta"
+
+msgid "Nameservers"
+msgstr "Servidores de nomes (DNS)"
+
+msgid "Design"
+msgstr "Design"
+
+msgid "Build Services"
+msgstr "Serviços de construção"
+
+msgid "USER"
+msgstr "USUÁRIO"
+
+msgid "Color scheme"
+msgstr "Esquema de cores"
+
+msgid "Toggle dark mode"
+msgstr "Alternar modo escuro"
+
+msgid "Activate Now"
+msgstr "Ativar agora"
+
+msgid "Are you absolutely sure?"
+msgstr "Você tem certeza absoluta?"
+
+msgid "CloudFlare Email"
+msgstr "E-mail do CloudFlare"
+
+msgid "API Token"
+msgstr "Token de API"
+
+msgid "Current Configuration"
+msgstr "Configuração atual"
+
+msgid "Enabled"
+msgstr "Ativado"
+
+msgid "Disabled"
+msgstr "Desativado"
+
+msgid "environment variables"
+msgstr "variáveis de ambiente"
+
+msgid "Save Settings"
+msgstr "Salvar configurações"
+
+msgid "ModSecurity Not Installed"
+msgstr "ModSecurity não instalado"
+
+msgid "PureFTPD is disabled"
+msgstr "O PureFTPD está desativado"
+
+msgid "Enable PureFTPD Now"
+msgstr "Ativar o PureFTPD agora"
+
+msgid "Warning"
+msgstr "Aviso"
+
+msgid "Create v2 Backup"
+msgstr "Criar backup v2"
+
+msgid "Important Information"
+msgstr "Informação importante"
+
+msgid "Set up account"
+msgstr "Configurar conta"
+
+msgid "Snapshot ID"
+msgstr "ID do snapshot"
+
+msgid "Backup Content"
+msgstr "Conteúdo do backup"
+
+msgid "Cannot issue SSL."
+msgstr "Não foi possível emitir o SSL."
+
+msgid "SSL Issued Successfully!"
+msgstr "SSL emitido com sucesso!"
+
+msgid "Web Resources"
+msgstr "Recursos web"
+
+msgid "Services & Features"
+msgstr "Serviços e recursos"
+
+msgid "Number of MySQL databases"
+msgstr "Número de bancos de dados MySQL"
+
+msgid "Process Limits"
+msgstr "Limites de processos"
+
+msgid "Allow Fully Qualified Domains"
+msgstr "Permitir domínios totalmente qualificados"
+
+msgid "Enforce Disk Limits"
+msgstr "Aplicar limites de disco"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "seconds"
+msgstr "segundos"
+
+msgid "Choose a user"
+msgstr "Escolha um usuário"
+
+msgid "Website Selection"
+msgstr "Seleção de site"
+
+msgid "Select an owner"
+msgstr "Selecione um proprietário"
+
+msgid "Git Host"
+msgstr "Host do Git"
+
+msgid "Backup Type"
+msgstr "Tipo de backup"
+
+msgid "Backup Progress"
+msgstr "Progresso do backup"
+
+msgid "Restore Progress"
+msgstr "Progresso da restauração"
+
+msgid "Select Backup to Restore"
+msgstr "Selecione o backup para restaurar"
+
+msgid "Select Folder"
+msgstr "Selecione a pasta"
+
+msgid "Create New Backup Schedule"
+msgstr "Criar novo agendamento de backup"
+
+msgid "Backup Retention"
+msgstr "Retenção de backup"
+
+msgid "Add Schedule"
+msgstr "Adicionar agendamento"
+
+msgid "Manage Existing Backup Schedules"
+msgstr "Gerenciar agendamentos de backup existentes"
+
+msgid "Select Job"
+msgstr "Selecione a tarefa"
+
+msgid "Add All"
+msgstr "Adicionar todos"
+
+msgid "All Sites"
+msgstr "Todos os sites"
+
+msgid "Current Status"
+msgstr "Status atual"
+
+msgid "Set-up now"
+msgstr "Configurar agora"
+
+msgid "Existing Backups"
+msgstr "Backups existentes"
+
+msgid "Google Drive Backups"
+msgstr "Backups do Google Drive"
+
+msgid "Account Name"
+msgstr "Nome da conta"
+
+msgid "Choose a destination..."
+msgstr "Escolha um destino..."
+
+msgid "Schedule Name"
+msgstr "Nome do agendamento"
+
+msgid "Default: 22"
+msgstr "Padrão: 22"
+
+msgid "Restore Backups"
+msgstr "Restaurar backups"
+
+msgid "View all mailboxes"
+msgstr "Ver todas as caixas de e-mail"
+
+msgid "Add a mailbox"
+msgstr "Adicionar uma caixa de e-mail"
+
+msgid "Forwarding"
+msgstr "Encaminhamento"
+
+msgid "Pattern Forwarding"
+msgstr "Encaminhamento por padrão"
+
+msgid "Open webmail"
+msgstr "Abrir webmail"
+
+msgid "Roundcube"
+msgstr "Roundcube"
+
+msgid "Paid add-on"
+msgstr "Complemento pago"
+
+msgid " Add WordPress Sites for Remote Backup"
+msgstr "Adicionar sites WordPress para backup remoto"
+
+msgid " Schedule Backups"
+msgstr "Agendar backups"
+
+msgid "ACTIVITY BOARD"
+msgstr "PAINEL DE ATIVIDADE"
+
+msgid "ADMIN"
+msgstr "ADMIN"
+
+msgid "About Tags"
+msgstr "Sobre as tags"
+
+msgid "Access Control"
+msgstr "Controle de acesso"
+
+msgid "Access Imunify 360"
+msgstr "Acessar o Imunify 360"
+
+msgid "Access Management"
+msgstr "Gerenciamento de acesso"
+
+msgid "Active Connections"
+msgstr "Conexões ativas"
+
+msgid "Active Containers"
+msgstr "Contêineres ativos"
+
+msgid "Active MySQL Processes"
+msgstr "Processos ativos do MySQL"
+
+msgid "Activity Logging"
+msgstr "Registro de atividades"
+
+msgid "Add Backup Destination"
+msgstr "Adicionar destino de backup"
+
+msgid "Add DNS Record"
+msgstr "Adicionar registro de DNS"
+
+msgid "Additional Settings"
+msgstr "Configurações adicionais"
+
+msgid "Administrator Account"
+msgstr "Conta de administrador"
+
+msgid "Advanced Environment Variables"
+msgstr "Variáveis de ambiente avançadas"
+
+msgid "Advanced Features"
+msgstr "Recursos avançados"
+
+msgid "Android App Development"
+msgstr "Desenvolvimento de apps Android"
+
+msgid "Assign Container to User"
+msgstr "Atribuir contêiner a um usuário"
+
+msgid "Assign Package"
+msgstr "Atribuir pacote"
+
+msgid "Attach Existing Repo"
+msgstr "Anexar repositório existente"
+
+msgid "Auto Login"
+msgstr "Login automático"
+
+msgid "Available Applications"
+msgstr "Aplicativos disponíveis"
+
+msgid "Available Backup Plans"
+msgstr "Planos de backup disponíveis"
+
+msgid "Available Images"
+msgstr "Imagens disponíveis"
+
+msgid "Available Websites on Remote Server"
+msgstr "Sites disponíveis no servidor remoto"
+
+msgid "BACKUPS"
+msgstr "BACKUPS"
+
+msgid "Backed Up Sites"
+msgstr "Sites com backup"
+
+msgid "Backup Account Overview"
+msgstr "Visão geral da conta de backup"
+
+msgid "Backup Configuration"
+msgstr "Configuração de backup"
+
+msgid "Backup Destinations"
+msgstr "Destinos de backup"
+
+msgid "Backup File Configurations"
+msgstr "Configurações do arquivo de backup"
+
+msgid "Backup Sites Configurations"
+msgstr "Configurações de backup de sites"
+
+msgid "Backup in Progress"
+msgstr "Backup em andamento"
+
+msgid "Bandwidth Control"
+msgstr "Controle de banda"
+
+msgid "Basic Configuration"
+msgstr "Configuração básica"
+
+msgid "Basic Information"
+msgstr "Informações básicas"
+
+msgid "Before installation"
+msgstr "Antes da instalação"
+
+msgid "CONTAINERS & CLOUDLINUX"
+msgstr "CONTÊINERES E CLOUDLINUX"
+
+msgid "CPU Information"
+msgstr "Informações da CPU"
+
+msgid "CPU Time Distribution"
+msgstr "Distribuição de tempo de CPU"
+
+msgid "Catch-All Configuration"
+msgstr "Configuração de catch-all"
+
+msgid "Catch-All Email"
+msgstr "E-mail catch-all"
+
+msgid "Change CyberPanel Port"
+msgstr "Alterar a porta do CyberPanel"
+
+msgid "Change Password for"
+msgstr "Alterar senha de"
+
+msgid "Chroot Jail"
+msgstr "Chroot Jail"
+
+msgid "ClamAV Configuration"
+msgstr "Configuração do ClamAV"
+
+msgid "ClamAV Configuration in Rspamd"
+msgstr "Configuração do ClamAV no Rspamd"
+
+msgid "CloudFlare API Configuration"
+msgstr "Configuração da API do CloudFlare"
+
+msgid "CloudFlare Configuration"
+msgstr "Configuração do CloudFlare"
+
+msgid "CloudFlare DNS Management"
+msgstr "Gerenciamento de DNS do CloudFlare"
+
+msgid "CloudFlare DNS Records"
+msgstr "Registros de DNS do CloudFlare"
+
+msgid "Code Editor"
+msgstr "Editor de código"
+
+msgid "Commit Changes"
+msgstr "Enviar alterações (commit)"
+
+msgid "Compress Files"
+msgstr "Compactar arquivos"
+
+msgid "Configuration Editor"
+msgstr "Editor de configuração"
+
+msgid "Configuration Reset Tool"
+msgstr "Ferramenta de redefinição de configuração"
+
+msgid "Configure API Access"
+msgstr "Configurar acesso à API"
+
+msgid "Configure Backup Destination"
+msgstr "Configurar destino de backup"
+
+msgid "Configure Backup Schedules"
+msgstr "Configurar agendamentos de backup"
+
+msgid "Configure Catch-All"
+msgstr "Configurar catch-all"
+
+msgid "Configure Default Nameservers"
+msgstr "Configurar servidores de nomes padrão"
+
+msgid "Configure Email Limits"
+msgstr "Configurar limites de e-mail"
+
+msgid "Configure Email Verification"
+msgstr "Configurar verificação de e-mail"
+
+msgid "Configure Forwarding"
+msgstr "Configurar encaminhamento"
+
+msgid "Configure v2 Backup Destinations"
+msgstr "Configurar destinos de backup v2"
+
+msgid "Configured Destinations"
+msgstr "Destinos configurados"
+
+msgid "Configured Local Destinations"
+msgstr "Destinos locais configurados"
+
+msgid "Configured SFTP Destinations"
+msgstr "Destinos SFTP configurados"
+
+msgid "Confirm Email Deletion"
+msgstr "Confirmar exclusão do e-mail"
+
+msgid "Confirm Restore!"
+msgstr "Confirmar restauração!"
+
+msgid "Connection & Timeout Settings"
+msgstr "Configurações de conexão e tempo limite"
+
+msgid "Connection Settings"
+msgstr "Configurações de conexão"
+
+msgid "Contacts"
+msgstr "Contatos"
+
+msgid "Container Actions"
+msgstr "Ações do contêiner"
+
+msgid "Container Created Successfully!"
+msgstr "Contêiner criado com sucesso!"
+
+msgid "Container Logs"
+msgstr "Logs do contêiner"
+
+msgid "Container Management"
+msgstr "Gerenciamento de contêineres"
+
+msgid "Container Processes"
+msgstr "Processos do contêiner"
+
+msgid "Container Resources"
+msgstr "Recursos do contêiner"
+
+msgid "Container Settings"
+msgstr "Configurações do contêiner"
+
+msgid "Container: "
+msgstr "Contêiner: "
+
+msgid "Content Filtering"
+msgstr "Filtragem de conteúdo"
+
+msgid "Convert Sub/Addon Domain to Website"
+msgstr "Converter subdomínio/domínio adicional em site"
+
+msgid "Create Assignment"
+msgstr "Criar atribuição"
+
+msgid "Create Incremental Backup"
+msgstr "Criar backup incremental"
+
+msgid "Create New Backup"
+msgstr "Criar novo backup"
+
+msgid "Create New Branch"
+msgstr "Criar nova branch"
+
+msgid "Create New File"
+msgstr "Criar novo arquivo"
+
+msgid "Create New Folder"
+msgstr "Criar nova pasta"
+
+msgid "Create New Package"
+msgstr "Criar novo pacote"
+
+msgid "Create New Rule"
+msgstr "Criar nova regra"
+
+msgid "Create Staging Site for"
+msgstr "Criar site de staging para"
+
+msgid "Create Sub/Addon Domain"
+msgstr "Criar subdomínio/domínio adicional"
+
+msgid "Create V2 Backup"
+msgstr "Criar backup V2"
+
+msgid "Creation Failed"
+msgstr "Falha na criação"
+
+msgid "Cron Jobs for"
+msgstr "Tarefas cron para"
+
+msgid "Current Access"
+msgstr "Acesso atual"
+
+msgid "Current my.cnf"
+msgstr "my.cnf atual"
+
+msgid "Custom CSS"
+msgstr "CSS personalizado"
+
+msgid "Custom Software & APIs"
+msgstr "Software personalizado e APIs"
+
+msgid "DATABASES"
+msgstr "BANCOS DE DADOS"
+
+msgid "DELIVERABILITY & ANTI-SPAM"
+msgstr "ENTREGABILIDADE E ANTISPAM"
+
+msgid "DKIM Key Management"
+msgstr "Gerenciamento de chaves DKIM"
+
+msgid "DNS Configuration"
+msgstr "Configuração de DNS"
+
+msgid "DNS Configuration Reset"
+msgstr "Redefinição da configuração de DNS"
+
+msgid "DNS Configuration Reset Complete!"
+msgstr "Redefinição da configuração de DNS concluída!"
+
+msgid "DNS Records Manager"
+msgstr "Gerenciador de registros DNS"
+
+msgid "Database Accounts"
+msgstr "Contas de banco de dados"
+
+msgid "Database Configuration"
+msgstr "Configuração do banco de dados"
+
+msgid "Database Selection"
+msgstr "Seleção de banco de dados"
+
+msgid "Delete Assignment"
+msgstr "Excluir atribuição"
+
+msgid "Delete Sub/Addon Domain"
+msgstr "Excluir subdomínio/domínio adicional"
+
+msgid "Delete User Account"
+msgstr "Excluir conta de usuário"
+
+msgid "Delete V2 Repo"
+msgstr "Excluir repositório V2"
+
+msgid "Deploy & support"
+msgstr "Implantação e suporte"
+
+msgid "DevOps & Server Management"
+msgstr "DevOps e gerenciamento de servidor"
+
+msgid "Docker Compose Benefits"
+msgstr "Vantagens do Docker Compose"
+
+msgid "Docker Images"
+msgstr "Imagens Docker"
+
+msgid "Docker Packages"
+msgstr "Pacotes Docker"
+
+msgid "Docker Sites"
+msgstr "Sites Docker"
+
+msgid "Docs"
+msgstr "Documentação"
+
+msgid "Domain Details"
+msgstr "Detalhes do domínio"
+
+msgid "Domain Information"
+msgstr "Informações do domínio"
+
+msgid "Drop files here or click to browse"
+msgstr "Solte os arquivos aqui ou clique para procurar"
+
+msgid "EMAIL"
+msgstr "E-MAIL"
+
+msgid "Edit .gitignore"
+msgstr "Editar .gitignore"
+
+msgid "Edit Contact"
+msgstr "Editar contato"
+
+msgid "Edit Package"
+msgstr "Editar pacote"
+
+msgid "Edit Plugin Bucket"
+msgstr "Editar bucket de plugin"
+
+msgid "Edit Rule"
+msgstr "Editar regra"
+
+msgid "Edit User"
+msgstr "Editar usuário"
+
+msgid "Email Account Details"
+msgstr "Detalhes da conta de e-mail"
+
+msgid "Email Account Resource Usage"
+msgstr "Uso de recursos da conta de e-mail"
+
+msgid "Email Forwarding Configuration"
+msgstr "Configuração de encaminhamento de e-mail"
+
+msgid "Email Limits Configuration"
+msgstr "Configuração de limites de e-mail"
+
+msgid "Email Limits Docs"
+msgstr "Documentação de limites de e-mail"
+
+msgid "Email Service Information"
+msgstr "Informações do serviço de e-mail"
+
+msgid "Email Service Status"
+msgstr "Status do serviço de e-mail"
+
+msgid "Execute Command"
+msgstr "Executar comando"
+
+msgid "Existing Docker Packages"
+msgstr "Pacotes Docker existentes"
+
+msgid "FILES, DATA & DNS"
+msgstr "ARQUIVOS, DADOS E DNS"
+
+msgid "FTP Account Details"
+msgstr "Detalhes da conta FTP"
+
+msgid "FTP Account Management"
+msgstr "Gerenciamento de contas FTP"
+
+msgid "FTP Service Features"
+msgstr "Recursos do serviço FTP"
+
+msgid "FTP Service Status"
+msgstr "Status do serviço FTP"
+
+msgid "Features"
+msgstr "Recursos"
+
+msgid "Features You"
+msgstr "Recursos que você"
+
+msgid "Filtering"
+msgstr "Filtragem"
+
+msgid "Firewall Status"
+msgstr "Status do firewall"
+
+msgid "Folders"
+msgstr "Pastas"
+
+msgid "Get a quote & plan"
+msgstr "Peça um orçamento e um plano"
+
+msgid "Get started with CyberPanel"
+msgstr "Comece a usar o CyberPanel"
+
+msgid "Git Docs"
+msgstr "Documentação do Git"
+
+msgid "Git Logs"
+msgstr "Logs do Git"
+
+msgid "Git Repository Management for"
+msgstr "Gerenciamento do repositório Git para"
+
+msgid "Global Settings"
+msgstr "Configurações globais"
+
+msgid "Google Drive Backup Configuration"
+msgstr "Configuração de backup do Google Drive"
+
+msgid "HOSTING PLANS"
+msgstr "PLANOS DE HOSPEDAGEM"
+
+msgid "Have a project in mind?"
+msgstr "Tem um projeto em mente?"
+
+msgid "Hosting Packages"
+msgstr "Pacotes de hospedagem"
+
+msgid "How it works"
+msgstr "Como funciona"
+
+msgid "INSIGHTS"
+msgstr "INSIGHTS"
+
+msgid "Image History"
+msgstr "Histórico de imagens"
+
+msgid "Import Environment Variables from Container"
+msgstr "Importar variáveis de ambiente do contêiner"
+
+msgid "Important Configuration Notes"
+msgstr "Notas importantes de configuração"
+
+msgid "Imunify Docs"
+msgstr "Documentação do Imunify"
+
+msgid "Imunify360 Not working?"
+msgstr "Imunify360 não está funcionando?"
+
+msgid "ImunifyAV Docs"
+msgstr "Documentação do ImunifyAV"
+
+msgid "ImunifyAV Not Working?"
+msgstr "ImunifyAV não está funcionando?"
+
+msgid "Included in the $169 lifetime plan"
+msgstr "Incluído no plano vitalício de $169"
+
+msgid "Initial Configurations"
+msgstr "Configurações iniciais"
+
+msgid "Install Magento"
+msgstr "Instalar Magento"
+
+msgid "Install Mautic"
+msgstr "Instalar Mautic"
+
+msgid "Installing ModSecurity..."
+msgstr "Instalando o ModSecurity..."
+
+msgid "Keys not available for this domain"
+msgstr "Chaves não disponíveis para este domínio"
+
+msgid "LOGS"
+msgstr "LOGS"
+
+msgid "Learn about Sub/Addon Domains"
+msgstr "Saiba mais sobre subdomínios/domínios adicionais"
+
+msgid "List Child Domains"
+msgstr "Listar domínios filhos"
+
+msgid "LiteSpeed Cache"
+msgstr "Cache do LiteSpeed"
+
+msgid "LiteSpeed Enterprise Global Conf!"
+msgstr "Configuração global do LiteSpeed Enterprise!"
+
+msgid "LiteSpeed Server Status"
+msgstr "Status do servidor LiteSpeed"
+
+msgid "Litespeed Enterprise Conf (/usr/local/lsws/conf/pre_main_global.conf)"
+msgstr ""
+"Configuração do Litespeed Enterprise "
+"(/usr/local/lsws/conf/pre_main_global.conf)"
+
+msgid "Loading websites..."
+msgstr "Carregando sites..."
+
+msgid "Local Images"
+msgstr "Imagens locais"
+
+msgid "Local Storage Configuration"
+msgstr "Configuração de armazenamento local"
+
+msgid "Location Information"
+msgstr "Informações de localização"
+
+msgid "Mail Client Configuration"
+msgstr "Configuração do cliente de e-mail"
+
+msgid "Mail Delivery Method"
+msgstr "Método de entrega de e-mail"
+
+msgid "Mail Filter Rules"
+msgstr "Regras de filtro de e-mail"
+
+msgid "MailScanner"
+msgstr "MailScanner"
+
+msgid "MailScanner is installed"
+msgstr "O MailScanner está instalado"
+
+msgid "MailScanner is not installed"
+msgstr "O MailScanner não está instalado"
+
+msgid "MailWatch Interface"
+msgstr "Interface do MailWatch"
+
+msgid "Maintenance & Support"
+msgstr "Manutenção e suporte"
+
+msgid "Make it yours"
+msgstr "Personalize"
+
+msgid "Manage Applications"
+msgstr "Gerenciar aplicativos"
+
+msgid "Manage Email Server (Postfix)"
+msgstr "Gerenciar servidor de e-mail (Postfix)"
+
+msgid "Manage FTP Server (Pure-FTPd)"
+msgstr "Gerenciar servidor FTP (Pure-FTPd)"
+
+msgid "Manage GIT"
+msgstr "Gerenciar GIT"
+
+msgid "Managing Your WordPress sites was never so easy!"
+msgstr "Gerenciar seus sites WordPress nunca foi tão fácil!"
+
+msgid "Memory Limits"
+msgstr "Limites de memória"
+
+msgid "Message Details"
+msgstr "Detalhes da mensagem"
+
+msgid "MySQL Uptime"
+msgstr "Tempo de atividade do MySQL"
+
+msgid "Nameserver Configuration"
+msgstr "Configuração de servidores de nomes"
+
+msgid "Need an app or custom website built?"
+msgstr "Precisa de um app ou site personalizado?"
+
+msgid "Need it built? Our team builds it for you."
+msgstr "Precisa que construam? Nossa equipe faz isso por você."
+
+msgid "New Contact"
+msgstr "Novo contato"
+
+msgid "New DNS Zone"
+msgstr "Nova zona de DNS"
+
+msgid "New Email Account"
+msgstr "Nova conta de e-mail"
+
+msgid "New FTP Account"
+msgstr "Nova conta FTP"
+
+msgid "New Rule"
+msgstr "Nova regra"
+
+msgid "No Applications Available"
+msgstr "Nenhum aplicativo disponível"
+
+msgid "No Docker Sites Found"
+msgstr "Nenhum site Docker encontrado"
+
+msgid "No Firewall Rules"
+msgstr "Nenhuma regra de firewall"
+
+msgid "No Images Found"
+msgstr "Nenhuma imagem encontrada"
+
+msgid "No PHP Version Selected"
+msgstr "Nenhuma versão do PHP selecionada"
+
+msgid "No Plugins Installed"
+msgstr "Nenhum plugin instalado"
+
+msgid "No Security Threats Detected"
+msgstr "Nenhuma ameaça de segurança detectada"
+
+msgid "No packages found"
+msgstr "Nenhum pacote encontrado"
+
+msgid "No websites yet"
+msgstr "Ainda sem sites"
+
+msgid "OVERVIEW"
+msgstr "VISÃO GERAL"
+
+msgid "One Click Install"
+msgstr "Instalação em um clique"
+
+msgid "One Click SSL"
+msgstr "SSL em um clique"
+
+msgid "One-click Backups"
+msgstr "Backups em um clique"
+
+msgid "OpenDKIM Installation"
+msgstr "Instalação do OpenDKIM"
+
+msgid "OpenDKIM is not installed"
+msgstr "O OpenDKIM não está instalado"
+
+msgid "Optimize MySQL"
+msgstr "Otimizar o MySQL"
+
+msgid "PHP & PERFORMANCE"
+msgstr "PHP E DESEMPENHO"
+
+msgid "PHP Configuration"
+msgstr "Configuração do PHP"
+
+msgid "Package Assignments"
+msgstr "Atribuições de pacote"
+
+msgid "Package Details:"
+msgstr "Detalhes do pacote:"
+
+msgid "Package Information"
+msgstr "Informações do pacote"
+
+msgid "Package Selection"
+msgstr "Seleção de pacote"
+
+msgid "Passive Mode"
+msgstr "Modo passivo"
+
+msgid "Password Management"
+msgstr "Gerenciamento de senhas"
+
+msgid "Pattern Forwarding Rules"
+msgstr "Regras de encaminhamento por padrão"
+
+msgid "Per-Domain Settings"
+msgstr "Configurações por domínio"
+
+msgid "Performance Settings"
+msgstr "Configurações de desempenho"
+
+msgid "Permissions Configuration"
+msgstr "Configuração de permissões"
+
+msgid "Personal Information"
+msgstr "Informações pessoais"
+
+msgid "Plus-Addressing"
+msgstr "Endereçamento com sinal de mais (+)"
+
+msgid "Port Mapping"
+msgstr "Mapeamento de portas"
+
+msgid "Postfix Configuration for Rspamd"
+msgstr "Configuração do Postfix para o Rspamd"
+
+msgid "Postfix Service Control"
+msgstr "Controle do serviço Postfix"
+
+msgid "PowerDNS Status"
+msgstr "Status do PowerDNS"
+
+msgid "Premium Features Include:"
+msgstr "Recursos premium incluem:"
+
+msgid "Primary Nameserver (NS1)"
+msgstr "Servidor de nomes primário (NS1)"
+
+msgid "Process Statistics"
+msgstr "Estatísticas de processos"
+
+msgid "Pure-FTPd Service Control"
+msgstr "Controle do serviço Pure-FTPd"
+
+msgid "Queue Management"
+msgstr "Gerenciamento de fila"
+
+msgid "Quick App Installer"
+msgstr "Instalador rápido de aplicativos"
+
+msgid "Quick Tips"
+msgstr "Dicas rápidas"
+
+msgid "Reboot SSH Server"
+msgstr "Reiniciar o servidor SSH"
+
+msgid "Recent Backup Errors"
+msgstr "Erros recentes de backup"
+
+msgid "Recent Shell History (Last 10 commands)"
+msgstr "Histórico recente do shell (últimos 10 comandos)"
+
+msgid "Redis Configuration"
+msgstr "Configuração do Redis"
+
+msgid "Regex Pattern (Advanced)"
+msgstr "Padrão regex (avançado)"
+
+msgid "Remote Access"
+msgstr "Acesso remoto"
+
+msgid "Remote Server Connection"
+msgstr "Conexão com servidor remoto"
+
+msgid "Remove Email Account"
+msgstr "Remover conta de e-mail"
+
+msgid "Remove FTP Account"
+msgstr "Remover conta FTP"
+
+msgid "Remove Git Tracking?"
+msgstr "Remover rastreamento do Git?"
+
+msgid "Repo Settings"
+msgstr "Configurações do repositório"
+
+msgid "Reseller Features"
+msgstr "Recursos de revenda"
+
+msgid "Reset DNS Configurations"
+msgstr "Redefinir configurações de DNS"
+
+msgid "Reset FTP Configurations"
+msgstr "Redefinir configurações de FTP"
+
+msgid "Resetting DNS Configuration..."
+msgstr "Redefinindo configuração de DNS..."
+
+msgid "Resource Control"
+msgstr "Controle de recursos"
+
+msgid "Resource Limits"
+msgstr "Limites de recursos"
+
+msgid "Restoration in Progress"
+msgstr "Restauração em andamento"
+
+msgid "Restore Points"
+msgstr "Pontos de restauração"
+
+msgid "Restore Remote Incremental Backups"
+msgstr "Restaurar backups incrementais remotos"
+
+msgid "Restore V2 Backups"
+msgstr "Restaurar backups V2"
+
+msgid "Restore WordPress Backup"
+msgstr "Restaurar backup do WordPress"
+
+msgid "Roundcube standalone — $99 lifetime"
+msgstr "Roundcube standalone — $99 vitalício"
+
+msgid "Rspamd"
+msgstr "Rspamd"
+
+msgid "Rspamd Logs"
+msgstr "Logs do Rspamd"
+
+msgid "Rspamd Management"
+msgstr "Gerenciamento do Rspamd"
+
+msgid "Rspamd is not installed"
+msgstr "O Rspamd não está instalado"
+
+msgid "Rule Files"
+msgstr "Arquivos de regras"
+
+msgid "Running Processes"
+msgstr "Processos em execução"
+
+msgid "SERVICES"
+msgstr "SERVIÇOS"
+
+msgid "SETTINGS"
+msgstr "CONFIGURAÇÕES"
+
+msgid "SFTP Server Configuration"
+msgstr "Configuração do servidor SFTP"
+
+msgid "SMTP Server Details"
+msgstr "Detalhes do servidor SMTP"
+
+msgid "SMTP Service"
+msgstr "Serviço SMTP"
+
+msgid "SSH Configuration"
+msgstr "Configuração do SSH"
+
+msgid "SSH Security Analysis"
+msgstr "Análise de segurança do SSH"
+
+msgid "SSL Details"
+msgstr "Detalhes do SSL"
+
+msgid "SSL v2"
+msgstr "SSL v2"
+
+msgid "Saved Sites For Remote Backup"
+msgstr "Sites salvos para backup remoto"
+
+msgid "Schedule V2 Backup"
+msgstr "Agendar backup V2"
+
+msgid "Schedule v2 Backup"
+msgstr "Agendar backup v2"
+
+msgid "Search & Pull Images"
+msgstr "Buscar e baixar imagens"
+
+msgid "Secondary Nameserver (NS2)"
+msgstr "Servidor de nomes secundário (NS2)"
+
+msgid "Section not found"
+msgstr "Seção não encontrada"
+
+msgid "Secure Transfers"
+msgstr "Transferências seguras"
+
+msgid "Security Alerts Detected"
+msgstr "Alertas de segurança detectados"
+
+msgid "Security Rules"
+msgstr "Regras de segurança"
+
+msgid "Select ACL to Delete"
+msgstr "Selecione a ACL para excluir"
+
+msgid "Select ACL to Modify"
+msgstr "Selecione a ACL para modificar"
+
+msgid "Select Action"
+msgstr "Selecione a ação"
+
+msgid "Server Configuration"
+msgstr "Configuração do servidor"
+
+msgid "Server Information"
+msgstr "Informações do servidor"
+
+msgid "Server Level Email Checks"
+msgstr "Verificações de e-mail em nível de servidor"
+
+msgid "Set up Google Drive Account"
+msgstr "Configurar conta do Google Drive"
+
+msgid "Set up Incremental Backup Destinations"
+msgstr "Configurar destinos de backup incremental"
+
+msgid "Set up Staging Environment"
+msgstr "Configurar ambiente de staging"
+
+msgid "Setup Email Limits"
+msgstr "Configurar limites de e-mail"
+
+msgid "Setup Remote"
+msgstr "Configurar remoto"
+
+msgid "Slow Queries"
+msgstr "Consultas lentas"
+
+msgid "Something went wrong..."
+msgstr "Algo deu errado..."
+
+msgid "Spam Detection"
+msgstr "Detecção de spam"
+
+msgid "SpamAssassin Configuration"
+msgstr "Configuração do SpamAssassin"
+
+msgid "SpamAssassin is not installed"
+msgstr "O SpamAssassin não está instalado"
+
+msgid "Staging Sites"
+msgstr "Sites de staging"
+
+msgid "Suggested Configuration"
+msgstr "Configuração sugerida"
+
+msgid "Swap Memory"
+msgstr "Memória swap"
+
+msgid "Switch off security rules"
+msgstr "Desativar regras de segurança"
+
+msgid "System Package Manager"
+msgstr "Gerenciador de pacotes do sistema"
+
+msgid "System Processes Monitor"
+msgstr "Monitor de processos do sistema"
+
+msgid "System Services"
+msgstr "Serviços do sistema"
+
+msgid "Tell us your idea"
+msgstr "Conte-nos sua ideia"
+
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Test Email Delivery"
+msgstr "Testar entrega de e-mail"
+
+msgid "Transfer Ownership"
+msgstr "Transferir propriedade"
+
+msgid "UI / UX Design"
+msgstr "Design de UI/UX"
+
+msgid "USERS"
+msgstr "USUÁRIOS"
+
+msgid "Uninstall Rspamd"
+msgstr "Desinstalar o Rspamd"
+
+msgid "Uninstallation Progress"
+msgstr "Progresso da desinstalação"
+
+msgid "Uninstalling Rspamd"
+msgstr "Desinstalando o Rspamd"
+
+msgid "Update Mysql"
+msgstr "Atualizar o MySQL"
+
+msgid "Update Settings"
+msgstr "Atualizar configurações"
+
+msgid "Updating Package:"
+msgstr "Atualizando pacote:"
+
+msgid "Upgrade Mysql"
+msgstr "Fazer upgrade do MySQL"
+
+msgid "Upgrade Progress Log"
+msgstr "Log de progresso da atualização"
+
+msgid "Upgrade to LiteSpeed Enterprise"
+msgstr "Fazer upgrade para o LiteSpeed Enterprise"
+
+msgid "Upload Files"
+msgstr "Enviar arquivos"
+
+msgid "Upload Queue"
+msgstr "Fila de envio"
+
+msgid "User Session Information"
+msgstr "Informações da sessão do usuário"
+
+msgid "Verification Logs"
+msgstr "Logs de verificação"
+
+msgid "Verify Your Email"
+msgstr "Verifique seu e-mail"
+
+msgid "View Changes"
+msgstr "Ver alterações"
+
+msgid "Virtual Users"
+msgstr "Usuários virtuais"
+
+msgid "Virus Protection"
+msgstr "Proteção contra vírus"
+
+msgid "Volume Mapping"
+msgstr "Mapeamento de volumes"
+
+msgid "WHAT WE BUILD"
+msgstr "O QUE CONSTRUÍMOS"
+
+msgid "Want this site built or customized for you?"
+msgstr "Quer que este site seja construído ou personalizado para você?"
+
+msgid "We build it"
+msgstr "Nós construímos"
+
+msgid "We will run following commands again:"
+msgstr "Vamos executar os seguintes comandos novamente:"
+
+msgid "Web SSH Terminal"
+msgstr "Terminal SSH web"
+
+msgid "Web Terminal"
+msgstr "Terminal web"
+
+msgid "Web Terminal Docs"
+msgstr "Documentação do terminal web"
+
+msgid "Website Development"
+msgstr "Desenvolvimento de sites"
+
+msgid "Website Level Email Issues"
+msgstr "Problemas de e-mail em nível de site"
+
+msgid "Website Settings"
+msgstr "Configurações do site"
+
+msgid "Website Speed Optimization"
+msgstr "Otimização de velocidade do site"
+
+msgid "Welcome back"
+msgstr "Bem-vindo de volta"
+
+msgid "Welcome to webmail"
+msgstr "Bem-vindo ao webmail"
+
+msgid "What is Plus-Addressing?"
+msgstr "O que é endereçamento com sinal de mais (+)?"
+
+msgid "Wildcard Pattern Examples"
+msgstr "Exemplos de padrão curinga"
+
+msgid "With Docker Compose, you can:"
+msgstr "Com o Docker Compose, você pode:"
+
+msgid "WordPress & eCommerce"
+msgstr "WordPress e e-commerce"
+
+msgid "WordPress Configuration"
+msgstr "Configuração do WordPress"
+
+msgid "Your Active Subscriptions"
+msgstr "Suas assinaturas ativas"
+
+msgid "Your Backup Plans"
+msgstr "Seus planos de backup"
+
+msgid "Your choice of webmail"
+msgstr "Sua escolha de webmail"
+
+msgid "iOS App Development"
+msgstr "Desenvolvimento de apps iOS"
+
+msgid "Add Email"
+msgstr "Adicionar e-mail"
+
+msgid "All Databases"
+msgstr "Todos os bancos de dados"
+
+msgid "Applications"
+msgstr "Aplicativos"
+
+msgid "Back Up"
+msgstr "Backup"
+
+msgid "Catch-All"
+msgstr "Catch-All"
+
+msgid "CloudLinux Usage"
+msgstr "Uso do CloudLinux"
+
+msgid "Configure backups"
+msgstr "Configurar backups"
+
+msgid "Create your first website"
+msgstr "Crie seu primeiro site"
+
+msgid "Default Nameservers"
+msgstr "Servidores de nomes padrão"
+
+msgid "Destinations"
+msgstr "Destinos"
+
+msgid "DNS Zones"
+msgstr "Zonas de DNS"
+
+msgid "Docker Apps"
+msgstr "Aplicativos Docker"
+
+msgid "Email Delivery"
+msgstr "Entrega de e-mail"
+
+msgid "Google Drive"
+msgstr "Google Drive"
+
+msgid "Incremental Backups"
+msgstr "Backups incrementais"
+
+msgid "Issue an SSL certificate"
+msgstr "Emitir um certificado SSL"
+
+msgid "Legacy v1"
+msgstr "Legado v1"
+
+msgid "Main Log"
+msgstr "Log principal"
+
+msgid "ModSec Audit"
+msgstr "Auditoria do ModSec"
+
+msgid "Package Manager"
+msgstr "Gerenciador de pacotes"
+
+msgid "PHP Configs"
+msgstr "Configurações do PHP"
+
+msgid "PHP Extensions"
+msgstr "Extensões do PHP"
+
+msgid "Point your domain"
+msgstr "Aponte seu domínio"
+
+msgid "Postfix"
+msgstr "Postfix"
+
+msgid "PowerDNS"
+msgstr "PowerDNS"
+
+msgid "Pure-FTPd"
+msgstr "Pure-FTPd"
+
+msgid "Reset FTP"
+msgstr "Redefinir FTP"
+
+msgid "Root File Manager"
+msgstr "Gerenciador de arquivos root"
+
+msgid "Set up email"
+msgstr "Configurar e-mail"
+
+msgid "Setup Wizard"
+msgstr "Assistente de configuração"
+
+msgid ".htaccess support is now live"
+msgstr "O suporte a .htaccess já está disponível"
+
+msgid "AI-powered malware detection"
+msgstr "Detecção de malware com IA"
+
+msgid "About Default Nameservers"
+msgstr "Sobre os servidores de nomes padrão"
+
+msgid "Automatic backups not configured"
+msgstr "Backups automáticos não configurados"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "CPU USAGE"
+msgstr "USO DE CPU"
+
+msgid "Cannot Fetch Current Values"
+msgstr "Não foi possível obter os valores atuais"
+
+msgid "Cloudflare"
+msgstr "Cloudflare"
+
+msgid "Configuration Failed"
+msgstr "Falha na configuração"
+
+msgid "Confirm Trial Activation"
+msgstr "Confirmar ativação do teste"
+
+msgid "DISK USAGE"
+msgstr "USO DE DISCO"
+
+msgid "DNS Zone"
+msgstr "Zona de DNS"
+
+msgid "Domain Registrar"
+msgstr "Registrador de domínio"
+
+msgid "Email Delivery Service"
+msgstr "Serviço de entrega de e-mail"
+
+msgid "Failed to Fetch Settings"
+msgstr "Falha ao obter as configurações"
+
+msgid "Git Deployment"
+msgstr "Implantação via Git"
+
+msgid "Important Notice"
+msgstr "Aviso importante"
+
+msgid "Important Warning"
+msgstr "Aviso importante"
+
+msgid "License Bundle Required"
+msgstr "Pacote de licença necessário"
+
+msgid "License Expired"
+msgstr "Licença expirada"
+
+msgid "MEMORY USAGE"
+msgstr "USO DE MEMÓRIA"
+
+msgid "Modification Tips"
+msgstr "Dicas de modificação"
+
+msgid "Redundancy"
+msgstr "Redundância"
+
+msgid "Reliable email delivery"
+msgstr "Entrega confiável de e-mail"
+
+msgid "SSH / Terminal"
+msgstr "SSH / Terminal"
+
+msgid "SSL CERTIFICATE"
+msgstr "CERTIFICADO SSL"
+
+msgid "Settings Loaded"
+msgstr "Configurações carregadas"
+
+msgid "Site Settings"
+msgstr "Configurações do site"
+
+msgid "Staging"
+msgstr "Staging"
+
+msgid "Sub / Addon Domains"
+msgstr "Subdomínios / Domínios adicionais"
+
+msgid "Volume Mappings"
+msgstr "Mapeamentos de volume"
+
+msgid "Warning: This action cannot be undone!"
+msgstr "Aviso: esta ação não pode ser desfeita!"
+
+msgid "Web Server Config"
+msgstr "Configuração do servidor web"
+
+msgid "Website + Mail Storage"
+msgstr "Armazenamento de site + e-mail"
+
+msgid "Website State Management"
+msgstr "Gerenciamento de estado do site"
+
+msgid "What are Nameservers?"
+msgstr "O que são servidores de nomes?"
+
+msgid "Your hosting workspace"
+msgstr "Seu espaço de hospedagem"
+
+msgid "Zone Configuration Preview"
+msgstr "Prévia da configuração da zona"
