@@ -85,6 +85,8 @@ class EnvironmentTests(unittest.TestCase):
                 for p in self.cert_dir.iterdir()}
 
     def client(self, staging=False, provider='letsencrypt', statuses=None):
+        # The inert CA returns old_cert, so its CSR key must match that fixture.
+        self.env['rsa'] = SimpleNamespace(generate_private_key=lambda **kwargs: self.key)
         # Exact constructor selection, but no /etc setup; every later write is private.
         with mock.patch.object(os, 'makedirs'), mock.patch.object(os, 'chmod'):
             obj = self.cls(DOMAIN, 'admin@fixture.invalid', staging=staging, provider=provider)
@@ -233,12 +235,19 @@ class EnvironmentTests(unittest.TestCase):
             PatchVhostConf=lambda *_: None, checkDNSRecords=lambda *_: False,
             acmeEnvironment=lambda: {}, installSSLForDomain=mock.Mock(return_value=1),
             lswsReloadCmd='fixture-no-reload')
+        from plogical.test_acme_staging_isolation import load_ssl_module
+        validation = load_ssl_module()
+        validation.open = lambda name, mode: open(path(name), mode)
+        utility.validateACMECertificate = validation.sslUtilities.validateACMECertificate
+        utility.isStagingCertificate = validation.sslUtilities.isStagingCertificate
+        utility.safeACMEOutput = validation.sslUtilities.safeACMEOutput
+        utility.logACMEFailure = lambda *args: None
         env = {'sslUtilities': utility, 'logging': self.logger, 'CustomACME': factory,
             'ProcessUtilities': SimpleNamespace(executioner=lambda *a: None, normalExecutioner=forbidden),
             'Websites': SimpleNamespace(objects=SimpleNamespace(get=mock.Mock(side_effect=LookupError))),
             'subprocess': SimpleNamespace(PIPE=-1, call=lambda *a, **k: 1, run=run),
             'os': SimpleNamespace(path=SimpleNamespace(exists=exists, lexists=exists)),
-            'shlex': shlex, 'open': lambda name, mode: open(path(name), mode)}
+            'shlex': shlex, 'tempfile': tempfile, 'open': lambda name, mode: open(path(name), mode)}
         exec(compile(ast.Module(body=[obtain, issue], type_ignores=[]), str(SOURCE / 'sslUtilities.py'), 'exec'), env)
         utility.obtainSSLForADomain = env['obtainSSLForADomain']
         # Keep the actual caller's local imports; only their external providers are inert.
