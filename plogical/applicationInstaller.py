@@ -561,6 +561,9 @@ class ApplicationInstaller(multi.Thread):
             ) % (shlex.quote(destination_home + '/.conversion-XXXXXX'),
                  shlex.quote(destination), shlex.quote(path), shlex.quote(destination),
                  shlex.quote(destination))
+            # The panel worker uses the privileged executor, which prefixes
+            # commands with sudo. Pass one executable, not a shell assignment.
+            command = '/bin/sh -c %s' % shlex.quote(command)
             moved, output = ProcessUtilities.outputExecutioner(command, retRequired=True)
             if not moved:
                 raise ValueError('Could not move the original website files: %s' % output)

@@ -2367,7 +2367,8 @@ Require valid-user
             except:
                 pass
 
-            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            from plogical.statusUtilities import create_status_file
+            tempStatusPath = create_status_file()
 
             apacheBackend = str(normalize_apache_backend(data.get('apacheBackend', 0)))
 
@@ -6206,10 +6207,10 @@ StrictHostKeyChecking no
 
     def convertDomainToSite(self, userID=None, request=None):
         try:
-
+            from plogical.statusUtilities import create_status_file
             extraArgs = {}
             extraArgs['request'] = request
-            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            extraArgs['tempStatusPath'] = create_status_file()
             background = ApplicationInstaller('convertDomainToSite', extraArgs)
             background.start()
 

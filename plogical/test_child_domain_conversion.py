@@ -150,10 +150,10 @@ class ChildConversionTests(unittest.TestCase):
             return 1, ''
         if command.startswith('cat --'):
             return self.creation_status
-        if command.startswith('backup='):
-            # Run the actual relocation shell command against isolated directories.
+        if command.startswith('/bin/sh -c '):
+            # Run the command as an executable, as the privilege boundary does.
             command = command.replace('/home/child.example.test', str(self.target_home))
-            process = subprocess.run(command, shell=True, capture_output=True, text=True)
+            process = subprocess.run(shlex.split(command), capture_output=True, text=True)
             return int(process.returncode == 0), process.stdout + process.stderr
         self.fail('Unexpected command: ' + command)
 
@@ -230,6 +230,52 @@ class ChildConversionTests(unittest.TestCase):
         self.files.fixPermissions.assert_called_once_with('child.example.test')
         self.manager.submitDomainDeletion.assert_called_once_with(1, {
             'websiteName':'child.example.test', 'DeleteDocRoot':0})
+
+    def test_nonroot_privileged_command_and_polling_wait_for_move(self):
+        # Execute the actual nonroot outputExecutioner/sendCommand methods;
+        # replace only the socket server and sudo with an isolated subprocess.
+        owner = self
+        class ExecutorSocket:
+            def sendall(self, payload):
+                command = payload.decode().removeprefix('TEST_TOKEN')
+                owner.assertTrue(command.startswith('sudo /bin/sh -c '))
+                command = command.removeprefix('sudo ')
+                command = command.replace('/home/child.example.test', str(owner.target_home))
+                process = subprocess.run(shlex.split(command), capture_output=True)
+                self.output = process.stdout + process.stderr + bytes([process.returncode])
+            def recv(self, size):
+                chunk, self.output = self.output[:size], self.output[size:]
+                return chunk
+            def close(self):
+                pass
+        executor = SimpleNamespace(token='TEST_TOKEN', debugPath='/does-not-exist',
+                                   setupUDSConnection=lambda: [ExecutorSocket(), None])
+        namespace = dict(os=os, time=self.clock, subprocess=subprocess, shlex=shlex,
+                         getpass=SimpleNamespace(getuser=lambda: 'cyberpanel'),
+                         logging=Mock(), ProcessUtilities=executor)
+        executor.sendCommand = load_method('plogical/processUtilities.py', 'ProcessUtilities',
+                                           'sendCommand', namespace)
+        execute = load_method('plogical/processUtilities.py', 'ProcessUtilities',
+                              'outputExecutioner', namespace)
+        poll = load_method('websiteFunctions/website.py', 'WebsiteManager',
+                           'installWordpressStatus', dict(
+            ACLManager=SimpleNamespace(CheckStatusFilleLoc=lambda path: True),
+            ProcessUtilities=SimpleNamespace(outputExecutioner=lambda command: self.status.read_text()),
+            HttpResponse=lambda content: SimpleNamespace(content=content.encode()),
+            json=json, shlex=shlex, subprocess=SimpleNamespace(call=lambda args: None)))
+        def command(command, **kwargs):
+            if command.startswith('/bin/sh -c '):
+                progress = json.loads(poll(None, data={'statusFile': str(self.status)}).content)
+                self.assertEqual(0, progress['abort'])
+                self.assertEqual(0, progress['installStatus'])
+                return execute(command, **kwargs)
+            return self.command(command, **kwargs)
+        self.process.outputExecutioner.side_effect = command
+        self.assertIn('Successfully converted. [200]', self.run_conversion())
+        terminal = json.loads(poll(None, data={'statusFile': str(self.status)}).content)
+        self.assertEqual(1, terminal['installStatus'])
+        self.assertFalse(self.source.exists())
+        self.assertEqual('original website data', (self.target / 'customer.txt').read_text())
 
     def test_move_failure_restores_generated_root_and_reports_error(self):
         # The command's source disappears after the preflight check.
