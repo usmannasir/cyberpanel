@@ -28,6 +28,10 @@ class RestoreHomeOwnershipTests(unittest.TestCase):
         public = self.home / 'public_html'
         public.mkdir(mode=0o750)
         (public / 'index.php').write_text('fixture')
+        self.logs = self.home / 'logs'
+        self.logs.mkdir(mode=0o750)
+        (self.logs / 'access.log').write_text('server access log')
+        (self.logs / 'access.log').chmod(0o640)
         self.external = self.root / 'outside'
         self.external.mkdir(mode=0o700)
         self.external_file = self.external / 'untouched'
@@ -52,6 +56,8 @@ class RestoreHomeOwnershipTests(unittest.TestCase):
     def test_whole_home_owner_changes_without_mode_changes_or_external_link_traversal(self):
         external_before = [(p.stat().st_uid, p.stat().st_gid, stat.S_IMODE(p.stat().st_mode))
                            for p in (self.external, self.external_file)]
+        logs_before = [(p.stat().st_uid, p.stat().st_gid, stat.S_IMODE(p.stat().st_mode))
+                       for p in (self.logs, self.logs / 'access.log')]
         modes_before = {str(p): stat.S_IMODE(p.stat().st_mode)
                         for p in (self.home, self.private, self.home / 'public_html', self.home / 'public_html/index.php')}
         if os.geteuid() == 0:
@@ -66,6 +72,12 @@ class RestoreHomeOwnershipTests(unittest.TestCase):
         with patch.object(os, 'chown', side_effect=checked_chown):
             self.restore(self.domain, homeRoot=str(self.root))
         self.assertNotIn('untouched', calls)
+        self.assertNotIn('logs', calls)
+        self.assertNotIn('access.log', calls)
+        self.assertEqual(logs_before, [(p.stat().st_uid, p.stat().st_gid, stat.S_IMODE(p.stat().st_mode))
+                                      for p in (self.logs, self.logs / 'access.log')])
+        if os.geteuid() == 0:
+            self.assertEqual(0, self.logs.stat().st_uid)
         for path in modes_before:
             details = os.stat(path)
             self.assertEqual(self.owner.pw_uid, details.st_uid)
@@ -84,6 +96,29 @@ class RestoreHomeOwnershipTests(unittest.TestCase):
         (self.root / link_domain).symlink_to(self.external, target_is_directory=True)
         with self.assertRaises(OSError):
             self.restore(link_domain, homeRoot=str(self.root))
+
+    def test_all_archive_exclusions_apply_to_nested_directories_and_files(self):
+        from plogical.backupExcludes import SITE_BACKUP_EXCLUDED_NAMES, rsync_exclude_arguments
+        excluded_paths = []
+        for index, name in enumerate(SITE_BACKUP_EXCLUDED_NAMES):
+            parent = self.home / 'public_html' / str(index)
+            parent.mkdir()
+            directory = parent / name
+            directory.mkdir(mode=0o700)
+            child = directory / 'untouched'
+            child.write_text('excluded content')
+            child.chmod(0o600)
+            file_parent = parent / 'files'
+            file_parent.mkdir()
+            excluded_file = file_parent / name
+            excluded_file.write_text('excluded file')
+            excluded_file.chmod(0o600)
+            excluded_paths.extend((directory, child, excluded_file))
+            self.assertIn('--exclude=' + name, rsync_exclude_arguments().split())
+        before = [(p.stat().st_uid, p.stat().st_gid, stat.S_IMODE(p.stat().st_mode)) for p in excluded_paths]
+        self.restore(self.domain, homeRoot=str(self.root))
+        self.assertEqual(before, [(p.stat().st_uid, p.stat().st_gid, stat.S_IMODE(p.stat().st_mode))
+                                  for p in excluded_paths])
 
     def test_domain_path_traversal_is_refused_before_owner_lookup(self):
         for domain in ('', '.', '..', '../outside', 'site/../../outside'):

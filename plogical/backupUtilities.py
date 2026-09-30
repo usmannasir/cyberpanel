@@ -100,6 +100,7 @@ class backupUtilities:
     def restoreWebsiteOwnership(domain, homeRoot='/home'):
         """Remap restored home ownership without changing modes or following links."""
         import pwd
+        from plogical.backupExcludes import SITE_BACKUP_EXCLUDED_NAMES
         if not domain or domain in ('.', '..') or os.path.basename(domain) != domain:
             raise ValueError('Invalid restored website domain.')
         website = Websites.objects.get(domain=domain)
@@ -115,6 +116,10 @@ class backupUtilities:
             # ownership calls are relative to those descriptors, not archive paths.
             for _, directories, files, directory_fd in os.fwalk(
                     '.', dir_fd=home_fd, follow_symlinks=False, onerror=fail):
+                # Match rsync's basename exclusions at every depth. In particular,
+                # destination logs are created root:webserver and are not restored.
+                directories[:] = [name for name in directories if name not in SITE_BACKUP_EXCLUDED_NAMES]
+                files = [name for name in files if name not in SITE_BACKUP_EXCLUDED_NAMES]
                 os.fchown(directory_fd, owner.pw_uid, owner.pw_gid)
                 for name in directories + files:
                     os.chown(name, owner.pw_uid, owner.pw_gid,
