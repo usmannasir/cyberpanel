@@ -750,9 +750,11 @@ class backupUtilities:
 
             # Restore the archived certificate below, after account creation.
             # DNS may still point at the source during a remote migration.
+            # Mail autodiscover also issues SSL, so configure it after restoring
+            # the archived mail child domain and its certificate instead.
             result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
-                                                   mail_domain)
+                                                   mail_domain, configureMail=False)
 
             if result[0] == 0:
                 raise BaseException(result[1])
@@ -875,8 +877,7 @@ class backupUtilities:
                     sslHome = '/etc/letsencrypt/live/' + masterDomain
 
                     try:
-                        if not os.path.exists(sslHome):
-                            os.mkdir(sslHome)
+                        os.makedirs(sslHome, exist_ok=True)
 
                         copy(completPath + "/" + masterDomain + ".cert.pem", sslHome + "/cert.pem")
                         copy(completPath + "/" + masterDomain + ".privkey.pem", sslHome + "/privkey.pem")
@@ -917,15 +918,6 @@ class backupUtilities:
                 for childDomain in childDomains:
 
                     domain = childDomain.find('domain').text
-
-                    ## mail domain check
-
-                    mailDomain = 'mail.%s' % (masterDomain)
-
-                    if domain == mailDomain:
-                        continue
-
-                    ## Mail domain check
 
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
@@ -1002,8 +994,7 @@ class backupUtilities:
                                 sslHome = '/etc/letsencrypt/live/' + domain
 
                                 try:
-                                    if not os.path.exists(sslHome):
-                                        os.mkdir(sslHome)
+                                    os.makedirs(sslHome, exist_ok=True)
 
                                     copy(completPath + "/" + domain + ".cert.pem", sslHome + "/cert.pem")
                                     copy(completPath + "/" + domain + ".privkey.pem", sslHome + "/privkey.pem")
@@ -1046,6 +1037,20 @@ class backupUtilities:
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
+
+            # Register only certificate files that were restored. Passing zero
+            # configures SNI for the existing domain without creating a mail
+            # child or requesting a certificate before DNS has moved here.
+            if virtualHostUtilities.emailServicesInstalled():
+                mailSSL = [masterDomain]
+                if backup_includes_mail_domain(backupMetaData, masterDomain):
+                    mailSSL.append('mail.%s' % masterDomain)
+                admin = Administrator.objects.get(userName='admin')
+                for domain in mailSSL:
+                    sslHome = '/etc/letsencrypt/live/' + domain
+                    if all(os.path.isfile(os.path.join(sslHome, name))
+                           for name in ('fullchain.pem', 'privkey.pem')):
+                        virtualHostUtilities.setupAutoDiscover(0, status, domain, admin)
 
             ## Restore Aliases
 
