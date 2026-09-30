@@ -97,6 +97,32 @@ class backupUtilities:
             copy(leaf, os.path.join(destinationDir, destinationPrefix + 'cert.pem'))
 
     @staticmethod
+    def restoreWebsiteOwnership(domain, homeRoot='/home'):
+        """Remap restored home ownership without changing modes or following links."""
+        import pwd
+        if not domain or domain in ('.', '..') or os.path.basename(domain) != domain:
+            raise ValueError('Invalid restored website domain.')
+        website = Websites.objects.get(domain=domain)
+        owner = pwd.getpwnam(website.externalApp)
+        if owner.pw_uid == 0:
+            raise ValueError('A restored website must have a dedicated non-root owner.')
+        home = os.path.join(homeRoot, domain)
+        home_fd = os.open(home, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            def fail(error):
+                raise error
+            # fwalk pins directories with descriptors and checks for replacement;
+            # ownership calls are relative to those descriptors, not archive paths.
+            for _, directories, files, directory_fd in os.fwalk(
+                    '.', dir_fd=home_fd, follow_symlinks=False, onerror=fail):
+                os.fchown(directory_fd, owner.pw_uid, owner.pw_gid)
+                for name in directories + files:
+                    os.chown(name, owner.pw_uid, owner.pw_gid,
+                             dir_fd=directory_fd, follow_symlinks=False)
+        finally:
+            os.close(home_fd)
+
+    @staticmethod
     def cleanupBackupMeta(metaPath):
         if not metaPath:
             return
@@ -1257,6 +1283,9 @@ class backupUtilities:
 
 
             ## Fix permissions
+
+            if BackupWholeDir:
+                backupUtilities.restoreWebsiteOwnership(masterDomain)
 
             from filemanager.filemanager import FileManager
 

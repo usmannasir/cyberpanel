@@ -137,7 +137,7 @@ class RestoreSSLTests(unittest.TestCase):
         self.assertTrue(installed())
         namespace['shutil'].which.assert_called_with('opendkim-genkey')
 
-    def run_mail_restore(self, mail_services=True, certificates=True, include_leaf=True):
+    def run_mail_restore(self, mail_services=True, certificates=True, include_leaf=True, ownership_error=False):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)
             extracted = root / 'fixture'
@@ -146,6 +146,7 @@ class RestoreSSLTests(unittest.TestCase):
             (extracted / 'meta.xml').write_text('''<metaFile>
                 <masterDomain>example.test</masterDomain><phpSelection>PHP 8.3</phpSelection>
                 <externalApp>example</externalApp><VERSION>3.0</VERSION><BUILD>7</BUILD>
+                <BackupWholeDir>1</BackupWholeDir>
                 <ChildDomains><domain><domain>mail.example.test</domain>
                 <phpSelection>PHP 8.3</phpSelection><path>/home/example.test/mail.example.test</path>
                 </domain></ChildDomains></metaFile>''')
@@ -202,6 +203,8 @@ class RestoreSSLTests(unittest.TestCase):
                              copy=copy_certificate)
             namespace['Administrator'].objects.get.return_value = user
             namespace['backupUtilities'].createWebsiteFromBackup.return_value = (1, 'None')
+            if ownership_error:
+                namespace['backupUtilities'].restoreWebsiteOwnership.side_effect = PermissionError('fixture ownership failure')
             namespace['backupUtilities'].copyCertificateFiles = load_method(
                 'backupUtilities.py', 'backupUtilities', 'copyCertificateFiles', namespace)
             restore = load_method('backupUtilities.py', 'backupUtilities', 'startRestore', namespace)
@@ -209,6 +212,12 @@ class RestoreSSLTests(unittest.TestCase):
                        'filemanager.filemanager': Mock()}
             with patch.dict('sys.modules', modules):
                 restore(str(root / 'fixture.tar.gz'), 'CLI')
+            namespace['backupUtilities'].restoreWebsiteOwnership.assert_called_once_with('example.test')
+            if ownership_error:
+                self.assertIn('[5009]', log.statusWriter.call_args.args[1])
+                self.assertNotIn('Done', [call.args[1] for call in log.statusWriter.call_args_list])
+                namespace['installUtilities'].reStartLiteSpeed.assert_not_called()
+                return
             self.assertEqual('Done', log.statusWriter.call_args.args[1])
             hosts.createDomain.assert_called_once_with(
                 'example.test', 'mail.example.test', 'PHP 8.3',
@@ -230,6 +239,9 @@ class RestoreSSLTests(unittest.TestCase):
 
     def test_main_and_mail_certificates_round_trip_without_optional_leaf(self):
         self.run_mail_restore(include_leaf=False)
+
+    def test_ownership_failure_marks_restore_failed_instead_of_done(self):
+        self.run_mail_restore(ownership_error=True)
 
     def test_incomplete_certificate_pair_does_not_copy_partial_material(self):
         copy_certificate = load_method('backupUtilities.py', 'backupUtilities',
