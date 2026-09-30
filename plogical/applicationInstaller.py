@@ -473,85 +473,119 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
     def convertDomainToSite(self):
-        try:
+        def write_status(message):
+            with open(self.tempStatusPath, 'w') as status_file:
+                status_file.write(message)
 
+        child_deleted = False
+        files_moved = False
+        try:
             from websiteFunctions.website import WebsiteManager
-            import json, time
 
             request = self.extraArgs['request']
-
-            ##
-
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines('Deleting domain as child..,20')
-            statusFile.close()
-
             data = json.loads(request.body)
-
-            if data['package'] == None or data['domainName'] == None or data['adminEmail'] == None \
-                    or data['phpSelection'] == None or data['websiteOwner'] == None:
-                raise BaseException('Please provide all values.')
+            required = ('package', 'domainName', 'adminEmail', 'phpSelection', 'websiteOwner')
+            if any(not data.get(field) for field in required):
+                raise ValueError('Please provide all values.')
 
             domainName = data['domainName']
-
             childDomain = ChildDomains.objects.get(domain=domainName)
             path = childDomain.path
+            destination_home = '/home/%s' % domainName
+            destination = destination_home + '/public_html'
+            source = os.path.realpath(path)
+            master_root = os.path.realpath('/home/%s/public_html' % childDomain.master.domain)
+            # deleteDomain removes /home/<child>. Shared or overlapping roots
+            # cannot be safely converted by moving a single document root.
+            if (source == master_root or master_root.startswith(source.rstrip('/') + '/')
+                    or source == destination_home or source.startswith(destination_home + '/')
+                    or destination_home.startswith(source.rstrip('/') + '/')
+                    or ChildDomains.objects.filter(path=path).exclude(pk=childDomain.pk).exists()):
+                raise ValueError('This document root is shared or overlaps the website directory. '
+                                 'Move the child domain to its own directory before converting.')
 
             wm = WebsiteManager()
+            write_status('Checking conversion requirements..,10')
+            preflight = wm.submitWebsiteCreation(
+                request.session['userID'], data, conversionPreflight=childDomain)
+            preflight_data = json.loads(preflight.content.decode('utf-8'))
+            if preflight_data.get('createWebSiteStatus') != 1:
+                raise ValueError(preflight_data.get('error_message') or 'Website creation validation failed.')
 
-            wm.submitDomainDeletion(request.session['userID'], {'websiteName': domainName})
-            time.sleep(5)
+            exists, unused = ProcessUtilities.outputExecutioner(
+                'test -d %s' % shlex.quote(path), retRequired=True)
+            if not exists:
+                raise ValueError('Child domain document root does not exist: %s' % path)
 
-            ##
+            write_status('Deleting domain as child..,20')
+            deletion = wm.submitDomainDeletion(request.session['userID'], {
+                'websiteName': domainName, 'DeleteDocRoot': 0,
+            })
+            deletion_data = json.loads(deletion.content.decode('utf-8'))
+            if deletion_data.get('websiteDeleteStatus') != 1:
+                raise ValueError(deletion_data.get('error_message') or 'Child domain deletion failed.')
+            if ChildDomains.objects.filter(domain=domainName).exists():
+                raise ValueError('Child domain deletion did not complete.')
+            child_deleted = True
 
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines('Creating domain as website..,40')
-            statusFile.close()
-
+            write_status('Creating domain as website..,40')
             resp = wm.submitWebsiteCreation(request.session['userID'], data)
             respData = json.loads(resp.content.decode('utf-8'))
+            if respData.get('createWebSiteStatus') != 1 or not respData.get('tempStatusPath'):
+                raise ValueError(respData.get('error_message') or 'Website creation did not start.')
 
-            ##
-
-            while True:
-                respDataStatus = ProcessUtilities.outputExecutioner("cat " + respData['tempStatusPath'])
-
-                if respDataStatus.find('[200]') > -1:
+            deadline = time.monotonic() + 600
+            while time.monotonic() < deadline:
+                respDataStatus = ProcessUtilities.outputExecutioner(
+                    'cat -- %s' % shlex.quote(respData['tempStatusPath']))
+                if '[404]' in respDataStatus:
+                    # Status files contain plain text, not the JSON returned by
+                    # the polling endpoint. Preserve the actual creation error.
+                    raise ValueError(respDataStatus.replace('[404]', '').strip())
+                if '[200]' in respDataStatus:
                     break
-                elif respDataStatus.find('[404]') > -1:
-                    statusFile = open(self.tempStatusPath, 'w')
-                    statusFile.writelines(respDataStatus['currentStatus'] + '  [404]')
-                    statusFile.close()
-                    return 0
-                else:
-                    statusFile = open(self.tempStatusPath, 'w')
-                    statusFile.writelines(respDataStatus)
-                    statusFile.close()
-                    time.sleep(1)
+                write_status(respDataStatus)
+                time.sleep(1)
+            else:
+                raise ValueError('Website creation timed out; its worker may still be running. '
+                                 'Check its status before retrying.')
 
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines('Moving data..,80')
-            statusFile.close()
-
-            command = 'rm -rf  /home/%s/public_html' % (domainName)
-            ProcessUtilities.executioner(command)
-
-            command = 'mv %s /home/%s/public_html' % (path, domainName)
-            ProcessUtilities.executioner(command)
+            write_status('Moving data..,80')
+            # Keep the newly generated root until the original content has
+            # moved successfully, and restore it if the move fails.
+            command = (
+                'backup=$(mktemp -d %s) && '
+                'mv -- %s "$backup/public_html" && '
+                'if mv -- %s %s; then rm -rf -- "$backup" || true; '
+                'else mv -- "$backup/public_html" %s; rmdir -- "$backup"; exit 1; fi'
+            ) % (shlex.quote(destination_home + '/.conversion-XXXXXX'),
+                 shlex.quote(destination), shlex.quote(path), shlex.quote(destination),
+                 shlex.quote(destination))
+            moved, output = ProcessUtilities.outputExecutioner(command, retRequired=True)
+            if not moved:
+                raise ValueError('Could not move the original website files: %s' % output)
+            files_moved = True
 
             from filemanager.filemanager import FileManager
-
             fm = FileManager(None, None)
-            fm.fixPermissions(domainName)
-
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines('Successfully converted. [200]')
-            statusFile.close()
+            permission_result = fm.fixPermissions(domainName)
+            # The legacy helper returns None on success, or an HttpResponse
+            # containing status=0 when it refuses to repair permissions.
+            if permission_result is not None:
+                permission_data = json.loads(permission_result.content.decode('utf-8'))
+                if permission_data.get('status') != 1:
+                    raise ValueError(permission_data.get('error_message') or 'Permission repair failed.')
+            write_status('Successfully converted. [200]')
 
         except BaseException as msg:
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines(str(msg) + " [404]")
-            statusFile.close()
+            message = str(msg)
+            if child_deleted:
+                if files_moved:
+                    message += ' Files were moved to %s; the website requires attention.' % destination
+                else:
+                    message += (' Original files remain at %s. The child configuration was removed; '
+                                'restore it or finish website creation before retrying.' % path)
+            write_status(message + ' [404]')
             return 0
 
     def installWPCLI(self):

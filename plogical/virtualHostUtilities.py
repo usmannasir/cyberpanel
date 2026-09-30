@@ -1744,12 +1744,15 @@ class virtualHostUtilities:
         try:
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+            if vhost.deleteCoreConf(virtualHostName, numberOfWebsites) == 0:
+                raise ValueError('Could not remove the child domain configuration. Please check the CyberPanel log.')
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
 
             if DeleteDocRoot:
-                command = 'rm -rf %s' % (delWebsite.path)
-                ProcessUtilities.executioner(command)
+                command = 'rm -rf -- %s' % shlex.quote(delWebsite.path)
+                removed, output = ProcessUtilities.outputExecutioner(command, retRequired=True)
+                if not removed:
+                    raise ValueError('Could not remove the child domain files: %s' % output)
 
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
