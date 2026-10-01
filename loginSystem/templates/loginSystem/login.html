@@ -224,10 +224,6 @@
         }
     </style>
 
-    <style>
-        {{ cosmetic.MainDashboardCSS | safe }}
-    </style>
-
     <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen.css' %}?v=20260924-1">
     <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-evergreen-standalone.css' %}?v=20260924-1">
     <link rel="stylesheet" href="{% static 'baseTemplate/css/cyberpanel-schemes.css' %}?v=20260924-1">
@@ -385,6 +381,7 @@
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
 <script src="{% static 'loginSystem/login-system.js' %}"></script>
 
+{% include "baseTemplate/customCSS.html" %}
 </body>
 
 </html>

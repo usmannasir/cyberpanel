@@ -188,6 +188,8 @@
                 
                 <div class="info-box" style="margin-bottom: 2rem;">
                     <p>{% trans "Any CSS added here will apply to the entire dashboard design." %}</p>
+                    <p>{% trans "Saved CSS loads after the built-in styles, including on the login page. Normal CSS specificity still applies." %}</p>
+                    <p>{% trans "Use the CyberPanel 3.x starter for current color tokens, or use the header's Color scheme menu. Legacy community themes target older layouts and may need changes: the current panel uses #sidebar, #header and #main-content." %}</p>
                 </div>
 
                 <form action="{% url 'design' %}" method="POST">
@@ -202,9 +204,14 @@
                     <div class="form-group">
                         <label class="form-label">{% trans "Select Theme" %}</label>
                         <select ng-change="getthemedata()" ng-model="stheme" id="stheme" class="form-select">
+                            <optgroup label="{% trans 'CyberPanel 3.x' %}">
+                                <option value="cyberpanel-3-starter">{% trans "Custom action colors (starter)" %}</option>
+                            </optgroup>
+                            <optgroup label="{% trans 'Legacy community themes (may need updates)' %}">
                             {% for key in tree %}
                                 <option value="{{ key }}">{{ key }}</option>
                             {% endfor %}
+                            </optgroup>
                         </select>
                     </div>
 

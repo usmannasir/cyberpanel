@@ -454,6 +454,10 @@ def getthemedata(request):
 
         # logging.CyberCPLogFileWriter.writeToFile(str(data) + "  [themedata]")
 
+        if data['Themename'] == 'cyberpanel-3-starter':
+            from baseTemplate.panelThemes import PANEL_V3_STARTER
+            return HttpResponse(json.dumps({'status': 1, 'csscontent': PANEL_V3_STARTER}))
+
         url = "https://raw.githubusercontent.com/usmannasir/CyberPanel-Themes/main/%s/design.css" % data['Themename']
 
         res = requests.get(url)

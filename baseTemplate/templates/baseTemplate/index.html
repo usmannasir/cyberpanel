@@ -23,11 +23,6 @@
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.min.css' %}?v={{ CP_VERSION }}">
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/bootstrap-toggle.min.css' %}?v={{ CP_VERSION }}">
     
-    <!-- Custom CSS -->
-    <style>
-        {{ cosmetic.MainDashboardCSS | safe }}
-    </style>
-    
     <!-- Core Scripts -->
     <style id="cp-ng-cloak-guard">[ng-cloak],[data-ng-cloak],.ng-cloak{display:none !important;}</style>
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}"></script>
@@ -927,6 +922,7 @@
     </script>
     
     {% block footer_scripts %}{% endblock %}
+    {% include "baseTemplate/customCSS.html" %}
 </body>
 </html>
 {% endwith %}
