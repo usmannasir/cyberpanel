@@ -31,6 +31,13 @@ from cyberpanel_version import BUILD, VERSION
 from contextlib import contextmanager
 
 
+def stagger_renewal_cron(data):
+    """Move the stock weekly renewal slot, preserving customized schedules."""
+    return re.sub(
+        r'(?m)^0 0 \* \* 4 (?=/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew\.py(?:[ \t]|$))',
+        '45 4 * * 4 ', data)
+
+
 def install_binary_atomically(source, destination):
     """Keep the installed executable if a release artifact cannot be copied."""
     if not os.path.isfile(source) or os.path.getsize(source) == 0:
@@ -4736,6 +4743,11 @@ vmail
 
         if os.path.exists(cronPath):
             data = open(cronPath, 'r').read()
+            updated = stagger_renewal_cron(data)
+            if updated != data:
+                with open(cronPath, 'w') as cron_file:
+                    cron_file.write(updated)
+                data = updated
 
             if data.find('findBWUsage') == -1:
                 content = """
@@ -4743,7 +4755,7 @@ vmail
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+45 4 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
@@ -4802,7 +4814,7 @@ vmail
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+45 4 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
