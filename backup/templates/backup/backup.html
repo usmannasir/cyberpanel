@@ -237,9 +237,40 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: pulse 2s infinite;
         }
         
+        .backup-state-running .status-icon {
+            animation: pulse 2s infinite;
+        }
+
+        .backup-state-completed {
+            background: var(--success-bg, #dcfce7);
+            border-color: var(--success-border, #86efac);
+        }
+
+        .backup-state-completed .status-icon {
+            background: var(--success-color, #16a34a);
+        }
+
+        .backup-state-completed .status-details h4,
+        .backup-state-completed .status-details p {
+            color: var(--success-text, #166534);
+        }
+
+        .backup-state-failed {
+            background: var(--danger-bg, #fee2e2);
+            border-color: var(--danger-border, #fca5a5);
+        }
+
+        .backup-state-failed .status-icon {
+            background: var(--danger-color, #dc2626);
+        }
+
+        .backup-state-failed .status-details h4,
+        .backup-state-failed .status-details p {
+            color: var(--danger-text, #991b1b);
+        }
+
         .status-details h4 {
             margin: 0;
             color: var(--warning-text, #92400e);
@@ -517,14 +548,19 @@
 
 
                     <!-- Running Backup Status -->
-                    <div ng-hide="runningBackup" class="running-backup-card">
+                    <div ng-hide="runningBackup" class="running-backup-card" ng-class="{'backup-state-running': backupState === 'running', 'backup-state-completed': backupState === 'completed', 'backup-state-failed': backupState === 'failed'}" aria-live="polite">
                         <div class="running-status">
                             <div class="status-info">
                                 <div class="status-icon">
-                                    <i class="fas fa-sync-alt fa-spin" style="color: white;"></i>
+                                    <i class="fas" ng-class="{'fa-sync-alt fa-spin': backupState === 'running', 'fa-check': backupState === 'completed', 'fa-exclamation-triangle': backupState === 'failed', 'fa-info-circle': !backupState}" style="color: white;" aria-hidden="true"></i>
                                 </div>
                                 <div class="status-details">
-                                    <h4>{% trans "Backup in Progress" %}</h4>
+                                    <h4 ng-switch="backupState">
+                                        <span ng-switch-when="running">{% trans "Backup in Progress" %}</span>
+                                        <span ng-switch-when="completed">{% trans "Backup Completed" %}</span>
+                                        <span ng-switch-when="failed">{% trans "Backup Failed" %}</span>
+                                        <span ng-switch-default>{% trans "Backup Status" %}</span>
+                                    </h4>
                                     <p>
                                         <strong>{% trans "File:" %}</strong> {$ fileName $} | 
                                         <strong>{% trans "Status:" %}</strong> {$ status $}

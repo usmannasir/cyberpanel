@@ -559,7 +559,7 @@ class BackupManager:
                 command = "sudo cat " + backupFileNamePath
                 fileName = ProcessUtilities.outputExecutioner(command, domain.externalApp)
                 if fileName.find('No such file or directory') > -1:
-                    final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0, "abort": 0})
+                    final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0, "abort": 0, "state": "idle"})
                     return HttpResponse(final_json)
             except:
                 fileName = "Fetching.."
@@ -585,7 +585,7 @@ class BackupManager:
 
                     final_json = json.dumps(
                         {'backupStatus': 1, 'error_message': "None", "status": status, "abort": 1,
-                         'fileName': fileName, })
+                         'fileName': fileName, 'state': 'completed'})
                     return HttpResponse(final_json)
 
                 elif status.find("[5009]") > -1:
@@ -609,15 +609,15 @@ class BackupManager:
 
                     final_json = json.dumps(
                         {'backupStatus': 1, 'fileName': fileName, 'error_message': "None", "status": status,
-                         "abort": 1})
+                         "abort": 1, "state": "failed"})
                     return HttpResponse(final_json)
                 else:
                     final_json = json.dumps(
                         {'backupStatus': 1, 'error_message': "None", 'fileName': fileName, "status": status,
-                         "abort": 0})
+                         "abort": 0, "state": "running"})
                     return HttpResponse(final_json)
             else:
-                final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0, "abort": 0})
+                final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0, "abort": 0, "state": "idle"})
                 return HttpResponse(final_json)
 
         except BaseException as msg:
