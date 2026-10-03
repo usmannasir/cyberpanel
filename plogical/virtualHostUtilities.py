@@ -33,7 +33,7 @@ from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
-from plogical.domainAliasUtilities import remove_alias_from_map_line
+from plogical.domainAliasUtilities import add_http_alias_mapping, remove_alias_from_map_line
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
@@ -1286,22 +1286,10 @@ class virtualHostUtilities:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                data = open(confPath, 'r').readlines()
-                writeToFile = open(confPath, 'w')
-                listenerTrueCheck = 0
-
-                for items in data:
-                    if items.find("listener") > -1 and items.find("Default") > -1:
-                        listenerTrueCheck = 1
-                    if items.find(' ' + masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
-                        data = [_f for _f in items.split(" ") if _f]
-                        if data[1] == masterDomain:
-                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
-                            listenerTrueCheck = 0
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+                with open(confPath, 'r') as config_file:
+                    updated = add_http_alias_mapping(config_file.read(), masterDomain, aliasDomain)
+                with open(confPath, 'w') as config_file:
+                    config_file.write(updated)
             else:
                 completePathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
                 data = open(completePathToConf, 'r').readlines()
