@@ -701,9 +701,10 @@ def scan_callback(request):
             if completed_at:
                 try:
                     # Parse ISO format datetime
-                    completed_datetime = datetime.datetime.fromisoformat(completed_at.replace('Z', '+00:00'))
+                    from plogical.isoTime import parse_iso_datetime
+                    completed_datetime = parse_iso_datetime(completed_at.replace('Z', '+00:00'))
                     scan_record.completed_at = completed_datetime
-                except ValueError:
+                except (TypeError, ValueError):
                     scan_record.completed_at = timezone.now()
             else:
                 scan_record.completed_at = timezone.now()
