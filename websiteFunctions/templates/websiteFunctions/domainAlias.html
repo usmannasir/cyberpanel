@@ -1,236 +1,109 @@
 {% extends "baseTemplate/index.html" %}
-{% load static %}
-{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>{% endblock %}
-{% load i18n %}
+{% load static i18n %}
 {% block title %}{% trans "Domain Aliases - CyberPanel" %}{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>{% endblock %}
+{% block header_scripts %}
+<style>
+.alias-page { max-width:1400px; margin:0 auto; padding:24px; color:var(--text-primary,#2f3640); }
+.alias-page * { box-sizing:border-box; }
+.alias-header { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
+.alias-header h1 { margin:0 0 8px; font-size:28px; font-weight:700; color:var(--text-primary,#2f3640); }
+.alias-page p { margin:0; color:var(--text-secondary,#667085); line-height:1.6; }
+.alias-page .alias-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; padding:9px 16px; border:1px solid var(--border-primary,#e3e7ef); border-radius:8px; background:var(--bg-primary,#fff); color:var(--text-primary,#2f3640); font-size:13px; font-weight:600; text-decoration:none; cursor:pointer; white-space:nowrap; }
+.alias-page .alias-btn-primary { color:var(--cp-action-text,#fff); background:var(--cp-action,#5b5fcf); border-color:var(--cp-action,#5b5fcf); }
+.alias-page .alias-btn-danger { color:var(--danger-color,#dc3545); }
+.alias-page .alias-btn:hover { filter:brightness(.94); }
+.alias-page .alias-btn:focus-visible, .alias-page input:focus-visible { outline:3px solid var(--accent-color,#a8abef); outline-offset:2px; }
+.alias-page .alias-btn:disabled { opacity:.55; cursor:wait; }
+.alias-card { background:var(--bg-primary,#fff); border:1px solid var(--border-primary,#e3e7ef); border-radius:12px; margin-bottom:20px; overflow:hidden; }
+.alias-context { padding:20px 24px; display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.alias-label { display:block; font-size:12px; font-weight:600; color:var(--text-secondary,#667085); margin-bottom:6px; }
+.alias-value { font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.alias-path { font-family:monospace; font-size:13px; font-weight:400; }
+.alias-form { padding:24px; }
+.alias-form h2, .alias-list-heading { font-size:17px; font-weight:600; margin:0; color:var(--text-primary,#2f3640); }
+.alias-form h2 { margin-bottom:18px; }
+.alias-form-fields { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:24px; }
+.alias-page .alias-input { width:100%; min-height:42px; padding:10px 12px; border:1px solid var(--border-primary,#d5dae3); border-radius:8px; background:var(--bg-secondary,#f8fafc); color:var(--text-primary,#2f3640); font-size:14px; }
+.alias-checkbox { display:flex; align-items:center; gap:9px; margin:20px 0 0; font-size:14px; font-weight:400; }
+.alias-checkbox input { margin:0; }
+.alias-form-actions { display:flex; gap:10px; margin-top:20px; }
+.alias-list-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 24px; border-bottom:1px solid var(--border-primary,#e3e7ef); }
+.alias-count { display:inline-block; margin-left:8px; padding:3px 8px; border-radius:20px; background:var(--bg-secondary,#f1f3f9); color:var(--text-secondary,#667085); font-size:12px; }
+.alias-table { width:100%; table-layout:fixed; border-collapse:collapse; }
+.alias-table th { text-align:left; padding:12px 24px; color:var(--text-secondary,#667085); background:var(--bg-secondary,#f8fafc); font-size:12px; font-weight:600; }
+.alias-table td { padding:18px 24px; border-top:1px solid var(--border-primary,#e3e7ef); vertical-align:middle; }
+.alias-table th:last-child { width:270px; }
+.alias-domain { font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.alias-domain a { color:var(--text-primary,#2f3640); text-decoration:none; }
+.alias-domain a:hover { color:var(--accent-color,#5b5fcf); text-decoration:underline; }
+.alias-domain small { display:block; margin-top:5px; font-size:12px; font-weight:400; color:var(--text-secondary,#667085); }
+.alias-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.alias-empty { padding:44px 24px; text-align:center; }
+.alias-empty h3 { margin:0 0 8px; font-size:17px; color:var(--text-primary,#2f3640); }
+.alias-page .alert { margin-bottom:16px; border-radius:8px; overflow-wrap:anywhere; }
+.alias-busy { padding:12px 0; color:var(--text-secondary,#667085); }
+@media(max-width:767px) {
+ .alias-page { padding:16px 12px; }
+ .alias-header { align-items:flex-start; flex-direction:column; gap:14px; }
+ .alias-header h1 { font-size:24px; }
+ .alias-context, .alias-form-fields { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .alias-context, .alias-form { padding:18px; }
+ .alias-checkbox { margin-top:0; }
+ .alias-list-header { padding:18px; }
+ .alias-table thead { display:none; }
+ .alias-table, .alias-table tbody, .alias-table tr, .alias-table td { display:block; width:100%; }
+ .alias-table tr { padding:18px; border-top:1px solid var(--border-primary,#e3e7ef); }
+ .alias-table tr:first-child { border-top:0; }
+ .alias-table td { border:0; padding:0; }
+ .alias-table td + td { padding-top:14px; }
+ .alias-actions { justify-content:flex-start; }
+}
+</style>
+{% endblock %}
 {% block content %}
-
-    {% load static %}
-    {% get_current_language as LANGUAGE_CODE %}
-    <!-- Current language: {{ LANGUAGE_CODE }} -->
-
-    <div ng-controller="manageAliasController" class="container">
-        <div id="page-title">
-            <h2>{% trans "Domain Aliases" %}</h2>
-            <p>{% trans "With Domain Aliases you can visit example.com using example.net and view the same content." %}</p>
-        </div>
-
-        <div class="panel">
-            <div class="panel-body">
-                <h3 class="title-hero">
-                    {% trans "Domain Aliases" %} <img ng-hide="domainLoading"
-                                                      src="{% static 'images/loading.gif' %}">
-                </h3>
-                <div class="example-box-wrapper">
-
-
-                <span id="domainNamePage" style="display: none">{{ masterDomain }}</span>
-                <span id="aliasDeleteConfirmation" style="display: none">{% trans "Are you sure you want to delete this alias?" %}</span>
-
-
-                    <form action="/" class="form-horizontal bordered-row">
-
-                        <!------ Modification form that appears after a click --------------->
-                        <div ng-hide="addAliasButton" class="form-group">
-                            <div class="col-sm-4">
-                                <button ng-click="showAliasForm('{{ masterDomain }}')"
-                                        class="btn ra-100 btn-blue-alt">{% trans 'Create Alias' %}</button>
-                            </div>
-                        </div>
-
-                    </form>
-
-                    <!---------- HTML For creating domains --------------->
-                    <div class="col-md-12 mx-10">
-                        <form id="domainCreationForm" name="websiteCreationForm" action="/"
-                              class="form-horizontal bordered-row">
-
-                            <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
-                                <div class="col-sm-6">
-                                    <input name="dom" type="text" class="form-control"
-                                           ng-model="aliasDomain" ng-keypress="createAliasEnter($event)" required>
-                                </div>
-                                <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                    <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div ng-hide="installationDetailsForm"
-                                 class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
-                                <div class="col-sm-9">
-                                    <div class="checkbox">
-                                        <label>
-                                            <input ng-model="sslCheck" type="checkbox" value="">
-                                            SSL
-                                        </label>
-                                    </div>
-                                </div>
-                                <label class="col-sm-3 control-label"></label>
-                            </div>
-
-                            <div ng-hide="installationDetailsForm" class="form-group">
-                                <label class="col-sm-3 control-label"></label>
-                                <div class="col-sm-4">
-                                    <button type="button" ng-click="addAliasFunc()"
-                                            class="btn btn-primary btn-lg">{% trans "Create Alias" %}</button>
-
-                                </div>
-                            </div>
-
-                            <div ng-hide="installationProgress" class="form-group">
-                                <label class="col-sm-2 control-label"></label>
-                                <div class="col-sm-7">
-
-                                    <div class="alert alert-success text-center">
-                                        <h2>{$ currentStatus $}</h2>
-                                    </div>
-
-                                    <div class="progress">
-                                        <div id="installProgress" class="progress-bar" role="progressbar"
-                                             aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"
-                                             style="width:0%">
-                                            <span class="sr-only">70% Complete</span>
-                                        </div>
-                                    </div>
-
-                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
-                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
-                                    </div>
-
-                                    <div ng-hide="success" class="alert alert-success">
-                                        <p>{% trans "Alias successfully created." %}</p>
-                                    </div>
-
-
-                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                    </div>
-
-
-                                </div>
-                            </div>
-
-                            <div style="margin-bottom: 1%" ng-hide="installationProgress" class="form-group">
-                                <label class="col-sm-3 control-label"></label>
-                                <div class="col-sm-4">
-                                    <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
-                                            class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
-                                </div>
-                            </div>
-
-
-                        </form>
-                    </div>
-
-                    <!---------- HTML For creating domains --------------->
-
-                    <!---------- HTML For Listing domains --------------->
-
-                    <div id="listDomains" class="col-md-12 mx-10">
-
-                        <form ng-hide="" class="form-horizontal bordered-row">
-
-
-                            <div ng-hide="phpChanged" class="alert alert-success">
-                                <p>{% trans "PHP Version Changed to:" %} {$ changedPHPVersion $} </p>
-                            </div>
-
-                            <div ng-hide="domainDeleted" class="alert alert-success">
-                                <p>{% trans "Deleted:" %} {$ deletedDomain $} </p>
-                            </div>
-
-                            <div ng-hide="sslIssued" class="alert alert-success">
-                                <p>{% trans "SSL Issued:" %} {$ sslDomainIssued $} </p>
-                            </div>
-
-                            <div ng-hide="childBaseDirChanged" class="alert alert-success">
-                                <p>{% trans "Changes applied successfully." %} </p>
-                            </div>
-
-
-                            <div ng-hide="domainError" class="alert alert-danger">
-                                <p>{$ errorMessage $}</p>
-                            </div>
-
-
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
-
-
-                            <div ng-hide="" class="form-group">
-
-                                <div class="col-sm-11">
-                                    <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
-                                           type="text" class="form-control"
-                                           required>
-                                </div>
-
-                                <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                    <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                    </a>
-                                </div>
-
-
-                                <div class="col-sm-12">
-                                    <table class="table">
-                                        <thead>
-                                        <tr>
-                                            <th>Domain</th>
-                                            <th>Launch</th>
-                                            <th>Path</th>
-                                            <th>SSL</th>
-                                            <th>Delete</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for alias in aliases %}
-                                        <tr>
-                                            <td>{{ alias }}</td>
-                                            <td><a href="//{{ alias }}" target="_blank"><img width="30px" height="30"
-                                                                                       class="center-block"
-                                                                                       src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
-                                            </td>
-                                            <td>{{ path }}</td>
-                                            <td>
-                                                <button type="button"
-                                                        ng-click="issueSSL('{{ masterDomain }}','{{ alias }}')"
-                                                        class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
-                                            </td>
-                                            <td>
-                                                <button type="button"
-                                                        ng-click="confirmRemoveAlias('{{ masterDomain }}','{{ alias }}')"
-                                                        class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="5">{% trans "No domain aliases have been added yet." %}</td>
-                                        </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-
-                        </form>
-
-                    </div>
-
-                    <!---------- HTML For Listing domains --------------->
-
-                </div>
-            </div>
-        </div>
-
-
+<div class="alias-page" ng-controller="manageAliasController">
+    <span id="domainNamePage" hidden>{{ masterDomain }}</span>
+    <span id="aliasDeleteConfirmation" hidden>{% trans "Are you sure you want to delete this alias?" %}</span>
+    <header class="alias-header">
+        <div><h1>{% trans "Domain Aliases" %}</h1><p>{% trans "Let additional domains display the same content as your website." %}</p></div>
+        <button type="button" class="alias-btn alias-btn-primary" ng-click="showAliasForm('{{ masterDomain }}')" ng-disabled="!manageAliasLoading">{% trans "Create Alias" %}</button>
+    </header>
+    <section class="alias-card alias-context" aria-label="{% trans 'Website details' %}">
+        <div><span class="alias-label">{% trans "Website" %}</span><div class="alias-value">{{ masterDomain }}</div></div>
+        <div><span class="alias-label">{% trans "Shared document root" %}</span><div class="alias-value alias-path">{{ path }}</div></div>
+    </section>
+    <div aria-live="polite" ng-cloak>
+        <div class="alias-busy" ng-hide="manageAliasLoading" role="status">{% trans "Working… Please wait." %}</div>
+        <div class="alert alert-danger" ng-hide="aliasError" role="alert">{$ errorMessage $}</div>
+        <div class="alert alert-danger" ng-hide="couldNotConnect" role="alert">{% trans "Could not connect to server. Please refresh this page." %}</div>
+        <div class="alert alert-success" ng-hide="aliasCreated">{% trans "Alias successfully created. Refreshing the list…" %}</div>
+        <div class="alert alert-success" ng-hide="operationSuccess">{% trans "Operation completed successfully." %}</div>
     </div>
-
-
+    <form id="domainCreationForm" name="websiteCreationForm" class="alias-card alias-form" style="display:none" action="/">
+        <h2>{% trans "New alias" %}</h2>
+        <div class="alias-form-fields">
+            <div><label class="alias-label" for="alias-domain">{% trans "Domain name" %}</label><input id="alias-domain" name="dom" type="text" class="alias-input" placeholder="alias.example.com" ng-model="aliasDomain" ng-keypress="createAliasEnter($event)" ng-disabled="!manageAliasLoading" autocomplete="off" required></div>
+            <label class="alias-checkbox" for="alias-ssl"><input id="alias-ssl" ng-model="sslCheck" type="checkbox" ng-disabled="!manageAliasLoading">{% trans "Issue SSL certificate" %}</label>
+        </div>
+        <div class="alias-form-actions"><button type="button" class="alias-btn alias-btn-primary" ng-click="addAliasFunc()" ng-disabled="!manageAliasLoading || !aliasDomain">{% trans "Create Alias" %}</button><button type="button" class="alias-btn" ng-click="hideDomainCreationForm()" ng-disabled="!manageAliasLoading">{% trans "Cancel" %}</button></div>
+    </form>
+    <section class="alias-card alias-form" ng-show="pendingAlias" ng-cloak role="alertdialog" aria-labelledby="alias-delete-title" aria-describedby="alias-delete-description">
+        <h2 id="alias-delete-title">{% trans "Delete this alias?" %}</h2>
+        <p id="alias-delete-description"><strong>{$ pendingAlias $}</strong><br>{% trans "The alias will stop serving this website. Your website’s files will be kept." %}</p>
+        <div class="alias-form-actions"><button type="button" class="alias-btn alias-btn-danger" ng-click="removeAlias(masterDomain, pendingAlias); pendingAlias = ''" ng-disabled="!manageAliasLoading">{% trans "Confirm Delete" %}</button><button type="button" class="alias-btn" ng-click="pendingAlias = ''">{% trans "Cancel" %}</button></div>
+    </section>
+    <section class="alias-card" aria-label="{% trans 'Alias list' %}">
+        <div class="alias-list-header"><h2 class="alias-list-heading">{% trans "Aliases" %}<span class="alias-count">{{ aliases|length }}</span></h2></div>
+        {% if aliases %}
+        <table class="alias-table"><thead><tr><th scope="col">{% trans "Domain" %}</th><th scope="col" style="text-align:right">{% trans "Actions" %}</th></tr></thead><tbody>
+        {% for alias in aliases %}
+            <tr><td class="alias-domain"><a href="http://{{ alias }}" target="_blank" rel="noopener noreferrer" title="{% trans 'Open website in a new tab' %}">{{ alias }} <span aria-hidden="true">↗</span></a><small>{% trans "Uses your website’s content" %}</small></td><td><div class="alias-actions"><button type="button" class="alias-btn" ng-click="issueSSL('{{ masterDomain }}','{{ alias }}')" ng-disabled="!manageAliasLoading">{% trans "Issue SSL" %}</button><button type="button" class="alias-btn alias-btn-danger" ng-click="pendingAlias = '{{ alias }}'" ng-disabled="!manageAliasLoading">{% trans "Delete" %}</button></div></td></tr>
+        {% endfor %}
+        </tbody></table>
+        {% else %}
+        <div class="alias-empty"><h3>{% trans "No aliases yet" %}</h3><p>{% trans "Create an alias to make another domain show this website’s content." %}</p></div>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

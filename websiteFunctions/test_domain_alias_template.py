@@ -14,7 +14,9 @@ class DomainAliasTemplateTests(unittest.TestCase):
 
         self.assertIn('ng-click="addAliasFunc()"', template)
         self.assertIn('ng-model="aliasDomain"', template)
-        self.assertIn('confirmRemoveAlias', template)
+        self.assertIn("pendingAlias = '{{ alias }}'", template)
+        self.assertIn('removeAlias(masterDomain, pendingAlias)', template)
+        self.assertIn('Confirm Delete', template)
         self.assertIn('{% for alias in aliases %}', template)
         self.assertIsNone(re.search(r'ng-click="createDomain\(\)"', template))
         self.assertIsNone(re.search(r'ng-model="domainNameCreate"', template))
