@@ -1,7 +1,7 @@
 /* Apply saved appearance before paint, including on standalone tools. */
 (function () {
     'use strict';
-    var schemes = ['evergreen', 'ocean', 'cloud', 'violet', 'slate'];
+    var schemes = ['evergreen', 'ocean', 'cloud', 'violet', 'slate', 'bright', 'apple'];
     var root = document.documentElement;
     var selected = 'evergreen';
     try {

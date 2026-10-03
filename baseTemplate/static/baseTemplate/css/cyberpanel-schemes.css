@@ -376,6 +376,199 @@ html.cp-evergreen[data-color-scheme="slate"][data-theme="dark"] {
     --skeleton-shine: hsl(215 20% 28%);
 }
 
+html.cp-evergreen[data-color-scheme="bright"]:not([data-theme="dark"]) {
+    --bg-primary: #fffaf6;
+    --cp-cream: #fffaf6;
+    --bg-secondary: #ffffff;
+    --cp-surface: #ffffff;
+    --bg-tertiary: #fff0e8;
+    --bg-sidebar: #fff0e8;
+    --bg-muted: #fff0e8;
+    --bg-light: #fff0e8;
+    --table-head-bg: #fff0e8;
+    --bg-code: #fff0e8;
+    --bg-hover: #ffe6d7;
+    --text-primary: #202b3b;
+    --text-heading: #111c2c;
+    --text-dark: #111c2c;
+    --cp-ink: #111c2c;
+    --text-secondary: #526070;
+    --table-head-text: #526070;
+    --text-muted: #657181;
+    --border-color: #e8d6ca;
+    --border-soft: #e8d6ca;
+    --border-light: #e8d6ca;
+    --border-primary: #e8d6ca;
+    --cp-border-strong: #bd9d89;
+    --accent-color: #005bd6;
+    --primary-color: #005bd6;
+    --purple-color: #005bd6;
+    --purple-text: #005bd6;
+    --focus-ring: #005bd6;
+    --accent-hover: #0043a3;
+    --primary-hover: #0043a3;
+    --cp-action-hover: #0043a3;
+    --accent-bg: #fff0e8;
+    --accent-light: #fff0e8;
+    --accent-soft-bg: #fff0e8;
+    --primary-light: #fff0e8;
+    --primary-bg: #fff0e8;
+    --purple-bg: #fff0e8;
+    --cp-selection: #fff0e8;
+    --cp-mint: #fff0e8;
+    --ai-banner-bg: #fff0e8;
+    --cp-selection-text: #913d24;
+    --text-on-accent: #ffffff;
+    --cp-action: #005bd6;
+    --cp-action-text: #ffffff;
+    --skeleton-base: #ece1d9;
+    --skeleton-shine: #fffaf6;
+}
+html.cp-evergreen[data-color-scheme="bright"][data-theme="dark"] {
+    --bg-primary: #101923;
+    --cp-cream: #101923;
+    --bg-secondary: #172535;
+    --cp-surface: #172535;
+    --bg-tertiary: #203449;
+    --bg-sidebar: #203449;
+    --bg-muted: #203449;
+    --bg-light: #203449;
+    --table-head-bg: #203449;
+    --bg-code: #203449;
+    --bg-hover: #29445c;
+    --text-primary: #eef7ff;
+    --text-heading: #ffffff;
+    --text-dark: #ffffff;
+    --cp-ink: #ffffff;
+    --text-secondary: #b7cbdd;
+    --table-head-text: #b7cbdd;
+    --text-muted: #a1b7c9;
+    --border-color: #354e65;
+    --border-soft: #354e65;
+    --border-light: #354e65;
+    --border-primary: #354e65;
+    --cp-border-strong: #6c91ac;
+    --accent-color: #65d4ff;
+    --primary-color: #65d4ff;
+    --purple-color: #65d4ff;
+    --purple-text: #65d4ff;
+    --focus-ring: #65d4ff;
+    --accent-hover: #a2e6ff;
+    --primary-hover: #a2e6ff;
+    --cp-action-hover: #a2e6ff;
+    --accent-bg: #403029;
+    --accent-light: #403029;
+    --accent-soft-bg: #403029;
+    --primary-light: #403029;
+    --primary-bg: #403029;
+    --purple-bg: #403029;
+    --cp-selection: #403029;
+    --cp-mint: #403029;
+    --ai-banner-bg: #403029;
+    --cp-selection-text: #ffd0ba;
+    --text-on-accent: #102535;
+    --cp-action: #65d4ff;
+    --cp-action-text: #102535;
+    --skeleton-base: #263d51;
+    --skeleton-shine: #34526c;
+}
+html.cp-evergreen[data-color-scheme="apple"]:not([data-theme="dark"]) {
+    --bg-primary: #f5f5f7;
+    --cp-cream: #f5f5f7;
+    --bg-secondary: #ffffff;
+    --cp-surface: #ffffff;
+    --bg-tertiary: #ededf0;
+    --bg-sidebar: #ededf0;
+    --bg-muted: #ededf0;
+    --bg-light: #ededf0;
+    --table-head-bg: #ededf0;
+    --bg-code: #ededf0;
+    --bg-hover: #e5e5ea;
+    --text-primary: #1d1d1f;
+    --text-heading: #111113;
+    --text-dark: #111113;
+    --cp-ink: #111113;
+    --text-secondary: #515154;
+    --table-head-text: #515154;
+    --text-muted: #636366;
+    --border-color: #d2d2d7;
+    --border-soft: #d2d2d7;
+    --border-light: #d2d2d7;
+    --border-primary: #d2d2d7;
+    --cp-border-strong: #a1a1a6;
+    --accent-color: #0066cc;
+    --primary-color: #0066cc;
+    --purple-color: #0066cc;
+    --purple-text: #0066cc;
+    --focus-ring: #0066cc;
+    --accent-hover: #004f9e;
+    --primary-hover: #004f9e;
+    --cp-action-hover: #004f9e;
+    --accent-bg: #eaf2fc;
+    --accent-light: #eaf2fc;
+    --accent-soft-bg: #eaf2fc;
+    --primary-light: #eaf2fc;
+    --primary-bg: #eaf2fc;
+    --purple-bg: #eaf2fc;
+    --cp-selection: #eaf2fc;
+    --cp-mint: #eaf2fc;
+    --ai-banner-bg: #eaf2fc;
+    --cp-selection-text: #0055aa;
+    --text-on-accent: #ffffff;
+    --cp-action: #0066cc;
+    --cp-action-text: #ffffff;
+    --skeleton-base: #e5e5ea;
+    --skeleton-shine: #f5f5f7;
+}
+html.cp-evergreen[data-color-scheme="apple"][data-theme="dark"] {
+    --bg-primary: #111113;
+    --cp-cream: #111113;
+    --bg-secondary: #1c1c1e;
+    --cp-surface: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    --bg-sidebar: #2c2c2e;
+    --bg-muted: #2c2c2e;
+    --bg-light: #2c2c2e;
+    --table-head-bg: #2c2c2e;
+    --bg-code: #2c2c2e;
+    --bg-hover: #38383a;
+    --text-primary: #f5f5f7;
+    --text-heading: #ffffff;
+    --text-dark: #ffffff;
+    --cp-ink: #ffffff;
+    --text-secondary: #c7c7cc;
+    --table-head-text: #c7c7cc;
+    --text-muted: #aeaeb2;
+    --border-color: #48484a;
+    --border-soft: #48484a;
+    --border-light: #48484a;
+    --border-primary: #48484a;
+    --cp-border-strong: #707074;
+    --accent-color: #70b7ff;
+    --primary-color: #70b7ff;
+    --purple-color: #70b7ff;
+    --purple-text: #70b7ff;
+    --focus-ring: #70b7ff;
+    --accent-hover: #a1d0ff;
+    --primary-hover: #a1d0ff;
+    --cp-action-hover: #a1d0ff;
+    --accent-bg: #1a304a;
+    --accent-light: #1a304a;
+    --accent-soft-bg: #1a304a;
+    --primary-light: #1a304a;
+    --primary-bg: #1a304a;
+    --purple-bg: #1a304a;
+    --cp-selection: #1a304a;
+    --cp-mint: #1a304a;
+    --ai-banner-bg: #1a304a;
+    --cp-selection-text: #a1d0ff;
+    --text-on-accent: #101c2a;
+    --cp-action: #70b7ff;
+    --cp-action-text: #101c2a;
+    --skeleton-base: #2c2c2e;
+    --skeleton-shine: #3a3a3c;
+}
+
 html.cp-evergreen[data-color-scheme]:not([data-color-scheme="evergreen"]) {
  --cp-sa-paper: var(--bg-primary); --cp-sa-surface: var(--bg-secondary);
  --cp-sa-mint: var(--cp-selection); --cp-sa-ink: var(--text-primary);
@@ -383,7 +576,7 @@ html.cp-evergreen[data-color-scheme]:not([data-color-scheme="evergreen"]) {
  --cp-sa-orange: var(--cp-action); --cp-sa-accent-ink: var(--cp-action-text); --cp-sa-focus: var(--focus-ring);
 }
 .cp-appearance { position: relative; }
-.cp-appearance-panel { position: absolute; right: 0; top: 52px; width: 280px; padding: 18px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); box-shadow: var(--cp-shadow-popover); z-index: 1100; }
+.cp-appearance-panel { position: absolute; right: 0; top: 52px; width: 280px; max-height: calc(100dvh - 90px); overflow-y: auto; padding: 18px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); box-shadow: var(--cp-shadow-popover); z-index: 1100; }
 .cp-appearance-panel[hidden] { display: none; }
 .cp-appearance-panel h2 { margin: 0 0 6px; font-size: 16px; color: var(--text-heading); }
 .cp-appearance-panel p { margin: 0 0 14px; font-size: 12px; color: var(--text-secondary); }
@@ -398,3 +591,10 @@ html.cp-evergreen.cp-auth[data-color-scheme]:not([data-color-scheme="evergreen"]
 html.cp-evergreen.cp-auth[data-color-scheme]:not([data-color-scheme="evergreen"]) .col-login-left > .row:first-child > .text-center::after { border-color: var(--cp-action-hover); box-shadow: 0 7px 0 var(--cp-action-hover); }
 html.cp-evergreen.cp-auth[data-color-scheme]:not([data-color-scheme="evergreen"]) :is(.btn-login, .wm-login-btn) { background: var(--cp-action) !important; border-color: var(--cp-action) !important; color: var(--cp-action-text) !important; }
 html.cp-evergreen[data-color-scheme]:not([data-color-scheme="evergreen"]):is(.cp-auth,.cp-filemanager,.cp-fileeditor) :is(.btn-login,.wm-login-btn,.btn-primary,.btn-success,.btn-light):hover { background: var(--cp-action-hover) !important; border-color: var(--cp-action-hover) !important; color: var(--cp-action-text) !important; }
+
+/* Keep shared promotional content readable on narrow screens. */
+@media (max-width: 767px) {
+    #cyberedge-panel-promo { flex-direction: column; align-items: stretch !important; margin-left: 12px !important; margin-right: 12px !important; }
+    #cyberedge-panel-promo > div { min-width: 0; width: 100%; }
+    #cyberedge-panel-promo > div:last-child { flex-wrap: wrap; justify-content: flex-start; }
+}
