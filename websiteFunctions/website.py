@@ -81,9 +81,11 @@ def storage_card_context(website, now=None):
     except (TypeError, ValueError):
         cached = {}
 
+    from plogical.isoTime import parse_iso_datetime
+
     def recent(value):
         try:
-            timestamp = datetime.fromisoformat(value)
+            timestamp = parse_iso_datetime(value)
             if timestamp.tzinfo is None:
                 return None
             # The installed statistics schedule runs daily. Allow a delayed run
