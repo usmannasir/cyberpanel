@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load static %}
-{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20261006-staging-sync"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "WordPress Manager - CyberPanel" %}{% endblock %}
 {% block content %}
@@ -777,6 +777,11 @@
                 flex-wrap: wrap;
             }
         }
+        #DeployToProduction .alert { display: block; }
+        #DeployToProduction .alert strong { display: block; margin-bottom: 8px; }
+        #DeployToProduction .progress,
+        #DeployToProduction .progress-bar { height: 22px; min-height: 22px; line-height: 22px; }
+        #DeployToProduction .progress-bar { font-size: 12px; }
     </style>
 
     <script>
@@ -805,6 +810,49 @@
     <div style="display: none" id="WPid">{{ wpsite.id }}</div>
 
     <div ng-controller="WPsiteHome" class="wp-container">
+        <div class="modal fade" id="DeployToProduction" tabindex="-1" role="dialog"
+             aria-labelledby="productionSyncTitle" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                                ng-disabled="productionSync.busy"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="productionSyncTitle">{% trans "Sync to Production" %}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <strong>{% trans "Back up production before continuing." %}</strong>
+                            <p>{% trans "This replaces the production database with the staging database and copies staging WordPress content (wp-content) to the live site. New live orders, form submissions, and other database changes made since staging was created can be overwritten. This is not a selective merge." %}</p>
+                        </div>
+                        <p>{% trans "Schedule the deployment and protect current live data. Check the live site after the sync finishes." %}</p>
+                        <label ng-hide="productionSync.submitted">
+                            <input type="checkbox" ng-model="productionSync.acknowledged">
+                            {% trans "I have a current production backup and understand what will be replaced." %}
+                        </label>
+                        <div ng-show="productionSync.submitted" aria-live="polite">
+                            <p ng-bind="productionSync.message"></p>
+                            <div class="progress" ng-show="productionSync.busy || productionSync.complete">
+                                <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                                     ng-attr-aria-valuenow="{$ productionSync.progress $}"
+                                     ng-style="{'width': productionSync.progress + '%'}">
+                                    <span ng-bind="productionSync.progress + '%'"></span>
+                                </div>
+                            </div>
+                            <div class="alert alert-danger" ng-show="productionSync.error" ng-bind="productionSync.error"></div>
+                            <div class="alert alert-success" ng-show="productionSync.complete">{% trans "Production sync completed." %}</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-disabled="productionSync.busy">{% trans "Close" %}</button>
+                        <button type="button" class="btn btn-primary" ng-click="FinalDeployToProduction()"
+                                ng-disabled="!productionSync.acknowledged || productionSync.submitted">
+                            {% trans "Sync to Production" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <div class="wp-page-header">
             <h2>{{ wpsite.title }}</h2>

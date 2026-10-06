@@ -8733,68 +8733,65 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         console.log('Rows in table after append:', $('#stagingListBody').find('tr').length + ' in stagingListBody, ' + $('#StagingBody').find('tr').length + ' in StagingBody');
     }
 
+    // Production sync owns its status path; staging creation and backups have separate progress.
+    var productionSyncTimer;
+    $scope.productionSync = { acknowledged: false, busy: false, submitted: false, progress: 0 };
+
     $scope.FinalDeployToProduction = function () {
+        var sync = $scope.productionSync;
+        if (!sync.acknowledged || sync.submitted) return;
+        sync.submitted = true;
+        sync.busy = true;
+        sync.error = '';
+        sync.message = 'Starting production sync...';
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        var data = { WPid: $('#WPid').html(), StagingID: DeploytoProductionID };
 
-        $('#wordpresshomeloading').show();
-
-        $scope.wordpresshomeloading = false;
-        $scope.stagingDetailsForm = true;
-        $scope.installationProgress = false;
-        $scope.errorMessageBox = true;
-        $scope.success = true;
-        $scope.couldNotConnect = true;
-        $scope.goBackDisable = true;
-
-        var data = {
-            WPid: $('#WPid').html(),
-            StagingID: DeploytoProductionID
+        function fail(message) {
+            sync.busy = false;
+            sync.error = message;
         }
 
-        var url = "/websites/DeploytoProduction";
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-        function ListInitialDatas(response) {
-
-            $('#wordpresshomeloading').hide();
-            if (response.data.status === 1) {
-                new PNotify({
-                    title: 'Success!',
-                    text: 'Deploy To Production start!.',
-                    type: 'success'
-                });
-                statusFile = response.data.tempStatusPath;
-                getCreationStatus();
-
-            } else {
-                new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
-                    type: 'error'
-                });
-
-            }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $('#wordpresshomeloading').hide();
-            new PNotify({
-                title: 'Operation Failed!',
-                text: response,
-                type: 'error'
+        function poll(path) {
+            $http.post('/websites/installWordpressStatus', { statusFile: path }, config).then(function (response) {
+                var result = response.data;
+                if (result.abort === 1) {
+                    sync.busy = false;
+                    if (result.installStatus === 1) {
+                        sync.progress = 100;
+                        sync.complete = true;
+                        sync.message = 'Production sync completed. Check the live site before accepting new changes.';
+                    } else {
+                        fail(result.error_message || 'Production sync failed. Check the live site and your backup before retrying.');
+                    }
+                    return;
+                }
+                sync.progress = Math.max(0, Math.min(100, parseInt(result.installationProgress, 10) || 0));
+                sync.message = result.currentStatus || 'Production sync is running...';
+                productionSyncTimer = $timeout(function () { poll(path); }, 2000);
+            }, function () {
+                fail('Could not read sync status. The sync may still be running. Refresh and check the live site before retrying.');
             });
-
         }
 
+        $http.post('/websites/DeploytoProduction', data, config).then(function (response) {
+            if (response.data.status === 1 && response.data.tempStatusPath) {
+                poll(response.data.tempStatusPath);
+            } else {
+                fail(response.data.error_message || 'Could not start production sync. Refresh before retrying.');
+            }
+        }, function () {
+            fail('Could not confirm whether the sync started. Refresh and check the live site before retrying.');
+        });
     };
+
+    $('#DeployToProduction').on('hide.bs.modal.productionSync', function (event) {
+        if ($scope.productionSync.busy) event.preventDefault();
+    });
+    $scope.$on('$destroy', function () {
+        $timeout.cancel(productionSyncTimer);
+        $('#DeployToProduction').off('.productionSync');
+    });
 
 
     $scope.CreateBackup = function () {
