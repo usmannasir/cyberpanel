@@ -237,8 +237,9 @@ The admin session doesn't have an active CyberMail connection. Click "Get Starte
 ### Emails still going to spam
 1. Verify all DNS records (SPF, DKIM, DMARC) are green
 2. Check your domain's reputation at https://www.mail-tester.com
-3. Ensure you're not sending to purchased/scraped lists
-4. Consider upgrading to a plan with dedicated IPs
+3. See which folder Gmail, Yahoo and other providers actually put a test message in at https://email-spam-tester.com (free, no signup)
+4. Ensure you're not sending to purchased/scraped lists
+5. Consider upgrading to a plan with dedicated IPs
 
 ---
 
