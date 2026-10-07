@@ -6,6 +6,7 @@ import time
 from random import randint
 import socket
 import shutil
+import shlex
 import docker
 
 sys.path.append('/usr/local/CyberCP')
@@ -54,7 +55,7 @@ DOCKER_APPS = {
         'siteType': 1,
         'requiresDB': True,
         'deploy': 'DeployWPContainer',
-        'compose': None,
+        'compose': 'generate_wordpress_compose_config',
         'minSiteRam': 256,
     },
     'n8n': {
@@ -401,7 +402,7 @@ context / {{
             return False
     
     @staticmethod
-    def SetupHTAccess(port, htaccess):
+    def SetupHTAccess(port, htaccess, domain=None):
         ### Update htaccess
 
         StringCheck = f'docker{port}'
@@ -418,6 +419,10 @@ context / {{
 RewriteEngine On
 REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 '''
+            if domain:
+                HTAccessContent = ('RewriteEngine On\nRewriteCond %{HTTPS} !=on\n'
+                    'RewriteRule ^ https://' + domain + '%{REQUEST_URI} [R=301,L]\n'
+                    + HTAccessContent)
             WriteToFile = open(htaccess, 'a')
             WriteToFile.write(HTAccessContent)
             WriteToFile.close()
@@ -426,6 +431,79 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
     # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
     # port, SitePath, CPUsSite, MemorySite, ComposePath, SiteName
     # finalURL, blogTitle, adminUser, adminPassword, adminEmail, htaccessPath, externalApp
+
+    def generate_wordpress_compose_config(self):
+        name = self.data['ServiceName']
+        directory = '/home/docker/' + self.data['finalURL']
+        probe = ('$context=stream_context_create(["http"=>["header"=>'
+                 + json.dumps('Host: ' + self.data['finalURL'])
+                 + ',"follow_location"=>0,"timeout"=>5]]); '
+                 '$page=@file_get_contents("http://127.0.0.1:8088/wp-login.php", false, $context); '
+                 'exit(is_string($page) && strpos($page, "id=\\\"loginform\\\"") !== false ? 0 : 1);')
+        config = {'services': {
+            name: {
+                'image': 'cyberpanel/openlitespeed:latest',
+                'user': 'root',
+                'entrypoint': ['/bin/bash', '/usr/local/bin/entrypoint.sh'],
+                'ports': ['127.0.0.1:%s:8088' % self.data['port']],
+                'environment': {
+                    'DB_NAME': self.data['MySQLDBName'], 'DB_USER': self.data['MySQLDBNUser'],
+                    'DB_PASSWORD': self.data['MySQLPassword'],
+                    'WP_ADMIN_EMAIL': self.data['adminEmail'], 'WP_ADMIN_USER': self.data['adminUser'],
+                    'WP_ADMIN_PASSWORD': self.data['adminPassword'],
+                    'WP_URL': 'https://' + self.data['finalURL'],
+                    'DB_Host': name + '-db:3306', 'SITE_NAME': self.data['SiteName'],
+                },
+                'volumes': [directory + '/data:/usr/local/lsws/Example/html',
+                            '/usr/local/CyberCP/dockerManager/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro'],
+                'depends_on': [name + '-db'],
+                'healthcheck': {
+                    'test': ['CMD-SHELL', 'test -f /tmp/cyberpanel-wordpress-ready && '
+                             '/usr/local/lsws/lsphp82/bin/php -r ' + shlex.quote(probe)],
+                    'interval': '5s', 'timeout': '10s', 'retries': 60, 'start_period': '20s',
+                },
+                'deploy': {'resources': {'limits': {
+                    'cpus': str(self.data['CPUsSite']), 'memory': str(self.data['MemorySite']) + 'M'}}},
+            },
+            name + '-db': {
+                'image': 'mariadb', 'restart': 'always',
+                'environment': {
+                    'MYSQL_DATABASE': self.data['MySQLDBName'], 'MYSQL_USER': self.data['MySQLDBNUser'],
+                    'MYSQL_PASSWORD': self.data['MySQLPassword'], 'MYSQL_ROOT_PASSWORD': self.data['MySQLRootPass'],
+                },
+                'volumes': [directory + '/db:/var/lib/mysql'],
+                'deploy': {'resources': {'limits': {
+                    'cpus': str(self.data['CPUsMySQL']), 'memory': str(self.data['MemoryMySQL']) + 'M'}}},
+            },
+        }}
+
+        # JSON is valid Compose YAML. Preserve quotes/newlines and prevent Compose
+        # from interpreting dollar signs in the administrator's password.
+        def escape(value):
+            if isinstance(value, dict):
+                return {key: escape(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [escape(item) for item in value]
+            return value.replace('$', '$$') if isinstance(value, str) else value
+
+        return json.dumps(escape(config), indent=2)
+
+    def wait_for_wordpress(self, attempts=60, delay=5):
+        client = docker.from_env()
+        for _ in range(attempts):
+            containers = client.containers.list(all=True, filters={'label': [
+                'com.docker.compose.project=' + self.data['SiteName'],
+                'com.docker.compose.service=' + self.data['ServiceName'],
+            ]})
+            if len(containers) == 1:
+                container = containers[0]
+                if container.status in ('exited', 'dead', 'restarting'):
+                    raise DockerDeploymentError('WordPress initialization failed; inspect the application container logs.')
+                health = container.attrs.get('State', {}).get('Health', {}).get('Status')
+                if container.status == 'running' and health == 'healthy':
+                    return True
+            time.sleep(delay)
+        raise DockerDeploymentError('WordPress installation did not become ready within five minutes.')
 
     def DeployWPContainer(self):
 
@@ -449,53 +527,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             self.data['ServiceName'] = self.data["SiteName"].replace(' ', '-')
 
-            WPSite = f'''
-version: '3.8'
-
-services:
-  '{self.data['ServiceName']}':
-    user: root
-    image: cyberpanel/openlitespeed:latest
-    ports:
-      - "{self.data['port']}:8088"
-#      - "443:443"
-    environment:
-      DB_NAME: "{self.data['MySQLDBName']}"
-      DB_USER: "{self.data['MySQLDBNUser']}"
-      DB_PASSWORD: "{self.data['MySQLPassword']}"
-      WP_ADMIN_EMAIL: "{self.data['adminEmail']}"
-      WP_ADMIN_USER: "{self.data['adminUser']}"
-      WP_ADMIN_PASSWORD: "{self.data['adminPassword']}"
-      WP_URL: {self.data['finalURL']}
-      DB_Host: '{self.data['ServiceName']}-db:3306'
-      SITE_NAME: '{self.data['SiteName']}'
-    volumes:
-#      - "/home/docker/{self.data['finalURL']}:/usr/local/lsws/Example/html"
-      - "/home/docker/{self.data['finalURL']}/data:/usr/local/lsws/Example/html"
-    depends_on:
-      - '{self.data['ServiceName']}-db'
-    deploy:
-      resources:
-        limits:
-          cpus: '{self.data['CPUsSite']}'  # Use 50% of one CPU core
-          memory: {self.data['MemorySite']}M  # Limit memory to 512 megabytes
-  '{self.data['ServiceName']}-db':
-    image: mariadb
-    restart: always
-    environment:
-#      ALLOW_EMPTY_PASSWORD=no
-      MYSQL_DATABASE: '{self.data['MySQLDBName']}'
-      MYSQL_USER: '{self.data['MySQLDBNUser']}'
-      MYSQL_PASSWORD: '{self.data['MySQLPassword']}'
-      MYSQL_ROOT_PASSWORD: '{self.data['MySQLPassword']}'
-    volumes:
-      - "/home/docker/{self.data['finalURL']}/db:/var/lib/mysql"
-    deploy:
-      resources:
-        limits:
-          cpus: '{self.data['CPUsMySQL']}'  # Use 50% of one CPU core
-          memory: {self.data['MemoryMySQL']}M  # Limit memory to 512 megabytes            
-'''
+            WPSite = self.generate_wordpress_compose_config()
 
             ### WriteConfig to compose-file
 
@@ -541,26 +573,7 @@ services:
 
             logging.statusWriter(self.JobID, 'Bringing containers online..,50')
 
-            time.sleep(25)
-
-            ### checking if everything ran properly
-
-            passdata = {}
-            passdata["JobID"] = None
-            passdata['name'] = self.data['ServiceName']
-            da = Docker_Sites(None, passdata)
-            retdata, containers = da.ListContainers()
-
-            containers = json.loads(containers)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(str(containers))
-
-            ### it means less then two containers which means something went wrong
-            if len(containers) < 2:
-                logging.writeToFile(f'Unkonwn error, containers not running. [DeployWPContainer]')
-                logging.statusWriter(self.JobID, f'Unkonwn error, containers not running. [DeployWPContainer]')
-                return 0
+            self.wait_for_wordpress()
 
             ### Set up Proxy
 
@@ -571,7 +584,7 @@ services:
             ### Set up ht access
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
-            execPath = execPath + f" SetupHTAccess --port {self.data['port']} --htaccess {self.data['htaccessPath']}"
+            execPath = execPath + f" SetupHTAccess --port {self.data['port']} --htaccess {self.data['htaccessPath']} --domain {self.data['finalURL']}"
             ProcessUtilities.executioner(execPath, self.data['externalApp'])
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
@@ -1663,7 +1676,7 @@ def Main():
         if args.function == "SetupProxy":
             Docker_Sites.SetupProxy(args.port)
         elif args.function == 'SetupHTAccess':
-            Docker_Sites.SetupHTAccess(args.port, args.htaccess)
+            Docker_Sites.SetupHTAccess(args.port, args.htaccess, args.domain)
         elif args.function == 'SetupN8NVhost' or args.function == 'SetupAppVhost':
             Docker_Sites.SetupAppVhost(args.domain, args.port)
         elif args.function == 'DeployWPDocker':
