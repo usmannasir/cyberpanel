@@ -587,8 +587,9 @@
         }
     }
 </style>
+{% include "dockerManager/partials/workspaceStyles.html" %}
 
-<div class="modern-container" ng-controller="viewContainer">
+<div class="modern-container cp-docker-workspace" ng-controller="viewContainer">
     <div class="page-header">
         <div class="container-header">
             <div class="container-icon-large">
@@ -675,7 +676,7 @@
                     <div class="info-label">{% trans "Port Mappings" %}</div>
                     <div class="info-value">
                         {% for iport, eport in ports.items %}
-                            <span style="background: var(--accent-bg, #e0e7ff); padding: 0.25rem 0.5rem; border-radius: 4px; margin-right: 0.5rem;">
+                            <span class="cp-port-binding">
                                 {% if eport.HostPort %}{% if ":" in eport.HostIp %}[{{ eport.HostIp }}]{% else %}{{ eport.HostIp }}{% endif %}:{{ eport.HostPort }}{% else %}{{ eport }}{% endif %} → {{ iport }}
                             </span>
                         {% endfor %}

@@ -453,8 +453,9 @@
         }
     }
 </style>
+{% include "dockerManager/partials/workspaceStyles.html" %}
 
-<div class="modern-container" ng-controller="manageImages">
+<div class="modern-container cp-docker-workspace" ng-controller="manageImages">
     <div class="page-header">
         <h1 class="page-title">
             <div class="docker-icon">
@@ -482,11 +483,11 @@
         <div class="card-body">
             <div class="search-section">
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="dockerImageSearch">
                         <i class="fas fa-search" style="margin-right: 0.5rem;"></i>
                         {% trans "Search Docker Hub" %}
                     </label>
-                    <input type="text" ng-change="searchImages()" ng-model="searchString" 
+                    <input id="dockerImageSearch" type="text" ng-change="searchImages()" ng-model="searchString"
                            class="form-control" placeholder="{% trans 'Enter image name (e.g., nginx, mysql, ubuntu)' %}">
                 </div>
             </div>
@@ -517,6 +518,9 @@
                                 </div>
                             </td>
                             <td>
+                                <div class="cp-tag-fields">
+                                <div>
+                                <label for="{$ image.name2 $}">{% trans "Browse tags" %}</label>
                                 <select ng-focus="loadTags($event)" ng-change="selectTag(image.name2)"
                                         ng-model="imageTag[image.name2]" 
                                         ng-options="tag for tag in tagList[image.name2]" 
@@ -525,9 +529,14 @@
                                         class="form-control">
                                     <option value="">{% trans "Select tag..." %}</option>
                                 </select>
-                                <input type="text" class="form-control" ng-model="image.exactTag"
+                                </div>
+                                <div>
+                                <label for="exact-tag-{$ $index $}">{% trans "Exact tag (optional)" %}</label>
+                                <input id="exact-tag-{$ $index $}" type="text" class="form-control" ng-model="image.exactTag"
                                        aria-label="{% trans 'Exact image tag' %}"
-                                       placeholder="{% trans 'Or enter an exact tag, e.g. 2.42.4' %}">
+                                       placeholder="{% trans 'e.g. 2.42.4' %}">
+                                </div>
+                                </div>
                             </td>
                             <td style="text-align: center;">
                                 <button ng-click="pullImage(image.name, image.exactTag || imageTag[image.name2])"

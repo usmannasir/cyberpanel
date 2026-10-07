@@ -1,0 +1,51 @@
+<style>
+/* Docker workspace: use the active CyberPanel theme, with scoped layout rules. */
+html #main-content .cp-docker-workspace { max-width: 1200px; margin: 0 auto; padding: 24px; color: var(--text-primary, #1e293b); }
+html #main-content .cp-docker-workspace .page-header { padding: 24px; margin: 0 0 24px; text-align: left; border: 1px solid var(--border-color, #e2e8f0); background: var(--bg-secondary, #fff); border-radius: 12px; animation: none; }
+html #main-content .cp-docker-workspace .page-header::before { display: none; }
+html #main-content .cp-docker-workspace .page-title { justify-content: flex-start; font-size: 24px; line-height: 1.35; margin: 0 0 8px; gap: 12px; overflow-wrap: anywhere; }
+html #main-content .cp-docker-workspace .docker-icon { flex: 0 0 40px; width: 40px; height: 40px; box-shadow: none; border: 1px solid var(--border-color, #e2e8f0); }
+html #main-content .cp-docker-workspace :is(.page-subtitle, .section-subtitle) { margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary, #64748b); }
+html #main-content .cp-docker-workspace :is(.header-actions, .image-info) { justify-content: flex-start; margin-top: 16px; flex-wrap: wrap; }
+html #main-content .cp-docker-workspace :is(.main-card, .form-container) { margin-bottom: 24px; border-radius: 12px; box-shadow: none; overflow: hidden; }
+html #main-content .cp-docker-workspace :is(.card-header, .section-header) { gap: 12px; flex-wrap: wrap; }
+html #main-content .cp-docker-workspace :is(.card-title, .section-title) { margin: 0; line-height: 1.5; font-size: 16px; }
+html #main-content .cp-docker-workspace .form-section { margin: 0; padding: 24px; }
+html #main-content .cp-docker-workspace .form-row { grid-template-columns: minmax(160px, 1fr) minmax(0, 3fr); gap: 12px 24px; align-items: start; margin-bottom: 20px; }
+html #main-content .cp-docker-workspace .form-row > .form-label { padding-top: 11px; margin: 0; }
+html #main-content .cp-docker-workspace .form-control { min-width: 0; min-height: 44px; color: var(--text-primary, #1e293b); background: var(--bg-secondary, #fff); }
+html #main-content .cp-docker-workspace textarea.form-control { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.65; min-height: 160px; }
+html #main-content .cp-docker-workspace :is(button, a.btn, .btn-primary, .btn-warning, .btn-danger, .btn-secondary) { min-height: 40px; line-height: 1.4; }
+html #main-content .cp-docker-workspace button:focus-visible,
+html #main-content .cp-docker-workspace a:focus-visible { outline: 3px solid var(--accent-color, #326d45); outline-offset: 3px; }
+html #main-content .cp-docker-workspace button:disabled { cursor: not-allowed; opacity: .55; }
+html #main-content .cp-docker-workspace .images-table { width: 100%; min-width: 640px; }
+html #main-content .cp-docker-workspace .images-table th { font-size: 12px; white-space: nowrap; }
+html #main-content .cp-docker-workspace .images-table td { vertical-align: middle; padding: 16px; }
+html #main-content .cp-docker-workspace .images-table td:first-child { width: 38%; overflow-wrap: anywhere; }
+html #main-content .cp-docker-workspace .cp-tag-fields { display: grid; gap: 12px; min-width: 240px; max-width: 360px; }
+html #main-content .cp-docker-workspace .cp-tag-fields label { display: block; margin: 0 0 6px; color: var(--text-secondary, #64748b); font-weight: 600; font-size: 12px; }
+html #main-content .cp-docker-workspace .cp-tag-fields :is(input, select) { width: 100%; }
+html #main-content .cp-docker-workspace .search-section { margin-bottom: 20px; padding: 0; background: transparent; border: 0; }
+html #main-content .cp-docker-workspace .port-mapping { grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr); gap: 16px; padding: 16px; }
+html #main-content .cp-docker-workspace .dynamic-item { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto; gap: 12px; padding: 12px; }
+html #main-content .cp-docker-workspace :is(.dynamic-header, .action-buttons) { gap: 12px; flex-wrap: wrap; }
+html #main-content .cp-docker-workspace .action-buttons { justify-content: flex-end; padding: 20px 24px; border-top: 1px solid var(--border-color, #e2e8f0); }
+html #main-content .cp-docker-workspace .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+html #main-content .cp-docker-workspace .info-item { min-width: 0; }
+html #main-content .cp-docker-workspace .info-value { overflow-wrap: anywhere; line-height: 1.7; }
+html #main-content .cp-docker-workspace .cp-port-binding { display: inline-block; padding: 6px 10px; margin: 4px 6px 4px 0; border: 1px solid var(--border-color, #e2e8f0); border-radius: 6px; background: var(--bg-code, #f1f5f9); color: var(--text-primary, #1e293b); font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
+html #main-content .cp-docker-workspace .toggle-container { background: var(--bg-muted, #f1f5f9) !important; border-color: var(--border-color, #e2e8f0) !important; }
+html #main-content .cp-docker-workspace .toggle-container :is(label, p) { color: var(--text-primary, #1e293b) !important; }
+@media (max-width: 768px) {
+ html #main-content .cp-docker-workspace { padding: 12px; }
+ html #main-content .cp-docker-workspace :is(.page-header, .form-section) { padding: 18px; }
+ html #main-content .cp-docker-workspace :is(.form-row, .info-grid, .dynamic-item) { grid-template-columns: minmax(0, 1fr); }
+ html #main-content .cp-docker-workspace .form-row > .form-label { padding-top: 0; }
+ html #main-content .cp-docker-workspace .dynamic-item button { justify-self: end; }
+ html #main-content .cp-docker-workspace .page-title { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ html #main-content .cp-docker-workspace * { animation: none !important; transition: none !important; }
+}
+</style>
