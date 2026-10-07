@@ -1,9 +1,9 @@
 import ipaddress
 
 # Cloudflare edge ranges, published at https://www.cloudflare.com/ips/.
-# CF-Connecting-IP is only trusted when the request comes from one of these
-# (or from loopback), otherwise any client could choose the IP address
-# CyberPanel binds its session to.
+# CF-Connecting-IP is only trusted when the request comes from one of these,
+# otherwise any client could choose the IP address CyberPanel binds its
+# session to.
 CLOUDFLARE_NETWORKS = tuple(ipaddress.ip_network(cidr) for cidr in (
     '173.245.48.0/20',
     '103.21.244.0/22',
@@ -30,25 +30,32 @@ CLOUDFLARE_NETWORKS = tuple(ipaddress.ip_network(cidr) for cidr in (
 ))
 
 
-def is_trusted_proxy(ip):
+def _ip_address(value):
     try:
-        address = ipaddress.ip_address(ip)
+        return ipaddress.ip_address((value or '').strip())
     except ValueError:
-        return False
-    # Loopback covers local callers such as plogical/phpmyadminsignin.php,
-    # which forwards the browser's address when it validates a panel session.
-    return address.is_loopback or any(address in network for network in CLOUDFLARE_NETWORKS)
+        return None
+
+
+def is_cloudflare_ip(ip):
+    address = _ip_address(ip)
+    return address is not None and any(address in network for network in CLOUDFLARE_NETWORKS)
 
 
 def get_client_ip(request):
     peer = request.META.get('REMOTE_ADDR') or ''
-    forwarded = (request.META.get('HTTP_CF_CONNECTING_IP') or '').strip()
 
-    if forwarded and is_trusted_proxy(peer):
-        try:
-            ipaddress.ip_address(forwarded)
-            return forwarded
-        except ValueError:
-            pass
+    # plogical/phpmyadminsignin.php validates panel sessions over loopback and
+    # passes on the address its own request came from, so the same rule below
+    # applies to it.  Only local callers can set this.
+    loopback = _ip_address(peer)
+    if loopback is not None and loopback.is_loopback:
+        local_peer = _ip_address(request.META.get('HTTP_X_CYBERPANEL_PEER'))
+        if local_peer is not None:
+            peer = str(local_peer)
+
+    forwarded = _ip_address(request.META.get('HTTP_CF_CONNECTING_IP'))
+    if forwarded is not None and is_cloudflare_ip(peer):
+        return str(forwarded)
 
     return peer

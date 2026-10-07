@@ -13,8 +13,11 @@ class ClientIPTests(SimpleTestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def client_ip(self, peer, forwarded):
-        return get_client_ip(self.factory.get('/', REMOTE_ADDR=peer, HTTP_CF_CONNECTING_IP=forwarded))
+    def client_ip(self, peer, forwarded, local_peer=None):
+        meta = {'REMOTE_ADDR': peer, 'HTTP_CF_CONNECTING_IP': forwarded}
+        if local_peer is not None:
+            meta['HTTP_X_CYBERPANEL_PEER'] = local_peer
+        return get_client_ip(self.factory.get('/', **meta))
 
     def test_spoofed_header_from_a_direct_client_is_ignored(self):
         self.assertEqual('203.0.113.5', self.client_ip('203.0.113.5', '8.8.8.8'))
@@ -23,9 +26,21 @@ class ClientIPTests(SimpleTestCase):
         self.assertEqual('198.51.100.7', self.client_ip('172.68.1.1', '198.51.100.7'))
         self.assertEqual('2001:db8::7', self.client_ip('2606:4700::1', '2001:db8::7'))
 
-    def test_header_from_loopback_is_used(self):
+    def test_phpmyadmin_signin_passes_on_the_browser_address(self):
         # plogical/phpmyadminsignin.php validates panel sessions over loopback.
-        self.assertEqual('198.51.100.7', self.client_ip('127.0.0.1', '198.51.100.7'))
+        self.assertEqual('203.0.113.5', self.client_ip('127.0.0.1', '', local_peer='203.0.113.5'))
+
+    def test_phpmyadmin_signin_cannot_forward_a_spoofed_header(self):
+        self.assertEqual('203.0.113.5', self.client_ip('127.0.0.1', '8.8.8.8', local_peer='203.0.113.5'))
+
+    def test_phpmyadmin_signin_behind_cloudflare_uses_the_header(self):
+        self.assertEqual('198.51.100.7', self.client_ip('::1', '198.51.100.7', local_peer='172.68.1.1'))
+
+    def test_loopback_alone_does_not_make_the_header_trusted(self):
+        self.assertEqual('127.0.0.1', self.client_ip('127.0.0.1', '8.8.8.8'))
+
+    def test_only_loopback_callers_can_name_their_peer(self):
+        self.assertEqual('203.0.113.5', self.client_ip('203.0.113.5', '198.51.100.7', local_peer='172.68.1.1'))
 
     def test_invalid_header_falls_back_to_the_peer(self):
         self.assertEqual('172.68.1.1', self.client_ip('172.68.1.1', '198.51.100.7, 10.0.0.1'))

@@ -9,7 +9,8 @@
 if (($argv[1] ?? '') !== '--capture') {
     $cases = array('custom_success', 'custom_connection_failure', 'custom_http_failure',
         'redirect_response', 'invalid_json', 'rejected_token', 'missing_grant', 'malformed_grant',
-        'malformed', 'unreadable', 'missing', 'empty', 'runtime_change');
+        'malformed', 'unreadable', 'missing', 'empty', 'runtime_change',
+        'browser_forwarded_ip', 'browser_forwarded_invalid_ip');
     foreach ($cases as $case) {
         // A fresh PHP process without configured extensions lets this harness
         // capture cURL calls instead of replacing or contacting a real backend.
@@ -129,6 +130,8 @@ $_SERVER['HTTP_X_FORWARDED_HOST'] = 'attacker.invalid:1234';
 $_SERVER['HTTP_X_FORWARDED_PORT'] = '1234';
 $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
 $_SERVER['HTTP_FORWARDED'] = 'host=attacker.invalid:1234;proto=http';
+if ($case === 'browser_forwarded_ip') $_SERVER['HTTP_CF_CONNECTING_IP'] = ' 198.51.100.7 ';
+if ($case === 'browser_forwarded_invalid_ip') $_SERVER['HTTP_CF_CONNECTING_IP'] = "198.51.100.7\r\nX-Injected: 1";
 
 assertTransport(stream_wrapper_unregister('file'), 'could not isolate file transport');
 assertTransport(stream_wrapper_register('file', 'PMABindFileTransport'), 'could not install isolated file transport');
@@ -156,7 +159,12 @@ if ($case === 'malformed' || $case === 'unreadable') {
     assertTransport($requestOptions[CURLOPT_POST] === true, 'handoff must remain a POST');
     assertTransport($requestOptions[CURLOPT_FOLLOWLOCATION] === false, 'handoff must not follow a redirect');
     assertTransport($requestOptions[CURLOPT_COOKIE] === 'cyberpanel_sessionid=authenticatedsession', 'session cookie changed');
-    assertTransport($requestOptions[CURLOPT_HTTPHEADER] === array('CF-Connecting-IP: 203.0.113.10'), 'client IP propagation changed');
+    // The panel, not this script, decides whether a browser-supplied
+    // CF-Connecting-IP is believed, so both addresses are passed on as-is.
+    $expectedHeaders = $case === 'browser_forwarded_ip'
+        ? array('X-CyberPanel-Peer: 203.0.113.10', 'CF-Connecting-IP: 198.51.100.7')
+        : array('X-CyberPanel-Peer: 203.0.113.10');
+    assertTransport($requestOptions[CURLOPT_HTTPHEADER] === $expectedHeaders, 'client IP propagation changed');
     assertTransport($requestOptions[CURLOPT_POSTFIELDS] === 'username=admin&token=one-time-token', 'handoff payload changed');
     assertTransport($requestOptions[CURLOPT_CONNECTTIMEOUT] === 2 && $requestOptions[CURLOPT_TIMEOUT] === 5, 'timeouts changed');
     assertTransport($requests[0]['execs'] === 1, 'handoff repeated its request');
