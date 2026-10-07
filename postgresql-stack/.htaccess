@@ -1,0 +1,12 @@
+<Files "config.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+<Files ".env*">
+    Order Allow,Deny
+    Deny from all
+</Files>
+<FilesMatch "\.(log|sql|bak|backup|key|pem|crt|tmp|temp|cache)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
