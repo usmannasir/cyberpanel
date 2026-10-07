@@ -24,6 +24,7 @@ from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
+from plogical.domainAliasUtilities import add_https_alias_mapping
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites, WPSites, WPStaging
     from databases.models import Databases
@@ -1044,31 +1045,15 @@ class vhost:
     @staticmethod
     def createAliasSSLMap(confPath, masterDomain, aliasDomain):
         try:
-
-            data = open(confPath, 'r').readlines()
-            writeToFile = open(confPath, 'w')
-            sslCheck = 0
-
-
-            for items in data:
-                if (items.find("listener SSL") > -1):
-                    sslCheck = 1
-                if items.find(masterDomain) > -1 and items.find('map') > -1 and sslCheck == 1:
-                    data = [_f for _f in items.split(" ") if _f]
-                    if data[1] == masterDomain:
-                        if vhost.checkIfSSLAliasExists(data, aliasDomain) == 0:
-                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
-                            sslCheck = 0
-                        else:
-                            writeToFile.writelines(items)
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
+            with open(confPath, 'r') as config_file:
+                updated = add_https_alias_mapping(config_file.read(), masterDomain, aliasDomain)
+            with open(confPath, 'w') as config_file:
+                config_file.write(updated)
             installUtilities.installUtilities.reStartLiteSpeed()
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAliasSSLMap]")
+            raise
 
     ## Child Domain Functions
 

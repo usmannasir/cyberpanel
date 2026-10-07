@@ -9,6 +9,7 @@ import subprocess
 import socket
 import tempfile
 from plogical.processUtilities import ProcessUtilities
+from plogical.domainAliasUtilities import has_https_listener, ensure_https_vhost_mapping
 
 try:
     from websiteFunctions.models import ChildDomains, Websites
@@ -427,30 +428,13 @@ class sslUtilities:
 
     @staticmethod
     def checkSSLListener():
-        try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            for items in data:
-                if items.find("listener SSL") > -1:
-                    return 1
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkSSLListener]]")
-            return str(msg)
-        return 0
+        with open("/usr/local/lsws/conf/httpd_config.conf") as config_file:
+            return int(has_https_listener(config_file.read()))
 
     @staticmethod
     def checkSSLIPv6Listener():
-        try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            for items in data:
-                if items.find("listener SSL IPv6") > -1:
-                    return 1
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [IO Error with main config file [checkSSLIPv6Listener]]")
-            return str(msg)
-        return 0
+        with open("/usr/local/lsws/conf/httpd_config.conf") as config_file:
+            return int(has_https_listener(config_file.read(), ipv6=True))
 
     @staticmethod
     def getDNSRecords(virtualHostName):
@@ -702,23 +686,11 @@ context /.well-known/acme-challenge {
 
                 else:
 
-                    if sslUtilities.checkIfSSLMap(virtualHostName) == 0:
-
-                        data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-                        writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-                        sslCheck = 0
-
-                        for items in data:
-                            if items.find("listener") > -1 and items.find("SSL") > -1:
-                                sslCheck = 1
-
-                            if (sslCheck == 1):
-                                writeDataToFile.writelines(items)
-                                writeDataToFile.writelines(map)
-                                sslCheck = 0
-                            else:
-                                writeDataToFile.writelines(items)
-                        writeDataToFile.close()
+                    config_path = "/usr/local/lsws/conf/httpd_config.conf"
+                    with open(config_path) as config_file:
+                        updated = ensure_https_vhost_mapping(config_file.read(), virtualHostName)
+                    with open(config_path, 'w') as config_file:
+                        config_file.write(updated)
 
                     ###################### Write per host Configs for SSL ###################
 
@@ -879,7 +851,7 @@ context /.well-known/acme-challenge {
         # no-ops while reporting success (see issue #1814). The skip-when-valid check
         # is kept for automated renewal/bulk callers (forceIssue=False) so they don't
         # hit Let's Encrypt rate limits.
-        if forceIssue or sslUtilities.CheckIfSSLNeedsToBeIssued(virtualHostName) == sslUtilities.ISSUE_SSL:
+        if aliasDomain or forceIssue or sslUtilities.CheckIfSSLNeedsToBeIssued(virtualHostName) == sslUtilities.ISSUE_SSL:
             pass
         else:
             return 1
@@ -1051,9 +1023,10 @@ def removeSSLForDomain(domain, *args, **kwargs):
 
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
     try:
-        # Check if certificate already exists and try to renew it first
+        # Adding an alias changes the certificate names; renewing the parent's
+        # existing ACME order cannot add that name.
         existingCertPath = '/etc/letsencrypt/live/' + domain + '/fullchain.pem'
-        if os.path.exists(existingCertPath):
+        if not aliasDomain and os.path.exists(existingCertPath):
             # Check if certificate is expired
             is_expired = False
             try:
