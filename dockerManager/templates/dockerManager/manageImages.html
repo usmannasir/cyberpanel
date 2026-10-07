@@ -517,7 +517,7 @@
                                 </div>
                             </td>
                             <td>
-                                <select ng-focus="loadTags($event)" ng-click="selectTag()" 
+                                <select ng-focus="loadTags($event)" ng-change="selectTag(image.name2)"
                                         ng-model="imageTag[image.name2]" 
                                         ng-options="tag for tag in tagList[image.name2]" 
                                         ng-attr-id="{$ image.name2 $}" 
@@ -525,9 +525,12 @@
                                         class="form-control">
                                     <option value="">{% trans "Select tag..." %}</option>
                                 </select>
+                                <input type="text" class="form-control" ng-model="image.exactTag"
+                                       aria-label="{% trans 'Exact image tag' %}"
+                                       placeholder="{% trans 'Or enter an exact tag, e.g. 2.42.4' %}">
                             </td>
                             <td style="text-align: center;">
-                                <button ng-click="pullImage(image.name, imageTag[image.name2])" 
+                                <button ng-click="pullImage(image.name, image.exactTag || imageTag[image.name2])"
                                         class="btn-primary">
                                     <i class="fas fa-download"></i>
                                     {% trans "Pull" %}
@@ -649,5 +652,5 @@
 {% endblock %}
 
 {% block footer_scripts %}
-<script src="{% static 'dockerManager/dockerManager.js' %}"></script>
+<script src="{% static 'dockerManager/dockerManager.js' %}?v=host-ip-20261008"></script>
 {% endblock %}

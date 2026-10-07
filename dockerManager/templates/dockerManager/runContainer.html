@@ -768,6 +768,12 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="containerHostIP">{% trans "Host IP" %}</label>
+                    <input id="containerHostIP" type="text" class="form-control" ng-model="hostIP" required
+                           placeholder="127.0.0.1">
+                    <p class="section-subtitle">{% trans "127.0.0.1 keeps ports local for a reverse proxy. Use 0.0.0.0 to allow public IPv4 access, or enter a local IPv4 or IPv6 address." %}</p>
+                </div>
                 {% for port, protocol in portConfig.items %}
                 <div class="port-mapping">
                     <div>
@@ -1090,7 +1096,7 @@
 {% endblock %}
 
 {% block footer_scripts %}
-<script src="{% static 'dockerManager/dockerManager.js' %}"></script>
+<script src="{% static 'dockerManager/dockerManager.js' %}?v=host-ip-20261008"></script>
 <script>
     // Initialize tooltips and other interactive elements
     document.addEventListener('DOMContentLoaded', function() {

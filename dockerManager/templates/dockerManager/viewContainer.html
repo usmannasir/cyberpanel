@@ -676,7 +676,7 @@
                     <div class="info-value">
                         {% for iport, eport in ports.items %}
                             <span style="background: var(--accent-bg, #e0e7ff); padding: 0.25rem 0.5rem; border-radius: 4px; margin-right: 0.5rem;">
-                                {{ iport }} → {{ eport }}
+                                {% if eport.HostPort %}{% if ":" in eport.HostIp %}[{{ eport.HostIp }}]{% else %}{{ eport.HostIp }}{% endif %}:{{ eport.HostPort }}{% else %}{{ eport }}{% endif %} → {{ iport }}
                             </span>
                         {% endfor %}
                     </div>
