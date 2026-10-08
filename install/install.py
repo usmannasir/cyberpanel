@@ -2253,17 +2253,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         print("###################################################################")
 
     def modSecPreReqs(self):
-        if is_el10_release():
-            return 1
-
-        try:
-
-            pathToRemoveGarbageFile = os.path.join(self.server_root_path, "modules/mod_security.so")
-            os.remove(pathToRemoveGarbageFile)
-
-        except OSError as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [modSecPreReqs]")
-            return 0
+        # The custom OLS bundle already installs the verified, ABI-matched module.
+        # This legacy post-install hook must not delete it on any platform.
+        return 1
 
     def installOpenDKIM(self):
         try:

@@ -112,13 +112,10 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
             node for node in installer_class.body
             if isinstance(node, ast.FunctionDef) and node.name == 'modSecPreReqs'
         )
-        source = ast.get_source_segment(INSTALLER.read_text(), method)
-
-        self.assertIn('if is_el10_release():', source)
-        self.assertLess(
-            source.index('if is_el10_release():'),
-            source.index('os.remove(pathToRemoveGarbageFile)'),
-        )
+        namespace = {'is_el10_release': lambda: True, 'os': os}
+        module = ast.fix_missing_locations(ast.Module(body=[method], type_ignores=[]))
+        exec(compile(module, str(INSTALLER), 'exec'), namespace)
+        self.assertEqual(namespace['modSecPreReqs'](None), 1)
 
     def test_el10_opendkim_maps_are_readable_by_the_service(self):
         tree = ast.parse(INSTALLER.read_text())

@@ -347,6 +347,11 @@ class BundleTransactionTests(unittest.TestCase):
                 with self.subTest(consumer=cls, existing_waf=waf), tempfile.TemporaryDirectory() as directory:
                     f = BundleFixture(directory, ROOT / source, cls, waf=waf)
                     self.assertTrue(f.call())
+                    if cls == 'InstallCyberPanel':
+                        cleanup = load_method(ROOT / 'install/install.py',
+                                              'preFlightsChecks', 'modSecPreReqs')
+                        cleanup.__globals__['is_el10_release'] = lambda: False
+                        cleanup(SimpleNamespace(server_root_path=str(f.path('/usr/local/lsws'))))
                     expected = {f.core: b'new-core', f.module: b'new-module', f.waf: b'new-waf'}
                     self.assertIn('modsec', f.downloads)
                     self.assertEqual(f.bundle(), expected)
