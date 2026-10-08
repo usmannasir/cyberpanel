@@ -4653,6 +4653,16 @@ vmail
             pass
 
     @staticmethod
+    def refreshCloudflareIPs():
+        # Save Cloudflare's current IP ranges now rather than waiting for the
+        # monthly cron run.  Failing here is harmless: the panel uses its
+        # built-in copy until a download succeeds.
+        try:
+            subprocess.run(['/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/plogical/clientIP.py'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+        except (OSError, subprocess.SubprocessError) as msg:
+            Upgrade.stdOut(str(msg) + ' [refreshCloudflareIPs]', 0)
+
+    @staticmethod
     def runSomeImportantBash():
 
         # Remove invalid crons from /etc/crontab Reference: https://github.com/usmannasir/cyberpanel/issues/216
@@ -4748,6 +4758,16 @@ vmail
                 writeToFile.write(content)
                 writeToFile.close()
 
+            # Cloudflare IP ranges used to trust CF-Connecting-IP.
+            # See plogical/clientIP.py.
+            if data.find('clientIP.py') == -1:
+                content = """
+23 4 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/clientIP.py >/dev/null 2>&1
+"""
+                writeToFile = open(cronPath, 'a')
+                writeToFile.write(content)
+                writeToFile.close()
+
 
         else:
             content = """
@@ -4761,6 +4781,7 @@ vmail
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
 */5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/pdnsHealthCheck.py >/dev/null 2>&1
+23 4 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/clientIP.py >/dev/null 2>&1
 """
             writeToFile = open(cronPath, 'w')
             writeToFile.write(content)
@@ -5440,6 +5461,7 @@ pm.max_spare_servers = 3
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
         Upgrade.runSomeImportantBash()
+        Upgrade.refreshCloudflareIPs()
         Upgrade.FixRSPAMDConfig()
         Upgrade.CreateMissingPoolsforFPM()
 

@@ -2152,6 +2152,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 0 0 */3 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '3 Days'
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
 
+23 4 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/clientIP.py >/dev/null 2>&1
+
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
 """
 
@@ -2186,6 +2188,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_cron]")
             return 0
+
+    def refresh_cloudflare_ips(self):
+        # Save Cloudflare's current IP ranges now rather than waiting for the
+        # monthly cron run.  Failing here is harmless: the panel uses its
+        # built-in copy until a download succeeds.
+        try:
+            subprocess.run(['/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/plogical/clientIP.py'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+        except (OSError, subprocess.SubprocessError) as msg:
+            logging.InstallLog.writeToFile(str(msg) + ' [refresh_cloudflare_ips]')
 
     def install_default_keys(self):
         try:
@@ -3066,6 +3077,7 @@ def main():
     checks.download_install_phpmyadmin()
     checks.setupCLI()
     checks.setup_cron()
+    checks.refresh_cloudflare_ips()
     checks.installRestic()
     checks.installAcme()
 

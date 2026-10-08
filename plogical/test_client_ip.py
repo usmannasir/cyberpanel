@@ -1,17 +1,36 @@
 import json
+import os
+import shutil
+import tempfile
 from types import SimpleNamespace
 from unittest import mock
 
 from django.contrib.sessions.backends.signed_cookies import SessionStore
 from django.test import RequestFactory, SimpleTestCase
 
+from plogical import clientIP
 from plogical.clientIP import get_client_ip
 
 
-class ClientIPTests(SimpleTestCase):
+class CloudflareFileTestCase(SimpleTestCase):
+    """Points CLOUDFLARE_IPS_FILE at a temporary directory."""
 
     def setUp(self):
         self.factory = RequestFactory()
+        self.tempdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tempdir)
+        self.path = os.path.join(self.tempdir, 'cloudflare-ips.txt')
+        patcher = mock.patch.object(clientIP, 'CLOUDFLARE_IPS_FILE', self.path)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        clientIP._saved.update(mtime=None, networks=clientIP.BUILTIN_CLOUDFLARE_NETWORKS)
+
+    def write(self, text):
+        with open(self.path, 'w') as handle:
+            handle.write(text)
+
+
+class ClientIPTests(CloudflareFileTestCase):
 
     def client_ip(self, peer, forwarded, local_peer=None):
         meta = {'REMOTE_ADDR': peer, 'HTTP_CF_CONNECTING_IP': forwarded}
@@ -65,3 +84,50 @@ class ClientIPTests(SimpleTestCase):
         verifyLogin(request)
 
         self.assertEqual('203.0.113.5', request.session['ipAddr'])
+
+
+PUBLISHED = '\n'.join('192.0.%d.0/24' % index for index in range(12)) + '\n'
+
+
+class CloudflareIPsFileTests(CloudflareFileTestCase):
+
+    def test_saved_list_replaces_the_builtin_one(self):
+        self.write(PUBLISHED)
+
+        self.assertTrue(clientIP.is_cloudflare_ip('192.0.5.9'))
+        self.assertFalse(clientIP.is_cloudflare_ip('172.68.1.1'))
+
+    def test_missing_or_invalid_file_falls_back_to_the_builtin_list(self):
+        self.assertTrue(clientIP.is_cloudflare_ip('172.68.1.1'))
+
+        for text in ('<html>error</html>\n', '192.0.2.0/24\n', ''):
+            with self.subTest(text=text):
+                self.write(text)
+                os.utime(self.path, (1, len(text) + 1))
+                self.assertTrue(clientIP.is_cloudflare_ip('172.68.1.1'))
+                self.assertFalse(clientIP.is_cloudflare_ip('192.0.2.9'))
+
+    def test_refresh_saves_both_published_lists(self):
+        responses = {
+            clientIP.CLOUDFLARE_IPS_URLS[0]: mock.Mock(text='\n'.join(PUBLISHED.splitlines()[:10])),
+            clientIP.CLOUDFLARE_IPS_URLS[1]: mock.Mock(text='2606:4700::/32\n2400:cb00::/32'),
+        }
+
+        with mock.patch('requests.get', side_effect=lambda url, timeout: responses[url]):
+            self.assertEqual(12, clientIP.refresh_cloudflare_ips())
+
+        self.assertTrue(clientIP.is_cloudflare_ip('2606:4700::1'))
+        self.assertTrue(clientIP.is_cloudflare_ip('192.0.9.1'))
+        self.assertEqual(['cloudflare-ips.txt'], os.listdir(self.tempdir))
+        if os.name == 'posix':
+            self.assertEqual(0o644, os.stat(self.path).st_mode & 0o777)
+
+    def test_bad_download_keeps_the_previous_list(self):
+        self.write(PUBLISHED)
+
+        with mock.patch('requests.get', return_value=mock.Mock(text='<html>maintenance</html>')):
+            with self.assertRaises(ValueError):
+                clientIP.refresh_cloudflare_ips()
+
+        self.assertEqual(PUBLISHED, open(self.path).read())
+        self.assertEqual(['cloudflare-ips.txt'], os.listdir(self.tempdir))
