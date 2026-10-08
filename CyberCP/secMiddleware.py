@@ -104,7 +104,7 @@ class secMiddleware:
 
                 # logging.writeToFile(request.body)
                 try:
-                    data = json.loads(request.body)
+                    data = json.loads(request.body.decode('utf-8'))
                 except:
                     data = request.POST
 
@@ -118,33 +118,33 @@ class secMiddleware:
                     if request.path.find('gitNotify') > -1:
                         break
 
-                    if type(value) == str or type(value) == bytes:
+                    if isinstance(value, (str, bytes)):
                         pass
-                    elif type(value) == list:
+                    elif isinstance(value, list):
                         valueAlreadyChecked = 1
                         if os.path.exists(ProcessUtilities.debugPath):
                             logging.writeToFile(f'Item type detected as list')
-                        for items in value:
-                            if items.find('- -') > -1 or items.find('\n') > -1 or items.find(';') > -1 or items.find(
-                                    '&&') > -1 or items.find('|') > -1 or items.find('...') > -1 \
-                                    or items.find("`") > -1 or items.find("$") > -1 or items.find(
-                                "(") > -1 or items.find(")") > -1 \
-                                    or items.find("'") > -1 or items.find("[") > -1 or items.find(
-                                "]") > -1 or items.find("{") > -1 or items.find("}") > -1 \
-                                    or items.find(":") > -1 or items.find("<") > -1 or items.find(
-                                ">") > -1 or items.find("&") > -1:
-                                logging.writeToFile(request.body)
-                                final_dic = {
-                                    'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
-                                    "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
-                                final_json = json.dumps(final_dic)
-                                return HttpResponse(final_json)
+                        for item in value:
+                            if isinstance(item, (str, bytes)):
+                                if item.find('- -') > -1 or item.find('\n') > -1 or item.find(';') > -1 or item.find(
+                                        '&&') > -1 or item.find('|') > -1 or item.find('...') > -1 \
+                                        or item.find("`") > -1 or item.find("$") > -1 or item.find(
+                                    "(") > -1 or item.find(")") > -1 \
+                                        or item.find("'") > -1 or item.find("[") > -1 or item.find(
+                                    "]") > -1 or item.find("{") > -1 or item.find("}") > -1 \
+                                        or item.find(":") > -1 or item.find("<") > -1 or item.find(
+                                    ">") > -1 or item.find("&") > -1:
+                                    logging.writeToFile(request.body)
+                                    final_dic = {
+                                        'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
+                                        "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
+                                    final_json = json.dumps(final_dic)
+                                    return HttpResponse(final_json)
                     else:
                         continue
 
                     if key == 'backupDestinations':
-                        if re.match('^[a-z|0-9]+:[a-z|0-9|\.]+\/?[A-Z|a-z|0-9|\.]*$',
-                                    value) == None and value != 'local':
+                        if isinstance(value, str) and re.match('^[a-z0-9]+:[a-z0-9\.]+/?[A-Za-z0-9\.]*$', value) is None and value != 'local':
                             logging.writeToFile(request.body)
                             final_dic = {'error_message': "Data supplied is not accepted.",
                                          "errorMessage": "Data supplied is not accepted."}
@@ -169,7 +169,7 @@ class secMiddleware:
                             or key == 'fileContent' or key == 'commands' or key == 'gitHost' or key == 'ipv6' or key == 'contentNow':
                         continue
 
-                    if valueAlreadyChecked == 0:
+                    if valueAlreadyChecked == 0 and isinstance(value, (str, bytes)):
                         if value.find('- -') > -1 or value.find('\n') > -1 or value.find(';') > -1 or value.find(
                                 '&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
                                 or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(
@@ -197,7 +197,7 @@ class secMiddleware:
 
             except BaseException as msg:
                 final_dic = {'error_message': f"Error: {str(msg)}",
-                             "errorMessage":  f"Error: {str(msg)}"}
+                             "errorMessage": f"Error: {str(msg)}"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
         else:
