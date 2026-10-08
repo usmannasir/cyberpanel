@@ -1004,14 +1004,13 @@ class Upgrade:
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
             control = '/usr/local/lsws/bin/lswsctrl'
-            # A fresh installation includes WAF; upgrades preserve its installed state.
+            # Keep the core and both modules on the same verified release, including
+            # upgrades from installations that did not previously have ModSecurity.
             required = [
                 ('binary', config.get('url'), OLS_BINARY_PATH, 0o755, 'openlitespeed.backup'),
                 ('module', config.get('module_url'), MODULE_PATH, 0o644, 'cyberpanel_ols.so.backup'),
+                ('modsec', config.get('modsec_url'), MODSEC_PATH, 0o644, 'mod_security.so.backup'),
             ]
-            if os.path.exists(MODSEC_PATH):
-                required.append(('modsec', config.get('modsec_url'), MODSEC_PATH,
-                                 0o644, 'mod_security.so.backup'))
 
             import tempfile
             import re

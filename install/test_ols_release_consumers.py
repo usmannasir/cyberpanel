@@ -132,6 +132,7 @@ class BundleFixture:
         self.active = True
         self.commands = []
         self.downloads = []
+        self.start_bundles = []
         self.old = {self.core: b'old-core'}
         if module:
             self.old[self.module] = b'old-module'
@@ -238,6 +239,7 @@ class BundleFixture:
             else:
                 self.active = False
         elif args[-1] == 'start':
+            self.start_bundles.append(self.bundle())
             data = self.path(self.core).read_bytes()
             self.active = not (self.failure == 'startup' and data == b'new-core')
             self.active_bytes = data
@@ -289,11 +291,15 @@ class BundleTransactionTests(unittest.TestCase):
 
     def test_rollback_removes_modules_that_did_not_previously_exist(self):
         for source, cls in self.consumers:
-            with self.subTest(consumer=cls), tempfile.TemporaryDirectory() as directory:
-                f = BundleFixture(directory, ROOT / source, cls, 'startup', module=False, waf=False)
-                self.assertFalse(f.call())
-                self.assertEqual(f.bundle(), f.old)
-                self.assertTrue(f.active)
+            for module in (False, True):
+                with self.subTest(consumer=cls, existing_module=module), tempfile.TemporaryDirectory() as directory:
+                    f = BundleFixture(directory, ROOT / source, cls, 'startup', module=module, waf=False)
+                    self.assertFalse(f.call())
+                    self.assertEqual(f.start_bundles[0][f.waf], b'new-waf')
+                    self.assertNotIn(f.waf, f.start_bundles[-1])
+                    self.assertEqual(f.bundle(), f.old)
+                    self.assertTrue(f.active)
+                    self.assertEqual(f.active_bytes, b'old-core')
 
     def test_write_and_version_failures_restore_bundle_and_service(self):
         for source, cls in self.consumers:
@@ -341,12 +347,8 @@ class BundleTransactionTests(unittest.TestCase):
                 with self.subTest(consumer=cls, existing_waf=waf), tempfile.TemporaryDirectory() as directory:
                     f = BundleFixture(directory, ROOT / source, cls, waf=waf)
                     self.assertTrue(f.call())
-                    expected = {f.core: b'new-core', f.module: b'new-module'}
-                    if waf or cls == 'InstallCyberPanel':
-                        expected[f.waf] = b'new-waf'
-                        self.assertIn('modsec', f.downloads)
-                    else:
-                        self.assertNotIn('modsec', f.downloads)
+                    expected = {f.core: b'new-core', f.module: b'new-module', f.waf: b'new-waf'}
+                    self.assertIn('modsec', f.downloads)
                     self.assertEqual(f.bundle(), expected)
                     self.assertTrue(f.active)
                     self.assertEqual(f.active_bytes, b'new-core')
