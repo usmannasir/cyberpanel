@@ -22,16 +22,16 @@ class modSec:
 
     # Compatible ModSecurity binaries (built against custom OLS headers)
     # These prevent ABI incompatibility crashes (Signal 11/SIGSEGV)
-    MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel8.so',
-               'sha256': 'cfdf61bb3e0115fbcd172a5dd55fe107a8e17888711a31eec25d34b94df3bb6c'},
-     'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel9.so',
-               'sha256': 'eb67cce467b29b73f70f798db8e5097b13e8c264a83b146bac601bbd62399b0f'},
-     'rhel10': {'url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel10.so',
-                'sha256': 'a7d8131bf7fa9b14286a088a1a9eb8f0bca15de991c79d6173ac0f274dcd9bcf'},
-     'ubuntu': {'url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu.so',
-                'sha256': '0714c9e43781d51ffab5ee4faf2b4506b68cc0f9483285bfa8a8d334d0f96172'},
-     'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu26.so',
-                  'sha256': '5f2f285b667611a6fd3dcb91f5790ead0b096afc43ca5f5507345dd05f2bd8a5'}}
+    MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel8.so',
+               'sha256': '6afde1bb82e4118e5986aa345b9d7120da0e7501dc4fad24d9c93e55b4560843'},
+     'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel9.so',
+               'sha256': 'f2551a3b4704e576c24a202c92905a0fbe249bc653d0d810f23bbacb40b22c2b'},
+     'rhel10': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel10.so',
+                'sha256': '5b3086279bee6f29c55e3cee6fbe4bbfd743c8f3371060ef8173dc84b5d3ae95'},
+     'ubuntu': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu.so',
+                'sha256': 'd196438c0a113ca339706a1e7e37c51026489e4893d06436d6f76252b6e0d6ec'},
+     'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu26.so',
+                  'sha256': '4bb70915336dce7e535923703014e89210ab4a17b157820d68b3e3db38110879'}}
 
     @staticmethod
     def detectPlatform():
