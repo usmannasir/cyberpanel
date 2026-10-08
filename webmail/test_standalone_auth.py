@@ -175,6 +175,57 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
         imap_client.assert_called_once_with('user@example.com', 'secret')
         imap_client.return_value.close.assert_called_once_with()
 
+    @mock.patch('webmail.webmailManager.WebmailManager._get_master_config',
+                return_value=('cyberpanel_master', 'stale-master-password'))
+    @mock.patch('webmail.webmailManager.IMAPClient')
+    def test_standalone_login_keeps_mailbox_credentials_for_imap(self, imap_client, master_config):
+        def authenticate(address, password, **kwargs):
+            if kwargs or password != 'secret':
+                raise Exception('Master authentication is unavailable')
+            return mock.MagicMock()
+
+        imap_client.side_effect = authenticate
+        request = self.request(body={'email': 'user@example.com', 'password': 'secret'})
+        manager = WebmailManager(request)
+
+        self.assertEqual(1, json.loads(manager.apiLogin().content)['status'])
+        manager._get_imap()
+
+        self.assertEqual(imap_client.call_args_list, [
+            mock.call('user@example.com', 'secret'),
+            mock.call('user@example.com', 'secret'),
+        ])
+
+    @mock.patch('webmail.webmailManager.WebmailManager._get_master_config',
+                return_value=('cyberpanel_master', 'stale-master-password'))
+    @mock.patch('webmail.webmailManager.SieveClient')
+    def test_standalone_sieve_uses_authenticated_mailbox_credentials(self, sieve_client, master_config):
+        request = self.request(session={
+            'webmail_standalone': True,
+            'webmail_email': 'user@example.com',
+            'webmail_password': 'secret',
+        })
+
+        WebmailManager(request)._get_sieve()
+
+        sieve_client.assert_called_once_with('user@example.com', 'secret')
+
+    @mock.patch('webmail.webmailManager.WebmailManager._get_master_config',
+                return_value=('cyberpanel_master', 'master-secret'))
+    @mock.patch('webmail.webmailManager.SieveClient')
+    @mock.patch('webmail.webmailManager.IMAPClient')
+    def test_panel_sso_retains_master_authentication(self, imap_client, sieve_client, master_config):
+        request = self.request(session={'userID': 1, 'webmail_email': 'user@example.com'})
+        manager = WebmailManager(request)
+
+        manager._get_imap()
+        manager._get_sieve()
+
+        for client in (imap_client, sieve_client):
+            client.assert_called_once_with('user@example.com', '',
+                                           master_user='cyberpanel_master',
+                                           master_password='master-secret')
+
     @mock.patch('webmail.webmailManager.IMAPClient', side_effect=Exception('private detail'))
     @mock.patch('webmail.webmailManager.logging.CyberCPLogFileWriter.writeToFile')
     def test_failed_login_does_not_expose_backend_error(self, unused_log, unused_imap):

@@ -91,7 +91,7 @@ class WebmailManager:
             raise Exception('No email account selected')
 
         master_user, master_pass = self._get_master_config()
-        if master_user and master_pass:
+        if master_user and master_pass and not self.request.session.get('webmail_standalone'):
             return IMAPClient(addr, '', master_user=master_user, master_password=master_pass)
 
         # Fallback: standalone login with stored password
@@ -121,7 +121,7 @@ class WebmailManager:
             raise Exception('No email account selected')
 
         master_user, master_pass = self._get_master_config()
-        if master_user and master_pass:
+        if master_user and master_pass and not self.request.session.get('webmail_standalone'):
             return SieveClient(addr, '', master_user=master_user, master_password=master_pass)
 
         password = self.request.session.get('webmail_password', '')
