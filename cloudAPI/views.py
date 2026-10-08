@@ -12,6 +12,7 @@ try:
 except ImportError:
     from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
 from plogical.securityUtils import api_token_matches, api_two_factor_matches
+from plogical.clientIP import get_client_ip
 
 
 CLOUD_ACCESS_FAILURE_LIMIT = 10
@@ -40,9 +41,7 @@ def _record_access_failure(cache_key):
 
 
 def _normalized_session_ip(request):
-    ip_address = request.META.get('HTTP_CF_CONNECTING_IP')
-    if ip_address is None:
-        ip_address = request.META.get('REMOTE_ADDR', '')
+    ip_address = get_client_ip(request)
     if ':' in ip_address:
         return ':'.join(ip_address.split(':')[:3])
     return ip_address

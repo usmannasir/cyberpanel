@@ -29,6 +29,7 @@ from plogical.securityUtils import get_mysql_upgrade_status_path
 from django.views.decorators.http import require_POST
 from databases.phpmyadmin_handoff import consume_handoff, create_handoff
 from databases.phpmyadmin_session import issue_grant, panel_ip_allowed, validate_grant
+from plogical.clientIP import get_client_ip
 
 
 # Create your views here.
@@ -287,7 +288,7 @@ def _phpmyadmin_principal(request, username):
     admin = Administrator.objects.get(pk=request.session['userID'])
     if admin.state != 'ACTIVE':
         raise ValueError('Inactive principal')
-    client_ip = request.META.get('HTTP_CF_CONNECTING_IP', request.META.get('REMOTE_ADDR'))
+    client_ip = get_client_ip(request)
     if not panel_ip_allowed(request.session, client_ip, admin.securityLevel):
         raise ValueError('Panel session address changed')
     permissions = json.loads(admin.acl.config)
