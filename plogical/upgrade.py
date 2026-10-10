@@ -147,6 +147,48 @@ def activate_source(current, staged):
         raise
 
 
+def prune_previous_installations(current, keep):
+    """Remove superseded source rollback trees after a successful upgrade.
+
+    ``activate_source`` keeps the installation it replaced so an administrator
+    has one known-good source tree available for rollback.  Older successful
+    upgrades used to leave every ``.cyberpanel-previous-*`` directory behind,
+    allowing full copies of CyberCP to accumulate without bound.
+
+    Only directories created beside ``current`` with the expected layout are
+    eligible.  The rollback tree from the current upgrade, symlinks and
+    unrelated paths are always preserved.  Cleanup errors are returned to the
+    caller so they can be logged without turning a completed upgrade into a
+    failure.
+    """
+    parent = os.path.dirname(os.path.abspath(current))
+    keep_parent = os.path.abspath(os.path.dirname(keep))
+    removed = []
+    failures = []
+
+    try:
+        entries = os.listdir(parent)
+    except OSError as error:
+        return removed, [(parent, str(error))]
+
+    for name in entries:
+        if not name.startswith('.cyberpanel-previous-'):
+            continue
+        candidate = os.path.abspath(os.path.join(parent, name))
+        if candidate == keep_parent or os.path.islink(candidate):
+            continue
+        previous_tree = os.path.join(candidate, 'CyberCP')
+        if not os.path.isdir(previous_tree) or os.path.islink(previous_tree):
+            continue
+        try:
+            shutil.rmtree(candidate)
+            removed.append(candidate)
+        except OSError as error:
+            failures.append((candidate, str(error)))
+
+    return removed, failures
+
+
 def update_all_config_files_with_password(new_password):
     """
     Update all configuration files that use the cyberpanel database password.
@@ -3990,6 +4032,14 @@ passdb {
 
             # FINAL STEP: Ensure Imunify360 execute permissions are set
             Upgrade.finalImunifyPermissions()
+
+            removed, cleanup_failures = prune_previous_installations(
+                installation, previous)
+            for removed_path in removed:
+                Upgrade.stdOut('Removed superseded rollback installation: ' + removed_path)
+            for failed_path, error in cleanup_failures:
+                Upgrade.stdOut('WARNING: Could not remove superseded rollback '
+                               'installation %s: %s' % (failed_path, error), 0)
 
             return 1, None
 

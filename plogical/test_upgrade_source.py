@@ -17,7 +17,7 @@ from unittest.mock import patch, call
 # Execute its actual standalone file helpers without those unrelated side effects.
 source = Path(__file__).with_name('upgrade.py').read_text()
 helper_names = {'_copy_path', 'activate_source', 'preserve_installation_state',
-                'protect_private_files'}
+                'protect_private_files', 'prune_previous_installations'}
 module = types.ModuleType('upgrade_source_under_test')
 module.__dict__.update(os=os, shutil=shutil, tempfile=tempfile,
                        contextmanager=contextmanager)
@@ -30,6 +30,7 @@ sys.modules[module.__name__] = module
 activate_source = module.activate_source
 preserve_installation_state = module.preserve_installation_state
 protect_private_files = module.protect_private_files
+prune_previous_installations = module.prune_previous_installations
 
 
 
@@ -170,6 +171,26 @@ class UpgradeSourceTests(unittest.TestCase):
         self.assertEqual(0o600, stat.S_IMODE((self.staged / 'terminal_jwt_secret').stat().st_mode))
         self.assertIn(call(str(self.staged / 'terminal_jwt_secret'), 1001, 1002), chown.call_args_list)
 
+    def test_prune_keeps_current_rollback_and_ignores_unrelated_paths(self):
+        keep_parent = self.root / '.cyberpanel-previous-keep'
+        old_parent = self.root / '.cyberpanel-previous-old'
+        unrelated = self.root / '.cyberpanel-previous-not-an-installation'
+        self.write(keep_parent / 'CyberCP/old_source.py', 'latest rollback')
+        self.write(old_parent / 'CyberCP/old_source.py', 'superseded rollback')
+        self.write(unrelated / 'notes.txt', 'not an upgrade rollback')
+        symlink = self.root / '.cyberpanel-previous-link'
+        symlink.symlink_to(old_parent, target_is_directory=True)
+
+        removed, failures = prune_previous_installations(
+            str(self.current), str(keep_parent / 'CyberCP'))
+
+        self.assertEqual([], failures)
+        self.assertEqual([str(old_parent)], removed)
+        self.assertTrue(keep_parent.exists())
+        self.assertTrue(unrelated.exists())
+        self.assertTrue(symlink.is_symlink())
+        self.assertFalse(old_parent.exists())
+
 
 class UpgradeEntryPointTests(unittest.TestCase):
     write = staticmethod(UpgradeSourceTests.write)
@@ -243,6 +264,18 @@ class UpgradeEntryPointTests(unittest.TestCase):
         self.assertEqual(self.globals['settings'].DATABASES, loaded['DATABASES'])
         self.assertFalse((self.current / 'old_source.py').exists())
         self.assertEqual(0o640, stat.S_IMODE((self.current / '.env').stat().st_mode))
+
+    def test_success_keeps_only_the_newest_source_rollback(self):
+        old_parent = self.root / '.cyberpanel-previous-old'
+        self.write(old_parent / 'CyberCP/old_source.py', 'superseded rollback')
+
+        self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.6'))
+
+        rollbacks = sorted(self.root.glob('.cyberpanel-previous-*'))
+        self.assertEqual(1, len(rollbacks))
+        self.assertNotEqual(old_parent, rollbacks[0])
+        self.assertEqual('old application',
+                         (rollbacks[0] / 'CyberCP/old_source.py').read_text())
 
     def test_clone_failure_keeps_original_runtime_and_source(self):
         self.clone_ok = False
