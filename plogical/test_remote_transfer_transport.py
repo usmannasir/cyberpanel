@@ -88,10 +88,10 @@ class RemoteTransferTransportTests(unittest.TestCase):
                          {'remoteTransferUtilities', 'main'}, self.env)
         self.worker = self.env['remoteTransferUtilities']
 
-    def start(self, transfer='1001', port='2222'):
+    def start(self, transfer='1001', port='2222', address='192.0.2.10'):
         accounts = self.root / ('accounts-' + transfer)
         accounts.write_text('example.com\n')
-        self.worker.remoteTransfer('192.0.2.10', transfer, str(accounts), port)
+        self.worker.remoteTransfer(address, transfer, str(accounts), port)
         return self.local('/home/backup/transfer-' + transfer + '/backup_log')
 
     def test_preflight_uses_requested_port_and_passes_it_to_worker(self):
@@ -113,6 +113,14 @@ class RemoteTransferTransportTests(unittest.TestCase):
         self.assertIn('on SSH port 2222 failed', content)
         self.assertIn('[5010]', content)
         self.assertFalse(self.children)
+
+    def test_private_callback_reaches_both_ssh_preflight_and_scp(self):
+        self.start(address='172.16.0.202')
+        self.env['backupSchedule'].createLocalBackup.side_effect = self.create_archive
+        child = self.children[0]
+        child['target'](*child['args'])
+        self.assertEqual(['root@172.16.0.202', 'true'], self.commands[0][-2:])
+        self.assertEqual('root@172.16.0.202:/home/backup/transfer-1001/', self.commands[1][-1])
 
     def test_interleaved_jobs_keep_their_ports_through_backup_and_send(self):
         self.start('1001', '2222')
@@ -201,11 +209,12 @@ class RemoteTransferTransportTests(unittest.TestCase):
         load_definitions(ROOT / 'api/views.py', {'remoteTransfer'}, namespace)
         for port in ('2222', '2022'):
             request = SimpleNamespace(method='POST', body=json.dumps({
-                'ipAddress': '192.0.2.10', 'accountsToTransfer': ['example.com'], 'port': port}))
+                'ipAddress': '172.16.0.202', 'accountsToTransfer': ['example.com'], 'port': port}))
             result = namespace['remoteTransfer'](request)
             self.assertEqual(1, result['transferStatus'])
             command = shlex.split(launch.call_args.args[0])
             self.assertEqual(port, command[command.index('--port') + 1])
+            self.assertEqual('172.16.0.202', command[command.index('--ipAddress') + 1])
         self.assertNotIn('/home/cyberpanel/remote_port', self.opened)
 
 
