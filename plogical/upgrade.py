@@ -2807,57 +2807,8 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-            # Email Filtering Tables - Catch-All, Plus-Addressing, Pattern Forwarding
-            query = """CREATE TABLE IF NOT EXISTS `e_catchall` (
-  `domain_id` varchar(50) NOT NULL,
-  `destination` varchar(255) NOT NULL,
-  `enabled` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`domain_id`),
-  CONSTRAINT `fk_catchall_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
-            try:
-                cursor.execute(query)
-            except:
-                pass
-
-            query = """CREATE TABLE IF NOT EXISTS `e_server_settings` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `plus_addressing_enabled` tinyint(1) NOT NULL DEFAULT 0,
-  `plus_addressing_delimiter` varchar(1) NOT NULL DEFAULT '+',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
-            try:
-                cursor.execute(query)
-            except:
-                pass
-
-            query = """CREATE TABLE IF NOT EXISTS `e_plus_override` (
-  `domain_id` varchar(50) NOT NULL,
-  `enabled` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`domain_id`),
-  CONSTRAINT `fk_plus_override_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
-            try:
-                cursor.execute(query)
-            except:
-                pass
-
-            query = """CREATE TABLE IF NOT EXISTS `e_pattern_forwarding` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `domain_id` varchar(50) NOT NULL,
-  `pattern` varchar(255) NOT NULL,
-  `destination` varchar(255) NOT NULL,
-  `pattern_type` varchar(20) NOT NULL DEFAULT 'wildcard',
-  `priority` int(11) NOT NULL DEFAULT 100,
-  `enabled` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  KEY `fk_pattern_domain` (`domain_id`),
-  CONSTRAINT `fk_pattern_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
-            try:
-                cursor.execute(query)
-            except:
-                pass
+            from plogical.schemaMigration import ensure_email_filter_tables
+            ensure_email_filter_tables(connection, cursor)
 
             try:
                 connection.close()
@@ -2865,7 +2816,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 pass
             return 1
         except BaseException as msg:
-            Upgrade.stdOut('Login-system database migration failed: %s' % msg, 0)
+            Upgrade.stdOut('Mail-server database migration failed: %s' % msg, 0)
             return 0
 
     @staticmethod
@@ -5478,7 +5429,8 @@ pm.max_spare_servers = 3
 
         ##
 
-        Upgrade.mailServerMigrations()
+        if Upgrade.mailServerMigrations() != 1:
+            raise RuntimeError('Required mail-server database migrations failed')
         Upgrade.emailMarketingMigrationsa()
         Upgrade.dockerMigrations()
         Upgrade.CLMigrations()
