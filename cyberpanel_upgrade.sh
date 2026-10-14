@@ -610,7 +610,7 @@ Install_Panel_Runtime_Requirements() {
     echo 'Panel runtime interpreter or requirements are unavailable.' >&2
     return 1
   fi
-  if ! Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip install --upgrade setuptools packaging; then
+  if ! Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip install --upgrade pip setuptools wheel packaging; then
     return 1
   fi
   for attempt in 1 2; do
@@ -622,6 +622,28 @@ Install_Panel_Runtime_Requirements() {
     echo "Panel runtime requirements attempt $attempt failed." >&2
   done
   return 1
+}
+
+# Keep the complete interpreter/dependency set together: preserving only lswsgi
+# is unsafe when it was built against a different Python version.
+Backup_Panel_Runtime() {
+  local runtime_root="$1" backup_directory="$2" component
+  for component in bin lib lib64 pyvenv.cfg; do
+    if [[ -e "$runtime_root/$component" || -L "$runtime_root/$component" ]]; then
+      cp -a "$runtime_root/$component" "$backup_directory/" || return 1
+    fi
+  done
+}
+
+Restore_Panel_Runtime() {
+  local runtime_root="$1" backup_directory="$2" component
+  [[ -d "$backup_directory" ]] || return 1
+  for component in bin lib lib64 pyvenv.cfg; do
+    rm -rf "$runtime_root/$component" || return 1
+    if [[ -e "$backup_directory/$component" || -L "$backup_directory/$component" ]]; then
+      cp -a "$backup_directory/$component" "$runtime_root/" || return 1
+    fi
+  done
 }
 
 Build_Panel_LSWSGI() {
@@ -978,7 +1000,7 @@ fi
 
 # shellcheck disable=SC1091
 . /usr/local/CyberPanel/bin/activate
-if ! /usr/local/CyberPanel/bin/python -m pip install --upgrade setuptools packaging; then
+if ! /usr/local/CyberPanel/bin/python -m pip install --upgrade pip setuptools wheel packaging; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Unable to prepare the CyberPanel upgrade environment" | tee -a /var/log/cyberpanel_upgrade_debug.log
   exit 1
 fi
@@ -1086,15 +1108,6 @@ fi
 upgrade_status=("${PIPESTATUS[@]}")
 RETURN_CODE=${upgrade_status[0]}
 
-# Check for TypeError specifically
-if grep -q "TypeError: expected string or bytes-like object" "$upgrade_output_file"; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: TypeError detected in upgrade.py, but continuing..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    # Check if upgrade actually completed despite the error
-    if grep -q "Upgrade Completed" "$upgrade_output_file"; then
-        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrade completed despite TypeError" | tee -a /var/log/cyberpanel_upgrade_debug.log
-        RETURN_CODE=0
-    fi
-fi
 rm -f "$upgrade_output_file"
 # A successful tee must not mask Python failures, nor may logging failures
 # turn into a successful upgrade.
@@ -1160,16 +1173,26 @@ if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
   NEEDS_RECREATE=1
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old CyberCP virtual environment directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-rm -rf /usr/local/CyberCP/bin
-rm -rf /usr/local/CyberCP/lib
-rm -rf /usr/local/CyberCP/lib64
-rm -rf /usr/local/CyberCP/pyvenv.cfg
+# Snapshot before cleanup; network/package/compiler failures must not destroy
+# the previously installed panel runtime. Abort before deleting anything if the
+# snapshot cannot be completed (for example, when the disk is full).
+local runtime_backup runtime_failed=0
+runtime_backup=$(mktemp -d /usr/local/CyberCP/.runtime-backup.XXXXXX) || return 1
+if ! Backup_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
+  rm -rf "$runtime_backup"
+  echo 'ERROR: Cannot preserve the existing panel runtime; rebuild aborted.' >&2
+  return 1
+fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP virtual environment status after cleanup..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-
-# After removing directories, we always need to recreate
-if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
+# Preserve an existing Python 3 environment. A missing or broken interpreter
+# still requires recreation; the snapshot above protects both paths on failure.
+if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -x /usr/local/CyberCP/bin/python ]] \
+    || ! env -u PYTHONHOME -u PYTHONPATH /usr/local/CyberCP/bin/python -c 'import sys; sys.exit(sys.version_info[0] != 3)' 2>/dev/null; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old CyberCP virtual environment directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  rm -rf /usr/local/CyberCP/bin
+  rm -rf /usr/local/CyberCP/lib
+  rm -rf /usr/local/CyberCP/lib64
+  rm -rf /usr/local/CyberCP/pyvenv.cfg
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating/recreating CyberCP virtual environment with Python 3..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   
   # First ensure the directory exists
@@ -1224,7 +1247,7 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
       echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
     fi
     
-    if [[ -f /usr/local/CyberCP/bin/activate ]]; then
+    if [[ "$VENV_CODE" -eq 0 && -f /usr/local/CyberCP/bin/activate ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Virtual environment created successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
       VENV_SUCCESS=1
       VENV_CODE=0
@@ -1240,7 +1263,12 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
   if [[ $VENV_CODE -ne 0 ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Virtualenv creation failed with code $VENV_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
     echo -e "Virtualenv creation failed. Please check the logs at /var/log/cyberpanel_upgrade_debug.log"
-    exit $VENV_CODE
+    if Restore_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
+      rm -rf "$runtime_backup"
+    else
+      echo "ERROR: Runtime restore failed; backup retained at $runtime_backup" >&2
+    fi
+    return "$VENV_CODE"
   fi
 else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] CyberCP virtualenv already exists, skipping recreation" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1254,6 +1282,7 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading and installing panel runtime
 if ! Download_Requirement \
     || ! Install_Panel_Runtime_Requirements /usr/local/CyberCP/bin/python /usr/local/requirments.txt; then
   UPGRADE_FAILED=1
+  runtime_failed=1
   echo 'ERROR: Panel runtime requirements could not be installed and verified.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
@@ -1261,6 +1290,7 @@ fi
 # failed, but never convert its failure to an upgrade-success result.
 if ! Build_Panel_LSWSGI /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/lswsgi; then
   UPGRADE_FAILED=1
+  runtime_failed=1
   echo 'ERROR: Panel WSGI build or installation failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
@@ -1268,7 +1298,18 @@ if ! Validate_Python_Requirements /usr/local/CyberCP/bin/python /usr/local/requi
     || ! env -u PYTHONHOME -u PYTHONPATH /usr/local/CyberCP/bin/python -c 'import django, docker, CloudFlare' 2>/dev/null \
     || [[ ! -x /usr/local/CyberCP/bin/lswsgi || ! -s /usr/local/CyberCP/bin/lswsgi ]]; then
   UPGRADE_FAILED=1
+  runtime_failed=1
   echo 'ERROR: Final panel runtime verification failed.' | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+if [[ "$runtime_failed" -ne 0 ]]; then
+  if Restore_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
+    rm -rf "$runtime_backup"
+    echo 'Previous panel runtime restored after a failed rebuild.'
+  else
+    echo "ERROR: Runtime restore failed; backup retained at $runtime_backup" >&2
+  fi
+else
+  rm -rf "$runtime_backup"
 fi
 [[ "$UPGRADE_FAILED" -eq 0 ]]
 }

@@ -77,11 +77,11 @@ print('UPGRADE-FINISHED')
         self.assertIn('failure detail', self.log.read_text())
         self.assertEqual([], list(self.root.glob('output.*')))
 
-    def test_legacy_completion_detection_uses_only_this_run(self):
+    def test_completion_banner_cannot_override_a_failed_python_process(self):
         self.log.write_text('Upgrade Completed\n')
         error = "print('TypeError: expected string or bytes-like object')\n"
         self.assertEqual(37, self.run_upgrade(error + 'raise SystemExit(37)\n').returncode)
-        self.assertEqual(0, self.run_upgrade(error + "print('Upgrade Completed')\nraise SystemExit(37)\n").returncode)
+        self.assertEqual(37, self.run_upgrade(error + "print('Upgrade Completed')\nraise SystemExit(37)\n").returncode)
 
     def test_logging_failure_cannot_become_success(self):
         commands = self.root / 'commands'
