@@ -274,6 +274,14 @@ class mailUtilities:
                 command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
                 ProcessUtilities.normalExecutioner(command)
 
+            # Failed generation must not change signing tables or restart mail.
+            from plogical.dkimPublicKey import parse_dkim_public_key
+            keyDirectory = '/etc/opendkim/keys/' + virtualHostName
+            with open(keyDirectory + '/default.txt', encoding='utf-8') as keyFile:
+                parse_dkim_public_key(keyFile.read())
+            if not os.path.isfile(keyDirectory + '/default.private') or os.path.getsize(keyDirectory + '/default.private') == 0:
+                raise ValueError('DKIM private key is missing; key generation did not complete.')
+
             ## Edit key file
 
             keyTable = "/etc/opendkim/KeyTable"

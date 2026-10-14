@@ -42,6 +42,7 @@ import os
 from plogical.processUtilities import ProcessUtilities
 from plogical.premiumEntitlements import premium_entitlement_required
 from plogical.legacyWebmail import legacy_data_permission_commands
+from plogical.dkimPublicKey import parse_dkim_public_key
 import bcrypt
 import threading as multi
 import argparse
@@ -702,16 +703,16 @@ class MailServerManager(multi.Thread):
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
                 output = ProcessUtilities.outputExecutioner(command, 'opendkim')
-                leftIndex = output.index('(') + 2
-                rightIndex = output.rindex(')') - 1
+                publicKey = parse_dkim_public_key(output)
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.private"
                 command = "sudo cat " + path
                 privateKey = ProcessUtilities.outputExecutioner(command, 'opendkim')
 
-                DNS.createDKIMRecords(domainName)
+                if DNS.createDKIMRecords(domainName) != 1:
+                    raise ValueError('Could not publish the DKIM DNS record; check the panel DNS log.')
 
-                data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
+                data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': publicKey,
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
@@ -772,24 +773,15 @@ class MailServerManager(multi.Thread):
                 zone = dnsDomains.objects.get(name=topLevelDomain)
                 zone.save()
 
-                path = "/etc/opendkim/keys/" + domainName + "/default.txt"
+                # setupDKIM stores the key pair under the registrable domain,
+                # including when signing a child domain.
+                path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
                 command = "cat " + path
                 output = ProcessUtilities.outputExecutioner(command)
-                leftIndex = output.index('(') + 2
-                rightIndex = output.rindex(')') - 1
+                parse_dkim_public_key(output)
 
-                DNS.createDKIMRecords(domainName)
-
-                record = dnsRecords(domainOwner=zone,
-                                    domain_id=zone.id,
-                                    name="default._domainkey." + domainName,
-                                    type="TXT",
-                                    content=output[leftIndex:rightIndex],
-                                    ttl=3600,
-                                    prio=0,
-                                    disabled=0,
-                                    auth=1)
-                record.save()
+                if DNS.createDKIMRecords(domainName) != 1:
+                    raise ValueError('Could not publish the DKIM DNS record; check the panel DNS log.')
 
                 data_ret = {'status': 1, 'generateStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
