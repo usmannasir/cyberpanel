@@ -199,6 +199,9 @@
                         </div>
                     {% endif %}
 
+                    {% if theme_catalog_unavailable %}
+                        <p role="status">{% trans "The online theme catalogue is temporarily unavailable. You can still edit or clear your custom CSS and save changes." %}</p>
+                    {% endif %}
                     <div class="form-group">
                         <label class="form-label">{% trans "Select Theme" %}</label>
                         <select ng-change="getthemedata()" ng-model="stheme" id="stheme" class="form-select">
