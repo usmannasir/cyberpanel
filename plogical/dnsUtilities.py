@@ -560,8 +560,8 @@ class DNS:
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
             command = "cat " + path
             output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-            leftIndex = output.index('(') + 2
-            rightIndex = output.rindex(')') - 1
+            from plogical.dkimPublicKey import parse_dkim_public_key
+            publicKey = '"' + parse_dkim_public_key(output) + '"'
 
             if Records.objects.filter(domainOwner=zone, name="default._domainkey." + topLevelDomain).count() == 0:
 
@@ -569,7 +569,7 @@ class DNS:
                                  domain_id=zone.id,
                                  name="default._domainkey." + topLevelDomain,
                                  type="TXT",
-                                 content=output[leftIndex:rightIndex],
+                                 content=publicKey,
                                  ttl=3600,
                                  prio=0,
                                  disabled=0,
@@ -577,9 +577,7 @@ class DNS:
                 record.save()
             #### in else we need to update record if new key found
             else:
-                rcrd = Records.objects.get(domainOwner=zone, name="default._domainkey." + topLevelDomain)
-                rcrd.content =  output[leftIndex:rightIndex]
-                rcrd.save()
+                Records.objects.filter(domainOwner=zone, name="default._domainkey." + topLevelDomain).update(content=publicKey)
 
 
             if len(subDomain) > 0:
@@ -588,7 +586,7 @@ class DNS:
                                      domain_id=zone.id,
                                      name="default._domainkey." + domain,
                                      type="TXT",
-                                     content=output[leftIndex:rightIndex],
+                                     content=publicKey,
                                      ttl=3600,
                                      prio=0,
                                      disabled=0,
@@ -596,9 +594,7 @@ class DNS:
                     record.save()
                 #### in else we need to update record of new key found
                 else:
-                    rcrd = Records.objects.get(domainOwner=zone, name="default._domainkey." + domain)
-                    rcrd.content = output[leftIndex:rightIndex]
-                    rcrd.save()
+                    Records.objects.filter(domainOwner=zone, name="default._domainkey." + domain).update(content=publicKey)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = ' systemctl restart pdns'
@@ -620,18 +616,23 @@ class DNS:
                             zone = zone['id']
 
                             DNS.createDNSRecordCloudFlare(cf, zone, "default._domainkey." + topLevelDomain, 'TXT',
-                                                          output[leftIndex:rightIndex], 0,
+                                                          publicKey, 0,
                                                           3600)
 
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
                         logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        return 0
                     except Exception as e:
                         logging.CyberCPLogFileWriter.writeToFile(str(e))
+                        return 0
+
+            return 1
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
+            return 0
 
     @staticmethod
     def getZoneObject(virtualHostName):
