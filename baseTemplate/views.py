@@ -418,21 +418,13 @@ def design(request):
         cosmetic.save()
         finalData['saved'] = 1
 
-    ####### Fetch sha...
-
-    sha_url = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/commits"
-
-    sha_res = requests.get(sha_url)
-
-    sha = sha_res.json()[0]['sha']
-
-    l = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/git/trees/%s" % sha
-    fres = requests.get(l)
-    tott = len(fres.json()['tree'])
     finalData['tree'] = []
-    for i in range(tott):
-        if (fres.json()['tree'][i]['type'] == "tree"):
-            finalData['tree'].append(fres.json()['tree'][i]['path'])
+    try:
+        from baseTemplate.themeCatalog import fetch_theme_catalog
+        finalData['tree'] = fetch_theme_catalog(requests.get)
+    except Exception as error:
+        logging.CyberCPLogFileWriter.writeToFile('Optional theme catalogue unavailable: ' + str(error))
+        finalData['theme_catalog_unavailable'] = True
 
     template = 'baseTemplate/design.html'
     finalData['cosmetic'] = cosmetic
