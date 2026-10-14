@@ -642,7 +642,7 @@ Install_Panel_Runtime_Requirements() {
     echo 'Panel runtime interpreter or requirements are unavailable.' >&2
     return 1
   fi
-  if ! Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip install --upgrade setuptools packaging; then
+  if ! Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -m pip install --upgrade pip setuptools wheel packaging; then
     return 1
   fi
   for attempt in 1 2; do
@@ -1052,7 +1052,7 @@ fi
 
 # shellcheck disable=SC1091
 . /usr/local/CyberPanel/bin/activate
-if ! /usr/local/CyberPanel/bin/python -m pip install --upgrade setuptools packaging; then
+if ! /usr/local/CyberPanel/bin/python -m pip install --upgrade pip setuptools wheel packaging; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] FATAL: Unable to prepare the CyberPanel upgrade environment" | tee -a /var/log/cyberpanel_upgrade_debug.log
   exit 1
 fi
@@ -1240,16 +1240,15 @@ if ! Backup_Panel_Runtime /usr/local/CyberCP "$runtime_backup"; then
   return 1
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old CyberCP virtual environment directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-rm -rf /usr/local/CyberCP/bin
-rm -rf /usr/local/CyberCP/lib
-rm -rf /usr/local/CyberCP/lib64
-rm -rf /usr/local/CyberCP/pyvenv.cfg
-
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP virtual environment status after cleanup..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-
-# After removing directories, we always need to recreate
-if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
+# Preserve an existing Python 3 environment. A missing or broken interpreter
+# still requires recreation; the snapshot above protects both paths on failure.
+if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -x /usr/local/CyberCP/bin/python ]] \
+    || ! env -u PYTHONHOME -u PYTHONPATH /usr/local/CyberCP/bin/python -c 'import sys; sys.exit(sys.version_info[0] != 3)' 2>/dev/null; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old CyberCP virtual environment directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  rm -rf /usr/local/CyberCP/bin
+  rm -rf /usr/local/CyberCP/lib
+  rm -rf /usr/local/CyberCP/lib64
+  rm -rf /usr/local/CyberCP/pyvenv.cfg
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating/recreating CyberCP virtual environment with Python 3..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   
   # First ensure the directory exists

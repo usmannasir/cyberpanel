@@ -36,6 +36,7 @@ class UpgradeRuntimeRequirementsTests(unittest.TestCase):
 command_args=$(printf '%s' "$*" | tr '\\n' ' ')
 printf '%s|%s|%s|%s\n' "$0" "$command_args" "${PYTHONHOME-unset}" "${PYTHONPATH-unset}" >> "$AUDIT_TRACE"
 case "$*" in
+  *'sys.version_info[0] != 3'*) exit "${FAKE_INTERPRETER_EXIT:-0}" ;;
   '-m pip --version') exit "${FAKE_PIP_MISSING:-0}" ;;
   '-m ensurepip --upgrade') exit "${FAKE_ENSUREPIP_EXIT:-0}" ;;
   *'--no-deps filelock<4'*) exit "${FAKE_FILELOCK_INSTALL_EXIT:-0}" ;;
@@ -192,6 +193,30 @@ exit 0
         self.assertNotEqual(0, self.install_panel(FAKE_INSTALL_EXIT=41).returncode)
         self.assertEqual('2', self.count.read_text().strip())
 
+    def test_panel_bootstraps_pip_and_wheel_before_runtime_requirements(self):
+        self.assertEqual(0, self.install_panel().returncode)
+        trace = self.trace.read_text().splitlines()
+        bootstrap = next(i for i, line in enumerate(trace)
+                         if 'install --upgrade pip setuptools wheel packaging' in line)
+        requirements = next(i for i, line in enumerate(trace) if '--ignore-installed -r' in line)
+        self.assertLess(bootstrap, requirements)
+
+    def test_existing_python3_runtime_is_not_removed_or_recreated(self):
+        main = self.function('Main_Upgrade')
+        start = main.index('# Snapshot before cleanup;')
+        end = main.index('echo -e "[$(date', main.index('No need to re-setup virtualenv'))
+        block = main[start:end].replace('/usr/local/CyberCP', str(self.runtime.parent.parent))
+        original = self.runtime.read_bytes()
+        marker = self.runtime.parent.parent / 'lib/installed-package'
+        marker.parent.mkdir()
+        marker.write_bytes(b'keep existing dependencies')
+        result = self.run_shell('Check_Runtime() {\nNEEDS_RECREATE=0\n' + block +
+                                '\nrm -rf "$runtime_backup"\n}\nCheck_Runtime')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn('skipping recreation', result.stdout)
+        self.assertEqual(original, self.runtime.read_bytes())
+        self.assertEqual(b'keep existing dependencies', marker.read_bytes())
+
     def test_panel_recovers_only_after_verified_retry(self):
         self.assertEqual(0, self.install_panel(FAKE_FAIL_FIRST_INSTALL=1).returncode)
         self.assertEqual('2', self.count.read_text().strip())
@@ -326,6 +351,7 @@ Build_Panel_LSWSGI() {
 }
 Validate_Python_Requirements() { return "${FAIL_VALIDATE:-0}"; }
 Main_Upgrade() {
+NEEDS_RECREATE=1
 ''' + tail + '\nUPGRADE_FAILED=0\nMain_Upgrade\n'
         for stage in ('VENV', 'DOWNLOAD', 'INSTALL', 'BUILD', 'VALIDATE', 'SUCCESS'):
             with self.subTest(stage=stage):
@@ -351,7 +377,7 @@ Main_Upgrade() {
 
     def test_snapshot_failure_aborts_before_existing_runtime_is_deleted(self):
         main = self.function('Main_Upgrade')
-        block = main[main.index('# Snapshot before cleanup;'):main.index('echo -e "[$(date', main.index('# Snapshot before cleanup;'))]
+        block = main[main.index('# Snapshot before cleanup;'):main.index('# Preserve an existing Python 3 environment.')]
         block = block.replace('/usr/local/CyberCP', str(self.runtime.parent.parent))
         original = self.runtime.read_bytes()
         result = self.run_shell('Backup_Panel_Runtime() { return 1; }\nMain_Upgrade() {\n'
