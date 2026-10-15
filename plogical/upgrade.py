@@ -3197,10 +3197,22 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
     @staticmethod
     def setupSieve():
         """Enable Sieve plugin and ManageSieve for email filtering (idempotent)"""
+        checkpoint = None
         try:
             if not os.path.exists('/etc/dovecot/dovecot.conf'):
                 Upgrade.stdOut("Dovecot not installed, skipping Sieve setup.", 0)
                 return
+
+            from plogical.sieveUpgrade import (prepare_sieve_upgrade,
+                                               SieveConfigCheckpoint,
+                                               activate_sieve_config)
+            if not prepare_sieve_upgrade(Upgrade.stdOut):
+                return
+            checkpoint = SieveConfigCheckpoint([
+                '/etc/dovecot/dovecot.conf',
+                '/etc/dovecot/dovecot-sql.conf.ext',
+                '/etc/dovecot/conf.d/20-managesieve.conf',
+            ])
 
             ## Ensure cyrus-sasl-plain is installed (needed for SMTP relay on RHEL/Alma/CentOS)
             if os.path.exists('/etc/redhat-release'):
@@ -3295,11 +3307,8 @@ protocol sieve {
 }
 """)
 
-            # Install sieve packages if missing
-            if os.path.exists('/etc/lsb-release') or os.path.exists('/etc/debian_version'):
-                Upgrade.executioner('apt-get install -y dovecot-sieve dovecot-managesieved', 'Install Sieve packages', 0)
-            else:
-                Upgrade.executioner('yum install -y dovecot-pigeonhole', 'Install Sieve packages', 0)
+            if not activate_sieve_config(checkpoint, Upgrade.stdOut):
+                return
 
             # Open firewall port
             try:
@@ -3308,10 +3317,11 @@ protocol sieve {
             except:
                 pass
 
-            subprocess.call(['systemctl', 'restart', 'dovecot'])
             Upgrade.stdOut("Sieve setup complete!", 0)
 
         except BaseException as msg:
+            if checkpoint is not None:
+                checkpoint.restore()
             Upgrade.stdOut("setupSieve error: " + str(msg), 0)
 
     @staticmethod
