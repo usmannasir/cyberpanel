@@ -522,6 +522,12 @@
         <div class="panel">
             <div class="panel-body">
                 <div class="example-box-wrapper">
+
+                    {% if not terminal_service_ready %}
+                    <div class="alert alert-warning">
+                        {% trans "The Web Terminal service is not running or its status is unavailable. Ask your server administrator to verify its setup and management-access restrictions. Opening this page does not start services or change firewall rules." %}
+                    </div>
+                    {% endif %}
                     
                     {% if accessed_via_ip %}
                     <div class="alert alert-danger">
