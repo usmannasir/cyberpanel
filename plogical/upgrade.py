@@ -3841,21 +3841,26 @@ passdb {
             pass
 
     @staticmethod
-    def enableServices():
+    def enableServices(service_root='/home/cyberpanel'):
+        """Reflect installed optional services without inventing a full install."""
         try:
-            servicePath = '/home/cyberpanel/powerdns'
-            writeToFile = open(servicePath, 'w+')
-            writeToFile.close()
-
-            servicePath = '/home/cyberpanel/postfix'
-            writeToFile = open(servicePath, 'w+')
-            writeToFile.close()
-
-            servicePath = '/home/cyberpanel/pureftpd'
-            writeToFile = open(servicePath, 'w+')
-            writeToFile.close()
-        except:
-            pass
+            services = (
+                ('powerdns', 'pdns_server', ('/etc/pdns/pdns.conf', '/etc/powerdns/pdns.conf')),
+                ('postfix', 'postfix', ('/etc/postfix/main.cf',)),
+                ('pureftpd', 'pure-ftpd', ('/etc/pure-ftpd/pureftpd-mysql.conf',
+                                          '/etc/pure-ftpd/db/mysql.conf')),
+            )
+            for name, binary, configs in services:
+                marker = os.path.join(service_root, name)
+                if os.path.exists(marker):
+                    continue  # Preserve existing selection/state, never truncate it.
+                if shutil.which(binary) and any(os.path.isfile(path) for path in configs):
+                    with open(marker, 'a'):
+                        pass
+                else:
+                    Upgrade.stdOut('Optional service %s is not installed; its marker was not enabled.' % name, 0)
+        except Exception as msg:
+            Upgrade.stdOut('Unable to record optional service state: %s' % msg, 0)
 
     @staticmethod
     def backupCriticalFiles():
