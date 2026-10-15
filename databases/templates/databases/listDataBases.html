@@ -481,7 +481,6 @@
     }
 </style>
 {% endblock %}
-
 {% block content %}
 {% load static %}
 {% get_current_language as LANGUAGE_CODE %}
@@ -571,7 +570,7 @@
                 </button>
             </div>
 
-            <button type="button" ng-click="changePasswordBtn()" class="btn btn-primary btn-lg">
+            <button type="button" ng-click="changePasswordBtn()" ng-disabled="passwordChangePending" class="btn btn-primary btn-lg">
                 <i class="fas fa-save"></i>
                 {% trans "Change Password" %}
             </button>
@@ -684,29 +683,4 @@
     </div>
 </div>
 
-{% endblock %}
-
-{% block footer_scripts %}
-<script>
-// Hide password change section when change password is successful
-$(document).ready(function() {
-    var scope = angular.element($('[ng-controller="listDBs"]')).scope();
-    if (scope) {
-        // Override changePasswordBtn to hide the section after success
-        var originalChangePasswordBtn = scope.changePasswordBtn;
-        scope.changePasswordBtn = function() {
-            if (originalChangePasswordBtn) {
-                originalChangePasswordBtn();
-            }
-            // Hide the password change section after a delay
-            setTimeout(function() {
-                if (!scope.changePasswordBox) {
-                    scope.changePasswordBox = true;
-                    scope.$apply();
-                }
-            }, 2000);
-        };
-    }
-});
-</script>
 {% endblock %}
