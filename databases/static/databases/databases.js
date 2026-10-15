@@ -636,12 +636,16 @@ app.controller('listDBs', function ($scope, $http) {
 
 app.controller('phpMyAdmin', function ($scope, $http, $window) {
     $scope.cyberPanelLoading = true;
+    $scope.phpMyAdminPending = false;
+    $scope.phpMyAdminError = '';
 
     $scope.generateAccess = function () {
-
+        if ($scope.phpMyAdminPending) return;
+        $scope.phpMyAdminPending = true;
+        $scope.phpMyAdminError = '';
         $scope.cyberPanelLoading = false;
 
-        url = "/dataBases/generateAccess";
+        var url = "/dataBases/generateAccess";
 
         var data = {};
 
@@ -657,7 +661,10 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
 
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = true;
-            if (response.data.status === 1) {
+            var result = response && response.data;
+            if (result && result.status === 1 &&
+                    typeof result.username === 'string' && result.username &&
+                    typeof result.token === 'string' && result.token) {
                 //var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
                 //$window.location.href = rUrl;
 
@@ -687,12 +694,16 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
                 form.submit();
 
             } else {
+                $scope.phpMyAdminPending = false;
+                $scope.phpMyAdminError = 'Unable to generate phpMyAdmin access. Check your panel session and the CyberPanel error log, then retry. Do not share access tokens or database credentials.';
             }
 
         }
 
         function cantLoadInitialDatas(response) {
             $scope.cyberPanelLoading = true;
+            $scope.phpMyAdminPending = false;
+            $scope.phpMyAdminError = 'The phpMyAdmin access request failed. Check your connection and panel session, then retry.';
         }
 
     }
