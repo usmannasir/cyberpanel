@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load static %}
-{% block module_scripts %}<script defer src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}-gdrive-handoff-2"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Google Drive Backups - CyberPanel" %}{% endblock %}
 {% block content %}
@@ -618,11 +618,20 @@
                             </label>
                             <input name="accountName" type="text" class="form-control" 
                                    ng-model="accountName" 
-                                   placeholder="{% trans 'e.g., My Google Drive Backup' %}" required>
+                                   maxlength="50" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,49}"
+                                   placeholder="{% trans 'e.g., my-drive-backup' %}" required>
                             <small class="form-text text-muted">
                                 {% trans "Choose a descriptive name for this Google Drive account" %}
                             </small>
                         </div>
+                        <div class="form-group">
+                            <label>{% trans "Your Google OAuth client ID" %}</label>
+                            <input class="form-control" ng-model="client_id" autocomplete="off" required>
+                            <label>{% trans "Your Google OAuth client secret" %}</label>
+                            <input class="form-control" ng-model="client_secret" type="password" autocomplete="off" required>
+                            <small>{% trans "Use your own Google OAuth client. This grants access only to files created by this app. Existing accounts and schedules are not changed." %}</small>
+                        </div>
+                        <p ng-if="!gdriveSetupEnabled" ng-bind="gdriveSetupReason" role="status"></p>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -630,7 +639,7 @@
                         <i class="fas fa-times"></i>
                         {% trans "Cancel" %}
                     </button>
-                    <button type="button" class="btn-primary" ng-click="setupAccount()">
+                    <button type="button" class="btn-primary" ng-click="setupAccount()" ng-disabled="!gdriveSetupEnabled || gdriveSetupPending || containerSettingsForm.$invalid">
                         <i class="fas fa-check"></i>
                         {% trans "Continue Setup" %}
                         <span ng-hide="cyberPanelLoading" class="loading-spinner" style="width: 16px; height: 16px;"></span>

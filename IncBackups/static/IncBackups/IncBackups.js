@@ -1848,6 +1848,18 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
 app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
     $scope.cyberpanelLoading = true;
+    $scope.gdriveAvailable = false;
+    $scope.gdriveUnavailableReason = 'Checking secure Google Drive setup availability.';
+    function unavailable() {
+        $scope.gdriveAvailable = false;
+        $scope.gdriveUnavailableReason = 'New Google Drive connections are not enabled for this installation. Existing backups are unchanged. Contact your administrator.';
+    }
+    $http.get('/IncrementalBackups/GDriveSetupStatus').then(function (response) {
+        if (response.data && response.data.status === 1 && response.data.enabled === true) {
+            $scope.gdriveAvailable = true;
+            $scope.gdriveUnavailableReason = '';
+        } else unavailable();
+    }, unavailable);
     $scope.selectbackuptype = function () {
 
         $scope.cyberpanelLoading = false;
@@ -1864,7 +1876,41 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
 
 
     $scope.setupAccount = function () {
-        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&client_id=' + $scope.client_id + '&client_secret=' + $scope.client_secret + '&server=' + window.location.href + 'Setup&domain=' + $scope.selwebsite);
+        if (!$scope.gdriveAvailable || $scope.gdriveSetupPending) return;
+        $scope.gdriveSetupPending = true;
+        $scope.cyberpanelLoading = false;
+        // Open only a blank tab synchronously; credentials go in the protected POST body.
+        var popup = window.open('about:blank', '_blank');
+        if (popup) popup.opener = null;
+        function failed() {
+            if (popup) popup.close();
+            $scope.client_secret = '';
+            $scope.gdriveSetupPending = false;
+            $scope.cyberpanelLoading = true;
+            new PNotify({title: 'Google Drive setup failed',
+                text: 'Could not start Google Drive setup. Check the required fields and try again.', type: 'error'});
+        }
+        if (!popup) { failed(); return; }
+        $http.post('/IncrementalBackups/BeginV2GDriveSetup', {
+            Selectedwebsite: $scope.selwebsite, accountName: $scope.accountName,
+            client_id: $scope.client_id, client_secret: $scope.client_secret
+        }, {headers: {'X-CSRFToken': getCookie('csrftoken')}}).then(function (response) {
+            if (!response.data || response.data.status !== 1 || !popup) { failed(); return; }
+            try {
+                var target = new URL(response.data.authorization_url);
+                if (target.protocol !== 'https:' || target.pathname !== '/gDrive/v2/start' ||
+                    target.username || target.password || target.hash ||
+                    target.searchParams.getAll('handoff').length !== 1 ||
+                    Array.from(target.searchParams.keys()).some(function (key) { return key !== 'handoff'; }) ||
+                    !/^[A-Za-z0-9_-]{43}$/.test(target.searchParams.get('handoff'))) {
+                    failed(); return;
+                }
+                popup.location.href = target.href;
+                $scope.client_secret = '';
+                $scope.gdriveSetupPending = false;
+                $scope.cyberpanelLoading = true;
+            } catch (error) { failed(); }
+        }, failed);
     };
 
     $scope.ConfigerSFTP = function () {

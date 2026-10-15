@@ -29,6 +29,7 @@ from plogical.normalBackupUtilities import (
     prepare_local_backup_run,
     prune_expired_local_backup_runs,
 )
+from plogical.gdriveRefresh import drive_credentials
 import requests
 import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
@@ -282,38 +283,27 @@ Automatic backup failed for %s on %s.
                 if items.runTime == type:
                     gDriveData = json.loads(items.auth)
                     try:
-                        credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
-                                                                            gDriveData['refresh_token'],
-                                                                            gDriveData['token_uri'], None, None,
-                                                                            gDriveData['scopes'])
+                        credentials, refreshed = drive_credentials(gDriveData)
 
                         drive = build('drive', 'v3', credentials=credentials)
                         drive.files().list(pageSize=10, fields="files(id, name)").execute()
+                        if refreshed != gDriveData:
+                            items.auth = json.dumps(refreshed)
+                            items.save()
+                            gDriveData = refreshed
                     except BaseException as msg:
                         try:
-                            import requests
-                            finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
-                            r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
-                                              )
-
-                            gDriveData['token'] = json.loads(r.text)['access_token']
-
-                            credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
-                                                                                gDriveData['refresh_token'],
-                                                                                gDriveData['token_uri'],
-                                                                                None,
-                                                                                None,
-                                                                                gDriveData['scopes'])
+                            credentials, refreshed = drive_credentials(gDriveData, force_refresh=True)
 
                             drive = build('drive', 'v3', credentials=credentials)
                             drive.files().list(pageSize=5, fields="files(id, name)").execute()
 
-                            items.auth = json.dumps(gDriveData)
+                            items.auth = json.dumps(refreshed)
                             items.save()
+                            gDriveData = refreshed
                         except BaseException as msg:
                             GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
-                                          message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (
-                                              str(msg))).save()
+                                          message='Connection to this Google Drive account failed. Check authorization.').save()
                             continue
 
                     try:
@@ -384,24 +374,14 @@ Automatic backup failed for %s on %s.
                             try:
                                 drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
                             except:
-                                import requests
-                                finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
-                                r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
-                                                  )
-                                gDriveData['token'] = json.loads(r.text)['access_token']
-
-                                credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
-                                                                                    gDriveData['refresh_token'],
-                                                                                    gDriveData['token_uri'],
-                                                                                    None,
-                                                                                    None,
-                                                                                    gDriveData['scopes'])
+                                credentials, refreshed = drive_credentials(gDriveData, force_refresh=True)
 
                                 drive = build('drive', 'v3', credentials=credentials)
                                 drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
 
-                                items.auth = json.dumps(gDriveData)
+                                items.auth = json.dumps(refreshed)
                                 items.save()
+                                gDriveData = refreshed
 
                             GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                           message='Backup for %s successfully sent to Google Drive.' % (

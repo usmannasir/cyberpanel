@@ -25,7 +25,7 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                                 <div class="col-sm-6">
-                                    <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite"
+                                    <select id="selwebsite" ng-model="selwebsite"
                                             class="form-control">
                                         {% for items in websiteList %}
                                             <option value="{{ items }}">{{ items }}</option>
@@ -58,6 +58,7 @@
                                         <h4 class="modal-title">{% trans "Set up account" %}</h4>
                                     </div>
                                     <div class="modal-body">
+                                        <p role="status" ng-if="!gdriveAvailable" ng-bind="gdriveUnavailableReason"></p>
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
 
@@ -72,8 +73,9 @@
                                             <div ng-hide="installationDetailsForm" class="form-group">
                                                 <p style="margin: 1%" class="text-center"><a
                                                         href="https://rclone.org/drive/#making-your-own-client-id">Learn
-                                                    how to create this.</a>. These field can be left empty but backups
-                                                    may not work then. </p>
+                                                    how to create this.</a>. A client ID and client secret from your own
+                                                    Google OAuth application are required. Register the platform callback
+                                                    URL shown in your setup instructions. Do not share these credentials. </p>
                                                 <label class="col-sm-3 control-label">{% trans "client_id" %}</label>
                                                 <div class="col-sm-6">
                                                     <input name="client_id" type="text" class="form-control"
@@ -84,7 +86,7 @@
                                             <div ng-hide="installationDetailsForm" class="form-group">
                                                 <label class="col-sm-3 control-label">{% trans "client_secret" %}</label>
                                                 <div class="col-sm-6">
-                                                    <input name="client_secret" type="text" class="form-control"
+                                                    <input name="client_secret" type="password" autocomplete="off" class="form-control"
                                                            ng-model="client_secret">
                                                 </div>
                                             </div>
@@ -94,7 +96,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-primary"
-                                                ng-click="setupAccount()">Save <img
+                                                ng-disabled="!gdriveAvailable || gdriveSetupPending" ng-click="setupAccount()">Save <img
                                                 ng-hide="cyberpanelLoading"
                                                 src="{% static 'images/loading.gif' %}">
                                         </button>
@@ -231,4 +233,9 @@
     {% endif %}
 
 
+{% endblock %}
+
+{% block module_scripts %}
+    {{ block.super }}
+    <script defer src="{% static 'IncBackups/IncBackups.js' %}?v={{ CP_VERSION }}-gdrive-handoff-2"></script>
 {% endblock %}
