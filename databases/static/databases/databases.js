@@ -370,6 +370,17 @@ app.controller('listDBs', function ($scope, $http) {
 
     $scope.changePasswordBtn = function () {
 
+        if ($scope.passwordChangePending) return;
+        $scope.notificationsBox = true;
+        $scope.canNotChangePassword = true;
+        $scope.couldNotConnect = true;
+        if (typeof $scope.dbPassword !== 'string' || !$scope.dbPassword.length) {
+            $scope.notificationsBox = false;
+            $scope.canNotChangePassword = false;
+            $scope.errorMessage = 'Enter a new database password.';
+            return;
+        }
+        $scope.passwordChangePending = true;
         $scope.dbLoading = false;
         $scope.passwordChanged = true;
 
@@ -392,9 +403,12 @@ app.controller('listDBs', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
-
+            $scope.passwordChangePending = false;
 
             if (response.data.changePasswordStatus == 1) {
+                $scope.changePasswordBox = true;
+                $scope.dbPassword = '';
+                $scope.generatedPasswordView = true;
                 $scope.notificationsBox = false;
                 $scope.passwordChanged = false;
                 $scope.dbLoading = true;
@@ -411,6 +425,7 @@ app.controller('listDBs', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.passwordChangePending = false;
             $scope.notificationsBox = false;
             $scope.couldNotConnect = false;
             $scope.dbLoading = true;
