@@ -8,7 +8,9 @@ from unittest.mock import Mock
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKUP_ACTIONS = (
-    'ConfigureV2BackupSetup', 'CreateV2BackupButton', 'RestorePathV2',
+    # Drive setup now uses the session/CSRF/ownership/entitlement checks exercised
+    # with real Django requests in IncBackups.test_gdrive_oauth.
+    'CreateV2BackupButton', 'RestorePathV2',
     'DeleteSnapshotV2Final', 'selectwebsiteRetorev2', 'ConfigureSftpV2Backup',
     'selectwebsiteCreatev2', 'selectreporestorev2', 'CreateScheduleV2',
 )

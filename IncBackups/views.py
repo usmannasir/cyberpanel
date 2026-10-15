@@ -769,56 +769,14 @@ def ConfigureV2Backup(request):
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
-@premium_entitlement_required('all', label='Backup V2', flags=('installStatus', 'fetchStatus'))
+def BeginV2GDriveSetup(request):
+    from .gdrive_oauth import begin
+    return begin(request)
+
+
 def ConfigureV2BackupSetup(request):
-    try:
-        userID = request.session['userID']
-
-        req_data={}
-        req_data['name'] = 'GDrive'
-        req_data['token'] = request.GET.get('t')
-        req_data['refresh_token'] = request.GET.get('r')
-        req_data['token_uri'] = request.GET.get('to')
-        req_data['scopes'] = request.GET.get('s')
-        req_data['accountname'] = request.GET.get('n')
-        req_data['client_id'] = request.GET.get('client_id')
-        req_data['client_secret'] = request.GET.get('client_secret')
-        website = request.GET.get('d')
-
-        # logging.writeToFile('domainname is ====%s'%(request.GET.get))
-
-        currentACL = ACLManager.loadedACL(userID)
-        admin = Administrator.objects.get(pk=userID)
-
-
-        if ACLManager.checkOwnership(website, admin, currentACL) == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        cpbuv2 = CPBackupsV2(
-            {'domain': website, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
-             'BackupEmails': 1, 'BackendName': 'testremote'})
-
-        status, message = cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
-        from plogical.processUtilities import ProcessUtilities
-
-        if os.path.exists(ProcessUtilities.debugPath):
-            logging.writeToFile(f'Response from SetupRcloneBackend is {str(status)} and message {str(message)}')
-
-        if status == 0:
-            data_ret = {'status': 0, 'error_message': message}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-
-        return ConfigureV2Backup(request)
-
-    except BaseException as msg:
-        logging.writeToFile("Error configure"+str(msg))
-        data_ret = {'status': 0, 'error_message': str(msg) + request.get_raw_uri() }
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+    from .gdrive_oauth import complete
+    return complete(request)
 
 def CreateV2Backup(request):
     try:

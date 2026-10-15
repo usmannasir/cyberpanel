@@ -26,6 +26,7 @@ urlpatterns = [
     # V2 Backups URLs
     path('CreateV2Backup', views.CreateV2Backup, name='CreateV2Backup'),
     path('ConfigureV2Backup', views.ConfigureV2Backup, name='ConfigureV2Backup'),
+    path('BeginV2GDriveSetup', views.BeginV2GDriveSetup, name='BeginV2GDriveSetup'),
     path('ConfigureV2BackupSetup', views.ConfigureV2BackupSetup, name='ConfigureV2BackupSetup'),
     path('RestoreV2backupSite', views.RestoreV2backupSite, name='RestoreV2backupSite'),
     path('selectwebsiteRetorev2', views.selectwebsiteRetorev2, name='selectwebsiteRetorev2'),
