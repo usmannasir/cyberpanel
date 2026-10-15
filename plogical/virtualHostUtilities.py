@@ -494,11 +494,27 @@ class virtualHostUtilities:
         )
 
     @staticmethod
+    def hasUsableMailTLS(domain):
+        try:
+            sslUtilities.validateACMECertificate(
+                '/etc/letsencrypt/live/%s/fullchain.pem' % domain,
+                '/etc/letsencrypt/live/%s/privkey.pem' % domain)
+            return True
+        except Exception:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Skipping mail TLS SNI for %s: a valid certificate/key pair is not available.' % domain)
+            return False
+
+    @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
         # Check if email services are installed before proceeding
         if not virtualHostUtilities.emailServicesInstalled():
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Email services not installed, skipping mail domain setup.')
             logging.CyberCPLogFileWriter.writeToFile('setupAutoDiscover: Email services not installed, skipping.')
+            return
+
+        # A site created without SSL must not make the shared mail config invalid.
+        if not virtualHostUtilities.hasUsableMailTLS(virtualHostName):
             return
 
         if mailDomain:
@@ -517,7 +533,8 @@ class virtualHostUtilities:
 
             dovecotPath = '/etc/dovecot/dovecot.conf'
 
-            if os.path.exists(dovecotPath):
+            if (os.path.exists(dovecotPath)
+                    and virtualHostUtilities.hasUsableMailTLS(childDomain)):
                 dovecotContent = open(dovecotPath, 'r').read()
 
                 if dovecotContent.find('/live/%s/' % (childDomain)) == -1:
