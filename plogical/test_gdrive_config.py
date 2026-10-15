@@ -82,6 +82,31 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(self.config.read_bytes(), old)
         self.assertEqual(list(self.config.parent.glob('.gdrive-*')), [self.config.parent / '.gdrive-oauth.lock'])
 
+    def test_concurrent_native_replacement_is_not_overwritten(self):
+        write_remote(self.home, 'drive', self.credentials)
+        native = b'[native-update]\ntype = local\n'
+        original_fsync = os.fsync
+        def edit(fd):
+            original_fsync(fd)
+            replacement = self.config.with_name('native.conf')
+            replacement.write_bytes(native)
+            replacement.chmod(0o600)
+            os.replace(replacement, self.config)
+        with mock.patch('plogical.gdriveConfig.os.fsync', side_effect=edit), self.assertRaises(ValueError):
+            write_remote(self.home, 'second-drive', self.credentials)
+        self.assertEqual(self.config.read_bytes(), native)
+
+    def test_new_config_created_concurrently_is_not_overwritten(self):
+        native = b'[native-update]\ntype = local\n'
+        original_fsync = os.fsync
+        def edit(fd):
+            original_fsync(fd)
+            self.config.write_bytes(native)
+            self.config.chmod(0o600)
+        with mock.patch('plogical.gdriveConfig.os.fsync', side_effect=edit), self.assertRaises(ValueError):
+            write_remote(self.home, 'drive', self.credentials)
+        self.assertEqual(self.config.read_bytes(), native)
+
 
 if __name__ == '__main__':
     unittest.main()

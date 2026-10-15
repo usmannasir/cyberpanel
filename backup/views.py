@@ -42,12 +42,16 @@ def gDrive(request):
         return redirect(loadLoginPage)
 
 def gDriveSetup(request):
-    try:
-        userID = request.session['userID']
-        wm = BackupManager()
-        return wm.gDriveSetup(userID, request)
-    except KeyError:
-        return redirect(loadLoginPage)
+    from IncBackups.gdrive_oauth import complete
+    return complete(request, mode='normal')
+
+def BeginGDriveSetup(request):
+    from IncBackups.gdrive_oauth import begin
+    return begin(request, mode='normal')
+
+def GDriveSetupStatus(request):
+    from IncBackups.gdrive_oauth import status
+    return status(request, mode='normal')
 
 def fetchgDriveSites(request):
     try:

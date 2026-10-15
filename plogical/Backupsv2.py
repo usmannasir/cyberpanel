@@ -20,6 +20,7 @@ from plogical.backupV2Repository import (
     rustic_repository,
     website_exclude_arguments,
 )
+from plogical.gdriveRefresh import custom_client, legacy_access_token, update_legacy_remote_as_user
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -73,13 +74,16 @@ class CPBackupsV2(multi.Thread):
                 token = json.loads(ProcessUtilities.outputExecutioner(
                     command, self.website.externalApp, True).rstrip('\n'))
                 repoConfig = token.get(reponame, {})
-                if repoConfig.get('type') == 'drive' and repoConfig.get('token'):
+                # Custom-client remotes are refreshed by rclone itself using the
+                # client saved with that remote. Never overwrite them using the
+                # legacy platform's unrelated OAuth client.
+                if repoConfig.get('type') == 'drive' and repoConfig.get('token') and not custom_client(repoConfig):
                     refreshToken = json.loads(
                         repoConfig['token'])['refresh_token']
                     newAccessToken = self.refresh_V2Gdive_token(refreshToken)
-                    command = f"""rclone config update '{reponame}' token '{{"access_token":"{newAccessToken}","token_type":"Bearer","refresh_token":"{refreshToken}","expiry":"2024-04-08T21:53:00.123456789Z"}}' --non-interactive"""
-                    ProcessUtilities.outputExecutioner(
-                        command, self.website.externalApp, True)
+                    if newAccessToken:
+                        update_legacy_remote_as_user(self.website.domain, self.website.externalApp,
+                                                     reponame, newAccessToken, refreshToken)
             except BaseException:
                 logging.CyberCPLogFileWriter.writeToFile(
                     'Failed to refresh the backup repository access token.')
@@ -1052,15 +1056,9 @@ team_drive =
     @staticmethod
     def refresh_V2Gdive_token(refresh_token):
         try:
-            finalData = json.dumps({'refresh_token': refresh_token})
-            r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
-                              )
-            newtoken = json.loads(r.text)['access_token']
-
-            return newtoken
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f'Error in tkupdate: {str(msg)}')
-            print("Error Update token:%s" % msg)
+            return legacy_access_token(refresh_token)
+        except Exception:
+            logging.CyberCPLogFileWriter.writeToFile('Google Drive authorization failed.')
             return None
 
     @staticmethod

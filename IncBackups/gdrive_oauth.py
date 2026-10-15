@@ -27,6 +27,8 @@ ACCOUNT = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$')
 CLIENT = re.compile(r'^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$')
 TOKEN = re.compile(r'^[A-Za-z0-9._~+/=-]{1,8192}$')
 SCOPE = 'https://www.googleapis.com/auth/drive.file'
+CALLBACKS = {'v2': '/IncrementalBackups/ConfigureV2BackupSetup', 'normal': '/backup/gDriveSetup'}
+NORMAL_DOMAIN = 'normal-backup-account'
 
 
 class AccessDenied(Exception):
@@ -82,7 +84,7 @@ def _data(request):
     raise ValueError()
 
 
-def _check_access(request, website):
+def _check_access(request, website, mode='v2', status_only=False):
     from loginSystem.models import Administrator
     from plogical.acl import ACLManager
     user_id = request.session.get('userID')
@@ -93,10 +95,13 @@ def _check_access(request, website):
         acl = ACLManager.loadedACL(user_id)
         if ACLManager.currentContextPermission(acl, 'createBackup') != 1:
             raise AccessDenied()
-        if ACLManager.checkOwnership(website, admin, acl) != 1:
-            raise AccessDenied()
-        entitlement = ACLManager.CheckForPremFeature('all')
-        if type(entitlement) is not int or entitlement != 1:
+        if mode == 'v2':
+            if not status_only and ACLManager.checkOwnership(website, admin, acl) != 1:
+                raise AccessDenied()
+            entitlement = ACLManager.CheckForPremFeature('all')
+            if type(entitlement) is not int or entitlement != 1:
+                raise AccessDenied()
+        elif mode != 'normal':
             raise AccessDenied()
     except Exception:
         raise AccessDenied() from None
@@ -125,9 +130,51 @@ def _post(base, path, payload):
     return data
 
 
+def capability(mode='v2'):
+    """Fail closed until both this installation and the platform support v2."""
+    try:
+        if mode not in CALLBACKS:
+            raise ValueError()
+        base = _base()
+        key = getattr(settings, 'GDRIVE_HANDOFF_REGISTRATION_KEY', '')
+        if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9_-]{32,256}', key):
+            raise ValueError()
+        response = requests.get(base + '/gDrive/capabilities', timeout=(5, 10), allow_redirects=False)
+        data = response.json()
+        if (response.status_code != 200 or data.get('status') != 1 or
+                data.get('protocol') != 'gdrive-handoff' or data.get('version') != 2 or
+                data.get('enabled') is not True or mode not in data.get('flows', []) or
+                data.get('register_path') != '/gDrive/register' or
+                data.get('redeem_path') != '/gDrive/redeem' or
+                data.get('start_path') != '/gDrive/v2/start' or
+                data.get('callback_path') != '/gDrive/v2/callback'):
+            raise ValueError()
+        return True, ''
+    except Exception:
+        return False, 'New Google Drive enrollment is unavailable until the secure platform handoff is configured. Existing backups are unchanged.'
+
+
+def _origin_ok(request):
+    # Django 3.1 does not enforce Origin. Explicitly reject null/missing origins.
+    expected = urlsplit(request.build_absolute_uri('/'))
+    return request.META.get('HTTP_ORIGIN') == expected.scheme + '://' + expected.netloc
+
+
+@_secured
+def status(request, mode='v2'):
+    if request.method != 'GET':
+        return _error(405)
+    try:
+        _check_access(request, None, mode, status_only=True)
+    except AccessDenied:
+        return _error(403)
+    enabled, reason = capability(mode)
+    return JsonResponse({'status': 1, 'enabled': enabled, 'reason': reason})
+
+
 @_secured
 @csrf_protect
-def begin(request):
+def begin(request, mode='v2'):
     try:
         base = _base()
     except Exception:
@@ -135,41 +182,45 @@ def begin(request):
     if request.method != 'POST':
         return _error(405)
     try:
-        if not request.is_secure():
+        if not request.is_secure() or not _origin_ok(request):
             return _error()
         data = _data(request)
-        website, account = data['Selectedwebsite'], data['accountName']
+        website = data['Selectedwebsite'] if mode == 'v2' else NORMAL_DOMAIN
+        account = data['accountName']
         client_id, client_secret = data['client_id'], data['client_secret']
         if (not isinstance(website, str) or len(website) > 253 or
                 not isinstance(account, str) or not ACCOUNT.fullmatch(account) or
+                (mode == 'normal' and len(account) > 50) or
                 not isinstance(client_id, str) or len(client_id) > 256 or not CLIENT.fullmatch(client_id) or
                 not isinstance(client_secret, str) or not re.fullmatch(r'[A-Za-z0-9._~-]{1,512}', client_secret)):
             return _error()
-        _check_access(request, website)
+        _check_access(request, website, mode)
+        if mode not in CALLBACKS or not capability(mode)[0]:
+            return _error(503)
+        pending = request.session.get(SESSION_KEY, {})
+        pending = {key: value for key, value in pending.items()
+                   if 0 <= time.time() - value.get('created', 0) < TTL}
+        if len(pending) >= 4:
+            return _error(429)
         verifier = secrets.token_urlsafe(32)
         state = secrets.token_urlsafe(32)
         challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip('=')
-        callback = request.build_absolute_uri('/IncrementalBackups/ConfigureV2BackupSetup')
+        callback = request.build_absolute_uri(CALLBACKS[mode])
         payload = {'callback': callback, 'state': state, 'challenge': challenge,
-                   'account': account, 'domain': website,
+                   'account': account, 'domain': website, 'flow_type': mode,
                    'client_id': client_id, 'client_secret': client_secret}
         registered = _post(base, '/gDrive/register', payload)
         url = urlsplit(registered['authorization_url'])
         expected = urlsplit(base)
         args = parse_qs(url.query, strict_parsing=True)
         if (url.scheme != expected.scheme or url.netloc != expected.netloc or
-                url.path != '/gDrive' or url.fragment or set(args) != {'handoff'} or
+                url.path != '/gDrive/v2/start' or url.fragment or set(args) != {'handoff'} or
                 len(args['handoff']) != 1 or not OPAQUE.fullmatch(args['handoff'][0])):
             return _error(502)
-        pending = request.session.get(SESSION_KEY, {})
-        pending = {key: value for key, value in pending.items()
-                   if 0 <= time.time() - value.get('created', 0) < TTL}
-        if len(pending) >= 4:
-            return _error(429)
         pending[state] = {'verifier': verifier, 'created': time.time(),
                           'user_id': request.session['userID'], 'website': website,
                           'account': account, 'callback': callback,
-                          'binding': _binding(request.session)}
+                          'binding': _binding(request.session), 'mode': mode}
         request.session[SESSION_KEY] = pending
         return _response(JsonResponse({'status': 1, 'authorization_url': registered['authorization_url']}))
     except AccessDenied:
@@ -209,17 +260,29 @@ def _install_backend(website, account, credentials):
         raise ValueError()
 
 
+def _install_normal(user_id, account, credentials):
+    from django.db import transaction
+    from websiteFunctions.models import GDrive
+    # Global unique name + INSERT only: a collision must never update an old row.
+    auth = dict(credentials, handoff_version=2)
+    with transaction.atomic():
+        GDrive.objects.create(owner_id=user_id, name=account,
+                              auth=json.dumps(auth, sort_keys=True), runTime='NEVER')
+
+
 @_secured
 @csrf_protect
-def complete(request):
+def complete(request, mode='v2'):
     try:
         base = _base()
+        if mode not in CALLBACKS:
+            return _error()
     except Exception:
         return _error(503)
     if request.method not in ('GET', 'POST'):
         return _error(405)
     try:
-        if not request.is_secure():
+        if not request.is_secure() or (request.method == 'POST' and not _origin_ok(request)):
             return _error()
         data = request.GET if request.method == 'GET' else _data(request)
         if request.method == 'GET' and any(len(data.getlist(key)) != 1 for key in data):
@@ -234,31 +297,35 @@ def complete(request):
         if (not record or record['user_id'] != request.session.get('userID') or
                 not hmac.compare_digest(record['binding'], _binding(request.session)) or
                 not 0 <= time.time() - record['created'] < TTL or
-                record['callback'] != request.build_absolute_uri('/IncrementalBackups/ConfigureV2BackupSetup')):
+                record.get('mode') != mode or
+                record['callback'] != request.build_absolute_uri(CALLBACKS[mode])):
             return _error()
-        _check_access(request, record['website'])
+        _check_access(request, record['website'], mode)
         if request.method == 'GET':
             html = format_html(
                 '<!doctype html><html><head><title>Complete Google Drive setup</title></head><body>'
                 '<h1>Complete Google Drive setup</h1><p>Save account {} for website {}?</p>'
-                '<form method="post" action="/IncrementalBackups/ConfigureV2BackupSetup">'
+                '<form method="post" action="{}">'
                 '<input type="hidden" name="csrfmiddlewaretoken" value="{}">'
                 '<input type="hidden" name="state" value="{}">'
                 '<input type="hidden" name="code" value="{}">'
                 '<button type="submit">Save Google Drive destination</button></form></body></html>',
-                record['account'], record['website'], get_token(request), state, code)
+                record['account'], record['website'], CALLBACKS[mode], get_token(request), state, code)
             return _response(HttpResponse(html))
         del pending[state]
         request.session[SESSION_KEY] = pending
         redeemed = _post(base, '/gDrive/redeem', {
             'code': code, 'verifier': record['verifier'],
-            'callback': record['callback'], 'state': state})
+            'callback': record['callback'], 'state': state, 'flow_type': mode})
         if (redeemed.get('state') != state or redeemed.get('domain') != record['website'] or
-                redeemed.get('account') != record['account']):
+                redeemed.get('account') != record['account'] or redeemed.get('flow_type') != mode):
             return _error()
         credentials = redeemed['credentials']
         _valid_credentials(credentials)
-        _install_backend(record['website'], record['account'], credentials)
+        if mode == 'normal':
+            _install_normal(record['user_id'], record['account'], credentials)
+        else:
+            _install_backend(record['website'], record['account'], credentials)
         return _response(HttpResponse('<!doctype html><title>Google Drive configured</title>'
                                      '<h1>Google Drive destination configured</h1>'
                                      '<p>No backup job or schedule was started.</p>'))

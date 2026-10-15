@@ -63,10 +63,12 @@ def write_remote(home, account, credentials):
         fcntl.flock(lock, fcntl.LOCK_EX)
         config = directory / 'rclone.conf'
         old = b''
+        original_info = None
         if config.exists() or config.is_symlink():
             descriptor = os.open(str(config), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
             try:
                 info = os.fstat(descriptor)
+                original_info = info
                 if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or
                         info.st_size > 4 * 1024 * 1024 or info.st_mode & 0o077 or info.st_nlink != 1):
                     raise ValueError('Unsafe existing config')
@@ -87,6 +89,26 @@ def write_remote(home, account, credentials):
             handle.write(old + new)
             handle.flush()
             os.fsync(handle.fileno())
+        # Native rclone does not honor this enrollment lock. Refuse an observed
+        # concurrent edit rather than replacing newer credentials. This check is
+        # not filesystem CAS: operators must serialize configuration changes.
+        if original_info is None:
+            if config.exists() or config.is_symlink():
+                raise ValueError('Drive configuration changed concurrently')
+        else:
+            current_fd = os.open(str(config), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            try:
+                fingerprint = lambda value: (value.st_dev, value.st_ino, value.st_size,
+                                             value.st_mtime_ns, value.st_ctime_ns)
+                if fingerprint(os.fstat(current_fd)) != fingerprint(original_info):
+                    raise ValueError('Drive configuration changed concurrently')
+                with os.fdopen(current_fd, 'rb', closefd=False) as current:
+                    if current.read(4 * 1024 * 1024 + 1) != old:
+                        raise ValueError('Drive configuration changed concurrently')
+                if fingerprint(config.lstat()) != fingerprint(original_info):
+                    raise ValueError('Drive configuration changed concurrently')
+            finally:
+                os.close(current_fd)
         os.replace(temp, config)
         temp = None
         dir_descriptor = os.open(str(directory), os.O_RDONLY | os.O_DIRECTORY)

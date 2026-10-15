@@ -774,6 +774,11 @@ def BeginV2GDriveSetup(request):
     return begin(request)
 
 
+def GDriveSetupStatus(request):
+    from .gdrive_oauth import status
+    return status(request, mode='v2')
+
+
 def ConfigureV2BackupSetup(request):
     from .gdrive_oauth import complete
     return complete(request)

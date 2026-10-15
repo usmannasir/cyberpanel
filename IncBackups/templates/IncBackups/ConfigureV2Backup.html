@@ -58,6 +58,7 @@
                                         <h4 class="modal-title">{% trans "Set up account" %}</h4>
                                     </div>
                                     <div class="modal-body">
+                                        <p role="status" ng-if="!gdriveAvailable" ng-bind="gdriveUnavailableReason"></p>
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
 
@@ -95,7 +96,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-primary"
-                                                ng-disabled="gdriveSetupPending" ng-click="setupAccount()">Save <img
+                                                ng-disabled="!gdriveAvailable || gdriveSetupPending" ng-click="setupAccount()">Save <img
                                                 ng-hide="cyberpanelLoading"
                                                 src="{% static 'images/loading.gif' %}">
                                         </button>
@@ -236,5 +237,5 @@
 
 {% block module_scripts %}
     {{ block.super }}
-    <script defer src="{% static 'IncBackups/IncBackups.js' %}?v={{ CP_VERSION }}-gdrive-handoff-1"></script>
+    <script defer src="{% static 'IncBackups/IncBackups.js' %}?v={{ CP_VERSION }}-gdrive-handoff-2"></script>
 {% endblock %}

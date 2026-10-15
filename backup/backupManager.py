@@ -117,27 +117,8 @@ class BackupManager:
         return proc.render()
 
     def gDriveSetup(self, userID=None, request=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'createBackup') == 0:
-                return ACLManager.loadError()
-
-            gDriveData = {}
-            gDriveData['token'] = request.GET.get('t')
-            gDriveData['refresh_token'] = request.GET.get('r')
-            gDriveData['token_uri'] = request.GET.get('to')
-            gDriveData['scopes'] = request.GET.get('s')
-
-            gD = GDrive(owner=admin, name=request.GET.get('n'), auth=json.dumps(gDriveData))
-            gD.save()
-
-            return self.gDrive(request, userID)
-        except BaseException as msg:
-            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        from IncBackups.gdrive_oauth import complete
+        return complete(request, mode='normal')
 
     def fetchDriveLogs(self, request=None, userID=None, data=None):
         try:

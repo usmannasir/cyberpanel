@@ -32,12 +32,15 @@ class HandoffTests(SimpleTestCase):
         self.access = mock.patch.object(flow, '_check_access', return_value=None)
         self.access.start()
         self.addCleanup(self.access.stop)
+        self.capability = mock.patch.object(flow, 'capability', return_value=(True, ''))
+        self.capability_mock = self.capability.start()
+        self.addCleanup(self.capability.stop)
 
     def request(self, method, data=None):
         if method == 'POST':
             req = self.factory.post('/IncrementalBackups/ConfigureV2BackupSetup',
                                     json.dumps(data or {}), content_type='application/json',
-                                    HTTP_HOST='panel.example.test:8090', secure=True)
+                                    HTTP_HOST='panel.example.test:8090', HTTP_ORIGIN='https://panel.example.test:8090', secure=True)
         else:
             req = self.factory.get('/IncrementalBackups/ConfigureV2BackupSetup', data or {},
                                    HTTP_HOST='panel.example.test:8090', secure=True)
@@ -51,7 +54,7 @@ class HandoffTests(SimpleTestCase):
                 'client_secret': 'SYNTHETIC-CLIENT-SECRET'}
         response = mock.Mock(status_code=200)
         response.json.return_value = {'status': 1, 'authorization_url':
-                                     'https://platform.example.test/gDrive?handoff='+'a'*43}
+                                     'https://platform.example.test/gDrive/v2/start?handoff='+'a'*43}
         with mock.patch.object(flow.requests, 'post', return_value=response) as post:
             result = flow.begin(self.request('POST', body))
         self.assertEqual(result.status_code, 200)
@@ -93,7 +96,7 @@ class HandoffTests(SimpleTestCase):
         state, payload = self.start()
         response = mock.Mock(status_code=200)
         response.json.return_value = {'status': 1, 'credentials': self.credentials(),
-                                     'account': 'qa-drive', 'domain': 'owned.example', 'state': state}
+                                     'account': 'qa-drive', 'domain': 'owned.example', 'state': state, 'flow_type': 'v2'}
         with mock.patch.object(flow.requests, 'post', return_value=response) as post, \
                 mock.patch.object(flow, '_install_backend') as install:
             result = flow.complete(self.request('POST', {'state': state, 'code': 'c'*43}))
@@ -132,7 +135,7 @@ class HandoffTests(SimpleTestCase):
                 self.session = Session(userID=7)
                 state, _ = self.start()
                 data = {'status': 1, 'credentials': self.credentials(),
-                        'account': 'qa-drive', 'domain': 'owned.example', 'state': state}
+                        'account': 'qa-drive', 'domain': 'owned.example', 'state': state, 'flow_type': 'v2'}
                 data[field] = value
                 response = mock.Mock(status_code=200)
                 response.json.return_value = data
@@ -170,6 +173,15 @@ class HandoffTests(SimpleTestCase):
         self.assertEqual(result.status_code, 403)
         network.assert_not_called()
         install.assert_not_called()
+        self.capability_mock.assert_not_called()
+
+    def test_platform_capability_disabled_never_registers(self):
+        self.capability_mock.return_value=(False,'Secure enrollment unavailable')
+        with mock.patch.object(flow.requests,'post') as network:
+            result=flow.begin(self.request('POST',{'Selectedwebsite':'owned.example','accountName':'qa',
+                'client_id':'a.apps.googleusercontent.com','client_secret':'SYNTHETIC'}))
+        self.assertEqual(result.status_code,503)
+        network.assert_not_called()
 
     @override_settings(GDRIVE_HANDOFF_ENABLED=False)
     def test_disabled_feature_fails_closed(self):
@@ -184,6 +196,16 @@ class HandoffTests(SimpleTestCase):
 
     def test_get_begin_not_allowed(self):
         self.assertEqual(flow.begin(self.request('GET')).status_code, 405)
+        self.capability_mock.assert_not_called()
+
+    def test_pending_limit_rejects_before_registration(self):
+        import time
+        self.session[flow.SESSION_KEY]={str(i):{'created':time.time()} for i in range(4)}
+        with mock.patch.object(flow.requests,'post') as network:
+            result=flow.begin(self.request('POST',{'Selectedwebsite':'owned.example','accountName':'qa',
+                'client_id':'a.apps.googleusercontent.com','client_secret':'SYNTHETIC'}))
+        self.assertEqual(result.status_code,429)
+        network.assert_not_called()
 
     def test_real_configuration_template_loads_versioned_controller(self):
         root = Path(__file__).resolve().parents[1]
@@ -193,7 +215,7 @@ class HandoffTests(SimpleTestCase):
             html = engine.get_template('IncBackups/ConfigureV2Backup.html').render(Context(
                 {'BackupStat':1,'websiteList':['owned.example'],'CP_VERSION':'qa-test'}))
         self.assertIn('IncBackups/IncBackups.js', html)
-        self.assertIn('gdrive-handoff-1', html)
+        self.assertIn('gdrive-handoff-2', html)
         self.assertIn('type="password" autocomplete="off"', html)
 
     def test_duplicate_return_fields_rejected(self):
@@ -258,3 +280,10 @@ class AccessTests(SimpleTestCase):
         self.acl.CheckForPremFeature.return_value = True
         with self.assertRaises(flow.AccessDenied):
             flow._check_access(self.request, 'owned.example')
+
+    def test_status_v2_checks_entitlement_without_website_ownership(self):
+        flow._check_access(self.request,None,'v2',status_only=True)
+        self.acl.checkOwnership.assert_not_called()
+        self.acl.CheckForPremFeature.return_value=0
+        with self.assertRaises(flow.AccessDenied):
+            flow._check_access(self.request,None,'v2',status_only=True)

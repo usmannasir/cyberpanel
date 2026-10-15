@@ -1384,9 +1384,43 @@ app.controller('googleDrive', function ($scope, $http) {
 
     $scope.cyberPanelLoading = true;
     $scope.driveHidden = true;
+    $scope.gdriveSetupEnabled = false;
+    $scope.gdriveSetupReason = 'Checking secure enrollment availability. Existing backups are unchanged.';
+    $http.get('/backup/GDriveSetupStatus').then(function (response) {
+        $scope.gdriveSetupEnabled = response.data.status === 1 && response.data.enabled === true;
+        $scope.gdriveSetupReason = $scope.gdriveSetupEnabled ? '' :
+            'Secure enrollment is not configured. Existing backups are unchanged.';
+    }, function () {
+        $scope.gdriveSetupReason = 'Secure enrollment is unavailable. Existing backups are unchanged.';
+    });
 
     $scope.setupAccount = function () {
-        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+        if (!$scope.gdriveSetupEnabled || $scope.gdriveSetupPending) return;
+        var popup = window.open('about:blank', '_blank');
+        function failed() {
+            if (popup) popup.close();
+            $scope.gdriveSetupPending = false;
+            new PNotify({title: 'Google Drive setup', type: 'error',
+                text: 'Setup could not be started. Check the configuration and try again.'});
+        }
+        if (!popup) { failed(); return; }
+        popup.opener = null;
+        $scope.gdriveSetupPending = true;
+        $http.post('/backup/BeginGDriveSetup', {
+            accountName: $scope.accountName, client_id: $scope.client_id,
+            client_secret: $scope.client_secret
+        }, {headers: {'X-CSRFToken': getCookie('csrftoken')}}).then(function (response) {
+            try {
+                var url = new URL(response.data.authorization_url);
+                if (response.data.status !== 1 || url.protocol !== 'https:' || url.username ||
+                    url.password || url.hash || url.pathname !== '/gDrive/v2/start' ||
+                    Array.from(url.searchParams.keys()).join(',') !== 'handoff' ||
+                    !/^[A-Za-z0-9_-]{43,128}$/.test(url.searchParams.get('handoff'))) throw Error();
+                popup.location.href = url.href;
+                $scope.client_secret = '';
+                $scope.gdriveSetupPending = false;
+            } catch (e) { failed(); }
+        }, failed);
     };
 
     $scope.currentPage = 1;
