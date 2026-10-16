@@ -9,23 +9,77 @@ app.controller('createDatabase', function ($scope, $http) {
     $(document).ready(function () {
         $(".dbDetails").hide();
         $(".generatedPasswordDetails").hide();
-        $('#create-database-select').select2();
+        if ($.fn.select2) {
+            $('#create-database-select').select2();
+        }
+
+        // Initialize preview if website is already selected
+        setTimeout(function() {
+            if ($scope.databaseWebsite) {
+                var truncatedName = $scope.getTruncatedWebName($scope.databaseWebsite);
+                $("#domainDatabase").text(truncatedName);
+                $("#domainUsername").text(truncatedName);
+                $(".dbDetails").show();
+            }
+        }, 100);
     });
 
-    $('#create-database-select').on('select2:select', function (e) {
-        var data = e.params.data;
-        $scope.databaseWebsite = data.text;
-        $(".dbDetails").show();
-        $("#domainDatabase").text(getWebsiteName(data.text));
-        $("#domainUsername").text(getWebsiteName(data.text));
-    });
+    // Helper function to get truncated website name
+    $scope.getTruncatedWebName = function(domain) {
+        if (!domain) return '';
+
+        // Remove hyphens and get first part before dot
+        var webName = domain.replace(/-/g, '').split('.')[0];
+
+        // Truncate to 4 characters if longer than 5
+        if (webName.length > 5) {
+            webName = webName.substring(0, 4);
+        }
+
+        return webName;
+    };
+
+    if ($.fn.select2) {
+        $('#create-database-select').on('select2:select', function (e) {
+            var data = e.params.data;
+            $scope.databaseWebsite = data.text;
+            $(".dbDetails").show();
+
+            // Use local truncation function to ensure consistency
+            var truncatedName = $scope.getTruncatedWebName(data.text);
+            $("#domainDatabase").text(truncatedName);
+            $("#domainUsername").text(truncatedName);
+
+            // Apply scope to update Angular bindings
+            $scope.$apply();
+        });
+    }
 
 
     $scope.showDetailsBoxes = function () {
         $scope.dbDetails = false;
     }
 
+    // Function called when website selection changes
+    $scope.websiteChanged = function() {
+        if ($scope.databaseWebsite) {
+            $(".dbDetails").show();
+            var truncatedName = $scope.getTruncatedWebName($scope.databaseWebsite);
+            $("#domainDatabase").text(truncatedName);
+            $("#domainUsername").text(truncatedName);
+        }
+    }
+
     $scope.createDatabaseLoading = true;
+
+    // Watch for changes to databaseWebsite to update preview
+    $scope.$watch('databaseWebsite', function(newValue, oldValue) {
+        if (newValue && newValue !== oldValue) {
+            var truncatedName = $scope.getTruncatedWebName(newValue);
+            $("#domainDatabase").text(truncatedName);
+            $("#domainUsername").text(truncatedName);
+        }
+    });
 
     $scope.createDatabase = function () {
 
@@ -39,14 +93,8 @@ app.controller('createDatabase', function ($scope, $http) {
         var dbPassword = $scope.dbPassword;
         var webUserName = "";
 
-        // getting website username
-
-        webUserName = databaseWebsite.replace(/-/g, '');
-        webUserName = webUserName.split(".")[0];
-
-        if (webUserName.length > 5) {
-            webUserName = webUserName.substring(0, 4);
-        }
+        // getting website username - use the same truncation function for consistency
+        webUserName = $scope.getTruncatedWebName(databaseWebsite);
 
         var url = "/dataBases/submitDBCreation";
 
@@ -75,9 +123,15 @@ app.controller('createDatabase', function ($scope, $http) {
 
                 $scope.createDatabaseLoading = true;
                 $scope.dbDetails = false;
+                var successMessage = 'Database successfully created.';
+                if (response.data.dbName && response.data.dbUsername) {
+                    successMessage = 'Database successfully created.\n' +
+                                   'Database Name: ' + response.data.dbName + '\n' +
+                                   'Database User: ' + response.data.dbUsername;
+                }
                 new PNotify({
                     title: 'Success!',
-                    text: 'Database successfully created.',
+                    text: successMessage,
                     type: 'success'
                 });
             } else {
@@ -316,6 +370,17 @@ app.controller('listDBs', function ($scope, $http) {
 
     $scope.changePasswordBtn = function () {
 
+        if ($scope.passwordChangePending) return;
+        $scope.notificationsBox = true;
+        $scope.canNotChangePassword = true;
+        $scope.couldNotConnect = true;
+        if (typeof $scope.dbPassword !== 'string' || !$scope.dbPassword.length) {
+            $scope.notificationsBox = false;
+            $scope.canNotChangePassword = false;
+            $scope.errorMessage = 'Enter a new database password.';
+            return;
+        }
+        $scope.passwordChangePending = true;
         $scope.dbLoading = false;
         $scope.passwordChanged = true;
 
@@ -338,9 +403,12 @@ app.controller('listDBs', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
-
+            $scope.passwordChangePending = false;
 
             if (response.data.changePasswordStatus == 1) {
+                $scope.changePasswordBox = true;
+                $scope.dbPassword = '';
+                $scope.generatedPasswordView = true;
                 $scope.notificationsBox = false;
                 $scope.passwordChanged = false;
                 $scope.dbLoading = true;
@@ -357,6 +425,7 @@ app.controller('listDBs', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.passwordChangePending = false;
             $scope.notificationsBox = false;
             $scope.couldNotConnect = false;
             $scope.dbLoading = true;
@@ -567,12 +636,246 @@ app.controller('listDBs', function ($scope, $http) {
 
 app.controller('phpMyAdmin', function ($scope, $http, $window) {
     $scope.cyberPanelLoading = true;
+    $scope.phpMyAdminPending = false;
+    $scope.phpMyAdminError = '';
 
     $scope.generateAccess = function () {
-
+        if ($scope.phpMyAdminPending) return;
+        $scope.phpMyAdminPending = true;
+        $scope.phpMyAdminError = '';
         $scope.cyberPanelLoading = false;
 
-        url = "/dataBases/generateAccess";
+        var url = "/dataBases/generateAccess";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            var result = response && response.data;
+            if (result && result.status === 1 &&
+                    typeof result.username === 'string' && result.username &&
+                    typeof result.token === 'string' && result.token) {
+                //var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
+                //$window.location.href = rUrl;
+
+                var form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/phpmyadmin/phpmyadminsignin.php';
+
+// Create input elements for username and token
+                var usernameInput = document.createElement('input');
+                usernameInput.type = 'hidden';
+                usernameInput.name = 'username';
+                usernameInput.value = response.data.username;
+
+                var tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = 'token';
+                tokenInput.value = response.data.token;
+
+// Append input elements to the form
+                form.appendChild(usernameInput);
+                form.appendChild(tokenInput);
+
+// Append the form to the body
+                document.body.appendChild(form);
+
+// Submit the form
+                form.submit();
+
+            } else {
+                $scope.phpMyAdminPending = false;
+                $scope.phpMyAdminError = 'Unable to generate phpMyAdmin access. Check your panel session and the CyberPanel error log, then retry. Do not share access tokens or database credentials.';
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            $scope.phpMyAdminPending = false;
+            $scope.phpMyAdminError = 'The phpMyAdmin access request failed. Check your connection and panel session, then retry.';
+        }
+
+    }
+
+});
+
+
+app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $timeout) {
+    $scope.cyberPanelLoading = false;
+    $scope.mysql_status = 'test'
+
+
+    $scope.getstatus = function () {
+
+        $scope.cyberPanelLoading = true;
+
+        url = "/dataBases/getMysqlstatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = false;
+            if (response.data.status === 1) {
+                $scope.uptime = response.data.uptime;
+                $scope.connections = response.data.connections;
+                $scope.Slow_queries = response.data.Slow_queries;
+                $scope.processes = JSON.parse(response.data.processes);
+                $timeout($scope.showStatus, 3000);
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully Fetched',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = false;
+            new PNotify({
+                title: 'Error!',
+                text: "cannot load",
+                type: 'error'
+            });
+        }
+
+    }
+
+    $scope.getstatus();
+});
+
+
+app.controller('OptimizeMysql', function ($scope, $http) {
+    $scope.cyberPanelLoading = true;
+
+    $scope.generateRecommendations = function () {
+        $scope.cyberhosting = false;
+        url = "/dataBases/generateRecommendations";
+
+        var data = {
+            detectedRam: $("#detectedRam").text()
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+                $scope.suggestedContent = response.data.generatedConf;
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+
+
+    $scope.applyMySQLChanges = function () {
+        $scope.cyberhosting = false;
+        url = "/dataBases/applyMySQLChanges";
+
+        var encodedContent = encodeURIComponent($scope.suggestedContent);
+
+        var data = {
+            suggestedContent: encodedContent
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes successfully applied.',
+                    type: 'success'
+                });
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+
+
+    $scope.restartMySQL = function () {
+        $scope.cyberPanelLoading = false;
+
+        url = "/dataBases/restartMySQL";
 
         var data = {};
 
@@ -589,17 +892,187 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
-                var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
-                $window.location.href = rUrl;
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully Done',
+                    type: 'success'
+                });
             } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    }
+})
+
+
+app.controller('mysqlupdate', function ($scope, $http, $timeout) {
+    $scope.cyberPanelLoading = true;
+    $scope.dbLoading = true;
+    $scope.modeSecInstallBox = true;
+    $scope.modsecLoading = true;
+    $scope.failedToStartInallation = true;
+    $scope.couldNotConnect = true;
+    $scope.modSecSuccessfullyInstalled = true;
+    $scope.installationFailed = true;
+
+    $scope.Upgardemysql = function () {
+        $scope.dbLoading = false;
+        $scope.installform = true;
+        $scope.modSecNotifyBox = true;
+        $scope.modeSecInstallBox = false;
+        $scope.modsecLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.modSecSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+
+        url = "/dataBases/upgrademysqlnow";
+
+        var data = {
+            mysqlversion: $scope.version
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+                $scope.modSecNotifyBox = true;
+                $scope.modeSecInstallBox = false;
+                $scope.modsecLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.statusfile = response.data.tempStatusPath
+
+                $timeout(getRequestStatus, 1000);
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.modSecNotifyBox = false;
+                $scope.modeSecInstallBox = true;
+                $scope.modsecLoading = true;
+                $scope.failedToStartInallation = false;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    }
+
+
+    function getRequestStatus() {
+
+        $scope.modSecNotifyBox = true;
+        $scope.modeSecInstallBox = false;
+        $scope.modsecLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.modSecSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+        url = "/dataBases/upgrademysqlstatus";
+
+        var data = {
+            statusfile: $scope.statusfile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 0) {
+
+                $scope.modSecNotifyBox = true;
+                $scope.modeSecInstallBox = false;
+                $scope.modsecLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $timeout.cancel();
+                $scope.modSecNotifyBox = false;
+                $scope.modeSecInstallBox = false;
+                $scope.modsecLoading = true;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+
+                $scope.requestData = response.data.requestStatus;
+
+                if (response.data.installed === 0) {
+                    $scope.installationFailed = false;
+                    $scope.errorMessage = response.data.error_message;
+                } else {
+                    $scope.modSecSuccessfullyInstalled = false;
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+
             }
 
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+
+            $scope.modSecNotifyBox = false;
+            $scope.modeSecInstallBox = false;
+            $scope.modsecLoading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.modSecSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+
+
         }
 
     }
-
 });
