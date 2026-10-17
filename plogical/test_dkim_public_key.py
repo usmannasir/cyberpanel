@@ -82,6 +82,22 @@ class DKIMPublicKeyTests(unittest.TestCase):
             self.assertEqual(0, response['generateStatus'])
             self.assertNotIn('substring', response['error_message'])
 
+    def test_child_fetch_keeps_selected_domain_for_dns_and_parent_for_key_files(self):
+        namespace, extractor, manager = self.manager_fixture()
+        namespace['ProcessUtilities'].outputExecutioner.side_effect = [PUBLIC, 'private-fixture']
+        fetch = extract_method('mailServer/mailserverManager.py', 'MailServerManager',
+                               'fetchDKIMKeys', namespace)
+        with patch.dict('sys.modules', {'tldextract': extractor}):
+            response = json.loads(fetch(manager).content)
+        self.assertEqual(1, response['keysAvailable'])
+        namespace['DNS'].createDKIMRecords.assert_called_once_with('mail.example.com')
+        commands = [call.args[0] for call in namespace['ProcessUtilities'].outputExecutioner.call_args_list]
+        self.assertEqual(['sudo cat /etc/opendkim/keys/example.com/default.txt',
+                          'sudo cat /etc/opendkim/keys/example.com/default.private'], commands)
+        namespace['ACLManager'].checkOwnership.assert_called_once_with(
+            'mail.example.com', namespace['Administrator'].objects.get.return_value,
+            namespace['ACLManager'].loadedACL.return_value)
+
     def test_fetch_does_not_read_or_return_private_key_after_public_key_failure(self):
         namespace, extractor, manager = self.manager_fixture()
         namespace['ProcessUtilities'].outputExecutioner.side_effect = ['cat: missing file']

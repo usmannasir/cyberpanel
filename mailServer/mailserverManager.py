@@ -698,14 +698,14 @@ class MailServerManager(multi.Thread):
                 no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 
                 extractDomain = no_cache_extract(domainName)
-                domainName = extractDomain.domain + '.' + extractDomain.suffix
+                keyDomain = extractDomain.domain + '.' + extractDomain.suffix
 
-                path = "/etc/opendkim/keys/" + domainName + "/default.txt"
+                path = "/etc/opendkim/keys/" + keyDomain + "/default.txt"
                 command = "sudo cat " + path
                 output = ProcessUtilities.outputExecutioner(command, 'opendkim')
                 publicKey = parse_dkim_public_key(output)
 
-                path = "/etc/opendkim/keys/" + domainName + "/default.private"
+                path = "/etc/opendkim/keys/" + keyDomain + "/default.private"
                 command = "sudo cat " + path
                 privateKey = ProcessUtilities.outputExecutioner(command, 'opendkim')
 
