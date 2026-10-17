@@ -25,6 +25,7 @@ from database_consumers import (
 )
 from env_generator import DatabaseConfigError, build_database_config
 from plogical.legacyWebmail import legacy_data_permission_commands
+from plogical.olsHtaccessReload import merge_defaults, migrate_cron
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -2132,7 +2133,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
 
-            cronFile = open(cronPath, "w")
+            existing = ""
+            if os.path.exists(cronPath):
+                with open(cronPath) as cronFile:
+                    existing = cronFile.read()
 
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
@@ -2152,27 +2156,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 0 0 */3 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '3 Days'
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
 
-*/3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
+
 """
 
-            cronFile.write(content)
-            cronFile.close()
-
-            ### Check and remove OLS restart if lsws ent detected
-
-            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-
-                data = open(cronPath, 'r').readlines()
-
-                writeToFile = open(cronPath, 'w')
-
-                for items in data:
-                    if items.find('-maxdepth 2 -type f -newer') > -1:
-                        pass
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+            content = migrate_cron(merge_defaults(existing, content),
+                                   os.path.exists('/usr/local/lsws/bin/openlitespeed'))
+            with open(cronPath, 'w') as cronFile:
+                cronFile.write(content)
 
             if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
                 command = 'chmod 600 %s' % (cronPath)

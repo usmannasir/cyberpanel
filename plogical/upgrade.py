@@ -4723,6 +4723,9 @@ vmail
 
     @staticmethod
     def runSomeImportantBash():
+        # upgrade.py bootstraps against the OLD installed tree. This phase runs
+        # only after downloadAndUpgrade has activated the requested new source.
+        from plogical.olsHtaccessReload import migrate_cron
 
         # Remove invalid crons from /etc/crontab Reference: https://github.com/usmannasir/cyberpanel/issues/216
         command = """sed -i '/CyberCP/d' /etc/crontab"""
@@ -4757,8 +4760,10 @@ vmail
             cronPath = '/var/spool/cron/crontabs/root'
 
         if os.path.exists(cronPath):
-            data = open(cronPath, 'r').read()
-            updated = stagger_renewal_cron(data)
+            with open(cronPath, 'r') as cron_file:
+                data = cron_file.read()
+            updated = migrate_cron(stagger_renewal_cron(data),
+                                   os.path.exists('/usr/local/lsws/bin/openlitespeed'))
             if updated != data:
                 with open(cronPath, 'w') as cron_file:
                     cron_file.write(updated)
@@ -4772,11 +4777,11 @@ vmail
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
 45 4 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
-*/3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
+
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
 """
 
-                writeToFile = open(cronPath, 'w')
+                writeToFile = open(cronPath, 'a')
                 writeToFile.write(content)
                 writeToFile.close()
 
@@ -4836,24 +4841,9 @@ vmail
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
 */5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/pdnsHealthCheck.py >/dev/null 2>&1
 """
+            content = migrate_cron(content, os.path.exists('/usr/local/lsws/bin/openlitespeed'))
             writeToFile = open(cronPath, 'w')
             writeToFile.write(content)
-            writeToFile.close()
-
-        ### Check and remove OLS restart if lsws ent detected
-
-        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-
-            data = open(cronPath, 'r').readlines()
-
-            writeToFile = open(cronPath, 'w')
-
-            for items in data:
-                if items.find('-maxdepth 2 -type f -newer') > -1:
-                    pass
-                else:
-                    writeToFile.writelines(items)
-
             writeToFile.close()
 
         if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
