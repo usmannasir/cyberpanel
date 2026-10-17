@@ -524,7 +524,7 @@ class ProcessUtilities(multi.Thread):
             logging.writeToFile(str(msg) + " [customPoen]")
 
     @staticmethod
-    def popenExecutioner(command, user=None):
+    def popenExecutioner(command, user=None, raise_errors=False):
         try:
             extraArgs = {}
             extraArgs['command'] = command
@@ -533,6 +533,8 @@ class ProcessUtilities(multi.Thread):
             pu.start()
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [popenExecutioner]")
+            if raise_errors:
+                raise
 
     @staticmethod
     def BuildCommand(path, functionName, parameters):
@@ -593,4 +595,3 @@ class ProcessUtilities(multi.Thread):
             print("An error occurred:", e)
             logging.writeToFile(f"[fetch_latest_prestashop_version] An error occurred: {str(e)}")
         return None
-    

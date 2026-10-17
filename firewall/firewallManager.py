@@ -1678,10 +1678,7 @@ class FirewallManager:
             if currentACL['admin'] == 1:
                 pass
             else:
-                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                          'Not authorized to install container packages. [404].',
-                                                          1)
-                return 0
+                return ACLManager.loadErrorJson()
 
             from plogical.imunify_integration import (
                 build_install_worker_command,
@@ -1690,14 +1687,21 @@ class FirewallManager:
             ensure_install_status_file(reset=True)
 
             execPath = build_install_worker_command('av')
-            ProcessUtilities.popenExecutioner(execPath)
+            ProcessUtilities.popenExecutioner(execPath, raise_errors=True)
 
             data_ret = {'status': 1, 'error_message': 'None'}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
+            try:
+                logging.CyberCPLogFileWriter.statusWriter(
+                    ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
+            except Exception:
+                # A status-file error must not hide the original launch error.
+                pass
+            return HttpResponse(json.dumps({'status': 0, 'error_message': str(msg)}),
+                                content_type='application/json')
 
 
 

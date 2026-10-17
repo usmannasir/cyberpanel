@@ -27,6 +27,24 @@ from plogical.imunify_integration import (
 
 class ImunifyIntegrationTests(unittest.TestCase):
 
+    def test_install_status_handles_utf8_and_invalid_vendor_bytes_under_ascii_locale(self):
+        real_open = open
+
+        def ascii_default(path, mode='r', *args, **kwargs):
+            # Reproduce Python's default text decoding in an ASCII service locale.
+            if 'b' not in mode:
+                kwargs.setdefault('encoding', 'ascii')
+            return real_open(path, mode, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / 'status.log'
+            path.write_bytes('Installation café '.encode('utf-8') + b'\xff [200]\n')
+            with mock.patch('builtins.open', side_effect=ascii_default):
+                output = read_install_status(str(path))
+            self.assertIn('café', output)
+            self.assertIn('\ufffd', output)
+            self.assertIn('[200]', output)
+
     def test_cagefs_prefers_cyberpanel_modules_over_system_packages(self):
         cagefs_source = (
             pathlib.Path(__file__).parents[1] / 'CLManager' / 'CageFS.py'
