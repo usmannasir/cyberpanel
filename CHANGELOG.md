@@ -21,6 +21,8 @@ Maintenance release collecting the fixes developed on the v3.0.7 line.
 - Allows quoted apostrophes and parentheses in File Manager upload names while
   retaining ownership, path-containment and command-input checks.
 - Corrects secondary-administrator greetings and subdomain DKIM record selection.
+- Keeps webmail inbox headers intact when a long Unicode subject would make
+  an unused IMAP envelope arrive as a separate literal response.
 - Repairs domain-alias routing/certificate names and WordPress Docker readiness;
   preserves explicit host-port bindings and exact Docker image tags.
 - Reloads OpenLiteSpeed once for an observed .htaccess change rather than on
