@@ -766,6 +766,22 @@ class preFlightsChecks:
 
         writeDataToFile.close()
 
+    def initialize_email_filter_schema(self):
+        # These models are unmanaged by Django, but website/domain deletion
+        # traverses their relations even when optional mail services are off.
+        # Use the migrated application's configured connection, including a
+        # remote database, and preserve e_domains' installed charset/collation.
+        script = (
+            'from django.db import connection\n'
+            'from plogical.schemaMigration import ensure_email_filter_tables\n'
+            'with connection.cursor() as cursor:\n'
+            '    ensure_email_filter_tables(connection, cursor)\n'
+        )
+        command = '/usr/local/CyberPanel/bin/python manage.py shell -c ' + shlex.quote(script)
+        if not preFlightsChecks.call(command, self.distro, command, command,
+                                     1, 1, os.EX_OSERR):
+            raise RuntimeError('Required email filter schema initialization failed')
+
     def download_install_CyberPanel(self, mysqlPassword, mysql):
         ##
 
@@ -843,6 +859,8 @@ class preFlightsChecks:
 
         command = "/usr/local/CyberPanel/bin/python manage.py migrate"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+        self.initialize_email_filter_schema()
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")

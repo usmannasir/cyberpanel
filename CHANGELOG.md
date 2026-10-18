@@ -23,6 +23,8 @@ Maintenance release collecting the fixes developed on the v3.0.7 line.
 - Corrects secondary-administrator greetings and subdomain DKIM record selection.
 - Keeps webmail inbox headers intact when a long Unicode subject would make
   an unused IMAP envelope arrive as a separate literal response.
+- Initializes required email-filter tables during a fresh install so native
+  website deletion can complete without missing-table errors.
 - Repairs domain-alias routing/certificate names and WordPress Docker readiness;
   preserves explicit host-port bindings and exact Docker image tags.
 - Reloads OpenLiteSpeed once for an observed .htaccess change rather than on
