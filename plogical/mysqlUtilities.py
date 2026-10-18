@@ -43,6 +43,7 @@ class mysqlUtilities:
             raise ValueError("identifier cannot be None")
         return "`" + str(identifier).replace("`", "``") + "`"
 
+
     @staticmethod
     def getPagination(records, toShow):
         pages = float(records) / float(toShow)
@@ -677,6 +678,7 @@ password=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
+
 
     @staticmethod
     def getDatabases(virtualHostName):

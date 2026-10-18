@@ -15,7 +15,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
 from cyberpanel_version import BUILD, VERSION
-from CyberCP.session_ip import session_ip_key
+from CyberCP.sessionSecurity import get_client_ip, session_ip_key
 # Create your views here.
 
 
@@ -126,11 +126,10 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
-                ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
-                if ipAddr is None:
-                    ipAddr = request.META.get('REMOTE_ADDR')
                 # Validate before storing authenticated state.
-                ipAddr = session_ip_key(ipAddr)
+                ipAddr = session_ip_key(get_client_ip(request))
+                if ipAddr is None:
+                    raise ValueError('A valid client address is required for login.')
 
                 # Rotate a stale or pre-authentication session identifier before
                 # storing authenticated state.

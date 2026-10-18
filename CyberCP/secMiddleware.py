@@ -6,7 +6,7 @@ from django.shortcuts import HttpResponse, render
 import json
 import re
 from loginSystem.models import Administrator
-from CyberCP.session_ip import session_ip_matches
+from CyberCP.sessionSecurity import get_client_ip, session_ip_matches
 
 
 CONTENT_SECURITY_POLICY = (
@@ -43,11 +43,7 @@ class secMiddleware:
             and request.session.get('webmail_password')
         )
 
-    def get_client_ip(request):
-        ip = request.META.get('HTTP_CF_CONNECTING_IP')
-        if ip is None:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
+    get_client_ip = staticmethod(get_client_ip)
 
     def __init__(self, get_response):
         self.get_response = get_response

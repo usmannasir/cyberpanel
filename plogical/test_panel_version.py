@@ -15,10 +15,10 @@ from cyberpanel_version import (
 
 class PanelVersionTests(unittest.TestCase):
 
-    def test_release_version_is_3_0_7(self):
+    def test_release_version_is_3_0_8(self):
         self.assertEqual('3.0', VERSION)
-        self.assertEqual(7, BUILD)
-        self.assertEqual('3.0.7', FULL_VERSION)
+        self.assertEqual(8, BUILD)
+        self.assertEqual('3.0.8', FULL_VERSION)
 
     def test_public_version_file_matches_runtime_version(self):
         version_path = pathlib.Path(__file__).parents[1] / 'version.txt'

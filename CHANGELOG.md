@@ -4,6 +4,47 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.8 (build 8) — 2026-10-18
+
+Maintenance release collecting the fixes developed on the v3.0.7 line.
+
+### Backups, databases and transfers
+- Clarifies all-site versus selected-site scheduled backups, reports failed or
+  exited workers, and uses private temporary backup metadata.
+- Preserves restored website ownership, private modes and certificate chains;
+  handles database-deletion retries without deleting MySQL filesystem paths.
+- Improves remote-transfer callbacks, SSH-port handling and failure reporting.
+- Keeps phpMyAdmin sign-on on the configured panel port and reports access
+  failures without duplicate handoffs; refreshes stale database-controller assets.
+
+### Websites, mail and daily administration
+- Allows quoted apostrophes and parentheses in File Manager upload names while
+  retaining ownership, path-containment and command-input checks.
+- Corrects secondary-administrator greetings and subdomain DKIM record selection.
+- Repairs domain-alias routing/certificate names and WordPress Docker readiness;
+  preserves explicit host-port bindings and exact Docker image tags.
+- Reloads OpenLiteSpeed once for an observed .htaccess change rather than on
+  every polling cycle, and keeps SSL renewal from restarting panel backup workers.
+- Adds guarded optional Sieve configuration, certificate-aware mail SNI setup,
+  improved theme fallback and Brazilian Portuguese interface coverage.
+
+### Upgrade and authentication safeguards
+- Preserves working Python environments and restores panel runtimes when an
+  upgrade rebuild fails; limits retained rollback directories and preserves
+  operator firewall and optional-service policies.
+- Normalizes IPv4/IPv6 session binding, rejects ambiguous legacy bindings and
+  permits a fresh login after a stale session's address changes.
+- Isolates ACME staging state, validates production certificates before deploying
+  them and reissues already-installed staging certificates.
+- Keeps Google Drive authorization handoffs and feature entitlements guarded;
+  publication does not validate an individual customer's external OAuth flow.
+
+### Known limitation
+- Issue #1924 remains open: PHP lint can crash when ionCube and OPcache are
+  enabled together. The verified workaround is the separate PHP CLI with
+  `opcache.enable_cli=0` for syntax checks. This release does not change global
+  OPcache settings or claim to fix the runtime compatibility defect.
+
 ## v3.0.7 (build 7) — 2026-09-21
 
 Feature release for optional Roundcube webmail and upgrade visibility.

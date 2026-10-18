@@ -4,13 +4,36 @@ from unittest import mock
 
 from django.contrib.sessions.backends.signed_cookies import SessionStore
 from django.http import HttpResponse
-from django.test import RequestFactory, SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase, override_settings
 
 from CyberCP.secMiddleware import secMiddleware
+from CyberCP.sessionSecurity import session_ip_key, session_ip_matches
 from loginSystem.views import verifyLogin
 
 
+urlpatterns = []  # These unit tests do not load unrelated panel URL handlers.
+
+
+@override_settings(ROOT_URLCONF=__name__)
 class SessionIPTests(SimpleTestCase):
+    def test_canonical_ipv6_prefix_and_privacy_addresses(self):
+        self.assertEqual(session_ip_key('2001:0DB8:0000:12::1'),
+                         session_ip_key('2001:db8:0:ffff::2'))
+        self.assertTrue(session_ip_matches('2001:db8:0', '2001:db8::3'))
+        self.assertFalse(session_ip_matches('2001:db8:0', '2001:db8:1::3'))
+
+    def test_mapped_ipv4_matches_native_ipv4(self):
+        self.assertEqual('192.0.2.1', session_ip_key('::ffff:192.0.2.1'))
+        self.assertEqual('192.0.2.1', session_ip_key('::ffff:c000:201'))
+        self.assertTrue(session_ip_matches('192.0.2.1', '::ffff:c000:201'))
+        self.assertFalse(session_ip_matches('192.0.2.1', '::ffff:192.0.2.2'))
+
+    def test_missing_invalid_and_ambiguous_legacy_bindings_do_not_match(self):
+        for stored, address in ((None, '192.0.2.1'), ('192.0.2.1', None),
+                                ('', ''), ('::ffff', '::ffff:192.0.2.1'),
+                                ('2001::', '2001::1'), ('bad', 'bad')):
+            self.assertFalse(session_ip_matches(stored, address))
+
     def request(self, path, address, session, method='get', data=None):
         factory = RequestFactory()
         if method == 'post':
@@ -47,6 +70,26 @@ class SessionIPTests(SimpleTestCase):
         self.assertTrue(payload['sessionExpired'])
         self.assertIn('LOW Security Level', payload['error_message'])
         self.assertNotIn('userID', session)
+
+    @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
+    @mock.patch('CyberCP.secMiddleware.Administrator.objects.get')
+    def test_login_requires_valid_address_before_authenticating_even_at_low_security(self, get_admin, check):
+        get_admin.return_value = SimpleNamespace(pk=7, password='hash', state='ACTIVE',
+            twoFA=False, securityLevel=secMiddleware.LOW)
+        for address in (None, '', 'not-an-ip'):
+            with self.subTest(address=address):
+                session = SessionStore()
+                request = self.request('/verifyLogin', address, session, 'post',
+                                       {'username': 'admin', 'password': 'test'})
+                if address is None:
+                    request.META.pop('REMOTE_ADDR', None)
+                with mock.patch.object(session, 'cycle_key') as rotate:
+                    response = secMiddleware(verifyLogin)(request)
+                self.assertEqual(0, json.loads(response.content)['loginStatus'])
+                self.assertNotIn('userID', session)
+                self.assertNotIn('ipAddr', session)
+                rotate.assert_not_called()
+        self.assertEqual(3, check.call_count)
 
     @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
     @mock.patch('CyberCP.secMiddleware.Administrator.objects.get')

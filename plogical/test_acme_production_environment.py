@@ -276,6 +276,9 @@ class EnvironmentTests(unittest.TestCase):
         self.assertTrue(self.processes)
         self.assertTrue(all('--install-cert' not in command for command in self.processes))
         self.assertFalse(any(staging for staging, _, _ in self.network))
+        # The acme.sh staging dry-run must not write the domain's real config.
+        self.assertTrue(all('--config-home' in command
+                            for command in self.processes if '--staging' in command))
 
     def test_actual_caller_can_continue_to_second_production_provider(self):
         env, utility = self.caller(secondary_success=True)
