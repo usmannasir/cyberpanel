@@ -168,6 +168,17 @@ class FileManager:
     def returnPathEnclosed(self, path):
         return "'" + str(path).replace("'", "'\"'\"'") + "'"
 
+    @staticmethod
+    def safeUploadPath(path):
+        # Upload paths are shell-quoted by returnPathEnclosed. Permit common
+        # literal filename punctuation without relaxing the shared command gate.
+        value = str(path)
+        if any(character in value for character in ('\x00', '\r', '\n')):
+            return False
+        for character in ("'", '(', ')'):
+            value = value.replace(character, '')
+        return ACLManager.commandInjectionCheck(value) != 1
+
     def validPermissions(self, permissions):
         try:
             permissions = str(permissions)
@@ -879,7 +890,7 @@ class FileManager:
                 if result.find('->') > -1:
                     return self.ajaxPre(0, "Symlink attack.")
 
-                if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
+                if not self.safeUploadPath(self.data['completePath'] + '/' + myfile.name):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if self.notInside(self.data['completePath'] + '/' + myfile.name, pathCheck):
@@ -901,7 +912,7 @@ class FileManager:
                 command = 'ls -la %s' % (self.returnPathEnclosed(self.data['completePath']))
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.writeToFile("upload file res %s" % result)
-                if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
+                if not self.safeUploadPath(self.data['completePath'] + '/' + myfile.name):
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
                 if self.notInside(self.data['completePath'] + '/' + myfile.name, pathCheck):
