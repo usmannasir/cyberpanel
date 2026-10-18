@@ -5,8 +5,10 @@ Run standalone (no database needed):
 """
 
 import os
+import re
 import sys
 import unittest
+from pathlib import Path
 from unittest import mock
 
 sys.path.append('/usr/local/CyberCP')
@@ -53,6 +55,13 @@ def make_site(app='Hermes'):
 
 
 class TestDockerAppRegistry(unittest.TestCase):
+
+    def test_creation_page_offers_every_supported_application(self):
+        template = (Path(__file__).parent / 'templates/websiteFunctions/CreateDockerSite.html').read_text()
+        selector = re.search(r'<select\b[^>]*ng-model="App"[^>]*>(.*?)</select>', template, re.S)
+        self.assertIsNotNone(selector)
+        options = re.findall(r'<option>([^<]+)</option>', selector.group(1))
+        self.assertEqual(set(options), set(DOCKER_APPS))
 
     def test_container_matching_accepts_compose_name_separators(self):
         self.assertTrue(container_name_matches('n8n_n8n', 'n8n_n8n_1'))

@@ -116,6 +116,38 @@ echo -e "\nChecking root privileges..."
   fi
 }
 
+Check_Upgrade_Services() {
+  UPGRADE_ACTIVE_SERVICES=()
+  local service
+  # Preserve the set of services the host was actually using; optional mail,
+  # DNS and FTP installations must not become new upgrade requirements.
+  for service in lscpd lshttpd lsws openlitespeed mariadb mysql mysqld postfix dovecot pdns powerdns pure-ftpd pure-ftpd-mysql; do
+    if systemctl is-active --quiet "$service"; then
+      UPGRADE_ACTIVE_SERVICES+=("$service")
+      if [[ "$service" = "dovecot" ]]; then
+        # A running Dovecot can still have invalid, not-yet-reloaded config.
+        # Detect that before package work or upgrade restarts stop working mail.
+        if ! command -v doveconf >/dev/null 2>&1 || ! doveconf -n -x >/dev/null; then
+          echo 'Upgrade stopped: the running Dovecot configuration cannot be reloaded. Repair the reported configuration error before upgrading; mail has not been restarted.' >&2
+          return 1
+        fi
+      fi
+    fi
+  done
+  return 0
+}
+
+Verify_Upgrade_Services() {
+  local service failed=0
+  for service in "${UPGRADE_ACTIVE_SERVICES[@]}"; do
+    if ! systemctl is-active --quiet "$service"; then
+      echo "ERROR: $service was running before the upgrade but is now unavailable. Check its service logs before treating this upgrade as complete." >&2
+      failed=1
+    fi
+  done
+  return "$failed"
+}
+
 Check_Server_IP() {
 echo -e "Checking server location...\n"
 
@@ -733,6 +765,25 @@ Validate_Python_Requirements() {
 # /usr/local/CyberCP (venv) are invisible to that runtime; mirror the requirements into system Python.
 # See PEP 668 (https://peps.python.org/pep-0668/) — Debian/Ubuntu and others ship EXTERNALLY-MANAGED;
 # pip needs --break-system-packages or PIP_BREAK_SYSTEM_PACKAGES=1 for intentional system-wide installs.
+Repair_Pip_Filelock_Compatibility() {
+  local runtime_python="$1"
+  shift
+  # An earlier upgrade may have overlaid filelock 4 on the distribution's
+  # virtualenv, which requires 3.x. --ignore-installed leaves stale 4.x metadata,
+  # so repair pip-owned overlays with an ordinary downgrade before installing
+  # the constrained requirements. Never uninstall an OS-owned filelock.
+  if env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -c '
+import sys
+from importlib.metadata import distribution
+package = distribution("filelock")
+pip_owned = (package.read_text("INSTALLER") or "").strip() == "pip"
+sys.exit(0 if pip_owned and int(package.version.split(".")[0]) >= 4 else 1)
+' >/dev/null 2>&1; then
+    Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --upgrade --no-deps "filelock<4" "$@" || return 1
+  fi
+  return 0
+}
+
 Install_CyberCP_Runtime_Python_Requirements() {
   local requirements_file="${1:-/etc/cyberpanel/cyberpanel-requirments-runtime.txt}"
   # Check_OS selects Python 3.12 on Ubuntu 26. Never select an activated
@@ -768,6 +819,7 @@ Install_CyberCP_Runtime_Python_Requirements() {
   else
     Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --upgrade pip setuptools wheel packaging || return 1
   fi
+  Repair_Pip_Filelock_Compatibility "$runtime_python" "${pip_extra[@]}" || return 1
   Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH PIP_DISABLE_PIP_VERSION_CHECK=1 "$runtime_python" -m pip install --default-timeout=3600 --ignore-installed "${pip_extra[@]}" -r "$requirements_file"
   install_status=$?
   if [[ "$install_status" -ne 0 ]]; then
@@ -1146,8 +1198,12 @@ else
       && Validate_Python_Requirements /usr/local/CyberPanelTemp/bin/python /usr/local/requirments.txt; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
     /usr/local/CyberPanelTemp/bin/python -u upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-    # upgrade.py is piped into tee, so read its status from PIPESTATUS.
-    FALLBACK_CODE=${PIPESTATUS[0]}
+    # Preserve failures from both the upgrader and its log writer.
+    upgrade_status=("${PIPESTATUS[@]}")
+    FALLBACK_CODE=${upgrade_status[0]}
+    if [[ "$FALLBACK_CODE" -eq 0 && "${upgrade_status[1]}" -ne 0 ]]; then
+      FALLBACK_CODE=${upgrade_status[1]}
+    fi
   else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Fallback requirements could not be installed and validated" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
@@ -1687,9 +1743,11 @@ if [[ "$*" = *"--debug"* ]] ; then
   chmod 600 "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
 fi
 
-Set_Default_Variables
-
 Check_Root
+
+Check_Upgrade_Services || exit 1
+
+Set_Default_Variables
 
 Check_Server_IP "$@"
 
@@ -1718,5 +1776,9 @@ if ! Post_Upgrade_System_Tweak; then
 fi
 
 Restart_Web_Terminal
+
+if ! Verify_Upgrade_Services; then
+  UPGRADE_FAILED=1
+fi
 
 Post_Install_Display_Final_Info

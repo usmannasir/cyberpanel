@@ -51,6 +51,8 @@ def verifyLogin(request):
                         user_Language = "br"
                     elif language_selection == "Portuguese":
                         user_Language = "pt"
+                    elif language_selection == "Portuguese (Brazil)":
+                        user_Language = "pt-br"
                     elif language_selection == "Japanese":
                         user_Language = "ja"
                     elif language_selection == "Bosnian":
@@ -124,12 +126,16 @@ def verifyLogin(request):
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
 
+                # Validate before storing authenticated state.
+                ipAddr = session_ip_key(get_client_ip(request))
+                if ipAddr is None:
+                    raise ValueError('A valid client address is required for login.')
+
                 # Rotate a stale or pre-authentication session identifier before
                 # storing authenticated state.
                 request.session.cycle_key()
                 request.session['userID'] = admin.pk
-
-                request.session['ipAddr'] = session_ip_key(get_client_ip(request))
+                request.session['ipAddr'] = ipAddr
 
                 request.session.set_expiry(43200)
                 # Persist before the browser follows the login response with a

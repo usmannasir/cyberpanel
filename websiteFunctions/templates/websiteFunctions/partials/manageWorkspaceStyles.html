@@ -1,0 +1,76 @@
+<style>
+/* Shared website management workspace. Keep tab state and Angular actions intact. */
+html #main-content .cp-site-workspace { max-width: 1320px; margin: 0 auto; padding: 24px; color: var(--text-primary, #1e293b); }
+html #main-content .cp-site-workspace .domain-hero { padding: 28px; margin: 0 0 20px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; background: var(--bg-secondary, #fff) !important; box-shadow: none; }
+html #main-content .cp-site-workspace .domain-hero::before,
+html #main-content .cp-site-workspace .domain-hero::after { display: none; }
+html #main-content .cp-site-workspace .domain-name { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 26px; line-height: 1.4; color: var(--text-primary, #1e293b); }
+html #main-content .cp-site-workspace #domainNamePage { min-width: 0; overflow-wrap: anywhere; }
+html #main-content .cp-site-workspace .domain-description { margin: 8px 0 0; font-size: 14px; color: var(--text-secondary, #64748b); }
+html #main-content .cp-site-workspace :is(.hero-actions, .action-group) { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+html #main-content .cp-site-workspace .hero-actions { margin-top: 20px; }
+html #main-content .cp-site-workspace :is(.hero-btn, .action-btn, .cyber-btn) { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 10px 14px; font-size: 13px; line-height: 1.5; border-radius: 6px; box-shadow: none; }
+html #main-content .cp-site-workspace .quick-actions { padding: 0; margin: 0 0 24px; background: transparent; border: 0; box-shadow: none; }
+html #main-content .cp-site-workspace .cp-wtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 24px; padding: 6px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-muted, #f1f5f9); }
+html #main-content .cp-site-workspace .cp-wtabs :is(a, button) { min-height: 42px; padding: 10px 14px; border-radius: 5px; font-size: 13px; line-height: 1.5; white-space: nowrap; }
+html #main-content .cp-site-workspace :is(a, button):focus-visible { outline: 3px solid var(--accent-color, #326d45); outline-offset: 3px; }
+html #main-content .cp-site-workspace .resource-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+html #main-content .cp-site-workspace .resource-card { padding: 20px; min-width: 0; border: 1px solid var(--border-color, #e2e8f0) !important; border-radius: 10px; background: var(--bg-secondary, #fff) !important; box-shadow: none; transform: none; }
+html #main-content .cp-site-workspace .resource-card::before { display: none; }
+html #main-content .cp-site-workspace .resource-card.ssl { grid-column: 1 / -1; }
+html #main-content .cp-site-workspace .resource-icon { width: 36px; height: 36px; margin-bottom: 12px; font-size: 16px; border-radius: 8px; background: var(--bg-muted, #f1f5f9) !important; color: var(--accent-color, #326d45) !important; }
+html #main-content .cp-site-workspace .resource-title { margin-bottom: 8px; font-size: 12px; letter-spacing: .03em; color: var(--text-secondary, #64748b) !important; }
+html #main-content .cp-site-workspace .resource-value { font-size: 26px; line-height: 1.3; font-weight: 650; color: var(--text-primary, #1e293b) !important; overflow-wrap: anywhere; }
+html #main-content .cp-site-workspace .resource-limit { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--text-secondary, #64748b) !important; flex-wrap: wrap; }
+html #main-content .cp-site-workspace .resource-limit > span:last-child { color: var(--text-secondary, #64748b) !important; }
+html #main-content .cp-site-workspace .example-box-wrapper.cp-wtab-panel { padding: 0; margin: 0 0 24px; border: 0; background: transparent !important; box-shadow: none !important; }
+html #main-content .cp-site-workspace .example-box-wrapper > .panel { padding: 0; margin: 0; overflow: hidden; border-radius: 12px; }
+html #main-content .cp-site-workspace .content-box-header { margin: 0; padding: 20px 24px; font-size: 17px; border-bottom: 1px solid var(--border-color, #e2e8f0); }
+html #main-content .cp-site-workspace .content-box-wrapper { padding: 24px; border: 0; border-radius: 0; box-shadow: none !important; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0 !important; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row::before,
+html #main-content .cp-site-workspace .content-box-wrapper > .row::after { display: none; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row > [class*="col-md-"] { float: none; width: auto; max-width: none; margin: 0; padding: 0; min-width: 0; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row > .col-md-12 { grid-column: 1 / -1; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row > .col-md-6 { grid-column: span 2; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row > :is(.col-md-3, .col-md-4) > a { display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 78px; height: 100%; padding: 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-secondary, #fff); }
+html #main-content .cp-site-workspace .content-box-wrapper > .row > :is(.col-md-3, .col-md-4) > a:hover { background: var(--bg-hover, #f1f5f9); border-color: var(--accent-color, #326d45); transform: none; }
+html #main-content .cp-site-workspace .content-box-wrapper > .row > :is(.col-md-3, .col-md-4) > a img { width: 32px; height: 32px; object-fit: contain; margin: 0; }
+html #main-content .cp-site-workspace .content-box-wrapper .h4 { font-size: 14px; line-height: 1.5; margin: 0; color: var(--text-primary, #1e293b); }
+html #main-content .cp-site-workspace .app-installer-section { padding: 24px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; background: var(--bg-secondary, #fff); }
+html #main-content .cp-site-workspace .app-installer-header { text-align: left; padding: 0; margin-bottom: 24px; }
+html #main-content .cp-site-workspace .app-installer-title { font-size: 20px; margin: 0 0 8px; }
+html #main-content .cp-site-workspace .app-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+html #main-content .cp-site-workspace .app-card { padding: 24px; border-radius: 10px; box-shadow: none; background: var(--bg-secondary, #fff); border-color: var(--border-color, #e2e8f0); }
+html #main-content .cp-site-workspace .app-card:hover { transform: none; border-color: var(--accent-color, #326d45); }
+html #main-content .cp-site-workspace .app-description { line-height: 1.65; color: var(--text-secondary, #64748b); }
+html #main-content .cp-site-workspace .cp-config-editor { margin: 8px 0 0; padding: 0; border: 1px solid var(--border-color, #e2e8f0); border-radius: 10px; background: var(--bg-secondary, #fff); overflow: hidden; }
+html #main-content .cp-site-workspace .cp-config-editor .cp-editor-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; background: var(--bg-muted, #f1f5f9); border-bottom: 1px solid var(--border-color, #e2e8f0); }
+html #main-content .cp-site-workspace .cp-editor-header h4 { margin: 0 0 5px; font-size: 16px; font-weight: 600; }
+html #main-content .cp-site-workspace .cp-editor-header p { margin: 0; font-size: 13px; color: var(--text-secondary, #64748b); }
+html #main-content .cp-site-workspace .cp-config-editor .alert { margin: 16px 20px; padding: 12px 16px; font-size: 13px; }
+html #main-content .cp-site-workspace .cp-config-editor .cp-editor-body { padding: 20px; }
+html #main-content .cp-site-workspace .cp-config-editor label { display: block; margin-bottom: 10px; font-size: 13px; font-weight: 600; }
+html #main-content .cp-site-workspace textarea.cp-config-source { display: block; width: 100%; height: 480px; min-height: 300px; padding: 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 6px; background: var(--bg-code, #f1f5f9) !important; color: var(--text-primary, #1e293b) !important; font: 13px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace !important; tab-size: 4; resize: vertical; overflow: auto; }
+html #main-content .cp-site-workspace .cp-editor-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 20px; border-top: 1px solid var(--border-color, #e2e8f0); background: var(--bg-muted, #f1f5f9); }
+html #main-content .cp-site-workspace .cp-config-editor button { min-height: 42px; padding: 10px 16px; }
+@media (max-width: 1000px) {
+ html #main-content .cp-site-workspace .resource-grid,
+ html #main-content .cp-site-workspace .content-box-wrapper > .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+ html #main-content .cp-site-workspace { padding: 12px; }
+ html #main-content .cp-site-workspace :is(.domain-hero, .content-box-wrapper, .app-installer-section) { padding: 18px; }
+ html #main-content .cp-site-workspace .domain-name { font-size: 21px; }
+ html #main-content .cp-site-workspace .resource-grid,
+ html #main-content .cp-site-workspace .content-box-wrapper > .row { grid-template-columns: minmax(0, 1fr); }
+ html #main-content .cp-site-workspace .content-box-wrapper > .row > .col-md-6 { grid-column: auto; }
+ html #main-content .cp-site-workspace .cp-wtabs { flex-wrap: nowrap; overflow-x: auto; }
+ html #main-content .cp-site-workspace .cp-wtabs :is(a, button) { flex: 0 0 auto; }
+ html #main-content .cp-site-workspace .cp-editor-header { align-items: flex-start; }
+ html #main-content .cp-site-workspace .cp-config-editor .cp-editor-body { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ html #main-content .cp-site-workspace * { animation: none !important; transition: none !important; }
+}
+</style>

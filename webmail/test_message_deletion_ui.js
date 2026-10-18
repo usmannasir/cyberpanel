@@ -65,13 +65,41 @@ test('webmail starts a guarded inbox refresh after successful SSO', () => {
     assert.deepEqual(requests.slice(before).map(r => r.url), ['/webmail/api/listMessages', '/webmail/api/listFolders']);
 });
 
-test('mobile webmail switches between the message list and read pane', () => {
+test('mobile webmail switches between the list, read and compose panes', () => {
     const template = fs.readFileSync(path.join(__dirname, 'templates/webmail/index.html'), 'utf8');
     const css = fs.readFileSync(path.join(__dirname, 'static/webmail/webmail.css'), 'utf8');
-    assert.match(template, /ng-class="\{'wm-reading': viewMode === 'read'\}"/);
-    assert.match(template, /wm-mobile-back[^>]+ng-click="setView\('list'\)"/);
-    assert.match(css, /\.webmail-container\.wm-reading \.wm-message-list\s*\{\s*display: none/);
-    assert.match(css, /\.webmail-container\.wm-reading \.wm-detail-pane\s*\{\s*display: block/);
+    const container = template.match(/<div\b[^>]*class="webmail-container"[^>]*>/);
+    assert.ok(container, 'The mailbox container must exist');
+    const binding = container[0].match(/ng-class="([^"]+)"/);
+    assert.ok(binding, 'The container must bind its active pane classes');
+    const h = harness();
+    const activeClasses = () => vm.runInNewContext('(' + binding[1] + ')', {viewMode: h.scope.viewMode});
+    for (const [mode, reading, detailActive] of [
+        ['list', false, false], ['read', true, true], ['compose', false, true],
+    ]) {
+        h.scope.setView(mode);
+        const classes = activeClasses();
+        assert.equal(classes['wm-reading'], reading, mode + ' reading state');
+        assert.equal(classes['wm-detail-active'], detailActive, mode + ' detail pane state');
+    }
+    const mobileStart = css.indexOf('@media (max-width: 768px)');
+    assert.notEqual(mobileStart, -1, 'Mobile pane rules must exist');
+    const mobileCss = css.slice(mobileStart);
+    assert.match(mobileCss, /\.webmail-container\.wm-reading \.wm-message-list\s*\{\s*display: none/);
+    assert.match(mobileCss, /\.webmail-container\.wm-detail-active \.wm-detail-pane\s*\{\s*display: block/);
+    assert.match(mobileCss, /\.wm-mobile-back\s*\{\s*display: inline-block/);
+    const backButton = template.match(/<button\b[^>]*class="[^"]*\bwm-mobile-back\b[^"]*"[^>]*>/);
+    assert.ok(backButton, 'The mobile read pane must expose its Back button');
+    const backAction = backButton[0].match(/ng-click="([^"]+)"/);
+    assert.ok(backAction, 'The mobile Back button must be wired to the controller');
+    h.open();
+    assert.equal(h.scope.viewMode, 'read');
+    vm.runInNewContext(backAction[1], h.scope);
+    assert.equal(h.scope.viewMode, 'list');
+    assert.equal(h.scope.openMsg, null);
+    const classes = activeClasses();
+    assert.equal(classes['wm-reading'], false);
+    assert.equal(classes['wm-detail-active'], false);
 });
 
 for (const action of ['bulk', 'single']) {

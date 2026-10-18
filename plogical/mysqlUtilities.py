@@ -277,7 +277,6 @@ class mysqlUtilities:
             if connection:
                 connection.close()
 
-
     @staticmethod
     def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None,
                            externalApp = None, use_compression=None, use_new_features=None):

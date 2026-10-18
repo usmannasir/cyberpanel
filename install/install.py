@@ -25,6 +25,7 @@ from database_consumers import (
 )
 from env_generator import DatabaseConfigError, build_database_config
 from plogical.legacyWebmail import legacy_data_permission_commands
+from plogical.olsHtaccessReload import merge_defaults, migrate_cron
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -765,6 +766,22 @@ class preFlightsChecks:
 
         writeDataToFile.close()
 
+    def initialize_email_filter_schema(self):
+        # These models are unmanaged by Django, but website/domain deletion
+        # traverses their relations even when optional mail services are off.
+        # Use the migrated application's configured connection, including a
+        # remote database, and preserve e_domains' installed charset/collation.
+        script = (
+            'from django.db import connection\n'
+            'from plogical.schemaMigration import ensure_email_filter_tables\n'
+            'with connection.cursor() as cursor:\n'
+            '    ensure_email_filter_tables(connection, cursor)\n'
+        )
+        command = '/usr/local/CyberPanel/bin/python manage.py shell -c ' + shlex.quote(script)
+        if not preFlightsChecks.call(command, self.distro, command, command,
+                                     1, 1, os.EX_OSERR):
+            raise RuntimeError('Required email filter schema initialization failed')
+
     def download_install_CyberPanel(self, mysqlPassword, mysql):
         ##
 
@@ -842,6 +859,8 @@ class preFlightsChecks:
 
         command = "/usr/local/CyberPanel/bin/python manage.py migrate"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+        self.initialize_email_filter_schema()
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
@@ -2132,14 +2151,17 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
 
-            cronFile = open(cronPath, "w")
+            existing = ""
+            if os.path.exists(cronPath):
+                with open(cronPath) as cronFile:
+                    existing = cronFile.read()
 
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+45 4 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
@@ -2152,27 +2174,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 0 0 */3 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '3 Days'
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
 
-*/3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
+
 """
 
-            cronFile.write(content)
-            cronFile.close()
-
-            ### Check and remove OLS restart if lsws ent detected
-
-            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-
-                data = open(cronPath, 'r').readlines()
-
-                writeToFile = open(cronPath, 'w')
-
-                for items in data:
-                    if items.find('-maxdepth 2 -type f -newer') > -1:
-                        pass
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+            content = migrate_cron(merge_defaults(existing, content),
+                                   os.path.exists('/usr/local/lsws/bin/openlitespeed'))
+            with open(cronPath, 'w') as cronFile:
+                cronFile.write(content)
 
             if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
                 command = 'chmod 600 %s' % (cronPath)
@@ -2253,17 +2261,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         print("###################################################################")
 
     def modSecPreReqs(self):
-        if is_el10_release():
-            return 1
-
-        try:
-
-            pathToRemoveGarbageFile = os.path.join(self.server_root_path, "modules/mod_security.so")
-            os.remove(pathToRemoveGarbageFile)
-
-        except OSError as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [modSecPreReqs]")
-            return 0
+        # The custom OLS bundle already installs the verified, ABI-matched module.
+        # This legacy post-install hook must not delete it on any platform.
+        return 1
 
     def installOpenDKIM(self):
         try:
@@ -3110,6 +3110,8 @@ def main():
     checks.installCLScripts()
     # checks.disablePackegeUpdates()
     checks.fixCyberPanelPermissions()
+    from plogical.roundcubeSudo import provision as provision_roundcube_sudo
+    provision_roundcube_sudo()
     configure_jwt_secret()
 
     # Start services that were enabled but not started during installation

@@ -2271,7 +2271,7 @@ Require valid-user
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def submitWebsiteCreation(self, userID=None, data=None):
+    def submitWebsiteCreation(self, userID=None, data=None, conversionPreflight=None):
         try:
             entitlement_error = apache_backend_entitlement_error(data)
             if entitlement_error is not None:
@@ -2284,7 +2284,7 @@ Require valid-user
             packageName = data['package']
             websiteOwner = data['websiteOwner'].lower()
 
-            if data['domainName'].find("cyberpanel.website") > -1:
+            if conversionPreflight is None and data['domainName'].find("cyberpanel.website") > -1:
                 url = "https://platform.cyberpersons.com/CyberpanelAdOns/CreateDomain"
 
                 domain_data = {
@@ -2327,6 +2327,33 @@ Require valid-user
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            if conversionPreflight is not None:
+                # Run the normal request validations above without reserving a
+                # managed domain or starting the creation worker. Check the
+                # worker's predictable failures before removing the child.
+                Package.objects.get(packageName=packageName)
+                if ACLManager.websitesLimitCheck(newOwner, 1) == 0:
+                    raise ValueError("You've reached maximum websites limit as a reseller.")
+                if ACLManager.checkOwnership(domain, loggedUser, currentACL) != 1:
+                    raise ValueError('You do not have permission to convert this child domain.')
+                if conversionPreflight.domain != domain:
+                    raise ValueError('Child domain changed during conversion.')
+                domains = (domain, domain[4:] if domain.startswith('www.') else domain)
+                if Websites.objects.filter(domain__in=domains).exists():
+                    raise ValueError('This website already exists.')
+                if ChildDomains.objects.filter(domain__in=domains).exclude(
+                        pk=conversionPreflight.pk).exists():
+                    raise ValueError('This website already exists as another child domain.')
+                from plogical.vhost import vhost
+                if vhost.checkIfAliasExists(domain) == 1:
+                    raise ValueError('This domain exists as Alias.')
+                php = PHPManager.getPHPString(phpSelection)
+                if not php.isdigit() or not os.path.isfile('/usr/local/lsws/lsphp%s/bin/lsphp' % php):
+                    raise ValueError('The selected PHP version is not installed.')
+                if data.get('openBasedir') not in (0, 1):
+                    raise ValueError('Invalid open_basedir selection.')
+                return HttpResponse(json.dumps({'status': 1, 'createWebSiteStatus': 1}))
+
             try:
                 HA = data['HA']
                 externalApp = 'nobody'
@@ -2342,7 +2369,8 @@ Require valid-user
             except:
                 pass
 
-            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            from plogical.statusUtilities import create_status_file
+            tempStatusPath = create_status_file()
 
             apacheBackend = str(normalize_apache_backend(data.get('apacheBackend', 0)))
 
@@ -3007,9 +3035,16 @@ Require valid-user
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (
+            execPath = execPath + " deleteDomain --virtualHostName " + shlex.quote(websiteName) + ' --DeleteDocRoot %s' % (
                 str(DeleteDocRoot))
-            ProcessUtilities.outputExecutioner(execPath)
+            success, output = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
+            # The helper reports application failures as "0,<reason>" even
+            # when Python exits normally. Do not report those as a deletion.
+            result = output.strip().splitlines() if output else []
+            if not success or not result or result[-1].strip() != '1,None':
+                raise ValueError(output.strip() if output else 'Domain deletion did not complete.')
+            if ChildDomains.objects.filter(domain=websiteName).exists():
+                raise ValueError('Domain deletion did not remove the child domain. Please check the CyberPanel log.')
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -6125,10 +6160,10 @@ StrictHostKeyChecking no
 
     def convertDomainToSite(self, userID=None, request=None):
         try:
-
+            from plogical.statusUtilities import create_status_file
             extraArgs = {}
             extraArgs['request'] = request
-            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            extraArgs['tempStatusPath'] = create_status_file()
             background = ApplicationInstaller('convertDomainToSite', extraArgs)
             background.start()
 

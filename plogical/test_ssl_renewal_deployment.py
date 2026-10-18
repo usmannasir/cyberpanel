@@ -16,6 +16,10 @@ No certificate authority is contacted; every process call is mocked.
 import unittest
 from unittest import mock
 import os
+from pathlib import Path
+import shlex
+import tempfile
+from plogical.test_acme_staging_isolation import certificate, PRODUCTION
 
 from plogical import sslUtilities as ssl_module
 from plogical.sslUtilities import issueSSLForDomain, sslUtilities
@@ -42,11 +46,22 @@ class RenewalDeploymentTests(unittest.TestCase):
         self.run_kwargs = []
         self.call_calls = []
         self.call_kwargs = []
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        self.acme_root = Path(scratch.name)
+        self.cert_pem, self.key_pem = certificate()
+        run_production = sslUtilities.runProductionACME
+        production = mock.patch.object(sslUtilities, 'runProductionACME', side_effect=
+            lambda command, domain, acme_path, environment: run_production(
+                command, domain, str(self.acme_root / 'acme.sh'), environment))
+        production.start()
+        self.addCleanup(production.stop)
 
         # Every path the renewal branch probes exists: the current certificate
         # and the acme.sh client.
-        patcher = mock.patch.object(ssl_module.os.path, 'exists',
-                                    return_value=True)
+        exists = os.path.exists
+        patcher = mock.patch.object(ssl_module.os.path, 'exists', side_effect=
+            lambda path: True if str(path).startswith(('/etc/letsencrypt/live/', '/root/.acme.sh')) else exists(path))
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -93,8 +108,17 @@ class RenewalDeploymentTests(unittest.TestCase):
         def fake_run(command, **kwargs):
             self.run_calls.append(command)
             self.run_kwargs.append(kwargs)
+            if '--update-account' in command:
+                return CompletedProcess(0, '', '')
             if '--install-cert' in command:
                 return CompletedProcess(install_rc, 'install out', 'install err')
+            if renew_rc == 0:
+                args = shlex.split(command)
+                candidate = Path(args[args.index('--cert-home') + 1]) / (DOMAIN + '_ecc')
+                (candidate / 'fullchain.cer').write_bytes(self.cert_pem)
+                (candidate / (DOMAIN + '.cer')).write_bytes(self.cert_pem)
+                (candidate / (DOMAIN + '.key')).write_bytes(self.key_pem)
+                (candidate / (DOMAIN + '.conf')).write_text("Le_API='%s'\n" % PRODUCTION)
             return CompletedProcess(renew_rc, 'renew out', 'renew err')
 
         with mock.patch.object(ssl_module.subprocess, 'run',
@@ -122,6 +146,7 @@ class RenewalDeploymentTests(unittest.TestCase):
         self.assertIsNotNone(command)
         self.assertIn('--renew', command)
         self.assertIn('--ecc', command)
+        self.assertIn('--server letsencrypt', command)
         self.assertIn('-d %s' % DOMAIN, command)
 
     def test_successful_renew_is_followed_by_install_cert(self):
@@ -211,6 +236,14 @@ class ExpiredCertificateTests(unittest.TestCase):
     def setUp(self):
         self.run_calls = []
 
+        # This case inspects expiry-driven command selection. Candidate validation
+        # has real-certificate coverage in test_acme_staging_isolation.
+        p = mock.patch.object(sslUtilities, 'runProductionACME', side_effect=
+            lambda command, domain, acme_path, environment: ssl_module.subprocess.run(
+                command + ' --server letsencrypt', env=environment))
+        p.start()
+        self.addCleanup(p.stop)
+
         patcher = mock.patch.object(ssl_module.os.path, 'exists',
                                     return_value=True)
         patcher.start()
@@ -266,6 +299,7 @@ class ExpiredCertificateTests(unittest.TestCase):
         self.assertTrue(issue, 'an expired certificate must be re-issued')
         self.assertIn('-k ec-256', issue[0])
         self.assertIn('--force', issue[0])
+        self.assertIn('--server letsencrypt', issue[0])
         self.assertFalse([c for c in self.run_calls if '--renew' in c],
                          'an expired certificate cannot be renewed')
 

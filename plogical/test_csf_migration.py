@@ -356,7 +356,7 @@ class CSFShellUpgradeTests(unittest.TestCase):
         # All function definitions and the real early entry-point checks run.
         # Stop before normal initialization, replacing only its initial local
         # cleanup section; no package, service, credential or network stage runs.
-        prefix = script[:script.index('\nSet_Default_Variables\n')]
+        prefix = script[:script.index('\nCheck_Root\n')]
         start = script.index('Set_Default_Variables() {')
         initial = script[start:script.index('export LC_CTYPE=', start)] + '\n}\n'
         with tempfile.TemporaryDirectory() as temporary:

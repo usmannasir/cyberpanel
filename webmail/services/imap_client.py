@@ -204,8 +204,11 @@ class IMAPClient:
             return {'messages': [], 'total': total, 'page': page, 'pages': pages}
 
         uid_str = b','.join(page_uids)
+        # Decode display fields from the requested header body only. An unused
+        # ENVELOPE can add earlier literals (e.g. a long encoded subject), which
+        # imaplib splits into separate tuples before the actual header body.
         status, msg_data = self.conn.uid('fetch', uid_str,
-                                          '(UID FLAGS ENVELOPE RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO SUBJECT DATE)])')
+                                          '(UID FLAGS RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO SUBJECT DATE)])')
         if status != 'OK':
             return {'messages': [], 'total': total, 'page': page, 'pages': pages}
 

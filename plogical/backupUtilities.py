@@ -83,6 +83,51 @@ class backupUtilities:
         self.extraArgs = extraArgs
 
     @staticmethod
+    def copyCertificateFiles(sourceDir, destinationDir, sourcePrefix='', destinationPrefix=''):
+        # CustomACME saves fullchain.pem and privkey.pem without a separate leaf.
+        required = ('fullchain.pem', 'privkey.pem')
+        if not all(os.path.isfile(os.path.join(sourceDir, sourcePrefix + name)) for name in required):
+            raise FileNotFoundError('SSL fullchain and private key are required together.')
+        os.makedirs(destinationDir, exist_ok=True)
+        for name in required:
+            copy(os.path.join(sourceDir, sourcePrefix + name),
+                 os.path.join(destinationDir, destinationPrefix + name))
+        leaf = os.path.join(sourceDir, sourcePrefix + 'cert.pem')
+        if os.path.isfile(leaf):
+            copy(leaf, os.path.join(destinationDir, destinationPrefix + 'cert.pem'))
+
+    @staticmethod
+    def restoreWebsiteOwnership(domain, homeRoot='/home'):
+        """Remap restored home ownership without changing modes or following links."""
+        import pwd
+        from plogical.backupExcludes import SITE_BACKUP_EXCLUDED_NAMES
+        if not domain or domain in ('.', '..') or os.path.basename(domain) != domain:
+            raise ValueError('Invalid restored website domain.')
+        website = Websites.objects.get(domain=domain)
+        owner = pwd.getpwnam(website.externalApp)
+        if owner.pw_uid == 0:
+            raise ValueError('A restored website must have a dedicated non-root owner.')
+        home = os.path.join(homeRoot, domain)
+        home_fd = os.open(home, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            def fail(error):
+                raise error
+            # fwalk pins directories with descriptors and checks for replacement;
+            # ownership calls are relative to those descriptors, not archive paths.
+            for _, directories, files, directory_fd in os.fwalk(
+                    '.', dir_fd=home_fd, follow_symlinks=False, onerror=fail):
+                # Match rsync's basename exclusions at every depth. In particular,
+                # destination logs are created root:webserver and are not restored.
+                directories[:] = [name for name in directories if name not in SITE_BACKUP_EXCLUDED_NAMES]
+                files = [name for name in files if name not in SITE_BACKUP_EXCLUDED_NAMES]
+                os.fchown(directory_fd, owner.pw_uid, owner.pw_gid)
+                for name in directories + files:
+                    os.chown(name, owner.pw_uid, owner.pw_gid,
+                             dir_fd=directory_fd, follow_symlinks=False)
+        finally:
+            os.close(home_fd)
+
+    @staticmethod
     def cleanupBackupMeta(metaPath):
         if not metaPath:
             return
@@ -330,8 +375,7 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(f"{backupDomain}: {str(msg)} [207][5009]")
             if FromInner:
                 #logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)), status)
-                command = f"echo '{status} [207][5009]' > {status}"
-                ProcessUtilities.executioner(command, website.externalApp)
+                logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % str(msg))
             return 0, str(msg), 'None'
 
     @staticmethod
@@ -453,11 +497,8 @@ class backupUtilities:
         if os.path.exists(sslStoragePath):
             try:
 
-                copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(CPHomeStorage, domainName + ".cert.pem"))
-
-                copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(CPHomeStorage, domainName + ".fullchain.pem"))
-
-                copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(CPHomeStorage, domainName + ".privkey.pem"))
+                backupUtilities.copyCertificateFiles(sslStoragePath, CPHomeStorage,
+                                                     destinationPrefix=domainName + '.')
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(f'{str(msg)}. [283:startBackup]')
@@ -526,18 +567,11 @@ class backupUtilities:
                 if os.path.exists(sslStoragePath):
                     try:
 
-                        #copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
-                        copy(os.path.join(sslStoragePath, "cert.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".cert.pem"))
-
-                        #copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
-                        copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".fullchain.pem"))
-
-                        #copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
-                        copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".privkey.pem"))
-
-                        #make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar', sslStoragePath)
-                    except:
-                        pass
+                        backupUtilities.copyCertificateFiles(sslStoragePath, CPHomeStorage,
+                                                             destinationPrefix=actualChildDomain + '.')
+                    except BaseException as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'Could not archive SSL for %s: %s [startBackup]' % (actualChildDomain, msg))
                 ## no need to do this as on line 380 whole dir will be backuped up
 
                 # if childPath.find(f'/home/{domainName}/public_html') == -1:
@@ -749,11 +783,13 @@ class backupUtilities:
 
             ## Create Configurations
 
-            # result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
-            #                                                 siteUser.userName, 'Default', 0)
-            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 1, 1, 0,
+            # Restore the archived certificate below, after account creation.
+            # DNS may still point at the source during a remote migration.
+            # Mail autodiscover also issues SSL, so configure it after restoring
+            # the archived mail child domain and its certificate instead.
+            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
-                                                   mail_domain)
+                                                   mail_domain, configureMail=False)
 
             if result[0] == 0:
                 raise BaseException(result[1])
@@ -870,18 +906,14 @@ class backupUtilities:
             if result[0] == 1:
                 ## Let us try to restore SSL.
 
-                sslStoragePath = completPath + "/" + masterDomain + ".cert.pem"
+                sslStoragePath = completPath + "/" + masterDomain + ".fullchain.pem"
 
                 if os.path.exists(sslStoragePath):
                     sslHome = '/etc/letsencrypt/live/' + masterDomain
 
                     try:
-                        if not os.path.exists(sslHome):
-                            os.mkdir(sslHome)
-
-                        copy(completPath + "/" + masterDomain + ".cert.pem", sslHome + "/cert.pem")
-                        copy(completPath + "/" + masterDomain + ".privkey.pem", sslHome + "/privkey.pem")
-                        copy(completPath + "/" + masterDomain + ".fullchain.pem", sslHome + "/fullchain.pem")
+                        backupUtilities.copyCertificateFiles(completPath, sslHome,
+                                                             sourcePrefix=masterDomain + '.')
 
                         sslUtilities.installSSLForDomain(masterDomain)
                     except BaseException as msg:
@@ -918,15 +950,6 @@ class backupUtilities:
                 for childDomain in childDomains:
 
                     domain = childDomain.find('domain').text
-
-                    ## mail domain check
-
-                    mailDomain = 'mail.%s' % (masterDomain)
-
-                    if domain == mailDomain:
-                        continue
-
-                    ## Mail domain check
 
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
@@ -997,19 +1020,14 @@ class backupUtilities:
 
 
 
-                            sslStoragePath = completPath + "/" + domain + ".cert.pem"
+                            sslStoragePath = completPath + "/" + domain + ".fullchain.pem"
 
                             if os.path.exists(sslStoragePath):
                                 sslHome = '/etc/letsencrypt/live/' + domain
 
                                 try:
-                                    if not os.path.exists(sslHome):
-                                        os.mkdir(sslHome)
-
-                                    copy(completPath + "/" + domain + ".cert.pem", sslHome + "/cert.pem")
-                                    copy(completPath + "/" + domain + ".privkey.pem", sslHome + "/privkey.pem")
-                                    copy(completPath + "/" + domain + ".fullchain.pem",
-                                         sslHome + "/fullchain.pem")
+                                    backupUtilities.copyCertificateFiles(completPath, sslHome,
+                                                                         sourcePrefix=domain + '.')
 
                                     sslUtilities.installSSLForDomain(domain)
                                 except:
@@ -1047,6 +1065,20 @@ class backupUtilities:
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
+
+            # Register only certificate files that were restored. Passing zero
+            # configures SNI for the existing domain without creating a mail
+            # child or requesting a certificate before DNS has moved here.
+            if virtualHostUtilities.emailServicesInstalled():
+                mailSSL = [masterDomain]
+                if backup_includes_mail_domain(backupMetaData, masterDomain):
+                    mailSSL.append('mail.%s' % masterDomain)
+                admin = Administrator.objects.get(userName='admin')
+                for domain in mailSSL:
+                    sslHome = '/etc/letsencrypt/live/' + domain
+                    if all(os.path.isfile(os.path.join(sslHome, name))
+                           for name in ('fullchain.pem', 'privkey.pem')):
+                        virtualHostUtilities.setupAutoDiscover(0, status, domain, admin)
 
             ## Restore Aliases
 
@@ -1256,6 +1288,9 @@ class backupUtilities:
 
 
             ## Fix permissions
+
+            if BackupWholeDir:
+                backupUtilities.restoreWebsiteOwnership(masterDomain)
 
             from filemanager.filemanager import FileManager
 
@@ -2442,11 +2477,10 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
         if result[0] == 0:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1325')
-            writeToFile.close()
-            command = "echo '%s [1084][5009]' > %s" % (str(result[1]), status)
-            ProcessUtilities.executioner(command, website.externalApp)
+            error = 'Backup metadata preparation failed: %s [1084][5009]' % result[1]
+            with open(schedulerPath, 'w') as marker:
+                marker.write(error)
+            logging.CyberCPLogFileWriter.statusWriter(status, error)
             return 0
 
 

@@ -3,6 +3,7 @@ import json
 import os
 import os.path
 import re
+import shutil
 import sys
 import time
 
@@ -32,7 +33,7 @@ from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
-from plogical.domainAliasUtilities import remove_alias_from_map_line
+from plogical.domainAliasUtilities import add_http_alias_mapping, remove_alias_from_map_line
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
@@ -58,14 +59,21 @@ class virtualHostUtilities:
 
     @staticmethod
     def emailServicesInstalled():
-        """
-        Check if email services (Postfix/OpenDKIM) are installed and configured.
-        Returns True if email services are available, False otherwise.
+        """A leftover installer marker does not establish usable mail configuration."""
+        return (os.path.exists('/home/cyberpanel/postfix')
+                and os.path.isfile('/etc/postfix/main.cf')
+                and os.path.isfile('/etc/dovecot/dovecot.conf'))
 
-        This checks for the marker file /home/cyberpanel/postfix which is created
-        during email services installation.
-        """
-        return os.path.exists('/home/cyberpanel/postfix')
+    @staticmethod
+    def dkimServicesInstalled():
+        if not virtualHostUtilities.emailServicesInstalled():
+            return False
+        if not os.path.isdir('/etc/opendkim/keys'):
+            return False
+        executable = 'opendkim-genkey'
+        if ProcessUtilities.decideDistro() in (ProcessUtilities.centos, ProcessUtilities.cent8):
+            executable = '/usr/sbin/opendkim-genkey'
+        return shutil.which(executable) is not None
 
     @staticmethod
     def OnBoardingHostName(Domain, tempStatusPath, skipRDNSCheck):
@@ -637,7 +645,8 @@ class virtualHostUtilities:
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
-                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain=None, LimitsCheck=1):
+                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain=None, LimitsCheck=1,
+                          configureMail=True):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -729,9 +738,7 @@ class virtualHostUtilities:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                     return 0, "This domain exists as Alias."
 
-            postfixPath = '/home/cyberpanel/postfix'
-
-            if os.path.exists(postfixPath):
+            if virtualHostUtilities.dkimServicesInstalled():
                 retValues = mailUtilities.setupDKIM(virtualHostName)
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
@@ -825,9 +832,7 @@ class virtualHostUtilities:
 
             ## DKIM Check
 
-            postFixPath = '/home/cyberpanel/postfix'
-
-            if os.path.exists(postFixPath):
+            if virtualHostUtilities.dkimServicesInstalled():
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
@@ -840,7 +845,8 @@ class virtualHostUtilities:
 
             ### For autodiscover of mail clients.
 
-            virtualHostUtilities.setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin)
+            if configureMail:
+                virtualHostUtilities.setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin)
 
             ###
 
@@ -1297,22 +1303,10 @@ class virtualHostUtilities:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                data = open(confPath, 'r').readlines()
-                writeToFile = open(confPath, 'w')
-                listenerTrueCheck = 0
-
-                for items in data:
-                    if items.find("listener") > -1 and items.find("Default") > -1:
-                        listenerTrueCheck = 1
-                    if items.find(' ' + masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
-                        data = [_f for _f in items.split(" ") if _f]
-                        if data[1] == masterDomain:
-                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
-                            listenerTrueCheck = 0
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+                with open(confPath, 'r') as config_file:
+                    updated = add_http_alias_mapping(config_file.read(), masterDomain, aliasDomain)
+                with open(confPath, 'w') as config_file:
+                    config_file.write(updated)
             else:
                 completePathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
                 data = open(completePathToConf, 'r').readlines()
@@ -1651,9 +1645,7 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
-            postFixPath = '/home/cyberpanel/postfix'
-
-            if os.path.exists(postFixPath):
+            if virtualHostUtilities.dkimServicesInstalled():
                 retValues = mailUtilities.setupDKIM(virtualHostName)
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
@@ -1735,9 +1727,7 @@ class virtualHostUtilities:
 
             ## DKIM Check
 
-            postFixPath = '/home/cyberpanel/postfix'
-
-            if os.path.exists(postFixPath):
+            if virtualHostUtilities.dkimServicesInstalled():
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
@@ -1759,12 +1749,15 @@ class virtualHostUtilities:
         try:
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+            if vhost.deleteCoreConf(virtualHostName, numberOfWebsites) == 0:
+                raise ValueError('Could not remove the child domain configuration. Please check the CyberPanel log.')
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
 
             if DeleteDocRoot:
-                command = 'rm -rf %s' % (delWebsite.path)
-                ProcessUtilities.executioner(command)
+                command = 'rm -rf -- %s' % shlex.quote(delWebsite.path)
+                removed, output = ProcessUtilities.outputExecutioner(command, retRequired=True)
+                if not removed:
+                    raise ValueError('Could not remove the child domain files: %s' % output)
 
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()

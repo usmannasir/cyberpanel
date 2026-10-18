@@ -49,7 +49,8 @@ class StagingProbeIsolationTests(unittest.TestCase):
         fakes['plogical.customACME'].CustomACME = failing_acme
 
         namespace = {
-            'os': SimpleNamespace(path=SimpleNamespace(exists=lambda path: True), environ=os.environ),
+            'os': SimpleNamespace(path=SimpleNamespace(exists=lambda path: True), environ=os.environ,
+                                  makedirs=mock.Mock()),
             're': __import__('re'), 'shlex': shlex, 'shutil': shutil, 'tempfile': tempfile,
             'subprocess': SimpleNamespace(run=run, call=lambda *a, **k: 0, PIPE=None),
             'socket': SimpleNamespace(gethostname=lambda: 'fixture-host'),
@@ -64,35 +65,57 @@ class StagingProbeIsolationTests(unittest.TestCase):
         ssl.CheckIfSSLNeedsToBeIssued = staticmethod(lambda domain: ssl.ISSUE_SSL)
         ssl.PatchVhostConf = staticmethod(lambda domain: None)
         ssl.checkDNSRecords = staticmethod(lambda domain: False)
+        # Production certificate validation has its own real-certificate tests.
+        # Isolate its result here so these tests exercise staging state and the
+        # caller's deployment gate without treating empty ACME output as valid.
+        def validated_production(command, domain, acme_path, environment):
+            commands.append(command)
+            return SimpleNamespace(returncode=production_rc, stdout='', stderr='')
+        production = mock.Mock(side_effect=validated_production)
+        ssl.runProductionACME = production
         with mock.patch.dict(sys.modules, fakes):
             result = ssl.obtainSSLForADomain(DOMAIN, 'admin@fixture.invalid', '/unused')
-        return result, commands
+        return result, commands, production
 
     def test_staging_probe_uses_a_throwaway_config_home(self):
-        result, commands = self.run_fallback(staging_rc=0, production_rc=1)
+        result, commands, production = self.run_fallback(staging_rc=0, production_rc=1)
         self.assertEqual(0, result)
         staging = [c for c in commands if ' --staging' in c]
         self.assertEqual(1, len(staging))
         home = shlex.split(staging[0])[shlex.split(staging[0]).index('--config-home') + 1]
+        cert_home = shlex.split(staging[0])[shlex.split(staging[0]).index('--cert-home') + 1]
+        self.assertEqual(home, cert_home)
         self.assertTrue(home.startswith(tempfile.gettempdir()))
         self.assertFalse(os.path.exists(home), 'probe config home must be removed')
         for command in commands:
             if command is not staging[0]:
                 self.assertNotIn('--config-home', command)
                 self.assertNotIn('--staging', command)
+        production.assert_called_once()
 
     def test_production_issue_still_follows_a_successful_probe(self):
-        result, commands = self.run_fallback(staging_rc=0, production_rc=0)
+        result, commands, validated = self.run_fallback(staging_rc=0, production_rc=0)
         self.assertEqual(1, result)
         production = [c for c in commands if ' --issue' in c and ' --staging' not in c]
         self.assertEqual(1, len(production))
-        self.assertIn('--server letsencrypt', production[0])
+        validated.assert_called_once()
+        self.assertEqual(DOMAIN, validated.call_args.args[1])
+        self.assertEqual('/root/.acme.sh/acme.sh', validated.call_args.args[2])
+        self.assertLess(commands.index(next(c for c in commands if ' --staging' in c)),
+                        commands.index(production[0]))
         self.assertTrue(any('--install-cert' in c for c in commands))
 
     def test_failed_probe_skips_production(self):
-        result, commands = self.run_fallback(staging_rc=1)
+        result, commands, production = self.run_fallback(staging_rc=1)
         self.assertEqual(0, result)
         self.assertFalse(any(' --issue' in c and ' --staging' not in c for c in commands))
+        production.assert_not_called()
+
+    def test_rejected_production_certificate_is_not_installed(self):
+        result, commands, production = self.run_fallback(production_rc=1)
+        self.assertEqual(0, result)
+        production.assert_called_once()
+        self.assertFalse(any('--install-cert' in c for c in commands))
 
 
 def make_cert(path, organization, days=60):
@@ -131,8 +154,14 @@ class StagingCertificateHealTests(unittest.TestCase):
             lswsReloadCmd='fixture-reload', installSSLForDomain=lambda *a: 1,
             obtainSSLForADomain=mock.Mock(side_effect=AssertionError('fell through')),
             parseACMEError=lambda output: output)
+        # Exercise renewal-vs-reissuance routing. The helper's certificate
+        # acceptance criteria are covered by test_acme_production_environment.
+        def validated_production(command, domain, acme_path, environment):
+            return run(command, env=environment)
+        utility.runProductionACME = mock.Mock(side_effect=validated_production)
         namespace = {
             'sslUtilities': utility,
+            'shlex': shlex,
             'logging': SimpleNamespace(CyberCPLogFileWriter=SimpleNamespace(writeToFile=lambda *a, **k: None)),
             'os': SimpleNamespace(path=SimpleNamespace(exists=lambda p: p in (live, '/root/.acme.sh/acme.sh') or p.startswith('/etc/letsencrypt/live/'))),
             'subprocess': SimpleNamespace(run=run, call=lambda *a, **k: 0, PIPE=None),

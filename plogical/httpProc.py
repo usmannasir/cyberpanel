@@ -46,8 +46,8 @@ class httpProc:
 
                 if currentACL['admin']:
                     try:
-                        admin = Administrator.objects.get(userName='admin')
-                        config = json.loads(admin.config)
+                        onboardingAdmin = Administrator.objects.get(userName='admin')
+                        config = json.loads(onboardingAdmin.config)
                         self.data['onboarding'] = config['onboarding']
                     except:
                         self.data['onboarding'] = 0

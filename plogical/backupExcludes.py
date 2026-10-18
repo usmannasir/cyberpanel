@@ -5,7 +5,10 @@ SITE_BACKUP_DIRECTORIES = (
     'incrementalbackups',
 )
 
+# These rsync patterns have no slash or wildcard: they exclude matching file or
+# directory basenames at every depth, including .wp-cli and lscache.
+SITE_BACKUP_EXCLUDED_NAMES = ('.wp-cli',) + SITE_BACKUP_DIRECTORIES + ('lscache',)
+
 
 def rsync_exclude_arguments():
-    directories = ('.wp-cli',) + SITE_BACKUP_DIRECTORIES + ('lscache',)
-    return ' '.join('--exclude=%s' % directory for directory in directories)
+    return ' '.join('--exclude=%s' % name for name in SITE_BACKUP_EXCLUDED_NAMES)

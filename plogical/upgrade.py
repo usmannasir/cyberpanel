@@ -31,6 +31,30 @@ from cyberpanel_version import BUILD, VERSION
 from contextlib import contextmanager
 
 
+def stagger_renewal_cron(data):
+    """Move the stock weekly renewal slot, preserving customized schedules."""
+    return re.sub(
+        r'(?m)^0 0 \* \* 4 (?=/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew\.py(?:[ \t]|$))',
+        '45 4 * * 4 ', data)
+
+
+def install_binary_atomically(source, destination):
+    """Keep the installed executable if a release artifact cannot be copied."""
+    if not os.path.isfile(source) or os.path.getsize(source) == 0:
+        raise RuntimeError('Required executable is missing or empty: %s' % source)
+    descriptor, temporary = tempfile.mkstemp(
+        prefix='.' + os.path.basename(destination) + '.upgrade-',
+        dir=os.path.dirname(destination))
+    os.close(descriptor)
+    try:
+        shutil.copyfile(source, temporary)
+        os.chmod(temporary, 0o755)
+        os.replace(temporary, destination)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 def _copy_path(source, destination):
     if os.path.lexists(destination):
         if os.path.isdir(destination) and not os.path.islink(destination):
@@ -585,12 +609,22 @@ class Upgrade:
                 os._exit(1)
 
     @staticmethod
-    def executioner(command, component, do_exit=0, shell=False):
+    def executioner(command, component, do_exit=0, shell=False, detach_output=False):
         try:
-            FNULL = open(os.devnull, 'w')
             count = 0
             while True:
-                if shell == False:
+                if detach_output:
+                    # Service launchers can leave stdout open in daemon children.
+                    # A regular file retains startup diagnostics without allowing
+                    # those children to hold the upgrade's tee pipe open forever.
+                    with tempfile.TemporaryFile() as output:
+                        arguments = command if shell else shlex.split(command)
+                        res = subprocess.call(arguments, stdout=output,
+                                              stderr=subprocess.STDOUT, shell=shell)
+                        output.seek(0)
+                        sys.stdout.write(output.read().decode('utf-8', errors='replace'))
+                        sys.stdout.flush()
+                elif shell == False:
                     res = subprocess.call(shlex.split(command), stderr=subprocess.STDOUT)
                 else:
                     res = subprocess.call(command, stderr=subprocess.STDOUT, shell=True)
@@ -832,11 +866,19 @@ class Upgrade:
         try:
             Upgrade.stdOut(f"Downloading {os.path.basename(destination)}...", 0)
 
-            # Use wget for better progress display
-            command = f'wget -q --show-progress {url} -O {destination}'
-            res = subprocess.call(shlex.split(command))
+            # Browser upgrades inherit an output socket that may not be drained.
+            # Wget progress can fill it and block the download indefinitely.
+            # Bound both network retries and total runtime, and keep output out
+            # of that socket; report the checked result through the status log.
+            result = subprocess.run(
+                ['wget', '-q', '--timeout=30', '--tries=3', '-O', destination, '--', url],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+            if result.returncode != 0:
+                Upgrade.stdOut(f"ERROR: Download failed (wget exit {result.returncode})", 0)
+                return False
 
-            # Check if file was downloaded successfully by verifying it exists and has reasonable size
+            # A failed transfer can leave a large partial file. Only inspect size
+            # after wget succeeds; the caller still verifies the published SHA256.
             if os.path.exists(destination):
                 file_size = os.path.getsize(destination)
                 # Verify file size is reasonable (at least 10KB to avoid error pages/empty files)
@@ -936,34 +978,34 @@ class Upgrade:
             # mappings use the same release with native runtime dependencies.
             BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel8',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
-                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel8.so',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel8.so',
                        'sha256': {'binary': 'd12b66fe05fa483f61d3833d86053bb1c81c4cd3421a9be5ef610dffd3a87949',
                                   'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
-                                  'modsec': 'cfdf61bb3e0115fbcd172a5dd55fe107a8e17888711a31eec25d34b94df3bb6c'}},
+                                  'modsec': '6afde1bb82e4118e5986aa345b9d7120da0e7501dc4fad24d9c93e55b4560843'}},
              'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel9',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel9.so',
-                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel9.so',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel9.so',
                        'sha256': {'binary': '1a6b9338d5dcc3153f15302f5a057faa0a369a90b6d850d72d07bfe3a41cb5be',
                                   'module': '7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb',
-                                  'modsec': 'eb67cce467b29b73f70f798db8e5097b13e8c264a83b146bac601bbd62399b0f'}},
+                                  'modsec': 'f2551a3b4704e576c24a202c92905a0fbe249bc653d0d810f23bbacb40b22c2b'}},
              'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel10',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel10.so',
-                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-rhel10.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel10.so',
                         'sha256': {'binary': 'e51b81234ab46452268449cb8a694dee09898cfd2eadc252b176b87cd4039ab1',
                                    'module': 'edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2',
-                                   'modsec': 'a7d8131bf7fa9b14286a088a1a9eb8f0bca15de991c79d6173ac0f274dcd9bcf'}},
+                                   'modsec': '5b3086279bee6f29c55e3cee6fbe4bbfd743c8f3371060ef8173dc84b5d3ae95'}},
              'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-ubuntu',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
-                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu.so',
                         'sha256': {'binary': '736eeb47bd3dc7b2a7206b95106dd735a80b3386118d0b4b17f39f9fa5324f8c',
                                    'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
-                                   'modsec': '0714c9e43781d51ffab5ee4faf2b4506b68cc0f9483285bfa8a8d334d0f96172'}},
+                                   'modsec': 'd196438c0a113ca339706a1e7e37c51026489e4893d06436d6f76252b6e0d6ec'}},
              'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-ubuntu',
                           'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
-                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.4-x86_64-ubuntu26.so',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu26.so',
                           'sha256': {'binary': '736eeb47bd3dc7b2a7206b95106dd735a80b3386118d0b4b17f39f9fa5324f8c',
                                      'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
-                                     'modsec': '5f2f285b667611a6fd3dcb91f5790ead0b096afc43ca5f5507345dd05f2bd8a5'}}}
+                                     'modsec': '4bb70915336dce7e535923703014e89210ab4a17b157820d68b3e3db38110879'}}}
 
             config = BINARY_CONFIGS.get(platform)
             if not config:
@@ -1004,14 +1046,13 @@ class Upgrade:
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
             control = '/usr/local/lsws/bin/lswsctrl'
-            # A fresh installation includes WAF; upgrades preserve its installed state.
+            # Keep the core and both modules on the same verified release, including
+            # upgrades from installations that did not previously have ModSecurity.
             required = [
                 ('binary', config.get('url'), OLS_BINARY_PATH, 0o755, 'openlitespeed.backup'),
                 ('module', config.get('module_url'), MODULE_PATH, 0o644, 'cyberpanel_ols.so.backup'),
+                ('modsec', config.get('modsec_url'), MODSEC_PATH, 0o644, 'mod_security.so.backup'),
             ]
-            if os.path.exists(MODSEC_PATH):
-                required.append(('modsec', config.get('modsec_url'), MODSEC_PATH,
-                                 0o644, 'mod_security.so.backup'))
 
             import tempfile
             import re
@@ -3176,7 +3217,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             ## Ensure cyrus-sasl-plain is installed (needed for SMTP relay on RHEL/Alma/CentOS)
             if os.path.exists('/etc/redhat-release'):
                 command = 'dnf install -y cyrus-sasl-plain'
-                ProcessUtilities.executioner(command)
+                Upgrade.executioner(command, 'Install Cyrus SASL PLAIN', 0)
 
             import re
 
@@ -3356,11 +3397,11 @@ passdb {
 
             # Run webmail migrations
             Upgrade.executioner(
-                'python /usr/local/CyberCP/manage.py makemigrations webmail',
+                '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/manage.py makemigrations webmail',
                 'Webmail makemigrations', shell=True
             )
             Upgrade.executioner(
-                'python /usr/local/CyberCP/manage.py migrate',
+                '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/manage.py migrate',
                 'Webmail migrate', shell=True
             )
 
@@ -3990,9 +4031,6 @@ passdb {
 
                 lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-                if os.path.exists(lscpdPath):
-                    os.remove(lscpdPath)
-
                 try:
                     try:
                         result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
@@ -4016,17 +4054,8 @@ passdb {
                         if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
 
-                command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
-                Upgrade.executioner(command, command, 0)
-
-                command = 'rm -f /usr/local/lscp/bin/lscpd'
-                Upgrade.executioner(command, command, 0)
-
-                command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
-                Upgrade.executioner(command, command, 0)
-
-                command = f'chmod 755 {lscpdPath}'
-                Upgrade.executioner(command, 'LSCPD Download.', 0)
+                install_binary_atomically(
+                    '/usr/local/CyberCP/' + lscpdSelection, lscpdPath)
 
                 command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
                 Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
@@ -4061,6 +4090,7 @@ passdb {
 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
+            raise
 
     ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
     @staticmethod
@@ -4693,6 +4723,9 @@ vmail
 
     @staticmethod
     def runSomeImportantBash():
+        # upgrade.py bootstraps against the OLD installed tree. This phase runs
+        # only after downloadAndUpgrade has activated the requested new source.
+        from plogical.olsHtaccessReload import migrate_cron
 
         # Remove invalid crons from /etc/crontab Reference: https://github.com/usmannasir/cyberpanel/issues/216
         command = """sed -i '/CyberCP/d' /etc/crontab"""
@@ -4727,7 +4760,14 @@ vmail
             cronPath = '/var/spool/cron/crontabs/root'
 
         if os.path.exists(cronPath):
-            data = open(cronPath, 'r').read()
+            with open(cronPath, 'r') as cron_file:
+                data = cron_file.read()
+            updated = migrate_cron(stagger_renewal_cron(data),
+                                   os.path.exists('/usr/local/lsws/bin/openlitespeed'))
+            if updated != data:
+                with open(cronPath, 'w') as cron_file:
+                    cron_file.write(updated)
+                data = updated
 
             if data.find('findBWUsage') == -1:
                 content = """
@@ -4735,13 +4775,13 @@ vmail
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+45 4 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
-*/3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
+
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
 """
 
-                writeToFile = open(cronPath, 'w')
+                writeToFile = open(cronPath, 'a')
                 writeToFile.write(content)
                 writeToFile.close()
 
@@ -4794,31 +4834,16 @@ vmail
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+45 4 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
 */5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/pdnsHealthCheck.py >/dev/null 2>&1
 """
+            content = migrate_cron(content, os.path.exists('/usr/local/lsws/bin/openlitespeed'))
             writeToFile = open(cronPath, 'w')
             writeToFile.write(content)
-            writeToFile.close()
-
-        ### Check and remove OLS restart if lsws ent detected
-
-        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-
-            data = open(cronPath, 'r').readlines()
-
-            writeToFile = open(cronPath, 'w')
-
-            for items in data:
-                if items.find('-maxdepth 2 -type f -newer') > -1:
-                    pass
-                else:
-                    writeToFile.writelines(items)
-
             writeToFile.close()
 
         if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
@@ -5222,6 +5247,20 @@ pm.max_spare_servers = 3
         return 1
 
     @staticmethod
+    def installPanelPHP():
+        destination = '/usr/local/lscp/fcgi-bin/lsphp'
+        for version in ('83', '84', '85', '82', '81', '80', '74'):
+            source = '/usr/local/lsws/lsphp%s/bin/lsphp' % version
+            if os.path.isfile(source) and os.access(source, os.X_OK):
+                install_binary_atomically(source, destination)
+                return
+        if os.path.isfile(destination) and os.access(destination, os.X_OK) \
+                and os.path.getsize(destination):
+            Upgrade.stdOut('Keeping the existing panel PHP executable.')
+            return
+        raise RuntimeError('No usable LSAPI PHP executable is available for the panel')
+
+    @staticmethod
     def upgrade(branch):
         requireCSFMigration()
 
@@ -5296,7 +5335,7 @@ pm.max_spare_servers = 3
                 command = '/usr/local/lsws/bin/lswsctrl stop'
                 Upgrade.executioner(command, 'Stop OpenLiteSpeed', 0)
                 command = '/usr/local/lsws/bin/lswsctrl start'
-                Upgrade.executioner(command, 'Start OpenLiteSpeed', 0)
+                Upgrade.executioner(command, 'Start OpenLiteSpeed', 0, detach_output=True)
 
                 # Verify OLS started successfully after restart
                 import time
@@ -5449,6 +5488,8 @@ pm.max_spare_servers = 3
         ## Upgrade version
 
         Upgrade.fixPermissions()
+        from plogical.roundcubeSudo import provision as provision_roundcube_sudo
+        provision_roundcube_sudo()
 
         ##
 
@@ -5456,17 +5497,9 @@ pm.max_spare_servers = 3
 
         Upgrade.UpdateMaxSSLCons()
 
-        ## Update LSCPD PHP
-
-        phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
-
-        try:
-            os.remove(phpPath)
-        except:
-            pass
-
-        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
-        Upgrade.executioner(command, 0)
+        # Use an installed LSAPI PHP executable and replace it only after a
+        # complete copy. PHP 8.0 is absent on many supported installations.
+        Upgrade.installPanelPHP()
 
         if Upgrade.SoftUpgrade == 0:
             try:

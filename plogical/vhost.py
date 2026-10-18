@@ -24,6 +24,7 @@ from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
+from plogical.domainAliasUtilities import add_https_alias_mapping
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites, WPSites, WPStaging
     from databases.models import Databases
@@ -582,6 +583,13 @@ class vhost:
                 else:
                     command = 'deluser %s' % (externalApp)
 
+                ## Remove resource limits for this user (OLS cgroups)
+                try:
+                    from plogical.resourceLimits import resource_manager
+                    resource_manager.remove_user_limits(externalApp)
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove resource limits for user {externalApp}: {str(e)}")
+
                 vhost._delete_unix_account(externalApp, command)
 
                 ## Remove git conf folder if present
@@ -590,13 +598,6 @@ class vhost:
 
                 if os.path.exists(gitPath):
                     shutil.rmtree(gitPath)
-
-                ## Remove resource limits for this user (OLS cgroups)
-                try:
-                    from plogical.resourceLimits import resource_manager
-                    resource_manager.remove_user_limits(externalApp)
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove resource limits for user {externalApp}: {str(e)}")
 
                 ### Delete Acme folder
 
@@ -687,6 +688,7 @@ class vhost:
     def deleteCoreConf(virtualHostName, numberOfSites):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
+                numberOfSites = int(numberOfSites)
 
                 virtualHostPath = "/home/" + virtualHostName
                 if os.path.exists(virtualHostPath):
@@ -696,7 +698,8 @@ class vhost:
                 if os.path.exists(confPath):
                     shutil.rmtree(confPath)
 
-                data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+                with open("/usr/local/lsws/conf/httpd_config.conf") as configFile:
+                    data = configFile.readlines()
 
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
 
@@ -704,10 +707,15 @@ class vhost:
                 sslCheck = 1
 
                 for items in data:
+                    tokens = items.split()
+                    is_mapping = (len(tokens) >= 2 and tokens[0].lower() == 'map'
+                                  and tokens[1] == virtualHostName)
+                    is_vhost = (len(tokens) >= 2 and tokens[0].lower() == 'virtualhost'
+                                and tokens[1] == virtualHostName)
                     if numberOfSites == 1:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
+                        if is_mapping:
                             continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                        if is_vhost:
                             check = 0
                         if items.find("listener") > -1 and items.find("SSL") > -1:
                             sslCheck = 0
@@ -717,14 +725,16 @@ class vhost:
                             check = 1
                             sslCheck = 1
                     else:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
+                        if is_mapping:
                             continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                        if is_vhost:
                             check = 0
                         if (check == 1):
                             writeDataToFile.writelines(items)
                         if (items.find("}") > -1 and check == 0):
                             check = 1
+
+                writeDataToFile.close()
 
                 ## Delete Apache Conf
 
@@ -1035,31 +1045,15 @@ class vhost:
     @staticmethod
     def createAliasSSLMap(confPath, masterDomain, aliasDomain):
         try:
-
-            data = open(confPath, 'r').readlines()
-            writeToFile = open(confPath, 'w')
-            sslCheck = 0
-
-
-            for items in data:
-                if (items.find("listener SSL") > -1):
-                    sslCheck = 1
-                if items.find(masterDomain) > -1 and items.find('map') > -1 and sslCheck == 1:
-                    data = [_f for _f in items.split(" ") if _f]
-                    if data[1] == masterDomain:
-                        if vhost.checkIfSSLAliasExists(data, aliasDomain) == 0:
-                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
-                            sslCheck = 0
-                        else:
-                            writeToFile.writelines(items)
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
+            with open(confPath, 'r') as config_file:
+                updated = add_https_alias_mapping(config_file.read(), masterDomain, aliasDomain)
+            with open(confPath, 'w') as config_file:
+                config_file.write(updated)
             installUtilities.installUtilities.reStartLiteSpeed()
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAliasSSLMap]")
+            raise
 
     ## Child Domain Functions
 

@@ -1282,8 +1282,9 @@
     }
     
     </style>
+    {% include "websiteFunctions/partials/manageWorkspaceStyles.html" %}
 
-    <div class="cyberpanel-website-page" ng-controller="websitePages">
+    <div class="cyberpanel-website-page cp-site-workspace" ng-controller="websitePages">
 
         <!-- Creative Hero Section -->
         <div class="domain-hero">
@@ -1296,7 +1297,7 @@
                     </div>
                 </div>
                 <p class="domain-description">
-                    {% trans "Manage your website with powerful tools and real-time monitoring" %}
+                    {% trans "Manage files, domains, security, and server settings for this website." %}
                 </p>
                 <div class="hero-actions">
                     <a target="_blank" rel="noopener" href="{$ previewUrl $}" class="hero-btn primary">
@@ -2029,7 +2030,14 @@
                         <!---- HTML for main conf file ---->
 
                         <div class="col-md-12">
-                            <form ng-hide="configurationsBox" class="form-horizontal bordered-row">
+                            <form ng-hide="configurationsBox" class="cp-config-editor" aria-label="{% trans 'Virtual host configuration editor' %}">
+                                <div class="cp-editor-header">
+                                    <div>
+                                        <h4>{% trans "Virtual host configuration" %}</h4>
+                                        <p>{{ domain }}</p>
+                                    </div>
+                                    <button type="button" class="btn btn-default" ng-click="hideconfigbtn()" aria-label="{% trans 'Close configuration editor' %}">{% trans "Close" %}</button>
+                                </div>
                                 <div ng-hide="configsFetched" class="alert alert-success">
                                     <p>{% trans "Current configuration in the file fetched." %}</p>
                                 </div>
@@ -2052,22 +2060,15 @@
                                         errorMessage $}</p>
                                 </div>
 
-                                <div ng-hide="fetchedConfigsData" class="form-group">
-                                    <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                        <a ng-click="hideconfigbtn()" href=""><img
-                                                src="/static/images/close-32.png"></a>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <textarea ng-model="configData" rows="20" class="form-control"></textarea>
-                                    </div>
+                                <div ng-hide="fetchedConfigsData" class="cp-editor-body">
+                                    <label for="vhostConfigurationSource">{% trans "Configuration source" %}</label>
+                                    <textarea id="vhostConfigurationSource" ng-model="configData" rows="20"
+                                              class="form-control cp-config-source" spellcheck="false"
+                                              autocapitalize="off" autocomplete="off" wrap="off"></textarea>
                                 </div>
-
-                                <div ng-hide="saveConfigBtn" class="form-group">
-                                    <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-4">
-                                        <button type="button" ng-click="saveCongiruations()"
-                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-                                    </div>
+                                <div ng-hide="saveConfigBtn" class="cp-editor-actions">
+                                    <button type="button" ng-click="hideconfigbtn()" class="btn btn-default">{% trans "Cancel" %}</button>
+                                    <button type="button" ng-click="saveCongiruations()" class="btn btn-primary">{% trans "Save configuration" %}</button>
                                 </div>
                             </form>
                         </div>

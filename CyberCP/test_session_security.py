@@ -4,13 +4,17 @@ from unittest import mock
 
 from django.contrib.sessions.backends.signed_cookies import SessionStore
 from django.http import HttpResponse
-from django.test import RequestFactory, SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase, override_settings
 
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.sessionSecurity import session_ip_key, session_ip_matches
 from loginSystem.views import verifyLogin
 
 
+urlpatterns = []  # These unit tests do not load unrelated panel URL handlers.
+
+
+@override_settings(ROOT_URLCONF=__name__)
 class SessionIPTests(SimpleTestCase):
     def test_canonical_ipv6_prefix_and_privacy_addresses(self):
         self.assertEqual(session_ip_key('2001:0DB8:0000:12::1'),
@@ -69,6 +73,26 @@ class SessionIPTests(SimpleTestCase):
 
     @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
     @mock.patch('CyberCP.secMiddleware.Administrator.objects.get')
+    def test_login_requires_valid_address_before_authenticating_even_at_low_security(self, get_admin, check):
+        get_admin.return_value = SimpleNamespace(pk=7, password='hash', state='ACTIVE',
+            twoFA=False, securityLevel=secMiddleware.LOW)
+        for address in (None, '', 'not-an-ip'):
+            with self.subTest(address=address):
+                session = SessionStore()
+                request = self.request('/verifyLogin', address, session, 'post',
+                                       {'username': 'admin', 'password': 'test'})
+                if address is None:
+                    request.META.pop('REMOTE_ADDR', None)
+                with mock.patch.object(session, 'cycle_key') as rotate:
+                    response = secMiddleware(verifyLogin)(request)
+                self.assertEqual(0, json.loads(response.content)['loginStatus'])
+                self.assertNotIn('userID', session)
+                self.assertNotIn('ipAddr', session)
+                rotate.assert_not_called()
+        self.assertEqual(3, check.call_count)
+
+    @mock.patch('loginSystem.views.hashPassword.check_password', return_value=True)
+    @mock.patch('CyberCP.secMiddleware.Administrator.objects.get')
     def test_login_then_dashboard_accepts_equivalent_address_forms(self, get_admin, check):
         get_admin.return_value = SimpleNamespace(pk=7, password='hash', state='ACTIVE',
             twoFA=False, securityLevel=secMiddleware.HIGH)
@@ -109,3 +133,15 @@ class SessionIPTests(SimpleTestCase):
             session, 'post', {'username': 'admin', 'password': 'wrong'}))
         self.assertEqual(0, json.loads(response.content)['loginStatus'])
         self.assertNotIn('userID', session)
+
+    @mock.patch('CyberCP.secMiddleware.Administrator.objects.get')
+    def test_stale_session_cannot_reuse_two_factor_flag(self, get_admin):
+        get_admin.return_value = SimpleNamespace(pk=7, password='hash', state='ACTIVE',
+            twoFA=True, securityLevel=secMiddleware.HIGH)
+        session = SessionStore()
+        session.update({'userID': 99, 'ipAddr': '192.0.2.1', 'twofa': 1})
+        response = secMiddleware(verifyLogin)(self.request('/verifyLogin', '198.51.100.2',
+            session, 'post', {'username': 'admin', 'password': 'test'}))
+        self.assertEqual(2, json.loads(response.content)['loginStatus'])
+        self.assertNotIn('userID', session)
+        self.assertEqual(0, session['twofa'])

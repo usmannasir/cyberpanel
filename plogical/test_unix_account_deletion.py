@@ -233,6 +233,8 @@ class UnixAccountDeletionTests(unittest.TestCase):
                                 'mail-directory-delete', command, 'groupdel ' + self.username]
                     positions = [self.events.index(event) for event in expected]
                     self.assertEqual(sorted(positions), positions)
+                    if server == 1:
+                        self.assertLess(self.events.index('resource-limits'), self.events.index(command))
                     if server == 2:
                         self.assertLess(self.events.index('/usr/sbin/cagefsctl --disable ' + self.username),
                                         self.events.index('conf-delete:child.fixture.test'))

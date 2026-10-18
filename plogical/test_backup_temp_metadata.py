@@ -21,6 +21,7 @@ class BackupTemporaryMetadataTests(unittest.TestCase):
         self.addCleanup(self.scratch.cleanup)
         self.paths = []
         self.logs = []
+        self.status_writer = Mock()
         self.process = SimpleNamespace(debugPath='/nonexistent-debug', executioner=Mock(),
                                        outputExecutioner=Mock(return_value=''))
         admin = SimpleNamespace(**dict.fromkeys(('userName', 'password', 'firstName', 'lastName',
@@ -35,7 +36,8 @@ class BackupTemporaryMetadataTests(unittest.TestCase):
             Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kw: self.website)),
             Backups=lambda **kw: self.row, ProcessUtilities=self.process,
             mysqlUtilities=SimpleNamespace(mysqlUtilities=SimpleNamespace(setupConnection=lambda: (None, None))),
-            logging=SimpleNamespace(CyberCPLogFileWriter=SimpleNamespace(writeToFile=self.logs.append)),
+            logging=SimpleNamespace(CyberCPLogFileWriter=SimpleNamespace(
+                writeToFile=self.logs.append, statusWriter=self.status_writer)),
             build_dns_records_xml=lambda rows: ET.Element('dnsrecords'),
             build_email_accounts_xml=lambda rows: ET.Element('emails'),
             generate_pass=lambda n: 'fixture',
@@ -81,6 +83,8 @@ class BackupTemporaryMetadataTests(unittest.TestCase):
         self.assertEqual(0, self.prepare(inner=1)[0])
         self.assertEqual(1, len(self.paths))
         self.assertFalse(os.path.exists(self.paths[0]))
+        self.assertTrue(any('injected save failure [207][5009]' in str(call)
+                            for call in self.status_writer.call_args_list))
 
     def test_write_error_removes_partial_file(self):
         create = self.real_factory

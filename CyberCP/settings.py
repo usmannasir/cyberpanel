@@ -223,6 +223,7 @@ LANGUAGES = (
     ('cn', _('Chinese')),
     ('br', _('Bulgarian')),
     ('pt', _('Portuguese')),
+    ('pt-br', _('Portuguese (Brazil)')),
     ('ja', _('Japanese')),
     ('bs', _('Bosnian')),
     ('gr', _('Greek')),

@@ -6,11 +6,12 @@ from plogical.customACME import CustomACME
 
 class CustomACMELoggingTests(unittest.TestCase):
 
+    @patch('plogical.customACME.os.chmod')
     @patch('plogical.customACME.os.makedirs')
     @patch('plogical.customACME.logging.CyberCPLogFileWriter.writeToFile')
     @patch('plogical.customACME.requests.post')
     def test_download_does_not_log_response_headers_or_url(
-            self, post, write_log, make_dirs):
+            self, post, write_log, make_dirs, chmod):
         response = MagicMock(
             status_code=200,
             content=b'-----BEGIN CERTIFICATE-----\ndata\n-----END CERTIFICATE-----\n',
@@ -18,6 +19,9 @@ class CustomACMELoggingTests(unittest.TestCase):
         response.headers = {'Replay-Nonce': 'private-nonce-value'}
         post.return_value = response
         acme = CustomACME('example.com', 'admin@example.com')
+        make_dirs.assert_called_once_with(
+            '/etc/letsencrypt/accounts', mode=0o700, exist_ok=True)
+        chmod.assert_called_once_with('/etc/letsencrypt/accounts', 0o700)
         acme.certificate_url = 'https://acme.invalid/private-certificate-url'
 
         with patch.object(acme, '_get_nonce', return_value=True), \
@@ -29,15 +33,19 @@ class CustomACMELoggingTests(unittest.TestCase):
         self.assertNotIn('private-certificate-url', log_output)
         self.assertIn('Certificate download response status: 200', log_output)
 
+    @patch('plogical.customACME.os.chmod')
     @patch('plogical.customACME.os.makedirs')
     @patch('plogical.customACME.logging.CyberCPLogFileWriter.writeToFile')
     @patch('plogical.customACME.requests.post')
     def test_existing_acme_account_response_is_accepted(
-            self, post, write_log, make_dirs):
+            self, post, write_log, make_dirs, chmod):
         response = MagicMock(status_code=200)
         response.headers = {'Location': 'https://acme.invalid/existing-account'}
         post.return_value = response
         acme = CustomACME('example.com', 'admin@example.com')
+        make_dirs.assert_called_once_with(
+            '/etc/letsencrypt/accounts', mode=0o700, exist_ok=True)
+        chmod.assert_called_once_with('/etc/letsencrypt/accounts', 0o700)
         acme.directory = {'newAccount': 'https://acme.invalid/new-account'}
 
         with patch.object(acme, '_create_jws', return_value='{}'), \
@@ -47,10 +55,14 @@ class CustomACMELoggingTests(unittest.TestCase):
         self.assertEqual(
             'https://acme.invalid/existing-account', acme.account_url)
 
+    @patch('plogical.customACME.os.chmod')
     @patch('plogical.customACME.os.makedirs')
     @patch('plogical.customACME.logging.CyberCPLogFileWriter.writeToFile')
-    def test_loaded_account_key_is_not_replaced(self, write_log, make_dirs):
+    def test_loaded_account_key_is_not_replaced(self, write_log, make_dirs, chmod):
         acme = CustomACME('example.com', 'admin@example.com')
+        make_dirs.assert_called_once_with(
+            '/etc/letsencrypt/accounts', mode=0o700, exist_ok=True)
+        chmod.assert_called_once_with('/etc/letsencrypt/accounts', 0o700)
 
         with patch.object(acme, '_load_account_key', return_value=True), \
                 patch.object(acme, '_check_dns_record', return_value=True), \
@@ -60,10 +72,11 @@ class CustomACMELoggingTests(unittest.TestCase):
 
         generate_key.assert_not_called()
 
+    @patch('plogical.customACME.os.chmod')
     @patch('plogical.customACME.os.makedirs')
     @patch('plogical.customACME.logging.CyberCPLogFileWriter.writeToFile')
     @patch('plogical.customACME.requests.post')
-    def test_zerossl_eab_secret_is_not_logged(self, post, write_log, make_dirs):
+    def test_zerossl_eab_secret_is_not_logged(self, post, write_log, make_dirs, chmod):
         secret = 'eab-secret-value'
         response = MagicMock(status_code=200, text='{"eab_hmac_key": "%s"}' % secret)
         response.json.return_value = {
@@ -72,6 +85,9 @@ class CustomACMELoggingTests(unittest.TestCase):
         }
         post.return_value = response
         acme = CustomACME('example.com', 'admin@example.com', provider='zerossl')
+        make_dirs.assert_called_once_with(
+            '/etc/letsencrypt/accounts', mode=0o700, exist_ok=True)
+        chmod.assert_called_once_with('/etc/letsencrypt/accounts', 0o700)
 
         self.assertEqual(('account-id', secret), acme._get_zerossl_eab_credentials())
 
@@ -79,11 +95,15 @@ class CustomACMELoggingTests(unittest.TestCase):
         self.assertNotIn(secret, log_output)
         self.assertIn('ZeroSSL EAB credentials response received', log_output)
 
+    @patch('plogical.customACME.os.chmod')
     @patch('plogical.customACME.os.makedirs')
     @patch('plogical.customACME.logging.CyberCPLogFileWriter.writeToFile')
-    def test_acme_request_contents_are_not_logged(self, write_log, make_dirs):
+    def test_acme_request_contents_are_not_logged(self, write_log, make_dirs, chmod):
         secret = 'request-secret-value'
         acme = CustomACME('example.com', 'admin@example.com')
+        make_dirs.assert_called_once_with(
+            '/etc/letsencrypt/accounts', mode=0o700, exist_ok=True)
+        chmod.assert_called_once_with('/etc/letsencrypt/accounts', 0o700)
         acme.directory = {'newAccount': 'https://acme.invalid/new-account'}
         acme._generate_account_key()
 

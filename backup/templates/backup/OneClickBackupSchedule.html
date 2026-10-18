@@ -591,11 +591,15 @@
                                     {% trans "Add Site" %}
                                 </button>
                                 <button type="button" ng-click="addSite('all')" class="btn-secondary" style="padding: 0.5rem 1rem;">
-                                    <i class="fas fa-plus-circle"></i>
-                                    {% trans "Add All" %}
+                                    <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                                    <span ng-if="allSites !== 'all'">{% trans "Enable All Sites" %}</span>
+                                    <span ng-if="allSites === 'all'">{% trans "Use Selected Sites" %}</span>
                                 </button>
                             </div>
                         </div>
+                        <p ng-hide="driveHidden" ng-if="allSites === 'all'" role="status">
+                            {% trans "All current and future websites are included in this backup schedule. The list below shows individually selected sites and is only used when all-site mode is disabled." %}
+                        </p>
 
                         <!-- Schedule Info Box -->
                         <div ng-hide="driveHidden" class="info-box">

@@ -104,9 +104,9 @@ class secMiddleware:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
             ipAddr = secMiddleware.get_client_ip(request)
-            if admin.securityLevel != secMiddleware.LOW and not session_ip_matches(
-                request.session.get('ipAddr'), ipAddr
-            ):
+
+            if (admin.securityLevel != secMiddleware.LOW
+                    and not session_ip_matches(request.session.get('ipAddr'), ipAddr)):
                 request.session.flush()
                 logging.writeToFile('Panel session IP binding changed.')
                 # A stale cookie must not consume a valid login attempt, nor

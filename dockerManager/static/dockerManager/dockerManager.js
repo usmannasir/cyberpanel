@@ -121,6 +121,7 @@ app.controller('runContainer', function ($scope, $http) {
     $scope.volList = {};
     $scope.volListNumber = 0;
     $scope.eport = {};
+    $scope.hostIP = '127.0.0.1';
     $scope.iport = {};
     $scope.portType = {};
     $scope.envList = {};
@@ -572,6 +573,7 @@ app.controller('runContainer', function ($scope, $http) {
             dockerOwner: dockerOwner,
             image: image,
             envList: finalEnvList,
+            hostIP: $scope.hostIP,
             volList: $scope.volList,
             advancedEnvMode: $scope.advancedEnvMode
 
@@ -2069,11 +2071,11 @@ app.controller('manageImages', function ($scope, $http) {
     }
 
     function populateTagList(image, page) {
-        $('imageLoading').show();
+        $('#imageLoading').show();
         url = "/docker/getTags"
         var data = {
             image: image,
-            page: page + 1
+            page: (page || 0) + 1
         };
 
         var config = {
@@ -2138,13 +2140,14 @@ app.controller('manageImages', function ($scope, $http) {
         }
     }
 
-    $scope.selectTag = function () {
-        var image = event.target.id;
-        var selectedTag = $('#' + image).find(":selected").text();
+    $scope.selectTag = function (image) {
+        var selectedTag = $scope.imageTag[image];
+        var tagSelect = document.getElementById(image);
 
         if (selectedTag == 'Load more') {
-            var pagesloaded = $(event.target).data('pageloaded');
-            $(event.target).data('pageloaded', pagesloaded + 1);
+            var pagesloaded = $(tagSelect).data('pageloaded');
+            $(tagSelect).data('pageloaded', pagesloaded + 1);
+            $scope.imageTag[image] = undefined;
 
             populateTagList(image, pagesloaded);
         }

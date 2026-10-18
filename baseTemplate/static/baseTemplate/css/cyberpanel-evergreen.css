@@ -1235,8 +1235,8 @@ html.cp-evergreen #main-content .fm-toolbar-group::after { background: var(--bor
 html.cp-evergreen #main-content .fm-btn { min-height: 40px; padding: 9px 12px; font-size: 13px; line-height: 20px; font-weight: 500; border-radius: 4px; background: var(--bg-muted) !important; color: var(--text-primary); border-color: var(--border-color); box-shadow: none; }
 html.cp-evergreen #main-content .fm-btn::before { background: transparent; }
 html.cp-evergreen #main-content .fm-btn:hover:not(:disabled) { background: var(--bg-hover) !important; color: var(--accent-color); border-color: var(--cp-border-strong); box-shadow: none; }
-html.cp-evergreen #main-content .fm-btn.primary { background: var(--cp-action) !important; color: #061711; border-color: var(--cp-action); }
-html.cp-evergreen #main-content .fm-btn.primary:hover:not(:disabled) { background: var(--cp-action-hover) !important; color: #061711; border-color: var(--cp-action-hover); }
+html.cp-evergreen #main-content .fm-btn.primary { background: var(--cp-action) !important; color: var(--cp-action-text); border-color: var(--cp-action); }
+html.cp-evergreen #main-content .fm-btn.primary:hover:not(:disabled) { background: var(--cp-action-hover) !important; color: var(--cp-action-text); border-color: var(--cp-action-hover); }
 html.cp-evergreen #main-content .fm-btn.danger { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text); border-color: var(--danger-border); }
 html.cp-evergreen #main-content .fm-btn.danger:hover:not(:disabled) { background: var(--danger-soft-bg) !important; color: var(--danger-soft-text); border-color: var(--danger-color); }
 html.cp-evergreen #main-content .fm-path { padding: 14px 18px; margin-bottom: 20px; }
@@ -1297,7 +1297,7 @@ html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar { background: 
 html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar .nav { padding: 0; margin: 0; border: 0; background: transparent; box-shadow: none; }
 html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar .nav-link { min-height: 40px; padding: 10px 12px; font-size: 13px; border-radius: 4px; color: var(--text-primary); }
 html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar .nav-link:hover { background: var(--bg-muted); color: var(--accent-color); box-shadow: none; }
-html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar a[ng-click="showUploadBox()"] { background: var(--cp-action); color: #061711; }
+html.cp-evergreen #main-content .file-manager-wrapper .fm-toolbar a[ng-click="showUploadBox()"] { background: var(--cp-action); color: var(--cp-action-text); }
 html.cp-evergreen #main-content .file-manager-wrapper #deleteFile .nav-link { color: var(--danger-soft-text); }
 html.cp-evergreen #main-content .file-manager-wrapper #treeView { width: 250px; flex-shrink: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 5px; }
 html.cp-evergreen #main-content .file-manager-wrapper #treeView .content-box { border: 0; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }

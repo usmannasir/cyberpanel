@@ -198,7 +198,7 @@ def ensure_install_status_file(
 
 def read_install_status(status_path=INSTALL_STATUS_PATH):
     try:
-        with open(status_path, 'r') as status_file:
+        with open(status_path, 'r', encoding='utf-8', errors='replace') as status_file:
             return status_file.read()
     except FileNotFoundError:
         return None

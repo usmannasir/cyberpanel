@@ -14,6 +14,7 @@ class FallbackTests(unittest.TestCase):
         cert.get_issuer.return_value.get_components.return_value = [(b'C', b'US'), (b'O', b'Issuer')]
         cert.get_subject.return_value.get_components.return_value = [(b'CN', b'example.com')]
         with mock.patch.object(module.os.path, 'exists', side_effect=lambda path: any(path.endswith(name) for name in present)), \
+                mock.patch.object(module.os, 'makedirs'), \
                 mock.patch.object(module.os.path, 'lexists', return_value=False), \
                 mock.patch('builtins.open', mock.mock_open(read_data=b'certificate')), \
                 mock.patch('OpenSSL.crypto.load_certificate', side_effect=None if parsed else ValueError('bad certificate'), return_value=cert), \

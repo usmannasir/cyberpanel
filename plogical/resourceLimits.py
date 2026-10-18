@@ -171,8 +171,10 @@ class ResourceLimitsManager:
             if needs_setup:
                 if os.path.exists(self.LSSETUP_PATH):
                     logging.writeToFile("Running lssetup to configure LiteSpeed Containers...")
+                    # -n only sets a minimum; -m prevents absent namespace settings
+                    # from defaulting to isolation while preserving explicit admin choices.
                     result = subprocess.run(
-                        [self.LSSETUP_PATH, '-c', '2', '-n', '0', '-s', '/usr/local/lsws'],
+                        [self.LSSETUP_PATH, '-c', '2', '-n', '0', '-m', '0', '-s', '/usr/local/lsws'],
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                         universal_newlines=True,
                         timeout=30
@@ -197,7 +199,7 @@ class ResourceLimitsManager:
 
                             # Try again with more slices
                             result2 = subprocess.run(
-                                [self.LSSETUP_PATH, '-c', '10', '-n', '0', '-s', '/usr/local/lsws'],
+                                [self.LSSETUP_PATH, '-c', '10', '-n', '0', '-m', '0', '-s', '/usr/local/lsws'],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 universal_newlines=True,
                                 timeout=30
@@ -215,7 +217,7 @@ class ResourceLimitsManager:
 
                             if "You must configure LiteSpeed" in verify_result2.stderr:
                                 logging.writeToFile("lscgctl still not working after second attempt")
-                                logging.writeToFile("Please manually run: /usr/local/lsws/lsns/bin/lssetup -c 10 -n 0 -s /usr/local/lsws")
+                                logging.writeToFile("Please manually run: /usr/local/lsws/lsns/bin/lssetup -c 10 -n 0 -m 0 -s /usr/local/lsws")
                                 return False
                             else:
                                 logging.writeToFile("lssetup successful on second attempt")
@@ -443,9 +445,8 @@ class ResourceLimitsManager:
             return False
 
         try:
-            # Use lscgctl to remove limits
-            # Format: lscgctl remove username
-            cmd = [self.LSCGCTL_PATH, 'remove', username]
+            # Reset this user's limits while its Unix account still exists.
+            cmd = [self.LSCGCTL_PATH, 'reset-user', username]
 
             logging.writeToFile(f"Removing resource limits for user {username}")
 
@@ -461,9 +462,9 @@ class ResourceLimitsManager:
                 return True
             else:
                 error_msg = result.stderr if result.stderr else result.stdout
-                # It's not critical if removal fails (user may not have had limits)
+                # Cleanup is best effort, but callers must be able to detect failure.
                 logging.writeToFile(f"Note: Could not remove limits for {username}: {error_msg}")
-                return True
+                return False
 
         except subprocess.TimeoutExpired:
             logging.writeToFile(f"Timeout removing resource limits for {username}")

@@ -391,6 +391,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
 
             if (response.data.backupStatus === 1) {
+                $scope.backupState = response.data.state;
 
                 if (response.data.abort === 1) {
                     $timeout.cancel();
@@ -497,6 +498,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
 
             if (response.data.metaStatus === 1) {
+                $scope.backupState = "running";
                 getBackupStatus();
                 createBackupButton.disabled = false;
             }

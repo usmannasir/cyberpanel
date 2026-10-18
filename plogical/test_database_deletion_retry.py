@@ -14,13 +14,14 @@ def database_helper(connection, cursor):
     tree = ast.parse((HERE / 'mysqlUtilities.py').read_text())
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'mysqlUtilities')
     methods = [n for n in cls.body if isinstance(n, ast.FunctionDef)
-               and n.name in ('quoteIdentifier', 'deleteDatabase')]
+               and n.name in ('quoteIdentifier', 'deleteDatabase', 'submitDBDeletion')]
     cls.body = methods
     scope = {'ProcessUtilities': NS(executioner=mock.Mock()),
              'logging': NS(CyberCPLogFileWriter=NS(writeToFile=mock.Mock()))}
     exec(compile(ast.Module(body=[cls], type_ignores=[]), str(HERE / 'mysqlUtilities.py'), 'exec'), scope)
     helper = scope['mysqlUtilities']
     helper.setupConnection = lambda: (connection, cursor)
+    helper.test_scope = scope
     return helper
 
 
@@ -30,6 +31,36 @@ class DatabaseDeletionTests(unittest.TestCase):
         self.cursor = mock.Mock()
         self.cursor.fetchall.return_value = [('fixtureuser', 'localhost')]
         self.helper = database_helper(self.connection, self.cursor)
+
+    def test_database_names_never_reach_a_filesystem_command(self):
+        # Leading whitespace previously split /var/lib/mysql/ into a separate
+        # rm operand, destroying every local database before SQL was contacted.
+        for name in (' leading_space', 'two words', '../escape', 'db;touch sentinel',
+                     'db$(touch sentinel)', 'db`name'):
+            with self.subTest(name=name):
+                self.cursor.reset_mock()
+                self.assertEqual(1, self.helper.deleteDatabase(name, 'fixtureuser'))
+                self.helper.test_scope['ProcessUtilities'].executioner.assert_not_called()
+                self.cursor.execute.assert_any_call(
+                    'DROP DATABASE IF EXISTS ' + self.helper.quoteIdentifier(name))
+
+    def test_sql_connection_failure_performs_no_filesystem_cleanup(self):
+        helper = database_helper(0, None)
+        self.assertEqual(0, helper.deleteDatabase(' leading_space', 'fixtureuser'))
+        helper.test_scope['ProcessUtilities'].executioner.assert_not_called()
+
+    def test_failed_sql_drop_retains_panel_registration_for_retry(self):
+        row = mock.Mock(dbUser='fixtureuser')
+        self.helper.test_scope['Databases'] = NS(objects=NS(get=mock.Mock(return_value=row)))
+        self.cursor.execute.side_effect = RuntimeError('cannot remove directory')
+        self.assertEqual((0, 'cannot remove directory'), self.helper.submitDBDeletion('fixturedb'))
+        row.delete.assert_not_called()
+
+    def test_successful_sql_drop_removes_panel_registration(self):
+        row = mock.Mock(dbUser='fixtureuser')
+        self.helper.test_scope['Databases'] = NS(objects=NS(get=mock.Mock(return_value=row)))
+        self.assertEqual((1, 'None'), self.helper.submitDBDeletion('fixturedb'))
+        row.delete.assert_called_once_with()
 
     def test_missing_database_is_idempotent_and_cleans_grants(self):
         self.assertEqual(1, self.helper.deleteDatabase('fixturedb', 'fixtureuser'))

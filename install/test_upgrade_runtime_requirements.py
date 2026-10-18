@@ -33,11 +33,14 @@ class UpgradeRuntimeRequirementsTests(unittest.TestCase):
                                 Server_OS_Version='26', Git_Content_URL='https://invalid.example',
                                 Branch_Name='v3.0.6')
         fake_python = '''#!/bin/sh
-printf '%s|%s|%s|%s\n' "$0" "$*" "${PYTHONHOME-unset}" "${PYTHONPATH-unset}" >> "$AUDIT_TRACE"
+command_args=$(printf '%s' "$*" | tr '\\n' ' ')
+printf '%s|%s|%s|%s\n' "$0" "$command_args" "${PYTHONHOME-unset}" "${PYTHONPATH-unset}" >> "$AUDIT_TRACE"
 case "$*" in
   *'sys.version_info[0] != 3'*) exit "${FAKE_INTERPRETER_EXIT:-0}" ;;
   '-m pip --version') exit "${FAKE_PIP_MISSING:-0}" ;;
   '-m ensurepip --upgrade') exit "${FAKE_ENSUREPIP_EXIT:-0}" ;;
+  *'--no-deps filelock<4'*) exit "${FAKE_FILELOCK_INSTALL_EXIT:-0}" ;;
+  *'distribution("filelock")'*) exit "${FAKE_FILELOCK_REPAIR:-1}" ;;
   *'install --upgrade'*) exit "${FAKE_BOOTSTRAP_EXIT:-0}" ;;
   *'--ignore-installed'*)
     count=0
@@ -97,7 +100,7 @@ chmod 755 lswsgi
         definitions = '\n'.join(self.function(name) for name in (
             'Run_Upgrade_Command', 'Validate_Python_Requirements',
             'Install_Panel_Runtime_Requirements', 'Install_CyberCP_Runtime_Python_Requirements',
-            'Download_Requirement', 'Build_Panel_LSWSGI',
+            'Download_Requirement', 'Build_Panel_LSWSGI', 'Repair_Pip_Filelock_Compatibility',
             'Backup_Panel_Runtime', 'Restore_Panel_Runtime'))
         env = dict(self.environment)
         env.update({key:str(value) for key,value in environment.items()})
@@ -118,6 +121,55 @@ chmod 755 lswsgi
     def test_log_write_failure_cannot_become_success(self):
         self.executable(self.commands/'tee', '#!/bin/sh\ncat >/dev/null\nexit 23\n')
         self.assertNotEqual(0, self.run_shell('Run_Upgrade_Command /bin/true').returncode)
+
+    def run_upgrade_attempts(self, **environment):
+        main = self.function('Main_Upgrade')
+        main = main[:main.index('echo -e "\\n[$(date', main.index('rm -rf /usr/local/CyberPanelTemp\n\nfi'))]
+        main += '\n[[ "$UPGRADE_FAILED" -eq 0 ]]\n}\n'
+        main = main.replace('/usr/local/CyberPanelTemp', str(self.root/'fallback'))
+        main = main.replace('/usr/local/CyberPanel/bin/python', str(self.runtime))
+        main = main.replace('/usr/local/requirments.txt', str(self.requirements))
+        main = main.replace('/tmp/cyberpanel-upgrade-output.XXXXXX', str(self.root/'output.XXXXXX'))
+        self.executable(self.runtime, "#!/bin/sh\nprintf 'Upgrade Completed\\nTypeError: expected string or bytes-like object\\n'\nexit 37\n")
+        self.executable(self.system_runtime, '''#!/bin/sh
+mkdir -p "$3/bin"
+cat > "$3/bin/python" <<'FAKEPYTHON'
+#!/bin/sh
+case "$*" in
+  *'upgrade.py'*) printf 'fallback-run\\n'; exit "${FAKE_FALLBACK_EXIT:-0}" ;;
+esac
+exit 0
+FAKEPYTHON
+chmod 755 "$3/bin/python"
+''')
+        return self.run_shell(main + '''
+Download_Requirement() { return 0; }
+Validate_Python_Requirements() { return 0; }
+UPGRADE_FAILED=0
+Main_Upgrade
+''', **environment)
+
+    def test_error_output_cannot_override_failed_upgrade_exit_status(self):
+        result = self.run_upgrade_attempts(FAKE_FALLBACK_EXIT=41)
+        self.assertNotEqual(0, result.returncode, result.stdout)
+        self.assertIn('fallback-run', result.stdout)
+        self.assertNotIn('First upgrade attempt successful', result.stdout)
+
+    def test_successful_fallback_can_recover_failed_initial_upgrade(self):
+        result = self.run_upgrade_attempts()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn('fallback-run', result.stdout)
+
+    def test_fallback_log_failure_cannot_claim_upgrade_success(self):
+        self.executable(self.commands/'tee', '''#!/bin/sh
+output=$(cat)
+printf '%s\\n' "$output"
+case "$output" in *fallback-run*) exit 23 ;; esac
+exit 0
+''')
+        result = self.run_upgrade_attempts()
+        self.assertNotEqual(0, result.returncode, result.stdout)
+        self.assertIn('Fallback upgrade returned code: 23', result.stdout)
 
     def test_panel_uses_its_interpreter_and_clears_ambient_python_environment(self):
         for operating_system in ('Ubuntu', 'CentOS', 'openEuler'):
@@ -165,7 +217,6 @@ chmod 755 lswsgi
         self.assertEqual(original, self.runtime.read_bytes())
         self.assertEqual(b'keep existing dependencies', marker.read_bytes())
 
-
     def test_panel_recovers_only_after_verified_retry(self):
         self.assertEqual(0, self.install_panel(FAKE_FAIL_FIRST_INSTALL=1).returncode)
         self.assertEqual('2', self.count.read_text().strip())
@@ -199,6 +250,24 @@ chmod 755 lswsgi
         trace = self.trace.read_text()
         self.assertNotIn('install --upgrade pip ', trace)
         self.assertIn('install --upgrade --ignore-installed setuptools wheel packaging --break-system-packages', trace)
+
+    def test_pip_owned_filelock_conflict_is_downgraded_without_ignore_installed(self):
+        result = self.install_system(FAKE_FILELOCK_REPAIR=0)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        commands = [line for line in self.trace.read_text().splitlines()
+                    if '--no-deps filelock<4' in line]
+        self.assertEqual(1, len(commands))
+        self.assertNotIn('--ignore-installed', commands[0])
+
+    def test_failed_filelock_repair_stops_before_bulk_requirement_install(self):
+        result = self.install_system(FAKE_FILELOCK_REPAIR=0, FAKE_FILELOCK_INSTALL_EXIT=31)
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse(self.count.exists())
+
+    def test_compatible_or_distribution_owned_filelock_is_not_uninstalled(self):
+        result = self.install_system(FAKE_FILELOCK_REPAIR=1)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertNotIn('--no-deps filelock<4', self.trace.read_text())
 
     def test_system_install_and_validation_failures_are_nonzero(self):
         for scenario in ({'FAKE_INSTALL_EXIT':29}, {'FAKE_IMPORT_EXIT':7},
@@ -317,7 +386,6 @@ NEEDS_RECREATE=1
         self.assertEqual(original, self.runtime.read_bytes())
         self.assertEqual([], list(self.runtime.parent.parent.glob('.runtime-backup.*')))
 
-
     def test_main_runtime_failures_survive_later_successful_repair_steps(self):
         main=self.function('Main_Upgrade')
         start=main.index('echo -e "[$(date',main.index('rm -f /usr/local/requirments.txt'))
@@ -331,7 +399,9 @@ Download_Requirement() { return "${FAIL_DOWNLOAD:-0}"; }
 Install_Panel_Runtime_Requirements() { return "${FAIL_INSTALL:-0}"; }
 Build_Panel_LSWSGI() { return "${FAIL_BUILD:-0}"; }
 Validate_Python_Requirements() { return "${FAIL_VALIDATE:-0}"; }
+Restore_Panel_Runtime() { :; }
 Main_Upgrade() {
+local runtime_failed=0 runtime_backup=''
 '''+tail+'\nUPGRADE_FAILED=0\nMain_Upgrade\n'
                 result=self.run_shell(code,**{'FAIL_'+stage:1})
                 self.assertNotEqual(0,result.returncode)
@@ -359,6 +429,7 @@ Main_Upgrade() {
 Main_Upgrade() { return "$FAKE_MAIN_EXIT"; }
 Post_Upgrade_System_Tweak() { return "$FAKE_SYSTEM_EXIT"; }
 Restart_Web_Terminal() { :; }
+Verify_Upgrade_Services() { return 0; }
 UPGRADE_FAILED=0
 '''+tail
                 result=self.run_shell(code,FAKE_MAIN_EXIT=main,FAKE_SYSTEM_EXIT=system)

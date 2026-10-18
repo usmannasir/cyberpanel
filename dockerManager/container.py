@@ -20,6 +20,7 @@ import subprocess
 import shlex
 import time
 from dockerManager.models import Containers
+from dockerManager.portBindings import build_port_bindings, publish_all_for_saved_bindings
 from math import ceil
 import docker
 import docker.utils
@@ -321,22 +322,8 @@ class ContainerManager(multi.Thread):
                         # Handle case where value might be a string (fallback)
                         envDict[key] = value
 
-            if 'ExposedPorts' in inspectImage['Config']:
-                for item in inspectImage['Config']['ExposedPorts']:
-                    # Check if port data exists and is valid
-                    if item in data and data[item]:
-                        try:
-                            port_num = int(data[item])
-                            # Do not allow priviledged port numbers
-                            if port_num < 1024 or port_num > 65535:
-                                data_ret = {'createContainerStatus': 0, 'error_message': "Choose port between 1024 and 65535"}
-                                json_data = json.dumps(data_ret)
-                                return HttpResponse(json_data)
-                            portConfig[item] = data[item]
-                        except (ValueError, TypeError):
-                            data_ret = {'createContainerStatus': 0, 'error_message': f"Invalid port number: {data[item]}"}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
+            portConfig, publish_all_ports = build_port_bindings(
+                inspectImage['Config'].get('ExposedPorts', {}), data)
 
             volumes = {}
             if volList:
@@ -351,7 +338,7 @@ class ContainerManager(multi.Thread):
                              'detach': True,
                              'name': name,
                              'ports': portConfig,
-                             'publish_all_ports': True,
+                             'publish_all_ports': publish_all_ports,
                              'environment': envDict,
                              'volumes': volumes}
 
@@ -1009,7 +996,7 @@ class ContainerManager(multi.Thread):
                              'ports': port,
                              'environment': env,
                              'volumes': volumes,
-                             'publish_all_ports': True,
+                             'publish_all_ports': publish_all_for_saved_bindings(port),
                              'mem_limit': memory * 1048576}
 
             if con.startOnReboot == 1:
