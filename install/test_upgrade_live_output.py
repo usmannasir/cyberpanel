@@ -60,6 +60,11 @@ print('UPGRADE-FINISHED')
                         output += chunk
             self.assertIn(b'LIVE-UPGRADE-PROGRESS', output)
             self.assertIn(b'LIVE-UPGRADE-STDERR', output)
+            # tee writes the console and log separately. Seeing stdout does not
+            # guarantee its subsequent file write has completed yet.
+            while ('LIVE-UPGRADE-PROGRESS' not in self.log.read_text()
+                   and time.monotonic() < deadline):
+                time.sleep(0.01)
             self.assertIsNone(process.poll())
             self.assertIn('LIVE-UPGRADE-PROGRESS', self.log.read_text())
         finally:
