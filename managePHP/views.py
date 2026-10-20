@@ -1746,13 +1746,13 @@ def getCurrentPHPConfig(request):
                         if items.find("On") > -1:
                             allow_url_include = "1"
                     if matches_directive(items, "memory_limit"):
-                        memory_limit = re.findall(r"[A-Za-z0-9_]+", items)[1]
-                    if items.find("max_execution_time") > -1 and items.find("=") > -1:
-                        max_execution_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                        memory_limit = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
+                    if matches_directive(items, "max_execution_time"):
+                        max_execution_time = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
                     if items.find("upload_max_filesize") > -1 and items.find("=") > -1:
                         upload_max_filesize = re.findall(r"[A-Za-z0-9_]+", items)[1]
-                    if items.find("max_input_time") > -1 and items.find("=") > -1:
-                        max_input_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                    if matches_directive(items, "max_input_time"):
+                        max_input_time = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
                     if items.find("post_max_size") > -1 and items.find("=") > -1:
                         post_max_size = re.findall(r"[A-Za-z0-9_]+", items)[1]
 
