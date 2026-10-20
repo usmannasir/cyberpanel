@@ -162,6 +162,23 @@ Automatic backup failed for %s on %s.
     def git(type):
         try:
             for website in os.listdir(IncScheduler.gitFolder):
+                finalPathInside = os.path.join(IncScheduler.gitFolder, website)
+                if not os.path.isdir(finalPathInside):
+                    continue  # Secret files are siblings of configuration directories.
+                configurations = []
+                for filename in os.listdir(finalPathInside):
+                    path = os.path.join(finalPathInside, filename)
+                    try:
+                        with open(path) as config_file:
+                            config = json.load(config_file)
+                        if (isinstance(config, dict) and config.get('domain')
+                                and config.get('folder')
+                                and 'autoCommit' in config and 'autoPush' in config):
+                            configurations.append(filename)
+                    except (OSError, ValueError):
+                        continue
+                if not configurations:
+                    continue  # Empty/stale webhook directories are not Git setups.
                 finalText = ''
                 web = Websites.objects.get(domain=website)
 
@@ -172,7 +189,7 @@ Automatic backup failed for %s on %s.
 
                 finalPathInside = '%s/%s' % (IncScheduler.gitFolder, website)
 
-                for file in os.listdir(finalPathInside):
+                for file in configurations:
 
                     try:
 
