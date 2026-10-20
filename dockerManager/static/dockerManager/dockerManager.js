@@ -2019,6 +2019,22 @@ app.controller('manageImages', function ($scope, $http) {
 
     }
 
+    function showImageSearchError(response) {
+        var data = response && response.data;
+        var message = 'Unable to search Docker images. Please try again.';
+        if (data && typeof data.error_message === 'string' && data.error_message.trim()) {
+            message = data.error_message;
+        } else if (data && typeof data.error === 'string' && data.error.trim()) {
+            message = data.error;
+        }
+        new PNotify({
+            title: 'Failed to complete request',
+            text: message,
+            text_escape: true,
+            type: 'error'
+        });
+    }
+
     $scope.searchImages = function () {
         console.log($scope.searchString);
         if (!$scope.searchString) {
@@ -2044,16 +2060,12 @@ app.controller('manageImages', function ($scope, $http) {
             $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
             function ListInitialDatas(response) {
-                if (response.data.searchImageStatus === 1) {
+                if (response.data && response.data.searchImageStatus === 1) {
                     $scope.images = response.data.matches;
                     console.log($scope.images)
                 }
                 else {
-                    new PNotify({
-                        title: 'Failed to complete request',
-                        text: response.data.error,
-                        type: 'error'
-                    });
+                    showImageSearchError(response);
                 }
 
                 $('#imageLoading').hide();
@@ -2062,10 +2074,7 @@ app.controller('manageImages', function ($scope, $http) {
 
             function cantLoadInitialDatas(response) {
                 $('#imageLoading').hide();
-                new PNotify({
-                    title: 'Failed to complete request',
-                    type: 'error'
-                });
+                showImageSearchError(response);
             }
         }, 500);
     }
