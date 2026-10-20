@@ -19,6 +19,7 @@ import hashlib
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cyberpanel_version import BUILD, VERSION
+from lscpd_binary import select_lscpd_binary
 from database_consumers import (
     configure_phpmyadmin_signon,
     dovecot_connect_line,
@@ -1819,40 +1820,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-            # if subprocess.check_output('uname -a').decode("utf-8").find("aarch64") == -1:
-            #     lscpdPath = '/usr/local/lscp/bin/lscpd'
-            #
-            #     lscpdSelection = 'lscpd-0.3.1'
-            #     if os.path.exists('/etc/lsb-release'):
-            #         result = open('/etc/lsb-release', 'r').read()
-            #         if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-            #             lscpdSelection = 'lscpd.0.4.0'
-            # else:
-            #     lscpdSelection = 'lscpd.aarch64'
-
-            try:
-                try:
-                    result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-                except:
-                    result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-
-                if result.stdout.find('aarch64') == -1:
-                    lscpdSelection = 'lscpd-0.3.1'
-                    if os.path.exists('/etc/lsb-release'):
-                        result = open('/etc/lsb-release', 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-                            lscpdSelection = 'lscpd.0.4.0'
-                else:
-                    lscpdSelection = 'lscpd.aarch64'
-
-            except:
-
-                lscpdSelection = 'lscpd-0.3.1'
-                if os.path.exists('/etc/lsb-release'):
-                    result = open('/etc/lsb-release', 'r').read()
-                    if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-                        lscpdSelection = 'lscpd.0.4.0'
-
+            lscpdSelection = select_lscpd_binary()
 
             command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
