@@ -1717,7 +1717,8 @@ rm -rf /root/cyberpanel_upgrade_tmp
 
 Restart_Web_Terminal() {
 if [[ -x /usr/local/CyberCP/bin/python ]] && \
-   [[ -f /etc/systemd/system/fastapi_ssh_server.service ]]; then
+   [[ -f /etc/systemd/system/fastapi_ssh_server.service ]] && \
+   systemctl is-active --quiet fastapi_ssh_server; then
   systemctl daemon-reload
   systemctl reset-failed fastapi_ssh_server >/dev/null 2>&1 || true
   if systemctl restart fastapi_ssh_server; then

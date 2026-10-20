@@ -5757,21 +5757,14 @@ pm.max_spare_servers = 3
                 shutil.chown(secret_path, user='cyberpanel', group='cyberpanel')
                 os.chmod(secret_path, 0o600)
 
-            service_source = '/usr/local/CyberCP/fastapi_ssh_server.service'
-            service_target = '/etc/systemd/system/fastapi_ssh_server.service'
-            if os.path.isfile(service_source):
-                shutil.copy2(service_source, service_target)
-                Upgrade.executioner(
-                    'systemctl daemon-reload', 'systemctl daemon-reload', 0
-                )
+            from plogical.terminalService import configure_terminal_service
+            configure_terminal_service()
         except Exception as error:
             Upgrade.stdOut(
                 "Warning: Web Terminal authentication could not be configured: %s" % error,
                 0,
             )
 
-        command = 'systemctl enable --now fastapi_ssh_server'
-        Upgrade.executioner(command, command, 0)
 
         Upgrade.stdOut("Upgrade Completed.")
 

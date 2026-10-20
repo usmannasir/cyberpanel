@@ -2647,7 +2647,7 @@ window.addEventListener('load', function() {
                         };
                         
                         socket.onerror = function(error) {
-                            terminal.write('\r\n\x1b[31mWebSocket error. Please check your connection.\x1b[0m\r\n');
+                            terminal.write('\r\n\x1b[31mWeb Terminal is unavailable. Ask your server administrator to check whether the terminal service or network access is disabled.\x1b[0m\r\n');
                             console.error('WebSocket error:', error);
                         };
                         
