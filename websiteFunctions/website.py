@@ -5049,12 +5049,11 @@ context /cyberpanel_suspension_page.html {
 
     @staticmethod
     def verifyWebhookSecret(domain, request=None):
-        # Opt-in authentication: enforce ONLY when a secret has been provisioned
-        # for this repo. Repos created before this feature have no secret file and
-        # therefore keep working exactly as before (no breakage).
+        # Authentication is mandatory, including for legacy and unconfigured sites.
+        # Owners can provision a secret by opening the authorized Git manager.
         expected = WebsiteManager.readWebhookSecret(domain)
         if not expected:
-            return True
+            return False
         provided = ''
         if request is not None:
             try:
@@ -5086,7 +5085,7 @@ context /cyberpanel_suspension_page.html {
 
             webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
 
-            webhookSecret = WebsiteManager.readWebhookSecret(self.domain)
+            webhookSecret = WebsiteManager.getOrCreateWebhookSecret(self.domain)
             if webhookSecret:
                 webhookURL = webhookURL + '?secret=' + webhookSecret
 
@@ -6437,7 +6436,7 @@ StrictHostKeyChecking no
 
                 webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
 
-                webhookSecret = WebsiteManager.readWebhookSecret(self.domain)
+                webhookSecret = WebsiteManager.getOrCreateWebhookSecret(self.domain)
                 if webhookSecret:
                     webHookURL = webHookURL + '?secret=' + webhookSecret
 
@@ -7527,7 +7526,12 @@ StrictHostKeyChecking no
             self.externalApp = ACLManager.FetchExternalApp(self.domain)
 
             command = 'git -C %s pull' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
+            pullSucceeded, commandStatus = ProcessUtilities.outputExecutioner(
+                command, self.externalApp, retRequired=True)
+            if not pullSucceeded:
+                GitLogs(owner=self.web, type='ERROR',
+                        message='[Webhook Fired] Status: %s.' % commandStatus).save()
+                return HttpResponse(json.dumps({'status': 0, 'commandStatus': commandStatus}))
 
             if commandStatus.find('Already up to date') == -1:
                 message = '[Webhook Fired] Status: %s.' % (commandStatus)
@@ -7539,12 +7543,6 @@ StrictHostKeyChecking no
 
                 gitConfFolder = '/home/cyberpanel/git'
                 gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
-
-                if not os.path.exists(gitConfFolder):
-                    os.mkdir(gitConfFolder)
-
-                if not os.path.exists(gitConFile):
-                    os.mkdir(gitConFile)
 
                 if os.path.exists(gitConFile):
                     files = os.listdir(gitConFile)
