@@ -8,6 +8,7 @@ import tempfile
 import types
 import unittest
 from unittest.mock import patch
+from lscpd_binary import select_lscpd_binary
 
 SOURCE = Path(__file__).with_name('upgrade.py').read_text()
 
@@ -30,7 +31,8 @@ class UpgradeBinaryTests(unittest.TestCase):
                 node.body = [m for m in node.body if isinstance(m, ast.FunctionDef)
                              and m.name in ('installPanelPHP', 'installLSCPD')]
                 definitions.append(node)
-        namespace = dict(os=os, shutil=shutil, tempfile=tempfile)
+        namespace = dict(os=os, shutil=shutil, tempfile=tempfile,
+                         select_lscpd_binary=select_lscpd_binary)
         tree = ast.fix_missing_locations(Relocate().visit(ast.Module(body=definitions, type_ignores=[])))
         exec(compile(tree, 'upgrade.py', 'exec'), namespace)
         self.install = namespace['install_binary_atomically']

@@ -27,6 +27,7 @@ import secrets
 import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
+from lscpd_binary import select_lscpd_binary
 
 from contextlib import contextmanager
 
@@ -4031,28 +4032,7 @@ passdb {
 
                 lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-                try:
-                    try:
-                        result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-                    except:
-                        result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-
-                    if result.stdout.find('aarch64') == -1:
-                        lscpdSelection = 'lscpd-0.3.1'
-                        if os.path.exists(Upgrade.UbuntuPath):
-                            result = open(Upgrade.UbuntuPath, 'r').read()
-                            if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-                                lscpdSelection = 'lscpd.0.4.0'
-                    else:
-                        lscpdSelection = 'lscpd.aarch64'
-
-                except:
-
-                    lscpdSelection = 'lscpd-0.3.1'
-                    if os.path.exists(Upgrade.UbuntuPath):
-                        result = open(Upgrade.UbuntuPath, 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-                            lscpdSelection = 'lscpd.0.4.0'
+                lscpdSelection = select_lscpd_binary()
 
                 install_binary_atomically(
                     '/usr/local/CyberCP/' + lscpdSelection, lscpdPath)
@@ -5777,21 +5757,14 @@ pm.max_spare_servers = 3
                 shutil.chown(secret_path, user='cyberpanel', group='cyberpanel')
                 os.chmod(secret_path, 0o600)
 
-            service_source = '/usr/local/CyberCP/fastapi_ssh_server.service'
-            service_target = '/etc/systemd/system/fastapi_ssh_server.service'
-            if os.path.isfile(service_source):
-                shutil.copy2(service_source, service_target)
-                Upgrade.executioner(
-                    'systemctl daemon-reload', 'systemctl daemon-reload', 0
-                )
+            from plogical.terminalService import configure_terminal_service
+            configure_terminal_service()
         except Exception as error:
             Upgrade.stdOut(
                 "Warning: Web Terminal authentication could not be configured: %s" % error,
                 0,
             )
 
-        command = 'systemctl enable --now fastapi_ssh_server'
-        Upgrade.executioner(command, command, 0)
 
         Upgrade.stdOut("Upgrade Completed.")
 

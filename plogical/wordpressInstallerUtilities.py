@@ -79,3 +79,33 @@ def build_wordpress_core_install_command(version, destination, php_binary):
         shlex.quote(version),
         destination,
     )
+
+
+def build_wordpress_config_command(php_binary, destination, database, user, password, host):
+    """Preserve each configuration value as a single literal WP-CLI argument."""
+    arguments = [php_binary, '-d', 'error_reporting=0', '/usr/bin/wp', 'core', 'config',
+                 '--dbname=' + database, '--dbuser=' + user, '--dbpass=' + password,
+                 '--dbhost=' + host, '--dbprefix=wp_', '--path=' + destination]
+    return ' '.join(shlex.quote(str(argument)) for argument in arguments)
+
+
+def build_wordpress_site_install_command(php_binary, destination, url, title, user, password, email):
+    """Quote every site field before the existing shell execution boundary."""
+    arguments = [php_binary, '-d', 'error_reporting=0', '/usr/bin/wp', 'core', 'install',
+                 '--url=' + url, '--title=' + title, '--admin_user=' + user,
+                 '--admin_password=' + password, '--admin_email=' + email,
+                 '--path=' + destination]
+    return ' '.join(shlex.quote(str(argument)) for argument in arguments)
+
+
+def wrap_wordpress_site_shell_script(script):
+    """Keep a complete multi-command script beneath the site's sudo boundary."""
+    return 'sh -c ' + shlex.quote(script)
+
+
+def build_wordpress_config_password_command(php_binary, destination, password):
+    """Use config-set's PHP literal serialization after config-create's escaping."""
+    arguments = [php_binary, '-d', 'error_reporting=0', '/usr/bin/wp',
+                 'config', 'set', 'DB_PASSWORD', password, '--type=constant',
+                 '--path=' + destination]
+    return ' '.join(shlex.quote(str(argument)) for argument in arguments)
