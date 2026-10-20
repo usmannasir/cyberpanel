@@ -27,6 +27,7 @@ import secrets
 import string
 import tempfile
 from cyberpanel_version import BUILD, VERSION
+from lscpd_binary import select_lscpd_binary
 
 from contextlib import contextmanager
 
@@ -4031,28 +4032,7 @@ passdb {
 
                 lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-                try:
-                    try:
-                        result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-                    except:
-                        result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
-
-                    if result.stdout.find('aarch64') == -1:
-                        lscpdSelection = 'lscpd-0.3.1'
-                        if os.path.exists(Upgrade.UbuntuPath):
-                            result = open(Upgrade.UbuntuPath, 'r').read()
-                            if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-                                lscpdSelection = 'lscpd.0.4.0'
-                    else:
-                        lscpdSelection = 'lscpd.aarch64'
-
-                except:
-
-                    lscpdSelection = 'lscpd-0.3.1'
-                    if os.path.exists(Upgrade.UbuntuPath):
-                        result = open(Upgrade.UbuntuPath, 'r').read()
-                        if result.find('22.04') > -1 or result.find('24.04') > -1 or result.find('26.04') > -1:
-                            lscpdSelection = 'lscpd.0.4.0'
+                lscpdSelection = select_lscpd_binary()
 
                 install_binary_atomically(
                     '/usr/local/CyberCP/' + lscpdSelection, lscpdPath)
