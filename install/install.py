@@ -1111,6 +1111,7 @@ class preFlightsChecks:
 $cfg['Servers'][$i]['AllowNoPassword'] = false;
 $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
+$cfg['Servers'][$i]['SignonScript'] = __DIR__ . '/phpmyadminsession.php';
 $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
 $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 """
@@ -1140,6 +1141,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsession.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsession.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.remotemysql == 'ON':

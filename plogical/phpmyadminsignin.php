@@ -3,11 +3,34 @@
 define("PMA_SIGNON_INDEX", 1);
 define('PMA_SIGNON_SESSIONNAME', 'SignonSession');
 define('PMA_DISABLE_SSL_PEER_VALIDATION', TRUE);
-if (!defined('PMA_HANDOFF_VALIDATION_URL')) {
-    define(
-        'PMA_HANDOFF_VALIDATION_URL',
-        'https://127.0.0.1:8090/dataBases/consumePHPMYAdminHandoff'
-    );
+
+function getPMAHandoffValidationURL($bindPath = '/usr/local/lscp/conf/bind.conf') {
+    $port = 8090;
+    if (file_exists($bindPath)) {
+        $binding = @file_get_contents($bindPath);
+        if ($binding === false) {
+            return false;
+        }
+        $binding = trim($binding, " \t\r\n");
+        if ($binding !== '') {
+            if (!preg_match('/\A\*:([0-9]{1,5})\z/', $binding, $matches)) {
+                return false;
+            }
+            $port = (int) $matches[1];
+            if ($port < 1 || $port > 65535) {
+                return false;
+            }
+        }
+    }
+
+    // Only the port comes from local LSCPD configuration, never request headers.
+    return 'https://127.0.0.1:' . $port . '/dataBases/consumePHPMYAdminHandoff';
+}
+
+function getPMASessionValidationURL($bindPath = '/usr/local/lscp/conf/bind.conf') {
+    $url = getPMAHandoffValidationURL($bindPath);
+    return $url === false ? false : str_replace(
+        '/dataBases/consumePHPMYAdminHandoff', '/dataBases/validatePHPMYAdminSession', $url);
 }
 
 function rejectSignon() {
@@ -15,14 +38,8 @@ function rejectSignon() {
     exit();
 }
 
-function consumeHandoff($username, $token) {
-    if (!is_string($username) || $username === '' || strlen($username) > 255) {
-        return false;
-    }
-    if (!is_string($token) || $token === '' || strlen($token) > 512) {
-        return false;
-    }
-    if (!isset($_COOKIE['cyberpanel_sessionid'])) {
+function requestPMAPanel($validationURL, $fields) {
+    if (!isset($_COOKIE['cyberpanel_sessionid']) || !is_string($_COOKIE['cyberpanel_sessionid'])) {
         return false;
     }
     $sessionID = (string) $_COOKIE['cyberpanel_sessionid'];
@@ -36,7 +53,11 @@ function consumeHandoff($username, $token) {
         return false;
     }
 
-    $request = @curl_init(PMA_HANDOFF_VALIDATION_URL);
+    if ($validationURL === false || !function_exists('curl_init')) {
+        return false;
+    }
+
+    $request = @curl_init($validationURL);
     if ($request === false) {
         return false;
     }
@@ -44,7 +65,7 @@ function consumeHandoff($username, $token) {
     @curl_setopt_array($request, array(
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => http_build_query(
-            array('username' => $username, 'token' => $token),
+            $fields,
             '',
             '&',
             PHP_QUERY_RFC3986
@@ -65,9 +86,29 @@ function consumeHandoff($username, $token) {
         return false;
     }
     $payload = @json_decode($response, true);
-    return is_array($payload)
-        && isset($payload['status'])
-        && $payload['status'] === 1;
+    return is_array($payload) && isset($payload['status']) && $payload['status'] === 1
+        ? $payload : false;
+}
+
+
+function consumeHandoff($username, $token) {
+    if (!is_string($username) || $username === '' || strlen($username) > 255 ||
+        !is_string($token) || $token === '' || strlen($token) > 512) {
+        return false;
+    }
+    $url = defined('PMA_HANDOFF_VALIDATION_URL')
+        ? PMA_HANDOFF_VALIDATION_URL : getPMAHandoffValidationURL();
+    $payload = requestPMAPanel($url, array('username' => $username, 'token' => $token));
+    if ($payload === false || !isset($payload['grant']) || !is_string($payload['grant']) ||
+        !preg_match('/^[a-f0-9]{64}$/D', $payload['grant'])) {
+        return false;
+    }
+    return $payload['grant'];
+}
+
+// SignonScript imports these functions without running the browser handoff.
+if (defined('PMA_SIGNON_LIBRARY_ONLY')) {
+    return;
 }
 
 try {
@@ -109,7 +150,8 @@ try {
         $password = $_POST['password'];
         $handoffToken = isset($_POST['handoff_token']) ? (string) $_POST['handoff_token'] : '';
 
-        if (!consumeHandoff($username, $handoffToken)) {
+        $grant = consumeHandoff($username, $handoffToken);
+        if ($grant === false || !is_string($password)) {
             rejectSignon();
         }
 
@@ -118,6 +160,12 @@ try {
             rejectSignon();
         }
 
+        if (!@session_regenerate_id(true)) {
+            rejectSignon();
+        }
+        $_SESSION = array();
+        $_SESSION['PMA_panel_grant'] = $grant;
+        $_SESSION['PMA_panel_session'] = $_COOKIE['cyberpanel_sessionid'];
         $_SESSION['PMA_single_signon_user'] = $username;
         $_SESSION['PMA_single_signon_password'] = $password;
         $_SESSION['PMA_single_signon_host'] = 'localhost';

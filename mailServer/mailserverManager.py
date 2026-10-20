@@ -40,6 +40,7 @@ except:
 import re
 import os
 from plogical.processUtilities import ProcessUtilities
+from plogical.premiumEntitlements import premium_entitlement_required
 from plogical.legacyWebmail import legacy_data_permission_commands
 import bcrypt
 import threading as multi
@@ -215,8 +216,8 @@ class MailServerManager(multi.Thread):
                     numberofEmails = int(result[0])
                     duration = result[1]
                 except:
-                    numberofEmails = 0
-                    duration = '0m'
+                    numberofEmails = None
+                    duration = None
 
                 dic = {'id': count, 'email': items.email, 'DiskUsage': '%sMB' % items.DiskUsage, 'numberofEmails': numberofEmails, 'duration': duration}
                 count = count + 1
@@ -250,20 +251,14 @@ class MailServerManager(multi.Thread):
             data = json.loads(self.request.body)
             email = data['email']
 
-            eUser = EUsers.objects.get(email=email)
-
-            emailOwnerDomain = eUser.emailOwner
-
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson()
 
-            mailUtilities.deleteEmailAccount(email)
+            def authorize(website):
+                return ACLManager.checkOwnership(website.domain, admin, currentACL) == 1
 
-            if emailOwnerDomain.eusers_set.all().count() == 0:
-                emailOwnerDomain.delete()
+            result = mailUtilities.deleteEmailAccount(email, authorize=authorize)
+            if result[0] != 1:
+                raise ValueError(result[1])
 
             data_ret = {'status': 1, 'deleteEmailStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -1920,6 +1915,8 @@ protocol sieve {
 
     ### emails for sites
 
+    @premium_entitlement_required('all', label='Email Limits',
+                                  page_redirect='https://cyberpanel.net/cyberpanel-addons')
     def EmailLimits(self):
 
         userID = self.request.session['userID']
@@ -1933,34 +1930,14 @@ protocol sieve {
         websitesName = ACLManager.findAllSites(currentACL, userID)
         websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-        try:
-            from plogical.processUtilities import ProcessUtilities
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-
-                url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-                data = {
-                    "name": "all",
-                    "IP": ACLManager.fetchIP()
-                }
-
-                import requests
-                response = requests.post(url, data=json.dumps(data))
-                Status = response.json()['status']
-
-                if (Status == 1):
-                    template = 'mailServer/EmailLimits.html'
-                else:
-                    return redirect("https://cyberpanel.net/cyberpanel-addons")
-            else:
-                template = 'mailServer/EmailLimits.html'
-        except BaseException as msg:
-            template = 'mailServer/EmailLimits.html'
+        template = 'mailServer/EmailLimits.html'
 
 
         proc = httpProc(self.request, template,
                         {'websiteList': websitesName, "status": 1}, 'emailForwarding')
         return proc.render()
 
+    @premium_entitlement_required('all', label='Email Limits', flags=('createStatus',))
     def SaveEmailLimitsNew(self):
         try:
             userID = self.request.session['userID']

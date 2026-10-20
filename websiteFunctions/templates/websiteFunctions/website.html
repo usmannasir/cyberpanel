@@ -1396,16 +1396,34 @@
         <!-- Modern Resource Cards Grid -->
         <div class="resource-grid cp-wtab-panel" data-wtab="overview">
             <!-- Disk Usage Card -->
-            <div class="resource-card disk">
+            <div class="resource-card disk" data-storage-usage="{{ storageUsageState }}" data-storage-quota="{{ storageQuotaState }}">
                 <div class="resource-icon">
                     <i class="fas fa-hdd"></i>
                 </div>
-                <div class="resource-title">{% trans "Disk Usage" %}</div>
-                <div class="resource-value">{{ diskInMB }} MB</div>
-                <div class="resource-limit">{% trans "of" %} {{ diskInMBTotal }} MB</div>
+                <div class="resource-title">{% trans "Website + Mail Storage" %}</div>
+                {% if storageUsageAvailable %}
+                    <div class="resource-value">{{ diskInMB }} MB</div>
+                {% else %}
+                    <div class="resource-value">{% trans "Unavailable" %}</div>
+                    <div class="resource-limit">{% trans "Awaiting a fresh measurement." %}</div>
+                {% endif %}
+                <div class="resource-limit">
+                    {% if diskInMBTotal == 0 %}{% trans "Unlimited" %}{% else %}{% trans "of" %} {{ diskInMBTotal }} MB{% endif %}
+                </div>
+                {% if storageUsageAvailable and diskInMBTotal > 0 %}
                 <div class="resource-progress">
                     <div class="resource-progress-bar" style="width: {{ diskUsage }}%;"></div>
                 </div>
+                {% endif %}
+                <div class="resource-limit">{% trans "Website home and owned mail domains." %}</div>
+                <div class="resource-limit">
+                    {% if storageQuotaState == 'active' %}{% trans "Combined limit configured" %}
+                    {% elif storageQuotaState == 'pending' %}{% trans "Combined limit needs verification" %}
+                    {% elif storageQuotaState == 'unconfigured' %}{% trans "Combined limit not configured" %}
+                    {% elif storageQuotaState == 'unsupported' %}{% trans "Combined limit unavailable on this storage" %}
+                    {% else %}{% trans "Combined limit status unavailable" %}{% endif %}
+                </div>
+                {% if storageUsageAvailable %}<div class="resource-limit">{% trans "Last measured" %}: {{ storageUsageCheckedAt }}</div>{% endif %}
             </div>
             
             <!-- Bandwidth Card -->

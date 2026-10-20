@@ -125,47 +125,17 @@ class restoreMeta():
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.writeToFile('Database user: %s' % (dbUser))
                         logging.writeToFile('Database host: %s' % (dbHost))
-                        logging.writeToFile('Database password: %s' % (password))
 
                     if first:
 
                         first = 0
 
-                        try:
-                            dbExist = Databases.objects.get(dbName=dbName)
-                            logging.statusWriter(statusPath, 'Database exists, changing Database password.. %s' % (dbName))
+                        result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(dbName, dbUser, website)
+                        if result[0] != 1:
+                            raise RuntimeError(result[1])
 
-                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost) == 0:
-                                logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
-                            else:
-                                logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
-
-                        except:
-
-                            logging.statusWriter(statusPath, 'Database did not exist, creating new.. %s' % (dbName))
-
-                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                                logging.statusWriter(statusPath, 'Failed the creation of database: %s' % (dbName))
-                            else:
-                                logging.statusWriter(statusPath, 'Database: %s successfully created.' % (dbName))
-
-                            mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1)
-
-                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1) == 0:
-                                logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
-                            else:
-                                logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
-
-                            try:
-                                newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                                newDB.save()
-                            except:
-                                pass
-
-                    ## This function will not create database, only database user is created as third value is 0 for createDB
-
-                    mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
-                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+                    if mysqlUtilities.mysqlUtilities.restoreDatabaseUser(dbName, dbUser, password, dbHost) != 1:
+                        raise RuntimeError('Database account restore failed: %s' % dbName)
 
 
             ## Databases restored
@@ -175,8 +145,11 @@ class restoreMeta():
             except:
                 pass
 
+            return 1
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [startRestore]")
+            logging.statusWriter(statusPath, 'Database metadata restore failed: %s [404]' % msg)
+            return 0
 
 def main():
 
@@ -194,7 +167,7 @@ def main():
 
 
     if args.function == "submitRestore":
-        restoreMeta.startRestore(args.metaPath,args.statusFile)
+        raise SystemExit(0 if restoreMeta.startRestore(args.metaPath,args.statusFile) == 1 else 1)
 
 if __name__ == "__main__":
     main()

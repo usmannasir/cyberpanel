@@ -490,13 +490,20 @@ class DNSManager:
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnershipZone(delRecord.domainOwner.name, admin, currentACL) == 1:
+            # Records created outside the panel (acme.sh, pdnsutil) can have a
+            # NULL domainOwner. Resolve those through the native PowerDNS
+            # domain_id so they can still be managed from the interface.
+            if delRecord.domainOwner is not None:
+                zone = delRecord.domainOwner
+            else:
+                zone = Domains.objects.get(id=delRecord.domain_id)
+
+            if ACLManager.checkOwnershipZone(zone.name, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadError()
 
 
-            zone = delRecord.domainOwner
             recordType = delRecord.type
             delRecord.delete()
 

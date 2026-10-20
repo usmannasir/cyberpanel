@@ -20,6 +20,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
+from plogical.premiumEntitlements import premium_entitlement_required
 from plogical.httpProc import httpProc
 from cloudAPI.cloudManager import CloudManager
 
@@ -1232,34 +1233,24 @@ def installStatusMailScanner(request):
 
 ###Rspamd
 
+@premium_entitlement_required('email-debugger', label='Email Debugger',
+                              page_redirect='https://cyberpanel.net/cyberpanel-addons')
 def Rspamd(request):
-    url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-    data = {
-        "name": "email-debugger",
-        "IP": ACLManager.GetServerIP()
-    }
+    checkIfRspamdInstalled = 0
 
-    import requests
-    response = requests.post(url, data=json.dumps(data))
-    Status = response.json()['status']
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddress = ipData.split('\n', 1)[0]
 
-    if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-        checkIfRspamdInstalled = 0
+    if mailUtilities.checkIfRspamdInstalled() == 1:
+        checkIfRspamdInstalled = 1
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+    proc = httpProc(request, 'emailPremium/Rspamd.html',
+                    {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
+    return proc.render()
 
-        if mailUtilities.checkIfRspamdInstalled() == 1:
-            checkIfRspamdInstalled = 1
-
-        proc = httpProc(request, 'emailPremium/Rspamd.html',
-                        {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
-        return proc.render()
-    else:
-        return redirect("https://cyberpanel.net/cyberpanel-addons")
-
+@premium_entitlement_required('email-debugger', label='Email Debugger')
 def installRspamd(request):
     try:
         userID = request.session['userID']
@@ -1270,29 +1261,18 @@ def installRspamd(request):
         else:
             return ACLManager.loadErrorJson()
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "email-debugger",
-            "IP": ACLManager.GetServerIP()
-        }
+        try:
 
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installRspamd"
+            ProcessUtilities.popenExecutioner(execPath)
 
-        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-            try:
-
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-                execPath = execPath + " installRspamd"
-                ProcessUtilities.popenExecutioner(execPath)
-
-                final_json = json.dumps({'status': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
-            except BaseException as msg:
-                final_dic = {'status': 0, 'error_message': str(msg)}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+            final_json = json.dumps({'status': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
     except KeyError:
         final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
@@ -1355,6 +1335,7 @@ def installStatusRspamd(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@premium_entitlement_required('email-debugger', label='Email Debugger', flags=('fetchStatus',))
 def fetchRspamdSettings(request):
     try:
         userID = request.session['userID']
@@ -1365,225 +1346,215 @@ def fetchRspamdSettings(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "email-debugger",
-            "IP": ACLManager.GetServerIP()
-        }
+        try:
+            if request.method == 'POST':
 
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+                enabled = True
+                action = ''
+                max_Size = ''
+                scan_mime_parts = True
+                log_clean = True
+                Server = ''
+                CLAMAV_VIRUS = ''
 
-        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-            try:
-                if request.method == 'POST':
+                confPath = "/etc/rspamd/local.d/antivirus.conf"
+                postfixpath = "/etc/postfix/main.cf"
 
-                    enabled = True
-                    action = ''
-                    max_Size = ''
-                    scan_mime_parts = True
-                    log_clean = True
-                    Server = ''
-                    CLAMAV_VIRUS = ''
+                if mailUtilities.checkIfRspamdInstalled() == 1:
 
-                    confPath = "/etc/rspamd/local.d/antivirus.conf"
-                    postfixpath = "/etc/postfix/main.cf"
+                    command = "sudo cat " + confPath
 
-                    if mailUtilities.checkIfRspamdInstalled() == 1:
+                    data = ProcessUtilities.outputExecutioner(command).splitlines()
 
-                        command = "sudo cat " + confPath
-
-                        data = ProcessUtilities.outputExecutioner(command).splitlines()
-
-                        for items in data:
-                            if items.find('enabled ') > -1:
-                                if items.find('enabled = true') < 0:
-                                    enabled = False
-                                    continue
-                                else:
-                                    enabled = True
-                            if items.find('action =') > -1:
-                                tempData = items.split(' ')
-                                # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "action")
-                                try:
-                                    if len(tempData) > 4:
-                                        a = tempData[4]
-                                    elif len(tempData) > 2:
-                                        a = tempData[2]
-                                    else:
-                                        continue
-                                    ac = a.split('"')
-                                    if len(ac) > 1:
-                                        action = ac[1]
-                                except:
-                                    pass
-                            if items.find('max_size') > -1:
-                                tempData = items.split(' ')
+                    for items in data:
+                        if items.find('enabled ') > -1:
+                            if items.find('enabled = true') < 0:
+                                enabled = False
+                                continue
+                            else:
+                                enabled = True
+                        if items.find('action =') > -1:
+                            tempData = items.split(' ')
+                            # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "action")
+                            try:
                                 if len(tempData) > 4:
-                                    max = tempData[4]
-                                    max_Size = max.rstrip(";")
-
-                            if items.find('scan_mime_parts ') > -1:
-                                if items.find('scan_mime_parts = true') < 0:
-                                    scan_mime_parts = False
+                                    a = tempData[4]
+                                elif len(tempData) > 2:
+                                    a = tempData[2]
+                                else:
                                     continue
-                                else:
-                                    scan_mime_parts = True
-                            if items.find('log_clean  ') > -1:
-                                if items.find('scan_mime_parts = true') < 0:
-                                    log_clean = False
-                                    continue
-                                else:
-                                    log_clean = True
-                            if items.find('servers =') > -1:
-                                tempData = items.split(' ')
-                                if len(tempData) > 4:
-                                    Ser = tempData[4]
-                                    x = Ser.rstrip(";")
-                                    y = x.split('"')
-                                    if len(y) > 1:
-                                        Server = y[1]
-                            if items.find('CLAMAV_VIRUS =') > -1:
-                                tempData = items.split(' ')
-                                if len(tempData) > 6:
-                                    CLAMAV = tempData[6]
-                                    i = CLAMAV.rstrip(";")
-                                    j = i.split('"')
-                                    if len(j) > 1:
-                                        CLAMAV_VIRUS = j[1]
+                                ac = a.split('"')
+                                if len(ac) > 1:
+                                    action = ac[1]
+                            except:
+                                pass
+                        if items.find('max_size') > -1:
+                            tempData = items.split(' ')
+                            if len(tempData) > 4:
+                                max = tempData[4]
+                                max_Size = max.rstrip(";")
 
-                        ###postfix
-                        smtpd_milters = ""
-                        non_smtpd_milters = ""
-                        command = "sudo cat " + postfixpath
+                        if items.find('scan_mime_parts ') > -1:
+                            if items.find('scan_mime_parts = true') < 0:
+                                scan_mime_parts = False
+                                continue
+                            else:
+                                scan_mime_parts = True
+                        if items.find('log_clean  ') > -1:
+                            if items.find('scan_mime_parts = true') < 0:
+                                log_clean = False
+                                continue
+                            else:
+                                log_clean = True
+                        if items.find('servers =') > -1:
+                            tempData = items.split(' ')
+                            if len(tempData) > 4:
+                                Ser = tempData[4]
+                                x = Ser.rstrip(";")
+                                y = x.split('"')
+                                if len(y) > 1:
+                                    Server = y[1]
+                        if items.find('CLAMAV_VIRUS =') > -1:
+                            tempData = items.split(' ')
+                            if len(tempData) > 6:
+                                CLAMAV = tempData[6]
+                                i = CLAMAV.rstrip(";")
+                                j = i.split('"')
+                                if len(j) > 1:
+                                    CLAMAV_VIRUS = j[1]
 
-                        postdata = ProcessUtilities.outputExecutioner(command).splitlines()
-                        for i in postdata:
-                            if (i.find('smtpd_milters=') > -1 or i.find('smtpd_milters =') > -1) and i.find('non_smtpd_milters') < 0:
-                                ### non_smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:11332
-                                split_data = i.split(',')
-                                if len(split_data) > 1:
-                                    tempData = split_data[1]
-                                    if os.path.exists(ProcessUtilities.debugPath):
-                                        logging.CyberCPLogFileWriter.writeToFile(f'smtpd_milters: {tempData}')
-                                    smtpd_milters = tempData.lstrip(' ')
-                                else:
-                                    # If no comma, try to get the value after the equals sign
-                                    eq_split = i.split('=')
-                                    if len(eq_split) > 1:
-                                        smtpd_milters = eq_split[1].strip()
-                            if i.find('non_smtpd_milters=') > -1 or i.find('non_smtpd_milters =') > -1:
+                    ###postfix
+                    smtpd_milters = ""
+                    non_smtpd_milters = ""
+                    command = "sudo cat " + postfixpath
+
+                    postdata = ProcessUtilities.outputExecutioner(command).splitlines()
+                    for i in postdata:
+                        if (i.find('smtpd_milters=') > -1 or i.find('smtpd_milters =') > -1) and i.find('non_smtpd_milters') < 0:
+                            ### non_smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:11332
+                            split_data = i.split(',')
+                            if len(split_data) > 1:
+                                tempData = split_data[1]
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(f'smtpd_milters: {tempData}')
+                                smtpd_milters = tempData.lstrip(' ')
+                            else:
+                                # If no comma, try to get the value after the equals sign
                                 eq_split = i.split('=')
                                 if len(eq_split) > 1:
-                                    tempData = eq_split[1]
+                                    smtpd_milters = eq_split[1].strip()
+                        if i.find('non_smtpd_milters=') > -1 or i.find('non_smtpd_milters =') > -1:
+                            eq_split = i.split('=')
+                            if len(eq_split) > 1:
+                                tempData = eq_split[1]
 
-                                    if os.path.exists(ProcessUtilities.debugPath):
-                                        logging.CyberCPLogFileWriter.writeToFile(f'non_smtpd_milters: {tempData}')
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(f'non_smtpd_milters: {tempData}')
 
-                                    non_smtpd_milters = tempData.lstrip(' ')
-
-
-                        ###Redis
-                        Redispath = "/etc/rspamd/local.d/redis.conf"
-                        read_servers = ''
-                        write_servers = ''
-                        command = "sudo cat " + Redispath
-
-                        postdata = ProcessUtilities.outputExecutioner(command).splitlines()
-
-                        for i in postdata:
-                            if i.find('write_servers =') > -1:
-                                tempData = i.split(' ')
-                                # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "redis")
-                                if len(tempData) > 2:
-                                    write = tempData[2]
-                                    i = write.rstrip(";")
-                                    j = i.split('"')
-                                    if len(j) > 1:
-                                        write_servers = j[1]
-                                    # logging.CyberCPLogFileWriter.writeToFile(str(write_servers) + "write_servers")
-
-                            if i.find('read_servers =') > -1:
-                                tempData = i.split(' ')
-                                # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "redis2")
-                                if len(tempData) > 2:
-                                    read = tempData[2]
-                                    i = read.rstrip(";")
-                                    j = i.split('"')
-                                    if len(j) > 1:
-                                        read_servers = j[1]
-                                    # logging.CyberCPLogFileWriter.writeToFile(str(read_servers) + "read_servers")
-
-                        #ClamAV configs
-
-                        clamav_Debug = True
-                        LogFile = ''
-                        TCPAddr = ''
-                        TCPSocket = ''
-
-                        if  ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                            clamavconfpath = '/etc/clamd.d/scan.conf'
-                        elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                            clamavconfpath = "/etc/clamav/clamd.conf"
-
-                        command = "sudo cat " + clamavconfpath
-                        data = ProcessUtilities.outputExecutioner(command).splitlines()
-                        for items in data:
-                            if items.find('TCPSocket') > -1:
-                                tempData = items.split(' ')
-                                if len(tempData) > 1:
-                                    TCPSocket = tempData[1]
-                            if items.find('TCPAddr') > -1:
-                                tempData = items.split(' ')
-                                if len(tempData) > 1:
-                                    TCPAddr = tempData[1]
-                            if items.find('LogFile') > -1:
-                                tempData = items.split(' ')
-                                if len(tempData) > 1:
-                                    LogFile = tempData[1]
-                            if items.find('Debug') > -1:
-                                if items.find('Debug true') < 0:
-                                    clamav_Debug = False
-                                    continue
-                                else:
-                                    clamav_Debug = True
+                                non_smtpd_milters = tempData.lstrip(' ')
 
 
-                        final_dic = {'fetchStatus': 1,
-                                     'installed': 1,
-                                     'enabled': enabled,
-                                     'action': action,
-                                     'max_Size': max_Size,
-                                     'scan_mime_parts': scan_mime_parts,
-                                     'log_clean ': log_clean,
-                                     'Server': Server,
-                                     'CLAMAV_VIRUS': CLAMAV_VIRUS,
-                                     'smtpd_milters': smtpd_milters,
-                                     'non_smtpd_milters': non_smtpd_milters,
-                                     'read_servers': read_servers,
-                                     'write_servers': write_servers,
-                                     'clamav_Debug': clamav_Debug,
-                                     'LogFile': LogFile,
-                                     'TCPAddr': TCPAddr,
-                                     'TCPSocket': TCPSocket,
+                    ###Redis
+                    Redispath = "/etc/rspamd/local.d/redis.conf"
+                    read_servers = ''
+                    write_servers = ''
+                    command = "sudo cat " + Redispath
 
-                                     }
+                    postdata = ProcessUtilities.outputExecutioner(command).splitlines()
+
+                    for i in postdata:
+                        if i.find('write_servers =') > -1:
+                            tempData = i.split(' ')
+                            # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "redis")
+                            if len(tempData) > 2:
+                                write = tempData[2]
+                                i = write.rstrip(";")
+                                j = i.split('"')
+                                if len(j) > 1:
+                                    write_servers = j[1]
+                                # logging.CyberCPLogFileWriter.writeToFile(str(write_servers) + "write_servers")
+
+                        if i.find('read_servers =') > -1:
+                            tempData = i.split(' ')
+                            # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "redis2")
+                            if len(tempData) > 2:
+                                read = tempData[2]
+                                i = read.rstrip(";")
+                                j = i.split('"')
+                                if len(j) > 1:
+                                    read_servers = j[1]
+                                # logging.CyberCPLogFileWriter.writeToFile(str(read_servers) + "read_servers")
+
+                    #ClamAV configs
+
+                    clamav_Debug = True
+                    LogFile = ''
+                    TCPAddr = ''
+                    TCPSocket = ''
+
+                    if  ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                        clamavconfpath = '/etc/clamd.d/scan.conf'
+                    elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                        clamavconfpath = "/etc/clamav/clamd.conf"
+
+                    command = "sudo cat " + clamavconfpath
+                    data = ProcessUtilities.outputExecutioner(command).splitlines()
+                    for items in data:
+                        if items.find('TCPSocket') > -1:
+                            tempData = items.split(' ')
+                            if len(tempData) > 1:
+                                TCPSocket = tempData[1]
+                        if items.find('TCPAddr') > -1:
+                            tempData = items.split(' ')
+                            if len(tempData) > 1:
+                                TCPAddr = tempData[1]
+                        if items.find('LogFile') > -1:
+                            tempData = items.split(' ')
+                            if len(tempData) > 1:
+                                LogFile = tempData[1]
+                        if items.find('Debug') > -1:
+                            if items.find('Debug true') < 0:
+                                clamav_Debug = False
+                                continue
+                            else:
+                                clamav_Debug = True
 
 
-                    else:
-                        final_dic = {'fetchStatus': 1,
-                                     'installed': 0}
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 1,
+                                 'enabled': enabled,
+                                 'action': action,
+                                 'max_Size': max_Size,
+                                 'scan_mime_parts': scan_mime_parts,
+                                 'log_clean ': log_clean,
+                                 'Server': Server,
+                                 'CLAMAV_VIRUS': CLAMAV_VIRUS,
+                                 'smtpd_milters': smtpd_milters,
+                                 'non_smtpd_milters': non_smtpd_milters,
+                                 'read_servers': read_servers,
+                                 'write_servers': write_servers,
+                                 'clamav_Debug': clamav_Debug,
+                                 'LogFile': LogFile,
+                                 'TCPAddr': TCPAddr,
+                                 'TCPSocket': TCPSocket,
 
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-            except BaseException as msg:
-                final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+                                 }
+
+
+                else:
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 0}
+
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('email-debugger', label='Email Debugger', flags=('saveStatus',))
 def saveRspamdConfigurations(request):
     try:
         userID = request.session['userID']
@@ -1620,6 +1591,7 @@ def saveRspamdConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('email-debugger', label='Email Debugger', flags=('saveStatus',))
 def savepostfixConfigurations(request):
     try:
         userID = request.session['userID']
@@ -1656,6 +1628,7 @@ def savepostfixConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('email-debugger', label='Email Debugger', flags=('saveStatus',))
 def saveRedisConfigurations(request):
     try:
         userID = request.session['userID']
@@ -1692,6 +1665,7 @@ def saveRedisConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@premium_entitlement_required('email-debugger', label='Email Debugger', flags=('saveStatus',))
 def saveclamavConfigurations(request):
     try:
         userID = request.session['userID']
@@ -1820,6 +1794,7 @@ def uninstallStatusRspamd(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@premium_entitlement_required('email-debugger', label='Email Debugger', flags=('logstatus',))
 def FetchRspamdLog(request):
     try:
         userID = request.session['userID']
@@ -1848,6 +1823,7 @@ def FetchRspamdLog(request):
         return HttpResponse(final_json)
 
 
+@premium_entitlement_required('email-debugger', label='Email Debugger')
 def RestartRspamd(request):
     try:
         userID = request.session['userID']
@@ -1883,33 +1859,22 @@ def RestartRspamd(request):
 
 ##Email Debugger
 
+@premium_entitlement_required('email-debugger', label='Email Debugger',
+                              page_redirect='https://cyberpanel.net/cyberpanel-addons')
 def EmailDebugger(request):
-    url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-    data = {
-        "name": "email-debugger",
-        "IP": ACLManager.GetServerIP()
-    }
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-    import requests
-    response = requests.post(url, data=json.dumps(data))
-    Status = response.json()['status']
-
-    if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        currentACL = ACLManager.loadedACL(userID)
-        websitesName = ACLManager.findAllSites(currentACL, userID)
-
-        proc = httpProc(request, 'emailPremium/EmailDebugger.html',
-                        {'websiteList': websitesName}, 'admin')
-        return proc.render()
+    if currentACL['admin'] == 1:
+        pass
     else:
-        return redirect("https://cyberpanel.net/cyberpanel-addons")
+        return ACLManager.loadErrorJson()
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+
+    proc = httpProc(request, 'emailPremium/EmailDebugger.html',
+                    {'websiteList': websitesName}, 'admin')
+    return proc.render()
 
 def RunServerLevelEmailChecks(request):
     try:
@@ -1921,14 +1886,9 @@ def RunServerLevelEmailChecks(request):
         else:
             return ACLManager.loadErrorJson()
 
-        if ACLManager.CheckForPremFeature('email-debugger'):
-            ob = CloudManager()
-            res = ob.RunServerLevelEmailChecks()
-            return res
-        else:
-            dic = {'status': 0, 'error_message': 'Kindly purchase email debugger Add-on'}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+        ob = CloudManager()
+        res = ob.RunServerLevelEmailChecks()
+        return res
     except BaseException as msg:
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
@@ -1944,14 +1904,9 @@ def ResetEmailConfigurations(request):
             pass
         else:
             return ACLManager.loadErrorJson()
-        if ACLManager.CheckForPremFeature('email-debugger'):
-            ob = CloudManager()
-            res = ob.ResetEmailConfigurations()
-            return res
-        else:
-            dic = {'status': 0, 'error_message': 'Kindly purchase email debugger Add-on'}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+        ob = CloudManager()
+        res = ob.ResetEmailConfigurations()
+        return res
     except BaseException as msg:
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
@@ -1984,79 +1939,73 @@ def ReadReport(request):
             pass
         else:
             return ACLManager.loadErrorJson()
-        if ACLManager.CheckForPremFeature('email-debugger'):
-            try:
-                ob = CloudManager(json.loads(request.body))
-                res = ob.ReadReport()
-                Result = json.loads(res.content)
-                status = Result['status']
-                #fetch Ip
+        try:
+            ob = CloudManager(json.loads(request.body))
+            res = ob.ReadReport()
+            Result = json.loads(res.content)
+            status = Result['status']
+            if status == 1:
                 IP = ACLManager.GetServerIP()
-                if status == 1:
-                    def CheckPort(port):
-                        import socket
-                        # Create a TCP socket
-                        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        try:
-                            s.settimeout(1)
-                            s.connect((IP, port))
-                            return 1
-                        except socket.error as e:
-                            return 0
-                        finally:
-                            s.close()
+                def CheckPort(port):
+                    import socket
+                    # Create a TCP socket
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        s.settimeout(1)
+                        s.connect((IP, port))
+                        return 1
+                    except socket.error as e:
+                        return 0
+                    finally:
+                        s.close()
 
-                    report = {}
+                report = {}
 
-                    if CheckPort(25):
-                        report['Port25'] = 'Open'
-                    else:
-                        report['Port25'] = 'Closed, mail will not go through.'
-
-                    if CheckPort(587):
-                        report['Port587'] = 'Open'
-                    else:
-                        report['Port587'] = 'Closed, mail will not go through.'
-
-                    if CheckPort(465):
-                        report['Port465'] = 'Open'
-                    else:
-                        report['Port465'] = 'Closed, mail will not go through.'
-
-                    if CheckPort(110):
-                        report['Port110'] = 'Open'
-                    else:
-                        report['Port110'] = 'Closed, POP3 will not work.'
-
-                    if CheckPort(143):
-                        report['Port143'] = 'Open'
-                    else:
-                        report['Port143'] = 'Closed, IMAP will not work.'
-
-                    if CheckPort(993):
-                        report['Port993'] = 'Open'
-                    else:
-                        report['Port993'] = 'Closed, IMAP will not work.'
-
-                    if CheckPort(995):
-                        report['Port995'] = 'Open'
-                    else:
-                        report['Port995'] = 'Closed, POP3 will not work.'
-
-                    report['serverHostName'] = IP
-                    finalResult = Result
-                    finalResult['report'] = report
-
-                    final_json = json.dumps(finalResult)
-                    return HttpResponse(final_json)
+                if CheckPort(25):
+                    report['Port25'] = 'Open'
                 else:
-                    return 0 , Result
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(msg))
-        else:
-            dic = {'status': 0, 'error_message': 'Kindly purchase email debugger Add-on'}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+                    report['Port25'] = 'Closed, mail will not go through.'
+
+                if CheckPort(587):
+                    report['Port587'] = 'Open'
+                else:
+                    report['Port587'] = 'Closed, mail will not go through.'
+
+                if CheckPort(465):
+                    report['Port465'] = 'Open'
+                else:
+                    report['Port465'] = 'Closed, mail will not go through.'
+
+                if CheckPort(110):
+                    report['Port110'] = 'Open'
+                else:
+                    report['Port110'] = 'Closed, POP3 will not work.'
+
+                if CheckPort(143):
+                    report['Port143'] = 'Open'
+                else:
+                    report['Port143'] = 'Closed, IMAP will not work.'
+
+                if CheckPort(993):
+                    report['Port993'] = 'Open'
+                else:
+                    report['Port993'] = 'Closed, IMAP will not work.'
+
+                if CheckPort(995):
+                    report['Port995'] = 'Open'
+                else:
+                    report['Port995'] = 'Closed, POP3 will not work.'
+
+                report['serverHostName'] = IP
+                finalResult = Result
+                finalResult['report'] = report
+
+                final_json = json.dumps(finalResult)
+                return HttpResponse(final_json)
+            else:
+                return res
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(msg))
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2069,14 +2018,9 @@ def debugEmailForSite(request):
             pass
         else:
             return ACLManager.loadErrorJson()
-        if ACLManager.CheckForPremFeature('email-debugger'):
-            ob = CloudManager(json.loads(request.body))
-            res = ob.debugEmailForSite()
-            return res
-        else:
-            dic = {'status': 0, 'error_message': 'Kindly purchase email debugger Add-on'}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+        ob = CloudManager(json.loads(request.body))
+        res = ob.debugEmailForSite()
+        return res
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2090,15 +2034,10 @@ def fixMailSSL(request):
         else:
             return ACLManager.loadErrorJson()
         admin = Administrator.objects.get(pk=userID)
-        if ACLManager.CheckForPremFeature('email-debugger'):
-            cm = CloudManager(json.loads(request.body), admin)
-            res = cm.fixMailSSL(request)
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(res.content))
-            return res
-        else:
-            dic = {'status': 0, 'error_message': 'Kindly purchase email debugger Add-on'}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+        cm = CloudManager(json.loads(request.body), admin)
+        res = cm.fixMailSSL(request)
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(res.content))
+        return res
     except KeyError:
         return redirect(loadLoginPage)

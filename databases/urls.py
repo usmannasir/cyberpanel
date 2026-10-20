@@ -25,4 +25,5 @@ urlpatterns = [
     re_path(r'^generateAccess$', views.generateAccess, name='generateAccess'),
     re_path(r'^fetchDetailsPHPMYAdmin$', views.fetchDetailsPHPMYAdmin, name='fetchDetailsPHPMYAdmin'),
     re_path(r'^consumePHPMYAdminHandoff$', views.consumePHPMYAdminHandoff, name='consumePHPMYAdminHandoff'),
+    re_path(r'^validatePHPMYAdminSession$', views.validatePHPMYAdminSession, name='validatePHPMYAdminSession'),
 ]

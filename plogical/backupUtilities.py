@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import tempfile
 import paramiko
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -83,7 +84,29 @@ class backupUtilities:
         self.extraArgs = extraArgs
 
     @staticmethod
+    def cleanupBackupMeta(metaPath):
+        if not metaPath:
+            return
+        try:
+            try:
+                os.unlink(metaPath)
+            except FileNotFoundError:
+                pass
+            except PermissionError:
+                # A failed backup may leave the file owned by the site user in
+                # sticky /tmp. Use the existing privileged command transport.
+                result, output = ProcessUtilities.outputExecutioner(
+                    'rm -f -- %s' % shlex.quote(metaPath), 'root',
+                    shell=False, retRequired=True)
+                if result != 1:
+                    raise OSError('Unable to remove backup metadata: %s' % output)
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                '%s [cleanupBackupMeta: %s]' % (msg, metaPath))
+
+    @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath, FromInner=1):
+        metaPath = None
         try:
 
             website = Websites.objects.get(domain=backupDomain)
@@ -280,16 +303,16 @@ class backupUtilities:
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
-            metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
+            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
+            # Create exclusively with mode 0600 before writing any credentials.
+            # Keep /tmp accessible to the site user after the ownership handoff.
+            with tempfile.NamedTemporaryFile(mode='wb', prefix='cyberpanel-backup-meta-',
+                                             suffix='.xml', dir='/tmp', delete=False) as metaFile:
+                metaPath = metaFile.name
+                metaFile.write(xmlpretty)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'Path to meta file {metaPath}')
-
-            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
-            metaFile = open(metaPath, 'w')
-            metaFile.write(xmlpretty.decode())
-            metaFile.close()
-            os.chmod(metaPath, 0o600)
 
             ## meta generated
 
@@ -304,7 +327,8 @@ class backupUtilities:
             return 1, 'None', metaPath
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [207][5009]")
+            backupUtilities.cleanupBackupMeta(metaPath)
+            logging.CyberCPLogFileWriter.writeToFile(f"{backupDomain}: {str(msg)} [207][5009]")
             if FromInner:
                 #logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)), status)
                 command = f"echo '{status} [207][5009]' > {status}"
@@ -566,7 +590,7 @@ class backupUtilities:
             ProcessUtilities.executioner(command)
 
             command = f'mv {CPHomeStorage}/* {tempStoragePath}/'
-            moveStatus = ProcessUtilities.executioner(command, externalApp, True)
+            moveStatus, _ = ProcessUtilities.outputExecutioner(command, externalApp, True, retRequired=True)
             if moveStatus != 1:
                 raise RuntimeError('Unable to prepare files for the backup archive')
 
@@ -575,9 +599,9 @@ class backupUtilities:
 
             filePath = f'{backupPath}/{backupName}.tar.gz'
             command = f'tar -czf {filePath} -C {tempStoragePath} .'
-            tarStatus = ProcessUtilities.executioner(command, externalApp, True)
+            tarStatus, _ = ProcessUtilities.outputExecutioner(command, externalApp, True, retRequired=True)
             if tarStatus != 1:
-                raise RuntimeError('Backup archive creation failed with exit status %s' % str(tarStatus))
+                raise RuntimeError('Backup archive creation failed')
             if not os.path.exists(filePath) or os.path.getsize(filePath) <= 0:
                 raise RuntimeError('Backup archive is missing or empty')
 
@@ -621,8 +645,9 @@ class backupUtilities:
             if externalApp == None:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             else:
-                command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
-                ProcessUtilities.executioner(command, externalApp)
+                command = 'echo %s > %s' % (
+                    shlex.quote('%s. [511:BackupRoot][[5009]]' % str(msg)), shlex.quote(status))
+                ProcessUtilities.executioner(command, externalApp, True)
 
             try:
                 failedArchive = f'{backupPath}/{backupName}.tar.gz'
@@ -743,33 +768,17 @@ class backupUtilities:
             website = Websites.objects.get(domain=domain)
 
             for database in databases:
-
                 dbName = database.find('dbName').text
-
                 if backup_uses_database_users_schema(backup_version, backup_build):
-
-                    logging.CyberCPLogFileWriter.writeToFile('Multi-user database backup metadata detected..')
                     databaseUsers = database.findall('databaseUsers')
-                    for databaseUser in databaseUsers:
-
-                        dbUser = databaseUser.find('dbUser').text
-                        res = mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel')
-                        if res == 0:
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                'Failed to restore database %s. But it can be false positive, moving on..' % (dbName))
-
-                        newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                        newDB.save()
-                        break
-
+                    if not databaseUsers:
+                        raise RuntimeError('Backup database has no account metadata: %s' % dbName)
+                    dbUser = databaseUsers[0].find('dbUser').text
                 else:
                     dbUser = database.find('dbUser').text
-
-                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                        raise BaseException
-
-                    newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                    newDB.save()
+                result = mysqlUtilities.mysqlUtilities.createDatabaseAndRegister(dbName, dbUser, 'cyberpanel', website)
+                if result[0] != 1:
+                    raise RuntimeError(result[1])
 
             ## Create dns zone
 
@@ -834,6 +843,10 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
+            existingWebsite = Websites.objects.filter(domain=masterDomain).first()
+            if existingWebsite is not None:
+                from plogical import storageQuota
+                storageQuota.assert_restore_allowed(existingWebsite)
             backup_version = backupMetaData.find('VERSION').text
             backup_build = backupMetaData.find('BUILD').text
 
@@ -1097,22 +1110,19 @@ class backupUtilities:
 
                             logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
                             logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
-                            logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
 
                         ## Future ref, this logic can be further refactored to improve restore backup logic
                         if first:
                             first = 0
                             res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1)
                             if res == 0:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    'Failed to restore database %s. But it can be false positive, moving on..' % (
-                                        dbName))
+                                raise RuntimeError('Database import failed: %s' % dbName)
 
 
                         ### This function will not create database, only database user is created as third value is 0 for createDB
 
-                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
-                        mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+                        if mysqlUtilities.mysqlUtilities.restoreDatabaseUser(dbName, dbUser, password, dbHost) != 1:
+                            raise RuntimeError('Database account restore failed: %s' % dbName)
 
                         # UserInMySQLTable = DBUsers.objects.get(user=dbUser, host=dbHost)
                         # UserInMySQLTable.password = password
@@ -1242,7 +1252,6 @@ class backupUtilities:
 
                     ### apache ends here
 
-            logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
 
             ## Fix permissions
@@ -1253,6 +1262,8 @@ class backupUtilities:
             fm.fixPermissions(masterDomain)
 
             installUtilities.reStartLiteSpeed()
+
+            logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
         except BaseException as msg:
             status = os.path.join(completPath, 'status')
@@ -2029,6 +2040,9 @@ class backupUtilities:
 
     def SubmitCloudBackupRestore(self):
         try:
+            from plogical import storageQuota
+            self.website = Websites.objects.get(domain=self.extraArgs['domain'])
+            storageQuota.assert_restore_allowed(self.website)
             import json
             if os.path.exists(backupUtilities.CloudBackupConfigPath):
                 result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
@@ -2144,15 +2158,11 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'Restoring database %s..,70' % (db['databaseName']))
 
-                mysqlUtilities.mysqlUtilities.submitDBDeletion(db['databaseName'])
-
-                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") == 0:
-                    raise BaseException("Failed to create Databases!")
-
-                newDB = Databases(website=self.website, dbName=db['databaseName'], dbUser=db['databaseUser'])
-                newDB.save()
-
-                mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
+                result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(db['databaseName'], db['databaseUser'], self.website)
+                if result[0] != 1:
+                    raise RuntimeError(result[1])
+                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password']) != 1:
+                    raise RuntimeError('Database import failed: %s' % db['databaseName'])
 
             if self.extraArgs['sourceDomain'] != 'None':
                 if self.extraArgs['sourceDomain'] != self.extraArgs['domain']:
@@ -2207,6 +2217,9 @@ class backupUtilities:
     def SubmitS3BackupRestore(self):
 
         try:
+            from plogical import storageQuota
+            self.website = Websites.objects.get(domain=self.extraArgs['domain'])
+            storageQuota.assert_restore_allowed(self.website)
             import json
             if os.path.exists(backupUtilities.CloudBackupConfigPath):
                 result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
@@ -2349,15 +2362,11 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'Restoring database %s..,70' % (db['databaseName']))
 
-                mysqlUtilities.mysqlUtilities.submitDBDeletion(db['databaseName'])
-
-                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") == 0:
-                    raise BaseException("Failed to create Databases!")
-
-                newDB = Databases(website=self.website, dbName=db['databaseName'], dbUser=db['databaseUser'])
-                newDB.save()
-
-                mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
+                result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(db['databaseName'], db['databaseUser'], self.website)
+                if result[0] != 1:
+                    raise RuntimeError(result[1])
+                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password']) != 1:
+                    raise RuntimeError('Database import failed: %s' % db['databaseName'])
 
 
             command = 'rm -rf %s' % (self.extractedPath)
@@ -2368,6 +2377,7 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % str(msg))
 
 def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
+    metaPath = None
     try:
         ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
         ## backup-example.com-02.13.2018_10-24-52 -- backup name
@@ -2439,7 +2449,8 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             return 0
 
 
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
+        metaPath = result[2]
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, metaPath)
         ProcessUtilities.executioner(command)
 
         logging.CyberCPLogFileWriter.writeToFile(backupPath)
@@ -2503,12 +2514,12 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         #command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
         #ProcessUtilities.executioner(command)
 
-        command = f'rm -f {result[2]}'
-        ProcessUtilities.executioner(command, 'cyberpanel')
 
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
-            f"{str(msg)}  [submitBackupCreation]")
+            f"{backupDomain}: {str(msg)}  [submitBackupCreation]")
+    finally:
+        backupUtilities.cleanupBackupMeta(metaPath)
 
 def cancelBackupCreation(backupCancellationDomain, fileName):
     try:

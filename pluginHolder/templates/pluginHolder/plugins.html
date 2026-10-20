@@ -373,7 +373,11 @@
         <div class="content-section">
             <h2 class="section-title">{% trans "Plugins" %}</h2>
             
-            {% if plugins %}
+            {% if pluginListUnavailable %}
+            <div class="alert alert-warning" role="alert">
+                {% trans "The installed plugin list is unavailable. Check the server log and plugin directory permissions." %}
+            </div>
+            {% elif plugins %}
             <!-- View Toggle -->
             <div class="view-toggle">
                 <button class="view-btn active" onclick="toggleView('grid')">
@@ -406,18 +410,18 @@
                         </div>
                         <div class="plugin-info">
                             <h3 class="plugin-name">{{ plugin.name }}</h3>
-                            <span class="plugin-type">{{ plugin.type }}</span>
+                            <span class="plugin-type">{% if plugin.metadata_available %}{{ plugin.type }}{% else %}{% trans "Metadata unavailable" %}{% endif %}</span>
                         </div>
                     </div>
                     
                     <div class="plugin-description">
-                        {{ plugin.desc }}
+                        {% if plugin.metadata_available %}{{ plugin.desc }}{% else %}{% trans "Check this plugin's installation and the server log." %}{% endif %}
                     </div>
                     
                     <div class="plugin-footer">
                         <div class="plugin-version">
                             <span>{% trans "Version" %}</span>
-                            <span class="plugin-version-number">{{ plugin.version }}</span>
+                            <span class="plugin-version-number">{% if plugin.metadata_available %}{{ plugin.version }}{% else %}—{% endif %}</span>
                         </div>
                     </div>
                 </div>
@@ -443,11 +447,11 @@
                                     <strong>{{ plugin.name }}</strong>
                                 </td>
                                 <td>
-                                    <span class="plugin-type">{{ plugin.type }}</span>
+                                    <span class="plugin-type">{% if plugin.metadata_available %}{{ plugin.type }}{% else %}{% trans "Metadata unavailable" %}{% endif %}</span>
                                 </td>
-                                <td>{{ plugin.desc }}</td>
+                                <td>{% if plugin.metadata_available %}{{ plugin.desc }}{% else %}{% trans "Check this plugin's installation and the server log." %}{% endif %}</td>
                                 <td>
-                                    <span class="plugin-version-number">{{ plugin.version }}</span>
+                                    <span class="plugin-version-number">{% if plugin.metadata_available %}{{ plugin.version }}{% else %}—{% endif %}</span>
                                 </td>
                             </tr>
                             {% endfor %}

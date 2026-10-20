@@ -98,7 +98,7 @@
                 <label class="wm-checkbox-label">
                     <input type="checkbox" ng-model="selectAll" ng-change="toggleSelectAll()">
                 </label>
-                <button class="wm-action-btn" ng-click="bulkDelete()" title="{% trans 'Delete' %}">
+                <button class="wm-action-btn" ng-click="bulkDelete()" ng-disabled="deletingMessages || movingMessages || loading" title="{% trans 'Delete' %}">
                     <i class="fa fa-trash"></i>
                 </button>
                 <button class="wm-action-btn" ng-click="bulkMarkRead()" title="{% trans 'Mark read' %}">
@@ -108,12 +108,12 @@
                     <i class="fa fa-envelope"></i>
                 </button>
                 <div class="wm-move-dropdown" ng-if="showMoveDropdown">
-                    <select ng-model="moveTarget" ng-change="bulkMove()"
+                    <select ng-model="moveTarget" ng-change="bulkMove(moveTarget)" ng-disabled="deletingMessages || movingMessages || loading"
                             ng-options="f.name for f in folders">
                         <option value="">{% trans "Move to..." %}</option>
                     </select>
                 </div>
-                <button class="wm-action-btn" ng-click="showMoveDropdown = !showMoveDropdown" title="{% trans 'Move' %}">
+                <button class="wm-action-btn" ng-click="showMoveDropdown = !showMoveDropdown" ng-disabled="deletingMessages || movingMessages || loading" title="{% trans 'Move' %}">
                     <i class="fa fa-folder-open"></i>
                 </button>
                 <span class="wm-page-info">{$ currentPage $} / {$ totalPages $}</span>
@@ -165,7 +165,7 @@
                     <button class="btn btn-sm btn-default" ng-click="forwardMsg()">
                         <i class="fa fa-share"></i> {% trans "Forward" %}
                     </button>
-                    <button class="btn btn-sm btn-danger" ng-click="deleteMsg(openMsg)">
+                    <button class="btn btn-sm btn-danger" ng-click="deleteMsg(openMsg)" ng-disabled="deletingMessages || movingMessages || loading">
                         <i class="fa fa-trash"></i> {% trans "Delete" %}
                     </button>
                 </div>
@@ -471,6 +471,6 @@
     </div>
 </div>
 
-<script src="{% static 'webmail/webmail.js' %}?v=7"></script>
+<script src="{% static 'webmail/webmail.js' %}?v=9"></script>
 
 {% endblock %}

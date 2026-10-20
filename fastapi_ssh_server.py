@@ -240,6 +240,9 @@ def decode_terminal_token(token):
     if expires_at <= issued_at or expires_at - issued_at > MAX_TOKEN_LIFETIME_SECONDS:
         raise JWTError("Invalid Web Terminal token lifetime")
 
+    if payload.get("web_terminal") is not True:
+        raise JWTError("Missing paid Web Terminal authorization")
+
     request_token = payload.get("jti")
     panel_user_id = payload.get("sub")
     ssh_user = payload.get("ssh_user")
