@@ -29,6 +29,10 @@ from plogical.installUtilities import installUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.wordpressInstallerUtilities import (
     build_directory_probe,
+    build_wordpress_config_password_command,
+    wrap_wordpress_site_shell_script,
+    build_wordpress_config_command,
+    build_wordpress_site_install_command,
     build_wordpress_core_install_command,
     directory_allows_install,
     wordpress_php_change_required,
@@ -817,6 +821,7 @@ class ApplicationInstaller(multi.Thread):
             command = build_wordpress_core_install_command(
                 self.extraArgs['WPVersion'], finalPath, FinalPHPPath
             )
+            command = wrap_wordpress_site_shell_script(command)
 
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
@@ -832,7 +837,9 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core config --dbname={dbName} --dbuser={dbUser} --dbpass={dbPassword} --dbhost={ApplicationInstaller.LOCALHOST}:{ApplicationInstaller.PORT} --dbprefix=wp_ --path={finalPath}"
+            command = build_wordpress_config_command(
+                FinalPHPPath, finalPath, dbName, dbUser, dbPassword,
+                '%s:%s' % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT))
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -841,13 +848,24 @@ class ApplicationInstaller(multi.Thread):
             if result.find('Success:') == -1:
                 raise BaseException(result)
 
+            # config-create uses addslashes() even for single-quoted PHP literals.
+            # config-set serializes the original password with var_export instead.
+            command = build_wordpress_config_password_command(
+                FinalPHPPath, finalPath, dbPassword)
+            success, result = ProcessUtilities.outputExecutioner(
+                command, externalApp, retRequired=True)
+            if not success:
+                raise BaseException('Unable to preserve the database password in wp-config.php.')
+
             if home == '0':
                 path = self.extraArgs['path']
                 finalURL = domainName + '/' + path
             else:
                 finalURL = domainName
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core install --url="http://{finalURL}" --title="{blogTitle}" --admin_user="{adminUser}" --admin_password="{adminPassword}" --admin_email="{adminEmail}" --path={finalPath}'
+            command = build_wordpress_site_install_command(
+                FinalPHPPath, finalPath, 'http://' + finalURL, blogTitle,
+                adminUser, adminPassword, adminEmail)
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):
