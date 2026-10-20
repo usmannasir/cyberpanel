@@ -3079,6 +3079,8 @@ def main():
     # checks.disablePackegeUpdates()
     checks.fixCyberPanelPermissions()
     configure_jwt_secret()
+    from plogical.terminalService import configure_terminal_service
+    configure_terminal_service(fresh_install=True)
 
     # Start services that were enabled but not started during installation
     # These services require database tables that are created by Django migrations

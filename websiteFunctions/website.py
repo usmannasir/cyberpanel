@@ -3727,59 +3727,8 @@ context /cyberpanel_suspension_page.html {
             #####
 
             from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
-            # Ensure FastAPI SSH server systemd service file is in place
-            try:
-                service_path = '/etc/systemd/system/fastapi_ssh_server.service'
-                local_service_path = 'fastapi_ssh_server.service'
-                check_service = ProcessUtilities.outputExecutioner(f'test -f {service_path} && echo exists || echo missing')
-                if 'missing' in check_service:
-                    ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
-                    ProcessUtilities.outputExecutioner('systemctl daemon-reload')
-            except Exception as e:
-                CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
-            
+            # Terminal service and firewall policy are managed by the administrator.
 
-            #####
-
-            # Ensure FastAPI SSH server is running using ProcessUtilities
-            try:
-                ProcessUtilities.outputExecutioner('systemctl is-active --quiet fastapi_ssh_server')
-                ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
-                ProcessUtilities.outputExecutioner('systemctl start fastapi_ssh_server')
-
-                csfPath = '/etc/csf'
-
-                sshPort = '8888'
-
-                if os.path.exists(csfPath):
-                        dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
-
-                        # self.modifyPorts is a method in the firewallManager.py file so how can we call it here?
-                        # we need to call the method from the firewallManager.py file
-                        from firewall.firewallManager import FirewallManager
-                        firewallManager = FirewallManager()
-                        firewallManager.modifyPorts(dataIn)
-                        dataIn = {'protocol': 'TCP_OUT', 'ports': sshPort}
-                        firewallManager.modifyPorts(dataIn)
-                else:
-                    from plogical.firewallUtilities import FirewallUtilities
-                    from firewall.models import FirewallRules
-                    try:
-                        updateFW = FirewallRules.objects.get(name="WebTerminalPort")
-                        FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
-                        updateFW.port = sshPort
-                        updateFW.save()
-                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                    except:
-                        try:
-                            newFireWallRule = FirewallRules(name="WebTerminalPort", port=sshPort, proto="tcp")
-                            newFireWallRule.save()
-                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                        except BaseException as msg:
-                            CyberCPLogFileWriter.writeToFile(str(msg))
-
-            except Exception as e:
-                CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
             # Fetch actual resource limits from lscgctl command if they exist
             Data['resource_limits'] = None
@@ -5857,56 +5806,8 @@ StrictHostKeyChecking no
             )
 
         from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
-        # Ensure FastAPI SSH server systemd service file is in place
-        try:
-            service_path = '/etc/systemd/system/fastapi_ssh_server.service'
-            local_service_path = 'fastapi_ssh_server.service'
-            check_service = ProcessUtilities.outputExecutioner(f'test -f {service_path} && echo exists || echo missing')
-            if 'missing' in check_service:
-                ProcessUtilities.outputExecutioner(f'cp /usr/local/CyberCP/fastapi_ssh_server.service {service_path}')
-                ProcessUtilities.outputExecutioner('systemctl daemon-reload')
-        except Exception as e:
-            CyberCPLogFileWriter.writeToFile(f"Failed to copy or reload fastapi_ssh_server.service: {e}")
+        # Terminal service and firewall policy are managed by the administrator.
 
-        # Ensure FastAPI SSH server is running using ProcessUtilities
-        try:
-            ProcessUtilities.outputExecutioner('systemctl is-active --quiet fastapi_ssh_server')
-            ProcessUtilities.outputExecutioner('systemctl enable --now fastapi_ssh_server')
-            ProcessUtilities.outputExecutioner('systemctl start fastapi_ssh_server')
-
-            csfPath = '/etc/csf'
-
-            sshPort = '8888'
-
-            if os.path.exists(csfPath):
-                    dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
-
-                    # self.modifyPorts is a method in the firewallManager.py file so how can we call it here?
-                    # we need to call the method from the firewallManager.py file
-                    from firewall.firewallManager import FirewallManager
-                    firewallManager = FirewallManager()
-                    firewallManager.modifyPorts(dataIn)
-                    dataIn = {'protocol': 'TCP_OUT', 'ports': sshPort}
-                    firewallManager.modifyPorts(dataIn)
-            else:
-                from plogical.firewallUtilities import FirewallUtilities
-                from firewall.models import FirewallRules
-                try:
-                    updateFW = FirewallRules.objects.get(name="WebTerminalPort")
-                    FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
-                    updateFW.port = sshPort
-                    updateFW.save()
-                    FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                except:
-                    try:
-                        newFireWallRule = FirewallRules(name="WebTerminalPort", port=sshPort, proto="tcp")
-                        newFireWallRule.save()
-                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                    except BaseException as msg:
-                        CyberCPLogFileWriter.writeToFile(str(msg))
-
-        except Exception as e:
-            CyberCPLogFileWriter.writeToFile(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
         # Add-on check logic
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"

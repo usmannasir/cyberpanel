@@ -57,13 +57,13 @@ class TerminalSecretTests(unittest.TestCase):
         )
         self.assertNotIn("/usr/local/CyberCP/bin/python3", service)
 
-    def test_upgrade_enables_terminal_service_for_reboots(self):
+    def test_upgrade_preserves_terminal_service_policy(self):
         upgrade_source = (
             pathlib.Path(__file__).parents[1]
             / "plogical/upgrade.py"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "systemctl enable --now fastapi_ssh_server",
+            "configure_terminal_service()",
             upgrade_source,
         )
 
