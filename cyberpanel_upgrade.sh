@@ -1100,6 +1100,9 @@ Download_Upgrade_Source "cyberpanel_version.py" "cyberpanel_version.py" "^VERSIO
 if grep -q '^from cyberpanel_firewall_migration import ' upgrade.py; then
   Download_Upgrade_Source "cyberpanel_firewall_migration.py" "cyberpanel_firewall_migration.py" "^CSF_UPGRADE_MESSAGE" || exit 1
 fi
+if grep -q '^from lscpd_binary import ' upgrade.py; then
+  Download_Upgrade_Source "lscpd_binary.py" "lscpd_binary.py" "^def select_lscpd_binary(" || exit 1
+fi
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py
