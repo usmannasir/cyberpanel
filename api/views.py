@@ -23,6 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 from userManagment.views import submitUserCreation as suc
 from userManagment.views import submitUserDeletion as duc
 from plogical.acl import ACLManager
+from plogical.clientIP import get_client_ip
 from plogical.securityUtils import (
     api_token_matches,
     api_two_factor_matches,
@@ -430,9 +431,7 @@ def loginAPI(request):
         if hashPassword.check_password(admin.password, password) and api_two_factor_matches(admin, request, request.POST):
             request.session.cycle_key()
             request.session['userID'] = admin.pk
-            ip_address = request.META.get('HTTP_CF_CONNECTING_IP')
-            if ip_address is None:
-                ip_address = request.META.get('REMOTE_ADDR', '')
+            ip_address = get_client_ip(request)
             if ':' in ip_address:
                 ip_address = ':'.join(ip_address.split(':')[:3])
             request.session['ipAddr'] = ip_address

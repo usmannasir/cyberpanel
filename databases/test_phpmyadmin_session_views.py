@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 from databases.phpmyadmin_handoff import consume_handoff, create_handoff
 from databases.phpmyadmin_session import issue_grant, panel_ip_allowed, validate_grant
 from databases.test_phpmyadmin_session import Session
+from plogical.clientIP import get_client_ip
 
 
 class PhpMyAdminSessionViewTests(unittest.TestCase):
@@ -32,7 +33,7 @@ class PhpMyAdminSessionViewTests(unittest.TestCase):
         self.database_model.objects.get.return_value = self.database_user
         self.scope = dict(JsonResponse=JsonResponse, csrf_exempt=csrf_exempt, require_POST=require_POST,
                           json=json, Administrator=self.admin_model, GlobalUserDB=self.database_model,
-                          issue_grant=issue_grant, panel_ip_allowed=panel_ip_allowed,
+                          issue_grant=issue_grant, panel_ip_allowed=panel_ip_allowed, get_client_ip=get_client_ip,
                           validate_grant=validate_grant, consume_handoff=consume_handoff)
         exec(compile(ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(source), 'exec'), self.scope)
         self.session = Session(userID=7, ipAddr='203.0.113.10')

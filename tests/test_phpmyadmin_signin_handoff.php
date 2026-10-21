@@ -36,8 +36,9 @@ file_put_contents($router, <<<'PHP'
 <?php
 $valid = isset($_COOKIE['cyberpanel_sessionid'])
     && $_COOKIE['cyberpanel_sessionid'] === 'authenticatedsession'
-    && isset($_SERVER['HTTP_CF_CONNECTING_IP'])
-    && $_SERVER['HTTP_CF_CONNECTING_IP'] === '203.0.113.10'
+    && isset($_SERVER['HTTP_X_CYBERPANEL_PEER'])
+    && $_SERVER['HTTP_X_CYBERPANEL_PEER'] === '203.0.113.10'
+    && !isset($_SERVER['HTTP_CF_CONNECTING_IP'])
     && isset($_POST['username'], $_POST['token'])
     && $_POST['username'] === 'admin'
     && $_POST['token'] === 'one-time-token';
