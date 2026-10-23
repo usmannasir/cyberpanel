@@ -957,6 +957,13 @@ class virtualHostUtilities:
 
             numberOfTotalLines = virtualHostUtilities.getLogLineCount(fileName, groupName)
 
+            if type(page) is not int or page < 1:
+                raise ValueError('Log page must be a positive integer.')
+
+            if (page - 1) * 25 >= numberOfTotalLines:
+                print('')
+                return ''
+
             if numberOfTotalLines < 25:
                 data = ProcessUtilities.outputExecutioner('cat -- %s' % shlex.quote(fileName), groupName)
             else:
@@ -993,6 +1000,13 @@ class virtualHostUtilities:
                 return 0
 
             numberOfTotalLines = virtualHostUtilities.getLogLineCount(fileName, externalApp)
+
+            if type(page) is not int or page < 1:
+                raise ValueError('Log page must be a positive integer.')
+
+            if (page - 1) * 25 >= numberOfTotalLines:
+                print('')
+                return ''
 
             if numberOfTotalLines < 25:
                 data = ProcessUtilities.outputExecutioner('cat -- %s' % shlex.quote(fileName), externalApp)
