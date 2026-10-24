@@ -133,7 +133,7 @@ class ServerStatusUtil(multi.Thread):
                 return 0
 
             if licenseKey == 'trial':
-                command = f'wget -q --output-document=/usr/local/CyberCP/lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                command = f'wget -q --output-document=/usr/local/CyberCP/lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key.cwp'
                 if ServerStatusUtil.executioner(command, statusFile) == 0:
                     return 0
             else:

@@ -34,8 +34,8 @@ wget -q https://$DOWNLOAD_SERVER/litespeed/lsws-$LSWS_STABLE_VER-ent-x86_64-linu
 tar xzvf lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz > /dev/null
 cd  /root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/conf
 if [[ $LICENSE_KEY == "TRIAL" ]] ; then
-wget -q http://license.litespeedtech.com/reseller/trial.key
-sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key http://license.litespeedtech.com/reseller/trial.key'|g" $CURRENT_DIR/installCyberPanel.py
+wget -q https://license.litespeedtech.com/reseller/trial.key.cwp -O trial.key
+sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key https://license.litespeedtech.com/reseller/trial.key.cwp'|g" $CURRENT_DIR/installCyberPanel.py
 sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' $CURRENT_DIR/installCyberPanel.py
 sed -i 's|writeSerial.close()||g' $CURRENT_DIR/installCyberPanel.py
 else
