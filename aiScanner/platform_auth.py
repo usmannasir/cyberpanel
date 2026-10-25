@@ -20,3 +20,22 @@ def saved_scanner_auth_headers(admin):
     if account and account.api_key and account.api_key.startswith('cpk_'):
         return {'X-CP-API-Key': account.api_key}
     return {}
+
+
+def scanner_payment_setup_request(admin, cyberpanel_host):
+    """Build a callback request without trusting a caller-supplied account email."""
+    from urllib.parse import urlsplit
+    headers = saved_scanner_auth_headers(admin)
+    if not headers:
+        return None
+    try:
+        callback = urlsplit('https://' + cyberpanel_host)
+        if not callback.hostname or callback.username or callback.password or callback.path or callback.query or callback.fragment:
+            return None
+        callback.port
+    except (TypeError, ValueError):
+        return None
+    return {
+        'domain': callback.hostname,
+        'return_url': 'https://' + cyberpanel_host + '/aiscanner/setup-complete/',
+    }, headers

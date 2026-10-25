@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.contrib import messages
 from loginSystem.models import Administrator
 from .models import AIScannerSettings, ScanHistory, FileAccessToken
-from .platform_auth import saved_scanner_auth_headers
+from .platform_auth import saved_scanner_auth_headers, scanner_payment_setup_request
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -148,7 +148,7 @@ class AIScannerManager:
             
             # Setup payment with AI Scanner API
             self.logger.writeToFile(f'[AIScannerManager.setupPayment] Attempting payment setup for {admin_email} on {cyberpanel_host}')
-            setup_data = self.setup_ai_scanner_payment(admin_email, cyberpanel_host)
+            setup_data = self.setup_ai_scanner_payment(admin_email, cyberpanel_host, admin=admin)
             
             if setup_data:
                 self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup successful for {admin_email}')
@@ -175,7 +175,6 @@ class AIScannerManager:
             status = request.GET.get('status')
             
             # Log all URL parameters for debugging
-            self.logger.writeToFile(f'[AIScannerManager.setupComplete] All URL params: {dict(request.GET)}')
             
             if status == 'success':
                 api_key = request.GET.get('api_key')
@@ -718,26 +717,26 @@ class AIScannerManager:
             self.logger.writeToFile(f'[AIScannerManager.get_ai_scanner_pricing] Error: {str(e)}')
             return None
     
-    def setup_ai_scanner_payment(self, user_email, cyberpanel_host):
+    def setup_ai_scanner_payment(self, user_email, cyberpanel_host, admin=None):
         """Setup payment method with AI Scanner API"""
         try:
-            payload = {
-                'email': user_email,
-                'domain': cyberpanel_host.split(':')[0],  # Send domain without port
-                'return_url': f'https://{cyberpanel_host}/aiscanner/setup-complete/'  # Include port in URL
-            }
-            
+            setup_request = scanner_payment_setup_request(admin, cyberpanel_host)
+            if setup_request is None:
+                self.logger.writeToFile('[AIScannerManager.setup_ai_scanner_payment] Authenticated account and valid callback host are required')
+                return None
+            payload, auth_headers = setup_request
+
             self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Sending request to: {self.AI_SCANNER_API_BASE}/cyberpanel/setup-payment/')
             self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Payload: {payload}')
             
             response = requests.post(
                 f'{self.AI_SCANNER_API_BASE}/cyberpanel/setup-payment/',
                 json=payload,
+                headers=auth_headers,
                 timeout=10
             )
             
             self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Response status: {response.status_code}')
-            self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Response content: {response.text}')
             
             if response.status_code == 200:
                 data = response.json()
