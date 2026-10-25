@@ -4,7 +4,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from aiScanner.platform_auth import saved_scanner_auth_headers
+from aiScanner.platform_auth import saved_scanner_auth_headers, scanner_payment_setup_request
 
 
 class ScannerPlatformAuthTests(unittest.TestCase):
@@ -44,3 +44,17 @@ class ScannerPlatformAuthTests(unittest.TestCase):
         self.assertEqual(saved_scanner_auth_headers(None), {})
         self.scanner_model.objects.filter.assert_not_called()
         self.mail_model.objects.filter.assert_not_called()
+
+    def test_payment_setup_sends_owner_credentials_outside_untrusted_payload(self):
+        self.mail_model.objects.filter.return_value.first.return_value = SimpleNamespace(api_key='cpk_saved_fixture')
+        payload, headers = scanner_payment_setup_request(self.admin, 'cp.example.com:8090')
+        self.assertEqual(headers, {'X-CP-API-Key': 'cpk_saved_fixture'})
+        self.assertEqual(payload, {'domain': 'cp.example.com', 'return_url': 'https://cp.example.com:8090/aiscanner/setup-complete/'})
+        self.assertNotIn('email', payload)
+        self.assertNotIn('cpk_saved_fixture', str(payload))
+
+    def test_payment_setup_without_credentials_or_with_injected_host_is_refused(self):
+        self.assertIsNone(scanner_payment_setup_request(self.admin, 'cp.example.com:8090'))
+        self.mail_model.objects.filter.return_value.first.return_value = SimpleNamespace(api_key='cpk_saved_fixture')
+        self.assertIsNone(scanner_payment_setup_request(self.admin, 'user@evil.example'))
+        self.assertIsNone(scanner_payment_setup_request(self.admin, 'cp.example.com/path'))
