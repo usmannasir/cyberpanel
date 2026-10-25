@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.contrib import messages
 from loginSystem.models import Administrator
 from .models import AIScannerSettings, ScanHistory, FileAccessToken
+from .platform_auth import saved_scanner_auth_headers
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -303,7 +304,7 @@ class AIScannerManager:
                 vps_info.get('free_scans_available', 0) > 0):
                 
                 self.logger.writeToFile(f'[AIScannerManager.startScan] VPS eligible for free scans, getting API key for IP: {server_ip}')
-                vps_key_data = self.get_or_create_vps_api_key(server_ip)
+                vps_key_data = self.get_or_create_vps_api_key(server_ip, admin=admin)
 
                 if vps_key_data:
                     vps_api_key = vps_key_data.get('api_key')
@@ -511,7 +512,7 @@ class AIScannerManager:
                     if vps_info.get('is_vps'):
                         # VPS users can add payment methods without initial setup
                         # Get or create VPS API key
-                        vps_key_data = self.get_or_create_vps_api_key(server_ip)
+                        vps_key_data = self.get_or_create_vps_api_key(server_ip, admin=admin)
                         if vps_key_data and vps_key_data.get('api_key'):
                             # Use VPS API key for adding payment method
                             api_key_to_use = vps_key_data.get('api_key')
@@ -535,7 +536,7 @@ class AIScannerManager:
                 if vps_info.get('is_vps'):
                     # VPS users can add payment methods without initial setup
                     # Get or create VPS API key
-                    vps_key_data = self.get_or_create_vps_api_key(server_ip)
+                    vps_key_data = self.get_or_create_vps_api_key(server_ip, admin=admin)
                     if vps_key_data and vps_key_data.get('api_key'):
                         # Use VPS API key for adding payment method
                         api_key_to_use = vps_key_data.get('api_key')
@@ -930,9 +931,13 @@ class AIScannerManager:
             self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] Exception: {str(e)}')
             return None
 
-    def get_or_create_vps_api_key(self, server_ip):
+    def get_or_create_vps_api_key(self, server_ip, admin=None):
         """Get API key for VPS free scans from platform"""
         try:
+            auth_headers = saved_scanner_auth_headers(admin)
+            if not auth_headers:
+                self.logger.writeToFile('[AIScannerManager.get_or_create_vps_api_key] Connect an authenticated scanner or CyberMail account before requesting a scanner key')
+                return None
             payload = {'server_ip': server_ip}
             
             self.logger.writeToFile(f'[AIScannerManager.get_or_create_vps_api_key] Requesting VPS API key for IP: {server_ip}')
@@ -940,12 +945,11 @@ class AIScannerManager:
             response = requests.post(
                 f'{self.AI_SCANNER_API_BASE}/api/vps/generate-api-key/',
                 json=payload,
-                headers={'Content-Type': 'application/json'},
+                headers={'Content-Type': 'application/json', **auth_headers},
                 timeout=10
             )
             
             self.logger.writeToFile(f'[AIScannerManager.get_or_create_vps_api_key] Response status: {response.status_code}')
-            self.logger.writeToFile(f'[AIScannerManager.get_or_create_vps_api_key] Response content: {response.text}')
             
             if response.status_code == 200:
                 data = response.json()
