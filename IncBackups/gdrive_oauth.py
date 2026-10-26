@@ -29,6 +29,7 @@ TOKEN = re.compile(r'^[A-Za-z0-9._~+/=-]{1,8192}$')
 SCOPE = 'https://www.googleapis.com/auth/drive.file'
 CALLBACKS = {'v2': '/IncrementalBackups/ConfigureV2BackupSetup', 'normal': '/backup/gDriveSetup'}
 NORMAL_DOMAIN = 'normal-backup-account'
+PUBLIC_PLATFORM = 'https://platform.cyberpersons.com'
 
 
 class AccessDenied(Exception):
@@ -113,13 +114,20 @@ def _binding(session):
     return hashlib.sha256(session.session_key.encode()).hexdigest()
 
 
+def _registration_headers(base):
+    key = getattr(settings, 'GDRIVE_HANDOFF_REGISTRATION_KEY', '')
+    if isinstance(key, str) and re.fullmatch(r'[A-Za-z0-9_-]{32,256}', key):
+        return {'X-GDrive-Installation-Key': key}
+    if (key == '' and getattr(settings, 'GDRIVE_HANDOFF_PUBLIC', False) is True
+            and base == PUBLIC_PLATFORM):
+        return {}
+    raise ValueError('Enrollment admission is not configured')
+
+
 def _post(base, path, payload):
     headers = {}
     if path == '/gDrive/register':
-        key = getattr(settings, 'GDRIVE_HANDOFF_REGISTRATION_KEY', '')
-        if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9_-]{32,256}', key):
-            raise ValueError()
-        headers['X-GDrive-Installation-Key'] = key
+        headers = _registration_headers(base)
     result = requests.post(base + path, json=payload, timeout=(5, 15),
                            headers=headers, allow_redirects=False)
     if result.status_code != 200:
@@ -136,14 +144,13 @@ def capability(mode='v2'):
         if mode not in CALLBACKS:
             raise ValueError()
         base = _base()
-        key = getattr(settings, 'GDRIVE_HANDOFF_REGISTRATION_KEY', '')
-        if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9_-]{32,256}', key):
-            raise ValueError()
+        public_client = not _registration_headers(base)
         response = requests.get(base + '/gDrive/capabilities', timeout=(5, 10), allow_redirects=False)
         data = response.json()
         if (response.status_code != 200 or data.get('status') != 1 or
                 data.get('protocol') != 'gdrive-handoff' or data.get('version') != 2 or
                 data.get('enabled') is not True or mode not in data.get('flows', []) or
+                (public_client and data.get('admission') != 'public') or
                 data.get('register_path') != '/gDrive/register' or
                 data.get('redeem_path') != '/gDrive/redeem' or
                 data.get('start_path') != '/gDrive/v2/start' or
@@ -151,7 +158,7 @@ def capability(mode='v2'):
             raise ValueError()
         return True, ''
     except Exception:
-        return False, 'New Google Drive enrollment is unavailable until the secure platform handoff is configured. Existing backups are unchanged.'
+        return False, 'Google Drive connection setup is unavailable. Check service availability, use the latest CyberPanel update, and contact support if this persists. Existing backups are unchanged.'
 
 
 def _origin_ok(request):

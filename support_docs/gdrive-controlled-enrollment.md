@@ -1,9 +1,44 @@
 # Controlled Google Drive enrollment
 
-New enrollment is disabled unless both sides have valid private configuration.
-Existing destinations and scheduled backups do not use this enrollment switch.
-These instructions are for an operator provisioning a verified installation;
-there is no public callback-registration or hostname-discovery endpoint.
+## Public customer enrollment
+
+Update CyberPanel from the current published release branch (v3.0.8 at the time
+of this change); a server already reporting 3.0.8 may still need the latest update.
+With no `/etc/cyberpanel/gdrive-handoff.json` override, the panel checks the fixed
+`https://platform.cyberpersons.com` service. It enables setup only when that
+service explicitly advertises public admission with the supported handoff
+protocol. No per-installation key or manual server registration is required for
+public admission. The service may be disabled during maintenance; a panel update
+alone does not guarantee service availability.
+
+Open your panel through its canonical public HTTPS address, then enter your own
+Google OAuth **Web application** client ID and client secret in Google Drive
+backup setup. Add exactly this authorized redirect URI in that Google client:
+
+`https://platform.cyberpersons.com/gDrive/v2/callback`
+
+Enable the Google Drive API in the same Google project. Follow Google's consent
+screen requirements for that application's audience (including test users if
+applicable). Continue through the platform sign-in and destination confirmation,
+authorize Google, then select **Save Google Drive destination** on the returned
+CyberPanel page. Credentials are submitted by HTTPS POST and never in browser
+query parameters. Access is limited to `drive.file`; existing destinations and
+schedules are unchanged. Normal backup setup requires backup permission; V2 also
+requires website ownership and its existing feature entitlement.
+
+Public mode never overrides an existing private configuration file. An explicit
+`{"version":1,"enabled":false}` keeps enrollment disabled. Invalid, unreadable,
+unsafe or partially configured files also remain disabled. Operators using a
+registered installation may retain the valid private configuration below. To
+migrate an existing operator override to the public default, review and back up
+that exact file first; remove it only as an intentional operator change, then
+restart `lscpd`. Do not replace its installation key with an empty string.
+
+## Optional registered installations
+
+The following instructions apply to the platform's registered admission mode.
+They are not required for public customer enrollment. Existing destinations and
+scheduled backups do not use this enrollment switch.
 
 ## Configuration contract
 

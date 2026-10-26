@@ -629,7 +629,9 @@
                             <input class="form-control" ng-model="client_id" autocomplete="off" required>
                             <label>{% trans "Your Google OAuth client secret" %}</label>
                             <input class="form-control" ng-model="client_secret" type="password" autocomplete="off" required>
-                            <small>{% trans "Use your own Google OAuth client. This grants access only to files created by this app. Existing accounts and schedules are not changed." %}</small>
+                            <small>{% trans "Use your own Google OAuth Web application. Add this exact authorized redirect URI:" %}
+                                <code>https://platform.cyberpersons.com/gDrive/v2/callback</code>.
+                                {% trans "Use the latest CyberPanel update and open your panel over HTTPS. Access is limited to files this app creates or opens. Existing accounts and schedules are not changed." %}</small>
                         </div>
                         <p ng-if="!gdriveSetupEnabled" ng-bind="gdriveSetupReason" role="status"></p>
                     </form>
