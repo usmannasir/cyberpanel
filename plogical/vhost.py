@@ -546,15 +546,17 @@ class vhost:
                             # If anything fails in Docker cleanup, at least remove the directory
                             shutil.rmtree('/home/docker/%s' % (virtualHostName))
 
+                    # A real DNS deletion error must retain website/database
+                    # metadata for retry, rather than reporting false success.
+                    if DNS.deleteDNSZone(virtualHostName) != 1:
+                        raise RuntimeError('Failed to remove the website DNS zone; website and database metadata retained.')
+
                     for items in databases:
                         if mysqlUtilities.deleteDatabase(items.dbName, items.dbUser) != 1:
                             raise RuntimeError('Failed to remove a website database; panel metadata retained.')
 
                     delWebsite.delete()
 
-                    ## Deleting DNS Zone if there is any.
-
-                    DNS.deleteDNSZone(virtualHostName)
 
                 if not os.path.exists(vhost.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
@@ -641,15 +643,17 @@ class vhost:
                     except Exception as msg:
                         logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
 
+                    # A real DNS deletion error must retain website/database
+                    # metadata for retry, rather than reporting false success.
+                    if DNS.deleteDNSZone(virtualHostName) != 1:
+                        raise RuntimeError('Failed to remove the website DNS zone; website and database metadata retained.')
+
                     for items in databases:
                         if mysqlUtilities.deleteDatabase(items.dbName, items.dbUser) != 1:
                             raise RuntimeError('Failed to remove a website database; panel metadata retained.')
 
                     delWebsite.delete()
 
-                    ## Deleting DNS Zone if there is any.
-
-                    DNS.deleteDNSZone(virtualHostName)
 
                 installUtilities.installUtilities.reStartLiteSpeed()
 

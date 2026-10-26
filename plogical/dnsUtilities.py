@@ -14,7 +14,7 @@ import subprocess
 import shlex
 
 try:
-    from dns.models import Domains, Records
+    from dns.models import Domains, Records, Comments, Cryptokeys, Domainmetadata
     from manageServices.models import PDNSStatus, SlaveServers
 except:
     pass
@@ -854,12 +854,22 @@ class DNS:
 
     @staticmethod
     def deleteDNSZone(virtualHostName):
+        from django.db import transaction
         try:
-            delZone = Domains.objects.get(name=virtualHostName)
-            delZone.delete()
-        except:
-            ## There does not exist a zone for this domain.
-            pass
+            with transaction.atomic():
+                delZone = Domains.objects.select_for_update().get(name=virtualHostName)
+                # PowerDNS tables use integer domain_id columns, not Django
+                # foreign keys. Delete their rows explicitly before the zone.
+                for model in (Records, Comments, Cryptokeys, Domainmetadata):
+                    model.objects.filter(domain_id=delZone.pk).delete()
+                delZone.delete()
+            return 1
+        except Domains.DoesNotExist:
+            return 1  # Already removed: a partial website deletion may be retried.
+        except Exception as error:
+            logging.CyberCPLogFileWriter.writeToFile(
+                '%s [deleteDNSZone: %s]' % (error, virtualHostName))
+            return 0
 
     @staticmethod
     def createDNSZone(virtualHostName, admin):
