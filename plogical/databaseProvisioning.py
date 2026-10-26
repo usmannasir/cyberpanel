@@ -8,6 +8,7 @@ import stat
 import time
 from contextlib import ExitStack
 
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 from plogical.securityUtils import _open_private_directory, _owner_ids, is_safe_sql_identifier
 
 JOURNAL_DIRECTORY = '/home/cyberpanel/.database-provisioning'
@@ -102,24 +103,45 @@ class ProvisioningJournal:
 def create_and_register(database, username, password, website, utilities, database_model,
                         directory=JOURNAL_DIRECTORY, owner_user='cyberpanel'):
     """Never adopt or drop an existing SQL namespace after a partial failure."""
+    stage = 'opening_journal'
     try:
         with ProvisioningJournal(database, username, website.domain, directory, owner_user) as journal:
+            stage = 'checking_panel_namespace'
             if (database_model.objects.filter(dbName=database).exists()
                     or database_model.objects.filter(dbUser=username).exists()):
                 raise ProvisioningError('This database or user is already registered.')
             # An old journal is evidence of an attempt, never proof of current ownership.
             # Only independently empty SQL and panel namespaces permit delete/recreate.
+            stage = 'checking_sql_namespace'
             if utilities.databaseNamesExist(database, username):
                 raise ProvisioningError('An SQL database or account already uses this name. Existing data was preserved; administrator review is required.')
+            stage = 'reserving_journal'
             journal.begin()
+            stage = 'creating_sql'
             if utilities.createDatabase(database, username, password, progress=journal.record) != 1:
                 raise ProvisioningError('Database creation stopped at %s. Existing data and the provisioning record were preserved for administrator review.' % journal.data['stage'])
+            stage = 'registering_panel'
             journal.record('registering_panel')
             database_model.objects.create(website=website, dbName=database, dbUser=username)
+            stage = 'completing_journal'
             journal.record('completed')
             return 1, 'None'
     except ProvisioningError as error:
         return 0, str(error)
-    except Exception:
-        # Driver errors can contain credentials; retain the stage, not the exception text.
-        return 0, 'Database creation could not complete. Existing data and any provisioning record were preserved for administrator review.'
+    except Exception as error:
+        # Driver messages, SQL statements and traceback locals can contain passwords.
+        # Correlate a safe diagnostic without recording any of those values.
+        reference = secrets.token_hex(8)
+        code = getattr(error, 'errno', None)
+        if not isinstance(code, int):
+            code = error.args[0] if error.args and isinstance(error.args[0], int) else None
+        diagnostic = {'reference': reference, 'stage': stage,
+                      'exception': type(error).__name__, 'code': code}
+        try:
+            CyberCPLogFileWriter.writeToFile(
+                'Database provisioning failure ' + json.dumps(diagnostic, sort_keys=True), email=0)
+        except Exception:
+            pass
+        return 0, ('Database creation stopped at %s (reference %s). Existing data and any provisioning '
+                   'record were preserved. Ask the administrator to check the CyberPanel error log.'
+                   % (stage, reference))

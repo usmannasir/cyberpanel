@@ -1,4 +1,5 @@
 import json
+import ast
 import os
 import os.path
 import sys
@@ -100,6 +101,84 @@ def preserve_installation_state(current, staged, backed_up_files):
         if relative == os.path.join('CyberCP', 'settings.py'):
             continue  # Caller merges credentials into the new settings module.
         _copy_path(backup, os.path.join(staged, relative))
+
+
+def _literal_installed_apps(path):
+    """Read app names without importing a settings module or plugin code."""
+    with open(path) as source:
+        tree = ast.parse(source.read(), filename=path)
+    apps = None
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == 'INSTALLED_APPS'
+                for target in node.targets):
+            apps = ast.literal_eval(node.value)
+        elif isinstance(node, ast.AugAssign) and isinstance(node.target, ast.Name) and (
+                node.target.id == 'INSTALLED_APPS') and isinstance(node.op, ast.Add):
+            apps = apps + ast.literal_eval(node.value)
+    if isinstance(apps, (list, tuple)) and all(isinstance(app, str) for app in apps):
+        return apps
+    raise RuntimeError('Cannot safely read INSTALLED_APPS in ' + path)
+
+
+def preserve_installed_plugins(current, staged, registry='/home/cyberpanel/plugins'):
+    """Carry registered local plugins into staging without running install hooks.
+
+    Only pluginInstaller's explicit registry and existing activation entries are
+    carried forward. Never merge the old core settings or overwrite release code.
+    Missing or conflicting plugin files stop the source swap for review.
+    """
+    if not os.path.lexists(registry):
+        return []
+    if os.path.islink(registry) or not os.path.isdir(registry):
+        raise RuntimeError('Plugin registry must be a directory: ' + registry)
+    plugins = sorted(os.listdir(registry))
+    if not plugins:
+        return []
+    settings_relative = os.path.join('CyberCP', 'settings.py')
+    old_apps = _literal_installed_apps(os.path.join(current, settings_relative))
+    new_apps = _literal_installed_apps(os.path.join(staged, settings_relative))
+    with open(os.path.join(current, 'CyberCP', 'urls.py')) as source:
+        old_urls = source.read().splitlines()
+    enabled_apps, enabled_routes = [], []
+    for plugin in plugins:
+        marker = os.path.join(registry, plugin)
+        if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', plugin) or (
+                os.path.islink(marker) or not os.path.isfile(marker)):
+            raise RuntimeError('Invalid plugin registry entry: ' + plugin)
+        source = os.path.join(current, plugin)
+        destination = os.path.join(staged, plugin)
+        if os.path.islink(source) or not os.path.isdir(source):
+            raise RuntimeError('Registered plugin files missing or linked: ' + plugin +
+                               '. Restore the plugin from a trusted backup before upgrading.')
+        if os.path.lexists(destination):
+            raise RuntimeError('Registered plugin conflicts with release source: ' + plugin)
+        _copy_path(source, destination)
+        if plugin in old_apps and plugin not in new_apps:
+            enabled_apps.append(plugin)
+        # These are the current and legacy routes written by pluginInstaller.
+        escaped = re.escape(plugin)
+        route = re.compile(
+            r'^\s*(?:path|url)\(\s*r?([\'\"])\^?%s/(?:\$)?\1\s*,\s*'
+            r'include\(\s*([\'\"])%s\.urls\2\s*\)\s*\)\s*,?\s*$'
+            % (escaped, escaped))
+        if any(route.match(line) for line in old_urls):
+            enabled_routes.append(plugin)
+        elif any(plugin + '.urls' in line for line in old_urls):
+            raise RuntimeError('Custom plugin route needs review before upgrade: ' + plugin)
+    if enabled_apps:
+        additions = tuple(enabled_apps) if isinstance(new_apps, tuple) else enabled_apps
+        with open(os.path.join(staged, settings_relative), 'a') as output:
+            output.write('\n# Preserve registered plugin applications during upgrades.\n'
+                         'INSTALLED_APPS += ' + repr(additions) + '\n')
+    if enabled_routes:
+        with open(os.path.join(staged, 'CyberCP', 'urls.py'), 'a') as output:
+            output.write('\n# Preserve registered plugin routes during upgrades.\n'
+                         'urlpatterns += [\n')
+            for plugin in enabled_routes:
+                output.write('    path(%r, include(%r)),\n' % (plugin + '/', plugin + '.urls'))
+            output.write(']\n')
+    return plugins
 
 
 def protect_private_files(staged, panel_uid, panel_gid):
@@ -3965,6 +4044,9 @@ passdb {
                     return 0, 'Failed to checkout CyberPanel branch %s' % branch
 
                 preserve_installation_state(installation, staged, backed_up_files)
+                preserved_plugins = preserve_installed_plugins(installation, staged)
+                if preserved_plugins:
+                    Upgrade.stdOut('Preserved registered plugins: ' + ', '.join(preserved_plugins))
                 staged_settings = os.path.join(staged, 'CyberCP', 'settings.py')
                 with open(staged_settings) as settings_file:
                     settingsData = settings_file.read()
