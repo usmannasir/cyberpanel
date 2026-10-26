@@ -74,8 +74,10 @@
                                                 <p style="margin: 1%" class="text-center"><a
                                                         href="https://rclone.org/drive/#making-your-own-client-id">Learn
                                                     how to create this.</a>. A client ID and client secret from your own
-                                                    Google OAuth application are required. Register the platform callback
-                                                    URL shown in your setup instructions. Do not share these credentials. </p>
+                                                    Google OAuth Web application are required. Add this exact authorized redirect URI:
+                                                    <code>https://platform.cyberpersons.com/gDrive/v2/callback</code>.
+                                                    Use the latest CyberPanel update and open your panel over HTTPS.
+                                                    Do not share these credentials. </p>
                                                 <label class="col-sm-3 control-label">{% trans "client_id" %}</label>
                                                 <div class="col-sm-6">
                                                     <input name="client_id" type="text" class="form-control"
@@ -96,7 +98,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-primary"
-                                                ng-disabled="!gdriveAvailable || gdriveSetupPending" ng-click="setupAccount()">Save <img
+                                                ng-disabled="!gdriveAvailable || gdriveSetupPending" ng-click="setupAccount()">{% trans "Continue Setup" %} <img
                                                 ng-hide="cyberpanelLoading"
                                                 src="{% static 'images/loading.gif' %}">
                                         </button>
@@ -237,5 +239,5 @@
 
 {% block module_scripts %}
     {{ block.super }}
-    <script defer src="{% static 'IncBackups/IncBackups.js' %}?v={{ CP_VERSION }}-gdrive-handoff-2"></script>
+    <script defer src="{% static 'IncBackups/IncBackups.js' %}?v={{ CP_VERSION }}-gdrive-public-1"></script>
 {% endblock %}

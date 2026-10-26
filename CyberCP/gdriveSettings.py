@@ -1,4 +1,4 @@
-"""Fail-closed settings for operator-provisioned Google Drive installations.
+"""Public enrollment defaults with fail-closed operator overrides.
 
 Only fixed, root-owned private JSON files are read. No HTTP request, environment
 variable, callback hostname or OAuth credential can add an installation here.
@@ -119,7 +119,7 @@ def _disabled(role):
     result = {'GDRIVE_HANDOFF_ENABLED': False}
     if role == 'panel':
         result.update(GDRIVE_PLATFORM_BASE_URL='https://platform.cyberpersons.com',
-                      GDRIVE_HANDOFF_REGISTRATION_KEY='')
+                      GDRIVE_HANDOFF_REGISTRATION_KEY='', GDRIVE_HANDOFF_PUBLIC=False)
     else:
         result.update(GDRIVE_HANDOFF_BASE_URL='', GDRIVE_HANDOFF_DB='',
                       GDRIVE_HANDOFF_CALLBACKS=[], GDRIVE_HANDOFF_CLIENT_KEYS={})
@@ -141,7 +141,8 @@ def _validate(data, role):
     origin = _origin(data['platform_origin'])
     if role == 'panel':
         return {'GDRIVE_HANDOFF_ENABLED': True, 'GDRIVE_PLATFORM_BASE_URL': origin,
-                'GDRIVE_HANDOFF_REGISTRATION_KEY': _key(data['installation_key'])}
+                'GDRIVE_HANDOFF_REGISTRATION_KEY': _key(data['installation_key']),
+                'GDRIVE_HANDOFF_PUBLIC': False}
     installations = data['installations']
     if not isinstance(installations, list) or not 1 <= len(installations) <= 256:
         raise ValueError('Installations required')
@@ -165,7 +166,7 @@ def _validate(data, role):
 
 
 def load_gdrive_settings(role, path=None):
-    """Invalid/missing configuration disables enrollment without breaking the app.
+    """Invalid configuration disables enrollment; missing panel config uses public service.
 
     The optional path is for isolated tests; settings always use the fixed path.
     """
@@ -174,6 +175,13 @@ def load_gdrive_settings(role, path=None):
     try:
         return _validate(_read_private_json(path or CONFIG_PATHS[role]), role)
     except FileNotFoundError:
+        if role == 'panel':
+            # No operator override: use only the published public service.
+            # Its live capabilities must explicitly advertise public admission.
+            return {'GDRIVE_HANDOFF_ENABLED': True,
+                    'GDRIVE_PLATFORM_BASE_URL': 'https://platform.cyberpersons.com',
+                    'GDRIVE_HANDOFF_REGISTRATION_KEY': '',
+                    'GDRIVE_HANDOFF_PUBLIC': True}
         return _disabled(role)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError):
         # Never log configuration values, installation keys or raw exceptions.

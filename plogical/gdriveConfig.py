@@ -1,10 +1,10 @@
 """Append a new Drive remote atomically, as its website user, without shell secrets."""
-import argparse
 import configparser
 from datetime import datetime, timezone
 import fcntl
 import json
 import os
+import pwd
 from pathlib import Path
 import re
 import stat
@@ -122,13 +122,57 @@ def write_remote(home, account, credentials):
         os.close(lock)
 
 
+def install_for_website(data):
+    """Root entry point: validate OS identity, then permanently shed privilege."""
+    if os.getuid() != 0 or os.geteuid() != 0:
+        raise ValueError('Root launcher required')
+    if not isinstance(data, dict) or set(data) != {'user', 'home', 'account', 'credentials'}:
+        raise ValueError('Invalid request')
+    user, home = data['user'], data['home']
+    if (not isinstance(user, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_-]{0,63}', user)
+            or user in {'root', 'cyberpanel', 'lscpd', 'nobody'}):
+        raise ValueError('Invalid website user')
+    if (not isinstance(home, str) or not re.fullmatch(
+            r'/home/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?', home)
+            or '.' not in home[6:] or '..' in home):
+        raise ValueError('Invalid website home')
+    owner = pwd.getpwnam(user)
+    if owner.pw_uid < 1000 or owner.pw_gid == 0 or owner.pw_dir != home:
+        raise ValueError('Invalid website identity')
+    for ancestor in (Path('/'), Path('/home')):
+        info = ancestor.lstat()
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
+            raise ValueError('Unsafe website parent')
+    info = Path(home).lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != owner.pw_uid or info.st_mode & 0o022:
+        raise ValueError('Unsafe website home')
+    # No project imports, shell, subprocess, environment lookup, or file writes
+    # occur as root. The caller's OS identity is the trusted account boundary.
+    os.setgroups([])
+    os.setgid(owner.pw_gid)
+    os.setuid(owner.pw_uid)
+    if (os.getuid(), os.geteuid(), os.getgid(), os.getegid()) != (
+            owner.pw_uid, owner.pw_uid, owner.pw_gid, owner.pw_gid):
+        raise ValueError('Privilege drop failed')
+    write_remote(home, data['account'], data['credentials'])
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--home', required=True)
-    args = parser.parse_args()
     try:
-        data = json.loads(sys.stdin.buffer.read(32769))
-        write_remote(args.home, data['account'], data['credentials'])
+        if len(sys.argv) != 1:
+            raise ValueError('Arguments are not accepted')
+        raw = sys.stdin.buffer.read(32769)
+        if len(raw) > 32768:
+            raise ValueError('Request too large')
+        def unique_object(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError('Duplicate request key')
+                result[key] = value
+            return result
+        data = json.loads(raw, object_pairs_hook=unique_object)
+        install_for_website(data)
     except Exception:
         print('Google Drive destination was not saved.', file=sys.stderr)
         return 1

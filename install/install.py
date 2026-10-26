@@ -3080,6 +3080,8 @@ def main():
     checks.fixCyberPanelPermissions()
     from plogical.roundcubeSudo import provision as provision_roundcube_sudo
     provision_roundcube_sudo()
+    from plogical.gdriveSudo import provision as provision_gdrive_sudo
+    provision_gdrive_sudo()
     configure_jwt_secret()
     from plogical.terminalService import configure_terminal_service
     configure_terminal_service(fresh_install=True)

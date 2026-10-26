@@ -215,7 +215,7 @@ class HandoffTests(SimpleTestCase):
             html = engine.get_template('IncBackups/ConfigureV2Backup.html').render(Context(
                 {'BackupStat':1,'websiteList':['owned.example'],'CP_VERSION':'qa-test'}))
         self.assertIn('IncBackups/IncBackups.js', html)
-        self.assertIn('gdrive-handoff-2', html)
+        self.assertIn('gdrive-public-1', html)
         self.assertIn('type="password" autocomplete="off"', html)
 
     def test_duplicate_return_fields_rejected(self):
@@ -287,3 +287,115 @@ class AccessTests(SimpleTestCase):
         self.acl.CheckForPremFeature.return_value=0
         with self.assertRaises(flow.AccessDenied):
             flow._check_access(self.request,None,'v2',status_only=True)
+
+
+@override_settings(GDRIVE_HANDOFF_ENABLED=True, GDRIVE_HANDOFF_PUBLIC=True,
+                   GDRIVE_PLATFORM_BASE_URL='https://platform.cyberpersons.com',
+                   GDRIVE_HANDOFF_REGISTRATION_KEY='',
+                   SESSION_ENGINE='django.contrib.sessions.backends.db')
+class PublicAdmissionTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.session = Session(userID=7)
+        self.good = {'status':1, 'protocol':'gdrive-handoff', 'version':2, 'enabled':True,
+            'admission':'public', 'flows':['normal','v2'], 'register_path':'/gDrive/register',
+            'redeem_path':'/gDrive/redeem', 'start_path':'/gDrive/v2/start',
+            'callback_path':'/gDrive/v2/callback'}
+
+    request = HandoffTests.request
+
+    def test_requires_explicit_public_admission_and_exact_protocol(self):
+        for mode in ('normal','v2'):
+            response = mock.Mock(status_code=200)
+            for update, expected in (({}, True), ({'admission':'registered'}, False),
+                                     ({'admission':None}, False), ({'admission':True}, False),
+                                     ({'version':1}, False), ({'enabled':False}, False),
+                                     ({'register_path':'https://attacker.example'}, False)):
+                response.json.return_value = dict(self.good, **update)
+                with self.subTest(mode=mode, update=update), mock.patch.object(flow.requests,'get',return_value=response):
+                    self.assertEqual(flow.capability(mode)[0], expected)
+            response.json.return_value = {k:v for k,v in self.good.items() if k != 'admission'}
+            with mock.patch.object(flow.requests,'get',return_value=response):
+                self.assertFalse(flow.capability(mode)[0])
+
+    def test_empty_key_requires_explicit_public_mode_and_fixed_platform(self):
+        self.assertEqual(flow._registration_headers(flow.PUBLIC_PLATFORM), {})
+        for overrides in ({'GDRIVE_HANDOFF_PUBLIC':False}, {'GDRIVE_HANDOFF_PUBLIC':'true'},
+                          {'GDRIVE_HANDOFF_REGISTRATION_KEY':'invalid'}):
+            with override_settings(**overrides), self.assertRaises(ValueError):
+                flow._registration_headers(flow.PUBLIC_PLATFORM)
+        with self.assertRaises(ValueError):
+            flow._registration_headers('https://attacker.example')
+        with override_settings(GDRIVE_HANDOFF_REGISTRATION_KEY='x'*43):
+            self.assertEqual(flow._registration_headers(flow.PUBLIC_PLATFORM),
+                             {'X-GDrive-Installation-Key':'x'*43})
+
+    def test_both_public_flows_remain_session_bound_and_save_once(self):
+        expiry = (datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()
+        creds = {'token':'SYNTHETIC','refresh_token':'SYNTHETIC-REFRESH',
+                 'token_uri':'https://oauth2.googleapis.com/token', 'scopes':[flow.SCOPE],
+                 'client_id':'synthetic.apps.googleusercontent.com','client_secret':'SYNTHETIC',
+                 'expiry':expiry}
+        available = mock.Mock(status_code=200)
+        available.json.return_value = self.good
+        registered = mock.Mock(status_code=200)
+        registered.json.return_value = {'status':1,'authorization_url':flow.PUBLIC_PLATFORM+
+                                        '/gDrive/v2/start?handoff='+'a'*43}
+        for mode in ('normal','v2'):
+            self.session = Session(userID=7)
+            with self.subTest(mode=mode), mock.patch.object(flow, '_check_access') as access, \
+                    mock.patch.object(flow.requests,'get',return_value=available), \
+                    mock.patch.object(flow.requests,'post',return_value=registered) as post:
+                response = flow.begin(self.request('POST', {'Selectedwebsite':'owned.example',
+                    'accountName':'public-qa','client_id':'synthetic.apps.googleusercontent.com',
+                    'client_secret':'SYNTHETIC'}),mode=mode)
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(post.call_args.kwargs['headers'],{})
+            self.assertFalse(post.call_args.kwargs['allow_redirects'])
+            access.assert_called_once_with(mock.ANY, 'owned.example' if mode=='v2' else flow.NORMAL_DOMAIN, mode)
+            state = next(iter(self.session[flow.SESSION_KEY]))
+            saved = self.session[flow.SESSION_KEY][state]
+            with mock.patch.object(flow, '_check_access'), mock.patch.object(flow.requests,'post') as post:
+                req = self.request('GET',{'state':state,'code':'c'*43});req.path=flow.CALLBACKS[mode]
+                self.assertEqual(flow.complete(req,mode=mode).status_code,200)
+                post.assert_not_called()
+            redeemed = mock.Mock(status_code=200)
+            redeemed.json.return_value = {'status':1, 'credentials':creds, 'account':'public-qa',
+                'domain':saved['website'], 'state':state,'flow_type':mode}
+            installer = '_install_backend' if mode=='v2' else '_install_normal'
+            with mock.patch.object(flow, '_check_access'), \
+                    mock.patch.object(flow.requests,'post',return_value=redeemed), \
+                    mock.patch.object(flow,installer) as install:
+                req=self.request('POST',{'state':state,'code':'c'*43});req.path=flow.CALLBACKS[mode]
+                self.assertEqual(flow.complete(req,mode=mode).status_code,200)
+                self.assertEqual(flow.complete(req,mode=mode).status_code,400)
+                install.assert_called_once()
+
+    def test_public_does_not_bypass_csrf_or_access_checks(self):
+        body={'Selectedwebsite':'owned.example','accountName':'public-qa',
+              'client_id':'synthetic.apps.googleusercontent.com','client_secret':'SYNTHETIC'}
+        for mode in ('normal','v2'):
+            with self.subTest(mode=mode), mock.patch.object(flow.requests,'post') as post, \
+                    mock.patch.object(flow,'_check_access',side_effect=flow.AccessDenied):
+                self.assertEqual(flow.begin(self.request('POST',body),mode=mode).status_code,403)
+                post.assert_not_called()
+            req=self.request('POST',body);req._dont_enforce_csrf_checks=False
+            with mock.patch.object(flow.requests,'post') as post:
+                self.assertEqual(flow.begin(req,mode=mode).status_code,403)
+                post.assert_not_called()
+
+
+class BackendCommandTests(SimpleTestCase):
+    def test_fixed_isolated_interpreter_and_stdin_credentials(self):
+        site=SimpleNamespace(domain='owned.example',externalApp='siteuser')
+        models=SimpleNamespace(Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kw:site)))
+        with mock.patch.dict(sys.modules,{'websiteFunctions.models':models}), \
+             mock.patch.object(flow.pwd,'getpwnam',return_value=SimpleNamespace(pw_uid=1234,pw_dir='/home/owned.example')), \
+             mock.patch.object(sys,'executable','/usr/local/lscp/fcgi-bin/lswsgi'), \
+             mock.patch.object(flow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
+            flow._install_backend('owned.example','qa',{'token':'SYNTHETIC-SECRET'})
+        self.assertEqual(run.call_args.args[0],['sudo','-n','/usr/local/CyberPanel/bin/python','-I','-S','/usr/local/CyberCP/plogical/gdriveConfig.py'])
+        self.assertNotIn('SYNTHETIC-SECRET',' '.join(run.call_args.args[0]))
+        body=json.loads(run.call_args.kwargs['input'])
+        self.assertEqual(body['user'],'siteuser')
+        self.assertEqual(body['home'],'/home/owned.example')
