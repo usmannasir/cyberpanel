@@ -79,6 +79,43 @@ class ProvisioningTests(unittest.TestCase):
             self.assertEqual(0, self.create()[0])
         self.utilities.createDatabase.assert_not_called()
 
+    def test_prejournal_sql_failure_reports_stage_without_leaking_driver_message(self):
+        self.utilities.databaseNamesExist.side_effect = RuntimeError(1045, 'SECRET-MUST-NOT-BE-PERSISTED')
+        with mock.patch('plogical.databaseProvisioning.CyberCPLogFileWriter.writeToFile') as log:
+            status, message = self.create()
+        self.assertEqual(0, status)
+        self.assertIn('checking_sql_namespace', message)
+        self.assertNotIn('SECRET', message)
+        diagnostic = json.loads(log.call_args[0][0].split('Database provisioning failure ', 1)[1])
+        self.assertEqual(1045, diagnostic['code'])
+        self.assertEqual('RuntimeError', diagnostic['exception'])
+        self.assertIn(diagnostic['reference'], message)
+        self.assertNotIn('SECRET', log.call_args[0][0])
+        self.assertEqual({'email': 0}, log.call_args[1])
+        self.assertFalse(any(name.endswith('.json') for name in os.listdir(self.directory.name)))
+        self.utilities.createDatabase.assert_not_called()
+        self.model.objects.create.assert_not_called()
+
+    def test_journal_os_error_reports_errno_and_does_not_require_a_journal(self):
+        with mock.patch('plogical.databaseProvisioning._open_private_directory',
+                        side_effect=PermissionError(13, 'SECRET-MUST-NOT-BE-PERSISTED')), \
+                mock.patch('plogical.databaseProvisioning.CyberCPLogFileWriter.writeToFile') as log:
+            status, message = self.create()
+        self.assertEqual(0, status)
+        self.assertIn('opening_journal', message)
+        self.assertIn('"code": 13', log.call_args[0][0])
+        self.assertNotIn('SECRET', log.call_args[0][0])
+        self.utilities.databaseNamesExist.assert_not_called()
+
+    def test_logging_failure_does_not_hide_original_provisioning_stage(self):
+        self.utilities.databaseNamesExist.side_effect = RuntimeError('SECRET-MUST-NOT-BE-PERSISTED')
+        with mock.patch('plogical.databaseProvisioning.CyberCPLogFileWriter.writeToFile',
+                        side_effect=OSError('log unavailable')):
+            status, message = self.create()
+        self.assertEqual(0, status)
+        self.assertIn('checking_sql_namespace', message)
+        self.assertNotIn('SECRET', message)
+
     def test_completed_or_crashed_record_never_proves_current_ownership(self):
         for stage in ('completed', 'creating_database', 'registering_panel'):
             with ProvisioningJournal('fixture_db', 'fixture_user', 'old.example', self.directory.name, None) as journal:
