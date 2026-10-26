@@ -41,3 +41,15 @@ class RestoreBoundaryTests(unittest.TestCase):
         self.data.update(DesSite='-1',Domain='new.example')
         self.assertEqual(1,self.restore()['status']);args=self.services['ApplicationInstaller'].call_args.args[1]
         self.assertEqual('new.example',args['Domain']);self.assertEqual('RestoreWPbackupNow',self.services['ApplicationInstaller'].call_args.args[0])
+
+    def test_unsafe_new_restore_path_never_starts_worker(self):
+        self.data.update(DesSite='-1',Domain='new.example',path='../outside',home='0')
+        self.assertEqual(0,self.restore()['status']);self.services['ApplicationInstaller'].assert_not_called()
+    def test_existing_restore_ignores_untrusted_path_and_home(self):
+        self.data.update(path='../outside',home='0')
+        self.assertEqual(1,self.restore()['status']);args=self.services['ApplicationInstaller'].call_args.args[1]
+        self.assertEqual('',args['path']);self.assertEqual('1',args['home'])
+    def test_new_restore_derives_home_from_validated_path(self):
+        self.data.update(DesSite='-1',Domain='new.example',path='blog/news/',home='1')
+        self.assertEqual(1,self.restore()['status']);args=self.services['ApplicationInstaller'].call_args.args[1]
+        self.assertEqual('blog/news',args['path']);self.assertEqual('0',args['home'])

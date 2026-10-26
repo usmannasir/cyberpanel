@@ -1367,13 +1367,19 @@ class WebsiteManager:
             else:
                 raise ValueError('Select exactly one restore destination.')
 
+            from websiteFunctions.wordpressRestore import validate_restore_path
+            restore_path, restore_home = ('', '1')
+            if DesSiteID == -1:
+                restore_path, restore_home = validate_restore_path(
+                    '/home/%s/public_html' % Domain, data.get('path', ''))
+
             extraArgs = {}
             extraArgs['adminID'] = admin.pk
             extraArgs['backupid'] = backupid
             extraArgs['DesSiteID'] = DesSiteID
             extraArgs['Domain'] = Domain
-            extraArgs['path'] = data['path']
-            extraArgs['home'] = data['home']
+            extraArgs['path'] = restore_path
+            extraArgs['home'] = restore_home
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             background = ApplicationInstaller('RestoreWPbackupNow', extraArgs)

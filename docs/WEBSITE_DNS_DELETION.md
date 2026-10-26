@@ -11,6 +11,6 @@ Validation:
 - Seven focused DNS/deletion-order tests plus existing website/database/Unix-account/vhost regression suites.
 - Twelve native checks use real CyberPanel MariaDB models, SQL schemas and a disposable restrictive foreign key. Baseline reports success while leaving the zone and all four child-row types. Candidate failure rolls back all DNS child deletions and retains Website/database metadata and actual SQL data. Removing the fixture's external restriction permits retry; zone/children/schema/website are removed and the same domain can be recreated.
 - Vhost files, service restarts and Unix-account operations are isolated in this native fixture. No full host installation/deletion or customer environment was tested.
-- Sixteen isolated SQLite mail-deletion ORM regressions pass. The combined application regression suite has eighty tests, seventy-nine passing and one existing environment-specific skip.
+- Sixteen isolated SQLite mail-deletion ORM regressions pass. The combined application regression suite has eighty-nine tests, eighty-eight passing and one existing environment-specific skip.
 
 Generated website/zone rows, DNS children, SQL schemas and the restrictive fixture table are removed after acceptance. Existing host services and websites are preserved.
