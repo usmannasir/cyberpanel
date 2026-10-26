@@ -116,12 +116,24 @@ class mysqlUtilities:
             host = params['host']
             connection = mysqlUtilities._connect(params)
 
-            # A remote installation must reach this server from the panel's
-            # public address; a local one only ever connects over the socket.
-            account_host = publicip if remote else 'localhost'
-
             cursor = connection.cursor()
             try:
+                # Scope the application account to the client identity the
+                # selected MySQL server actually sees. The panel's public IP
+                # may differ from its private route or translated source.
+                account_host = 'localhost'
+                if remote:
+                    cursor.execute("SELECT SUBSTRING_INDEX(USER(), '@', -1)")
+                    row = cursor.fetchone()
+                    account_host = row[0] if row else None
+                    if isinstance(account_host, bytes):
+                        account_host = account_host.decode('ascii')
+                    if (not isinstance(account_host, str) or not
+                            re.fullmatch(r'[A-Za-z0-9.:-]{1,255}', account_host)):
+                        raise MySQLSetupError(
+                            'Cannot determine a safe remote MySQL client host; '
+                            'no database or account was created.')
+
                 cursor.execute("CREATE DATABASE IF NOT EXISTS `%s`" % dbname)
 
                 cursor.execute(
