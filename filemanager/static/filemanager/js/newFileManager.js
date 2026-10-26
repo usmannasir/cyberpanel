@@ -1170,6 +1170,8 @@ function findFileExtension(fileName) {
     
     // Permissions
     $scope.fixPermissions = function () {
+        if ($scope.fixPermissionsPending) return;
+        $scope.fixPermissionsPending = true;
         var data = {
             domainName: domainName
         };
@@ -1179,6 +1181,7 @@ function findFileExtension(fileName) {
         $http.post(url, data, {
             headers: {'X-CSRFToken': getCookie('csrftoken')}
         }).then(function (response) {
+            $scope.fixPermissionsPending = false;
             if (response.data.permissionsChanged === 1) {
                 new PNotify({
                     title: 'Success!',
@@ -1192,6 +1195,9 @@ function findFileExtension(fileName) {
                     type: 'error'
                 });
             }
+        }, function () {
+            $scope.fixPermissionsPending = false;
+            new PNotify({title: 'Error!', text: 'Permission repair request failed. Check the panel log before retrying.', type: 'error'});
         });
     };
     

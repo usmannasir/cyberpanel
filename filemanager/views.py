@@ -195,7 +195,13 @@ def changePermissions(request):
                 return ACLManager.loadError()
 
             fm = FM(request, data)
-            fm.fixPermissions(domainName)
+            result = fm.fixPermissions(domainName)
+            if result is not None:
+                status = json.loads(result.content.decode('utf-8'))
+                if status.get('status') != 1:
+                    return HttpResponse(json.dumps({
+                        'permissionsChanged': 0,
+                        'error_message': status.get('error_message') or 'Permission repair failed.'}))
 
             data_ret = {'permissionsChanged': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
