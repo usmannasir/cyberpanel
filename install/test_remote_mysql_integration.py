@@ -233,5 +233,50 @@ class RemoteMySQLInstallationTests(unittest.TestCase):
         self.assertEqual(default['PASSWORD'], self.db_password)
 
 
+    def test_installer_grant_uses_the_observed_client_host(self):
+        """Public panel address must not override a private database route."""
+        from unittest.mock import patch
+        from mysqlUtilities import mysqlUtilities
+        try:
+            import MySQLdb
+        except ImportError:
+            self.skipTest('installer requires mysqlclient')
+        database = 'cphost_' + self.suffix
+        username = 'cphost_' + self.suffix
+        public_address = '203.0.113.99'
+        cursor = self.admin.cursor()
+        cursor.execute("SELECT SUBSTRING_INDEX(USER(), '@', -1)")
+        observed = cursor.fetchone()[0]
+        self.assertNotEqual(public_address, observed)
+        params = {'host': HOST, 'port': int(PORT), 'user': ROOT_USER,
+                  'passwd': ROOT_PASSWORD}
+        try:
+            with patch.object(mysqlUtilities, '_load_admin_connection',
+                              return_value=(params, 1)):
+                self.assertEqual(1, mysqlUtilities.createDatabase(
+                    database, username, self.db_password, public_address))
+            connection = MySQLdb.connect(
+                host=HOST, port=int(PORT), user=username,
+                passwd=self.db_password, db=database, connect_timeout=10)
+            try:
+                with connection.cursor() as application:
+                    application.execute('CREATE TABLE marker (value INTEGER)')
+                    application.execute('INSERT INTO marker VALUES (1489)')
+                    connection.commit()
+                    application.execute('SELECT value FROM marker')
+                    self.assertEqual(1489, application.fetchone()[0])
+                    application.execute('SELECT CURRENT_USER()')
+                    self.assertEqual(username + '@' + observed,
+                                     application.fetchone()[0])
+            finally:
+                connection.close()
+        finally:
+            cursor.execute('DROP DATABASE IF EXISTS `%s`' % database)
+            for host in (observed, public_address):
+                cursor.execute('DROP USER IF EXISTS %s@%s', (username, host))
+            self.admin.commit()
+            cursor.close()
+
+
 if __name__ == '__main__':
     unittest.main()

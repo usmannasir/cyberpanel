@@ -28,7 +28,8 @@ from mysqlUtilities import MySQLSetupError, mysqlUtilities  # noqa: E402
 
 
 class FakeCursor(object):
-    def __init__(self, fail_on=None):
+    def __init__(self, fail_on=None, observed_host="10.10.0.100"):
+        self.observed_host = observed_host
         self.statements = []
         self._fail_on = fail_on
 
@@ -36,6 +37,9 @@ class FakeCursor(object):
         self.statements.append((sql, args))
         if self._fail_on and self._fail_on in sql:
             raise RuntimeError('statement rejected by the server')
+
+    def fetchone(self):
+        return (self.observed_host,)
 
     def close(self):
         pass
@@ -154,8 +158,28 @@ class CreateDatabaseTests(unittest.TestCase):
         mysqlUtilities.createDatabase('cyberpanel', 'cyberpanel', 'pw',
                                       '203.0.113.4')
         hosts = {a[1] for _, a in cursor.statements if a and len(a) > 1}
-        self.assertIn('203.0.113.4', hosts)
+        self.assertIn('10.10.0.100', hosts)
+        self.assertNotIn('203.0.113.4', hosts)
         self.assertNotIn('localhost', hosts)
+
+    def test_invalid_observed_host_fails_before_database_mutations(self):
+        for host in (None, '', '%', '10.10.%', 'host_name', 'host\nname'):
+            cursor = FakeCursor(observed_host=host)
+            self._with_connection(cursor, remote=1)
+            result = mysqlUtilities.createDatabase('cyberpanel', 'cyberpanel', 'pw',
+                                                   '203.0.113.4')
+            self.assertEqual(0, result)
+            self.assertFalse(any(sql.startswith(('CREATE', 'ALTER', 'GRANT'))
+                                 for sql, args in cursor.statements))
+
+    def test_ipv6_observed_host_is_preserved(self):
+        cursor = FakeCursor(observed_host='fd00::100')
+        self._with_connection(cursor, remote=1)
+        self.assertEqual(1, mysqlUtilities.createDatabase(
+            'cyberpanel', 'cyberpanel', 'pw', '203.0.113.4'))
+        create_user = next(args for sql, args in cursor.statements
+                           if sql.startswith('CREATE USER'))
+        self.assertEqual('fd00::100', create_user[1])
 
     def test_local_account_stays_on_localhost(self):
         cursor = FakeCursor()
@@ -236,7 +260,7 @@ class CreateDatabaseTests(unittest.TestCase):
             if sql.startswith('ALTER USER')
         ]
         self.assertIn(
-            ('cyberpanel', '203.0.113.4', 'NewAppPw456'), changes)
+            ('cyberpanel', '10.10.0.100', 'NewAppPw456'), changes)
 
 
 class LoadAdminConnectionTests(unittest.TestCase):
