@@ -69,7 +69,7 @@ class InstalledPHPUpgradeTests(unittest.TestCase):
 
     def test_legacy_development_repair_does_not_reinstall_absent_runtime(self):
         source=(pathlib.Path(__file__).parents[1]/'cyberpanel_upgrade.sh').read_text()
-        start=source.index('  if [[ -x /usr/local/lsws/lsphp74/bin/php ]]')
+        start=source.index('\n  if [[ -x /usr/local/lsws/lsphp74/bin/php ]]') + 1
         end=source.index('\n  fi',start)+len('\n  fi')
         snippet=source[start:end]
         self.assertIn('if [[ -x /usr/local/lsws/lsphp74/bin/php ]] ; then',source)
