@@ -1,3 +1,4 @@
+import os
 import pathlib
 import tempfile
 import unittest
@@ -21,7 +22,7 @@ class TerminalServiceTests(unittest.TestCase):
             return SimpleNamespace(stdout='', returncode=0)
         with mock.patch('plogical.terminalService.subprocess.run', side_effect=run) as execute:
             result = configure_terminal_service(fresh_install=fresh, source=str(self.source), target=str(self.target))
-        return result, [call.args[0] for call in execute.call_args_list]
+        return result, [call[0][0] for call in execute.call_args_list]
 
     def test_fresh_install_installs_and_enables_unit(self):
         result, commands = self.configure(load='not-found', fresh=True)
@@ -47,7 +48,7 @@ class TerminalServiceTests(unittest.TestCase):
         self.target.symlink_to('/dev/null')
         result, commands = self.configure(load='masked', fresh=True)
         self.assertEqual(result, 'masked')
-        self.assertEqual(self.target.readlink(), pathlib.Path('/dev/null'))
+        self.assertEqual(os.readlink(str(self.target)), '/dev/null')
         self.assertEqual(len(commands), 1)
 
     def test_enabled_active_unit_is_refreshed_without_changing_enable_policy(self):
@@ -70,6 +71,31 @@ class TerminalServiceTests(unittest.TestCase):
     def test_unknown_service_state_fails_closed(self):
         with self.assertRaises(RuntimeError):self.configure(load='error')
         self.assertFalse(self.target.exists())
+
+    def test_real_subprocess_supports_supported_python_runtimes(self):
+        """Exercise Popen, since mocking run hides unsupported Python keywords."""
+        executable = pathlib.Path(self.directory.name) / 'systemctl'
+        executable.write_text('#!/bin/sh\n'
+                              'case "$1" in\n'
+                              'show) printf "%s\\n" "$CP_TEST_LOAD";;\n'
+                              'is-active) exit "$CP_TEST_ACTIVE";;\n'
+                              '*) exit 0;;\n'
+                              'esac\n')
+        executable.chmod(0o700)
+        for load, active, fresh, expected in (
+                ('not-found', '3', True, 'enabled'),
+                ('loaded', '0', False, 'restarted'),
+                ('loaded', '3', False, 'inactive')):
+            with self.subTest(expected=expected):
+                if self.target.exists():
+                    self.target.unlink()
+                environment = {'PATH': self.directory.name + os.pathsep + os.environ.get('PATH', ''),
+                               'CP_TEST_LOAD': load, 'CP_TEST_ACTIVE': active}
+                with mock.patch.dict(os.environ, environment):
+                    result = configure_terminal_service(fresh_install=fresh,
+                                                        source=str(self.source), target=str(self.target))
+                self.assertEqual(result, expected)
+                self.assertEqual(self.source.read_bytes(), self.target.read_bytes())
 
 
 if __name__ == '__main__':unittest.main()
