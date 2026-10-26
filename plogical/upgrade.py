@@ -1369,6 +1369,8 @@ module cyberpanel_ols {
 
     @staticmethod
     def download_install_phpmyadmin():
+        from install.proxy_identity import ensure_pma_peer_key
+        ensure_pma_peer_key()
         try:
             cwd = os.getcwd()
 
@@ -4077,6 +4079,10 @@ passdb {
                 panel_user = pwd.getpwnam('cyberpanel')
                 protect_private_files(staged, panel_user.pw_uid,
                                       grp.getgrnam('cyberpanel').gr_gid)
+
+                peer_key_setup = os.path.join(staged, 'install', 'proxy_identity.py')
+                if os.path.isfile(peer_key_setup):
+                    subprocess.check_call([sys.executable, peer_key_setup, "--staged-root", staged, "--current-root", installation])
 
                 os.chdir('/usr/local')
                 with activate_source(installation, staged) as previous:

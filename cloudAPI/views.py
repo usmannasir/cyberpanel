@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from CyberCP.sessionSecurity import get_client_ip, session_ip_key
+
 from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
@@ -40,12 +42,7 @@ def _record_access_failure(cache_key):
 
 
 def _normalized_session_ip(request):
-    ip_address = request.META.get('HTTP_CF_CONNECTING_IP')
-    if ip_address is None:
-        ip_address = request.META.get('REMOTE_ADDR', '')
-    if ':' in ip_address:
-        return ':'.join(ip_address.split(':')[:3])
-    return ip_address
+    return session_ip_key(get_client_ip(request))
 
 @csrf_exempt
 def router(request):
@@ -512,10 +509,13 @@ def access(request):
             require_https=request.is_secure()):
         return _access_response('Invalid redirect target.', 400)
 
+    ip_address = _normalized_session_ip(request)
+    if ip_address is None:
+        return _access_response('Invalid client address.', 400)
     cache.delete(cache_key)
     request.session.cycle_key()
     request.session['userID'] = admin.pk
-    request.session['ipAddr'] = _normalized_session_ip(request)
+    request.session['ipAddr'] = ip_address
     request.session.set_expiry(43200)
     request.session.save()
 

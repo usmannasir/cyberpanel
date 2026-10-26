@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . "/phpmyadmin_peer_fixture.php";
 /**
  * Exercise the real handoff function with isolated file and cURL transports.
  * No request reaches a live server and no LSCPD configuration is changed.
@@ -85,25 +86,28 @@ class PMABindFileTransport {
     public static $readable = true;
     public static $paths = array();
     private $offset = 0;
+    private $keyFile = false;
     private function record($path) {
         self::$paths[] = $path;
-        assertTransport($path === '/usr/local/lscp/conf/bind.conf', 'only the fixed local bind file may be read');
+        assertTransport(($path === '/usr/local/lscp/conf/bind.conf' || $path === PMA_PEER_KEY_PATH), 'only the bind file or private peer key may be read');
     }
     public function url_stat($path, $flags) {
         $this->record($path);
+        if ($path === PMA_PEER_KEY_PATH) return array('mode' => 0100640, 'uid' => 0, 'nlink' => 1, 'size' => 64);
         return self::$exists ? array('mode' => 0100600, 'size' => strlen(self::$content)) : false;
     }
     public function stream_open($path, $mode, $options, &$openedPath) {
         $this->record($path);
-        return self::$exists && self::$readable;
+        $this->keyFile = ($path === PMA_PEER_KEY_PATH);
+        return $this->keyFile || (self::$exists && self::$readable);
     }
     public function stream_read($count) {
-        $result = substr(self::$content, $this->offset, $count);
+        $result = substr($this->keyFile ? str_repeat('a', 64) : self::$content, $this->offset, $count);
         $this->offset += strlen($result);
         return $result;
     }
-    public function stream_eof() { return $this->offset >= strlen(self::$content); }
-    public function stream_stat() { return array('mode' => 0100600, 'size' => strlen(self::$content)); }
+    public function stream_eof() { return $this->offset >= ($this->keyFile ? 64 : strlen(self::$content)); }
+    public function stream_stat() { return array('mode' => 0100640, 'uid' => 0, 'nlink' => 1, 'size' => $this->keyFile ? 64 : strlen(self::$content)); }
     public function stream_set_option($option, $arg1, $arg2) { return false; }
 }
 
@@ -156,7 +160,7 @@ if ($case === 'malformed' || $case === 'unreadable') {
     assertTransport($requestOptions[CURLOPT_POST] === true, 'handoff must remain a POST');
     assertTransport($requestOptions[CURLOPT_FOLLOWLOCATION] === false, 'handoff must not follow a redirect');
     assertTransport($requestOptions[CURLOPT_COOKIE] === 'cyberpanel_sessionid=authenticatedsession', 'session cookie changed');
-    assertTransport($requestOptions[CURLOPT_HTTPHEADER] === array('CF-Connecting-IP: 203.0.113.10'), 'client IP propagation changed');
+    assertTransport(in_array('X-CyberPanel-Peer: 203.0.113.10', $requestOptions[CURLOPT_HTTPHEADER], true) && count($requestOptions[CURLOPT_HTTPHEADER]) === 4, 'authenticated peer propagation changed');
     assertTransport($requestOptions[CURLOPT_POSTFIELDS] === 'username=admin&token=one-time-token', 'handoff payload changed');
     assertTransport($requestOptions[CURLOPT_CONNECTTIMEOUT] === 2 && $requestOptions[CURLOPT_TIMEOUT] === 5, 'timeouts changed');
     assertTransport($requests[0]['execs'] === 1, 'handoff repeated its request');
