@@ -514,6 +514,25 @@ class virtualHostUtilities:
             return False
 
     @staticmethod
+    def installedMailPHPVersion(virtualHostName):
+        """Use the parent's runtime when available, otherwise an installed runtime."""
+        preferred = Websites.objects.get(domain=virtualHostName).phpSelection
+        candidates = [preferred] + list(PHPManager.findPHPVersions())
+        installed = []
+        for version in candidates:
+            if not re.match(r'^PHP [0-9]+\.[0-9]+$', version or ''):
+                continue
+            binary = os.path.join(virtualHostUtilities.Server_root,
+                                  'lsphp' + PHPManager.getPHPString(version), 'bin', 'lsphp')
+            if os.path.isfile(binary) and os.access(binary, os.X_OK):
+                installed.append(version)
+        if preferred in installed:
+            return preferred
+        if installed:
+            return max(installed, key=lambda version: tuple(int(part) for part in version[4:].split('.')))
+        raise ValueError('No installed executable PHP runtime is available for the mail child domain.')
+
+    @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
         # Check if email services are installed before proceeding
         if not virtualHostUtilities.emailServicesInstalled():
@@ -530,7 +549,8 @@ class virtualHostUtilities:
             childDomain = 'mail.%s' % (virtualHostName)
             childPath = '/home/%s/%s' % (virtualHostName, childDomain)
 
-            result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.3', childPath, 1, 0, 0,
+            phpVersion = virtualHostUtilities.installedMailPHPVersion(virtualHostName)
+            result = virtualHostUtilities.createDomain(virtualHostName, childDomain, phpVersion, childPath, 1, 0, 0,
                                                        admin.userName, 0,
                                                        "/home/cyberpanel/" + str(randint(1000, 9999)))
 
@@ -1854,6 +1874,8 @@ class virtualHostUtilities:
                 ###
 
                 installUtilities.installUtilities.reStartLiteSpeed()
+                website.phpSelection = phpVersion
+                website.save(update_fields=['phpSelection'])
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted.[200]')
             else:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Starting Conversion..,0')
@@ -1867,13 +1889,16 @@ class virtualHostUtilities:
                     vhost.perHostVirtualConf(completePathToConfigFile, website.adminEmail, website.externalApp,
                                              phpVersion, virtualHostName, 0)
 
-                    sslFCPath = f'/etc/letsencrypt/live/{virtualHostName}/fullchain.pem'
-
-                    if os.path.exists(sslFCPath):
-                        sslUtilities.sslUtilities.installSSLForDomain(virtualHostName, website.adminEmail)
+                sslFCPath = f'/etc/letsencrypt/live/{virtualHostName}/fullchain.pem'
+                if os.path.exists(sslFCPath):
+                    adminEmail = website.master.adminEmail if child else website.adminEmail
+                    if sslUtilities.sslUtilities.installSSLForDomain(virtualHostName, adminEmail) != 1:
+                        raise ValueError('Could not restore the existing SSL certificate during conversion.')
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting server..,90')
                 installUtilities.installUtilities.reStartLiteSpeed()
+                website.phpSelection = phpVersion
+                website.save(update_fields=['phpSelection'])
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted. [200]')
 
         except BaseException as msg:
