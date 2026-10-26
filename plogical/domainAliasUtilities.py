@@ -17,6 +17,11 @@ def has_https_listener(config, ipv6=False):
     return False
 
 
+def ensure_http_vhost_mapping(config, master_domain):
+    """Route a newly created vhost on every existing non-TLS listener."""
+    return _add_alias_mapping(config, master_domain, master_domain, secure=False, create_missing=True)
+
+
 def ensure_https_vhost_mapping(config, master_domain):
     """Ensure every existing secure listener routes the parent vhost."""
     return _add_alias_mapping(config, master_domain, master_domain, secure=True, create_missing=True)

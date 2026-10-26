@@ -33,6 +33,15 @@ from lscpd_binary import select_lscpd_binary
 from contextlib import contextmanager
 
 
+def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
+    result = subprocess.run([binary, '-t'], capture_output=True, text=True, timeout=30)
+    output = (result.stdout or '') + (result.stderr or '')
+    # OLS uses 0 for clean configurations, 1 for warnings, and 2 for errors.
+    if result.returncode not in (0, 1) or '[ERROR]' in output:
+        raise RuntimeError('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:])
+    return output
+
+
 def stagger_renewal_cron(data):
     """Move the stock weekly renewal slot, preserving customized schedules."""
     return re.sub(
@@ -1208,6 +1217,7 @@ class Upgrade:
                                             stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
                     if result.returncode != 0 or 'LiteSpeed' not in ((result.stdout or '') + (result.stderr or '')):
                         raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
+                    validate_ols_configuration(OLS_BINARY_PATH)
                     if was_running:
                         result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE, timeout=60)
@@ -5284,6 +5294,9 @@ pm.max_spare_servers = 3
     @staticmethod
     def upgrade(branch):
         requireCSFMigration()
+        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            # Abort before any bundle replacement or service stop on broken input.
+            validate_ols_configuration()
 
         if branch.find('SoftUpgrade') > -1:
             Upgrade.SoftUpgrade = 1
@@ -5350,6 +5363,9 @@ pm.max_spare_servers = 3
                 except Exception as e:
                     Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
 
+                # Recheck module/Auto-SSL edits before stopping the running service.
+                validate_ols_configuration()
+
                 # Full stop/start (NOT graceful restart) to apply config changes:
                 # graceful does not reliably re-exec the binary or reload modules
                 Upgrade.stdOut("Restarting OpenLiteSpeed (full stop/start)...", 0)
@@ -5383,7 +5399,7 @@ pm.max_spare_servers = 3
                 else:
                     Upgrade.stdOut("OpenLiteSpeed restarted successfully", 0)
             else:
-                Upgrade.stdOut("Custom binary installation failed, continuing with upgrade...", 0)
+                raise RuntimeError("Custom OLS bundle installation failed; upgrade stopped before further service changes. Check the upgrade log and any rollback diagnostics.")
 
         Upgrade.updateRepoURL()
 

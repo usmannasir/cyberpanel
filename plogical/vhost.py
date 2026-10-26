@@ -329,20 +329,8 @@ class vhost:
     @staticmethod
     def createNONSSLMapEntry(virtualHostName):
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-
-            map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-
-            mapchecker = 1
-
-            for items in data:
-                if (mapchecker == 1 and (items.find("listener") > -1 and items.find("Default") > -1)):
-                    writeDataToFile.writelines(items)
-                    writeDataToFile.writelines(map)
-                    mapchecker = 0
-                else:
-                    writeDataToFile.writelines(items)
+            from plogical.httpListenerMapping import update_http_listener_mappings
+            update_http_listener_mappings("/usr/local/lsws/conf/httpd_config.conf", virtualHostName)
 
             return 1
         except BaseException as msg:
