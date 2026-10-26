@@ -9,7 +9,7 @@ import grp
 import re
 
 sys.path.append('/usr/local/CyberCP')
-from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE, requireCSFMigration
+from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE, requireCSFMigration, preserving_csf
 
 
 # Reject direct command-line upgrades before loading database recovery code.
@@ -154,6 +154,13 @@ def preserve_installed_plugins(current, staged, registry='/home/cyberpanel/plugi
         if os.path.lexists(destination):
             raise RuntimeError('Registered plugin conflicts with release source: ' + plugin)
         _copy_path(source, destination)
+        if plugin == 'configservercsf' and preserving_csf():
+            # copytree preserves modes but does not preserve ownership.
+            for directory, names, files in os.walk(source, followlinks=False):
+                for original in [directory] + [os.path.join(directory, name) for name in names + files]:
+                    copied = os.path.join(destination, os.path.relpath(original, source))
+                    info = os.lstat(original)
+                    os.chown(copied, info.st_uid, info.st_gid, follow_symlinks=False)
         if plugin in old_apps and plugin not in new_apps:
             enabled_apps.append(plugin)
         # These are the current and legacy routes written by pluginInstaller.
@@ -3393,7 +3400,10 @@ protocol sieve {
             # Open firewall port
             try:
                 from plogical.firewallUtilities import FirewallUtilities
-                FirewallUtilities.addSieveFirewallRule()
+                if preserving_csf():
+                    Upgrade.stdOut('Preserving CSF rules; Sieve port policy is unchanged.')
+                else:
+                    FirewallUtilities.addSieveFirewallRule()
             except:
                 pass
 
@@ -4016,7 +4026,9 @@ passdb {
     
     @staticmethod
     def downloadAndUpgrade(versionNumbring, branch):
-        if os.path.lexists('/etc/csf'):
+        try:
+            requireCSFMigration()
+        except SystemExit:
             return 0, CSF_UPGRADE_MESSAGE
 
         try:
@@ -4213,10 +4225,13 @@ milter_default_action = accept
 
             ###### fix Core CyberPanel permissions
 
-            command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
+            source_find = "find /usr/local/CyberCP"
+            if preserving_csf():
+                source_find += " -path /usr/local/CyberCP/configservercsf -prune -o"
+            command = source_find + " -type d -exec chmod 0755 {} \;"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
+            command = source_find + " -type f -exec chmod 0644 {} \;"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod -R 755 /usr/local/CyberCP/bin"
@@ -4224,7 +4239,7 @@ milter_default_action = accept
 
             ## change owner
 
-            command = "chown -R root:root /usr/local/CyberCP"
+            command = source_find + " -exec chown -h root:root {} +"
             Upgrade.executioner(command, 'chown core code', 0)
 
             terminalSecretPath = '/usr/local/CyberCP/terminal_jwt_secret'
@@ -5530,7 +5545,9 @@ pm.max_spare_servers = 3
         # Both products use the same config file, so we need to read its content to determine which product
         integrationConfig = '/etc/sysconfig/imunify360/integration.conf'
 
-        if os.path.exists(integrationConfig):
+        if preserving_csf():
+            Upgrade.stdOut('Preserving CSF; automatic Imunify integration repair was skipped.')
+        elif os.path.exists(integrationConfig):
             try:
                 with open(integrationConfig, 'r') as f:
                     configContent = f.read()
@@ -5607,9 +5624,16 @@ pm.max_spare_servers = 3
         else:
             Upgrade.stdOut("No Imunify integration config file found")
 
+        # The CLI wrapper also verifies after its own final service work. Keep
+        # direct Python entrypoints from declaring success after policy drift.
+        requireCSFMigration()
+
     @staticmethod
     def restoreImunify360():
         """Restore and reconfigure Imunify360 after upgrade"""
+        if preserving_csf():
+            Upgrade.stdOut('Preserving CSF; Imunify firewall reinstallation was skipped.')
+            return
         try:
             Upgrade.stdOut("=== STARTING IMUNIFY360 RESTORATION ===")
             Upgrade.stdOut("Checking for Imunify360 restoration...")

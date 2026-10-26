@@ -21,7 +21,8 @@ helper_names = {'_copy_path', 'activate_source', 'preserve_installation_state',
                 '_literal_installed_apps', 'preserve_installed_plugins'}
 module = types.ModuleType('upgrade_source_under_test')
 module.__dict__.update(os=os, shutil=shutil, tempfile=tempfile, ast=ast, re=re,
-                       contextmanager=contextmanager)
+                       contextmanager=contextmanager, preserving_csf=lambda: False,
+                       requireCSFMigration=lambda: None)
 parsed_source = ast.parse(source)
 helper_tree = ast.Module(body=[node for node in parsed_source.body
                               if isinstance(node, ast.FunctionDef)
@@ -212,6 +213,20 @@ class PluginPreservationTests(unittest.TestCase):
 
     def preserve_plugins(self):
         return module.preserve_installed_plugins(str(self.current), str(self.staged), str(self.registry))
+
+    @unittest.skipUnless(os.geteuid() == 0, 'ownership preservation requires root')
+    def test_csf_plugin_private_modes_and_ownership_survive_copy(self):
+        (self.registry / 'examplePlugin').rename(self.registry / 'configservercsf')
+        (self.current / 'examplePlugin').rename(self.current / 'configservercsf')
+        source = self.current / 'configservercsf/data.txt'
+        source.chmod(0o600)
+        os.chown(source, 1234, 1235)
+        with patch.object(module, 'preserving_csf', return_value=True):
+            self.preserve_plugins()
+        copied = self.staged / 'configservercsf/data.txt'
+        self.assertEqual((1234, 1235, 0o600),
+                         (copied.stat().st_uid, copied.stat().st_gid,
+                          stat.S_IMODE(copied.stat().st_mode)))
 
     def test_plugin_files_and_activation_survive_source_swap(self):
         self.assertEqual(['examplePlugin'], self.preserve_plugins())

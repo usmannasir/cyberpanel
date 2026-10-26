@@ -57,7 +57,8 @@ class CSFMigrationTests(unittest.TestCase):
             ),
             chdir=Mock(),
         )
-        namespace = {'os': self.os, 'sys': sys, 'subprocess': self.process, 'shlex': shlex}
+        namespace = {'os': self.os, 'sys': sys, 'subprocess': self.process, 'shlex': shlex,
+                     'preserving_csf': lambda: False}
         if (ROOT / 'cyberpanel_firewall_migration.py').exists():
             definitions('cyberpanel_firewall_migration.py',
                 {'CSF_UPGRADE_MESSAGE', 'requireCSFMigration'}, namespace)
