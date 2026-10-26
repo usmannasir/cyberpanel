@@ -12108,23 +12108,21 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
     $scope.webselection = true;
     $scope.WebsiteType = function () {
-        var type = $scope.websitetype;
-        if (type == 'Sub Domain') {
-            $scope.webselection = false;
-            $scope.DomainCreateForm = true;
-
-        } else if (type == 'Addon Domain') {
-            $scope.DomainCreateForm = false;
-            $scope.webselection = true;
-            $scope.masterDomain = $('#defaultSite').html()
-        }
+        // Both domain types use the parent explicitly selected in this form.
+        $scope.webselection = ['Sub Domain', 'Addon Domain'].indexOf($scope.websitetype) === -1;
+        $scope.DomainCreateForm = $scope.webselection || !$scope.masterDomain;
     };
 
     $scope.WebsiteSelection = function () {
-        $scope.DomainCreateForm = false;
+        $scope.DomainCreateForm = !$scope.masterDomain;
     };
 
     $scope.createDomain = function () {
+        if (!$scope.masterDomain) {
+            $scope.webselection = false;
+            $scope.DomainCreateForm = true;
+            return;
+        }
 
         $scope.domainLoading = false;
         $scope.installationDetailsForm = true;
