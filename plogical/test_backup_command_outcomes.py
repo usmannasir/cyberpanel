@@ -126,7 +126,9 @@ class BackupCommandOutcomeTests(unittest.TestCase):
         self.assertTrue(result.saved)
         self.assertFalse(result.pid_exists)
         with tarfile.open(result.archive, 'r:gz') as archive:
-            self.assertTrue({'meta.xml', 'vhost.conf'} <= {member.name.removeprefix('./') for member in archive})
+            names = {member.name[2:] if member.name.startswith('./') else member.name
+                     for member in archive}
+            self.assertTrue({'meta.xml', 'vhost.conf'} <= names)
 
     def test_failure_message_is_literal_even_with_shell_punctuation(self):
         message = lambda path: "can't prepare $(touch " + path + "); check archive"

@@ -57,10 +57,13 @@ def _portable_data_members(members):
     safe_members = []
     for member in members:
         safe_member = copy.copy(member)
-        safe_member.uid = None
-        safe_member.gid = None
-        safe_member.uname = None
-        safe_member.gname = None
+        # Older tarfile implementations do not accept None for ownership:
+        # they pass gname straight to getgrnam and uid/gid to chown. POSIX -1
+        # leaves ownership unchanged, including for already-existing files.
+        safe_member.uid = -1
+        safe_member.gid = -1
+        safe_member.uname = ''
+        safe_member.gname = ''
         safe_member.mode &= 0o777
         safe_members.append(safe_member)
     return safe_members
@@ -81,7 +84,8 @@ def safe_extract(archive, destination):
         except tarfile.FilterError as error:
             raise UnsafeArchiveError(str(error))
     else:
-        archive.extractall(destination, members=_portable_data_members(members))
+        archive.extractall(destination, members=_portable_data_members(members),
+                           numeric_owner=True)
 
 
 def archive_is_valid(archive_path):
