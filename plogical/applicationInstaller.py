@@ -483,8 +483,11 @@ class ApplicationInstaller(multi.Thread):
 
         child_deleted = False
         files_moved = False
+        database_snapshot = None
+        database_transferred = False
         try:
             from websiteFunctions.website import WebsiteManager
+            from plogical.childDatabaseOwnership import capture_child_database, transfer_child_database
 
             request = self.extraArgs['request']
             data = json.loads(request.body)
@@ -497,6 +500,8 @@ class ApplicationInstaller(multi.Thread):
             path = childDomain.path
             destination_home = '/home/%s' % domainName
             destination = destination_home + '/public_html'
+            if os.path.islink(path.rstrip('/')):
+                raise ValueError('A symbolic-link document root cannot be converted safely. Use a separate real directory.')
             source = os.path.realpath(path)
             master_root = os.path.realpath('/home/%s/public_html' % childDomain.master.domain)
             # deleteDomain removes /home/<child>. Shared or overlapping roots
@@ -520,6 +525,8 @@ class ApplicationInstaller(multi.Thread):
                 'test -d %s' % shlex.quote(path), retRequired=True)
             if not exists:
                 raise ValueError('Child domain document root does not exist: %s' % path)
+
+            database_snapshot = capture_child_database(childDomain)
 
             write_status('Deleting domain as child..,20')
             deletion = wm.submitDomainDeletion(request.session['userID'], {
@@ -582,6 +589,8 @@ class ApplicationInstaller(multi.Thread):
                 permission_data = json.loads(permission_result.content.decode('utf-8'))
                 if permission_data.get('status') != 1:
                     raise ValueError(permission_data.get('error_message') or 'Permission repair failed.')
+            transfer_child_database(database_snapshot, destination)
+            database_transferred = True
             write_status('Successfully converted. [200]')
 
         except BaseException as msg:
@@ -592,6 +601,9 @@ class ApplicationInstaller(multi.Thread):
                 else:
                     message += (' Original files remain at %s. The child configuration was removed; '
                                 'restore it or finish website creation before retrying.' % path)
+            if database_snapshot is not None and child_deleted and not database_transferred:
+                message += (' Database ownership could not be verified; do not delete the original website '
+                            'until the conversion is repaired.')
             write_status(message + ' [404]')
             return 0
 

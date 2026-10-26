@@ -132,6 +132,8 @@ class ChildConversionTests(unittest.TestCase):
         self.acl.checkOwnerProtection.return_value = 1
         self.clock = Mock()
         self.clock.monotonic.return_value = 0
+        self.ownership = Mock()
+        self.ownership.capture_child_database.return_value = None
         self.files = Mock()
         self.files.fixPermissions.return_value = None
         self.namespace = dict(json=json, os=os, shlex=shlex, time=self.clock,
@@ -161,6 +163,7 @@ class ChildConversionTests(unittest.TestCase):
         with patch.dict(sys.modules, {
             'websiteFunctions.website': SimpleNamespace(WebsiteManager=lambda: self.manager),
             'filemanager.filemanager': SimpleNamespace(FileManager=lambda *args: self.files),
+            'plogical.childDatabaseOwnership': self.ownership,
         }):
             self.convert(self.runner)
         return self.status.read_text()
@@ -168,6 +171,39 @@ class ChildConversionTests(unittest.TestCase):
     def assert_original_preserved(self):
         self.assertEqual('original website data', (self.source / 'customer.txt').read_text())
         self.files.fixPermissions.assert_not_called()
+
+    def test_symlink_document_root_refuses_before_deletion(self):
+        link = self.root / 'linked child'
+        link.symlink_to(self.source, target_is_directory=True)
+        for suffix in ('', '/'):
+            self.child.path = str(link) + suffix
+            self.assertIn('symbolic-link document root', self.run_conversion())
+        self.manager.submitDomainDeletion.assert_not_called()
+        self.assert_original_preserved()
+
+    def test_database_transfer_completes_before_success(self):
+        snapshot = {'database_id': 12, 'master_id': 4}
+        self.ownership.capture_child_database.return_value = snapshot
+        status = self.run_conversion()
+        self.assertIn('[200]', status)
+        self.ownership.capture_child_database.assert_called_once_with(self.child)
+        self.ownership.transfer_child_database.assert_called_once_with(
+            snapshot, '/home/child.example.test/public_html')
+
+    def test_shared_database_refusal_preserves_child_and_original_files(self):
+        self.ownership.capture_child_database.side_effect = ValueError('Database is shared')
+        self.assertIn('Database is shared', self.run_conversion())
+        self.manager.submitDomainDeletion.assert_not_called()
+        self.assert_original_preserved()
+
+    def test_database_transfer_failure_is_not_success(self):
+        self.ownership.capture_child_database.return_value = {'database_id': 12}
+        self.ownership.transfer_child_database.side_effect = ValueError('Database owner changed')
+        status = self.run_conversion()
+        self.assertIn('[404]', status)
+        self.assertNotIn('[200]', status)
+        self.assertIn('Database owner changed', status)
+        self.assertIn('do not delete the original website', status)
 
     def test_creation_failure_preserves_real_error_and_original_files(self):
         self.creation_status = 'PHP configuration failed [404]'
