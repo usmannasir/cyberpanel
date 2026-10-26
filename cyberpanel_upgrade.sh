@@ -1380,6 +1380,7 @@ Post_Upgrade_System_Tweak() {
     if [[ "$Server_OS_Version" = "7" ]] ; then
       sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
     #fix php.ini &amp; issue
+      if [[ -x /usr/local/lsws/lsphp74/bin/php ]] ; then
         if ! yum list installed lsphp74-devel ; then
           yum install -y lsphp74-devel
         fi
@@ -1402,6 +1403,7 @@ Post_Upgrade_System_Tweak() {
           echo -e "\nlsphp74-zip compilation failed..."
         fi
         #fix old legacy lsphp74-zip issue on centos 7
+        fi
       fi
 
 
@@ -1414,7 +1416,8 @@ Post_Upgrade_System_Tweak() {
 
   if [[ "$Server_OS" = "Ubuntu" ]] ; then
 
-  if apt-cache show lsphp74-dev >/dev/null 2>&1 \
+  if [[ -x /usr/local/lsws/lsphp74/bin/php ]] \
+     && apt-cache show lsphp74-dev >/dev/null 2>&1 \
      && ! dpkg-query -W -f='${db:Status-Status}' lsphp74-dev 2>/dev/null | grep -qx installed ; then
     DEBIAN_FRONTEND=noninteractive apt-get install -y lsphp74-dev
   fi

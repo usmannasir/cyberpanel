@@ -4442,74 +4442,12 @@ milter_default_action = accept
 
     @staticmethod
     def installPHP73():
-        try:
-            if Upgrade.installedOutput.find('lsphp73') == -1:
-                command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
-                          'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
-                          'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
-                          'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
-                Upgrade.executioner(command, 'Install PHP 73, 0')
-
-            if Upgrade.installedOutput.find('lsphp74') == -1:
-                command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
-                          'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
-                          'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
-                          'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
-
-                Upgrade.executioner(command, 'Install PHP 74, 0')
-
-            if Upgrade.installedOutput.find('lsphp80') == -1:
-                command = 'yum install lsphp80* -y'
-                subprocess.call(command, shell=True)
-
-            if Upgrade.installedOutput.find('lsphp81') == -1:
-                command = 'yum install lsphp81* -y'
-                subprocess.call(command, shell=True)
-
-            if Upgrade.installedOutput.find('lsphp82') == -1:
-                command = 'yum install lsphp82* -y'
-                subprocess.call(command, shell=True)
-
-            command = 'yum install lsphp83* -y'
-            subprocess.call(command, shell=True)
-
-            command = 'yum install lsphp84* -y'
-            subprocess.call(command, shell=True)
-
-            command = 'yum install lsphp85* -y'
-            subprocess.call(command, shell=True)
-
-        except:
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
-                      'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
-                      'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
-                      'lsphp7?-sqlite3 lsphp7?-tidy'
-            Upgrade.executioner(command, 'Install PHP 73, 0')
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp81*'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82*'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83*'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp84*'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85*'
-            os.system(command)
-
-        CentOSPath = '/etc/redhat-release'
-        openEulerPath = '/etc/openEuler-release'
-
-        # if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
-        # command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
-        # Upgrade.executioner(command, 'Set default PHP 7.0, 0')
+        # Retain this entry point for callers, but preserve the operator's PHP
+        # branch selection. Required panel PHP is handled by setupPHPSymlink.
+        from plogical.phpPackageUpgrade import upgrade_installed_php
+        command = upgrade_installed_php()
+        Upgrade.stdOut('Updated installed PHP packages.' if command else
+                       'No packaged PHP runtimes found; preserving the existing selection.')
 
     @staticmethod
     def someDirectories():
