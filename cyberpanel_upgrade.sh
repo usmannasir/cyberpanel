@@ -1818,11 +1818,11 @@ Check_Provider
 
 Check_Argument "$@"
 
-Check_CSF_Target_Support || exit 1
-
 if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
+
+Check_CSF_Target_Support || exit 1
 
 Pre_Upgrade_Setup_Repository
 
