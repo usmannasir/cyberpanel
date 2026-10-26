@@ -128,7 +128,12 @@ class secMiddleware:
             pass
 
 
-        if not roundcubeRequest and bool(request.body):
+        from CyberCP.csfAdapter import validate_request, adapt_response
+        csfRequest, csfResponse = validate_request(request)
+        if csfResponse is not None:
+            return self._security_headers(csfResponse)
+
+        if not roundcubeRequest and not csfRequest and bool(request.body):
             try:
 
                 # Body scanning logging removed
@@ -331,7 +336,12 @@ class secMiddleware:
         #         return render(request, 'loginSystem/login.html', {})
 
         response = self.get_response(request)
+        if csfRequest:
+            response = adapt_response(request, response)
+        return self._security_headers(response)
 
+    @staticmethod
+    def _security_headers(response):
         response['X-XSS-Protection'] = "1; mode=block"
         response['X-Frame-Options'] = "sameorigin"
         if not response.has_header('Content-Security-Policy'):
