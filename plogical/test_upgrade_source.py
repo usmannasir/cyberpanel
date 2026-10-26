@@ -17,9 +17,10 @@ from unittest.mock import patch, call
 # Execute its actual standalone file helpers without those unrelated side effects.
 source = Path(__file__).with_name('upgrade.py').read_text()
 helper_names = {'_copy_path', 'activate_source', 'preserve_installation_state',
-                'protect_private_files', 'prune_previous_installations'}
+                'protect_private_files', 'prune_previous_installations',
+                '_literal_installed_apps', 'preserve_installed_plugins'}
 module = types.ModuleType('upgrade_source_under_test')
-module.__dict__.update(os=os, shutil=shutil, tempfile=tempfile,
+module.__dict__.update(os=os, shutil=shutil, tempfile=tempfile, ast=ast, re=re,
                        contextmanager=contextmanager)
 parsed_source = ast.parse(source)
 helper_tree = ast.Module(body=[node for node in parsed_source.body
@@ -192,6 +193,91 @@ class UpgradeSourceTests(unittest.TestCase):
         self.assertFalse(old_parent.exists())
 
 
+class PluginPreservationTests(unittest.TestCase):
+    write = staticmethod(UpgradeSourceTests.write)
+
+    def setUp(self):
+        UpgradeSourceTests.setUp(self)
+        self.registry = self.root / 'plugins'
+        self.write(self.registry / 'examplePlugin', '')
+        self.write(self.current / 'examplePlugin/__init__.py', '')
+        self.write(self.current / 'examplePlugin/data.txt', 'private plugin data')
+        self.write(self.current / 'examplePlugin/pre_install', 'must never run')
+        self.write(self.current / 'CyberCP/settings.py',
+                   "INSTALLED_APPS = ['old_core', 'examplePlugin']\n")
+        self.write(self.staged / 'CyberCP/settings.py', "INSTALLED_APPS = ['new_core']\n")
+        self.write(self.current / 'CyberCP/urls.py',
+                   "urlpatterns = [\n    url(r'^examplePlugin/', include('examplePlugin.urls')),\n]\n")
+        self.write(self.staged / 'CyberCP/urls.py', "urlpatterns = []\n")
+
+    def preserve_plugins(self):
+        return module.preserve_installed_plugins(str(self.current), str(self.staged), str(self.registry))
+
+    def test_plugin_files_and_activation_survive_source_swap(self):
+        self.assertEqual(['examplePlugin'], self.preserve_plugins())
+        with activate_source(str(self.current), str(self.staged)) as previous:
+            self.assertEqual('private plugin data', (self.current / 'examplePlugin/data.txt').read_text())
+            self.assertEqual(['new_core', 'examplePlugin'],
+                             module._literal_installed_apps(str(self.current / 'CyberCP/settings.py')))
+            self.assertIn("path('examplePlugin/', include('examplePlugin.urls'))",
+                          (self.current / 'CyberCP/urls.py').read_text())
+            self.assertFalse((self.current / 'old_source.py').exists())
+        self.assertTrue((Path(previous) / 'examplePlugin/data.txt').exists())
+
+    def test_second_upgrade_keeps_previously_preserved_app(self):
+        self.preserve_plugins()
+        with activate_source(str(self.current), str(self.staged)):
+            pass
+        self.staged.mkdir()
+        self.write(self.staged / 'CyberCP/settings.py', "INSTALLED_APPS = ['next_core']\n")
+        self.write(self.staged / 'CyberCP/urls.py', "urlpatterns = []\n")
+        self.preserve_plugins()
+        self.assertEqual(['next_core', 'examplePlugin'],
+                         module._literal_installed_apps(str(self.staged / 'CyberCP/settings.py')))
+
+    def test_tuple_settings_remain_valid(self):
+        self.write(self.staged / 'CyberCP/settings.py', "INSTALLED_APPS = ('new_core',)\n")
+        self.preserve_plugins()
+        self.assertEqual(('new_core', 'examplePlugin'),
+                         module._literal_installed_apps(str(self.staged / 'CyberCP/settings.py')))
+
+    def test_disabled_plugin_is_copied_without_reenabling(self):
+        self.write(self.current / 'CyberCP/settings.py', "INSTALLED_APPS = ['old_core']\n")
+        self.write(self.current / 'CyberCP/urls.py', 'urlpatterns = []\n')
+        self.preserve_plugins()
+        self.assertEqual(['new_core'], module._literal_installed_apps(str(self.staged / 'CyberCP/settings.py')))
+        self.assertNotIn('examplePlugin.urls', (self.staged / 'CyberCP/urls.py').read_text())
+
+    def test_missing_plugin_stops_before_activation(self):
+        shutil.rmtree(self.current / 'examplePlugin')
+        with self.assertRaisesRegex(RuntimeError, 'plugin files missing'):
+            self.preserve_plugins()
+        self.assertTrue((self.current / 'old_source.py').exists())
+
+    def test_core_collision_does_not_overwrite_release_code(self):
+        self.write(self.staged / 'examplePlugin/__init__.py', 'new release')
+        with self.assertRaisesRegex(RuntimeError, 'conflicts with release'):
+            self.preserve_plugins()
+        self.assertEqual('new release', (self.staged / 'examplePlugin/__init__.py').read_text())
+
+    def test_invalid_registry_name_is_rejected(self):
+        self.write(self.registry / 'bad-name', '')
+        with self.assertRaisesRegex(RuntimeError, 'Invalid plugin registry'):
+            self.preserve_plugins()
+
+    def test_linked_plugin_is_rejected(self):
+        shutil.rmtree(self.current / 'examplePlugin')
+        (self.current / 'examplePlugin').symlink_to(self.root)
+        with self.assertRaisesRegex(RuntimeError, 'plugin files missing or linked'):
+            self.preserve_plugins()
+
+    def test_custom_route_stops_for_review(self):
+        self.write(self.current / 'CyberCP/urls.py',
+                   "urlpatterns = [path('custom/', include('examplePlugin.urls'))]\n")
+        with self.assertRaisesRegex(RuntimeError, 'Custom plugin route'):
+            self.preserve_plugins()
+
+
 class UpgradeEntryPointTests(unittest.TestCase):
     write = staticmethod(UpgradeSourceTests.write)
     def setUp(self):
@@ -216,6 +302,8 @@ class UpgradeEntryPointTests(unittest.TestCase):
         tree = ast.fix_missing_locations(TestPaths().visit(
             ast.Module(body=[upgrade_class], type_ignores=[])))
         self.globals = dict(module.__dict__, re=re, shlex=shlex,
+                            preserve_installed_plugins=lambda current, staged:
+                                module.preserve_installed_plugins(current, staged, str(self.root / 'plugins')),
                             pwd=types.SimpleNamespace(getpwnam=lambda _: types.SimpleNamespace(pw_uid=1001)),
                             grp=types.SimpleNamespace(getgrnam=lambda _: types.SimpleNamespace(gr_gid=1002)),
                             settings=types.SimpleNamespace(DATABASES={
@@ -276,6 +364,28 @@ class UpgradeEntryPointTests(unittest.TestCase):
         self.assertNotEqual(old_parent, rollbacks[0])
         self.assertEqual('old application',
                          (rollbacks[0] / 'CyberCP/old_source.py').read_text())
+
+    def test_download_upgrade_preserves_registered_plugin_before_activation(self):
+        self.write(self.root / 'plugins/examplePlugin', '')
+        self.write(self.current / 'examplePlugin/__init__.py', '')
+        self.write(self.current / 'CyberCP/settings.py',
+                   "INSTALLED_APPS = ['old_core', 'examplePlugin']\n")
+        self.write(self.current / 'CyberCP/urls.py',
+                   "urlpatterns = [\n path('examplePlugin/', include('examplePlugin.urls')),\n]\n")
+        execute = self.execute
+        def clone_with_urls(command, *args):
+            result = execute(command, *args)
+            argv = shlex.split(command)
+            if argv[1] == 'clone' and result:
+                self.write(Path(argv[-1]) / 'CyberCP/urls.py', 'urlpatterns = []\n')
+            return result
+        self.upgrade.executioner = clone_with_urls
+        self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.8'))
+        self.assertTrue((self.current / 'examplePlugin/__init__.py').exists())
+        self.assertEqual(['new_app', 'examplePlugin'],
+                         module._literal_installed_apps(str(self.current / 'CyberCP/settings.py')))
+        self.assertIn("path('examplePlugin/', include('examplePlugin.urls'))",
+                      (self.current / 'CyberCP/urls.py').read_text())
 
     def test_clone_failure_keeps_original_runtime_and_source(self):
         self.clone_ok = False
