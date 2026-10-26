@@ -96,8 +96,18 @@ def _rules():
 def _normalized_rules(text):
     text = re.sub(r'\[[0-9]+:[0-9]+\]', '[0:0]', text)
     text = re.sub(r'counter packets [0-9]+ bytes [0-9]+', 'counter packets 0 bytes 0', text)
-    text = re.sub(r'\b(?:timeout|expires) [0-9]+(?:[smhd]+[0-9]*)*', 'timeout 0', text)
-    return '\n'.join(line for line in text.splitlines() if not line.startswith('#'))
+    # nft's expiration countdown changes while configured timeout policy does not.
+    text = re.sub(r'\bexpires [0-9]+(?:[smhd]+[0-9]*)*', 'expires 0', text)
+    lines = []
+    for line in text.splitlines():
+        if line.startswith('#'):
+            continue
+        # ipset emits remaining member lifetimes on add lines. Keep the create
+        # line's default timeout so a real policy change remains detectable.
+        if line.startswith('add '):
+            line = re.sub(r'\btimeout [0-9]+', 'timeout 0', line)
+        lines.append(line)
+    return '\n'.join(lines)
 
 
 def _plugin_state():

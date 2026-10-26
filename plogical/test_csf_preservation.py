@@ -62,6 +62,18 @@ class PreservationTests(unittest.TestCase):
         self.rules['ipv4'] = self.rules['ipv4'].replace('[1:80]', '[900:99000]')
         self.assertTrue(csf.verify(str(self.root)))
 
+    def test_configured_timeouts_are_not_ignored(self):
+        self.assertNotEqual(csf._normalized_rules('create qa hash:ip timeout 60'),
+                            csf._normalized_rules('create qa hash:ip timeout 90'))
+        self.assertNotEqual(csf._normalized_rules('timeout 60s'),
+                            csf._normalized_rules('timeout 90s'))
+
+    def test_member_countdowns_are_normalized(self):
+        self.assertEqual(csf._normalized_rules('add qa 198.51.100.1 timeout 59'),
+                         csf._normalized_rules('add qa 198.51.100.1 timeout 57'))
+        self.assertEqual(csf._normalized_rules('expires 59s12ms'),
+                         csf._normalized_rules('expires 57s98ms'))
+
     def test_service_change_is_detected(self):
         self.services['lfd.service'] = 'ActiveState=inactive'
         with self.assertRaisesRegex(RuntimeError, 'service state'):
