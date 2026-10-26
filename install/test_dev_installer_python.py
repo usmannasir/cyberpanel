@@ -62,7 +62,7 @@ class DeveloperInstallerPythonTests(unittest.TestCase):
         )
 
         self.assertIn(
-            'if apt-cache show lsphp74-dev >/dev/null 2>&1',
+            '&& apt-cache show lsphp74-dev >/dev/null 2>&1',
             upgrade_script,
         )
         self.assertIn(
