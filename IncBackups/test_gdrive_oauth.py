@@ -215,7 +215,7 @@ class HandoffTests(SimpleTestCase):
             html = engine.get_template('IncBackups/ConfigureV2Backup.html').render(Context(
                 {'BackupStat':1,'websiteList':['owned.example'],'CP_VERSION':'qa-test'}))
         self.assertIn('IncBackups/IncBackups.js', html)
-        self.assertIn('gdrive-handoff-2', html)
+        self.assertIn('gdrive-public-1', html)
         self.assertIn('type="password" autocomplete="off"', html)
 
     def test_duplicate_return_fields_rejected(self):
