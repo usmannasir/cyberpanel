@@ -9,7 +9,8 @@ def configure_terminal_service(*, fresh_install=False,
                                target='/etc/systemd/system/fastapi_ssh_server.service'):
     service = 'fastapi_ssh_server.service'
     load = subprocess.run(['systemctl', 'show', '--property=LoadState', '--value', service],
-                          capture_output=True, text=True, check=True).stdout.strip()
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                          universal_newlines=True, check=True).stdout.strip()
     if load == 'masked' or (os.path.islink(target) and os.path.realpath(target) == '/dev/null'):
         return 'masked'
     if load not in ('loaded', 'not-found'):
@@ -18,15 +19,19 @@ def configure_terminal_service(*, fresh_install=False,
     if not present and not fresh_install:
         return 'absent'
     active = subprocess.run(['systemctl', 'is-active', '--quiet', service],
-                            capture_output=True, text=True).returncode == 0
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True).returncode == 0
     shutil.copy2(source, target)
-    subprocess.run(['systemctl', 'daemon-reload'], check=True, capture_output=True, text=True)
+    subprocess.run(['systemctl', 'daemon-reload'], check=True,
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     if not present and fresh_install:
         subprocess.run(['systemctl', 'enable', '--now', service],
-                       check=True, capture_output=True, text=True)
+                       check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       universal_newlines=True)
         return 'enabled'
     if active:
         subprocess.run(['systemctl', 'restart', service],
-                       check=True, capture_output=True, text=True)
+                       check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       universal_newlines=True)
         return 'restarted'
     return 'inactive'
