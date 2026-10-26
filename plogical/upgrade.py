@@ -5437,6 +5437,15 @@ pm.max_spare_servers = 3
                 (download_error or 'unknown error')
             )
 
+        # The new source provides this helper, including on older installations.
+        # WebAdmin package assets are separate from the custom OLS core overlay.
+        try:
+            from plogical.olsWebAdmin import patch_webadmin_release_notice
+            notice = patch_webadmin_release_notice()
+            Upgrade.stdOut('WebAdmin release notice: ' + notice['status'], 0)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: WebAdmin release notice was not updated: ' + str(error), 0)
+
         if Upgrade.waitForDatabaseReady() != 1:
             raise RuntimeError(
                 'MariaDB is unavailable; refusing to run post-upgrade migrations.'
