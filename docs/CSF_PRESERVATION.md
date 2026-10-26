@@ -42,3 +42,29 @@ manual recovery; they are not a transaction covering package or database changes
 The panel and cloud upgrade buttons continue to refuse CSF installations because
 they cannot provide this explicit preflight and recovery workflow. Do not bypass
 their guards or remove `/etc/csf` to make an upgrade proceed.
+
+## Verified scope
+
+Acceptance used Ubuntu 22.04.5 **x86_64** in an isolated KVM guest with the
+Aetherinox `csf-firewall` **15.10** release and CyberPanel 3.0.8. Two complete
+shell upgrades passed with active CSF/LFD, retained configuration and rule
+snapshots, fresh SSH connections, and a responding panel. The native CSF form
+saved a real configuration change; a submission without CSRF was rejected
+without changing the configuration. Injected source-activation failure restored
+the original source tree. Real ipset/nft expiration counters and configured
+policy-timeout changes were checked separately.
+
+The final additional link-coverage preflight was exercised on that running
+installation after the complete upgrade tests. Custom links outside the captured
+recovery paths are refused. This prevents a link-only archive from being mistaken
+for a backup of its target.
+
+The issue reporter's Ubuntu 22.04 **arm64** system was not tested. This acceptance
+does not establish compatibility with that server, other operating systems, or
+other CSF fork versions.
+
+The [CSF interface adapter](../support_docs/csf-plugin-adapter.md) retains
+administrator and CSRF checks without copying the fork's core input-filter
+bypass. State-changing GET actions require confirmation. Advanced vendor AJAX
+navigation outside the inspected display actions may require direct navigation;
+the adapter does not silently permit those actions on GET.
