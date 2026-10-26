@@ -1348,28 +1348,24 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            backupid = data['backupid']
-            DesSiteID = data['DesSite']
+            backupid = int(data['backupid'])
+            DesSiteID = int(data['DesSite'])
+            Domain = data['Domain'].strip()
 
-            # try:
-            #
-            #     bwp = WPSites.objects.get(pk=int(backupid))
-            #
-            #     if ACLManager.checkOwnership(bwp.owner.domain, admin, currentACL) == 1:
-            #         pass
-            #     else:
-            #         return ACLManager.loadError()
-            #
-            # except:
-            #     pass
-            #
-            # dwp = WPSites.objects.get(pk=int(DesSiteID))
-            # if ACLManager.checkOwnership(dwp.owner.domain, admin, currentACL) == 1:
-            #     pass
-            # else:
-            #     return ACLManager.loadError()
-
-            Domain = data['Domain']
+            backup = WPSitesBackup.objects.get(pk=backupid)
+            if ACLManager.CheckIPBackupObjectOwner(currentACL, backup, admin) != 1:
+                raise ValueError('You are not authorized to restore this backup.')
+            if DesSiteID > 0 and not Domain:
+                destination = WPSites.objects.get(pk=DesSiteID)
+                if ACLManager.checkOwnership(destination.owner.domain, admin, currentACL) != 1:
+                    raise ValueError('You are not authorized to restore to this website.')
+            elif DesSiteID == -1 and Domain:
+                if ACLManager.currentContextPermission(currentACL, 'createWebsite') != 1:
+                    raise ValueError('You do not have permission to create a restore destination.')
+                if not validators.domain(Domain) or Websites.objects.filter(domain=Domain).exists():
+                    raise ValueError('Select a valid new domain, or use the existing-site restore option.')
+            else:
+                raise ValueError('Select exactly one restore destination.')
 
             extraArgs = {}
             extraArgs['adminID'] = admin.pk
