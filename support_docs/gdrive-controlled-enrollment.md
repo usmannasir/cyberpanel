@@ -78,7 +78,9 @@ Configuration files must be regular, single-link, root-owned files, mode 0600
 (or 0640 for a service read-group; read-only equivalents are accepted). Every
 ancestor must be root-owned, not group/other writable, and not a symlink. Config
 is limited to 64 KiB. Unknown or duplicate fields and invalid types are rejected.
-Missing, unreadable or invalid config leaves enrollment disabled and never logs
+Missing platform configuration leaves platform enrollment disabled. Missing panel
+configuration uses the public default; present unreadable or invalid configuration
+leaves enrollment disabled. Configuration loading never logs
 its contents. Environment variables do not override the fixed paths or switch.
 
 The handoff database belongs in a dedicated 0700 directory owned by the platform
@@ -183,3 +185,22 @@ Other installations remain admitted. For rotation, provision a new unique key on
 both sides; do not reuse another customer's key. Restart the affected workers and
 start a fresh setup. Pending setup expires after five minutes. Existing saved
 Drive destinations are not disconnected by changing the enrollment switch.
+
+### V2 local privilege boundary
+
+Install and upgrade provision `/etc/sudoers.d/cyberpanel-gdrive` after the panel
+permissions step. It permits only the fixed isolated Python interpreter and
+`plogical/gdriveConfig.py`, with no extra arguments. The helper receives bounded
+JSON on stdin, validates a non-system website user and its matching `/home/DOMAIN`
+passwd home, and permanently drops groups, GID and UID before any config writes.
+No credentials enter command arguments or diagnostics. The native LSWS worker
+does not use its `sys.executable`, which can refer to the LSWS executable.
+
+The sudo policy does not grant shell access, arbitrary Python, or arbitrary
+run-as-user execution. A missing or unsafe policy fails the save closed.
+
+Google OAuth external apps in Testing can issue Drive refresh tokens that expire
+after seven days. For unattended backups use the appropriate production
+publishing status and follow Google's audience requirements; a successful forced
+refresh test does not prove indefinite token durability. See
+https://developers.google.com/identity/protocols/oauth2.

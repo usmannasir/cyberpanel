@@ -4,12 +4,10 @@ from functools import wraps
 import hashlib
 import hmac
 import json
-from pathlib import Path
 import pwd
 import re
 import secrets
 import subprocess
-import sys
 import time
 from urllib.parse import parse_qs, urlsplit
 
@@ -257,10 +255,13 @@ def _install_backend(website, account, credentials):
     if owner.pw_uid == 0 or owner.pw_dir != '/home/' + site.domain:
         raise ValueError()
     # No constructor-driven installer, shell interpolation, tokens in argv, or debug logging.
-    helper = Path(__file__).resolve().parents[1] / 'plogical' / 'gdriveConfig.py'
+    # LSWS may report lswsgi as sys.executable. Use the installed, isolated
+    # interpreter and the exact no-extra-arguments sudo policy.
+    helper = '/usr/local/CyberCP/plogical/gdriveConfig.py'
     result = subprocess.run(
-        ['sudo', '-n', '-u', site.externalApp, sys.executable, str(helper), '--home', '/home/' + site.domain],
-        input=json.dumps({'account': account, 'credentials': credentials}).encode(),
+        ['sudo', '-n', '/usr/local/CyberPanel/bin/python', '-I', '-S', helper],
+        input=json.dumps({'user': site.externalApp, 'home': '/home/' + site.domain,
+                          'account': account, 'credentials': credentials}).encode(),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20, check=False,
     )
     if result.returncode:

@@ -383,3 +383,19 @@ class PublicAdmissionTests(SimpleTestCase):
             with mock.patch.object(flow.requests,'post') as post:
                 self.assertEqual(flow.begin(req,mode=mode).status_code,403)
                 post.assert_not_called()
+
+
+class BackendCommandTests(SimpleTestCase):
+    def test_fixed_isolated_interpreter_and_stdin_credentials(self):
+        site=SimpleNamespace(domain='owned.example',externalApp='siteuser')
+        models=SimpleNamespace(Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kw:site)))
+        with mock.patch.dict(sys.modules,{'websiteFunctions.models':models}), \
+             mock.patch.object(flow.pwd,'getpwnam',return_value=SimpleNamespace(pw_uid=1234,pw_dir='/home/owned.example')), \
+             mock.patch.object(sys,'executable','/usr/local/lscp/fcgi-bin/lswsgi'), \
+             mock.patch.object(flow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
+            flow._install_backend('owned.example','qa',{'token':'SYNTHETIC-SECRET'})
+        self.assertEqual(run.call_args.args[0],['sudo','-n','/usr/local/CyberPanel/bin/python','-I','-S','/usr/local/CyberCP/plogical/gdriveConfig.py'])
+        self.assertNotIn('SYNTHETIC-SECRET',' '.join(run.call_args.args[0]))
+        body=json.loads(run.call_args.kwargs['input'])
+        self.assertEqual(body['user'],'siteuser')
+        self.assertEqual(body['home'],'/home/owned.example')
