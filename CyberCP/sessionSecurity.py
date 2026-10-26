@@ -2,8 +2,7 @@
 import ipaddress
 
 
-def get_client_ip(request):
-    return request.META.get('HTTP_CF_CONNECTING_IP') or request.META.get('REMOTE_ADDR')
+from plogical.clientIP import get_client_ip
 
 
 def session_ip_key(address):

@@ -1,6 +1,6 @@
 """Session-bound phpMyAdmin grants; no database credentials are stored here."""
 import hashlib
-import ipaddress
+from CyberCP.sessionSecurity import session_ip_key, session_ip_matches
 import secrets
 
 
@@ -8,17 +8,12 @@ GRANT_KEY = 'phpmyadmin_signon_grant'
 
 
 def panel_ip_allowed(session, client_ip, security_level):
-    """Keep the panel's exact IPv4 and three-group IPv6 HIGH/LOW policy."""
-    try:
-        ipaddress.ip_address(client_ip)
-    except (ValueError, TypeError):
+    """Use the same canonical HIGH/LOW address policy as panel middleware."""
+    if session_ip_key(client_ip) is None:
         return False
     if security_level == 1:
         return True
-    if security_level != 0:
-        return False
-    expected = client_ip if '.' in client_ip else ':'.join(client_ip.split(':')[:3])
-    return session.get('ipAddr') == expected
+    return security_level == 0 and session_ip_matches(session.get('ipAddr'), client_ip)
 
 
 def authorization_version(token):

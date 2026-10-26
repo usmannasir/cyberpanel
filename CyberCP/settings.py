@@ -247,10 +247,11 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2147483648
 # Security settings
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# Operator-provisioned enrollment; missing or invalid private config stays disabled.
+# Public service by default; explicit operator overrides and invalid config fail closed.
 from CyberCP.gdriveSettings import load_gdrive_settings as _load_gdrive_settings
 _gdrive_settings = _load_gdrive_settings('panel')
 GDRIVE_HANDOFF_ENABLED = _gdrive_settings['GDRIVE_HANDOFF_ENABLED']
 GDRIVE_PLATFORM_BASE_URL = _gdrive_settings['GDRIVE_PLATFORM_BASE_URL']
 GDRIVE_HANDOFF_REGISTRATION_KEY = _gdrive_settings['GDRIVE_HANDOFF_REGISTRATION_KEY']
+GDRIVE_HANDOFF_PUBLIC = _gdrive_settings['GDRIVE_HANDOFF_PUBLIC']
 del _gdrive_settings

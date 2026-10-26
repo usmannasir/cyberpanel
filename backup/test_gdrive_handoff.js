@@ -2,7 +2,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync(__dirname+'/static/backup/backup.js','utf8');
 const template=fs.readFileSync(__dirname+'/templates/backup/googleDrive.html','utf8');
-assert.match(template,/gdrive-handoff-2/);
+assert.match(template,/gdrive-public-1/);
 assert.match(template,/type="password" autocomplete="off"/);
 assert.match(template,/ng-disabled="!gdriveSetupEnabled/);
 const start=source.indexOf("app.controller('googleDrive'");

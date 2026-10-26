@@ -81,6 +81,7 @@ class LoginSessionRegressionTests(SimpleTestCase):
         from loginSystem.views import verifyLogin
         administrator_get.return_value = self.admin()
         request = self.request({'username': 'admin', 'password': 'valid-password'})
+        request.META['REMOTE_ADDR'] = '173.245.48.10'
         request.META['HTTP_CF_CONNECTING_IP'] = 'not-an-ip'
         self.assertEqual(0, json.loads(verifyLogin(request).content)['loginStatus'])
         self.assertNotIn('userID', request.session)
@@ -98,13 +99,16 @@ class LoginSessionRegressionTests(SimpleTestCase):
         admin.securityLevel = secMiddleware.HIGH
         administrator_get.return_value = admin
         request = self.request({'username': 'admin', 'password': 'valid-password'})
+        request.META['REMOTE_ADDR'] = '173.245.48.10'
         request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.1'
         self.assertEqual(1, json.loads(verifyLogin(request).content)['loginStatus'])
         next_request = self.factory.get('/base/')
         next_request.session = request.session
+        next_request.META['REMOTE_ADDR'] = '173.245.48.10'
         next_request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.1'
         middleware = secMiddleware(lambda unused: HttpResponse('dashboard-reached'))
         self.assertEqual(b'dashboard-reached', middleware(next_request).content)
+        next_request.META['REMOTE_ADDR'] = '173.245.48.10'
         next_request.META['HTTP_CF_CONNECTING_IP'] = '::ffff:192.0.2.2'
         expired = middleware(next_request)
         self.assertEqual(302, expired.status_code)

@@ -125,6 +125,39 @@ class BackupArchiveReadinessTests(TestCase):
                 self.assertEqual(b'legacy runtime content', restored.read())
             self.assertEqual(0, os.stat(restored_path).st_mode & 0o7000)
 
+    @patch('plogical.backupIntegrity.sys.version_info', (3, 8))
+    def test_legacy_extract_ignores_archive_owner_names_and_preserves_private_modes(self):
+        with tempfile.TemporaryDirectory() as test_dir:
+            archive_path = os.path.join(test_dir, 'backup.tar.gz')
+            destination = os.path.join(test_dir, 'restore')
+            with tarfile.open(archive_path, mode='w:gz') as archive:
+                directory = tarfile.TarInfo('private')
+                directory.type = tarfile.DIRTYPE
+                directory.uid, directory.gid = 1234, 2345
+                directory.uname, directory.gname = 'archive-owner', 'archive-group'
+                directory.mode = 0o2770
+                archive.addfile(directory)
+                member = tarfile.TarInfo('private/secret.txt')
+                member.uid, member.gid = 1234, 2345
+                member.uname, member.gname = 'archive-owner', 'archive-group'
+                member.mode = 0o4600
+                member.size = len(b'private fixture')
+                archive.addfile(member, io.BytesIO(b'private fixture'))
+            with tarfile.open(archive_path, mode='r:*') as archive:
+                with patch('tarfile.grp.getgrnam', side_effect=AssertionError('Archive group lookup')), \
+                        patch('tarfile.pwd.getpwnam', side_effect=AssertionError('Archive user lookup')):
+                    safe_extract(archive, destination)
+                # Sanitization must not mutate the source archive metadata.
+                original = archive.getmember('private/secret.txt')
+                self.assertEqual((1234, 2345, 'archive-owner', 'archive-group'),
+                                 (original.uid, original.gid, original.uname, original.gname))
+            for name, mode in (('private', 0o770), ('private/secret.txt', 0o600)):
+                info = os.stat(os.path.join(destination, name))
+                self.assertEqual((os.geteuid(), os.getegid()), (info.st_uid, info.st_gid))
+                self.assertEqual(mode, info.st_mode & 0o7777)
+            with open(os.path.join(destination, 'private/secret.txt'), 'rb') as restored:
+                self.assertEqual(b'private fixture', restored.read())
+
     def test_safe_extract_rejects_parent_traversal(self):
         with tempfile.TemporaryDirectory() as test_dir:
             archive_path = os.path.join(test_dir, 'backup.tar.gz')

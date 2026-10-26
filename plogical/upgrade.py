@@ -1369,6 +1369,8 @@ module cyberpanel_ols {
 
     @staticmethod
     def download_install_phpmyadmin():
+        from install.proxy_identity import ensure_pma_peer_key
+        ensure_pma_peer_key()
         try:
             cwd = os.getcwd()
 
@@ -4078,6 +4080,10 @@ passdb {
                 protect_private_files(staged, panel_user.pw_uid,
                                       grp.getgrnam('cyberpanel').gr_gid)
 
+                peer_key_setup = os.path.join(staged, 'install', 'proxy_identity.py')
+                if os.path.isfile(peer_key_setup):
+                    subprocess.check_call([sys.executable, peer_key_setup, "--staged-root", staged, "--current-root", installation])
+
                 os.chdir('/usr/local')
                 with activate_source(installation, staged) as previous:
                     os.chdir(installation)
@@ -5514,6 +5520,8 @@ pm.max_spare_servers = 3
         Upgrade.fixPermissions()
         from plogical.roundcubeSudo import provision as provision_roundcube_sudo
         provision_roundcube_sudo()
+        from plogical.gdriveSudo import provision as provision_gdrive_sudo
+        provision_gdrive_sudo()
 
         ##
 

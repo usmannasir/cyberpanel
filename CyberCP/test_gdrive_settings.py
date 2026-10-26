@@ -42,10 +42,23 @@ class ConfigurationTests(unittest.TestCase):
         for key, value in config._validate(document, role).items():
             self.assertEqual(namespace[key], value)
 
+    def test_public_default_never_overrides_invalid_or_disabled_file(self):
+        with patch.object(config, '_read_private_json', return_value={'version':1,'enabled':False}):
+            result = config.load_gdrive_settings('panel')
+            self.assertFalse(result['GDRIVE_HANDOFF_ENABLED'])
+            self.assertFalse(result['GDRIVE_HANDOFF_PUBLIC'])
+        for exception in (PermissionError(), ValueError(), OSError()):
+            with patch.object(config, '_read_private_json', side_effect=exception):
+                with self.assertLogs(config.__name__, level='WARNING'):
+                    result = config.load_gdrive_settings('panel')
+                self.assertFalse(result['GDRIVE_HANDOFF_ENABLED'])
+                self.assertFalse(result['GDRIVE_HANDOFF_PUBLIC'])
+
     def test_panel_settings(self):
         result = config._validate(self.panel, 'panel')
         self.assertTrue(result['GDRIVE_HANDOFF_ENABLED'])
         self.assertEqual(result['GDRIVE_HANDOFF_REGISTRATION_KEY'], 'a' * 43)
+        self.assertFalse(result['GDRIVE_HANDOFF_PUBLIC'])
 
     def test_platform_generates_exact_both_callback_pair(self):
         result = config._validate(self.platform, 'platform')
@@ -99,7 +112,7 @@ class ConfigurationTests(unittest.TestCase):
     def test_missing_and_invalid_config_fail_closed_without_secrets_in_logs(self):
         for role in config.CONFIG_PATHS:
             with patch.object(config, '_read_private_json', side_effect=FileNotFoundError):
-                self.assertFalse(config.load_gdrive_settings(role)['GDRIVE_HANDOFF_ENABLED'])
+                self.assertEqual(config.load_gdrive_settings(role)['GDRIVE_HANDOFF_ENABLED'], role == 'panel')
             with patch.object(config, '_read_private_json', side_effect=ValueError('SECRET TEST VALUE')):
                 with self.assertLogs(config.__name__, level='WARNING') as logs:
                     self.assertFalse(config.load_gdrive_settings(role)['GDRIVE_HANDOFF_ENABLED'])
@@ -109,7 +122,11 @@ class ConfigurationTests(unittest.TestCase):
         with patch.dict(os.environ, {'GDRIVE_HANDOFF_ENABLED': 'true',
                                      'GDRIVE_HANDOFF_CONFIG': '/tmp/untrusted.json'}):
             with patch.object(config, '_read_private_json', side_effect=FileNotFoundError) as reader:
-                self.assertFalse(config.load_gdrive_settings('panel')['GDRIVE_HANDOFF_ENABLED'])
+                result = config.load_gdrive_settings('panel')
+                self.assertTrue(result['GDRIVE_HANDOFF_ENABLED'])
+                self.assertEqual(result['GDRIVE_PLATFORM_BASE_URL'], 'https://platform.cyberpersons.com')
+                self.assertTrue(result['GDRIVE_HANDOFF_PUBLIC'])
+                self.assertEqual(result['GDRIVE_HANDOFF_REGISTRATION_KEY'], '')
                 reader.assert_called_once_with('/etc/cyberpanel/gdrive-handoff.json')
 
 

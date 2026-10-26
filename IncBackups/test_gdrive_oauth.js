@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(__dirname + '/static/IncBackups/IncBackups.js', 'utf8');
 const template = fs.readFileSync(__dirname + '/templates/IncBackups/ConfigureV2Backup.html', 'utf8');
 assert.match(template, /block module_scripts/);
-assert.match(template, /IncBackups\/IncBackups\.js.*gdrive-handoff-2/);
+assert.match(template, /IncBackups\/IncBackups\.js.*gdrive-public-1/);
 assert.match(template, /ng-disabled="!gdriveAvailable \|\| gdriveSetupPending"/);
 assert.ok(!template.includes('ng-change="selectwebsite()"'), 'no undefined website-change handler');
 const start = source.indexOf("app.controller('ConfigureV2Backup'");

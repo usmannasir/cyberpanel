@@ -11,6 +11,7 @@ namespace PhpMyAdmin {
     }
 }
 namespace {
+    require __DIR__ . '/phpmyadmin_peer_fixture.php';
     $mode = $argv[1]; $case = $argv[2]; $vendor = $argv[3]; $sessionDir = $argv[4];
     function checkFixture($condition, $label) {
         if (!$condition) { throw new \RuntimeException($label); }
@@ -111,7 +112,8 @@ namespace {
             checkFixture($request['url'] === PMA_SESSION_VALIDATION_URL, 'fixed validation destination');
             checkFixture($request['options'][CURLOPT_FOLLOWLOCATION] === false, 'redirects disabled');
             checkFixture($request['options'][CURLOPT_COOKIE] === 'cyberpanel_sessionid=originalpanelsessionkey', 'originating cookie forwarded');
-            checkFixture($request['options'][CURLOPT_HTTPHEADER] === array('CF-Connecting-IP: 203.0.113.10'), 'client address forwarded');
+            checkFixture(in_array('X-CyberPanel-Peer: 203.0.113.10', $request['options'][CURLOPT_HTTPHEADER], true), 'socket peer forwarded');
+            checkFixture(count($request['options'][CURLOPT_HTTPHEADER]) === 4, 'authenticated peer envelope');
             checkFixture(strpos($request['options'][CURLOPT_POSTFIELDS], 'password') === false, 'DB password never sent to validator');
         }
     }

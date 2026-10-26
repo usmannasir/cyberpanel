@@ -1160,6 +1160,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
+            from install.proxy_identity import ensure_pma_peer_key
+            ensure_pma_peer_key()
+
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsession.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsession.php'
@@ -3080,6 +3083,8 @@ def main():
     checks.fixCyberPanelPermissions()
     from plogical.roundcubeSudo import provision as provision_roundcube_sudo
     provision_roundcube_sudo()
+    from plogical.gdriveSudo import provision as provision_gdrive_sudo
+    provision_gdrive_sudo()
     configure_jwt_secret()
     from plogical.terminalService import configure_terminal_service
     configure_terminal_service(fresh_install=True)

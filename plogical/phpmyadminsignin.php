@@ -46,10 +46,20 @@ function requestPMAPanel($validationURL, $fields) {
     if (!preg_match('/^[A-Za-z0-9]{16,128}$/D', $sessionID)) {
         return false;
     }
-    $clientIP = isset($_SERVER['HTTP_CF_CONNECTING_IP'])
-        ? (string) $_SERVER['HTTP_CF_CONNECTING_IP']
-        : (isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '');
-    if (filter_var($clientIP, FILTER_VALIDATE_IP) === false) {
+    $peer = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    $forwarded = isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? (string) $_SERVER['HTTP_CF_CONNECTING_IP'] : '';
+    if (filter_var($peer, FILTER_VALIDATE_IP) === false ||
+        ($forwarded !== '' && filter_var($forwarded, FILTER_VALIDATE_IP) === false)) {
+        return false;
+    }
+    $keyPath = defined('PMA_PEER_KEY_PATH') ? PMA_PEER_KEY_PATH : '/etc/cyberpanel/pmaPeerKeyPHP';
+    $keyInfo = @lstat($keyPath);
+    if ($keyInfo === false || ($keyInfo['mode'] & 0170000) !== 0100000 ||
+        $keyInfo['uid'] !== 0 || ($keyInfo['mode'] & 0027) !== 0 || $keyInfo['nlink'] !== 1) {
+        return false;
+    }
+    $key = @file_get_contents($keyPath);
+    if (!is_string($key) || !preg_match('/\A[a-f0-9]{64}\z/', $key)) {
         return false;
     }
 
@@ -62,16 +72,22 @@ function requestPMAPanel($validationURL, $fields) {
         return false;
     }
 
+    $body = http_build_query($fields, '', '&', PHP_QUERY_RFC3986);
+    $timestamp = (string) time();
+    $path = parse_url($validationURL, PHP_URL_PATH);
+    $message = implode("\n", array('pma-peer-v1', $timestamp, 'POST', $path,
+        $sessionID, $peer, $forwarded, hash('sha256', $body)));
+    $signature = hash_hmac('sha256', $message, $key);
     @curl_setopt_array($request, array(
         CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query(
-            $fields,
-            '',
-            '&',
-            PHP_QUERY_RFC3986
-        ),
+        CURLOPT_POSTFIELDS => $body,
         CURLOPT_COOKIE => 'cyberpanel_sessionid=' . $sessionID,
-        CURLOPT_HTTPHEADER => array('CF-Connecting-IP: ' . $clientIP),
+        CURLOPT_HTTPHEADER => array(
+            'X-CyberPanel-Peer: ' . $peer,
+            'CF-Connecting-IP: ' . $forwarded,
+            'X-CyberPanel-Peer-Time: ' . $timestamp,
+            'X-CyberPanel-Peer-Signature: ' . $signature,
+        ),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => false,
         CURLOPT_CONNECTTIMEOUT => 2,

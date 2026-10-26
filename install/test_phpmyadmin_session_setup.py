@@ -6,6 +6,7 @@ import tempfile
 import zipfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from install.database_consumers import render_phpmyadmin_signon
 
@@ -56,8 +57,11 @@ class PhpMyAdminSessionSetupTests(unittest.TestCase):
                                  self=SimpleNamespace(distro='fixture'),
                                  preFlightsChecks=SimpleNamespace(call=command),
                                  Upgrade=SimpleNamespace(executioner=command))
-                    exec(compile(ast.fix_missing_locations(ast.Module(body=statements[begin:end], type_ignores=[])),
-                                 relative, 'exec'), scope)
+                    with patch('install.proxy_identity.ensure_pma_peer_key') as provision:
+                        exec(compile(ast.fix_missing_locations(ast.Module(body=statements[begin:end], type_ignores=[])),
+                                     relative, 'exec'), scope)
+                        if relative == 'install/install.py':
+                            provision.assert_called_once_with()
                     config = (target / 'config.inc.php').read_text()
                     self.assertIn("['auth_type'] = 'signon'", config)
                     self.assertIn("['SignonScript'] = __DIR__ . '/phpmyadminsession.php'", config)

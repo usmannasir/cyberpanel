@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+from CyberCP.sessionSecurity import get_client_ip, session_ip_key
 import time
 import os
 import shlex
@@ -287,7 +289,7 @@ def _phpmyadmin_principal(request, username):
     admin = Administrator.objects.get(pk=request.session['userID'])
     if admin.state != 'ACTIVE':
         raise ValueError('Inactive principal')
-    client_ip = request.META.get('HTTP_CF_CONNECTING_IP', request.META.get('REMOTE_ADDR'))
+    client_ip = get_client_ip(request)
     if not panel_ip_allowed(request.session, client_ip, admin.securityLevel):
         raise ValueError('Panel session address changed')
     permissions = json.loads(admin.acl.config)

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from CyberCP.sessionSecurity import get_client_ip, session_ip_key
+
 import json
 import shlex
 from django.shortcuts import redirect
@@ -428,13 +430,11 @@ def loginAPI(request):
             return HttpResponse(json_data, status=401)
 
         if hashPassword.check_password(admin.password, password) and api_two_factor_matches(admin, request, request.POST):
+            ip_address = session_ip_key(get_client_ip(request))
+            if ip_address is None:
+                return HttpResponse('Invalid client address.', status=400)
             request.session.cycle_key()
             request.session['userID'] = admin.pk
-            ip_address = request.META.get('HTTP_CF_CONNECTING_IP')
-            if ip_address is None:
-                ip_address = request.META.get('REMOTE_ADDR', '')
-            if ':' in ip_address:
-                ip_address = ':'.join(ip_address.split(':')[:3])
             request.session['ipAddr'] = ip_address
             request.session.set_expiry(43200)
             request.session.save()
