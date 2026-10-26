@@ -19,10 +19,59 @@ Sudo_Test=$(set)
 export HOME=/root
 
 Check_CSF_Migration() {
-  if [[ -e /etc/csf || -L /etc/csf ]]; then
-    echo "Upgrade stopped: CSF files were detected. Complete a reviewed manual firewall migration, verify replacement rules and SSH/panel access, then retry. CSF and its panel integration have not been removed." >&2
+  [[ -e /etc/csf || -L /etc/csf ]] || return 0
+  local preserve=0 argument
+  for argument in "$@"; do
+    [[ "$argument" = "--preserve-csf" ]] && preserve=1
+  done
+  if [[ "$preserve" -ne 1 ]]; then
+    echo "Upgrade stopped: CSF files were detected. Use --preserve-csf with the current upgrader, or complete a reviewed manual firewall migration. CSF has not been removed." >&2
     exit 1
   fi
+  [[ "$EUID" -eq 0 ]] || { echo 'CSF preservation requires root.' >&2; exit 1; }
+  export CYBERPANEL_CSF_STATE
+  # Package hooks must report restart needs without restarting firewall daemons.
+  export NEEDRESTART_MODE=l
+  CYBERPANEL_CSF_STATE=$(mktemp -d /root/cyberpanel-csf-preserve.XXXXXXXX) || exit 1
+  chmod 700 "$CYBERPANEL_CSF_STATE" || exit 1
+  CSF_PRESERVATION_HELPER="$CYBERPANEL_CSF_STATE/cyberpanel_firewall_migration.py"
+  # Bootstrap before package/service/source changes, using the official current
+  # preservation contract. Older target branches without support still fail closed.
+  curl -fsSL --retry 2 --connect-timeout 15 --max-time 90 \
+    https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_firewall_migration.py \
+    -o "$CSF_PRESERVATION_HELPER" || exit 1
+  chmod 600 "$CSF_PRESERVATION_HELPER" || exit 1
+  python3 "$CSF_PRESERVATION_HELPER" prepare "$CYBERPANEL_CSF_STATE" || exit 1
+  echo "Preserving existing CSF policy and integration. Recovery files: $CYBERPANEL_CSF_STATE"
+  trap CSF_Preservation_Exit EXIT
+}
+
+Check_CSF_Target_Support() {
+  [[ -n "${CYBERPANEL_CSF_STATE:-}" ]] || return 0
+  local target_helper="$CYBERPANEL_CSF_STATE/target-firewall-helper.py"
+  curl -fsSL --retry 2 --connect-timeout 15 --max-time 90 \
+    "https://raw.githubusercontent.com/usmannasir/cyberpanel/${Branch_Name}/cyberpanel_firewall_migration.py" \
+    -o "$target_helper" || return 1
+  if ! grep -qx 'CSF_PRESERVATION_VERSION = 1' "$target_helper"; then
+    echo "Target $Branch_Name does not support CSF preservation; no upgrade package or source changes were made." >&2
+    return 1
+  fi
+  python3 "$target_helper" verify "$CYBERPANEL_CSF_STATE"
+}
+
+Verify_CSF_Preservation() {
+  [[ -n "${CYBERPANEL_CSF_STATE:-}" ]] || return 0
+  python3 "$CSF_PRESERVATION_HELPER" verify "$CYBERPANEL_CSF_STATE"
+}
+
+CSF_Preservation_Exit() {
+  local status=$?
+  trap - EXIT
+  if ! Verify_CSF_Preservation; then
+    echo "CSF preservation verification failed. Review $CYBERPANEL_CSF_STATE from a console; no automatic firewall reset was performed." >&2
+    status=1
+  fi
+  exit "$status"
 }
 
 Set_Default_Variables() {
@@ -378,7 +427,7 @@ done
 
 Check_Argument() {
 if [[ "$*" = *"--branch "* ]] || [[ "$*" = *"-b "* ]]; then
-  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/-b //")
+  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/--preserve-csf//" -e "s/-b //")
   Branch_Check "$Branch_Name"
 fi
 }
@@ -435,7 +484,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
     curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo
   fi
   yum clean all
-  yum update -y
+  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y; fi
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
@@ -503,7 +552,7 @@ EOF
     fi
     yum install yum-plugin-priorities -y
 
-    yum update -y
+    if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y; fi
 
     yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel bind-utils
 
@@ -559,7 +608,10 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   fi
 
   apt update -y
-  export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
+  export DEBIAN_FRONTEND=noninteractive
+  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then
+    apt-get -o Dpkg::Options::="--force-confold" upgrade -y
+  fi
 
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "26" ]] ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing Ubuntu ${Server_OS_Version}.04 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -605,7 +657,9 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
 
     rm -f /etc/apt/sources.list.d/dovecot.list
     apt update
-    DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y
+    if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then
+      DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y
+    fi
   fi
 #all pre-upgrade operation for Ubuntu 20
 fi
@@ -614,7 +668,7 @@ if [[ "$Server_OS" = "openEuler" ]] ; then
   rm -f /etc/yum.repos.d/litespeed.repo
 
   yum clean all
-  yum update -y
+  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y; fi
 
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat bind-utils
   dnf install gpgme-devel -y
@@ -1740,7 +1794,7 @@ if [[ ! -d /etc/cyberpanel ]] ; then
   exit
 fi
 
-Check_CSF_Migration
+Check_CSF_Migration "$@"
 
 if [[ "$*" = *"--debug"* ]] ; then
   Debug="On"
@@ -1763,6 +1817,8 @@ Check_OS
 Check_Provider
 
 Check_Argument "$@"
+
+Check_CSF_Target_Support || exit 1
 
 if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
@@ -1787,5 +1843,10 @@ Restart_Web_Terminal
 if ! Verify_Upgrade_Services; then
   UPGRADE_FAILED=1
 fi
+
+if ! Verify_CSF_Preservation; then
+  UPGRADE_FAILED=1
+fi
+trap - EXIT
 
 Post_Install_Display_Final_Info
