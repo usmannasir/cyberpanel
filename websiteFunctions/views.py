@@ -14,6 +14,7 @@ from websiteFunctions.models import wpplugins
 from websiteFunctions.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from .dockerviews import startContainer as docker_startContainer
 from .dockerviews import stopContainer as docker_stopContainer
 from .dockerviews import restartContainer as docker_restartContainer
@@ -461,6 +462,7 @@ def WPCreateBackup(request):
         return redirect(loadLoginPage)
 
 
+@require_POST
 def RestoreWPbackupNow(request):
     try:
         userID = request.session['userID']

@@ -2149,6 +2149,9 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
 
     $scope.RestoreWPbackupNow = function () {
+        if (!$window.confirm('Restore this backup? This may overwrite files and database contents at the selected destination.')) {
+            return;
+        }
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
         $scope.stagingDetailsForm = true;
@@ -5253,6 +5256,9 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
 
     $scope.RestoreWPbackupNow = function () {
+        if (!$window.confirm('Restore this backup? This may overwrite files and database contents at the selected destination.')) {
+            return;
+        }
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
         $scope.stagingDetailsForm = true;
@@ -9155,6 +9161,9 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
 
     $scope.RestoreWPbackupNow = function () {
+        if (!$window.confirm('Restore this backup? This may overwrite files and database contents at the selected destination.')) {
+            return;
+        }
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
         $scope.stagingDetailsForm = true;

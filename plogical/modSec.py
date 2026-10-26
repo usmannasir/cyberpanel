@@ -168,100 +168,20 @@ class modSec:
 
     @staticmethod
     def installCompatibleModSecurity():
-        """Install ModSecurity compatible with custom OpenLiteSpeed binary"""
+        """Use the release-pinned module and ABI/dependency checks for custom OLS."""
         try:
             mailUtilities.checkHome()
-
-            with open(modSec.installLogPath, 'w') as f:
-                f.write("Installing ModSecurity compatible with custom OpenLiteSpeed binary...\n")
-
-            MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
-
-            # Detect OS and select appropriate ModSecurity binary
-            binary_suffix = modSec.detectBinarySuffix()
-            BASE_URL = "https://cyberpanel.net/binaries"
-
-            if binary_suffix == 'rhel8':
-                MODSEC_URL = f"{BASE_URL}/rhel8/mod_security-compatible-rhel8.so"
-                EXPECTED_SHA256 = "8c769dfb42711851ec539e9b6ea649616c14b0e85a53eb18755d200ce29bc442"
-            elif binary_suffix == 'rhel9':
-                MODSEC_URL = f"{BASE_URL}/rhel9/mod_security-compatible-rhel.so"
-                EXPECTED_SHA256 = "db580afc431fda40d46bdae2249ac74690d9175ff6d8b1843f2837d86f8d602f"
-            else:  # ubuntu
-                MODSEC_URL = f"{BASE_URL}/ubuntu/mod_security-compatible-ubuntu.so"
-                EXPECTED_SHA256 = "115971fcd44b74bc7c7b097b9cec33ddcfb0fb07bb9b562ec9f4f0691c388a6b"
-
-            # Download to temp location
-            tmp_modsec = "/tmp/mod_security_custom.so"
-
-            with open(modSec.installLogPath, 'a') as f:
-                f.write(f"Downloading compatible ModSecurity for {binary_suffix}...\n")
-
-            command = f'wget -q --show-progress {MODSEC_URL} -O {tmp_modsec}'
-            result = subprocess.call(shlex.split(command))
-
-            if result != 0 or not os.path.exists(tmp_modsec):
-                with open(modSec.installLogPath, 'a') as f:
-                    f.write("ERROR: Failed to download ModSecurity\n")
-                    f.write("Can not be installed.[404]\n")
-                logging.CyberCPLogFileWriter.writeToFile("[Could not download compatible ModSecurity]")
-                return 0
-
-            # Verify checksum
-            with open(modSec.installLogPath, 'a') as f:
-                f.write("Verifying checksum...\n")
-
-            result = subprocess.run(f'sha256sum {tmp_modsec}', shell=True, capture_output=True, text=True)
-            actual_sha256 = result.stdout.split()[0]
-
-            if actual_sha256 != EXPECTED_SHA256:
-                with open(modSec.installLogPath, 'a') as f:
-                    f.write(f"ERROR: Checksum verification failed\n")
-                    f.write(f"  Expected: {EXPECTED_SHA256}\n")
-                    f.write(f"  Got: {actual_sha256}\n")
-                    f.write("Can not be installed.[404]\n")
-                os.remove(tmp_modsec)
-                logging.CyberCPLogFileWriter.writeToFile("[ModSecurity checksum verification failed]")
-                return 0
-
-            # Backup existing ModSecurity if present
-            if os.path.exists(MODSEC_PATH):
-                backup_path = f"{MODSEC_PATH}.backup.{int(time.time())}"
-                shutil.copy2(MODSEC_PATH, backup_path)
-                with open(modSec.installLogPath, 'a') as f:
-                    f.write(f"Backed up existing ModSecurity to: {backup_path}\n")
-
-            # Stop OpenLiteSpeed
-            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'], timeout=30)
-            time.sleep(2)
-
-            # Install compatible ModSecurity
-            os.makedirs(os.path.dirname(MODSEC_PATH), exist_ok=True)
-            shutil.copy2(tmp_modsec, MODSEC_PATH)
-            os.chmod(MODSEC_PATH, 0o755)
-            os.remove(tmp_modsec)
-
-            # Start OpenLiteSpeed
-            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'], timeout=30)
-
-            with open(modSec.installLogPath, 'a') as f:
-                f.write("Compatible ModSecurity installed successfully\n")
-                f.write("ModSecurity Installed (ABI-compatible version).[200]\n")
-
-            logging.CyberCPLogFileWriter.writeToFile("[Compatible ModSecurity installed successfully]")
+            with open(modSec.installLogPath, 'w') as log:
+                log.write("Installing release-compatible ModSecurity...\n")
+            if not modSec.downloadCompatibleModSec(modSec.detectPlatform()):
+                raise RuntimeError("No verified compatible module could be installed; check the installation log")
+            with open(modSec.installLogPath, 'a') as log:
+                log.write("ModSecurity Installed (ABI-compatible version).[200]\n")
             return 1
-
-        except subprocess.TimeoutExpired:
-            with open(modSec.installLogPath, 'a') as f:
-                f.write("ERROR: Timeout during OpenLiteSpeed restart\n")
-                f.write("Can not be installed.[404]\n")
-            logging.CyberCPLogFileWriter.writeToFile("[Timeout during ModSecurity installation]")
-            return 0
-        except Exception as msg:
-            with open(modSec.installLogPath, 'a') as f:
-                f.write(f"ERROR: {str(msg)}\n")
-                f.write("Can not be installed.[404]\n")
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installCompatibleModSecurity]")
+        except Exception as error:
+            with open(modSec.installLogPath, 'a') as log:
+                log.write("ERROR: %s\nCan not be installed.[404]\n" % error)
+            logging.CyberCPLogFileWriter.writeToFile(str(error) + " [installCompatibleModSecurity]")
             return 0
 
     @staticmethod
@@ -289,7 +209,7 @@ class modSec:
             with open(modSec.installLogPath, 'w') as f:
                 res = subprocess.call(cmd, stdout=f)
 
-            if res == 1:
+            if res != 0:
                 writeToFile = open(modSec.installLogPath, 'a')
                 writeToFile.writelines("Can not be installed.[404]\n")
                 writeToFile.close()
@@ -297,7 +217,7 @@ class modSec:
                 return 0
             else:
                 writeToFile = open(modSec.installLogPath, 'a')
-                writeToFile.writelines("ModSecurity Installed.[200]\n")
+                writeToFile.writelines("Package installation completed; checking compatibility.\n")
                 writeToFile.close()
 
             # Check if custom OLS binary is installed - if so, replace with compatible ModSecurity
@@ -314,12 +234,18 @@ class modSec:
                     writeToFile.close()
                 else:
                     writeToFile = open(modSec.installLogPath, 'a')
-                    writeToFile.writelines("WARNING: Could not install compatible ModSecurity. May experience crashes.\n")
+                    writeToFile.writelines("ERROR: Could not install compatible ModSecurity.[404]\n")
                     writeToFile.close()
+                    return 0
 
+            with open(modSec.installLogPath, 'a') as log:
+                log.write("ModSecurity Installed.[200]\n")
             return 1
         except BaseException as msg:
+            with open(modSec.installLogPath, 'a') as log:
+                log.write("ERROR: %s\nCan not be installed.[404]\n" % msg)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installModSec]")
+            return 0
 
     @staticmethod
     def installModSecConfigs():
@@ -375,6 +301,20 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 rule.write(initialRules)
                 rule.close()
 
+            # Loading the package alone does not activate the newly written module block.
+            validation = subprocess.run(
+                [os.path.join(virtualHostUtilities.Server_root, 'bin/openlitespeed'), '-t'],
+                capture_output=True, text=True, timeout=30)
+            # OLS -t returns 1 for warnings, 2 for errors.
+            if validation.returncode not in (0, 1) or "[ERROR]" in validation.stderr + validation.stdout:
+                raise RuntimeError("OpenLiteSpeed configuration validation failed; server was not restarted: " +
+                                   (validation.stderr + validation.stdout)[-2000:])
+            activation = subprocess.run(
+                [os.path.join(virtualHostUtilities.Server_root, 'bin/lswsctrl'), 'restart'],
+                capture_output=True, text=True, timeout=60)
+            if activation.returncode != 0:
+                raise RuntimeError("OpenLiteSpeed could not activate ModSecurity: " +
+                                   (activation.stderr + activation.stdout)[-2000:])
             print("1,None")
             return
 

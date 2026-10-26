@@ -178,7 +178,8 @@ class BundleFixture:
                          time=SimpleNamespace(sleep=lambda seconds: None), logging=mock.Mock(),
                          open=lambda p, *a, **kw: open(self.path(p), *a, **kw),
                          __builtins__=dict(vars(builtins), __import__=imports))
-        exec(compile(ast.fix_missing_locations(ast.Module(body=[cls], type_ignores=[])),
+        helpers = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'validate_ols_configuration']
+        exec(compile(ast.fix_missing_locations(ast.Module(body=helpers + [cls], type_ignores=[])),
                      str(source), 'exec'), namespace)
         target_class = namespace[class_name]
         target_class.stdOut = staticmethod(mock.Mock())
@@ -244,6 +245,9 @@ class BundleFixture:
             self.active = not (self.failure == 'startup' and data == b'new-core')
             self.active_bytes = data
             code = 0 if self.active else 1
+        elif args[-1] == '-t':
+            code = 2 if self.failure == 'config' else 0
+            stdout = '[ERROR] injected candidate configuration failure' if code else ''
         elif args[-1] == '-v':
             if self.failure == 'version-timeout':
                 raise subprocess.TimeoutExpired(args, 10)
@@ -258,6 +262,14 @@ class BundleFixture:
 
 
 class BundleTransactionTests(unittest.TestCase):
+    def test_upgrade_candidate_invalid_config_restores_before_start(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', failure='config')
+            self.assertFalse(fixture.call())
+            self.assertEqual(fixture.bundle(), fixture.old)
+            self.assertTrue(fixture.active)
+            self.assertEqual(fixture.start_bundles, [fixture.old])
+
     consumers = [('install/installCyberPanel.py', 'InstallCyberPanel'),
                  ('plogical/upgrade.py', 'Upgrade')]
 

@@ -785,6 +785,8 @@ class FileManager:
                 retRequired=True,
             )
             if readStatus != 1:
+                if fileContents.strip() == 'CYBERPANEL_FILE_TOO_LARGE':
+                    return self.ajaxPre(0, 'Files larger than 4 MiB cannot be opened in the editor. Download the file to inspect it locally.')
                 return self.ajaxPre(0, 'Not allowed.')
             finalData['fileContents'] = fileContents
 
@@ -1108,6 +1110,13 @@ class FileManager:
 
     def fixPermissions(self, domainName):
 
+        def repair(command):
+            success, output = ProcessUtilities.outputExecutioner(
+                command, shell=False, retRequired=True)
+            if success != 1:
+                logging.writeToFile('Permission repair command failed: %s' % output)
+                raise RuntimeError('Permission repair failed. Check the panel log before retrying.')
+
         website = Websites.objects.get(domain=domainName)
         externalApp = website.externalApp
 
@@ -1132,7 +1141,7 @@ class FileManager:
 
         # Set home directory ownership
         command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.returnPathEnclosed(homePath))
-        ProcessUtilities.executioner(command)
+        repair(command)
 
         ### Sym link checks
 
@@ -1145,12 +1154,15 @@ class FileManager:
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
 
-        # Set file permissions first (before ownership to avoid conflicts)
-        command = "find %s -type d -exec chmod 0755 {} \;" % self.returnPathEnclosed(publicHtmlPath)
-        ProcessUtilities.executioner(command)
+        # Keep the document-root boundary restricted throughout repair.
+        repair("chmod 750 %s" % self.returnPathEnclosed(publicHtmlPath))
 
-        command = "find %s -type f -exec chmod 0644 {} \;" % self.returnPathEnclosed(publicHtmlPath)
-        ProcessUtilities.executioner(command)
+        # Set file permissions first (before ownership to avoid conflicts)
+        command = "find %s -mindepth 1 -type d -exec chmod 0755 {} +" % self.returnPathEnclosed(publicHtmlPath)
+        repair(command)
+
+        command = "find %s -type f -exec chmod 0644 {} +" % self.returnPathEnclosed(publicHtmlPath)
+        repair(command)
 
         # Set ownership for all files inside public_html to user:user.
         # Recurse the directory itself instead of a "path/*" shell glob: commands that
@@ -1160,7 +1172,7 @@ class FileManager:
         # after a restore (#1735). -R also covers dotfiles, so the separate hidden-file
         # pass is no longer needed; the directory's own group is reset to nogroup below.
         command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, self.returnPathEnclosed(publicHtmlPath))
-        ProcessUtilities.executioner(command)
+        repair(command)
 
         # Process child domains first
         for childs in website.childdomains_set.all():
@@ -1176,30 +1188,32 @@ class FileManager:
                      'error_message': "Symlink attack."})
                 return HttpResponse(final_json)
 
-            # Set file permissions first
-            command = "find %s -type d -exec chmod 0755 {} \;" % childPathArg
-            ProcessUtilities.executioner(command)
+            repair("chmod 750 %s" % childPathArg)
 
-            command = "find %s -type f -exec chmod 0644 {} \;" % childPathArg
-            ProcessUtilities.executioner(command)
+            # Set file permissions first
+            command = "find %s -mindepth 1 -type d -exec chmod 0755 {} +" % childPathArg
+            repair(command)
+
+            command = "find %s -type f -exec chmod 0644 {} +" % childPathArg
+            repair(command)
 
             # Set ownership for all files inside the child domain to user:user.
             # Recurse the directory itself (no "path/*" glob) — see #1735 above: the glob
             # is passed literally under shell=False and never matches. The child domain
             # directory's own group is reset to nogroup below.
             command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, childPathArg)
-            ProcessUtilities.executioner(command)
+            repair(command)
 
-            # Set child domain directory itself to 755 with user:nogroup
-            command = 'chmod 755 %s' % childPathArg
-            ProcessUtilities.executioner(command)
+            # Keep child document roots restricted, including those outside public_html
+            command = 'chmod 750 %s' % childPathArg
+            repair(command)
 
             command = 'chown %s:%s %s' % (externalApp, groupName, childPathArg)
-            ProcessUtilities.executioner(command)
+            repair(command)
 
         # Set public_html directory itself to user:nogroup with 750 permissions (done at the end)
         command = 'chown %s:%s %s' % (externalApp, groupName, self.returnPathEnclosed(publicHtmlPath))
-        ProcessUtilities.executioner(command)
+        repair(command)
 
         command = 'chmod 750 %s' % self.returnPathEnclosed(publicHtmlPath)
-        ProcessUtilities.executioner(command)
+        repair(command)

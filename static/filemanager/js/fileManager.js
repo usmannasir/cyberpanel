@@ -1610,6 +1610,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     // Fix permissions
 
     $scope.fixPermissions = function () {
+        if ($scope.fixPermissionsPending) return;
+        $scope.fixPermissionsPending = true;
 
         url = "/filemanager/changePermissions";
 
@@ -1631,6 +1633,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
+            $scope.fixPermissionsPending = false;
 
 
             if (response.data.permissionsChanged === 1) {
@@ -1648,6 +1651,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.fixPermissionsPending = false;
+            alertify.notify('Permission repair request failed. Check the panel log before retrying.', 'error', 5);
         }
 
     };

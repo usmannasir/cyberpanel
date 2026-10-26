@@ -13,7 +13,15 @@ def main():
     parser.add_argument("--allowed-root", required=True)
     parser.add_argument("--file", required=True)
     arguments = parser.parse_args()
-    sys.stdout.write(read_text_file_under(arguments.allowed_root, arguments.file))
+    try:
+        content = read_text_file_under(arguments.allowed_root, arguments.file,
+                                       max_bytes=4 * 1024 * 1024)
+    except ValueError as error:
+        if str(error) != 'File is too large to edit':
+            raise
+        print('CYBERPANEL_FILE_TOO_LARGE')
+        raise SystemExit(1)
+    sys.stdout.write(content)
 
 
 if __name__ == "__main__":

@@ -87,7 +87,7 @@ class UnixAccountDeletionTests(unittest.TestCase):
             'WPSites': NS(objects=NS(filter=lambda **kwargs: [])),
             'ACLManager': NS(FindIfChild=lambda: int(self.child_node)),
             'mysqlUtilities': NS(deleteDatabase=lambda *args: self.events.append('database-delete') or 1),
-            'DNS': NS(deleteDNSZone=lambda domain: self.events.append('dns-delete')),
+            'DNS': NS(deleteDNSZone=lambda domain: self.events.append('dns-delete') or 1),
             'installUtilities': NS(installUtilities=NS(reStartLiteSpeed=lambda: self.events.append('restart'))),
             'os': NS(path=NS(exists=lambda path: False, isabs=os.path.isabs), listdir=lambda path: []),
             'shutil': NS(rmtree=mock.Mock(side_effect=AssertionError('No filesystem deletion allowed'))),
@@ -229,7 +229,7 @@ class UnixAccountDeletionTests(unittest.TestCase):
                     self.assertEqual(1, self.deletion())
                     command = ('userdel -r -f ' if distro in (1, 2) else 'deluser ') + self.username
                     expected = ['conf-delete:fixture.test', 'conf-delete:child.fixture.test',
-                                'database-delete', 'website-row-delete', 'dns-delete', 'restart',
+                                'dns-delete', 'database-delete', 'website-row-delete', 'restart',
                                 'mail-directory-delete', command, 'groupdel ' + self.username]
                     positions = [self.events.index(event) for event in expected]
                     self.assertEqual(sorted(positions), positions)
