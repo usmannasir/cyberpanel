@@ -118,6 +118,23 @@ class PreservationTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 csf.requireCSFMigration()
 
+    def test_internal_link_target_is_covered(self):
+        link = self.root / 'covered'
+        link.symlink_to(self.config)
+        csf._check_link_coverage(csf._tree((str(self.root),)), [str(self.root)])
+
+    def test_external_link_target_is_rejected(self):
+        link = self.root / 'external'
+        link.symlink_to('/outside-csf-snapshot/config')
+        with self.assertRaisesRegex(RuntimeError, 'outside the recovery snapshot'):
+            csf._check_link_coverage(csf._tree((str(self.root),)), [str(self.root)])
+
+    def test_linked_root_cannot_claim_its_target_is_backed_up(self):
+        link = self.root / 'external-root'
+        link.symlink_to('/etc')
+        with self.assertRaisesRegex(RuntimeError, 'outside the recovery snapshot'):
+            csf._check_link_coverage(csf._tree((str(link),)), [str(link)])
+
     def test_symlinks_are_recorded_without_following(self):
         link = self.root / 'link'
         link.symlink_to('/unavailable')

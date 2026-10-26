@@ -78,6 +78,22 @@ def _tree(paths):
     return result
 
 
+def _check_link_coverage(files, roots):
+    # A link alone is not a backup of its target. Standard CSF links point
+    # within the captured installation; custom external targets need review.
+    directories = [os.path.realpath(path) for path in roots
+                   if os.path.isdir(path) and not os.path.islink(path)]
+    regular_files = {os.path.realpath(path) for path in roots
+                     if os.path.isfile(path) and not os.path.islink(path)}
+    for path, metadata in files.items():
+        if 'link' not in metadata:
+            continue
+        target = os.path.realpath(path)
+        if target not in regular_files and not any(
+                target == root or target.startswith(root + os.sep) for root in directories):
+            raise RuntimeError('CSF link target is outside the recovery snapshot: ' + path)
+
+
 def _rules():
     result = {}
     for name, command in (('ipv4', 'iptables-save'), ('ipv6', 'ip6tables-save'),
@@ -128,7 +144,8 @@ def prepare(directory):
     _private_directory(directory)
     if os.path.lexists(os.path.join(directory, 'manifest.json')):
         raise RuntimeError('CSF preservation manifest already exists; do not overwrite a recovery snapshot.')
-    if os.path.islink('/etc/csf') or not os.path.isfile('/etc/csf/csf.conf'):
+    if (os.path.islink('/etc/csf') or os.path.islink('/etc/csf/csf.conf')
+            or not os.path.isfile('/etc/csf/csf.conf')):
         raise RuntimeError('A regular CSF configuration directory is required.')
     if not os.access('/usr/sbin/csf', os.X_OK):
         raise RuntimeError('The existing CSF executable is missing; no upgrade changes were made.')
@@ -144,6 +161,7 @@ def prepare(directory):
     if plugin is not None:
         roots.extend((PLUGIN, REGISTRY))
     files = _tree(roots)
+    _check_link_coverage(files, roots)
     rules = _rules()
     manifest = {'version': 1, 'roots': roots, 'files': files, 'services': _service_state(),
                 'plugin': plugin, 'csf_version': _run(['/usr/sbin/csf', '-v']),
