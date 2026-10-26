@@ -619,6 +619,13 @@ module cyberpanel_ols {
             # Configure the custom module
             self.configureCustomModule()
 
+            try:
+                from plogical.olsWebAdmin import patch_webadmin_release_notice
+                notice = patch_webadmin_release_notice()
+                InstallCyberPanel.stdOut('WebAdmin release notice: ' + notice['status'], 1)
+            except Exception as error:
+                InstallCyberPanel.stdOut('WARNING: WebAdmin release notice was not updated: ' + str(error), 1)
+
             # Enable Auto-SSL in httpd_config.conf
             try:
                 import re
