@@ -423,18 +423,19 @@ local runtime_failed=0 runtime_backup=''
         bind=self.root/'bind.conf';bind.write_text('8090\n')
         banner=banner.replace('/usr/local/lscp/conf/bind.conf',str(bind)).replace('/root/cyberpanel_upgrade_tmp',str(self.root/'unused-upgrade-temp'))
         tail=SOURCE[SOURCE.rindex('\nif ! Main_Upgrade; then'):]
-        for main,system in ((1,0),(0,1),(0,0)):
-            with self.subTest(main=main,system=system):
+        for main,system,csf in ((1,0,0),(0,1,0),(0,0,1),(0,0,0)):
+            with self.subTest(main=main,system=system,csf=csf):
                 code=banner+'''
 Main_Upgrade() { return "$FAKE_MAIN_EXIT"; }
 Post_Upgrade_System_Tweak() { return "$FAKE_SYSTEM_EXIT"; }
 Restart_Web_Terminal() { :; }
 Verify_Upgrade_Services() { return 0; }
+Verify_CSF_Preservation() { return "$FAKE_CSF_EXIT"; }
 UPGRADE_FAILED=0
 '''+tail
-                result=self.run_shell(code,FAKE_MAIN_EXIT=main,FAKE_SYSTEM_EXIT=system)
-                self.assertEqual(bool(main or system),result.returncode != 0)
-                self.assertEqual(not bool(main or system),'CyberPanel Upgraded' in result.stdout)
+                result=self.run_shell(code,FAKE_MAIN_EXIT=main,FAKE_SYSTEM_EXIT=system,FAKE_CSF_EXIT=csf)
+                self.assertEqual(bool(main or system or csf),result.returncode != 0)
+                self.assertEqual(not bool(main or system or csf),'CyberPanel Upgraded' in result.stdout)
 
     def test_system_callers_reject_stale_requirements_and_preserve_failures(self):
         post=self.function('Post_Upgrade_System_Tweak')
