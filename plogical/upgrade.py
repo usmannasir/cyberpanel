@@ -5542,6 +5542,8 @@ pm.max_spare_servers = 3
         provision_roundcube_sudo()
         from plogical.gdriveSudo import provision as provision_gdrive_sudo
         provision_gdrive_sudo()
+        from plogical.cloudflareSudo import provision as provision_cloudflare_sudo
+        provision_cloudflare_sudo()
 
         ##
 

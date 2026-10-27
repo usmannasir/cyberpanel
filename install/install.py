@@ -3100,6 +3100,8 @@ def main():
     provision_roundcube_sudo()
     from plogical.gdriveSudo import provision as provision_gdrive_sudo
     provision_gdrive_sudo()
+    from plogical.cloudflareSudo import provision as provision_cloudflare_sudo
+    provision_cloudflare_sudo()
     configure_jwt_secret()
     from plogical.terminalService import configure_terminal_service
     configure_terminal_service(fresh_install=True)

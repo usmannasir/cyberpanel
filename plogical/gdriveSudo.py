@@ -35,15 +35,15 @@ def trusted_path(path):
     while pending:
         current = pending.pop()
         if not current.is_absolute():
-            raise RuntimeError('Google Drive policy paths must be absolute.')
+            raise RuntimeError('Fixed sudo policy paths must be absolute.')
         if current in checked:
             continue
         checked.add(current)
         if len(checked) > 256:
-            raise RuntimeError('Google Drive policy path has too many symlink components.')
+            raise RuntimeError('Fixed sudo policy path has too many symlink components.')
         info = current.lstat()
         if info.st_uid != 0 or (not stat.S_ISLNK(info.st_mode) and info.st_mode & 0o022):
-            raise RuntimeError('Google Drive policy requires root-owned, non-writable paths: %s' % current)
+            raise RuntimeError('Fixed sudo policy requires root-owned, non-writable paths: %s' % current)
         if stat.S_ISLNK(info.st_mode):
             current.resolve(strict=True)  # Reject dangling links and loops.
             target = Path(os.readlink(current))
@@ -53,32 +53,39 @@ def trusted_path(path):
 
 
 def provision():
+    return provision_fixed(PYTHON, HELPER, TARGET, policy())
+
+
+def provision_fixed(python, helper, target, content):
+    """Install one exact root-authored policy after checking the entire trust chain."""
+    PYTHON, HELPER, TARGET = Path(python), Path(helper), Path(target)
+    if TARGET.parent != DIRECTORY or not re.fullmatch(r'[A-Za-z0-9_-]+', TARGET.name):
+        raise RuntimeError('Fixed sudo policy must use an active /etc/sudoers.d filename.')
     if os.geteuid() != 0:
-        raise RuntimeError('Google Drive sudo policy must be provisioned as root.')
+        raise RuntimeError('Fixed sudo policy must be provisioned as root.')
     for path in (PYTHON, HELPER, VISUDO, SUDOERS):
         trusted_path(path)
         if not path.is_file():
-            raise RuntimeError('Missing regular Google Drive policy dependency: %s' % path)
+            raise RuntimeError('Missing regular fixed sudo policy dependency: %s' % path)
     for path in (PYTHON, VISUDO):
         if not os.access(path, os.X_OK):
-            raise RuntimeError('Google Drive policy dependency is not executable: %s' % path)
+            raise RuntimeError('fixed sudo policy dependency is not executable: %s' % path)
     # Do not silently install an ineffective rule or modify unrelated sudo policy.
     if not re.search(r'^\s*(?:@|#)includedir\s+["\']?/etc/sudoers\.d["\']?\s*(?:#.*)?$',
                      SUDOERS.read_text(), re.MULTILINE):
-        raise RuntimeError('Enable /etc/sudoers.d in the server sudoers policy before provisioning Google Drive.')
+        raise RuntimeError('Enable /etc/sudoers.d in the server sudoers policy before provisioning a fixed helper.')
     trusted_path(DIRECTORY.parent)
     DIRECTORY.mkdir(mode=0o755, exist_ok=True)
     trusted_path(DIRECTORY)
     if not DIRECTORY.is_dir() or DIRECTORY.is_symlink():
-        raise RuntimeError('Google Drive sudoers directory must be a real directory.')
-    content = policy()
+        raise RuntimeError('Fixed helper sudoers directory must be a real directory.')
     if TARGET.exists() or TARGET.is_symlink():
         trusted_path(TARGET)
         if TARGET.is_symlink() or not TARGET.is_file():
-            raise RuntimeError('Google Drive sudoers policy must be a regular file.')
+            raise RuntimeError('Fixed helper sudoers policy must be a regular file.')
         existing = TARGET.read_text()
         if existing != content:
-            raise RuntimeError('Existing Google Drive sudoers policy is unmanaged; review it before provisioning.')
+            raise RuntimeError('Existing Fixed helper sudoers policy is unmanaged; review it before provisioning.')
     subprocess.run([str(VISUDO), '-c'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
     descriptor, temporary = tempfile.mkstemp(prefix='.cyberpanel-gdrive-', dir=str(DIRECTORY))
     backup = None
