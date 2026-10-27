@@ -1959,6 +1959,12 @@ fi
 echo -e "Preparing...\n"
 
 Final_Flags=()
+# Optional fresh-install identities; defaults retain the historical behavior.
+# Python validates both names before its first installation mutation.
+if [[ -n "${CP_INSTALL_APP_DB:-}" || -n "${CP_INSTALL_APP_USER:-}" ]]; then
+  Final_Flags+=(--appdb "${CP_INSTALL_APP_DB:-}")
+  Final_Flags+=(--appuser "${CP_INSTALL_APP_USER:-}")
+fi
 Final_Flags+=("$Server_IP")
 Final_Flags+=(${Enterprise_Flag:+$Enterprise_Flag})
 Final_Flags+=(${License_Key:+$License_Key})

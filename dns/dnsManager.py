@@ -1306,6 +1306,11 @@ setuid=pdns
                 command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)
                 ProcessUtilities.executioner(command, 'root', True)
 
+            from CyberCP import settings
+            from install.env_generator import rewrite_application_identity
+            database = settings.DATABASES['default']
+            rewrite_application_identity(dnsPath, database['NAME'], database['USER'])
+
             # Set proper permissions for PowerDNS config
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 # Ensure pdns user/group exists

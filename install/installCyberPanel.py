@@ -1,3 +1,4 @@
+from env_generator import build_database_config, rewrite_application_identity, require_fresh_application_installation
 import shutil
 import subprocess
 import os
@@ -153,7 +154,7 @@ class InstallCyberPanel:
                 InstallCyberPanel.CloudLinux8 = 1
 
     def __init__(self, rootPath, cwd, distro, ent, serial=None, port=None, ftp=None, dns=None, publicip=None,
-                 remotemysql=None, mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None):
+                 remotemysql=None, mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None, appdb=None, appuser=None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
@@ -169,6 +170,8 @@ class InstallCyberPanel:
         self.mysqlpassword = mysqlpassword
         self.mysqlport = mysqlport
         self.mysqldb = mysqldb
+        self.appdb = appdb
+        self.appuser = appuser
 
         ## TURN ON OS FLAGS FOR SPECIFIC NEEDS LATER
 
@@ -1298,6 +1301,7 @@ gpgcheck=1
             writeDataToFile.close()
 
             ftpConfPath = '/etc/pure-ftpd/pureftpd-mysql.conf'
+            rewrite_application_identity(ftpConfPath, self.appdb or 'cyberpanel', self.appuser or 'cyberpanel')
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, ftpConfPath)
@@ -1520,6 +1524,8 @@ setuid=pdns
                 command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
+            rewrite_application_identity(dnsPath, self.appdb or 'cyberpanel', self.appuser or 'cyberpanel')
+
             # Set proper permissions for PowerDNS config
             if self.distro == ubuntu:
                 # Ensure pdns user/group exists
@@ -1562,7 +1568,10 @@ setuid=pdns
 
 
 def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, publicip=None, remotemysql=None,
-         mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None):
+         mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None, appdb=None, appuser=None):
+    database_config = build_database_config(remote=(remotemysql == 'ON'), host=mysqlhost,
+        port=mysqlport, root_db=mysqldb, root_user=mysqluser, app_db=appdb, app_user=appuser)
+    require_fresh_application_installation(appdb)
     InstallCyberPanel.mysqlPassword = install_utils.generate_pass()
     InstallCyberPanel.mysql_Root_password = install_utils.generate_pass()
 
@@ -1579,7 +1588,8 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
             password.close()
     else:
         mysqlData = {'remotemysql': remotemysql, 'mysqlhost': mysqlhost, 'mysqldb': mysqldb, 'mysqluser': mysqluser,
-                     'mysqlpassword': mysqlpassword, 'mysqlport': mysqlport}
+                     'mysqlpassword': mysqlpassword, 'mysqlport': mysqlport,
+                     'appdb': database_config['db_name'], 'appuser': database_config['db_user']}
         from json import dumps
         writeToFile = open(file_name, 'w')
         writeToFile.write(dumps(mysqlData))
@@ -1613,7 +1623,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
     installer = InstallCyberPanel("/usr/local/lsws/", cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql,
-                                  mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+                                  mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, appdb, appuser)
 
     logging.InstallLog.writeToFile('Installing LiteSpeed Web server,40')
     installer.installLiteSpeed()
@@ -1643,9 +1653,9 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
     # installation that failed several steps later at `manage.py migrate`
     # against an application account that had never been created, with nothing
     # in the log about the administrative connection that actually failed.
-    if mysqlUtilities.createDatabase("cyberpanel", "cyberpanel",
+    if mysqlUtilities.createDatabase(database_config["db_name"], database_config["db_user"],
                                      InstallCyberPanel.mysqlPassword,
-                                     publicip) != 1:
+                                     publicip, require_fresh=(appdb is not None)) != 1:
         logging.InstallLog.writeToFile(
             "[ERROR] Could not create the CyberPanel database or its "
             "application account. For a remote installation, check that the "

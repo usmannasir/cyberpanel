@@ -962,27 +962,10 @@ webserver-allow-from=0.0.0.0/0
             return 0, str(msg)
 
     @staticmethod
-    def ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email):
+    def ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email, mode='global_key'):
         try:
-
-            ## remove existing keys first
-
-            path = '/root/.acme.sh/account.conf'
-
-            command = f"sed -i '/SAVED_CF_Key/d;/SAVED_CF_Email/d' {path}"
-            ProcessUtilities.executioner(command)
-
-
-            CFContent = f"""
-SAVED_CF_Key='{SAVED_CF_Key}'
-SAVED_CF_Email='{SAVED_CF_Email}'
-"""
-
-            command = f'echo {shlex.quote(CFContent)} >> {path}'
-            ProcessUtilities.executioner(command, None, True)
-
+            from plogical.cloudflareCredentials import request as credential_request
+            credential_request('save', {'mode': mode, 'secret': SAVED_CF_Key, 'email': SAVED_CF_Email})
             return 1, None
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(f'ConfigureCloudflareInAcme, Error: {str(msg)}')
-            return 0, str(msg)
+        except ValueError:
+            return 0, 'Cloudflare settings could not be saved.'

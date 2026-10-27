@@ -1532,8 +1532,8 @@
                         <i class="fas fa-microchip"></i>
                     </div>
                     <div class="resource-title" style="color: white;">{% trans "CPU" %}</div>
-                    <div class="resource-value" style="color: white;">{{ resource_limits.cpu }}%</div>
-                    <div class="resource-limit" style="color: rgba(255, 255, 255, 0.9);">{% trans "CPU cores allocated" %}</div>
+                    <div class="resource-value" style="color: white;">{{ resource_limits.cpu }}</div>
+                    <div class="resource-limit" style="color: rgba(255, 255, 255, 0.9);">{% trans "CPU limit (100% = one core)" %}</div>
                 </div>
                 {% endif %}
 
@@ -1573,7 +1573,7 @@
             <div style="margin-top: 15px; padding: 12px; background: #f8f9ff; border-radius: 8px; border-left: 4px solid #5b5fcf;">
                 <p style="margin: 0; color: #64748b; font-size: 13px;">
                     <i class="fas fa-info-circle" style="color: #5b5fcf; margin-right: 8px;"></i>
-                    {% trans "These are the actual resource limits applied to this website. Limits are enforced at the system level using OpenLiteSpeed cgroups." %}
+                    {% trans "These are the configured system limits for this website account. Package allocations may differ; only an authorized administrator can change the package or system limits." %}
                 </p>
             </div>
         </div>
@@ -1585,8 +1585,10 @@
                 <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid #dbeafe;border-radius:8px;margin-right:12px;background:#f6faff;">
                     <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M3 3V21H23" stroke="#222b38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 16L9 10L13 14L23 4" stroke="#222b38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
-                <span>{% trans "Real-time Resource Usage" %}</span>
+                <span>{% trans "Account Resource Usage" %}</span>
             </div>
+            <p id="resource-usage-status" role="status" style="color:#64748b;">{% trans "Loading resource usage…" %}</p>
+            <p style="color:#64748b;">{% trans "CPU and RAM are percentages of server capacity for this website account. Disk shows this document root as a percentage of its filesystem." %}</p>
             <div class="cyber-resource-row">
                 <div class="cyber-resource-col">
                     <canvas id="cpuChart" style="width:100%;height:200px;"></canvas>
@@ -2538,7 +2540,7 @@
 {{ block.super }}
 <!-- Add Chart.js and resource monitoring script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}"></script>
+<script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}?v=20261027-resource-sampling"></script>
 
 <!-- Fix modal functionality -->
 <script>

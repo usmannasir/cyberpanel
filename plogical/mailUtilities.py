@@ -1908,6 +1908,12 @@ class MailServerManagerUtils(multi.Thread):
                 command = "sed -i 's|localhost|%s:%s|g' %s" % (
                     self.mysqlhost, self.mysqlport, mysql_virtual_email2email)
                 ProcessUtilities.executioner(command)
+            from CyberCP import settings
+            from install.env_generator import rewrite_application_identity
+            database = settings.DATABASES['default']
+            for path in (dovecotmysql, mysql_virtual_domains, mysql_virtual_forwardings,
+                         mysql_virtual_mailboxes, mysql_virtual_email2email):
+                rewrite_application_identity(path, database['NAME'], database['USER'])
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       '%s [setup_email_Passwords][404]' % (str(msg)), 10)

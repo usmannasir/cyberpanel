@@ -2136,8 +2136,8 @@ def get_website_resources(request):
         else:
             return ACLManager.loadError()
 
-        # Get resource usage data using externalApp
-        resource_data = get_website_resource_usage(website.externalApp)
+        # Measure the authorized website account and domain document root
+        resource_data = get_website_resource_usage(website)
         if resource_data['status'] == 0:
             return JsonResponse(resource_data)
 

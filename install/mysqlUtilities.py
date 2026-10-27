@@ -96,7 +96,7 @@ class mysqlUtilities:
                 % (params['host'], params['port'], params['user'], e))
 
     @staticmethod
-    def createDatabase(dbname, dbuser, dbpassword, publicip):
+    def createDatabase(dbname, dbuser, dbpassword, publicip, require_fresh=False):
         """Create the CyberPanel database and its application account.
 
         Returns 1 on success and 0 on failure, as before, but a failure is
@@ -134,10 +134,31 @@ class mysqlUtilities:
                             'Cannot determine a safe remote MySQL client host; '
                             'no database or account was created.')
 
-                cursor.execute("CREATE DATABASE IF NOT EXISTS `%s`" % dbname)
+                grant_database = dbname
+                if '_' in dbname:
+                    # MariaDB/older MySQL return no variable; MySQL with partial
+                    # revokes enabled uses literal schema names instead.
+                    cursor.execute("SHOW VARIABLES LIKE 'partial_revokes'")
+                    partial_revokes = cursor.fetchone()
+                    literal_grants = (partial_revokes and len(partial_revokes) > 1 and
+                                      str(partial_revokes[1]).upper() in ('ON', '1'))
+                    if not literal_grants:
+                        grant_database = dbname.replace('_', r'\_')
+
+                if require_fresh:
+                    # Do not reset a different panel's password or reuse its data.
+                    cursor.execute('SELECT 1 FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = %s', (dbname,))
+                    if cursor.fetchone():
+                        raise MySQLSetupError('Application database already exists; choose an unused identity')
+                    cursor.execute('SELECT 1 FROM mysql.user WHERE User = %s LIMIT 1', (dbuser,))
+                    if cursor.fetchone():
+                        raise MySQLSetupError('Application user already exists; choose an unused identity')
+                cursor.execute(('CREATE DATABASE `%s`' if require_fresh else
+                                'CREATE DATABASE IF NOT EXISTS `%s`') % dbname)
 
                 cursor.execute(
-                    "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY %s",
+                    ("CREATE USER %s@%s IDENTIFIED BY %s" if require_fresh else
+                     "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY %s"),
                     (dbuser, account_host, dbpassword))
 
                 if remote:
@@ -160,9 +181,9 @@ class mysqlUtilities:
                 # does not itself hold, so ask for the explicit subset there.
                 if remote and host.find('rds.amazon') > -1:
                     grant = ("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, "
-                             "INSERT, DELETE ON `%s`.* TO %%s@%%s" % dbname)
+                             "INSERT, DELETE ON `%s`.* TO %%s@%%s" % grant_database)
                 else:
-                    grant = "GRANT ALL PRIVILEGES ON `%s`.* TO %%s@%%s" % dbname
+                    grant = "GRANT ALL PRIVILEGES ON `%s`.* TO %%s@%%s" % grant_database
                 cursor.execute(grant, (dbuser, account_host))
 
                 cursor.execute("FLUSH PRIVILEGES")

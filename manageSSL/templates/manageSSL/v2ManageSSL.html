@@ -374,6 +374,9 @@
                     </div>
                 {% endif %}
                 
+                {% if SaveError %}
+                    <div class="alert alert-danger">{{ SaveError }}</div>
+                {% endif %}
                 <ul class="nav nav-tabs">
                     <li class="active">
                         <a href="#tab-example-1" data-toggle="tab">
@@ -381,12 +384,14 @@
                             <span>{% trans "Issue SSL" %}</span>
                         </a>
                     </li>
+                    {% if CanConfigureDNS %}
                     <li>
                         <a href="#tab-example-3" data-toggle="tab">
                             <i class="fas fa-cogs"></i>
                             <span>{% trans "API Settings" %}</span>
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
                 
                 <div class="tab-content">
@@ -439,32 +444,34 @@
                         </form>
                     </div>
 
+                    {% if CanConfigureDNS %}
                     <div class="tab-pane fade" id="tab-example-3">
                         <form method="post" action="{% url 'v2ManageSSL' %}">
                             {% csrf_token %}
-                            
                             <h4 class="section-title" style="font-size: 14px;">CLOUDFLARE SETTINGS</h4>
-                            
+                            {% if CFConfigured %}<p>{% trans "Credentials are configured. Enter a replacement to update them." %}</p>{% endif %}
                             <div class="form-group">
-                                <label class="form-label">{% trans "CloudFlare Email" %}</label>
-                                <input name="SAVED_CF_Email" type="text" class="form-control"
-                                       value="{{ SAVED_CF_Email }}" placeholder="your-email@example.com" required>
+                                <label class="form-label" for="cf-mode">{% trans "Credential type" %}</label>
+                                <select id="cf-mode" name="CF_Mode" class="form-control" onchange="document.getElementById('cf-email').required = this.value === 'global_key'">
+                                    <option value="token" {% if CFMode != 'global_key' %}selected{% endif %}>{% trans "Scoped API Token" %}</option>
+                                    <option value="global_key" {% if CFMode == 'global_key' %}selected{% endif %}>{% trans "Global API Key (legacy)" %}</option>
+                                </select>
+                                <p>{% trans "For API tokens, grant Zone:Read and DNS:Edit only for the zones you want this server to manage." %}</p>
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">{% trans "API Token" %}</label>
-                                <input name="SAVED_CF_Key" type="text" class="form-control"
-                                       value="{{ SAVED_CF_Key }}" placeholder="Your CloudFlare API Token" required>
+                                <label class="form-label" for="cf-email">{% trans "Email (required only for a Global API Key)" %}</label>
+                                <input id="cf-email" name="SAVED_CF_Email" type="email" class="form-control"
+                                       autocomplete="off" placeholder="your-email@example.com" {% if CFMode == 'global_key' %}required{% endif %}>
                             </div>
-
                             <div class="form-group">
-                                <button type="submit" class="btn-primary">
-                                    <i class="fas fa-save"></i>
-                                    {% trans "Save Settings" %}
-                                </button>
+                                <label class="form-label" for="cf-secret">{% trans "New token or key" %}</label>
+                                <input id="cf-secret" name="SAVED_CF_Key" type="password" class="form-control"
+                                       autocomplete="new-password" required>
                             </div>
+                            <button type="submit" class="btn-primary">{% trans "Save Settings" %}</button>
                         </form>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
