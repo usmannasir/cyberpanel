@@ -46,6 +46,7 @@ class ReleaseConsumerTests(unittest.TestCase):
             with self.subTest(platform=platform):
                 self.assertEqual(modsec[platform]['url'], config['modsec_url'])
                 self.assertEqual(modsec[platform]['sha256'], config['sha256']['modsec'])
+                self.assertEqual(modsec[platform]['core_sha256'], config['sha256']['binary'])
 
     def test_modsecurity_detects_native_abis_and_refuses_unsupported_versions(self):
         detect = load_modsec().detectPlatform
@@ -93,11 +94,19 @@ class ReleaseConsumerTests(unittest.TestCase):
             self.assertFalse(target.downloadCompatibleModSec('ubuntu'))
         download.assert_not_called()
 
+    def test_modsecurity_refuses_an_older_custom_core_even_with_matching_api_marker(self):
+        target = load_modsec()
+        with mock.patch.object(builtins, 'open', return_value=io.BytesIO(b'old-core cyberpanel_lsi_api_abi_v1')), \
+             mock.patch.object(subprocess, 'call') as download:
+            self.assertFalse(target.downloadCompatibleModSec('ubuntu'))
+        download.assert_not_called()
+
     def test_verified_modsecurity_is_installed_only_when_dependencies_resolve(self):
         for mismatch, missing, accepted in [(False, False, True), (True, False, False), (False, True, False)]:
             with self.subTest(mismatch=mismatch, missing=missing), tempfile.TemporaryDirectory() as directory:
                 target = load_modsec()
                 target.MODSEC_COMPATIBLE['ubuntu']['sha256'] = hashlib.sha256(b'module').hexdigest()
+                target.MODSEC_COMPATIBLE['ubuntu']['core_sha256'] = hashlib.sha256(b'core cyberpanel_lsi_api_abi_v1').hexdigest()
                 real_open = builtins.open
                 real_temp = tempfile.TemporaryDirectory
 

@@ -22,16 +22,21 @@ class modSec:
 
     # Compatible ModSecurity binaries (built against custom OLS headers)
     # These prevent ABI incompatibility crashes (Signal 11/SIGSEGV)
-    MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel8.so',
-               'sha256': '6afde1bb82e4118e5986aa345b9d7120da0e7501dc4fad24d9c93e55b4560843'},
-     'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel9.so',
-               'sha256': 'f2551a3b4704e576c24a202c92905a0fbe249bc653d0d810f23bbacb40b22c2b'},
-     'rhel10': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel10.so',
-                'sha256': '5b3086279bee6f29c55e3cee6fbe4bbfd743c8f3371060ef8173dc84b5d3ae95'},
-     'ubuntu': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu.so',
-                'sha256': 'd196438c0a113ca339706a1e7e37c51026489e4893d06436d6f76252b6e0d6ec'},
-     'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu26.so',
-                  'sha256': '4bb70915336dce7e535923703014e89210ab4a17b157820d68b3e3db38110879'}}
+    MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
+               'sha256': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708',
+               'core_sha256': 'daf71e8f3e0f284ddc2abb038eb858e0df5f154f9df6d8ad1e60a23d75dd096d'},
+     'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
+               'sha256': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9',
+               'core_sha256': 'ebc4411647d29aaf900b7610adafd6734b57776f4f7c59fa62b6a9347a5a65b3'},
+     'rhel10': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel10.so',
+                'sha256': 'a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde',
+                'core_sha256': '00ddb4ba37c69bc9a2030ece5494ab990c7a65b3e79fd8e2ef432c3725a4767f'},
+     'ubuntu': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
+                'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
+                'core_sha256': '404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c'},
+     'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
+                  'sha256': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae',
+                  'core_sha256': '404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c'}}
 
     @staticmethod
     def detectPlatform():
@@ -68,9 +73,11 @@ class modSec:
                     "No published compatible ModSecurity for platform %s" % platform)
                 return False
             with open('/usr/local/lsws/bin/openlitespeed', 'rb') as core:
-                if b'cyberpanel_lsi_api_abi_v1' not in core.read():
+                core_bytes = core.read()
+                if (b'cyberpanel_lsi_api_abi_v1' not in core_bytes or
+                        hashlib.sha256(core_bytes).hexdigest() != config.get('core_sha256')):
                     logging.CyberCPLogFileWriter.writeToFile(
-                        "Upgrade the custom OpenLiteSpeed core before installing this ModSecurity build")
+                        "Upgrade CyberPanel to the complete compatible OpenLiteSpeed security bundle before installing this ModSecurity build")
                     return False
             modsec_path = '/usr/local/lsws/modules/mod_security.so'
             with tempfile.TemporaryDirectory(prefix='.modsec-', dir=os.path.dirname(modsec_path)) as staging:
