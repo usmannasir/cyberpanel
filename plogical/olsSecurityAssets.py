@@ -16,7 +16,7 @@ import tempfile
 
 
 SECURITY_ASSETS_URL = 'https://cyberpanel.net/ols-security-assets-2.5.6-php8.3.36-x86_64.tar.gz'
-SECURITY_ASSETS_SHA256 = '2456eeb3c864d276c6c92694aadb514abaae397069c24eee6d8b619a58776e97'
+SECURITY_ASSETS_SHA256 = '03b360647adc88cf210dfc73d00bbbc68a8a5005e13b45d2cf75d5a62bf27c31'
 
 
 _EXACT = frozenset(('VERSION', 'admin/fcgi-bin/admin_php',
@@ -32,10 +32,13 @@ $required=['openssl_encrypt','openssl_decrypt','openssl_random_pseudo_bytes',
 'xml_parser_create','socket_create','session_start','posix_geteuid','ctype_digit'];
 $missing=array_values(array_filter($required, function($name){return !function_exists($name);}));
 $parser=xml_parser_create(); $xml=xml_parse($parser,'<test>ok</test>',true); xml_parser_free($parser);
+$dom=class_exists('DOMDocument') ? new DOMDocument() : null;
+$dom_ok=$dom && $dom->loadHTML('<table><tr><td>cp-admin-test</td></tr></table>')
+    && $dom->getElementsByTagName('td')->item(0)->textContent==='cp-admin-test';
 $key=random_bytes(32); $iv=random_bytes(16); $cipher=openssl_encrypt('cp-admin-test','aes-256-cbc',$key,0,$iv);
 echo json_encode(['version'=>PHP_VERSION,'sapi'=>PHP_SAPI,'opcache'=>phpversion('Zend OPcache'),
 'openssl'=>OPENSSL_VERSION_TEXT,'libxml'=>LIBXML_DOTTED_VERSION,'missing'=>$missing,
-'xml'=>$xml,'crypto'=>openssl_decrypt($cipher,'aes-256-cbc',$key,0,$iv)==='cp-admin-test',
+'xml'=>$xml,'dom'=>$dom_ok,'crypto'=>openssl_decrypt($cipher,'aes-256-cbc',$key,0,$iv)==='cp-admin-test',
 'upload_progress'=>ini_get('session.upload_progress.enabled'),
 'ini'=>php_ini_loaded_file(),'scanned'=>php_ini_scanned_files()]);
 '''
@@ -224,7 +227,7 @@ class SecurityAssetsTransaction:
                 raise RuntimeError('Isolated WebAdmin PHP probe failed')
             if (result.returncode or evidence.get('version') != '8.3.36'
                     or evidence.get('sapi') != 'litespeed' or evidence.get('opcache') is not False
-                    or evidence.get('missing') or not evidence.get('xml') or not evidence.get('crypto')
+                    or evidence.get('missing') or not evidence.get('xml') or not evidence.get('dom') or not evidence.get('crypto')
                     or evidence.get('upload_progress') not in ('0', '')
                     or evidence.get('scanned') not in (False, None, '')
                     or evidence.get('openssl') != 'OpenSSL 3.5.9 29 Sep 2026'

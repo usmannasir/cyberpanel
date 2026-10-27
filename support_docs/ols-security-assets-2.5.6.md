@@ -50,13 +50,21 @@ The isolated build's runtime/XML/AES/HTTPS trust-store probes passed on Ubuntu
 verified PHP 8.3.36, no OPcache, the dedicated INI, no additional INI scan and
 upload-progress disabled for GET and multipart uploads. Anonymous access and an
 incorrect password were denied; correct login, session reuse and the
-configuration view succeeded. Temporary probes were removed after testing.
+configuration view succeeded. The actual log-selection exporter and legacy XML
+configuration parser also passed, including entity decoding and multiline log
+messages. DOM is included because omitting it silently empties selected-log
+exports. Temporary probes were removed after testing.
 
-The 121 changed upstream PHP PHPT tests applicable to the selected extensions
+The 122 changed upstream PHP PHPT tests applicable to the selected extensions
 were run with a CLI test driver built from the same source/configuration. There
-were 107 passes, 14 skips and no failures. Skips include unbuilt extensions,
+were 108 passes, 14 skips and no failures. Skips include unbuilt extensions,
 CGI-only cases and Windows-only behavior; they are not successful exploit
 regressions. Real LSAPI multipart requests independently checked startup policy.
+
+A token-based audit covered all 165 WebAdmin PHP files, 247 global function
+calls and 45 constructed class names. The only omitted extension calls are
+upstream-guarded `mb_substr` (with its explicit fallback) and the Apache-only
+`apache_setenv` hook. Other names resolve to source-managed local helpers.
 
 The helper unit suite verifies normal/fresh application, symlink restoration,
 persisted rollback, failed runtime checks, authentication/website preservation,
