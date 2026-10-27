@@ -24,7 +24,7 @@ from database_consumers import (
     configure_phpmyadmin_signon,
     dovecot_connect_line,
 )
-from env_generator import DatabaseConfigError, build_database_config
+from env_generator import DatabaseConfigError, build_database_config, rewrite_application_identity, require_fresh_application_installation
 from plogical.legacyWebmail import legacy_data_permission_commands
 from plogical.olsHtaccessReload import merge_defaults, migrate_cron
 
@@ -166,7 +166,7 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
-                 mysqluser=None, mysqlpassword=None, mysqlport=None):
+                 mysqluser=None, mysqlpassword=None, mysqlport=None, appdb=None, appuser=None):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -179,6 +179,8 @@ class preFlightsChecks:
         self.mysqlpassword = mysqlpassword
         self.mysqlport = mysqlport
         self.mysqldb = mysqldb
+        self.appdb = appdb
+        self.appuser = appuser
 
 
     def installQuota(self,):
@@ -654,6 +656,8 @@ class preFlightsChecks:
                 port=getattr(self, 'mysqlport', None),
                 root_db=getattr(self, 'mysqldb', None),
                 root_user=getattr(self, 'mysqluser', None),
+                app_db=getattr(self, 'appdb', None),
+                app_user=getattr(self, 'appuser', None),
             )
 
             # Generate secure credentials
@@ -715,6 +719,8 @@ class preFlightsChecks:
                     port=getattr(self, 'mysqlport', None),
                     root_db=getattr(self, 'mysqldb', None),
                     root_user=getattr(self, 'mysqluser', None),
+                    app_db=getattr(self, 'appdb', None),
+                    app_user=getattr(self, 'appuser', None),
                 )
             except Exception as endpoint_error:
                 # Writing the local defaults for a remote installation would
@@ -733,7 +739,7 @@ class preFlightsChecks:
         block = 0
 
         for items in data:
-            if items.find('SECRET_KEY') > -1:
+            if items.startswith('SECRET_KEY ='):
                 SK = "SECRET_KEY = %r\n" % generate_pass(50)
                 writeDataToFile.writelines(SK)
                 continue
@@ -753,12 +759,12 @@ class preFlightsChecks:
                 writeDataToFile.writelines("        'PORT': %r,\n" % port)
                 # PORT is the last entry of each database block.
                 block = block + 1
-            elif items.find("'USER':") > -1 and block == 1:
+            elif items.find("'USER':") > -1 and block < 2:
                 writeDataToFile.writelines(
-                    "        'USER': %r,\n" % db['root_db_user'])
-            elif items.find("'NAME':") > -1 and block == 1:
+                    "        'USER': %r,\n" % (db['db_user'] if block == 0 else db['root_db_user']))
+            elif items.find("'NAME':") > -1 and block < 2:
                 writeDataToFile.writelines(
-                    "        'NAME': %r,\n" % db['root_db_name'])
+                    "        'NAME': %r,\n" % (db['db_name'] if block == 0 else db['root_db_name']))
             else:
                 writeDataToFile.writelines(items)
 
@@ -1402,6 +1408,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     self.mysqlhost, self.mysqlport, mysql_virtual_email2email)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
+            for identity_path in (dovecotmysql, mysql_virtual_domains, mysql_virtual_forwardings,
+                                  mysql_virtual_mailboxes, mysql_virtual_email2email):
+                rewrite_application_identity(identity_path, getattr(self, 'appdb', None) or 'cyberpanel',
+                                             getattr(self, 'appuser', None) or 'cyberpanel')
             logging.InstallLog.writeToFile("Authentication for Postfix and Dovecot set.")
 
         except BaseException as msg:
@@ -2892,17 +2902,22 @@ def main():
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
 
+    parser.add_argument('--appdb', help='New, distinct remote application database (opt-in).')
+    parser.add_argument('--appuser', help='New, distinct remote application user (opt-in).')
+
     args = parser.parse_args()
 
-    if args.remotemysql == 'ON':
+    if args.remotemysql == 'ON' or args.appdb is not None or args.appuser is not None:
         try:
             build_database_config(
-                remote=True,
+                remote=(args.remotemysql == 'ON'),
                 host=args.mysqlhost,
                 port=args.mysqlport,
                 root_db=args.mysqldb,
                 root_user=args.mysqluser,
+                app_db=args.appdb, app_user=args.appuser,
             )
+            require_fresh_application_installation(args.appdb)
         except DatabaseConfigError as error:
             parser.error(str(error))
 
@@ -2977,7 +2992,7 @@ def main():
 
     distro = get_distro()
     checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro,
-                              remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+                              remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser)
     checks.mountTemp()
     checks.installQuota()
 
@@ -3004,10 +3019,10 @@ def main():
 
     if ent == 0:
         installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql,
-                               mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+                               mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser)
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
-                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()

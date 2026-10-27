@@ -437,6 +437,10 @@ except ImportError:
             sys.exit(1)
         
         root_password = open('/etc/cyberpanel/mysqlPassword', 'r').read().strip()
+        # Remote configuration must never enter the local-account recovery path.
+        # Keep its identities/grants untouched and require restoration of settings.
+        if root_password.lstrip().startswith(('{', '[')):
+            raise RuntimeError('Remote MySQL settings could not be loaded. Restore CyberCP/settings.py and .env before upgrading; no database accounts were changed.')
         cyberpanel_password = None
         
         # Try to read existing settings.py to get cyberpanel password

@@ -96,7 +96,7 @@ LOCAL_DATABASE_CONFIG = {
 
 
 def build_database_config(remote=False, host=None, port=None, root_db=None,
-                          root_user=None):
+                          root_user=None, app_db=None, app_user=None):
     """
     Build the validated database endpoint used to render .env.
 
@@ -121,6 +121,22 @@ def build_database_config(remote=False, host=None, port=None, root_db=None,
                              or the port is not a usable TCP port
     """
     config = dict(LOCAL_DATABASE_CONFIG)
+
+    custom = app_db is not None or app_user is not None
+    if custom:
+        if not remote:
+            raise DatabaseConfigError('Custom application identities require remote MySQL')
+        if not app_db or not app_user:
+            raise DatabaseConfigError('Provide both application database and application user')
+        if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,63}', app_db):
+            raise DatabaseConfigError('Application database must be a letter followed by letters, digits or underscores (maximum 64)')
+        if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,31}', app_user):
+            raise DatabaseConfigError('Application user must be a letter followed by letters, digits or underscores (maximum 32)')
+        if app_db.lower() in ('mysql', 'sys', 'information_schema', 'performance_schema', 'cyberpanel'):
+            raise DatabaseConfigError('Choose a distinct, non-system application database')
+        if app_user.lower() in ('root', 'mysql', 'cyberpanel') or app_user == str(root_user).strip():
+            raise DatabaseConfigError('Application user must be distinct from the administrative and default users')
+        config.update(db_name=app_db, db_user=app_user)
 
     if not remote:
         return config
@@ -450,3 +466,31 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error generating environment configuration: {e}")
         sys.exit(1)
+
+
+def rewrite_application_identity(path, database, user):
+    """Update only known application identity fields in installer templates.
+
+    Never rewrite passwords, queries, arbitrary words, or existing installations.
+    Callers pass names already validated by build_database_config().
+    """
+    if database == user == 'cyberpanel':
+        return
+    with open(path) as handle:
+        content = handle.read()
+    for pattern, value in (
+        (r'(?m)^(\s*(?:gmysql-user=|MYSQLUser\s+|user\s*=\s*))cyberpanel(?=\s|$)', user),
+        (r'(?m)^(\s*(?:gmysql-dbname=|MYSQLDatabase\s+|dbname\s*=\s*))cyberpanel(?=\s|$)', database),
+        (r'(?<=\s)user=cyberpanel(?=\s|$)', 'user=' + user),
+        (r'(?<=\s)dbname=cyberpanel(?=\s|$)', 'dbname=' + database),
+    ):
+        content = re.sub(pattern, lambda match: (match.group(1) if match.lastindex else '') + value, content)
+    with open(path, 'w') as handle:
+        handle.write(content)
+
+
+def require_fresh_application_installation(app_db):
+    """Opt-in identities may not repoint an already configured installation."""
+    if app_db is not None and any(os.path.exists(path) for path in (
+            '/etc/cyberpanel/mysqlPassword', '/usr/local/CyberCP/.env')):
+        raise DatabaseConfigError('Custom application identities require a fresh installation; existing configuration was not changed')

@@ -516,6 +516,10 @@ class FTPManager:
             writeDataToFile.close()
 
             ftpConfPath = '/etc/pure-ftpd/pureftpd-mysql.conf'
+            from CyberCP import settings
+            from install.env_generator import rewrite_application_identity
+            database = settings.DATABASES['default']
+            rewrite_application_identity(ftpConfPath, database['NAME'], database['USER'])
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, ftpConfPath)
