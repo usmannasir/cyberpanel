@@ -528,8 +528,9 @@ class InstallCyberPanel:
                     if result.returncode != 0 or 'LiteSpeed' not in ((result.stdout or '') + (result.stderr or '')):
                         raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
                     if was_running:
-                        result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE, timeout=60)
+                        # Daemon children inherit output pipes; do not wait for pipe EOF.
+                        result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
+                                                stderr=subprocess.DEVNULL, timeout=60)
                         time.sleep(3)
                         if result.returncode != 0 or not running():
                             raise RuntimeError('OpenLiteSpeed did not start with the new bundle')
@@ -557,8 +558,8 @@ class InstallCyberPanel:
                         else:
                             security_assets.rollback()
                         if was_running and stopped:
-                            result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
-                                                    stderr=subprocess.PIPE, timeout=60)
+                            result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
+                                                    stderr=subprocess.DEVNULL, timeout=60)
                             time.sleep(3)
                             if result.returncode != 0 or not running():
                                 raise RuntimeError('Previous bundle restored, but OpenLiteSpeed did not restart')

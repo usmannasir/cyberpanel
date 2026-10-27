@@ -212,7 +212,7 @@ class BundleFixture:
                     n.name in ('installCustomOLSBinaries', 'verifyChecksum', 'checkGlibcCompat', 'rollbackOLSBinary')]
         namespace = dict(os=fake_os, re=__import__('re'), shutil=SimpleNamespace(copy2=self.copy2,
                                                move=lambda src, dst: shutil.move(self.path(src), self.path(dst))),
-                         subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE),
+                         subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
                          time=SimpleNamespace(sleep=lambda seconds: None), logging=mock.Mock(),
                          open=lambda p, *a, **kw: open(self.path(p), *a, **kw),
                          __builtins__=dict(vars(builtins), __import__=imports))
