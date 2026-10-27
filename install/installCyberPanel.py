@@ -477,6 +477,16 @@ class InstallCyberPanel:
                         return False
                     downloads[kind] = candidate
 
+                from plogical.olsSecurityAssets import (SecurityAssetsTransaction,
+                    SECURITY_ASSETS_URL, SECURITY_ASSETS_SHA256)
+                import json
+                security_archive = os.path.join(staging, 'security-assets.tar.gz')
+                if not self.downloadCustomBinary(SECURITY_ASSETS_URL, security_archive):
+                    InstallCyberPanel.stdOut('ERROR: Security assets download failed; keeping the existing OLS bundle', 1)
+                    return False
+                security_assets = SecurityAssetsTransaction(
+                    security_archive, SECURITY_ASSETS_SHA256, fresh_install=True)
+
                 # Backups and replacement files share the installation filesystem,
                 # so a successful backup is mandatory and every replacement is atomic.
                 from datetime import datetime
@@ -495,6 +505,9 @@ class InstallCyberPanel:
                     shutil.copy2(downloads[kind], candidate)
                     os.chmod(candidate, mode)
 
+                with open(os.path.join(backup_dir, 'security_assets_backup.json'), 'w') as receipt:
+                    json.dump({'backup_dir': security_assets.backup_dir}, receipt)
+
                 was_running = running()
                 stopped = False
                 touched = []
@@ -505,6 +518,7 @@ class InstallCyberPanel:
                                                 stderr=subprocess.PIPE, timeout=60)
                         if result.returncode != 0 or running():
                             raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                    security_assets.apply()
                     for kind, url, target, mode, backup_name in required:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
                         touched.append((target, backup_name))
@@ -532,6 +546,7 @@ class InstallCyberPanel:
                                                stderr=subprocess.PIPE, timeout=60)
                             except Exception:
                                 pass  # Restore files even if the control command failed.
+                            security_assets.rollback()
                             for target, backup_name in reversed(touched):
                                 if previous[target]:
                                     restored = os.path.join(backup_dir, backup_name + '.restore')
@@ -539,6 +554,8 @@ class InstallCyberPanel:
                                     os.replace(restored, target)
                                 elif os.path.exists(target):
                                     os.remove(target)
+                        else:
+                            security_assets.rollback()
                         if was_running and stopped:
                             result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
                                                     stderr=subprocess.PIPE, timeout=60)

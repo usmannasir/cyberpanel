@@ -1185,6 +1185,16 @@ class Upgrade:
                         return False
                     downloads[kind] = candidate
 
+                from plogical.olsSecurityAssets import (SecurityAssetsTransaction,
+                    SECURITY_ASSETS_URL, SECURITY_ASSETS_SHA256)
+                import json
+                security_archive = os.path.join(staging, 'security-assets.tar.gz')
+                if not Upgrade.downloadCustomBinary(SECURITY_ASSETS_URL, security_archive):
+                    Upgrade.stdOut('ERROR: Security assets download failed; keeping the existing OLS bundle', 0)
+                    return False
+                security_assets = SecurityAssetsTransaction(
+                    security_archive, SECURITY_ASSETS_SHA256, fresh_install=False)
+
                 # Backups and replacement files share the installation filesystem,
                 # so a successful backup is mandatory and every replacement is atomic.
                 from datetime import datetime
@@ -1203,6 +1213,9 @@ class Upgrade:
                     shutil.copy2(downloads[kind], candidate)
                     os.chmod(candidate, mode)
 
+                with open(os.path.join(backup_dir, 'security_assets_backup.json'), 'w') as receipt:
+                    json.dump({'backup_dir': security_assets.backup_dir}, receipt)
+
                 was_running = running()
                 stopped = False
                 touched = []
@@ -1213,6 +1226,7 @@ class Upgrade:
                                                 stderr=subprocess.PIPE, timeout=60)
                         if result.returncode != 0 or running():
                             raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                    security_assets.apply()
                     for kind, url, target, mode, backup_name in required:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
                         touched.append((target, backup_name))
@@ -1241,6 +1255,7 @@ class Upgrade:
                                                stderr=subprocess.PIPE, timeout=60)
                             except Exception:
                                 pass  # Restore files even if the control command failed.
+                            security_assets.rollback()
                             for target, backup_name in reversed(touched):
                                 if previous[target]:
                                     restored = os.path.join(backup_dir, backup_name + '.restore')
@@ -1248,6 +1263,8 @@ class Upgrade:
                                     os.replace(restored, target)
                                 elif os.path.exists(target):
                                     os.remove(target)
+                        else:
+                            security_assets.rollback()
                         if was_running and stopped:
                             result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
                                                     stderr=subprocess.PIPE, timeout=60)
@@ -1273,8 +1290,17 @@ class Upgrade:
             if os.path.exists(backup_binary):
                 # Stop OLS before rollback
                 Upgrade.stdOut("Stopping OpenLiteSpeed for rollback...", 0)
-                subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
+                stopped = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+                status = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'status'],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True, timeout=30)
+                if stopped.returncode != 0 or 'is not running.' not in (status.stdout or ''):
+                    Upgrade.stdOut('ERROR: OpenLiteSpeed did not stop; rollback files were not replaced', 0)
+                    return False
+
+                from plogical.olsSecurityAssets import restore_security_assets
+                restore_security_assets(backup_dir)
 
                 # Restore binary (remove first: cp onto a mapped binary = ETXTBSY)
                 if os.path.exists(binary_path):
@@ -1308,14 +1334,23 @@ class Upgrade:
                 import time
                 time.sleep(3)
 
-                result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if result.returncode == 0:
+                import re
+                status = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'status'],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        universal_newlines=True, timeout=30)
+                match = re.search(r'is running with PID ([1-9][0-9]*)\.', status.stdout or '')
+                restored_running = False
+                if result.returncode == 0 and match:
+                    try:
+                        restored_running = os.path.samefile('/proc/%s/exe' % match.group(1), binary_path)
+                    except OSError:
+                        pass
+                if restored_running:
                     Upgrade.stdOut("OpenLiteSpeed started successfully after rollback", 0)
                     return True
                 else:
                     Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after rollback", 0)
-                    return True  # Rollback was successful, startup issue is separate
+                    return False  # Restored files alone do not prove a successful rollback.
             else:
                 Upgrade.stdOut(f"ERROR: Backup not found at {backup_binary}", 0)
                 return False
