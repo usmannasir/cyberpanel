@@ -16,7 +16,7 @@ import tempfile
 
 
 SECURITY_ASSETS_URL = 'https://cyberpanel.net/ols-security-assets-2.5.6-php8.3.36-x86_64.tar.gz'
-SECURITY_ASSETS_SHA256 = '03b360647adc88cf210dfc73d00bbbc68a8a5005e13b45d2cf75d5a62bf27c31'
+SECURITY_ASSETS_SHA256 = 'b812c9bfa839cbd20087fce1526f1fac77ea5360bf2b411d5827dd6d025c5a13'
 
 
 _EXACT = frozenset(('VERSION', 'admin/fcgi-bin/admin_php',
