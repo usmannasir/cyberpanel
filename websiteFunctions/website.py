@@ -3828,13 +3828,8 @@ context /cyberpanel_suspension_page.html {
                         for uid, user_limits in limits_data.items():
                             if user_limits.get('name') == username:
                                 # Extract and format the limits for display
-                                Data['resource_limits'] = {
-                                    'cpu': user_limits.get('cpu', ''),
-                                    'memory': user_limits.get('mem', ''),
-                                    'io': user_limits.get('io', ''),
-                                    'tasks': user_limits.get('tasks', ''),
-                                    'iops': user_limits.get('iops', '')
-                                }
+                                from websiteFunctions.resource_monitoring import format_resource_limits
+                                Data['resource_limits'] = format_resource_limits(user_limits)
                                 break
             except Exception as e:
                 # Silently fail - resource limits are optional

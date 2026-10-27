@@ -1,3 +1,4 @@
+(function () {
 // Resource Monitoring
 let cpuChart, memoryChart, diskChart;
 let cpuData = [], memoryData = [], diskData = [];
@@ -30,7 +31,7 @@ function initializeCharts() {
         data: {
             labels: [],
             datasets: [{
-                label: 'CPU Usage (%)',
+                label: 'Account CPU (% of server)' ,
                 data: [],
                 borderColor: '#2563eb',
                 backgroundColor: 'rgba(37, 99, 235, 0.1)',
@@ -49,7 +50,7 @@ function initializeCharts() {
         data: {
             labels: [],
             datasets: [{
-                label: 'Memory Usage (%)',
+                label: 'Account RAM (% of server)' ,
                 data: [],
                 borderColor: '#00b894',
                 backgroundColor: 'rgba(0, 184, 148, 0.1)',
@@ -68,7 +69,7 @@ function initializeCharts() {
         data: {
             labels: [],
             datasets: [{
-                label: 'Disk Usage (%)',
+                label: 'Document root (% of filesystem)' ,
                 data: [],
                 borderColor: '#ff9800',
                 backgroundColor: 'rgba(255, 152, 0, 0.1)',
@@ -110,34 +111,62 @@ function updateCharts(data) {
     diskChart.update('none');
 }
 
+let resourceRequestPending = false;
+let resourceTimer = null;
+let resourceStopped = false;
+function showResourceStatus(message) {
+    const status = document.getElementById('resource-usage-status');
+    if (status) status.textContent = message;
+}
+function scheduleResourceUsage() {
+    if (!resourceStopped) resourceTimer = setTimeout(fetchResourceUsage, 5000);
+}
 function fetchResourceUsage() {
+    if (resourceStopped || resourceRequestPending) return;
+    if (document.hidden) { scheduleResourceUsage(); return; }
+    resourceRequestPending = true;
     $.ajax({
-        url: '/websites/get_website_resources/',
-        type: 'POST',
-        data: JSON.stringify({
-            'domain': $('#domainNamePage').text().trim()
-        }),
+        url: '/websites/get_website_resources/', type: 'POST', timeout: 12000,
+        data: JSON.stringify({'domain': $('#domainNamePage').text().trim()}),
         contentType: 'application/json',
         success: function(data) {
-            if (data.status === 1) {
+            if (data.status === 1 && [data.cpu_usage, data.memory_usage, data.disk_percent].every(Number.isFinite)) {
                 updateCharts(data);
+                showResourceStatus('Updated ' + new Date().toLocaleTimeString() + '. Document root: ' + data.disk_used + ' MiB.');
             } else {
-                console.error('Error fetching resource data:', data.error_message);
+                showResourceStatus('Resource usage unavailable. Previous chart points are historical.');
             }
         },
-        error: function(xhr, status, error) {
-            console.error('Failed to fetch resource usage:', error);
+        error: function() {
+            showResourceStatus('Resource usage unavailable. Retrying after this request finishes.');
+        },
+        complete: function() {
+            resourceRequestPending = false;
+            scheduleResourceUsage();
         }
     });
 }
-
-// Initialize charts when the page loads
 $(document).ready(function() {
     if (document.getElementById('cpuChart')) {
         initializeCharts();
-        // Fetch resource usage every 5 seconds
-        setInterval(fetchResourceUsage, 5000);
-        // Initial fetch
         fetchResourceUsage();
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && !resourceRequestPending) {
+                clearTimeout(resourceTimer);
+                fetchResourceUsage();
+            }
+        });
+        window.addEventListener('pageshow', function() {
+            if (resourceStopped) {
+                resourceStopped = false;
+                fetchResourceUsage();
+            }
+        });
+        window.addEventListener('pagehide', function() {
+            resourceStopped = true;
+            clearTimeout(resourceTimer);
+        });
     }
-}); 
+});
+
+})();
