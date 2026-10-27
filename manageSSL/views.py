@@ -36,7 +36,8 @@ def v2ManageSSL(request):
 
     data = {}
 
-    if ACLManager.CheckForPremFeature('all'):
+    entitlement = ACLManager.CheckForPremFeature('all')
+    if type(entitlement) is int and entitlement == 1:
         data['PremStat'] = 1
     else:
         data['PremStat'] = 0
@@ -44,21 +45,28 @@ def v2ManageSSL(request):
         proc = httpProc(request, 'manageSSL/v2ManageSSL.html', data, 'manageSSL')
         return proc.render()
 
-    if request.method == 'POST':
-        SAVED_CF_Key = request.POST.get('SAVED_CF_Key')
-        SAVED_CF_Email = request.POST.get('SAVED_CF_Email')
-        from plogical.dnsUtilities import DNS
-        DNS.ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email)
-        data['SaveSuccess'] = 1
-
-
-    RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
-    from plogical.dnsUtilities import DNS
-    DNS.ConfigurePowerDNSInAcme()
-
-    data['SAVED_CF_Key'] = SAVED_CF_Key
-    data['SAVED_CF_Email'] = SAVED_CF_Email
+    # Provider credentials are server-wide. A website's SSL permission does not
+    # grant access to another owner's DNS credentials or service configuration.
+    data['CanConfigureDNS'] = currentACL.get('admin') == 1
     data['websiteList'] = websitesName
+    if request.method == 'POST' and not data['CanConfigureDNS']:
+        return ACLManager.loadErrorJson()
+
+    if data['CanConfigureDNS']:
+        from plogical.cloudflareCredentials import request as credential_request
+        try:
+            if request.method == 'POST':
+                credential_request('save', {
+                    'mode': request.POST.get('CF_Mode', 'global_key'),
+                    'secret': request.POST.get('SAVED_CF_Key', ''),
+                    'email': request.POST.get('SAVED_CF_Email', ''),
+                })
+                data['SaveSuccess'] = 1
+            status = credential_request('metadata')
+            data['CFConfigured'] = status['configured']
+            data['CFMode'] = status['mode']
+        except ValueError as error:
+            data['SaveError'] = str(error)
 
     proc = httpProc(request, 'manageSSL/v2ManageSSL.html',
                     data, 'manageSSL')
@@ -125,7 +133,7 @@ def v2IssueSSL(request):
                     if "Rate limit" in output or "rate limit" in output:
                         detailed_error = "Let's Encrypt rate limit exceeded. Please wait before retrying."
                     elif "DNS problem" in output or "NXDOMAIN" in output:
-                        detailed_error = "DNS validation failed. Please ensure your domain points to this server."
+                        detailed_error = "DNS validation failed. Check the provider credentials, zone scope and authoritative TXT records."
                     elif "Connection refused" in output or "Connection timeout" in output:
                         detailed_error = "Could not connect to ACME server. Check your firewall settings."
                     elif "Unauthorized" in output or "authorization" in output:
@@ -133,7 +141,7 @@ def v2IssueSSL(request):
                     elif "CAA record" in output:
                         detailed_error = "CAA record prevents issuance. Check your DNS CAA records."
                     elif "Challenge failed" in output or "challenge failed" in output:
-                        detailed_error = "ACME challenge failed. Ensure port 80 is accessible and .well-known path is not blocked."
+                        detailed_error = "DNS challenge failed. Check TXT propagation and the DNS provider permissions."
                     elif "Invalid response" in output:
                         detailed_error = "Invalid response from ACME challenge. Check your web server configuration."
                     else:

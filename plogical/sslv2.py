@@ -334,41 +334,8 @@ class sslUtilities:
 
     @staticmethod
     def FindIfDomainInCloudflare(virtualHostName):
-        try:
-            import tldextract
-
-            RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
-            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
-
-            if RetStatus:
-
-                extractDomain = no_cache_extract(virtualHostName)
-                topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
-                logging.CyberCPLogFileWriter.writeToFile(f'top level domain in cf: {topLevelDomain}')
-                import CloudFlare
-
-                params = {'name': topLevelDomain, 'per_page': 50}
-                cf = CloudFlare.CloudFlare(email=SAVED_CF_Email, token=SAVED_CF_Key)
-
-                try:
-                    zones = cf.zones.get(params=params)
-                except BaseException as msg:
-                    return 0, str(msg)
-
-                for zone in sorted(zones, key=lambda v: v['name']):
-                    logging.CyberCPLogFileWriter.writeToFile(f'zone: {zone["name"]}')
-                    if zone['name'] == topLevelDomain:
-                        if zone['status'] == 'active':
-                            return 1, None
-                        else:
-                            logging.CyberCPLogFileWriter.writeToFile(f'zone is not active in cf: {zone["name"]}')
-
-                return 0, 'Zone not found in Cloudflare'
-
-            else:
-                return 0, 'Error in finding keys.'
-        except BaseException as msg:
-            return 0, str(msg)
+        from plogical.cloudflareCredentials import find_zone
+        return find_zone(virtualHostName)
 
     @staticmethod
     def FindIfDomainInPowerDNS(virtualHostName):
@@ -443,6 +410,12 @@ class sslUtilities:
             CyberPanel_Check, message = sslUtilities.FindIfDomainInPowerDNS(virtualHostName)
 
             if CyberPanel_Check:
+                # Configure the local provider only for an explicit issuance,
+                # never as a side effect of viewing the settings page.
+                from plogical.dnsUtilities import DNS
+                configured, error = DNS.ConfigurePowerDNSInAcme()
+                if not configured:
+                    return 0, 'The local DNS provider could not be configured.'
                 DNS_TO_USE = 'dns_cyberpanel'
             else:
                 return 0, 'Domain is not active in any of the configured DNS provider.'
