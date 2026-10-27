@@ -1299,8 +1299,14 @@ class Upgrade:
                     Upgrade.stdOut('ERROR: OpenLiteSpeed did not stop; rollback files were not replaced', 0)
                     return False
 
-                from plogical.olsSecurityAssets import restore_security_assets
-                restore_security_assets(backup_dir)
+                # Older bundle backups predate the separately staged support assets.
+                assets_receipt = os.path.join(backup_dir, 'security_assets_backup.json')
+                if os.path.exists(assets_receipt):
+                    import json
+                    from plogical.olsSecurityAssets import restore_security_assets
+                    with open(assets_receipt) as receipt:
+                        assets_backup = json.load(receipt)['backup_dir']
+                    restore_security_assets(assets_backup)
 
                 # Restore binary (remove first: cp onto a mapped binary = ETXTBSY)
                 if os.path.exists(binary_path):
