@@ -4928,7 +4928,9 @@ context /cyberpanel_suspension_page.html {
                 command = 'rm -f ' + statusFile
                 subprocess.call(shlex.split(command))
                 data_ret = {'abort': 1, 'installStatus': 1, 'installationProgress': "100",
-                            'currentStatus': 'Successfully Installed.'}
+                            'currentStatus': (lastLine.split(',[200]', 1)[0]
+                                              if lastLine.startswith('Completed. Recovery backup: ')
+                                              else 'Successfully Installed.')}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             elif lastLine.find('[404]') > -1:
@@ -6092,7 +6094,10 @@ StrictHostKeyChecking no
         else:
             return ACLManager.loadError()
 
-        website = Websites.objects.get(domain=self.domain)
+        child = ChildDomains.objects.get(domain=childDomain, master__domain=self.domain)
+        if ACLManager.checkOwnership(child.domain, admin, currentACL) != 1:
+            return ACLManager.loadError()
+        website = child.master
         externalApp = website.externalApp
 
         proc = httpProc(request, 'websiteFunctions/syncMaster.html',
@@ -6117,6 +6122,18 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 0)
 
+            child = ChildDomains.objects.get(domain=data['childDomain'])
+            if ACLManager.checkOwnership(child.master.domain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson('status', 0)
+            flags = ('eraseCheck', 'dbCheck', 'copyChanged')
+            if any(type(data.get(flag, False)) is not bool for flag in flags):
+                raise ValueError('Sync options must be true or false.')
+            if not any(data.get(flag, False) for flag in flags):
+                raise ValueError('Select a database or content sync mode.')
+            if data.get('eraseCheck') and data.get('copyChanged'):
+                raise ValueError('Select only one content sync mode.')
+            if data.get('confirmed') is not True:
+                raise ValueError('Confirm the production sync before continuing.')
             extraArgs = {}
             extraArgs['childDomain'] = data['childDomain']
             try:
@@ -6134,11 +6151,8 @@ StrictHostKeyChecking no
 
             extraArgs['admin'] = admin
 
-            tempStatusPath = "/tmp/" + str(randint(1000, 9999))
-            writeToFile = open(tempStatusPath, 'a')
-            message = 'Syncing process has started..,5'
-            writeToFile.write(message)
-            writeToFile.close()
+            from plogical.statusUtilities import create_status_file
+            tempStatusPath = create_status_file()
 
             extraArgs['tempStatusPath'] = tempStatusPath
 

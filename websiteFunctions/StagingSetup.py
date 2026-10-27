@@ -195,114 +195,31 @@ class StagingSetup(multi.Thread):
             logging.statusWriter(self.tempStatusPath, mesg)
 
     def startSyncing(self):
+        tempStatusPath = self.extraArgs['tempStatusPath']
+        worker = None
         try:
-            tempStatusPath = self.extraArgs['tempStatusPath']
-            childDomain = self.extraArgs['childDomain']
-            #eraseCheck = self.extraArgs['eraseCheck']
-            dbCheck = self.extraArgs['dbCheck']
-            #copyChanged = self.extraArgs['copyChanged']
-
-
-            child = ChildDomains.objects.get(domain=childDomain)
-
+            from .stagingSync import StagingSync
             from managePHP.phpManager import PHPManager
+            child = ChildDomains.objects.get(domain=self.extraArgs['childDomain'])
             php = PHPManager.getPHPString(child.master.phpSelection)
-            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-
+            target = '/home/%s/public_html' % child.master.domain
+            from cloudAPI.models import WPDeployments
             try:
                 import json
-                from cloudAPI.models import WPDeployments
-                wpd = WPDeployments.objects.get(owner=child.master)
-                path = json.loads(wpd.config)['path']
-                masterPath = '/home/%s/public_html/%s' % (child.master.domain, path)
-                replaceDomain = '%s/%s' % (child.master.domain, path)
-            except:
-                masterPath = '/home/%s/public_html' % (child.master.domain)
-                replaceDomain = child.master.domain
-
-            command = 'chmod 755 /home/%s/public_html' % (child.master.domain)
-            ProcessUtilities.executioner(command)
-
-            configPath = '%s/wp-config.php' % (child.path)
-
-            if not os.path.exists(configPath):
-                logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
-                return 0
-
-            ## Restore db
-
-            logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
-
-            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (FinalPHPPath, child.path, masterPath)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            ## Restore to master domain
-
-            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (FinalPHPPath, masterPath, masterPath)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            try:
-                command = 'rm -f %s/dbexport-stage.sql' % (masterPath)
-                ProcessUtilities.executioner(command)
-            except:
+                deployment = WPDeployments.objects.get(owner=child.master)
+                subpath = json.loads(deployment.config).get('path', '')
+                candidate = os.path.realpath(os.path.join(target, subpath))
+                if os.path.commonpath([os.path.realpath(target), candidate]) != os.path.realpath(target):
+                    raise ValueError('Invalid production WordPress path.')
+                target = candidate
+            except WPDeployments.DoesNotExist:
                 pass
-
-            ## Sync WP-Content Folder
-
-            logging.statusWriter(tempStatusPath, 'Syncing data..,50')
-
-            command = '%s -d error_reporting=0 /usr/bin/wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (FinalPHPPath, masterPath)
-            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('wp-content/themes', '')
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(WpContentPath)
-
-            command = 'cp -R %s/wp-content/ %s' % (child.path, WpContentPath)
-            ProcessUtilities.executioner(command)
-
-            ## COPY Htaccess
-
-            command = 'cp -f %s/.htaccess %s' % (child.path, WpContentPath)
-            ProcessUtilities.executioner(command)
-
-            ## Search and replace url
-
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (FinalPHPPath, masterPath, child.domain, replaceDomain)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (FinalPHPPath,masterPath, child.domain, replaceDomain)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "https://%s" "http://%s"' % (FinalPHPPath,
-            masterPath, replaceDomain, replaceDomain)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(child.master.domain)
-
-            from plogical.installUtilities import installUtilities
-            installUtilities.reStartLiteSpeed()
-
-            logging.statusWriter(tempStatusPath, 'Completed,[200]')
-
-            return 0
-        except BaseException as msg:
-            mesg = '%s. [404]' % (str(msg))
-            logging.statusWriter(tempStatusPath, mesg)
+            worker = StagingSync(ProcessUtilities.outputExecutioner,
+                                 lambda message: logging.statusWriter(tempStatusPath, message))
+            worker.run(child.path, target, '/usr/local/lsws/lsphp%s/bin/php' % php,
+                       copy_all=self.extraArgs.get('eraseCheck', False),
+                       database=self.extraArgs.get('dbCheck', False),
+                       copy_changed=self.extraArgs.get('copyChanged', False))
+        except Exception as error:
+            backup = worker.backup if worker else None
+            logging.statusWriter(tempStatusPath, '%s. Recovery backup: %s [404]' % (error, backup or 'not created'))
