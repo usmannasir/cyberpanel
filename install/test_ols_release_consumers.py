@@ -46,6 +46,7 @@ class ReleaseConsumerTests(unittest.TestCase):
             with self.subTest(platform=platform):
                 self.assertEqual(modsec[platform]['url'], config['modsec_url'])
                 self.assertEqual(modsec[platform]['sha256'], config['sha256']['modsec'])
+                self.assertEqual(modsec[platform]['core_sha256'], config['sha256']['binary'])
 
     def test_modsecurity_detects_native_abis_and_refuses_unsupported_versions(self):
         detect = load_modsec().detectPlatform
@@ -93,11 +94,19 @@ class ReleaseConsumerTests(unittest.TestCase):
             self.assertFalse(target.downloadCompatibleModSec('ubuntu'))
         download.assert_not_called()
 
+    def test_modsecurity_refuses_an_older_custom_core_even_with_matching_api_marker(self):
+        target = load_modsec()
+        with mock.patch.object(builtins, 'open', return_value=io.BytesIO(b'old-core cyberpanel_lsi_api_abi_v1')), \
+             mock.patch.object(subprocess, 'call') as download:
+            self.assertFalse(target.downloadCompatibleModSec('ubuntu'))
+        download.assert_not_called()
+
     def test_verified_modsecurity_is_installed_only_when_dependencies_resolve(self):
         for mismatch, missing, accepted in [(False, False, True), (True, False, False), (False, True, False)]:
             with self.subTest(mismatch=mismatch, missing=missing), tempfile.TemporaryDirectory() as directory:
                 target = load_modsec()
                 target.MODSEC_COMPATIBLE['ubuntu']['sha256'] = hashlib.sha256(b'module').hexdigest()
+                target.MODSEC_COMPATIBLE['ubuntu']['core_sha256'] = hashlib.sha256(b'core cyberpanel_lsi_api_abi_v1').hexdigest()
                 real_open = builtins.open
                 real_temp = tempfile.TemporaryDirectory
 
@@ -125,6 +134,7 @@ class BundleFixture:
     core = '/usr/local/lsws/bin/openlitespeed'
     module = '/usr/local/lsws/modules/cyberpanel_ols.so'
     waf = '/usr/local/lsws/modules/mod_security.so'
+    admin = '/usr/local/lsws/admin/fcgi-bin/admin_php'
 
     def __init__(self, directory, source, class_name, failure=None, module=True, waf=True):
         self.root = Path(directory)
@@ -133,7 +143,7 @@ class BundleFixture:
         self.commands = []
         self.downloads = []
         self.start_bundles = []
-        self.old = {self.core: b'old-core'}
+        self.old = {self.core: b'old-core', self.admin: b'old-admin'}
         if module:
             self.old[self.module] = b'old-module'
         if waf:
@@ -143,12 +153,12 @@ class BundleFixture:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
         self.active_bytes = b'old-core'
-        payloads = {'binary': b'new-core', 'module': b'new-module', 'modsec': b'new-waf'}
+        payloads = {'binary': b'new-core', 'module': b'new-module', 'modsec': b'new-waf', 'assets': b'verified-assets'}
         config = binary_configs(source, class_name)['ubuntu']
         self.by_url = {config[key]: kind for key, kind in
                        [('url', 'binary'), ('module_url', 'module'), ('modsec_url', 'modsec')]}
         fixture_digests = {config['sha256'][kind]: hashlib.sha256(data).hexdigest()
-                           for kind, data in payloads.items()}
+                           for kind, data in payloads.items() if kind != 'assets'}
         fake_os = SimpleNamespace(
             path=SimpleNamespace(exists=lambda p: self.path(p).exists(),
                                  samefile=self.samefile, join=os.path.join,
@@ -161,7 +171,44 @@ class BundleFixture:
             mkdtemp=lambda **kw: tempfile.mkdtemp(prefix=kw['prefix'], dir=self.path(kw['dir'])))
         real_import = builtins.__import__
 
+        fixture = self
+        assets_url = 'https://fixture.invalid/security-assets.tar.gz'
+        self.by_url[assets_url] = 'assets'
+
+        class AssetTransaction:
+            # The helper's native PHP/archive tests live in test_ols_security_assets.
+            # This fixture checks consumer sequencing and shared rollback behavior.
+            def __init__(self, archive, digest, **kwargs):
+                if fixture.failure == 'asset-validation':
+                    raise RuntimeError('injected asset validation failure')
+                self.backup_dir = tempfile.mkdtemp(dir=fixture.root)
+                self.applied = False
+
+            def apply(self):
+                if fixture.active:
+                    raise AssertionError('Assets must be replaced only while OLS is stopped')
+                fixture.path(fixture.admin).write_bytes(b'new-admin')
+                self.applied = True
+                if fixture.failure == 'asset-apply':
+                    raise RuntimeError('injected asset write failure')
+
+            def rollback(self):
+                if self.applied:
+                    if fixture.active:
+                        raise AssertionError('Assets must be restored only while OLS is stopped')
+                    fixture.path(fixture.admin).write_bytes(fixture.old[fixture.admin])
+                    self.applied = False
+
+        def restore_assets(backup_dir, **kwargs):
+            if fixture.active:
+                raise AssertionError('Persisted asset restore must follow service stop')
+            fixture.path(fixture.admin).write_bytes(fixture.old[fixture.admin])
+
         def imports(name, *args, **kwargs):
+            if name == 'plogical.olsSecurityAssets':
+                return SimpleNamespace(SecurityAssetsTransaction=AssetTransaction,
+                    SECURITY_ASSETS_URL=assets_url, SECURITY_ASSETS_SHA256='a' * 64,
+                    restore_security_assets=restore_assets)
             if name == 'tempfile':
                 return fake_temp
             if name == 'time':
@@ -174,7 +221,7 @@ class BundleFixture:
                     n.name in ('installCustomOLSBinaries', 'verifyChecksum', 'checkGlibcCompat', 'rollbackOLSBinary')]
         namespace = dict(os=fake_os, re=__import__('re'), shutil=SimpleNamespace(copy2=self.copy2,
                                                move=lambda src, dst: shutil.move(self.path(src), self.path(dst))),
-                         subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE),
+                         subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
                          time=SimpleNamespace(sleep=lambda seconds: None), logging=mock.Mock(),
                          open=lambda p, *a, **kw: open(self.path(p), *a, **kw),
                          __builtins__=dict(vars(builtins), __import__=imports))
@@ -190,6 +237,8 @@ class BundleFixture:
         def download(url, destination):
             kind = self.by_url[url]
             self.downloads.append(kind)
+            if self.failure == 'missing-assets' and kind == 'assets':
+                return False
             if self.failure in ('missing-module', 'missing-waf') and kind == (
                     'module' if self.failure == 'missing-module' else 'modsec'):
                 return False
@@ -242,7 +291,7 @@ class BundleFixture:
         elif args[-1] == 'start':
             self.start_bundles.append(self.bundle())
             data = self.path(self.core).read_bytes()
-            self.active = not (self.failure == 'startup' and data == b'new-core')
+            self.active = not ((self.failure == 'startup' and data == b'new-core') or self.failure == 'rollback-start')
             self.active_bytes = data
             code = 0 if self.active else 1
         elif args[-1] == '-t':
@@ -257,7 +306,7 @@ class BundleFixture:
         return SimpleNamespace(returncode=code, stdout=stdout, stderr='')
 
     def bundle(self):
-        return {p: self.path(p).read_bytes() for p in (self.core, self.module, self.waf)
+        return {p: self.path(p).read_bytes() for p in (self.core, self.module, self.waf, self.admin)
                 if self.path(p).exists()}
 
 
@@ -275,7 +324,7 @@ class BundleTransactionTests(unittest.TestCase):
 
     def test_required_download_integrity_and_abi_failures_do_not_touch_bundle_or_service(self):
         for source, cls in self.consumers:
-            for failure in ('corrupt-waf', 'missing-module', 'missing-waf', 'waf-abi'):
+            for failure in ('corrupt-waf', 'missing-module', 'missing-waf', 'waf-abi', 'missing-assets', 'asset-validation'):
                 with self.subTest(consumer=cls, failure=failure), tempfile.TemporaryDirectory() as directory:
                     f = BundleFixture(directory, ROOT / source, cls, failure)
                     self.assertFalse(f.call())
@@ -315,7 +364,7 @@ class BundleTransactionTests(unittest.TestCase):
 
     def test_write_and_version_failures_restore_bundle_and_service(self):
         for source, cls in self.consumers:
-            for failure in ('module-write', 'version-timeout'):
+            for failure in ('module-write', 'version-timeout', 'asset-apply'):
                 with self.subTest(consumer=cls, failure=failure), tempfile.TemporaryDirectory() as directory:
                     f = BundleFixture(directory, ROOT / source, cls, failure)
                     self.assertFalse(f.call())
@@ -353,6 +402,28 @@ class BundleTransactionTests(unittest.TestCase):
                 self.assertTrue(f.active)
                 self.assertEqual(f.active_bytes, b'old-core')
 
+    def test_persisted_rollback_restores_assets_and_reports_restart_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade')
+            self.assertTrue(f.call())
+            backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+            self.assertTrue((backup / 'security_assets_backup.json').is_file())
+            f.failure = 'rollback-start'
+            self.assertFalse(f.rollback(str(backup), f.core, f.module))
+            self.assertEqual(f.bundle(), f.old)
+            self.assertFalse(f.active)
+
+    def test_persisted_rollback_does_not_replace_files_if_stop_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade')
+            self.assertTrue(f.call())
+            installed = f.bundle()
+            backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+            f.failure = 'stop'
+            self.assertFalse(f.rollback(str(backup), f.core, f.module))
+            self.assertEqual(f.bundle(), installed)
+            self.assertTrue(f.active)
+
     def test_success_installs_the_complete_required_bundle(self):
         for source, cls in self.consumers:
             for waf in (False, True):
@@ -364,7 +435,7 @@ class BundleTransactionTests(unittest.TestCase):
                                               'preFlightsChecks', 'modSecPreReqs')
                         cleanup.__globals__['is_el10_release'] = lambda: False
                         cleanup(SimpleNamespace(server_root_path=str(f.path('/usr/local/lsws'))))
-                    expected = {f.core: b'new-core', f.module: b'new-module', f.waf: b'new-waf'}
+                    expected = {f.core: b'new-core', f.module: b'new-module', f.waf: b'new-waf', f.admin: b'new-admin'}
                     self.assertIn('modsec', f.downloads)
                     self.assertEqual(f.bundle(), expected)
                     self.assertTrue(f.active)

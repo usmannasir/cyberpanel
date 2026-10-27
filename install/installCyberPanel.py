@@ -375,41 +375,41 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut("Custom binary installation skipped for this platform; using standard OLS", 1)
                 return True  # Not a failure, just skip
 
-            # Paired core 2.5.5 and module 2.7.7 release artifacts.
+            # Paired security core 2.5.6 and unchanged paid module 2.7.7 release artifacts.
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
             # The ABI marker prevents incompatible stock-core loading.
             # EL10 uses its dedicated ABI-matched release set. Existing platform
             # mappings use the same release with native runtime dependencies.
-            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel8',
+            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.6-x86_64-rhel8',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
-                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel8.so',
-                       'sha256': {'binary': 'd12b66fe05fa483f61d3833d86053bb1c81c4cd3421a9be5ef610dffd3a87949',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
+                       'sha256': {'binary': 'daf71e8f3e0f284ddc2abb038eb858e0df5f154f9df6d8ad1e60a23d75dd096d',
                                   'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
-                                  'modsec': '6afde1bb82e4118e5986aa345b9d7120da0e7501dc4fad24d9c93e55b4560843'}},
-             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel9',
+                                  'modsec': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708'}},
+             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.6-x86_64-rhel9',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel9.so',
-                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel9.so',
-                       'sha256': {'binary': '1a6b9338d5dcc3153f15302f5a057faa0a369a90b6d850d72d07bfe3a41cb5be',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
+                       'sha256': {'binary': 'ebc4411647d29aaf900b7610adafd6734b57776f4f7c59fa62b6a9347a5a65b3',
                                   'module': '7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb',
-                                  'modsec': 'f2551a3b4704e576c24a202c92905a0fbe249bc653d0d810f23bbacb40b22c2b'}},
-             'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-rhel10',
+                                  'modsec': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9'}},
+             'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.6-x86_64-rhel10',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel10.so',
-                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-rhel10.so',
-                        'sha256': {'binary': 'e51b81234ab46452268449cb8a694dee09898cfd2eadc252b176b87cd4039ab1',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel10.so',
+                        'sha256': {'binary': '00ddb4ba37c69bc9a2030ece5494ab990c7a65b3e79fd8e2ef432c3725a4767f',
                                    'module': 'edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2',
-                                   'modsec': '5b3086279bee6f29c55e3cee6fbe4bbfd743c8f3371060ef8173dc84b5d3ae95'}},
-             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-ubuntu',
+                                   'modsec': 'a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde'}},
+             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.6-x86_64-ubuntu',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
-                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu.so',
-                        'sha256': {'binary': '736eeb47bd3dc7b2a7206b95106dd735a80b3386118d0b4b17f39f9fa5324f8c',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
+                        'sha256': {'binary': '404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c',
                                    'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
-                                   'modsec': 'd196438c0a113ca339706a1e7e37c51026489e4893d06436d6f76252b6e0d6ec'}},
-             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.5-x86_64-ubuntu',
+                                   'modsec': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536'}},
+             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.6-x86_64-ubuntu',
                           'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
-                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.5-x86_64-ubuntu26.so',
-                          'sha256': {'binary': '736eeb47bd3dc7b2a7206b95106dd735a80b3386118d0b4b17f39f9fa5324f8c',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
+                          'sha256': {'binary': '404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c',
                                      'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
-                                     'modsec': '4bb70915336dce7e535923703014e89210ab4a17b157820d68b3e3db38110879'}}}
+                                     'modsec': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae'}}}
 
             config = BINARY_CONFIGS.get(platform)
             if not config:
@@ -477,6 +477,16 @@ class InstallCyberPanel:
                         return False
                     downloads[kind] = candidate
 
+                from plogical.olsSecurityAssets import (SecurityAssetsTransaction,
+                    SECURITY_ASSETS_URL, SECURITY_ASSETS_SHA256)
+                import json
+                security_archive = os.path.join(staging, 'security-assets.tar.gz')
+                if not self.downloadCustomBinary(SECURITY_ASSETS_URL, security_archive):
+                    InstallCyberPanel.stdOut('ERROR: Security assets download failed; keeping the existing OLS bundle', 1)
+                    return False
+                security_assets = SecurityAssetsTransaction(
+                    security_archive, SECURITY_ASSETS_SHA256, fresh_install=True)
+
                 # Backups and replacement files share the installation filesystem,
                 # so a successful backup is mandatory and every replacement is atomic.
                 from datetime import datetime
@@ -495,6 +505,9 @@ class InstallCyberPanel:
                     shutil.copy2(downloads[kind], candidate)
                     os.chmod(candidate, mode)
 
+                with open(os.path.join(backup_dir, 'security_assets_backup.json'), 'w') as receipt:
+                    json.dump({'backup_dir': security_assets.backup_dir}, receipt)
+
                 was_running = running()
                 stopped = False
                 touched = []
@@ -505,6 +518,7 @@ class InstallCyberPanel:
                                                 stderr=subprocess.PIPE, timeout=60)
                         if result.returncode != 0 or running():
                             raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                    security_assets.apply()
                     for kind, url, target, mode, backup_name in required:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
                         touched.append((target, backup_name))
@@ -514,8 +528,9 @@ class InstallCyberPanel:
                     if result.returncode != 0 or 'LiteSpeed' not in ((result.stdout or '') + (result.stderr or '')):
                         raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
                     if was_running:
-                        result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE, timeout=60)
+                        # Daemon children inherit output pipes; do not wait for pipe EOF.
+                        result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
+                                                stderr=subprocess.DEVNULL, timeout=60)
                         time.sleep(3)
                         if result.returncode != 0 or not running():
                             raise RuntimeError('OpenLiteSpeed did not start with the new bundle')
@@ -532,6 +547,7 @@ class InstallCyberPanel:
                                                stderr=subprocess.PIPE, timeout=60)
                             except Exception:
                                 pass  # Restore files even if the control command failed.
+                            security_assets.rollback()
                             for target, backup_name in reversed(touched):
                                 if previous[target]:
                                     restored = os.path.join(backup_dir, backup_name + '.restore')
@@ -539,9 +555,11 @@ class InstallCyberPanel:
                                     os.replace(restored, target)
                                 elif os.path.exists(target):
                                     os.remove(target)
+                        else:
+                            security_assets.rollback()
                         if was_running and stopped:
-                            result = subprocess.run([control, 'start'], stdout=subprocess.PIPE,
-                                                    stderr=subprocess.PIPE, timeout=60)
+                            result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
+                                                    stderr=subprocess.DEVNULL, timeout=60)
                             time.sleep(3)
                             if result.returncode != 0 or not running():
                                 raise RuntimeError('Previous bundle restored, but OpenLiteSpeed did not restart')
