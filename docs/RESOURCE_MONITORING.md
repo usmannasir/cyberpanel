@@ -14,3 +14,9 @@ Validation:
 - Native Django rendered the changed resource fragment. Headless Chromium used that fragment, real jQuery/Chart.js and production polling code against controlled local HTTP responses. A 6.2-second response did not overlap, unavailable data was not plotted as zero, the next poll recovered, and page exit stopped polling. This is component acceptance, not deployment of the whole candidate panel.
 
 No namespace or cgroup settings were changed by this fix. The broader namespace-management request (#1955) remains separate. Its server/site controls, namespace checks, activation/rollback and upgrade checks are not implemented here.
+
+## Panel service-user acceptance
+
+The initial native test ran as root. A subsequent test as the actual panel worker UID1000 with normal website permissions (home0755, public_html0750 websiteuser:nogroup) exposed a second defect: direct process enumeration could silently omit other users and return zero CPU/RAM. Account sampling therefore now runs through the existing authenticated ProcessUtilities bridge in a read-only `--account-usage` entrypoint. It requires root execution, rejects unsafe/root account names, and validates numeric output; failure is unavailable, not zero. No sudo rules or elevated privileges were added. The bridge token remained in memory and was not logged.
+
+The corrected service-context test observed a live owned account CPU process, nonzero RSS and the 2 MiB website fixture. An unprivileged direct invocation was refused. Existing bridge identity checks returned root for the default route and the fixture user for the explicit-user route. All temporary files, accounts and processes were removed. Process iterator AccessDenied failures also have a focused regression test. The bridge itself must already be correctly configured; this change does not repair unrelated privilege provisioning.

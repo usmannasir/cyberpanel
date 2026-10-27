@@ -33,6 +33,15 @@ class ResourceUsageTests(unittest.TestCase):
         resource.process_usage.side_effect=KeyError('missing user')
         self.assertEqual(0,resource.get_website_resource_usage(self.site)['status']);self.execute.assert_not_called()
 
+    def test_process_iterator_access_denied_is_unavailable(self):
+        self.process.stop()
+        def denied(*args):
+            raise resource.psutil.AccessDenied(pid=123)
+            yield
+        with patch.object(resource.pwd,'getpwnam',return_value=NS(pw_uid=1001)),patch.object(resource.psutil,'process_iter',side_effect=denied):
+            self.assertEqual(0,resource.get_website_resource_usage(self.site)['status'])
+        self.execute.assert_not_called()
+
 class ProcessUsageTests(unittest.TestCase):
     def test_cpu_is_sampled_and_normalized_to_host_capacity(self):
         process=Mock();process.info={'uids':NS(effective=1001),'cpu_times':NS(user=1.0,system=0)}
@@ -69,3 +78,21 @@ class ResourceLimitDisplayTests(unittest.TestCase):
             self.assertEqual('Unavailable',resource.format_resource_limits({'cpu':value})['cpu'])
     def test_missing_values_are_not_claimed_unlimited(self):
         self.assertEqual({'Unavailable'},set(resource.format_resource_limits({}).values()))
+
+
+class AccountBridgeTests(unittest.TestCase):
+    def test_service_user_samples_through_authenticated_bridge(self):
+        with patch.object(resource.os,'geteuid',return_value=1000),patch.object(resource,'process_usage') as direct,patch.object(resource.ProcessUtilities,'outputExecutioner',return_value=(1,'{"cpu_usage":25,"memory_usage":2}')) as execute:
+            self.assertEqual((25,2),resource.account_usage('siteuser'));direct.assert_not_called()
+            self.assertIn('--account-usage siteuser',execute.call_args.args[0]);self.assertFalse(execute.call_args.kwargs['shell'])
+    def test_bridge_failure_is_not_zero(self):
+        with patch.object(resource.os,'geteuid',return_value=1000),patch.object(resource.ProcessUtilities,'outputExecutioner',return_value=(0,'denied')):
+            with self.assertRaises(ValueError):resource.account_usage('siteuser')
+    def test_invalid_bridge_metrics_are_rejected(self):
+        for output in ('{}','{"cpu_usage":NaN,"memory_usage":2}','{"cpu_usage":true,"memory_usage":2}'):
+            with patch.object(resource.os,'geteuid',return_value=1000),patch.object(resource.ProcessUtilities,'outputExecutioner',return_value=(1,output)):
+                with self.assertRaises((ValueError,KeyError)):resource.account_usage('siteuser')
+    def test_invalid_user_never_reaches_bridge(self):
+        with patch.object(resource.os,'geteuid',return_value=1000),patch.object(resource.ProcessUtilities,'outputExecutioner') as execute:
+            with self.assertRaises(ValueError):resource.account_usage('root')
+            execute.assert_not_called()

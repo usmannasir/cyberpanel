@@ -1,10 +1,14 @@
 """Bounded, read-only resource measurements for an authorized website."""
 import os
+import sys
+import json
 import math
 import pwd
 import shlex
 import time
 import psutil
+if __name__ == '__main__':
+    sys.path.insert(0, '/usr/local/CyberCP')
 from plogical.processUtilities import ProcessUtilities
 from plogical.securityUtils import is_safe_system_user
 
@@ -43,6 +47,24 @@ def process_usage(username, interval=0.1):
     return cpu_percent, memory_percent
 
 
+def account_usage(username):
+    """Sample in the existing privileged bridge; hidepid can silently hide peers."""
+    if not is_safe_system_user(username) or username == 'root':
+        raise ValueError('Invalid website system user.')
+    if os.geteuid() == 0:
+        return process_usage(username)
+    command = '/usr/local/CyberCP/bin/python %s --account-usage %s' % (
+        shlex.quote(os.path.abspath(__file__)), shlex.quote(username))
+    ok, output = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+    if not ok:
+        raise ValueError('Account process usage is unavailable.')
+    data = json.loads(output)
+    values = (data['cpu_usage'], data['memory_usage'])
+    if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0 for value in values):
+        raise ValueError('Account process usage is unavailable.')
+    return values
+
+
 def get_website_resource_usage(website):
     try:
         # The Unix account name normally differs from the website domain.
@@ -53,7 +75,7 @@ def get_website_resource_usage(website):
         path = home + '/public_html'
         if os.path.commonpath((os.path.realpath(home), os.path.realpath(path))) != os.path.realpath(home):
             raise ValueError('Website document root is outside its home directory.')
-        cpu_percent, memory_percent = process_usage(website.externalApp)
+        cpu_percent, memory_percent = account_usage(website.externalApp)
         # Bound expensive disk scans; use argv semantics through the executor.
         ok, output = ProcessUtilities.outputExecutioner(
             '/usr/bin/timeout 5 du -sk -- ' + shlex.quote(path), shell=False, retRequired=True)
@@ -70,7 +92,7 @@ def get_website_resource_usage(website):
         return {'status': 1, 'cpu_usage': round(cpu_percent, 2),
                 'memory_usage': round(memory_percent, 2), 'disk_used': round(disk_used, 2),
                 'disk_total': round(disk_total, 2), 'disk_percent': round(disk_used / disk_total * 100, 4)}
-    except (OSError, ValueError, KeyError, IndexError, TypeError, AttributeError):
+    except (OSError, ValueError, KeyError, IndexError, TypeError, AttributeError, psutil.Error):
         return {'status': 0, 'error_message': 'Resource usage is unavailable. Check the website account, directory permissions and server load.'}
 
 
@@ -94,3 +116,14 @@ def format_resource_limits(values):
     return {'cpu': cpu, 'memory': display(values.get('mem')),
             'io': display(values.get('io')), 'tasks': display(values.get('tasks')),
             'iops': display(values.get('iops'))}
+
+
+if __name__ == '__main__':
+    try:
+        if len(sys.argv) != 3 or sys.argv[1] != '--account-usage' or os.geteuid() != 0:
+            raise ValueError('Privileged account sampling is required.')
+        cpu, memory = process_usage(sys.argv[2])
+        print(json.dumps({'cpu_usage': cpu, 'memory_usage': memory}))
+    except (OSError, ValueError, KeyError, IndexError, TypeError, AttributeError, psutil.Error):
+        print(json.dumps({'error': 'Account process usage is unavailable.'}))
+        sys.exit(1)
