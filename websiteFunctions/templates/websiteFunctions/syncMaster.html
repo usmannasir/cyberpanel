@@ -1,5 +1,7 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
+{% load static %}
+{% block module_scripts %}<script defer src="{% static 'websiteFunctions/syncMaster.js' %}?v={{ CP_VERSION }}-20261027"></script>{% endblock %}
 {% block title %}{% trans "Sync to Master - CyberPanel" %}{% endblock %}
 {% block content %}
 
@@ -23,6 +25,8 @@
                 <div class="example-box-wrapper">
 
 
+                    <div class="alert alert-warning">{% trans "Sync replaces selected production content. A private files and database backup is required before changes start. Production URLs and configuration are preserved." %}</div>
+                    <div class="alert alert-danger" ng-show="syncError" ng-cloak>{$ syncError $}</div>
                     <form name="websiteCreationForm" action="/" id="createPackages"
                           class="form-horizontal bordered-row">
 
@@ -32,7 +36,7 @@
                                 <div class="checkbox">
                                     <label>
                                         <input ng-model="eraseCheck" type="checkbox" value="">
-                                        Copy Complete Data
+                                        Replace WordPress content (including deletions)
                                     </label>
                                 </div>
                             </div>
@@ -50,7 +54,7 @@
                                 <div class="checkbox">
                                     <label>
                                         <input ng-model="copyChanged" type="checkbox" value="">
-                                        Copy Changed Files
+                                        Merge changed WordPress content (keep production-only files)
                                     </label>
                                 </div>
                             </div>
@@ -59,7 +63,8 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
-                                <button type="button" ng-click="startSyncing()"
+                                <label><input type="checkbox" ng-model="confirmed"> {% trans "I understand this changes the live site." %}</label>
+                                <button type="button" ng-disabled="!confirmed || syncSubmitted" ng-click="startSyncing()"
                                         class="btn btn-primary btn-lg btn-block">{% trans "Start Syncing" %}</button>
                             </div>
                         </div>
