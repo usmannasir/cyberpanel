@@ -74,6 +74,17 @@ class SecurityAssetsTests(unittest.TestCase):
         self.assertFalse((self.root / 'admin/cyberpanel-php').exists())
         self.assertFalse((self.root / 'admin/html').exists())
 
+    def test_installed_optional_component_receives_new_source_files(self):
+        component = self.root / 'add-ons/webcachemgr'
+        component.mkdir(parents=True)
+        tx = self.prepare()
+        with patch.object(tx, 'verify', return_value={}):
+            tx.apply()
+        self.assertEqual((component / 'VERSION').read_bytes(), b'new-optional-version')
+        tx.rollback()
+        self.assertFalse((component / 'VERSION').exists())
+        self.assertTrue(component.is_dir())
+
     def test_fresh_install_disables_webadmin_and_rollback_restores_bytes(self):
         config = self.root / 'conf/httpd_config.conf'
         previous = config.read_bytes()

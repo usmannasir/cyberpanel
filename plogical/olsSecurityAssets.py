@@ -125,8 +125,13 @@ class SecurityAssetsTransaction:
                         raise RuntimeError('No system CA bundle for isolated WebAdmin PHP')
                     data += ('\nopenssl.cafile=\"' + ca_bundle + '\"\n').encode('utf-8')
                 target = self._target(path)
-                if item.get('existing_only') and not os.path.lexists(target):
-                    continue
+                if item.get('existing_only'):
+                    component = ('add-ons/webcachemgr' if path.startswith('add-ons/webcachemgr/')
+                                 else 'lsns' if path.startswith('lsns/bin/') else None)
+                    if component is None:
+                        raise RuntimeError('Existing-only policy requires an optional component')
+                    if not os.path.isdir(os.path.join(self.server_root, component)):
+                        continue
                 prepared.append((path, data, mode, target))
             if set(names) != {'manifest.json'} | {'payload/' + p for p in seen}:
                 raise RuntimeError('Unlisted files in OLS security assets')
