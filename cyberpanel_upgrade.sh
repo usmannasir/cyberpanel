@@ -1157,6 +1157,9 @@ fi
 if grep -q '^from lscpd_binary import ' upgrade.py; then
   Download_Upgrade_Source "lscpd_binary.py" "lscpd_binary.py" "^def select_lscpd_binary(" || exit 1
 fi
+if grep -q '^def load_ols_security_assets(' upgrade.py; then
+  Download_Upgrade_Source "plogical/olsSecurityAssets.py" "olsSecurityAssets.py" "^class SecurityAssetsTransaction" || exit 1
+fi
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py

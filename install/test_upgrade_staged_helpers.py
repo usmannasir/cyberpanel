@@ -28,7 +28,8 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.stage.mkdir()
         self.release = self.root / 'http/v3.0.8'
         for name in ('plogical/upgrade.py', 'cyberpanel_version.py',
-                     'cyberpanel_firewall_migration.py', 'lscpd_binary.py'):
+                     'cyberpanel_firewall_migration.py', 'lscpd_binary.py',
+                     'plogical/olsSecurityAssets.py'):
             target = self.release / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, target)
@@ -92,6 +93,63 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         result = self.stage_sources()
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Failed to download lscpd_binary.py', result.stdout)
+
+    def test_security_helper_uses_selected_release_with_old_installed_package(self):
+        result = self.stage_sources()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.stage / 'olsSecurityAssets.py').read_bytes(),
+                         (self.release / 'plogical/olsSecurityAssets.py').read_bytes())
+        legacy = self.root / 'legacy-install/plogical'
+        legacy.mkdir(parents=True)
+        (legacy / '__init__.py').write_text('')
+        # This old package must remain available; staging must not shadow it.
+        (legacy / 'old_helper.py').write_text('value = "preserved"\n')
+        (legacy / 'olsSecurityAssets.py').write_text('release = "old installed helper"\n')
+        runner = '''import ast, os, sys
+from pathlib import Path
+sys.path.insert(0, %r)
+import plogical.old_helper
+import plogical.olsSecurityAssets
+ns = {'os': os, '__file__': %r}
+tree = ast.parse(Path(%r).read_text())
+loader = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'load_ols_security_assets')
+exec(compile(ast.Module(body=[loader], type_ignores=[]), 'upgrade.py', 'exec'), ns)
+helper = ns['load_ols_security_assets']()
+assert helper.__file__ == %r
+assert callable(helper.SecurityAssetsTransaction)
+assert plogical.old_helper.value == 'preserved'
+assert plogical.olsSecurityAssets.release == 'old installed helper'
+print('release helper loaded')
+''' % (str(legacy.parent), str(self.stage / 'upgrade.py'),
+       str(self.stage / 'upgrade.py'), str(self.stage / 'olsSecurityAssets.py'))
+        probe = subprocess.run([sys.executable, '-I', '-c', runner],
+                               cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(probe.returncode, 0, probe.stdout + probe.stderr)
+        self.assertIn('release helper loaded', probe.stdout)
+
+    def test_missing_security_helper_stops_staging_and_removes_stale_copy(self):
+        (self.release / 'plogical/olsSecurityAssets.py').unlink()
+        (self.stage / 'olsSecurityAssets.py').write_text('class SecurityAssetsTransaction: pass\n')
+        result = self.stage_sources()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Failed to download olsSecurityAssets.py', result.stdout)
+        self.assertNotIn('class SecurityAssetsTransaction',
+                         (self.stage / 'olsSecurityAssets.py').read_text())
+
+    def test_invalid_security_helper_stops_staging(self):
+        (self.release / 'plogical/olsSecurityAssets.py').write_text('rate limit response\n')
+        result = self.stage_sources()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Failed to download olsSecurityAssets.py', result.stdout)
+
+    def test_older_upgrader_does_not_require_security_helper(self):
+        source = self.release / 'plogical/upgrade.py'
+        source.write_text(source.read_text().replace(
+            'def load_ols_security_assets(', 'def older_unused_loader('))
+        (self.release / 'plogical/olsSecurityAssets.py').unlink()
+        result = self.stage_sources()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.stage / 'olsSecurityAssets.py').exists())
 
     def test_invalid_selector_download_stops_staging(self):
         (self.release / 'lscpd_binary.py').write_text('rate limit response\n')
