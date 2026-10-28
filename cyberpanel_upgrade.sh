@@ -220,6 +220,48 @@ if [[ "$Server_Country" = *"CN"* ]] ; then
 fi
 }
 
+Protect_Custom_OLS_From_APT() {
+  # APT owns these paths even when our ABI-matched overlay supplies their bytes.
+  # Keep that package held across upgrades and unattended package maintenance.
+  local distro_id core module validation validation_status held
+  distro_id=$(. /etc/os-release; printf '%s' "$ID")
+  [[ "$distro_id" == "ubuntu" ]] || return 0
+  core=/usr/local/lsws/bin/openlitespeed
+  module=/usr/local/lsws/modules/cyberpanel_ols.so
+  [[ -f "$core" ]] || return 0
+  # This marker is also used by plogical/modSec.py to recognize custom cores.
+  # A module filename alone must never pin a stock/unsupported installation.
+  grep -aFq 'cyberpanel_lsi_api_abi_v1' "$core" || return 0
+  if [[ ! -x "$core" ]] || ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module"; then
+    echo 'ERROR: Incomplete custom OLS bundle; no package changes attempted.'
+    return 1
+  fi
+  validation=$(timeout 30 "$core" -t 2>&1)
+  validation_status=$?
+  if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* ]] ||
+     [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+    echo 'ERROR: Custom OLS configuration failed validation; no package changes attempted.'
+    printf '%s\n' "${validation: -2000}"
+    return 1
+  fi
+  case "$(dpkg-query -W -f='${Status}' openlitespeed 2>/dev/null)" in
+    'install ok installed'|'hold ok installed') ;;
+    *) echo 'ERROR: Cannot verify the custom OLS package owner; no package changes attempted.'; return 1 ;;
+  esac
+  held=$(apt-mark showhold) || return 1
+  if ! grep -Fxq 'openlitespeed' <<< "$held"; then
+    if ! apt-mark hold openlitespeed; then
+      echo 'ERROR: Could not protect the custom OLS package; no package changes attempted.'
+      return 1
+    fi
+  fi
+  held=$(apt-mark showhold) || return 1
+  if ! grep -Fxq 'openlitespeed' <<< "$held"; then
+    echo 'ERROR: Custom OLS package hold was not retained; no package changes attempted.'
+    return 1
+  fi
+}
+
 Check_OS() {
 if [[ ! -f /etc/os-release ]] ; then
   echo -e "Unable to detect the Operating System...\n"
@@ -1814,6 +1856,8 @@ Check_Upgrade_Services || exit 1
 Set_Default_Variables
 
 Check_Server_IP "$@"
+
+Protect_Custom_OLS_From_APT || exit 1
 
 Check_OS
 
