@@ -33,6 +33,20 @@ from lscpd_binary import select_lscpd_binary
 from contextlib import contextmanager
 
 
+def load_ols_security_assets():
+    """Use the helper paired with this upgrader, before replacing installed code."""
+    import importlib.util
+    helper = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'olsSecurityAssets.py')
+    spec = importlib.util.spec_from_file_location('cyberpanel_upgrade_ols_assets', helper)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for name in ('SecurityAssetsTransaction', 'restore_security_assets',
+                 'SECURITY_ASSETS_URL', 'SECURITY_ASSETS_SHA256'):
+        if not hasattr(module, name):
+            raise ImportError('Incomplete OLS security helper: ' + helper + ' (missing ' + name + ')')
+    return module
+
+
 def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
     result = subprocess.run([binary, '-t'], capture_output=True, text=True, timeout=30)
     output = (result.stdout or '') + (result.stderr or '')
@@ -1113,6 +1127,8 @@ class Upgrade:
                 Upgrade.stdOut("Skipping custom binary installation", 0)
                 return True  # Not fatal
 
+            assets_module = load_ols_security_assets()
+
             if platform == 'rhel10':
                 Upgrade.stdOut(
                     "Installing AlmaLinux 10 OpenLiteSpeed runtime dependency...",
@@ -1185,15 +1201,13 @@ class Upgrade:
                         return False
                     downloads[kind] = candidate
 
-                from plogical.olsSecurityAssets import (SecurityAssetsTransaction,
-                    SECURITY_ASSETS_URL, SECURITY_ASSETS_SHA256)
                 import json
                 security_archive = os.path.join(staging, 'security-assets.tar.gz')
-                if not Upgrade.downloadCustomBinary(SECURITY_ASSETS_URL, security_archive):
+                if not Upgrade.downloadCustomBinary(assets_module.SECURITY_ASSETS_URL, security_archive):
                     Upgrade.stdOut('ERROR: Security assets download failed; keeping the existing OLS bundle', 0)
                     return False
-                security_assets = SecurityAssetsTransaction(
-                    security_archive, SECURITY_ASSETS_SHA256, fresh_install=False)
+                security_assets = assets_module.SecurityAssetsTransaction(
+                    security_archive, assets_module.SECURITY_ASSETS_SHA256, fresh_install=False)
 
                 # Backups and replacement files share the installation filesystem,
                 # so a successful backup is mandatory and every replacement is atomic.
@@ -1289,6 +1303,9 @@ class Upgrade:
             backup_binary = os.path.join(backup_dir, "openlitespeed.backup")
 
             if os.path.exists(backup_binary):
+                # Resolve support code before stopping the running service.
+                assets_receipt = os.path.join(backup_dir, 'security_assets_backup.json')
+                assets_module = load_ols_security_assets() if os.path.exists(assets_receipt) else None
                 # Stop OLS before rollback
                 Upgrade.stdOut("Stopping OpenLiteSpeed for rollback...", 0)
                 stopped = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
@@ -1301,13 +1318,11 @@ class Upgrade:
                     return False
 
                 # Older bundle backups predate the separately staged support assets.
-                assets_receipt = os.path.join(backup_dir, 'security_assets_backup.json')
                 if os.path.exists(assets_receipt):
                     import json
-                    from plogical.olsSecurityAssets import restore_security_assets
                     with open(assets_receipt) as receipt:
                         assets_backup = json.load(receipt)['backup_dir']
-                    restore_security_assets(assets_backup)
+                    assets_module.restore_security_assets(assets_backup)
 
                 # Restore binary (remove first: cp onto a mapped binary = ETXTBSY)
                 if os.path.exists(binary_path):

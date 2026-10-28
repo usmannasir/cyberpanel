@@ -223,6 +223,7 @@ class BundleFixture:
                                                move=lambda src, dst: shutil.move(self.path(src), self.path(dst))),
                          subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
                          time=SimpleNamespace(sleep=lambda seconds: None), logging=mock.Mock(),
+                         load_ols_security_assets=lambda: imports('plogical.olsSecurityAssets'),
                          open=lambda p, *a, **kw: open(self.path(p), *a, **kw),
                          __builtins__=dict(vars(builtins), __import__=imports))
         helpers = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'validate_ols_configuration']
