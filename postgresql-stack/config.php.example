@@ -1,0 +1,29 @@
+<?php
+if (!defined('APP_INIT')) {
+    http_response_code(404);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>';
+    exit;
+}
+
+$config = array(
+    'pg_version' => '17',
+    'pg_port' => 5432,
+    'pg_superuser' => 'postgres',
+    'pg_superuser_password' => 'CHANGE_ME_pg_superuser',
+    'pg_app_user' => 'pgstack_app',
+    'pg_app_password' => 'CHANGE_ME_pg_app',
+    'pg_cron_database' => 'postgres',
+    'pgadmin_email' => 'pgadmin@example.com',
+    'pgadmin_password' => 'CHANGE_ME_pgadmin',
+    'pgadmin_sso_token' => '',
+    'pgadmin_bind_host' => '127.0.0.1',
+    'pgadmin_bind_port' => 5050,
+    'pgadmin_domain' => 'pgadmin.example.com',
+    'master_domain' => 'example.com',
+    'cyberpanel_owner' => 'Admin',
+    'cyberpanel_php' => '8.3',
+    'with_pgagent' => false,
+    'install_tile' => true,
+    'installed_at' => '',
+);

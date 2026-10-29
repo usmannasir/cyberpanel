@@ -140,6 +140,7 @@ Admin_Pass="1234567"
 
 Memcached="Off"
 Redis="Off"
+PostgreSQL_Stack="Off"
 
 Postfix_Switch="On"
 PowerDNS_Switch="On"
@@ -780,6 +781,7 @@ echo -e "\n\e[31m-v\e[39m or \e[31m--version\e[39m : choose to install CyberPane
 echo -e "Please be aware, this serial number must be obtained from LiteSpeed Store."
 echo -e "And if this serial number has been used before, it must be released/migrated in Store first, otherwise it will fail to start."
 echo -e "\n\e[31m-a\e[39m or \e[31m--addons\e[39m : install addons: memcached, redis, PHP extension for memcached and redis"
+echo -e "\n\e[31m--postgresql-stack\e[39m : optional PostgreSQL 17 + pgAdmin stack (AlmaLinux/RHEL 9+)"
 echo -e "\n\e[31m-p\e[39m or \e[31m--password\e[39m : set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use 1234567."
 echo -e "e.g. \e[31m-p r\e[39m will generate a random password"
 echo -e "     \e[31m-p 123456789\e[39m will set password to 123456789"
@@ -885,6 +887,10 @@ else
         Memcached="On"
         Redis="On"
         echo -e "\nEnable Addons..."
+      ;;
+      --postgresql-stack)
+        PostgreSQL_Stack="On"
+        echo -e "\nEnable PostgreSQL + pgAdmin stack..."
       ;;
       -h | --help)
         Show_Help
@@ -1140,6 +1146,17 @@ if [[ $Tmp_Input =~ ^(no|n|N) ]]; then
 else
   Redis="On"
   echo -e "\nInstall Redis process and its PHP extension set to Yes...\n"
+fi
+
+echo -e "\nDo you wish to install the optional PostgreSQL + pgAdmin stack?"
+echo -e "(PostgreSQL 17, pg_cron, pgAdmin 4 with CyberPanel SSO tile; AlmaLinux/RHEL 9+ recommended)"
+printf "%s" "Please select [y/N]: "
+read -r Tmp_Input
+if [[ $Tmp_Input =~ ^(yes|y|Y) ]]; then
+  PostgreSQL_Stack="On"
+  echo -e "\nPostgreSQL stack set to Yes...\n"
+else
+  PostgreSQL_Stack="Off"
 fi
 
 echo -e "\nWould you like to set up a WatchDog \e[31m(beta)\e[39m for Web service and Database service ?"
@@ -2097,6 +2114,28 @@ Post_Install_Addon_Redis() {
   fi
 }
 
+Post_Install_Addon_PostgreSQL_Stack() {
+  log_function_start "Post_Install_Addon_PostgreSQL_Stack"
+  local stack_dir="/usr/local/CyberCP/postgresql-stack"
+  if [[ ! -x "${stack_dir}/install.sh" ]]; then
+    echo -e "\nPostgreSQL stack files missing at ${stack_dir}; skipping optional addon.\n"
+    log_function_end "Post_Install_Addon_PostgreSQL_Stack"
+    return 0
+  fi
+  local master_domain pgadmin_domain
+  master_domain="$(hostname -d 2>/dev/null || true)"
+  if [[ -z "${master_domain}" ]]; then
+    master_domain="$(hostname -f 2>/dev/null || echo localhost)"
+  fi
+  pgadmin_domain="pgadmin.${master_domain}"
+  log_info "Installing optional PostgreSQL stack (pgAdmin: ${pgadmin_domain})"
+  if ! bash "${stack_dir}/install.sh" --master-domain "${master_domain}" --domain "${pgadmin_domain}"; then
+    log_error "PostgreSQL stack install failed; see ${stack_dir}/logs/install.log"
+  fi
+  log_function_end "Post_Install_Addon_PostgreSQL_Stack"
+}
+
+
 Post_Install_PHP_Session_Setup() {
 log_function_start "Post_Install_PHP_Session_Setup"
 echo -e "\nSetting up PHP session storage path...\n"
@@ -2736,6 +2775,10 @@ fi
 
 if [[ "$Redis" = "On" ]] ; then
   Post_Install_Addon_Redis
+fi
+
+if [[ "$PostgreSQL_Stack" = "On" ]] ; then
+  Post_Install_Addon_PostgreSQL_Stack
 fi
 
 Post_Install_Required_Components

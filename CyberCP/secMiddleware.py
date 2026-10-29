@@ -13,7 +13,7 @@ CONTENT_SECURITY_POLICY = (
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
     "https://www.jsdelivr.com https://cdn.jsdelivr.net https://code.jquery.com "
     "https://code.angularjs.org https://cdnjs.cloudflare.com "
-    "https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com https://js.stripe.com; "
+    "https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com https://js.stripe.com https://static.cloudflareinsights.com; "
     "connect-src *; "
     "font-src 'self' data: https:; "
     "style-src 'self' 'unsafe-inline' https:; "
