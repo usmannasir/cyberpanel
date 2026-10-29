@@ -43,7 +43,7 @@ class PhpMyAdminSessionSetupTests(unittest.TestCase):
                     def command(command, *args):
                         if command.startswith('chown -R lscpd:lscpd '):
                             self.assertEqual('chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', command)
-                            return
+                            return True
                         fields = command.split()
                         self.assertEqual(3, len(fields))
                         self.assertEqual('cp', fields[0])
@@ -52,6 +52,7 @@ class PhpMyAdminSessionSetupTests(unittest.TestCase):
                         self.assertEqual('/usr/local/CyberCP/plogical/' + name, fields[1])
                         shutil.copyfile(root / 'plogical' / name, mapped(fields[2]))
                         copied.append(name)
+                        return True
                     scope = dict(open=fixture_open, rString='fixture-secret-only',
                                  os=SimpleNamespace(mkdir=lambda p: mapped(p).mkdir(), EX_OSERR=71),
                                  self=SimpleNamespace(distro='fixture'),

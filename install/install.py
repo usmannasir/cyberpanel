@@ -1109,19 +1109,23 @@ class preFlightsChecks:
 
             command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
 
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
-                                  command, 1, 0, os.EX_OSERR)
+            if not preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                         command, 1, 0, os.EX_OSERR):
+                raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
 
             command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
-                                  command, 1, 0, os.EX_OSERR)
+            if not preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                         command, 1, 0, os.EX_OSERR):
+                raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True)
+            if subprocess.call(command, shell=True) != 0:
+                raise RuntimeError("Required phpMyAdmin extraction move failed")
 
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
-                                  command, 1, 0, os.EX_OSERR)
+            if not preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                         command, 1, 0, os.EX_OSERR):
+                raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
 
             ## Write secret phrase
 
@@ -1163,16 +1167,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
 
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin'
-            preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
-                                  'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
+            if not preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
+                                         'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR):
+                raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
 
             from install.proxy_identity import ensure_pma_peer_key
             ensure_pma_peer_key()
 
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if not preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR):
+                raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsession.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsession.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if not preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR):
+                raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
 
             if self.remotemysql == 'ON':
                 configure_phpmyadmin_signon(
@@ -1181,6 +1188,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     self.mysqlport,
                 )
 
+            return 1
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
@@ -3049,7 +3057,8 @@ def main():
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-    checks.download_install_phpmyadmin()
+    if not checks.download_install_phpmyadmin():
+        raise RuntimeError("phpMyAdmin setup failed; installation stopped. Check the [download_install_phpmyadmin] error in the install log.")
     checks.setupCLI()
     checks.setup_cron()
     checks.installRestic()
