@@ -1793,8 +1793,6 @@ if [[ $Panel_Port = "" ]] ; then
   Panel_Port="8090"
 fi
 
-Panel_HTTP_Code=$(curl -k -L -s -o /dev/null -w "%{http_code}" "https://127.0.0.1:${Panel_Port#*:}/")
-
 # A responding panel cannot prove the upgrade completed. upgrade.py refreshes
 # source files before later migrations and service work, so a failed run can
 # leave a mixture of old and new state even though the panel is online again.
@@ -1807,6 +1805,21 @@ if [[ "${UPGRADE_FAILED:-0}" -ne 0 ]] ; then
   rm -rf /root/cyberpanel_upgrade_tmp
   exit 1
 fi
+
+# LSCPD can accept connections before its Python application finishes starting.
+# Bound both each request and the retry count; persistent failures still fail.
+local panel_attempt
+Panel_HTTP_Code="000"
+for panel_attempt in {1..10}; do
+  if Panel_HTTP_Code=$(curl -k -L -s --connect-timeout 2 --max-time 5 -o /dev/null -w "%{http_code}" "https://127.0.0.1:${Panel_Port#*:}/") &&
+      [[ "$Panel_HTTP_Code" =~ ^(200|302|401|403)$ ]]; then
+    break
+  fi
+  Panel_HTTP_Code="000"
+  if [[ "$panel_attempt" -lt 10 ]]; then
+    sleep 2
+  fi
+done
 
 if [[ "$Panel_HTTP_Code" =~ ^(200|302|401|403)$ ]] ; then
   echo "###################################################################"
