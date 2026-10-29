@@ -5595,6 +5595,10 @@ pm.max_spare_servers = 3
         ## Upgrade version
 
         Upgrade.fixPermissions()
+        # The panel service reads this credential for the admin phpMyAdmin handoff.
+        # Keep errors outside fixPermissions' legacy broad exception handler.
+        from plogical.mysqlPasswordPermissions import repair as repair_mysql_password_permissions
+        repair_mysql_password_permissions()
         from plogical.roundcubeSudo import provision as provision_roundcube_sudo
         provision_roundcube_sudo()
         from plogical.gdriveSudo import provision as provision_gdrive_sudo
