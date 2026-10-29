@@ -635,7 +635,8 @@ module cyberpanel_ols {
 
             # Install custom binaries with PHP config support
             # This replaces the standard binary with enhanced version
-            self.installCustomOLSBinaries()
+            if not self.installCustomOLSBinaries():
+                raise RuntimeError("Custom OLS bundle installation failed; installation stopped before further configuration changes. Check the install log and any rollback diagnostics.")
 
             # Configure the custom module
             self.configureCustomModule()

@@ -1993,11 +1993,17 @@ fi
 if [[ "$Remote_MySQL" = "On" ]] ; then
   CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password" \
     /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+  Install_Status=$?
   unset MySQL_Password
 else
   /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+  Install_Status=$?
 fi
 
+if [[ "$Install_Status" -ne 0 ]]; then
+  echo "CyberPanel installation failed (exit $Install_Status). Check /var/log/installLogs.txt for details."
+  exit "$Install_Status"
+fi
 
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then
   echo -e "\nCyberPanel installation sucessfully completed...\n"
