@@ -53,7 +53,7 @@ class PhpMyAdminSessionSetupTests(unittest.TestCase):
                         shutil.copyfile(root / 'plogical' / name, mapped(fields[2]))
                         copied.append(name)
                         return True
-                    scope = dict(open=fixture_open, rString='fixture-secret-only',
+                    scope = dict(__package__='install', open=fixture_open, rString='fixture-secret-only',
                                  os=SimpleNamespace(mkdir=lambda p: mapped(p).mkdir(), EX_OSERR=71),
                                  self=SimpleNamespace(distro='fixture'),
                                  preFlightsChecks=SimpleNamespace(call=command),

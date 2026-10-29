@@ -79,7 +79,7 @@ class PhpMyAdminFailureTests(unittest.TestCase):
         cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'preFlightsChecks')
         method = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'download_install_phpmyadmin')
         commands = Mock(side_effect=lambda command, *args: not (failed_command and command.startswith(failed_command)))
-        scope = dict(os=Mock(), subprocess=Mock(), logging=SimpleNamespace(InstallLog=Mock()),
+        scope = dict(__package__='install', os=Mock(), subprocess=Mock(), logging=SimpleNamespace(InstallLog=Mock()),
                      preFlightsChecks=SimpleNamespace(call=commands),
                      install_utils=SimpleNamespace(generate_random_string=lambda count: 'fixture-only'))
         scope['subprocess'].call.return_value = move_status

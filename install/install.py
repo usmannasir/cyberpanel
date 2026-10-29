@@ -1171,7 +1171,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                                          'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR):
                 raise RuntimeError("Required phpMyAdmin setup command failed: " + command)
 
-            from install.proxy_identity import ensure_pma_peer_key
+            # Direct CLI execution also loads install.py as the non-package
+            # module "install". Resolve its sibling without that package name.
+            if __package__:
+                from .proxy_identity import ensure_pma_peer_key
+            else:
+                from proxy_identity import ensure_pma_peer_key
             ensure_pma_peer_key()
 
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
