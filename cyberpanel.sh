@@ -2554,6 +2554,65 @@ log_error "No usable LiteSpeed PHP CLI binary was found"
 return 1
 }
 
+CyberPanel_CLI_Succeeded() {
+# CLI failures can exit zero, and legacy TLS failures can report success=1
+# with a nonempty error. Require the complete actual printStatus contract.
+python3 -c '
+import json, sys
+data = sys.stdin.read(1048577)
+statuses = []
+if len(data) <= 1048576:
+    for line in data.splitlines():
+        try:
+            status = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(status, dict) and "success" in status:
+            statuses.append(status)
+ok = (len(statuses) == 1 and type(statuses[0]["success"]) is int
+      and statuses[0]["success"] == 1 and statuses[0].get("errorMessage") == "None")
+sys.exit(0 if ok else 1)
+'
+}
+
+Setup_Hostname_SSL() {
+local hostname_value php_version php_suffix create_result ssl_result
+local lsws_root="${LSWS_ROOT:-/usr/local/lsws}"
+hostname_value=$(hostname --fqdn) || return 0
+if [[ -z "$hostname_value" || -z "$(dig @1.1.1.1 +short "$hostname_value")" ]]; then
+  return 0
+fi
+
+# Prefer the supported PHP 8.3 runtime for a new hostname website. Require
+# its LSAPI executable; a CLI-only package cannot serve the website.
+for php_version in 8.3 8.2 8.4 8.5 8.1 8.0 7.4; do
+  php_suffix=${php_version/./}
+  if [[ -f "$lsws_root/lsphp$php_suffix/bin/lsphp" && -x "$lsws_root/lsphp$php_suffix/bin/lsphp" ]]; then
+    echo "$hostname_value resolves to valid IP. Setting up hostname SSL"
+    if ! create_result=$(cyberpanel createWebsite --package Default --owner admin --domainName "$hostname_value" --email root@localhost --php "$php_version"); then
+      log_error "Hostname website creation command failed; skipping hostname SSL"
+      return 1
+    fi
+    if ! printf '%s' "$create_result" | CyberPanel_CLI_Succeeded; then
+      log_error "Hostname website creation did not report success; skipping hostname SSL"
+      return 1
+    fi
+    if ! ssl_result=$(cyberpanel hostNameSSL --domainName "$hostname_value"); then
+      log_error "Hostname SSL command failed"
+      return 1
+    fi
+    if ! printf '%s' "$ssl_result" | CyberPanel_CLI_Succeeded; then
+      log_error "Hostname SSL did not report success"
+      return 1
+    fi
+    return 0
+  fi
+done
+
+log_error "No installed executable LiteSpeed PHP runtime is available for the hostname website"
+return 1
+}
+
 Post_Install_Tweak() {
 log_function_start "Post_Install_Tweak"
 log_info "Applying post-installation tweaks and configurations"
@@ -2674,7 +2733,7 @@ Post_Install_CN_Replacement
 fi
 
 # If valid hostname is set that resolves externally we can issue an ssl. This will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
-HostName=$(hostname --fqdn); [ -n "$(dig @1.1.1.1 +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
+Setup_Hostname_SSL || return 1
 
 
 }
@@ -2764,6 +2823,6 @@ Post_Install_Setup_Watchdog
 
 Post_Install_Setup_Utility
 
-Post_Install_Tweak
+Post_Install_Tweak || exit 1
 
 Post_Install_Display_Final_Info
