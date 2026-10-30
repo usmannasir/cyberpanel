@@ -5,6 +5,7 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
+import socket
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from .policyConstraint import policyConstraints
 from emailPremium.models import DomainLimits, EmailLogs
@@ -13,6 +14,8 @@ import time
 from .cacheManager import cacheManager
 
 limitThreads = multi.BoundedSemaphore(10)
+# Cache lookups, limit checks and increments must be one transaction.
+policyLock = multi.RLock()
 
 class HandleRequest(multi.Thread):
     cleaningPath = '/home/cyberpanel/purgeCache'
@@ -23,68 +26,75 @@ class HandleRequest(multi.Thread):
     def __del__(self):
         try:
             self.connection.close()
-        except BaseException as msg:
+        except Exception as msg:
             logging.writeToFile(str(msg) + ' [HandleRequest.__del__]')
+
+    requestTimeout = 30
+    maxRequestBytes = 64 * 1024
 
     def run(self):
         limitThreads.acquire()
-        dataComplete = ""
-
+        dataComplete = b""
         try:
+            self.connection.settimeout(self.requestTimeout)
             while True:
-
-                Data = self.connection.recv(64)
-                # Wait for a connection
-
-                try:
-                    if os.path.exists(HandleRequest.cleaningPath):
-
-                        readFromFile = open(HandleRequest.cleaningPath, 'r')
-                        command = readFromFile.read()
-
-                        cacheManager.handlePurgeRequest(command)
-
-                        readFromFile.close()
-
-                        os.remove(HandleRequest.cleaningPath)
-                        cacheManager.flushCache()
-                except:
-                    pass
-
-                if Data:
-                    if len(Data) < 64:
-                        dataComplete = dataComplete + Data
-                        self.manageRequest(dataComplete)
-                        dataComplete = ''
-                    else:
-                        dataComplete = dataComplete + Data
-                else:
-                    self.connection.close()
+                data = self.connection.recv(4096)
+                if not data:
                     break
-
-        except BaseException as msg:
-            logging.writeToFile( str(msg) + ' [HandleRequest.run]')
+                dataComplete += data
+                # Stream read boundaries have no relationship to request boundaries.
+                while b"\n\n" in dataComplete:
+                    request, dataComplete = dataComplete.split(b"\n\n", 1)
+                    if len(request) > self.maxRequestBytes:
+                        raise ValueError("Policy request exceeds size limit")
+                    with policyLock:
+                        self._purgeCache()
+                        self.manageRequest(request.decode('utf-8'))
+                if len(dataComplete) > self.maxRequestBytes:
+                    raise ValueError("Policy request exceeds size limit")
+        except Exception as msg:
+            logging.writeToFile(str(msg) + ' [HandleRequest.run]')
+            # Do not send an unsolicited reply on an idle persistent connection.
+            if not isinstance(msg, socket.timeout) or dataComplete:
+                try:
+                    self.connection.sendall(b'action=defer_if_permit Service temporarily unavailable\n\n')
+                except OSError:
+                    pass
         finally:
+            self.connection.close()
             limitThreads.release()
+
+    @staticmethod
+    def _purgeCache():
+        try:
+            if os.path.exists(HandleRequest.cleaningPath):
+                with open(HandleRequest.cleaningPath, 'r') as source:
+                    cacheManager.handlePurgeRequest(source.read())
+                os.remove(HandleRequest.cleaningPath)
+                cacheManager.flushCache()
+        except Exception as msg:
+            logging.writeToFile(str(msg) + ' [HandleRequest._purgeCache]')
 
     def manageRequest(self, completeData):
         try:
-            completeData = completeData.split('\n')
-            for items in completeData:
-                tempData = items.split('=')
-                if tempData[0] == 'sasl_username':
-                    if len(tempData[1]) == 0:
-                        self.connection.sendall('action=dunno\n\n')
-                        return
-                    emailAddress = tempData[1]
-                    domainName = emailAddress.split('@')[1]
-                elif tempData[0] == 'recipient':
-                    if len(tempData[1]) == 0:
-                        self.connection.sendall('action=dunno\n\n')
-                        return
-                    destination = tempData[1]
-
-
+            attributes = {}
+            for line in completeData.split('\n'):
+                if not line or '=' not in line or '\x00' in line:
+                    raise ValueError("Malformed policy request")
+                key, value = line.split('=', 1)
+                attributes[key] = value
+            if attributes.get('request') != 'smtpd_access_policy':
+                raise ValueError("Unsupported policy request")
+            emailAddress = attributes.get('sasl_username', '')
+            if not emailAddress:
+                self.connection.sendall(b'action=dunno\n\n')
+                return
+            if '@' not in emailAddress:
+                raise ValueError("Invalid authenticated email address")
+            domainName = emailAddress.rsplit('@', 1)[1]
+            # Postfix omits recipient at DATA when there are multiple recipients.
+            # Sending limits still apply; there is no individual destination to log.
+            destination = attributes.get('recipient', '')
 
             if domainName in cacheManager.domains:
                 domainObj = cacheManager.domains[domainName]
@@ -99,8 +109,8 @@ class HandleRequest(multi.Thread):
                     domainObj = newDomain
 
                     emailObj = newDomain.findEmailOBJ(emailAddress)
-                except:
-                    self.connection.sendall('action=dunno\n\n')
+                except (Domains.DoesNotExist, DomainLimits.DoesNotExist):
+                    self.connection.sendall(b'action=dunno\n\n')
                     return
 
             #logging.writeToFile('Domain Limit Status: ' + str(domainObj.limitStatus))
@@ -112,7 +122,7 @@ class HandleRequest(multi.Thread):
 
                 if domainObj.monthlyLimits <= domainObj.monthlyUsed or emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
                     logging.writeToFile(emailAddress + ' either exceeded monthly or hourly sending limit.')
-                    self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
+                    self.connection.sendall(b'action=defer_if_permit Service temporarily unavailable\n\n')
                     return
                 else:
                     email = EUsers.objects.get(email=emailAddress)
@@ -122,7 +132,7 @@ class HandleRequest(multi.Thread):
                     emailObj.monthlyUsed = emailObj.monthlyUsed + 1
                     emailObj.hourlyUsed = emailObj.hourlyUsed + 1
                     domainObj.monthlyUsed = domainObj.monthlyUsed + 1
-                    self.connection.sendall('action=dunno\n\n')
+                    self.connection.sendall(b'action=dunno\n\n')
             else:
                 email = EUsers.objects.get(email=emailAddress)
                 if emailObj.logStatus == 1:
@@ -133,9 +143,9 @@ class HandleRequest(multi.Thread):
                 emailObj.monthlyUsed = emailObj.monthlyUsed + 1
                 emailObj.hourlyUsed = emailObj.hourlyUsed + 1
                 domainObj.monthlyUsed = domainObj.monthlyUsed + 1
-                self.connection.sendall('action=dunno\n\n')
+                self.connection.sendall(b'action=dunno\n\n')
 
 
-        except BaseException as msg:
+        except Exception as msg:
             logging.writeToFile(str(msg) + " [HandleRequest.manageRequest]")
-            self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
+            self.connection.sendall(b'action=defer_if_permit Service temporarily unavailable\n\n')

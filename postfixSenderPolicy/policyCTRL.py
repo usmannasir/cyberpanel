@@ -1,6 +1,5 @@
 #!/usr/local/CyberCP/bin/python
 import subprocess, signal
-import shlex
 import argparse
 import os
 import sys
@@ -24,8 +23,8 @@ class policyCTRL:
         if os.path.exists(policyCTRL.applicationPath):
             self.stop()
 
-        command = '/usr/local/CyberCP/postfixSenderPolicy/startServer.py'
-        subprocess.Popen(shlex.split(command))
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        subprocess.Popen([sys.executable, '-m', 'postfixSenderPolicy.startServer'], cwd=root)
 
     def stop(self):
 
