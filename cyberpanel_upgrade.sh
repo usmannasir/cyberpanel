@@ -223,7 +223,8 @@ fi
 Protect_Custom_OLS_From_APT() {
   # APT owns these paths even when our ABI-matched overlay supplies their bytes.
   # Keep that package held across upgrades and unattended package maintenance.
-  local distro_id core module validation validation_status held
+  local distro_id core module validation validation_status held package package_status query_status
+  local packages=(openlitespeed)
   distro_id=$(. /etc/os-release; printf '%s' "$ID")
   [[ "$distro_id" == "ubuntu" ]] || return 0
   core=/usr/local/lsws/bin/openlitespeed
@@ -231,7 +232,19 @@ Protect_Custom_OLS_From_APT() {
   [[ -f "$core" ]] || return 0
   # This marker is also used by plogical/modSec.py to recognize custom cores.
   # A module filename alone must never pin a stock/unsupported installation.
-  grep -aFq 'cyberpanel_lsi_api_abi_v1' "$core" || return 0
+  if ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$core"; then
+    if grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module" 2>/dev/null; then
+      validation=$(timeout 30 "$core" -t 2>&1)
+      validation_status=$?
+      if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* ]] ||
+         [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+        echo 'ERROR: Stock OLS with an existing CyberPanel module failed validation; no package changes attempted. Preserve logs and recover the verified paired bundle before retrying; do not restart OLS or remove security configuration to bypass this check.'
+        printf '%s\n' "${validation: -2000}"
+        return 1
+      fi
+    fi
+    return 0
+  fi
   if [[ ! -x "$core" ]] || ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module"; then
     echo 'ERROR: Incomplete custom OLS bundle; no package changes attempted.'
     return 1
@@ -248,18 +261,31 @@ Protect_Custom_OLS_From_APT() {
     'install ok installed'|'hold ok installed') ;;
     *) echo 'ERROR: Cannot verify the custom OLS package owner; no package changes attempted.'; return 1 ;;
   esac
+  # ols-modsecurity independently owns modules/mod_security.so. Holding only
+  # the core package leaves a validated custom WAF vulnerable to replacement.
+  package_status=$(dpkg-query -W -f='${Status}' ols-modsecurity 2>/dev/null)
+  query_status=$?
+  case "$query_status:$package_status" in
+    '0:install ok installed'|'0:hold ok installed') packages+=(ols-modsecurity) ;;
+    '1:'|'0:unknown ok not-installed'|'0:deinstall ok config-files'|'0:purge ok not-installed') ;;
+    *) echo 'ERROR: Cannot verify the OLS ModSecurity package state; no package changes attempted.'; return 1 ;;
+  esac
   held=$(apt-mark showhold) || return 1
-  if ! grep -Fxq 'openlitespeed' <<< "$held"; then
-    if ! apt-mark hold openlitespeed; then
-      echo 'ERROR: Could not protect the custom OLS package; no package changes attempted.'
+  for package in "${packages[@]}"; do
+    if ! grep -Fxq "$package" <<< "$held"; then
+      if ! apt-mark hold "$package"; then
+        echo "ERROR: Could not protect the custom OLS package $package; no package changes attempted."
+        return 1
+      fi
+    fi
+  done
+  held=$(apt-mark showhold) || return 1
+  for package in "${packages[@]}"; do
+    if ! grep -Fxq "$package" <<< "$held"; then
+      echo "ERROR: Custom OLS package hold was not retained for $package; no package changes attempted."
       return 1
     fi
-  fi
-  held=$(apt-mark showhold) || return 1
-  if ! grep -Fxq 'openlitespeed' <<< "$held"; then
-    echo 'ERROR: Custom OLS package hold was not retained; no package changes attempted.'
-    return 1
-  fi
+  done
 }
 
 Check_OS() {
