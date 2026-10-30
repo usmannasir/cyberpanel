@@ -135,7 +135,7 @@ class backupSchedule:
                         status = open(statusPath, 'r').read()
                         time.sleep(2)
 
-                        if status.find("Completed") > -1:
+                        if status.strip() == "Completed":
 
                             if not backupSchedule.completedArchiveIsReady(
                                     virtualHost, tempStoragePath, fileName, backupLogPath):
@@ -214,7 +214,7 @@ class backupSchedule:
                         status = open(statusPath, 'r').read()
                         time.sleep(2)
 
-                        if status.find("Completed") > -1:
+                        if status.strip() == "Completed":
 
                             if not backupSchedule.completedArchiveIsReady(
                                     virtualHost, tempStoragePath, fileName, backupLogPath):

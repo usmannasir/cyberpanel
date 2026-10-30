@@ -49,7 +49,7 @@ from cyberpanel_version import (
     backup_uses_database_users_schema,
     backup_uses_full_directory_layout,
 )
-from plogical.backupIntegrity import safe_extract
+from plogical.backupIntegrity import safe_extract, backup_command_error
 from plogical.backupMetadata import backup_includes_mail_domain
 from plogical.backupExcludes import rsync_exclude_arguments
 from plogical.backupMetadataBuilder import (
@@ -436,12 +436,17 @@ class backupUtilities:
             #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
             ### doing backup of whole dir and keeping it in public_html folder will restore from here - ref https://github.com/usmannasir/cyberpanel/issues/1196
             command = (
-                f"rsync -av --ignore-errors {rsync_exclude_arguments()} "
+                f"rsync -a --ignore-errors {rsync_exclude_arguments()} "
                 f"/home/{domainName}/ {tempStoragePath}/public_html/"
             )
-            ProcessUtilities.normalExecutioner(command)
-            # if ProcessUtilities.normalExecutioner(command) == 0:
-            #      raise BaseException(f'Failed to run cp command during backup generation.')
+            # Run as the current site user, as before; a privileged command
+            # bridge here would change quota and file-access enforcement.
+            copied = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, encoding='utf-8', errors='replace')
+            if copied.returncode != 0:
+                raise RuntimeError(backup_command_error(
+                    'Backup file staging failed (rsync exit %s)' % copied.returncode,
+                    copied.stdout))
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
@@ -462,6 +467,8 @@ class backupUtilities:
             #     pass
 
             status = os.path.join(backupPath, 'status')
+            logging.CyberCPLogFileWriter.writeToFile(
+                '%s: %s [startBackup][5009]' % (backupName, msg))
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, " + str(msg) + ".[365] [5009]")
             print(f"Aborted, {str(msg)}.[365] [5009]")
         try:
@@ -623,18 +630,19 @@ class backupUtilities:
             ProcessUtilities.executioner(command)
 
             command = f'mv {CPHomeStorage}/* {tempStoragePath}/'
-            moveStatus, _ = ProcessUtilities.outputExecutioner(command, externalApp, True, retRequired=True)
+            moveStatus, moveOutput = ProcessUtilities.outputExecutioner(command, externalApp, True, retRequired=True)
             if moveStatus != 1:
-                raise RuntimeError('Unable to prepare files for the backup archive')
+                raise RuntimeError(backup_command_error(
+                    'Unable to prepare files for the backup archive', moveOutput))
 
             #make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             #rmtree(tempStoragePath)
 
             filePath = f'{backupPath}/{backupName}.tar.gz'
             command = f'tar -czf {filePath} -C {tempStoragePath} .'
-            tarStatus, _ = ProcessUtilities.outputExecutioner(command, externalApp, True, retRequired=True)
+            tarStatus, tarOutput = ProcessUtilities.outputExecutioner(command, externalApp, True, retRequired=True)
             if tarStatus != 1:
-                raise RuntimeError('Backup archive creation failed')
+                raise RuntimeError(backup_command_error('Backup archive creation failed', tarOutput))
             if not os.path.exists(filePath) or os.path.getsize(filePath) <= 0:
                 raise RuntimeError('Backup archive is missing or empty')
 
@@ -675,6 +683,8 @@ class backupUtilities:
 
             os.remove(pidFile)
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                '%s: %s [BackupRoot][5009]' % (backupName, msg))
             if externalApp == None:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
             else:

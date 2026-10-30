@@ -85,6 +85,12 @@ class DeadWorkerTests(unittest.TestCase):
             [''] * (limit - 1) + ['BackupRoot /example.test/'] + [''] * (limit - 1), '')
         self.assertNotEqual('Backup worker exited without reporting a result.', result[1])
 
+    def test_error_filename_containing_completed_is_never_success(self):
+        limit = load_backup_schedule({'datetime': SimpleNamespace(now=lambda: None)}).WORKER_GONE_MAX_CHECKS
+        result, _, _, _ = self.run_backup(
+            [''] * limit, 'tar: Completed.txt: Disk quota exceeded [5009]')
+        self.assertEqual(0, result[0])
+
     def test_completed_status_still_succeeds(self):
         result, _, _, _ = self.run_backup([''], 'Completed')
         self.assertEqual(1, result[0])

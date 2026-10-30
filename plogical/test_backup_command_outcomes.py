@@ -12,10 +12,11 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 from xml.etree import ElementTree
+from plogical.backupIntegrity import backup_command_error
 
 
 class BackupCommandOutcomeTests(unittest.TestCase):
-    def run_backup(self, failure=None, user='fixture', error=None):
+    def run_backup(self, failure=None, user='fixture', error=None, diagnostic='controlled command failure'):
         scratch = tempfile.TemporaryDirectory(prefix='backup-command-outcome-')
         self.addCleanup(scratch.cleanup)
         root = Path(scratch.name)
@@ -54,7 +55,7 @@ class BackupCommandOutcomeTests(unittest.TestCase):
             if failure == program:
                 if program == 'tar':
                     archive.write_bytes(b'partial archive')
-                return 0, 'controlled command failure'
+                return 0, diagnostic
             if program == 'tar' and failure in ('missing', 'empty'):
                 if failure == 'empty':
                     archive.touch()
@@ -82,7 +83,7 @@ class BackupCommandOutcomeTests(unittest.TestCase):
         cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'backupUtilities')
         method = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'BackupRoot')
         wrapper = ast.ClassDef(name='backupUtilities', bases=[], keywords=[], body=[method], decorator_list=[])
-        namespace = {'os': os, 'shlex': shlex, 'copy': shutil.copy, 'ElementTree': ElementTree,
+        namespace = {'backup_command_error': backup_command_error, 'os': os, 'shlex': shlex, 'copy': shutil.copy, 'ElementTree': ElementTree,
                      'logging': SimpleNamespace(CyberCPLogFileWriter=Logger), 'ProcessUtilities': Processes,
                      'Backups': SimpleNamespace(objects=SimpleNamespace(filter=lambda **kwargs: [row]))}
         exec(compile(ast.fix_missing_locations(ast.Module(body=[wrapper], type_ignores=[])),
@@ -106,6 +107,16 @@ class BackupCommandOutcomeTests(unittest.TestCase):
 
     def test_tar_failure_does_not_complete_or_keep_partial_archive(self):
         self.assert_failure(self.run_backup(failure='tar'))
+
+    def test_tar_failure_preserves_filesystem_diagnostic(self):
+        result = self.run_backup(failure='tar', diagnostic='gzip: stdout: Disk quota exceeded')
+        self.assert_failure(result)
+        self.assertIn('gzip: stdout: Disk quota exceeded', result.status)
+
+    def test_move_failure_preserves_filesystem_diagnostic(self):
+        result = self.run_backup(failure='mv', diagnostic='mv: No space left on device')
+        self.assert_failure(result)
+        self.assertIn('mv: No space left on device', result.status)
 
     def test_move_failure_stops_before_archive_creation(self):
         result = self.run_backup(failure='mv')

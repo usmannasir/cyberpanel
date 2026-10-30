@@ -5,6 +5,14 @@ import tarfile
 import time
 
 
+def backup_command_error(stage, output):
+    """Keep command diagnostics bounded for the backup status and server log."""
+    diagnostic = (output or '').strip()
+    if len(diagnostic) > 4096:
+        diagnostic = '[earlier output omitted] ' + diagnostic[-4096:]
+    return '%s: %s' % (stage, diagnostic or 'command failed without diagnostic output')
+
+
 def backup_process_is_running(process_list, domain):
     """Return whether the process list contains a backup worker for domain."""
     has_backup_worker = 'startBackup' in process_list or 'BackupRoot' in process_list

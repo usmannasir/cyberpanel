@@ -551,7 +551,7 @@ class BackupManager:
                 command = "sudo cat " + status
                 status = ProcessUtilities.outputExecutioner(command, domain.externalApp)
 
-                if status.find("Completed") > -1:
+                if status.strip() == "Completed":
 
                     ### Removing Files
 
