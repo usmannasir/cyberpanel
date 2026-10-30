@@ -24,6 +24,8 @@ class PackageHoldTests(unittest.TestCase):
         self.core.chmod(0o755)
         self.module = self.root / 'module'
         self.module.write_text('ELF cyberpanel_lsi_api_abi_v1')
+        self.waf = self.root / 'waf'
+        self.waf.write_text('paired custom WAF')
         self.release = self.root / 'os-release'
         self.release.write_text('ID=ubuntu\nVERSION_ID="26.04"\n')
         self.holds = self.root / 'holds'
@@ -33,17 +35,22 @@ class PackageHoldTests(unittest.TestCase):
         self.bin.mkdir()
         for name, body in {
             'timeout': '[ "$1" = 30 ] || exit 99; shift; [ "${SIMULATE_TIMEOUT:-0}" = 0 ] || exit 124; exec "$@"',
-            'dpkg-query': 'printf "%s" "${PACKAGE_STATUS:-install ok installed}"',
+            'dpkg-query': '''if [ "${@: -1}" = ols-modsecurity ]; then
+printf "%s" "${WAF_PACKAGE_STATUS-install ok installed}"; exit "${WAF_QUERY_STATUS:-0}"
+fi
+printf "%s" "${PACKAGE_STATUS:-install ok installed}"''',
             'apt-mark': '''echo "apt-mark $*" >> "$EVENTS"
 case "$1" in
 showhold) [ "${SHOWHOLD_FAIL:-0}" = 0 ] || exit 1; cat "$HOLDS";;
-hold) [ "${HOLD_FAIL:-0}" = 0 ] || exit 1; [ "${HOLD_NOOP:-0}" = 1 ] || echo "$2" >> "$HOLDS";;
+hold) [ "${HOLD_FAIL:-0}" = 0 ] && [ "${HOLD_FAIL_PACKAGE:-}" != "$2" ] || exit 1; [ "${HOLD_NOOP:-0}" = 1 ] || [ "${HOLD_NOOP_PACKAGE:-}" = "$2" ] || echo "$2" >> "$HOLDS";;
 *) exit 99;;
 esac''',
             'apt': '''echo "apt $*" >> "$EVENTS"
-if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"; fi''',
+if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"; fi
+if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecurity "$HOLDS"; then printf 'stock WAF replacement' > "$WAF"; fi''',
             'apt-get': '''echo "apt-get $*" >> "$EVENTS"
-if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"; fi''',
+if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"; fi
+if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecurity "$HOLDS"; then printf 'stock WAF replacement' > "$WAF"; fi''',
         }.items():
             path = self.bin / name
             path.write_text('#!/bin/bash\n' + body + '\n')
@@ -54,7 +61,8 @@ if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"
 
     def run_upgrade(self, command=None, **env):
         environment = dict(os.environ, PATH=str(self.bin) + os.pathsep + os.environ['PATH'],
-                           CORE=str(self.core), HOLDS=str(self.holds), EVENTS=str(self.events))
+                           CORE=str(self.core), WAF=str(self.waf), WAF_PACKAGE_STATUS="install ok installed",
+                           HOLDS=str(self.holds), EVENTS=str(self.events))
         environment.update(env)
         return subprocess.run(['bash', '-c', self.guard + '\nProtect_Custom_OLS_From_APT || exit 1\n' +
                                (command or UPGRADES[0])], env=environment, capture_output=True, text=True)
@@ -73,8 +81,11 @@ if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"
                 result = self.run_upgrade(command)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(self.core.read_bytes(), original)
+                self.assertEqual(self.waf.read_text(), 'paired custom WAF')
                 events = self.events.read_text()
                 self.assertLess(events.index('apt-mark hold openlitespeed'),
+                                re.search(r'(?m)^apt(?:-get)? ', events).start())
+                self.assertLess(events.index('apt-mark hold ols-modsecurity'),
                                 re.search(r'(?m)^apt(?:-get)? ', events).start())
 
     def test_hold_failure_aborts_before_destructive_upgrade(self):
@@ -92,17 +103,65 @@ if ! grep -Fxq openlitespeed "$HOLDS"; then printf 'stock replacement' > "$CORE"
         self.assert_no_apt()
 
     def test_existing_hold_is_preserved_without_rewriting(self):
-        self.holds.write_text('other-package\nopenlitespeed\n')
+        self.holds.write_text('other-package\nopenlitespeed\nols-modsecurity\n')
         self.assertEqual(self.run_upgrade(PACKAGE_STATUS='hold ok installed').returncode, 0)
-        self.assertEqual(self.holds.read_text(), 'other-package\nopenlitespeed\n')
+        self.assertEqual(self.holds.read_text(), 'other-package\nopenlitespeed\nols-modsecurity\n')
         self.assertNotIn('apt-mark hold ', self.events.read_text())
 
     def test_stock_ubuntu20_with_leftover_module_is_not_held(self):
         self.release.write_text('ID=ubuntu\nVERSION_ID="20.04"\n')
-        self.core.write_text('stock core')
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
         self.assertEqual(self.run_upgrade().returncode, 0)
         self.assertEqual(self.holds.read_text(), 'other-package\n')
         self.assertEqual(self.core.read_text(), 'stock replacement')
+
+    def test_installed_waf_hold_failure_or_ineffective_hold_aborts(self):
+        for env in ({'HOLD_FAIL_PACKAGE': 'ols-modsecurity'},
+                    {'HOLD_NOOP_PACKAGE': 'ols-modsecurity'}):
+            with self.subTest(env=env):
+                self.holds.write_text('other-package\n')
+                self.events.write_text('')
+                self.assertNotEqual(self.run_upgrade(**env).returncode, 0)
+                self.assertEqual(self.waf.read_text(), 'paired custom WAF')
+                self.assert_no_apt()
+
+    def test_absent_waf_package_is_not_installed_or_held(self):
+        for status, rc in (('', '1'), ('unknown ok not-installed', '0'),
+                           ('deinstall ok config-files', '0'), ('purge ok not-installed', '0')):
+            with self.subTest(status=status, rc=rc):
+                self.holds.write_text('other-package\n')
+                result = self.run_upgrade(WAF_PACKAGE_STATUS=status, WAF_QUERY_STATUS=rc)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(self.holds.read_text(), 'other-package\nopenlitespeed\n')
+                self.assertEqual(self.waf.read_text(), 'paired custom WAF')
+
+    def test_uncertain_waf_package_state_aborts(self):
+        for status, rc in (('', '2'), ('install ok unpacked', '0'),
+                           ('install reinstreq half-installed', '0'), ('install ok installed', '1')):
+            with self.subTest(status=status, rc=rc):
+                self.assertNotEqual(self.run_upgrade(WAF_PACKAGE_STATUS=status, WAF_QUERY_STATUS=rc).returncode, 0)
+                self.assert_no_apt()
+
+    def test_existing_waf_hold_supported(self):
+        self.holds.write_text('other-package\nols-modsecurity\n')
+        self.assertEqual(self.run_upgrade(WAF_PACKAGE_STATUS='hold ok installed').returncode, 0)
+        self.assertNotIn('apt-mark hold ols-modsecurity', self.events.read_text())
+        self.assertIn('ols-modsecurity\n', self.holds.read_text())
+
+    def test_split_stock_core_custom_module_aborts_before_packages(self):
+        self.release.write_text('ID=ubuntu\nVERSION_ID="24.04"\n')
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
+        original = self.core.read_bytes()
+        for env in ({'VALIDATION_OUTPUT': 'incompatible OpenLiteSpeed core ABI'},
+                    {'VALIDATION_OUTPUT': '[ERROR] missing CRS file'},
+                    {'SIMULATE_TIMEOUT': '1'}):
+            with self.subTest(env=env):
+                result = self.run_upgrade(**env)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('recover the verified paired bundle', result.stdout)
+                self.assertEqual(self.core.read_bytes(), original)
+                self.assertEqual(self.holds.read_text(), 'other-package\n')
+                self.assert_no_apt()
 
     def test_custom_core_missing_paired_module_aborts(self):
         self.module.unlink()
