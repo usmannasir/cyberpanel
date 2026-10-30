@@ -126,6 +126,71 @@ def preserve_installation_state(current, staged, backed_up_files):
         _copy_path(backup, os.path.join(staged, relative))
 
 
+def _literal_cookie_hardening(source, label):
+    """Read supported cookie flags without executing existing settings code."""
+    names = {'SESSION_COOKIE_SECURE', 'CSRF_COOKIE_SECURE',
+             'SESSION_COOKIE_HTTPONLY'}
+    tree = ast.parse(source, filename=label)
+    values = {}
+    accepted_targets = set()
+    for statement in tree.body:
+        targets = statement.targets if isinstance(statement, ast.Assign) else (
+            [statement.target] if isinstance(statement, ast.AnnAssign) else [])
+        for target in targets:
+            if not isinstance(target, ast.Name) or target.id not in names:
+                continue
+            value = statement.value
+            if (len(targets) != 1 or target.id in values or
+                    not isinstance(value, ast.Constant) or type(value.value) is not bool):
+                raise RuntimeError('Cannot safely preserve ' + target.id + ' in ' + label +
+                                   ': use one top-level literal True or False assignment')
+            values[target.id] = value
+            accepted_targets.add(id(target))
+    # Conditional, unpacked, augmented or nested assignments are ambiguous.
+    # Reject rebinding by imports/function/class definitions as well.
+    for node in ast.walk(tree):
+        name = None
+        if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            if id(node) not in accepted_targets:
+                name = node.id
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            name = node.name
+        elif isinstance(node, ast.alias):
+            name = node.asname or node.name.split('.')[0]
+        if name in names:
+            raise RuntimeError('Cannot safely preserve ' + name + ' in ' + label +
+                               ': use one top-level literal True or False assignment')
+    return values
+
+
+def merge_cookie_hardening(previous_source, new_source):
+    """Carry explicit True flags forward without copying old defaults or apps."""
+    previous = _literal_cookie_hardening(previous_source, 'existing settings.py')
+    current = _literal_cookie_hardening(new_source, 'new settings.py')
+    # AST offsets are UTF-8 byte columns, including on non-ASCII source lines.
+    encoded = new_source.encode('utf-8')
+    lines = encoded.splitlines(keepends=True)
+    edits = []
+    additions = []
+    for name, value in sorted(previous.items()):
+        if value.value is not True:
+            continue  # Never carry a local False over a stronger release default.
+        if name not in current:
+            additions.append(name + ' = True')
+        elif current[name].value is False:
+            node = current[name]
+            start = sum(map(len, lines[:node.lineno - 1])) + node.col_offset
+            end = sum(map(len, lines[:node.end_lineno - 1])) + node.end_col_offset
+            edits.append((start, end))
+    for start, end in sorted(set(edits), reverse=True):
+        encoded = encoded[:start] + b'True' + encoded[end:]
+    merged = encoded.decode('utf-8')
+    if additions:
+        merged += '\n# Explicit cookie hardening preserved from the previous installation.\n'
+        merged += '\n'.join(additions) + '\n'
+    return merged
+
+
 def _literal_installed_apps(path):
     """Read app names without importing a settings module or plugin code."""
     with open(path) as source:
@@ -4145,6 +4210,11 @@ passdb {
                     count=1, flags=re.DOTALL)
                 if replacements != 1:
                     raise RuntimeError('Unable to locate database settings in new source')
+                original_settings = os.path.join(installation, 'CyberCP', 'settings.py')
+                settings_backup = backed_up_files.get(original_settings)
+                if settings_backup:
+                    with open(settings_backup) as settings_file:
+                        settingsData = merge_cookie_hardening(settings_file.read(), settingsData)
                 with open(staged_settings, 'w') as settings_file:
                     settings_file.write(settingsData)
                 panel_user = pwd.getpwnam('cyberpanel')
