@@ -18,7 +18,8 @@ from unittest.mock import patch, call
 source = Path(__file__).with_name('upgrade.py').read_text()
 helper_names = {'_copy_path', 'activate_source', 'preserve_installation_state',
                 'protect_private_files', 'prune_previous_installations',
-                '_literal_installed_apps', 'preserve_installed_plugins'}
+                '_literal_installed_apps', 'preserve_installed_plugins',
+                '_literal_cookie_hardening', 'merge_cookie_hardening'}
 module = types.ModuleType('upgrade_source_under_test')
 module.__dict__.update(os=os, shutil=shutil, tempfile=tempfile, ast=ast, re=re,
                        contextmanager=contextmanager, preserving_csf=lambda: False,
@@ -293,6 +294,78 @@ class PluginPreservationTests(unittest.TestCase):
             self.preserve_plugins()
 
 
+class CookieHardeningTests(unittest.TestCase):
+    def test_preserves_only_true_flags_without_running_existing_source(self):
+        old = "raise RuntimeError('old settings must not execute')\nSESSION_COOKIE_SECURE = True\nCSRF_COOKIE_SECURE: bool = True\nSESSION_COOKIE_HTTPONLY = True\nCUSTOM_OLD_VALUE = 123\n"
+        new = "INSTALLED_APPS = ['new_app']\nNEW_DEFAULT = 42\n"
+        merged = module.merge_cookie_hardening(old, new)
+        loaded = {}
+        exec(merged, loaded)
+        self.assertEqual(['new_app'], loaded['INSTALLED_APPS'])
+        self.assertEqual(42, loaded['NEW_DEFAULT'])
+        self.assertNotIn('CUSTOM_OLD_VALUE', loaded)
+        for name in ('SESSION_COOKIE_SECURE', 'CSRF_COOKIE_SECURE', 'SESSION_COOKIE_HTTPONLY'):
+            self.assertIs(True, loaded[name])
+
+    def test_old_false_never_weakens_release_defaults(self):
+        new = 'SESSION_COOKIE_SECURE = True\nCSRF_COOKIE_SECURE = True\n'
+        self.assertEqual(new, module.merge_cookie_hardening(
+            'SESSION_COOKIE_SECURE = False\nCSRF_COOKIE_SECURE = False\nSESSION_COOKIE_HTTPONLY = False\n', new))
+
+    def test_updates_existing_false_without_duplicate_and_is_repeatable(self):
+        old = 'SESSION_COOKIE_SECURE = True\nCSRF_COOKIE_SECURE = True\n'
+        new = "TITLE = 'café'; SESSION_COOKIE_SECURE: bool = False  # keep comment\nCSRF_COOKIE_SECURE = (False)\n"
+        merged = module.merge_cookie_hardening(old, new)
+        self.assertIn("TITLE = 'café'; SESSION_COOKIE_SECURE: bool = True  # keep comment", merged)
+        self.assertIn('CSRF_COOKIE_SECURE = (True)', merged)
+        self.assertEqual(merged, module.merge_cookie_hardening(merged, merged))
+
+    def test_ambiguous_assignments_fail_with_named_setting(self):
+        cases = [
+            'SESSION_COOKIE_SECURE = True\nSESSION_COOKIE_SECURE = True',
+            'SESSION_COOKIE_SECURE = bool(1)',
+            'SESSION_COOKIE_SECURE = 1',
+            'SESSION_COOKIE_SECURE = "True"',
+            'if enabled:\n SESSION_COOKIE_SECURE = True',
+            'def configure():\n SESSION_COOKIE_SECURE = True',
+            'SESSION_COOKIE_SECURE, other = True, False',
+            'SESSION_COOKIE_SECURE = other = True',
+            'SESSION_COOKIE_SECURE |= True',
+            'del SESSION_COOKIE_SECURE',
+            'SESSION_COOKIE_SECURE: bool',
+            'from custom import SESSION_COOKIE_SECURE',
+            'def SESSION_COOKIE_SECURE(): pass',
+        ]
+        for old in cases:
+            with self.subTest(old=old), self.assertRaisesRegex(RuntimeError, 'Cannot safely preserve SESSION_COOKIE_SECURE'):
+                module.merge_cookie_hardening(old, '')
+
+    def test_ambiguous_release_setting_also_stops_merge(self):
+        with self.assertRaisesRegex(RuntimeError, 'new settings.py'):
+            module.merge_cookie_hardening('CSRF_COOKIE_SECURE = True', 'CSRF_COOKIE_SECURE = env_flag()')
+
+    def test_actual_release_settings_keep_all_other_assignments(self):
+        source = (Path(__file__).resolve().parents[1] / 'CyberCP/settings.py').read_text()
+        flags = ('SESSION_COOKIE_SECURE', 'CSRF_COOKIE_SECURE', 'SESSION_COOKIE_HTTPONLY')
+        merged = module.merge_cookie_hardening(
+            '\n'.join(name + ' = True' for name in flags), source)
+        compile(merged, 'staged-settings.py', 'exec')  # Parse only; never load live settings.
+        assignments = module._literal_cookie_hardening(merged, 'staged-settings.py')
+        self.assertEqual(set(flags), set(assignments))
+        self.assertTrue(all(node.value is True for node in assignments.values()))
+        def without_cookie_flags(text):
+            tree = ast.parse(text)
+            tree.body = [node for node in tree.body if not (
+                isinstance(node, ast.Assign) and any(
+                    isinstance(target, ast.Name) and target.id in flags for target in node.targets))]
+            return ast.dump(tree)
+        self.assertEqual(without_cookie_flags(source), without_cookie_flags(merged))
+
+    def test_absent_flags_leave_release_unchanged(self):
+        new = 'NEW_DEFAULT = 42\n'
+        self.assertEqual(new, module.merge_cookie_hardening('OLD_DEFAULT = 1', new))
+
+
 class UpgradeEntryPointTests(unittest.TestCase):
     write = staticmethod(UpgradeSourceTests.write)
     def setUp(self):
@@ -355,6 +428,47 @@ class UpgradeEntryPointTests(unittest.TestCase):
         if 'checkout' in argv:
             return self.checkout_ok
         self.fail('Unexpected command: ' + command)
+
+    def test_staged_upgrade_preserves_cookie_hardening_and_new_apps(self):
+        old = "INSTALLED_APPS = ['old_app']\nSESSION_COOKIE_SECURE = True\nCSRF_COOKIE_SECURE = True\nSESSION_COOKIE_HTTPONLY = True\n"
+        self.write(self.current / 'CyberCP/settings.py', old)
+        self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.8'))
+        loaded = {}
+        exec((self.current / 'CyberCP/settings.py').read_text(), loaded)
+        for name in ('SESSION_COOKIE_SECURE', 'CSRF_COOKIE_SECURE', 'SESSION_COOKIE_HTTPONLY'):
+            self.assertIs(True, loaded[name])
+        self.assertEqual(['new_app'], loaded['INSTALLED_APPS'])
+        self.assertEqual(self.globals['settings'].DATABASES, loaded['DATABASES'])
+        backups = list(self.root.glob('cyberpanel_backup_*/**/CyberCP/settings.py'))
+        self.assertEqual([old], [path.read_text() for path in backups])
+
+    def test_ambiguous_hardening_stops_before_source_activation(self):
+        old = 'SESSION_COOKIE_SECURE = get_security_flag()\n'
+        self.write(self.current / 'CyberCP/settings.py', old)
+        result = self.upgrade.downloadAndUpgrade(None, 'v3.0.8')
+        self.assertEqual(0, result[0])
+        self.assertIn('Cannot safely preserve SESSION_COOKIE_SECURE', result[1])
+        self.assertEqual(old, (self.current / 'CyberCP/settings.py').read_text())
+        self.assertTrue((self.current / 'old_source.py').exists())
+        self.assertFalse((self.current / 'new_source.py').exists())
+        self.assertEqual([], list(self.root.glob('.cyberpanel-previous-*')))
+
+    def test_hardened_staged_settings_roll_back_after_collectstatic_failure(self):
+        old = 'SESSION_COOKIE_SECURE = True\nCSRF_COOKIE_SECURE = True\nSESSION_COOKIE_HTTPONLY = True\n'
+        self.write(self.current / 'CyberCP/settings.py', old)
+        def fail_static():
+            loaded = {}
+            exec((self.current / 'CyberCP/settings.py').read_text(), loaded)
+            self.assertIs(True, loaded['CSRF_COOKIE_SECURE'])
+            self.assertEqual(['new_app'], loaded['INSTALLED_APPS'])
+            raise RuntimeError('collectstatic failed with hardened staging')
+        self.upgrade.staticContent = fail_static
+        self.assertEqual((0, 'collectstatic failed with hardened staging'),
+                         self.upgrade.downloadAndUpgrade(None, 'v3.0.8'))
+        self.assertEqual(old, (self.current / 'CyberCP/settings.py').read_text())
+        self.assertTrue((self.current / 'old_source.py').exists())
+        self.assertFalse((self.current / 'new_source.py').exists())
+        self.assertEqual('SECRET_KEY=existing-key', (self.current / '.env').read_text())
 
     def test_success_preserves_runtime_credentials_and_new_applications(self):
         result = self.upgrade.downloadAndUpgrade(None, 'v3.0.6')
