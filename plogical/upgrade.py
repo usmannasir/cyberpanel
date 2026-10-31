@@ -52,7 +52,18 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
     output = (result.stdout or '') + (result.stderr or '')
     # OLS uses 0 for clean configurations, 1 for warnings, and 2 for errors.
     if result.returncode not in (0, 1) or '[ERROR]' in output:
-        raise RuntimeError('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:])
+        hint = ''
+        try:
+            # The diagnostic helper must come from this checkout, not installed code.
+            import importlib.util
+            helper = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'olsParserRecovery.py')
+            spec = importlib.util.spec_from_file_location('upgrade_ols_parser_recovery', helper)
+            recovery = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(recovery)
+            hint = recovery.recovery_hint(binary, result.returncode, output)
+        except (OSError, ImportError, NameError):
+            pass  # A missing diagnostic helper must never waive the original failure.
+        raise RuntimeError('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
     return output
 
 
