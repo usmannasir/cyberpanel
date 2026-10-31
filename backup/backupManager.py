@@ -2614,14 +2614,17 @@ class BackupManager:
 
             # Read SSH public key
             try:
-                ssh_pub_key = ProcessUtilities.outputExecutioner('cat /root/.ssh/cyberpanel.pub').strip()
-                if not ssh_pub_key or ssh_pub_key.startswith('cat:'):
-                    raise Exception("Failed to read SSH public key")
+                key_command = '/usr/local/CyberCP/bin/python ' + shlex.quote(
+                    virtualHostUtilities.cyberPanel + '/plogical/backupSSHKey.py')
+                key_result = json.loads(ProcessUtilities.outputExecutioner(key_command))
+                if key_result.get('status') != 1:
+                    raise ValueError(key_result.get('error_message', 'Backup key validation failed.'))
+                ssh_pub_key = key_result['public_key']
             except Exception as e:
                 logging.CyberCPLogFileWriter.writeToFile(f"Failed to read SSH public key: {str(e)} [DeployAccount]")
                 return HttpResponse(json.dumps({
                     'status': 0,
-                    'error_message': 'SSH public key not found. Please ensure One-Click Backup is properly configured.'
+                    'error_message': str(e)
                 }))
 
             # Prepare API request
