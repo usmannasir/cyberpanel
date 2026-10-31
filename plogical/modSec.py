@@ -24,19 +24,19 @@ class modSec:
     # These prevent ABI incompatibility crashes (Signal 11/SIGSEGV)
     MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
                'sha256': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708',
-               'core_sha256': 'daf71e8f3e0f284ddc2abb038eb858e0df5f154f9df6d8ad1e60a23d75dd096d'},
+               'core_sha256': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b'},
      'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
                'sha256': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9',
-               'core_sha256': 'ebc4411647d29aaf900b7610adafd6734b57776f4f7c59fa62b6a9347a5a65b3'},
+               'core_sha256': '03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec'},
      'rhel10': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel10.so',
                 'sha256': 'a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde',
-                'core_sha256': '00ddb4ba37c69bc9a2030ece5494ab990c7a65b3e79fd8e2ef432c3725a4767f'},
+                'core_sha256': 'fb65d7f438da8f7dfa4057b9c42d5f0b50d8b742e0e9bef1959fc0b432837c96'},
      'ubuntu': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
                 'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
-                'core_sha256': '404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c'},
+                'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'},
      'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
                   'sha256': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae',
-                  'core_sha256': '404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c'}}
+                  'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'}}
 
     @staticmethod
     def detectPlatform():

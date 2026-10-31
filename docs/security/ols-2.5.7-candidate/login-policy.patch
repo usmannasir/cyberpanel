@@ -1,0 +1,93 @@
+--- a/admin/html/lib/LSWebAdmin/Auth/CAuthorizer.php
++++ b/admin/html/lib/LSWebAdmin/Auth/CAuthorizer.php
+@@ -29,7 +29,8 @@
+         $this->_id_field = 'LSID' . $label;
+         $this->_pass_field = 'LSPA' . $label;
+ 
+-        $this->_throttle = new IpThrottle();
++        $loginConfig = AdminLoginConfig::load(rtrim(SERVER_ROOT, '/') . '/admin/conf/admin_config.conf');
++        $this->_throttle = new IpThrottle(new FileThrottleStore(), $loginConfig);
+         $this->_loginHistory = new LoginHistory();
+ 
+         session_name('LSUI' . $label); // to prevent conflicts with other app sessions
+@@ -48,12 +49,9 @@
+             $_SESSION['token'] = self::generateSessionToken();
+         }
+ 
+-        // Restore admin-configured login-history retention from session so
+-        // it takes effect on every page load, not only when admin config is
+-        // loaded (confMgr / service requests).
+-        if (isset($_SESSION['loginHistoryRetention'])) {
+-            $this->_loginHistory->setRetentionDays($_SESSION['loginHistoryRetention']);
+-        }
++        // Read current policy even for a new session, before login records are written.
++        $this->_loginHistory->setRetentionDays(isset($loginConfig['historyRetention'])
++            ? $loginConfig['historyRetention'] : LoginHistory::RETENTION_DAYS);
+ 
+         // Restore admin-configured ops audit file retention from session.
+         if (isset($_SESSION['opsAuditRetainFiles'])) {
+@@ -341,9 +339,8 @@
+      * Apply throttle configuration from admin settings.
+      *
+      * Called from ControllerBase after the admin config is loaded, so post-login
+-     * throttle checks (e.g. abuse bucket) use admin-configured values. The login
+-     * page itself uses the built-in defaults since admin config is not yet loaded
+-     * at that point.
++     * throttle checks (e.g. abuse bucket) use admin-configured values. Login
++     * requests load their policy independently before authentication.
+      *
+      * @param array $config Keys: 'enabled', 'maxFailures', 'blockWindow', 'maxBackoff'.
+      */
+--- a/admin/html/lib/LSWebAdmin/Auth/AdminLoginConfig.php
++++ b/admin/html/lib/LSWebAdmin/Auth/AdminLoginConfig.php
+@@ -0,0 +1,50 @@
++<?php
++namespace LSWebAdmin\Auth;
++
++use LSWebAdmin\Config\Parser\PlainConfParser;
++
++/** Read login policy without bootstrapping authenticated controllers or migrating files. */
++class AdminLoginConfig
++{
++    public static function load($path)
++    {
++        if (!is_file($path) || !is_readable($path)) {
++            return [];
++        }
++        try {
++            $parser = new PlainConfParser();
++            $root = $parser->Parse($path);
++            if ($root->HasFatalErr()) {
++                return [];
++            }
++        } catch (\Throwable $error) {
++            // A read/parse failure must preserve the built-in login protection.
++            return [];
++        }
++        $config = [];
++        $fields = [
++            'throttleEnabled' => ['enabled', 0, 1],
++            'throttleMaxFailures' => ['maxFailures', 1, 10],
++            'throttleBlockWindow' => ['blockWindow', 60, 86400],
++            'throttleMaxBackoff' => ['maxBackoff', 60, 86400],
++            'loginHistoryRetention' => ['historyRetention', 1, 365],
++        ];
++        foreach ($fields as $name => $spec) {
++            $value = $root->GetChildVal($name);
++            if ($value === null) {
++                continue;
++            }
++            if (!preg_match('/^[0-9]+$/D', (string) $value)
++                || (int) $value < $spec[1] || (int) $value > $spec[2]) {
++                return [];
++            }
++            $config[$spec[0]] = (int) $value;
++        }
++        $window = isset($config['blockWindow']) ? $config['blockWindow'] : 900;
++        $backoff = isset($config['maxBackoff']) ? $config['maxBackoff'] : 14400;
++        if ($backoff < $window) {
++            return [];
++        }
++        return $config;
++    }
++}

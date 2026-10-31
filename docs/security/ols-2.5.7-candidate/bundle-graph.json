@@ -1,0 +1,48 @@
+{
+  "entrypoint": "install-module-2.5.7.sh",
+  "artifacts": {
+    "install-module-2.5.7.sh": "7fbeba4e85eeafc9f71d7c0ed59dd98b065eff21202591a156dd5ae7e8947daf",
+    "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0",
+    "cyberpanel_ols-2.7.7-x86_64-rhel10.so": "edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2",
+    "cyberpanel_ols-2.7.7-x86_64-rhel8.so": "c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733",
+    "cyberpanel_ols-2.7.7-x86_64-rhel9.so": "7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb",
+    "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+    "mod_security-2.5.6-x86_64-rhel10.so": "a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde",
+    "mod_security-2.5.6-x86_64-rhel8.so": "12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708",
+    "mod_security-2.5.6-x86_64-rhel9.so": "0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9",
+    "mod_security-2.5.6-x86_64-ubuntu.so": "640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536",
+    "mod_security-2.5.6-x86_64-ubuntu26.so": "057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae",
+    "openlitespeed-2.5.7-x86_64-rhel10": "fb65d7f438da8f7dfa4057b9c42d5f0b50d8b742e0e9bef1959fc0b432837c96",
+    "openlitespeed-2.5.7-x86_64-rhel8": "b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b",
+    "openlitespeed-2.5.7-x86_64-rhel9": "03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec",
+    "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+    "ols-bundle-installer-2.5.7.py": "056797c5d180c58a1478390c7180e899f6ed5664d19e1034f6bdb6e5a28c72f2",
+    "ols-security-assets-helper-2.5.7.py": "68aef3b7fa052066043d3110586f6cd85321b384f1486b23bb8d83a2292c1873",
+    "ols-parser-recovery-2.5.7.py": "b193a6115cf2041c529541897bb2e94da68e711cd81f0a84a9aeacd582a3e061",
+    "ols-parser-classifier-2.5.7.py": "312266a6aabe62e4bd30bb826fab891d43482e98bb558277af5585a625f8b207"
+  },
+  "dependencies": {
+    "install-module-2.5.7.sh": [
+      "cyberpanel_ols-2.7.7-x86_64-rhel10.so",
+      "cyberpanel_ols-2.7.7-x86_64-rhel8.so",
+      "cyberpanel_ols-2.7.7-x86_64-rhel9.so",
+      "cyberpanel_ols-2.7.7-x86_64-ubuntu.so",
+      "mod_security-2.5.6-x86_64-rhel10.so",
+      "mod_security-2.5.6-x86_64-rhel8.so",
+      "mod_security-2.5.6-x86_64-rhel9.so",
+      "mod_security-2.5.6-x86_64-ubuntu.so",
+      "mod_security-2.5.6-x86_64-ubuntu26.so",
+      "openlitespeed-2.5.7-x86_64-rhel10",
+      "openlitespeed-2.5.7-x86_64-rhel8",
+      "openlitespeed-2.5.7-x86_64-rhel9",
+      "openlitespeed-2.5.7-x86_64-ubuntu",
+      "ols-bundle-installer-2.5.7.py",
+      "ols-security-assets-helper-2.5.7.py",
+      "ols-parser-recovery-2.5.7.py",
+      "ols-parser-classifier-2.5.7.py"
+    ],
+    "ols-security-assets-helper-2.5.7.py": [
+      "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz"
+    ]
+  }
+}

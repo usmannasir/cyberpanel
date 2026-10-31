@@ -1,0 +1,16 @@
+{
+  "baseline_sha256": "86a4d7dfc14f7bc72be6fbd7749ef6a13fe81e7549bc00acd62868372618b3b0",
+  "changed": [
+    "core/CMakeLists.txt",
+    "core/SOURCE_MANIFEST.json",
+    "core/dist/admin/html.open/lib/LSWebAdmin/Auth/CAuthorizer.php",
+    "core/src/main/lshttpdmain.cpp",
+    "core/src/main/plainconf.cpp",
+    "core/test/CMakeLists.txt"
+  ],
+  "added": [
+    "core/dist/admin/html.open/lib/LSWebAdmin/Auth/AdminLoginConfig.php",
+    "core/test/security/webadminconfigtest.cpp"
+  ],
+  "removed": []
+}

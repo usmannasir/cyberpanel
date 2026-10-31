@@ -1,0 +1,13 @@
+{
+  "changed_existing": [
+    "manifest.json",
+    "payload/VERSION",
+    "payload/admin/html/lib/LSWebAdmin/Auth/CAuthorizer.php"
+  ],
+  "added": [
+    "payload/admin/html/lib/LSWebAdmin/Auth/AdminLoginConfig.php"
+  ],
+  "all_existing_modes_owners_preserved": true,
+  "all_manifest_payload_digests_match": true,
+  "source_and_payload_auth_identical": true
+}

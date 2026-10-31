@@ -15,8 +15,8 @@ import tarfile
 import tempfile
 
 
-SECURITY_ASSETS_URL = 'https://cyberpanel.net/ols-security-assets-2.5.6-php8.3.36-x86_64.tar.gz'
-SECURITY_ASSETS_SHA256 = 'b812c9bfa839cbd20087fce1526f1fac77ea5360bf2b411d5827dd6d025c5a13'
+SECURITY_ASSETS_URL = 'https://cyberpanel.net/ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz'
+SECURITY_ASSETS_SHA256 = '1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0'
 
 
 _EXACT = frozenset(('VERSION', 'admin/fcgi-bin/admin_php',
@@ -103,7 +103,7 @@ class SecurityAssetsTransaction:
             if 'manifest.json' not in names:
                 raise RuntimeError('OLS security assets manifest missing')
             manifest = json.load(archive.extractfile('manifest.json'))
-            if manifest.get('release') != '2.5.6' or not isinstance(manifest.get('files'), list):
+            if manifest.get('release') != '2.5.7' or not isinstance(manifest.get('files'), list):
                 raise RuntimeError('Unsupported OLS security assets manifest')
             seen = set()
             for item in manifest['files']:
