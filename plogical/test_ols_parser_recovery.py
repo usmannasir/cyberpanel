@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import olsParserRecovery as recovery
+from plogical import olsParserRecovery as recovery
 
 
 class ClassifierTests(unittest.TestCase):
