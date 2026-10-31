@@ -43,7 +43,7 @@
     "private_recovery": 38
   },
   "release_dependency_graph_nodes": 19,
-  "paid_entitlement_acceptance": "NOT RUN; legitimate valid test entitlement pending",
+  "paid_entitlement_acceptance": "PASSED with a legitimate owner-authorized QA entitlement; six isolated native userspaces",
   "recovery_final3": {
     "verified_utc": "2026-10-31T14:16:23.346454+00:00",
     "core_sha256": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
@@ -58,5 +58,25 @@
     "waf_attack_http": 403,
     "rollback_asset_and_binary_paths": 265,
     "status": "passed"
+  },
+  "licensed_acceptance": {
+    "totals": {
+      "paid_feature_checks": 456,
+      "fresh_unlicensed_checks": 54,
+      "canonical_autostart_checks": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    "platforms": [
+      "ubuntu",
+      "rhel8",
+      "rhel9",
+      "rhel10",
+      "ubuntu24",
+      "ubuntu26"
+    ],
+    "verified_utc": "2026-10-31T19:21:40.512789+00:00",
+    "independent_results_and_artifact_hash_review": "passed",
+    "coverage_limit": "76-check feature matrix uses manually launched loopback LSAPI. Separate eight-check native autoStart smoke closes process-startup gap, but is not a full production installation/reboot test."
   }
 }

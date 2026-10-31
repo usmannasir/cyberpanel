@@ -1,0 +1,166 @@
+{
+  "verified_utc": "2026-10-31T19:21:40.512789+00:00",
+  "release": "2.5.7 candidate, unpublished",
+  "entitlement": {
+    "source": "owner-authorized complimentary legitimate QA order",
+    "api_validation": "verified HTTP200 valid=true active",
+    "no_entitlement_fabrication_in_tests": true
+  },
+  "scope": "six isolated native userspaces, exact staged core/module/WAF/full support payload; website LSAPI launched manually as uid/gid65534 on private loopback19000",
+  "coverage_limit": "76-check feature matrix uses manually launched loopback LSAPI. Separate eight-check native autoStart smoke closes process-startup gap, but is not a full production installation/reboot test.",
+  "harness_sha256": "f370fc64320fa9548811f0912b8950b498f808dd0699d79f6b62cbcb36522b81",
+  "fixture_runner_sha256": "e1376ab557e9a604c28dbda9beaeaa1e4bcd5307a3de674357d3dd5f72b44642",
+  "rows": [
+    {
+      "platform": "ubuntu",
+      "artifact_sha256": {
+        "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+        "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+        "mod_security-2.5.6-x86_64-ubuntu.so": "640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536",
+        "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+      },
+      "paid_checks": 76,
+      "paid_failures": 0,
+      "paid_skips": 0,
+      "fresh_unlicensed_checks": 9,
+      "paid_report": "paid-qa/v3-ubuntu/paid-report.json",
+      "paid_report_sha256": "8e803a83b594990b9375c5a98431ce5dea61d29a634f7cc34d3265944de1cb20",
+      "unlicensed_report": "paid-qa/unlicensed-ubuntu/native-acceptance.json",
+      "unlicensed_report_sha256": "5d7c3c40ccbf548b7cab6b1642acb03d4242920e1a38c67d2e7109fd9d4851b6",
+      "native_config_exit": 0,
+      "owned_listener_container_stopped": true,
+      "canonical_autostart_checks": 8,
+      "canonical_autostart_report": "paid-qa/autostart-ubuntu/autostart-report.json",
+      "canonical_autostart_report_sha256": "44cdc2a2f39fd9bce4b7c67603b5939de8ed94112dc64e75e87d9d4eab6f4231"
+    },
+    {
+      "platform": "rhel8",
+      "artifact_sha256": {
+        "openlitespeed-2.5.7-x86_64-rhel8": "b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b",
+        "cyberpanel_ols-2.7.7-x86_64-rhel8.so": "c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733",
+        "mod_security-2.5.6-x86_64-rhel8.so": "12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708",
+        "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+      },
+      "paid_checks": 76,
+      "paid_failures": 0,
+      "paid_skips": 0,
+      "fresh_unlicensed_checks": 9,
+      "paid_report": "paid-qa/v3-rhel8/paid-report.json",
+      "paid_report_sha256": "8e803a83b594990b9375c5a98431ce5dea61d29a634f7cc34d3265944de1cb20",
+      "unlicensed_report": "paid-qa/unlicensed-rhel8/native-acceptance.json",
+      "unlicensed_report_sha256": "172c8bab56e39f859a166a3809311cc2c44441347651f69c8ebe56dba151e992",
+      "native_config_exit": 0,
+      "owned_listener_container_stopped": true,
+      "canonical_autostart_checks": 8,
+      "canonical_autostart_report": "paid-qa/autostart-rhel8/autostart-report.json",
+      "canonical_autostart_report_sha256": "44cdc2a2f39fd9bce4b7c67603b5939de8ed94112dc64e75e87d9d4eab6f4231"
+    },
+    {
+      "platform": "rhel9",
+      "artifact_sha256": {
+        "openlitespeed-2.5.7-x86_64-rhel9": "03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec",
+        "cyberpanel_ols-2.7.7-x86_64-rhel9.so": "7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb",
+        "mod_security-2.5.6-x86_64-rhel9.so": "0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9",
+        "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+      },
+      "paid_checks": 76,
+      "paid_failures": 0,
+      "paid_skips": 0,
+      "fresh_unlicensed_checks": 9,
+      "paid_report": "paid-qa/v3-rhel9/paid-report.json",
+      "paid_report_sha256": "8e803a83b594990b9375c5a98431ce5dea61d29a634f7cc34d3265944de1cb20",
+      "unlicensed_report": "paid-qa/unlicensed-rhel9/native-acceptance.json",
+      "unlicensed_report_sha256": "eefaa837bf89960d28eeaf1fd99d932931608ead93ab6dea47534d7be872be7f",
+      "native_config_exit": 0,
+      "owned_listener_container_stopped": true,
+      "canonical_autostart_checks": 8,
+      "canonical_autostart_report": "paid-qa/autostart-rhel9/autostart-report.json",
+      "canonical_autostart_report_sha256": "44cdc2a2f39fd9bce4b7c67603b5939de8ed94112dc64e75e87d9d4eab6f4231"
+    },
+    {
+      "platform": "rhel10",
+      "artifact_sha256": {
+        "openlitespeed-2.5.7-x86_64-rhel10": "fb65d7f438da8f7dfa4057b9c42d5f0b50d8b742e0e9bef1959fc0b432837c96",
+        "cyberpanel_ols-2.7.7-x86_64-rhel10.so": "edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2",
+        "mod_security-2.5.6-x86_64-rhel10.so": "a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde",
+        "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+      },
+      "paid_checks": 76,
+      "paid_failures": 0,
+      "paid_skips": 0,
+      "fresh_unlicensed_checks": 9,
+      "paid_report": "paid-qa/v3-rhel10/paid-report.json",
+      "paid_report_sha256": "8e803a83b594990b9375c5a98431ce5dea61d29a634f7cc34d3265944de1cb20",
+      "unlicensed_report": "paid-qa/unlicensed-rhel10/native-acceptance.json",
+      "unlicensed_report_sha256": "f2a02f3eae07bafffa29e7fd236b371563cfd3c7133dd292079985c6444c9f4e",
+      "native_config_exit": 0,
+      "owned_listener_container_stopped": true,
+      "canonical_autostart_checks": 8,
+      "canonical_autostart_report": "paid-qa/autostart-rhel10/autostart-report.json",
+      "canonical_autostart_report_sha256": "44cdc2a2f39fd9bce4b7c67603b5939de8ed94112dc64e75e87d9d4eab6f4231"
+    },
+    {
+      "platform": "ubuntu24",
+      "artifact_sha256": {
+        "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+        "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+        "mod_security-2.5.6-x86_64-ubuntu.so": "640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536",
+        "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+      },
+      "paid_checks": 76,
+      "paid_failures": 0,
+      "paid_skips": 0,
+      "fresh_unlicensed_checks": 9,
+      "paid_report": "paid-qa/v3-ubuntu24/paid-report.json",
+      "paid_report_sha256": "8e803a83b594990b9375c5a98431ce5dea61d29a634f7cc34d3265944de1cb20",
+      "unlicensed_report": "paid-qa/unlicensed-ubuntu24/native-acceptance.json",
+      "unlicensed_report_sha256": "1f3795a18abaeb051b76b9cdf08b9f82c70cb8b0aff834347510e3a16bc013c7",
+      "native_config_exit": 0,
+      "owned_listener_container_stopped": true,
+      "canonical_autostart_checks": 8,
+      "canonical_autostart_report": "paid-qa/autostart-ubuntu24/autostart-report.json",
+      "canonical_autostart_report_sha256": "44cdc2a2f39fd9bce4b7c67603b5939de8ed94112dc64e75e87d9d4eab6f4231"
+    },
+    {
+      "platform": "ubuntu26",
+      "artifact_sha256": {
+        "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+        "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+        "mod_security-2.5.6-x86_64-ubuntu26.so": "057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae",
+        "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+      },
+      "paid_checks": 76,
+      "paid_failures": 0,
+      "paid_skips": 0,
+      "fresh_unlicensed_checks": 9,
+      "paid_report": "paid-qa/v3-ubuntu26/paid-report.json",
+      "paid_report_sha256": "8e803a83b594990b9375c5a98431ce5dea61d29a634f7cc34d3265944de1cb20",
+      "unlicensed_report": "paid-qa/unlicensed-ubuntu26/native-acceptance.json",
+      "unlicensed_report_sha256": "771b03ed58728c82b60a0676fe0422d716370636d6bbb33289d635c65c1b9a93",
+      "native_config_exit": 0,
+      "owned_listener_container_stopped": true,
+      "canonical_autostart_checks": 8,
+      "canonical_autostart_report": "paid-qa/autostart-ubuntu26/autostart-report.json",
+      "canonical_autostart_report_sha256": "44cdc2a2f39fd9bce4b7c67603b5939de8ed94112dc64e75e87d9d4eab6f4231"
+    }
+  ],
+  "initial_failed_receipts": [
+    "paid-qa/ubuntu/paid-report.json",
+    "paid-qa/ubuntu-v2/paid-report.json"
+  ],
+  "harness_corrections": [
+    "UDS socket fixture spelling corrected; later explicit external LSAPI mode used",
+    "Brute-force policy documented as POST-only: three GET quota-negative controls followed by POST200,200,403"
+  ],
+  "module_policy_source": "cyberpanel_ols.c:2333-2338; support_docs/BRUTE_FORCE_PROTECTION.md POST-only tracking",
+  "secrets_in_logs_or_reports": false,
+  "publication_or_production_activation": false,
+  "canonical_autostart_scope": "Separate six-platform smoke with canonical CGIRLimit, OLS autoStart1 and packaged PHP; no manually launched PHP. Eight HTTP and CA-verified HTTPS PHP/env/header/ini checks per row all pass.",
+  "totals": {
+    "paid_feature_checks": 456,
+    "fresh_unlicensed_checks": 54,
+    "canonical_autostart_checks": 48,
+    "failed": 0,
+    "skipped": 0
+  }
+}

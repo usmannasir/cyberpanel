@@ -1,7 +1,7 @@
 {
   "release": "2.5.7",
   "architecture": "x86_64",
-  "status": "UNRELEASED CANDIDATE; publication and paid acceptance pending",
+  "status": "UNRELEASED CANDIDATE; licensed acceptance passed; publication and download verification pending",
   "artifacts": {
     "cyberpanel-ols-2.5.7.zip": {
       "url": "https://cyberpanel.net/cyberpanel-ols-2.5.7.zip",
@@ -186,7 +186,6 @@
     "Recover the exact affected old parser using unchanged-configuration isolated preflight and complete paired rollback"
   ],
   "open_gates": [
-    "valid paid OLS entitlement acceptance",
     "publication and download verification before consumer activation"
   ],
   "independent_digest_review": {

@@ -6,4 +6,4 @@ The candidate repairs seven WebAdmin parser registrations and applies configured
 
 The explicit parser recovery entrypoint validates the unchanged installed configuration against the paired candidate before stopping the service and preserves complete rollback. Ordinary upgrades continue to validate configuration. Recovery requires the documented Linux namespace/overlay prerequisites and refuses unsupported hosts. No license or entitlement is created by recovery.
 
-Paid-feature acceptance remains open pending a legitimate test entitlement. The core/WAF and verified-TLS HTTP/2 and HTTP/3 checks do not substitute for that gate.
+Licensed-feature acceptance now passes across six userspaces: 456 feature checks, 54 fresh unlicensed checks, and 48 packaged-PHP autoStart checks, with no failures or skips. See LICENSED_ACCEPTANCE.md and licensed-acceptance.json for fixture corrections, exact artifact hashes and coverage limits. This is not a full production installation/reboot or customer-server test. Immutable publication and download verification remain open before consumer activation.
