@@ -29,6 +29,16 @@ class UpgradePreflightTests(unittest.TestCase):
                 else:
                     with self.assertRaises(RuntimeError):ns['validate_ols_configuration']()
 
+    def test_broken_optional_diagnostic_helper_preserves_original_error(self):
+        ns = load()
+        ns['__file__'] = str(Path(__file__).with_name('upgrade.py'))
+        result = SimpleNamespace(returncode=2, stdout='[ERROR] original invalid config', stderr='')
+        for failure in (SyntaxError('broken helper'), AttributeError('incomplete helper')):
+            with self.subTest(failure=failure), patch.object(subprocess, 'run', return_value=result), \
+                    patch('importlib.util.module_from_spec', side_effect=failure):
+                with self.assertRaisesRegex(RuntimeError, 'original invalid config'):
+                    ns['validate_ols_configuration']()
+
     def test_invalid_existing_config_stops_before_any_upgrade_action(self):
         ns=load();ns['validate_ols_configuration']=Mock(side_effect=RuntimeError('invalid existing config'))
         with patch.object(os.path,'exists',return_value=True), self.assertRaisesRegex(RuntimeError,'invalid existing'):

@@ -61,8 +61,8 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
             recovery = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(recovery)
             hint = recovery.recovery_hint(binary, result.returncode, output)
-        except (OSError, ImportError, NameError):
-            pass  # A missing diagnostic helper must never waive the original failure.
+        except Exception:
+            pass  # Optional diagnostics must never mask or waive the original failure.
         raise RuntimeError('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
     return output
 
