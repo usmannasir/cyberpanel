@@ -1,0 +1,11 @@
+# Isolated paid acceptance â€” no publication
+
+The owner-authorized legitimate QA entitlement is mounted read-only into disposable containers. Its value is never an argument or printed. Six distinct userspaces use exact staged 2.5.7 core/security assets with unchanged 2.7.7 module and matching 2.5.6 WAF binaries. Fresh unlicensed tests use separate containers with no key mount or inherited license cache.
+
+The canonical acceptance harness was copied from the verified AlmaLinux10 module source tree. The original73-check fixture used GET for brute-force quota checks, contrary to cyberpanel_ols.c:2333â€“2338 and support_docs/BRUTE_FORCE_PROTECTION.md (POST-only policy). The isolated correction adds three GET-negative controls and sends POST for quota checks (200,200,403), yielding76 checks. Original failed reports are retained under ubuntu/ and ubuntu-v2/.
+
+The initial synthetic fixture omitted CGIRLimit. Owning source src/main/httpserver.cpp:3434â€“3444 returns without security initialization when absent;3504â€“3511 configures the CGI worker only if CGIRLimit exists. Canonical dist/conf/httpd_config.conf.in:107 supplies CGIRLimit. Thus the first autoStart attempt logged cgidSuEXEC failed. No runtime artifacts were changed. The first UDS spelling was also corrected according to the canonical uds:/%DEFAULT_TMP_DIR% template (with absolute /tmp, uds://tmp).
+
+The76-check matrix uses packaged admin_php in its documented external LSAPI -b mode on private loopback19000, uid/gid65534. It does not itself establish automatic process startup. A separate native-autostart.py smoke restores autoStart1, canonical CGIRLimit, and private cgidsocket directory; no PHP process is manually spawned. Its eight HTTP and CA-verified HTTPS checks per userspace cover PHP execution, SetEnv, RequestHeader, and php_value.
+
+Executed orchestration: python3 paid-qa/run-matrix.py and python3 paid-qa/run-autostart-matrix.py (management build workspace). These scripts refuse preexisting fixture destinations; preserve receipts and use new names for any repeat. Native client commands and mounted paths are in those scripts; exact hashes are in the aggregate receipt. No listening ports are published to the host. Owned server process groups are stopped and entitlement symlinks removed on completion.

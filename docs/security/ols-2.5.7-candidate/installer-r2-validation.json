@@ -1,0 +1,206 @@
+{
+  "release": "2.5.7",
+  "status": "release acceptance passed",
+  "native_build": {
+    "platforms": [
+      "ubuntu22",
+      "rhel8",
+      "rhel9",
+      "rhel10"
+    ],
+    "per_platform": {
+      "unit_tests": 393,
+      "cgi_assertions": 102,
+      "brotli_fixtures": 28
+    },
+    "final_relink": "one translation unit changed only frozen build stamp; core runtime logic identical to tested full builds"
+  },
+  "native_exact_core_matrix": {
+    "platforms": [
+      "ubuntu22",
+      "ubuntu24",
+      "ubuntu26",
+      "rhel8",
+      "rhel9",
+      "rhel10"
+    ],
+    "per_platform": {
+      "configuration_unlicensed_waf_checks": 9,
+      "verified_tls_http2_http3_checks": 11
+    }
+  },
+  "final3_webadmin": {
+    "https_behavior_checks": 21,
+    "policy_parser_tests": 11,
+    "assets_sha256": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0",
+    "ubuntu_core_sha256": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f"
+  },
+  "python_tests": {
+    "public_consumers": 32,
+    "security_assets_bootstrap": 21,
+    "private_bundle_driver": 23,
+    "private_shell_selectors": 4,
+    "private_recovery": 38
+  },
+  "release_dependency_graph_nodes": 19,
+  "paid_entitlement_acceptance": {
+    "status": "passed",
+    "totals": {
+      "paid_feature_checks": 456,
+      "fresh_unlicensed_checks": 54,
+      "canonical_autostart_checks": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    "platforms": [
+      {
+        "platform": "ubuntu",
+        "artifact_sha256": {
+          "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+          "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+          "mod_security-2.5.6-x86_64-ubuntu.so": "640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536",
+          "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+        },
+        "paid_checks": 76,
+        "fresh_unlicensed_checks": 9,
+        "canonical_autostart_checks": 8
+      },
+      {
+        "platform": "rhel8",
+        "artifact_sha256": {
+          "openlitespeed-2.5.7-x86_64-rhel8": "b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b",
+          "cyberpanel_ols-2.7.7-x86_64-rhel8.so": "c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733",
+          "mod_security-2.5.6-x86_64-rhel8.so": "12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708",
+          "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+        },
+        "paid_checks": 76,
+        "fresh_unlicensed_checks": 9,
+        "canonical_autostart_checks": 8
+      },
+      {
+        "platform": "rhel9",
+        "artifact_sha256": {
+          "openlitespeed-2.5.7-x86_64-rhel9": "03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec",
+          "cyberpanel_ols-2.7.7-x86_64-rhel9.so": "7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb",
+          "mod_security-2.5.6-x86_64-rhel9.so": "0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9",
+          "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+        },
+        "paid_checks": 76,
+        "fresh_unlicensed_checks": 9,
+        "canonical_autostart_checks": 8
+      },
+      {
+        "platform": "rhel10",
+        "artifact_sha256": {
+          "openlitespeed-2.5.7-x86_64-rhel10": "fb65d7f438da8f7dfa4057b9c42d5f0b50d8b742e0e9bef1959fc0b432837c96",
+          "cyberpanel_ols-2.7.7-x86_64-rhel10.so": "edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2",
+          "mod_security-2.5.6-x86_64-rhel10.so": "a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde",
+          "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+        },
+        "paid_checks": 76,
+        "fresh_unlicensed_checks": 9,
+        "canonical_autostart_checks": 8
+      },
+      {
+        "platform": "ubuntu24",
+        "artifact_sha256": {
+          "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+          "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+          "mod_security-2.5.6-x86_64-ubuntu.so": "640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536",
+          "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+        },
+        "paid_checks": 76,
+        "fresh_unlicensed_checks": 9,
+        "canonical_autostart_checks": 8
+      },
+      {
+        "platform": "ubuntu26",
+        "artifact_sha256": {
+          "openlitespeed-2.5.7-x86_64-ubuntu": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+          "cyberpanel_ols-2.7.7-x86_64-ubuntu.so": "41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b",
+          "mod_security-2.5.6-x86_64-ubuntu26.so": "057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae",
+          "ols-security-assets-2.5.7-php8.3.36-x86_64.tar.gz": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0"
+        },
+        "paid_checks": 76,
+        "fresh_unlicensed_checks": 9,
+        "canonical_autostart_checks": 8
+      }
+    ],
+    "coverage": "76-check feature matrix uses manually launched loopback LSAPI. Separate eight-check native autoStart smoke closes process-startup gap, but is not a full production installation/reboot test."
+  },
+  "recovery_final3": {
+    "verified_utc": "2026-10-31T14:16:23.346454+00:00",
+    "core_sha256": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+    "assets_sha256": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0",
+    "evidence_sha256": "280af722c580bb04795ba494e2e8aabc9f148a5610e2621a49230fe073bb60e0",
+    "markers": [
+      "NATIVE_TRANSACTION_HTTP_CONFIG_PRESERVED=PASS",
+      "NATIVE_TRANSACTION_ROLLBACK_HTTP_CONFIG_ASSETS=PASS",
+      "OLD_TO_FINAL3_AUTH_UPGRADE_AND_FULL_265_PATH_ROLLBACK=PASS"
+    ],
+    "benign_http": 200,
+    "waf_attack_http": 403,
+    "rollback_asset_and_binary_paths": 265,
+    "status": "passed"
+  },
+  "licensed_acceptance": {
+    "totals": {
+      "paid_feature_checks": 456,
+      "fresh_unlicensed_checks": 54,
+      "canonical_autostart_checks": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    "platforms": [
+      "ubuntu",
+      "rhel8",
+      "rhel9",
+      "rhel10",
+      "ubuntu24",
+      "ubuntu26"
+    ],
+    "verified_utc": "2026-10-31T19:21:40.512789+00:00",
+    "independent_results_and_artifact_hash_review": "passed",
+    "coverage_limit": "76-check feature matrix uses manually launched loopback LSAPI. Separate eight-check native autoStart smoke closes process-startup gap, but is not a full production installation/reboot test."
+  },
+  "provenance": "Native build, HTTP/WAF, verified-TLS HTTP2/HTTP3, WebAdmin and complete paired recovery/rollback receipts independently reviewed before publication.",
+  "installer_revision": "r2",
+  "version_boundaries": {
+    "driver_sha256": "9e8f93de69e53b90d3ad8aff53fb2e2b74c7e3d0ae0af03211f4b9720da39901",
+    "exact_staged_driver_loaded_without_modification": true,
+    "checks": [
+      {
+        "installed_version": "2.5.6",
+        "accepted": true,
+        "expected_accept": true,
+        "passed": true
+      },
+      {
+        "installed_version": "2.5.7",
+        "accepted": true,
+        "expected_accept": true,
+        "passed": true
+      },
+      {
+        "installed_version": "2.5.8",
+        "accepted": false,
+        "expected_accept": false,
+        "passed": true
+      },
+      {
+        "installed_version": "2.6.0",
+        "accepted": false,
+        "expected_accept": false,
+        "passed": true
+      }
+    ],
+    "installed_binary_execution": false
+  },
+  "r2_native_acceptance": {
+    "status": "passed, independently reviewed",
+    "receipt_sha256": "4c23a21bd86c50ee710a943ad19a350045569b39794064a5d136a6c5c2802ca3",
+    "scope": "exact staged driver, enabled paid and fresh absent-key canonical-root recovery, same-version reinstall, injected-start-failure full rollback; HTTP200 and WAF403 preserved",
+    "licensed_recovery_limit": "Paid test used an authentic cache created by the normal module validator over normal network access before isolated preflight. A cold licensed cache is not claimed to validate inside the network-isolated namespace; refresh through the normal validator first.",
+    "canonical_dependency_verifier": "Owning release graph verifier independently verifies all19 nodes, including required recovery/classifier helper pins and byte-identical canonical sources."
+  }
+}

@@ -29,7 +29,7 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.release = self.root / 'http/v3.0.8'
         for name in ('plogical/upgrade.py', 'cyberpanel_version.py',
                      'cyberpanel_firewall_migration.py', 'lscpd_binary.py',
-                     'plogical/olsSecurityAssets.py'):
+                     'plogical/olsSecurityAssets.py', 'plogical/olsParserRecovery.py'):
             target = self.release / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, target)
@@ -87,6 +87,18 @@ class StagedUpgradeHelperTests(unittest.TestCase):
                                cwd=self.root, capture_output=True, text=True)
         self.assertEqual(probe.returncode, 0, probe.stdout + probe.stderr)
         self.assertEqual(probe.stdout.strip(), 'lscpd.0.4.0')
+
+    def test_parser_diagnostic_helper_is_from_selected_release(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual((self.stage / 'olsParserRecovery.py').read_bytes(),
+                         (self.release / 'plogical/olsParserRecovery.py').read_bytes())
+
+    def test_missing_parser_diagnostic_helper_stops_staging(self):
+        (self.release / 'plogical/olsParserRecovery.py').unlink()
+        result = self.stage_sources()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('Failed to download olsParserRecovery.py', result.stdout)
 
     def test_missing_required_selector_stops_staging(self):
         (self.release / 'lscpd_binary.py').unlink()

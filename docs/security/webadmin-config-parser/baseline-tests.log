@@ -1,0 +1,13 @@
+source/core/test/security/webadminconfigtest.cpp:45: error: Failure in WebAdminSecuritySettingsKeepExactValues: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:45: error: Failure in WebAdminSecuritySettingsKeepExactValues: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:45: error: Failure in WebAdminSecuritySettingsKeepExactValues: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:45: error: Failure in WebAdminSecuritySettingsKeepExactValues: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:45: error: Failure in WebAdminSecuritySettingsKeepExactValues: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:45: error: Failure in WebAdminSecuritySettingsKeepExactValues: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:48: error: Failure in WebAdminSecuritySettingsKeepExactValues: plainconf::errorLogList.size() == 0
+source/core/test/security/webadminconfigtest.cpp:57: error: Failure in WebAdminBackupRetentionAndExistingSettings: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:61: error: Failure in WebAdminBackupRetentionAndExistingSettings: plainconf::errorLogList.size() == 0
+source/core/test/security/webadminconfigtest.cpp:68: error: Failure in WebAdminSecurityKeywordsAreCaseInsensitive: actual != NULL
+source/core/test/security/webadminconfigtest.cpp:70: error: Failure in WebAdminSecurityKeywordsAreCaseInsensitive: plainconf::errorLogList.size() == 0
+FAILURE: 3 out of 5 tests failed (11 failures).
+Test time: 0.00 seconds.

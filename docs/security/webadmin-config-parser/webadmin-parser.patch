@@ -1,0 +1,113 @@
+--- a/src/main/plainconf.cpp
++++ b/src/main/plainconf.cpp
+@@ -113,0 +114 @@
++    {"configautobackupretention",                NULL},
+@@ -219,0 +221 @@
++    {"loginhistoryretention",                    NULL},
+@@ -258,0 +261 @@
++    {"opsauditretainfiles",                      NULL},
+@@ -329,0 +333,4 @@
++    {"throttleblockwindow",                      NULL},
++    {"throttleenabled",                          NULL},
++    {"throttlemaxbackoff",                       NULL},
++    {"throttlemaxfailures",                      NULL},
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -171,0 +172 @@
++   security/webadminconfigtest.cpp
+--- /dev/null
++++ b/test/security/webadminconfigtest.cpp
+@@ -0,0 +1,93 @@
++#ifdef RUN_TEST
++#include <main/plainconf.h>
++#include <util/xmlnode.h>
++#include "unittest-cpp/UnitTest++.h"
++#include <string.h>
++
++// Exercise the real plain-config parser without touching an installed config.
++struct AdminConfigFixture
++{
++    XmlNode root;
++    bool priorLogSetup;
++    AdminConfigFixture()
++    {
++        plainconf::init();
++        const char *attr = NULL;
++        root.init("adminConfig", &attr);
++        plainconf::gModuleList.push_back(&root);
++        priorLogSetup = plainconf::bErrorLogSetup;
++        plainconf::bErrorLogSetup = false;
++        plainconf::errorLogList.clear();
++    }
++    ~AdminConfigFixture()
++    {
++        plainconf::gModuleList.pop_back();
++        plainconf::errorLogList.clear();
++        plainconf::bErrorLogSetup = priorLogSetup;
++    }
++    void parse(const char *line)
++    { plainconf::parseLine("webadmin-regression.conf", 1, line); }
++};
++
++TEST_FIXTURE(AdminConfigFixture, WebAdminSecuritySettingsKeepExactValues)
++{
++    const char *lines[] = {"throttleEnabled 1", "throttleMaxFailures 3",
++        "throttleBlockWindow 300", "throttleMaxBackoff 86400",
++        "loginHistoryRetention 30", "opsAuditRetainFiles 30"};
++    const char *keys[] = {"throttleenabled", "throttlemaxfailures",
++        "throttleblockwindow", "throttlemaxbackoff",
++        "loginhistoryretention", "opsauditretainfiles"};
++    const char *values[] = {"1", "3", "300", "86400", "30", "30"};
++    for (int i = 0; i < 6; ++i)
++    {
++        parse(lines[i]);
++        const char *actual = root.getChildValue(keys[i]);
++        CHECK(actual != NULL);
++        if (actual) CHECK_EQUAL(values[i], actual);
++    }
++    CHECK(plainconf::errorLogList.size() == 0);
++}
++
++TEST_FIXTURE(AdminConfigFixture, WebAdminBackupRetentionAndExistingSettings)
++{
++    parse("configAutoBackupRetention 90");
++    parse("sessionTimeout 3600");
++    parse("enableCoreDump 1");
++    const char *actual = root.getChildValue("configautobackupretention");
++    CHECK(actual != NULL);
++    if (actual) CHECK_EQUAL("90", actual);
++    CHECK_EQUAL("3600", root.getChildValue("sessiontimeout"));
++    CHECK_EQUAL("1", root.getChildValue("enablecoredump"));
++    CHECK(plainconf::errorLogList.size() == 0);
++}
++
++TEST_FIXTURE(AdminConfigFixture, WebAdminSecurityKeywordsAreCaseInsensitive)
++{
++    parse("THROTTLEenabled 0");
++    const char *actual = root.getChildValue("throttleenabled");
++    CHECK(actual != NULL);
++    if (actual) CHECK_EQUAL("0", actual);
++    CHECK(plainconf::errorLogList.size() == 0);
++}
++
++TEST_FIXTURE(AdminConfigFixture, WebAdminOmittedSettingsRemainAccepted)
++{
++    parse("sessionTimeout 120");
++    CHECK(root.getChildValue("throttleenabled") == NULL);
++    CHECK(root.getChildValue("configautobackupretention") == NULL);
++    CHECK(plainconf::errorLogList.size() == 0);
++}
++
++TEST_FIXTURE(AdminConfigFixture, WebAdminUnknownSecuritySettingStillErrors)
++{
++    parse("throttleMaxFailurez 3");
++    CHECK(root.getChildValue("throttlemaxfailurez") == NULL);
++    CHECK(plainconf::errorLogList.size() == 1);
++    if (plainconf::errorLogList.size())
++    {
++        CHECK_EQUAL('E', (*plainconf::errorLogList.begin())->c_str()[0]);
++        CHECK(strstr((*plainconf::errorLogList.begin())->c_str(),
++                     "Not support [throttlemaxfailurez 3]") != NULL);
++    }
++}
++#endif

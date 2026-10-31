@@ -35,7 +35,7 @@ class SecurityAssetsTests(unittest.TestCase):
         }
 
     def archive(self, extra=None, mutate=None):
-        manifest = {'release': '2.5.6', 'files': []}
+        manifest = {'release': '2.5.7', 'files': []}
         for name, data in self.files.items():
             manifest['files'].append({'path': name, 'mode': 0o755 if name.endswith('admin_php') else 0o644,
                 'sha256': hashlib.sha256(data).hexdigest(), 'existing_only': name.startswith('add-ons/')})

@@ -1229,6 +1229,10 @@ if grep -q '^def load_ols_security_assets(' upgrade.py; then
   Download_Upgrade_Source "plogical/olsSecurityAssets.py" "olsSecurityAssets.py" "^class SecurityAssetsTransaction" || exit 1
 fi
 
+if grep -q 'olsParserRecovery.py' upgrade.py; then
+  Download_Upgrade_Source "plogical/olsParserRecovery.py" "olsParserRecovery.py" "^def require_known_failure(" || exit 1
+fi
+
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py
 
