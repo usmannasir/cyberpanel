@@ -1,0 +1,7 @@
+2026-10-31 17:17:00.569173 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [throttleenabled 1] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:3
+2026-10-31 17:17:00.569369 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [throttlemaxfailures 3] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:4
+2026-10-31 17:17:00.569374 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [throttleblockwindow 300] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:5
+2026-10-31 17:17:00.569379 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [throttlemaxbackoff 86400] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:6
+2026-10-31 17:17:00.569383 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [loginhistoryretention 30] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:7
+2026-10-31 17:17:00.569388 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [opsauditretainfiles 30] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:8
+2026-10-31 17:17:00.569394 [ERROR] [2612093] [PlainConf] [adminConfig:] Not support [configautobackupretention 90] in file <QA_WORKDIR>/native-root/admin/conf/admin_config.conf:9

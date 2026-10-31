@@ -1,0 +1,14 @@
+{
+  "source_archive_sha256": "86a4d7dfc14f7bc72be6fbd7749ef6a13fe81e7549bc00acd62868372618b3b0",
+  "security_assets_sha256": "b812c9bfa839cbd20087fce1526f1fac77ea5360bf2b411d5827dd6d025c5a13",
+  "published_ubuntu_core_sha256": "404c148b3dbdc7341d9a8166b034ddb93f4aac9eee1168ba331f9b0e9fb79b6c",
+  "experimental_native_ubuntu24_core_sha256": "9ff14729209ebb391129d4c6c86f7a5a055d3b234c6f61e2ce8adc86fe1c8a1f",
+  "admin_config_preserved_sha256": "1469cffd36ed7924b0a482dcf52e1a71cd2b6e9c8ff9b5e472fd7c8e7e3a4eae",
+  "baseline_config_exit": 2,
+  "candidate_config_exit": 0,
+  "candidate_unknown_directive_exit": 2,
+  "candidate_native_unit_tests_passed": 5,
+  "baseline_native_unit_tests_failed": 3,
+  "baseline_assertion_failures": 11,
+  "release_status": "source candidate only; no published binaries or consumer changes"
+}

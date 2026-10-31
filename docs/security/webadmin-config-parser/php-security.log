@@ -1,0 +1,1 @@
+PASS: actual bundled PHP cross-field checks (valid/equal/invalid), value preservation, and no-restart save field mapping
