@@ -1,6 +1,8 @@
 # Tested WebAdmin configuration parser repair candidate
 
-Status: **source repair candidate only**. This directory does not publish a replacement OLS binary, change installer pins, or make an already-blocked upgrade recover automatically.
+Historical first-stage evidence. Current staged release and recovery validation is in [the OLS 2.5.7 candidate](../ols-2.5.7-candidate/README.md). The observations below describe the original parser-only experiment.
+
+Original status: **source repair candidate only**. This directory does not publish a replacement OLS binary, change installer pins, or make an already-blocked upgrade recover automatically.
 
 The published 2.5.6 WebAdmin UI writes six login-throttling/history/audit settings that the same release's native configuration parser does not recognize. Saving those settings makes `openlitespeed -t` return 2; the upgrade preflight correctly refuses that configuration. The seventh setting, `configAutoBackupRetention`, is also emitted by the bundled UI and omitted from the parser table.
 

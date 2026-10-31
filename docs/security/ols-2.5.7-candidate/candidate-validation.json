@@ -1,0 +1,62 @@
+{
+  "release": "2.5.7",
+  "status": "candidate only; no production activation",
+  "native_build": {
+    "platforms": [
+      "ubuntu22",
+      "rhel8",
+      "rhel9",
+      "rhel10"
+    ],
+    "per_platform": {
+      "unit_tests": 393,
+      "cgi_assertions": 102,
+      "brotli_fixtures": 28
+    },
+    "final_relink": "one translation unit changed only frozen build stamp; core runtime logic identical to tested full builds"
+  },
+  "native_exact_core_matrix": {
+    "platforms": [
+      "ubuntu22",
+      "ubuntu24",
+      "ubuntu26",
+      "rhel8",
+      "rhel9",
+      "rhel10"
+    ],
+    "per_platform": {
+      "configuration_unlicensed_waf_checks": 9,
+      "verified_tls_http2_http3_checks": 11
+    }
+  },
+  "final3_webadmin": {
+    "https_behavior_checks": 21,
+    "policy_parser_tests": 11,
+    "assets_sha256": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0",
+    "ubuntu_core_sha256": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f"
+  },
+  "python_tests": {
+    "public_consumers": 32,
+    "security_assets_bootstrap": 21,
+    "private_bundle_driver": 23,
+    "private_shell_selectors": 4,
+    "private_recovery": 38
+  },
+  "release_dependency_graph_nodes": 19,
+  "paid_entitlement_acceptance": "NOT RUN; legitimate valid test entitlement pending",
+  "recovery_final3": {
+    "verified_utc": "2026-10-31T14:16:23.346454+00:00",
+    "core_sha256": "a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f",
+    "assets_sha256": "1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0",
+    "evidence_sha256": "280af722c580bb04795ba494e2e8aabc9f148a5610e2621a49230fe073bb60e0",
+    "markers": [
+      "NATIVE_TRANSACTION_HTTP_CONFIG_PRESERVED=PASS",
+      "NATIVE_TRANSACTION_ROLLBACK_HTTP_CONFIG_ASSETS=PASS",
+      "OLD_TO_FINAL3_AUTH_UPGRADE_AND_FULL_265_PATH_ROLLBACK=PASS"
+    ],
+    "benign_http": 200,
+    "waf_attack_http": 403,
+    "rollback_asset_and_binary_paths": 265,
+    "status": "passed"
+  }
+}
