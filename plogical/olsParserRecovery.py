@@ -105,5 +105,5 @@ def recovery_hint(binary, returncode, output):
     except (OSError, RuntimeError, ValueError):
         return ''
     return (' Known WebAdmin parser defect detected. Use the checksum-verified '
-            'install-module-2.5.7.sh --repair-webadmin-parser recovery release, '
+            'install-module-2.5.7-r2.sh --repair-webadmin-parser recovery release, '
             'then rerun this upgrade. Configuration validation remains mandatory.')
