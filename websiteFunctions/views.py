@@ -1027,17 +1027,33 @@ def convertDomainToSite(request):
         return redirect(loadLoginPage)
 
 
+def fetchWebsiteStatus(request):
+    if request.method != 'POST':
+        return JsonResponse({'websiteStatus': 0, 'error_message': 'POST required.'}, status=405)
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        return WebsiteManager().fetchWebsiteStatus(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+    except (ValueError, TypeError):
+        return JsonResponse({'websiteStatus': 0, 'error_message': 'Invalid request.'}, status=400)
+
+
 def submitWebsiteStatus(request):
+    if request.method != 'POST':
+        return JsonResponse({'websiteStatus': 0, 'error_message': 'POST required.'}, status=405)
     try:
 
         userID = request.session['userID']
+        data = json.loads(request.body)
 
         result = pluginManager.preWebsiteSuspension(request)
         if result != 200:
             return result
 
         wm = WebsiteManager()
-        coreResult = wm.submitWebsiteStatus(userID, json.loads(request.body))
+        coreResult = wm.submitWebsiteStatus(userID, data)
 
         result = pluginManager.postWebsiteSuspension(request, coreResult)
         if result != 200:
@@ -1047,6 +1063,8 @@ def submitWebsiteStatus(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+    except (ValueError, TypeError):
+        return JsonResponse({'websiteStatus': 0, 'error_message': 'Invalid request.'}, status=400)
 
 
 def submitWebsiteModify(request):

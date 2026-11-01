@@ -12886,126 +12886,81 @@ RewriteRule ^/(xmlrpc|wp-trackback)\.php - [F,L,NC]
 /* Java script code to suspend/un-suspend Website */
 
 app.controller('suspendWebsiteControl', function ($scope, $http) {
-
     $scope.suspendLoading = true;
+    $scope.saving = false;
     $scope.stateView = true;
-
     $scope.websiteSuspendFailure = true;
     $scope.websiteUnsuspendFailure = true;
     $scope.websiteSuccess = true;
     $scope.couldNotConnect = true;
 
+    function headers() {
+        return {headers: {'X-CSRFToken': getCookie('csrftoken')}};
+    }
+
     $scope.showSuspendUnsuspend = function () {
-
-        $scope.stateView = false;
-
-
+        $scope.stateView = true;
+        $scope.currentWebsiteState = null;
+        $scope.parentSuspended = false;
+        $scope.websiteSuccess = true;
+        $scope.websiteSuspendFailure = true;
+        $scope.websiteUnsuspendFailure = true;
+        $scope.couldNotConnect = true;
+        $scope.state = null;
+        var selected = $scope.websiteToBeSuspended;
+        if (!selected) return;
+        $http.post('/websites/fetchWebsiteStatus', {websiteName: selected}, headers()).then(function (response) {
+            if (selected !== $scope.websiteToBeSuspended) return;
+            if (response.data.websiteStatus !== 1) {
+                $scope.errorMessage = response.data.error_message;
+                $scope.websiteSuspendFailure = false;
+                return;
+            }
+            $scope.currentWebsiteState = response.data.state;
+            $scope.parentSuspended = response.data.parentSuspended;
+            $scope.stateView = false;
+        }, function () {
+            if (selected === $scope.websiteToBeSuspended) $scope.couldNotConnect = false;
+        });
     };
 
     $scope.save = function () {
-
+        if ($scope.saving || $scope.stateView || !$scope.websiteToBeSuspended ||
+            ['Suspend', 'Un-Suspend'].indexOf($scope.state) === -1) return;
+        $scope.saving = true;
         $scope.suspendLoading = false;
-
-        var websiteName = $scope.websiteToBeSuspended
+        $scope.websiteSuccess = true;
+        $scope.websiteSuspendFailure = true;
+        $scope.websiteUnsuspendFailure = true;
+        $scope.couldNotConnect = true;
+        var websiteName = $scope.websiteToBeSuspended;
         var state = $scope.state;
-
-
-        url = "/websites/submitWebsiteStatus";
-
-        var data = {
-            websiteName: websiteName,
-            state: state,
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-            if (response.data.websiteStatus === 1) {
-                if (state == "Suspend") {
-
-                    $scope.suspendLoading = true;
-                    $scope.stateView = false;
-
-                    $scope.websiteSuspendFailure = true;
-                    $scope.websiteUnsuspendFailure = true;
-                    $scope.websiteSuccess = false;
-                    $scope.couldNotConnect = true;
-
-                    $scope.websiteStatus = websiteName;
-                    $scope.finalStatus = "Suspended";
-
-                } else {
-                    $scope.suspendLoading = true;
-                    $scope.stateView = false;
-
-                    $scope.websiteSuspendFailure = true;
-                    $scope.websiteUnsuspendFailure = true;
-                    $scope.websiteSuccess = false;
-                    $scope.couldNotConnect = true;
-
-                    $scope.websiteStatus = websiteName;
-                    $scope.finalStatus = "Un-suspended";
-
-                }
-
-            } else {
-
-                if (state == "Suspend") {
-
-                    $scope.suspendLoading = true;
-                    $scope.stateView = false;
-
-                    $scope.websiteSuspendFailure = false;
-                    $scope.websiteUnsuspendFailure = true;
-                    $scope.websiteSuccess = true;
-                    $scope.couldNotConnect = true;
-
-
-                } else {
-                    $scope.suspendLoading = true;
-                    $scope.stateView = false;
-
-                    $scope.websiteSuspendFailure = true;
-                    $scope.websiteUnsuspendFailure = false;
-                    $scope.websiteSuccess = true;
-                    $scope.couldNotConnect = true;
-
-
-                }
-
-
-                $scope.errorMessage = response.data.error_message;
-
-            }
-
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.couldNotConnect = false;
+        $http.post('/websites/submitWebsiteStatus', {
+            websiteName: websiteName, state: state
+        }, headers()).then(function (response) {
+            $scope.saving = false;
             $scope.suspendLoading = true;
+            if (response.data.websiteStatus === 1) {
+                $scope.currentWebsiteState = response.data.state;
+                $scope.parentSuspended = response.data.parentSuspended;
+                $scope.websiteStatus = websiteName;
+                $scope.finalStatus = response.data.state;
+                $scope.websiteSuccess = false;
+            } else {
+                $scope.errorMessage = response.data.error_message;
+                $scope.websiteSuspendFailure = state !== 'Suspend';
+                $scope.websiteUnsuspendFailure = state === 'Suspend';
+            }
+        }, function () {
+            $scope.saving = false;
+            $scope.suspendLoading = true;
+            $scope.couldNotConnect = false;
+            // A lost response does not prove that the server rejected the
+            // operation. Re-read status before allowing another action.
             $scope.stateView = true;
-
-            $scope.websiteSuspendFailure = true;
-            $scope.websiteUnsuspendFailure = true;
-            $scope.websiteSuccess = true;
-
-        }
-
-
+        });
     };
-
 });
-
-/* Java script code to suspend/un-suspend ends here */
 
 /* Java script code to manage cron */
 

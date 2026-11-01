@@ -75,6 +75,7 @@ urlpatterns = [
     path('searchWebsites', views.searchWebsites, name='searchWebsites'),
     path('submitWebsiteModification', views.deleteWebsite, name='submitWebsiteModification'),
     path('submitWebsiteStatus', views.submitWebsiteStatus, name='submitWebsiteStatus'),
+    path('fetchWebsiteStatus', views.fetchWebsiteStatus, name='fetchWebsiteStatus'),
     path('getWebsiteDetails', views.submitWebsiteModify, name='getWebsiteDetails'),
     path('saveWebsiteChanges', views.saveWebsiteChanges, name='saveWebsiteChanges'),
     path('getDataFromLogFile', views.getDataFromLogFile, name='getDataFromLogFile'),

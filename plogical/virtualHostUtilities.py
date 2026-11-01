@@ -1612,7 +1612,80 @@ class virtualHostUtilities:
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
-                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1, alias = 0):
+                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1, alias = 0, independentState=None):
+        # Serialize creation with parent/child suspension until the new vhost
+        # and its inherited state have been installed. Otherwise a parent
+        # suspension can miss a child that is not in the database yet.
+        from plogical.websiteSuspension import suspension_lock, validate_domain
+        from plogical.childDomainState import normalize_child_state
+        try:
+            validate_domain(masterDomain)
+            validate_domain(virtualHostName)
+            if independentState is not None:
+                independentState = normalize_child_state(independentState)
+            with suspension_lock(virtualHostUtilities.Server_root):
+                return virtualHostUtilities._createDomain(
+                    masterDomain, virtualHostName, phpVersion, path, ssl,
+                    dkimCheck, openBasedir, owner, apache, tempStatusPath,
+                    LimitsCheck, alias, independentState)
+        except Exception as error:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(error) + '. [404]')
+            return 0, str(error)
+
+    @staticmethod
+    def _inheritDomainSuspension(master, virtualHostName, independentState=None):
+        """Install inherited protection before creation can reload the server."""
+        from pathlib import Path
+        from plogical.websiteSuspension import VhostUpdate, _checked
+        from plogical.childDomainState import normalize_child_state
+        existing = ChildDomains.objects.filter(domain=virtualHostName).first()
+        state = existing.state if independentState is None and existing else normalize_child_state(independentState)
+        suspended = not master.state or not state
+        if not suspended:
+            return
+        root = Path(virtualHostUtilities.Server_root)
+        binary = root / 'bin' / 'openlitespeed'
+        if not binary.exists():
+            binary = root / 'bin' / 'lshttpd'
+        # createDomain's ordinary restarts follow this hook. Validate now but
+        # do not activate a newly mapped domain before its state is installed.
+        with VhostUpdate(root, lambda: _checked([str(binary), '-t']), lambda: None) as update:
+            update.apply([(virtualHostName, True)])
+
+    @staticmethod
+    def restoreChildDomainState(virtualHostName, independentState, masterDomain):
+        """Privileged backup restore; apply the saved state to existing vhosts."""
+        from pathlib import Path
+        from django.db import transaction
+        from plogical.childDomainState import normalize_child_state
+        from plogical.websiteSuspension import suspension_lock, validate_domain, VhostUpdate, _checked
+        validate_domain(virtualHostName)
+        state = None if independentState is None else normalize_child_state(independentState)
+        validate_domain(masterDomain)
+        root = Path(virtualHostUtilities.Server_root)
+        binary = root / 'bin' / 'openlitespeed'
+        if not binary.exists():
+            binary = root / 'bin' / 'lshttpd'
+        with suspension_lock(root):
+            with VhostUpdate(root, lambda: _checked([str(binary), '-t']),
+                             lambda: _checked([str(root / 'bin' / 'lswsctrl'), 'restart'])) as update:
+                with transaction.atomic():
+                    child = ChildDomains.objects.get(domain=virtualHostName)
+                    parent = Websites.objects.select_for_update().get(pk=child.master_id)
+                    if parent.domain != masterDomain:
+                        raise ValueError('Backup child domain does not belong to the restored website.')
+                    child = ChildDomains.objects.select_for_update().get(pk=child.pk, master=parent)
+                    if state is None:
+                        # Legacy snapshots have no independent-state policy;
+                        # retain the existing child's current suspension.
+                        state = normalize_child_state(child.state)
+                    update.apply([(virtualHostName, not (parent.state and state))])
+                    child.state = state
+                    child.save(update_fields=['state'])
+
+    @staticmethod
+    def _createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
+                      tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1, alias = 0, independentState=None):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1709,11 +1782,16 @@ class virtualHostUtilities:
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
 
+            # Apply the parent's effective state before any creation/SSL
+            # restart. Regeneration also preserves independent suspension.
+            virtualHostUtilities._inheritDomainSuspension(master, virtualHostName, independentState)
+
             ## Now restart litespeed after initial configurations are done
 
             if LimitsCheck:
                 website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
-                                       ssl=ssl, alais=alias)
+                                       ssl=ssl, alais=alias,
+                                       state=1 if independentState is None else independentState)
                 website.save()
 
             if ssl == 1:
@@ -1751,6 +1829,9 @@ class virtualHostUtilities:
                         raise BaseException(result[1])
                     else:
                         ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail)
+                        # Apache setup replaces the OLS frontend vhost. Restore
+                        # inherited/independent suspension before activating it.
+                        virtualHostUtilities._inheritDomainSuspension(master, virtualHostName, independentState)
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
@@ -1813,6 +1894,16 @@ class virtualHostUtilities:
 
     @staticmethod
     def switchServer(virtualHostName, phpVersion, server, tempStatusPath):
+        from plogical.websiteSuspension import suspension_lock, validate_domain
+        try:
+            validate_domain(virtualHostName)
+            with suspension_lock(virtualHostUtilities.Server_root):
+                return virtualHostUtilities._switchServer(virtualHostName, phpVersion, server, tempStatusPath)
+        except Exception as error:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, '%s[404]' % error)
+
+    @staticmethod
+    def _switchServer(virtualHostName, phpVersion, server, tempStatusPath):
         try:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Starting Conversion..,0')
             child = 0
@@ -1873,6 +1964,9 @@ class virtualHostUtilities:
 
                 ###
 
+                virtualHostUtilities._inheritDomainSuspension(
+                    website.master if child else website, virtualHostName,
+                    website.state if child else 1)
                 installUtilities.installUtilities.reStartLiteSpeed()
                 website.phpSelection = phpVersion
                 website.save(update_fields=['phpSelection'])
@@ -1896,6 +1990,9 @@ class virtualHostUtilities:
                         raise ValueError('Could not restore the existing SSL certificate during conversion.')
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting server..,90')
+                virtualHostUtilities._inheritDomainSuspension(
+                    website.master if child else website, virtualHostName,
+                    website.state if child else 1)
                 installUtilities.installUtilities.reStartLiteSpeed()
                 website.phpSelection = phpVersion
                 website.save(update_fields=['phpSelection'])

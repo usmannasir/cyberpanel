@@ -28,6 +28,8 @@ class ChildDomains(models.Model):
     ssl = models.IntegerField()
     phpSelection = models.CharField(max_length=10,default=None)
     alais = models.IntegerField(default=0)
+    # Independent state; a suspended parent also blocks an active child.
+    state = models.IntegerField(default=1)
 
 
 class Backups(models.Model):

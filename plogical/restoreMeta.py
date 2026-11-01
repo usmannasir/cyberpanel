@@ -45,9 +45,15 @@ class restoreMeta():
                     domain = childDomain.find('domain').text
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
+                    from plogical.childDomainState import normalize_child_state
+                    savedState = childDomain.findtext('state')
+                    independentState = None if savedState is None else normalize_child_state(savedState)
 
-                    virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0,
-                                                                  'admin', 0)
+                    result = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0,
+                                                               'admin', 0, independentState=independentState)
+                    if result[0] != 1:
+                        raise RuntimeError('Could not restore child domain %s: %s' % (domain, result[1]))
+                    virtualHostUtilities.restoreChildDomainState(domain, independentState, masterDomain)
             except BaseException as msg:
                 logging.writeToFile(str(msg) + " [startRestore]")
                 return 0
