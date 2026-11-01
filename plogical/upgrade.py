@@ -5601,6 +5601,11 @@ pm.max_spare_servers = 3
                 (download_error or 'unknown error')
             )
 
+        # Retire only the exact shipped global session purge. Application-specific
+        # expiry cannot be inferred from global PHP settings; preserve all sessions.
+        from plogical.phpSessionSafety import report_retirement
+        report_retirement(log=Upgrade.stdOut)
+
         # The new source provides this helper, including on older installations.
         # WebAdmin package assets are separate from the custom OLS core overlay.
         try:
