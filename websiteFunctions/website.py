@@ -842,7 +842,7 @@ class WebsiteManager:
     def siteState(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
 
-        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID, fetchChilds=1)
 
         proc = httpProc(request, 'websiteFunctions/suspendWebsite.html',
                         {'websiteList': websitesName}, 'suspendWebsite')
@@ -3057,393 +3057,51 @@ Require valid-user
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def submitWebsiteStatus(self, userID=None, data=None):
+    def fetchWebsiteStatus(self, userID=None, data=None):
         try:
+            from plogical.websiteSuspension import validate_domain
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'suspendWebsite') == 0:
                 return ACLManager.loadErrorJson('websiteStatus', 0)
-
-            websiteName = data['websiteName']
-            state = data['state']
-
-            website = Websites.objects.get(domain=websiteName)
-
+            domain = validate_domain(data['websiteName'])
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(websiteName, admin, currentACL) == 1:
-                pass
-            else:
+            if ACLManager.checkOwnership(domain, admin, currentACL) != 1:
                 return ACLManager.loadErrorJson('websiteStatus', 0)
+            child = ChildDomains.objects.filter(domain=domain).select_related('master').first()
+            target = child if child else Websites.objects.get(domain=domain)
+            parentSuspended = bool(child and not child.master.state)
+            return JsonResponse({'websiteStatus': 1, 'error_message': 'None',
+                                 'state': 'Suspended' if parentSuspended or not target.state else 'Active',
+                                 'independentState': target.state,
+                                 'parentSuspended': parentSuspended})
+        except Exception as error:
+            return JsonResponse({'websiteStatus': 0, 'error_message': str(error)})
 
-            if state == "Suspend":
-                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-                vhostConfPath = confPath + "/vhost.conf"
-                
-                # Ensure suspension page exists and has proper permissions
-                suspensionPagePath = "/usr/local/CyberCP/websiteFunctions/suspension.html"
-                if not os.path.exists(suspensionPagePath):
-                    # Create default suspension page if it doesn't exist
-                    defaultSuspensionHTML = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Suspended</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 500px;
-        }
-        h1 {
-            color: #e74c3c;
-            margin-bottom: 20px;
-        }
-        p {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        .contact {
-            color: #777;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Website Suspended</h1>
-        <p>This website has been temporarily suspended. This could be due to various reasons including billing issues, policy violations, or administrative actions.</p>
-        <p>If you are the website owner, please contact your hosting provider for more information about why your account was suspended and how to restore service.</p>
-        <p class="contact">For support, please contact your system administrator.</p>
-    </div>
-</body>
-</html>"""
-                    try:
-                        # Create directory if it doesn't exist
-                        dirPath = os.path.dirname(suspensionPagePath)
-                        if not os.path.exists(dirPath):
-                            command = f"mkdir -p {dirPath}"
-                            ProcessUtilities.executioner(command)
-                        
-                        # Write the HTML content to a temporary file in /home/cyberpanel
-                        tempFile = "/home/cyberpanel/suspension_temp.html"
-                        
-                        # Create the file using normal Python file operations
-                        with open(tempFile, 'w') as f:
-                            f.write(defaultSuspensionHTML)
-                        
-                        # Use ProcessUtilities to move the file to the final location
-                        command = f"mv {tempFile} {suspensionPagePath}"
-                        ProcessUtilities.executioner(command)
-                    except:
-                        pass
-                
-                # Set proper permissions for suspension page
-                try:
-                    command = f"chown lsadm:lsadm {suspensionPagePath}"
-                    ProcessUtilities.executioner(command)
-                    command = f"chmod 644 {suspensionPagePath}"
-                    ProcessUtilities.executioner(command)
-                except:
-                    pass
-                
-                # Create suspension configuration with end marker
-                suspensionConf = """# Website Suspension Configuration
-context /{
-  location                        $DOC_ROOT/
-  allowBrowse                     1
-  
-  rewrite  {
-    enable                  1
-    autoLoadHtaccess        0
-    rules                   <<<END_rules
-RewriteEngine On
-RewriteCond %{REQUEST_URI} !^/cyberpanel_suspension_page\.html$
-RewriteRule ^(.*)$ /cyberpanel_suspension_page.html [L]
-END_rules
-  }
-  
-  addDefaultCharset               off
-}
-
-context /cyberpanel_suspension_page.html {
-  location                        /usr/local/CyberCP/websiteFunctions/suspension.html
-  accessible                      1
-  extraHeaders                    X-Frame-Options: DENY
-  allowBrowse                     1
-}
-# End Website Suspension Configuration
-"""
-                
-                try:
-                    # Read current vhost configuration
-                    with open(vhostConfPath, 'r') as f:
-                        vhostContent = f.read()
-                    
-                    if "# Website Suspension Configuration" not in vhostContent:
-                        # Check if there's an existing rewrite block at the root level
-                        # If so, we need to comment it out to avoid conflicts
-                        
-                        # Pattern to find root-level rewrite block
-                        rewrite_pattern = r'^(rewrite\s*\{[^}]*\})'
-                        
-                        # Comment out existing root-level rewrite block if found
-                        if re.search(rewrite_pattern, vhostContent, re.MULTILINE | re.DOTALL):
-                            vhostContent = re.sub(rewrite_pattern, 
-                                lambda m: '# Commented out during suspension\n#' + m.group(0).replace('\n', '\n#'), 
-                                vhostContent, 
-                                flags=re.MULTILINE | re.DOTALL)
-                        
-                        # Add suspension configuration at the beginning
-                        modifiedContent = suspensionConf + "\n" + vhostContent
-                        
-                        # Write directly to vhost file
-                        with open(vhostConfPath, 'w') as f:
-                            f.write(modifiedContent)
-                        
-                        # Set proper ownership
-                        command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
-                except IOError as e:
-                    # If direct file access fails, fall back to command-based approach
-                    command = f"cat {vhostConfPath}"
-                    vhostContent = ProcessUtilities.outputExecutioner(command)
-                    
-                    if vhostContent and "# Website Suspension Configuration" not in vhostContent:
-                        # Check if there's an existing rewrite block at the root level
-                        # If so, we need to comment it out to avoid conflicts
-                        
-                        # Pattern to find root-level rewrite block
-                        rewrite_pattern = r'^(rewrite\s*\{[^}]*\})'
-                        
-                        # Comment out existing root-level rewrite block if found
-                        if re.search(rewrite_pattern, vhostContent, re.MULTILINE | re.DOTALL):
-                            vhostContent = re.sub(rewrite_pattern, 
-                                lambda m: '# Commented out during suspension\n#' + m.group(0).replace('\n', '\n#'), 
-                                vhostContent, 
-                                flags=re.MULTILINE | re.DOTALL)
-                        
-                        modifiedContent = suspensionConf + "\n" + vhostContent
-                        
-                        # Use temp file in /tmp
-                        import tempfile
-                        with tempfile.NamedTemporaryFile(mode='w', delete=False, prefix='cyberpanel_') as tmpfile:
-                            tmpfile.write(modifiedContent)
-                            tempFile = tmpfile.name
-                        
-                        # Copy to vhost configuration
-                        command = f"cp {tempFile} {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
-                        
-                        # Set proper ownership
-                        command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
-                        
-                        # Remove temporary file
-                        try:
-                            os.remove(tempFile)
-                        except:
-                            pass
-                
-                # Apply same suspension configuration to child domains
-                childDomains = website.childdomains_set.all()
-                
-                for items in childDomains:
-                    childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
-                    childVhostConfPath = childConfPath + "/vhost.conf"
-                    
-                    try:
-                        # Try direct file access first
-                        try:
-                            with open(childVhostConfPath, 'r') as f:
-                                childVhostContent = f.read()
-                            
-                            if "# Website Suspension Configuration" not in childVhostContent:
-                                childModifiedContent = suspensionConf + "\n" + childVhostContent
-                                
-                                with open(childVhostConfPath, 'w') as f:
-                                    f.write(childModifiedContent)
-                                
-                                command = f"chown lsadm:lsadm {childVhostConfPath}"
-                                ProcessUtilities.executioner(command)
-                        except IOError:
-                            # Fall back to command-based approach
-                            command = f"cat {childVhostConfPath}"
-                            childVhostContent = ProcessUtilities.outputExecutioner(command)
-                            
-                            if childVhostContent and "# Website Suspension Configuration" not in childVhostContent:
-                                childModifiedContent = suspensionConf + "\n" + childVhostContent
-                                
-                                import tempfile
-                                with tempfile.NamedTemporaryFile(mode='w', delete=False, prefix='cyberpanel_child_') as tmpfile:
-                                    tmpfile.write(childModifiedContent)
-                                    childTempFile = tmpfile.name
-                                
-                                command = f"cp {childTempFile} {childVhostConfPath}"
-                                ProcessUtilities.executioner(command)
-                                
-                                command = f"chown lsadm:lsadm {childVhostConfPath}"
-                                ProcessUtilities.executioner(command)
-                                
-                                try:
-                                    os.remove(childTempFile)
-                                except:
-                                    pass
-                    except Exception as e:
-                        CyberCPLogFileWriter.writeToFile(f"Error suspending child domain {items.domain}: {str(e)}")
-                
-                installUtilities.reStartLiteSpeedSocket()
-                website.state = 0
-            else:
-                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-                vhostConfPath = confPath + "/vhost.conf"
-                
-                try:
-                    # Try direct file access first
-                    with open(vhostConfPath, 'r') as f:
-                        vhostContent = f.read()
-                    
-                    if "# Website Suspension Configuration" in vhostContent:
-                        # Use regex to remove the suspension configuration block
-                        pattern = r'# Website Suspension Configuration.*?# End Website Suspension Configuration\n'
-                        modifiedContent = re.sub(pattern, '', vhostContent, flags=re.DOTALL)
-                        
-                        # Restore any rewrite blocks that were commented out during suspension
-                        commented_rewrite_pattern = r'# Commented out during suspension\n((?:#[^\n]*\n)+)'
-                        
-                        def restore_commented_block(match):
-                            commented_block = match.group(1)
-                            # Remove the leading # from each line
-                            restored_block = '\n'.join(line[1:] if line.startswith('#') else line 
-                                                     for line in commented_block.splitlines())
-                            return restored_block
-                        
-                        if re.search(commented_rewrite_pattern, modifiedContent):
-                            modifiedContent = re.sub(commented_rewrite_pattern,
-                                                   restore_commented_block,
-                                                   modifiedContent)
-                        
-                        with open(vhostConfPath, 'w') as f:
-                            f.write(modifiedContent)
-                        
-                        command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
-                except IOError:
-                    # Fall back to command-based approach
-                    command = f"cat {vhostConfPath}"
-                    vhostContent = ProcessUtilities.outputExecutioner(command)
-                    
-                    if vhostContent and "# Website Suspension Configuration" in vhostContent:
-                        pattern = r'# Website Suspension Configuration.*?# End Website Suspension Configuration\n'
-                        modifiedContent = re.sub(pattern, '', vhostContent, flags=re.DOTALL)
-                        
-                        # Restore any rewrite blocks that were commented out during suspension
-                        commented_rewrite_pattern = r'# Commented out during suspension\n((?:#[^\n]*\n)+)'
-                        
-                        def restore_commented_block(match):
-                            commented_block = match.group(1)
-                            # Remove the leading # from each line
-                            restored_block = '\n'.join(line[1:] if line.startswith('#') else line 
-                                                     for line in commented_block.splitlines())
-                            return restored_block
-                        
-                        if re.search(commented_rewrite_pattern, modifiedContent):
-                            modifiedContent = re.sub(commented_rewrite_pattern,
-                                                   restore_commented_block,
-                                                   modifiedContent)
-                        
-                        import tempfile
-                        with tempfile.NamedTemporaryFile(mode='w', delete=False, prefix='cyberpanel_') as tmpfile:
-                            tmpfile.write(modifiedContent)
-                            tempFile = tmpfile.name
-                        
-                        command = f"cp {tempFile} {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
-                        
-                        command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
-                        
-                        try:
-                            os.remove(tempFile)
-                        except:
-                            pass
-                
-                # Remove suspension configuration from child domains
-                childDomains = website.childdomains_set.all()
-                
-                for items in childDomains:
-                    childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
-                    childVhostConfPath = childConfPath + "/vhost.conf"
-                    
-                    try:
-                        # Try direct file access first
-                        try:
-                            with open(childVhostConfPath, 'r') as f:
-                                childVhostContent = f.read()
-                            
-                            if "# Website Suspension Configuration" in childVhostContent:
-                                pattern = r'# Website Suspension Configuration.*?# End Website Suspension Configuration\n'
-                                childModifiedContent = re.sub(pattern, '', childVhostContent, flags=re.DOTALL)
-                                
-                                with open(childVhostConfPath, 'w') as f:
-                                    f.write(childModifiedContent)
-                                
-                                command = f"chown lsadm:lsadm {childVhostConfPath}"
-                                ProcessUtilities.executioner(command)
-                        except IOError:
-                            # Fall back to command-based approach
-                            command = f"cat {childVhostConfPath}"
-                            childVhostContent = ProcessUtilities.outputExecutioner(command)
-                            
-                            if childVhostContent and "# Website Suspension Configuration" in childVhostContent:
-                                pattern = r'# Website Suspension Configuration.*?# End Website Suspension Configuration\n'
-                                childModifiedContent = re.sub(pattern, '', childVhostContent, flags=re.DOTALL)
-                                
-                                import tempfile
-                                with tempfile.NamedTemporaryFile(mode='w', delete=False, prefix='cyberpanel_child_') as tmpfile:
-                                    tmpfile.write(childModifiedContent)
-                                    childTempFile = tmpfile.name
-                                
-                                command = f"cp {childTempFile} {childVhostConfPath}"
-                                ProcessUtilities.executioner(command)
-                                
-                                command = f"chown lsadm:lsadm {childVhostConfPath}"
-                                ProcessUtilities.executioner(command)
-                                
-                                try:
-                                    os.remove(childTempFile)
-                                except:
-                                    pass
-                    except Exception as e:
-                        CyberCPLogFileWriter.writeToFile(f"Error unsuspending child domain {items.domain}: {str(e)}")
-                
-                installUtilities.reStartLiteSpeedSocket()
-                website.state = 1
-
-            website.save()
-
-            data_ret = {'websiteStatus': 1, 'error_message': "None"}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-        except Exception as msg:
-            CyberCPLogFileWriter.writeToFile(f"Error in submitWebsiteStatus: {str(msg)}")
-            data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+    def submitWebsiteStatus(self, userID=None, data=None):
+        try:
+            from plogical.websiteSuspension import validate_domain, normalize_action
+            currentACL = ACLManager.loadedACL(userID)
+            if ACLManager.currentContextPermission(currentACL, 'suspendWebsite') == 0:
+                return ACLManager.loadErrorJson('websiteStatus', 0)
+            domain = validate_domain(data['websiteName'])
+            action = normalize_action(data['state'])
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson('websiteStatus', 0)
+            command = ' '.join(shlex.quote(value) for value in (
+                '/usr/local/CyberCP/bin/python',
+                virtualHostUtilities.cyberPanel + '/plogical/websiteSuspension.py',
+                '--user-id', str(userID), '--domain', domain, '--action', action))
+            success, output = ProcessUtilities.outputExecutioner(command, retRequired=True)
+            lines = output.strip().splitlines() if output else []
+            if not lines:
+                raise ValueError('Suspension worker returned no result.')
+            result = json.loads(lines[-1])
+            if not success or result.get('websiteStatus') != 1:
+                raise ValueError(result.get('error_message', 'Suspension did not complete.'))
+            return JsonResponse(result)
+        except Exception as error:
+            return JsonResponse({'websiteStatus': 0, 'error_message': str(error)})
 
     def submitWebsiteModify(self, userID=None, data=None):
         try:

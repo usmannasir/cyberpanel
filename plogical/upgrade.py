@@ -2384,6 +2384,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 pass
 
             Upgrade.ensureAdministratorDefaultSiteColumn(connection, cursor)
+            from plogical.schemaMigration import ensure_child_domain_state
+            ensure_child_domain_state(connection, cursor)
 
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD twoFA integer DEFAULT 0')

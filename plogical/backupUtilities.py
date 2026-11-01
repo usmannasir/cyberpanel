@@ -248,16 +248,8 @@ class backupUtilities:
             childDomainsXML = Element('ChildDomains')
 
             for items in childDomains:
-                childDomainXML = Element('domain')
-
-                child = SubElement(childDomainXML, 'domain')
-                child.text = items.domain
-                child = SubElement(childDomainXML, 'phpSelection')
-                child.text = items.phpSelection
-                child = SubElement(childDomainXML, 'path')
-                child.text = items.path
-
-                childDomainsXML.append(childDomainXML)
+                from plogical.childDomainState import append_child_backup_xml
+                append_child_backup_xml(childDomainsXML, items)
 
             metaFileXML.append(childDomainsXML)
 
@@ -963,9 +955,12 @@ class backupUtilities:
 
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
+                    from plogical.childDomainState import normalize_child_state
+                    savedState = childDomain.findtext('state')
+                    independentState = None if savedState is None else normalize_child_state(savedState)
 
                     retValues = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0,
-                                                                  'admin', 0)
+                                                                  'admin', 0, independentState=independentState)
 
                     if retValues[0] == 1:
                         if os.path.exists(websiteHome):
@@ -1045,6 +1040,11 @@ class backupUtilities:
                         except:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
+
+                        # A backed-up vhost or Apache conversion can replace
+                        # the initial configuration. Reconcile the saved state
+                        # before reporting this child as restored.
+                        virtualHostUtilities.restoreChildDomainState(domain, independentState, masterDomain)
 
                         if backup_uses_full_directory_layout(version, build):
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
@@ -1860,7 +1860,8 @@ class backupUtilities:
             import json
 
             for child in self.website.childdomains_set.all():
-                childs.append({'domain': child.domain, 'path': child.path, 'php': child.phpSelection})
+                from plogical.childDomainState import child_backup_record
+                childs.append(child_backup_record(child))
 
             DataJson['ChildDomains'] = childs
 
@@ -2128,16 +2129,23 @@ class backupUtilities:
                     childDomains = json.loads(open('%s/data.json' % (self.extractedPath), 'r').read())['ChildDomains']
 
                     for child in childDomains:
+                        from plogical.childDomainState import normalize_child_state
+                        savedState = child.get('state')
+                        independentState = None if savedState is None else normalize_child_state(savedState)
                         try:
                             ch = ChildDomains.objects.get(domain=child['domain'])
-                        except:
+                        except ChildDomains.DoesNotExist:
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                       'Creating %s,20' % (child['domain']))
-                            virtualHostUtilities.createDomain(self.website.domain, child['domain'], child['php'], child['path'], 1, 0, 0,
-                                                              self.website.admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+                            result = virtualHostUtilities.createDomain(self.website.domain, child['domain'], child['php'], child['path'], 1, 0, 0,
+                                                              self.website.admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)),
+                                                              independentState=independentState)
+                            if result[0] != 1:
+                                raise RuntimeError('Could not restore child domain %s: %s' % (child['domain'], result[1]))
+                        virtualHostUtilities.restoreChildDomainState(child['domain'], independentState, self.website.domain)
 
                 except BaseException as msg:
-                    logging.CyberCPLogFileWriter.writeToFile('%s [SubmitCloudBackupRestore:1533]' % str(msg))
+                    raise RuntimeError('Child-domain backup restore failed: %s' % msg) from msg
 
                 homePath = '/home/%s' % (self.website.domain)
                 command = 'rm -rf %s' % (homePath)
@@ -2337,16 +2345,23 @@ class backupUtilities:
                     childDomains = json.loads(open('%s/data.json' % (self.extractedPath), 'r').read())['ChildDomains']
 
                     for child in childDomains:
+                        from plogical.childDomainState import normalize_child_state
+                        savedState = child.get('state')
+                        independentState = None if savedState is None else normalize_child_state(savedState)
                         try:
                             ch = ChildDomains.objects.get(domain=child['domain'])
-                        except:
+                        except ChildDomains.DoesNotExist:
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                       'Creating %s,20' % (child['domain']))
-                            virtualHostUtilities.createDomain(self.website.domain, child['domain'], child['php'], child['path'], 1, 0, 0,
-                                                              self.website.admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+                            result = virtualHostUtilities.createDomain(self.website.domain, child['domain'], child['php'], child['path'], 1, 0, 0,
+                                                              self.website.admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)),
+                                                              independentState=independentState)
+                            if result[0] != 1:
+                                raise RuntimeError('Could not restore child domain %s: %s' % (child['domain'], result[1]))
+                        virtualHostUtilities.restoreChildDomainState(child['domain'], independentState, self.website.domain)
 
                 except BaseException as msg:
-                    logging.CyberCPLogFileWriter.writeToFile('%s [SubmitCloudBackupRestore:1533]' % str(msg))
+                    raise RuntimeError('Child-domain backup restore failed: %s' % msg) from msg
 
                 homePath = '/home/%s' % (self.website.domain)
                 command = 'rm -rf %s' % (homePath)

@@ -1,8 +1,8 @@
 {% extends "baseTemplate/index.html" %}
 {% load static %}
-{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20261101-domain-suspension"></script>{% endblock %}
 {% load i18n %}
-{% block title %}{% trans "Suspend/Unsuspend Website - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Suspend/Unsuspend Website or Domain - CyberPanel" %}{% endblock %}
 
 {% block header_scripts %}
 <style>
@@ -462,8 +462,8 @@
 <div class="page-wrapper" ng-controller="suspendWebsiteControl">
     <div class="page-container">
         <div class="page-header">
-            <h1 class="page-title">{% trans "Suspend/Unsuspend Website" %}</h1>
-            <p class="page-subtitle">{% trans "Manage website state by suspending or unsuspending websites" %}</p>
+            <h1 class="page-title">{% trans "Suspend/Unsuspend Website or Domain" %}</h1>
+            <p class="page-subtitle">{% trans "Suspend main websites or individual sub/addon domains" %}</p>
         </div>
 
         <div class="content-card">
@@ -473,9 +473,9 @@
             </h2>
             
             <div class="website-selector-card">
-                <label class="website-selector-label">{% trans "Select Website to Manage" %}</label>
-                <select ng-change="showSuspendUnsuspend()" ng-model="websiteToBeSuspended" class="form-control">
-                    <option value="">-- {% trans "Select a website" %} --</option>
+                <label class="website-selector-label">{% trans "Select Website or Domain to Manage" %}</label>
+                <select ng-change="showSuspendUnsuspend()" ng-model="websiteToBeSuspended" ng-disabled="saving" class="form-control">
+                    <option value="">-- {% trans "Select a website or domain" %} --</option>
                     {% for items in websiteList %}
                         <option>{{ items }}</option>
                     {% endfor %}
@@ -497,10 +497,14 @@
                 <div class="info-box-content">
                     <div class="info-box-title">{% trans "Website State Management" %}</div>
                     <div class="info-box-text">
-                        {% trans "Suspending a website will make it temporarily inaccessible. You can unsuspend it at any time to restore access." %}
+                        {% trans "Suspending a main website also suspends its child domains. Independently suspended child domains stay suspended when their parent is restored." %}
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div ng-show="parentSuspended" class="alert alert-info">
+            {% trans "The parent website is suspended. This domain remains inaccessible until its parent is restored, even if you clear its independent suspension." %}
         </div>
 
         <!-- State Selection -->
@@ -524,7 +528,7 @@
             <div class="button-container">
                 <button type="button" ng-click="save()" class="btn" 
                         ng-class="{'btn-danger': state == 'Suspend', 'btn-success': state == 'Un-Suspend', 'btn-primary': !state}"
-                        ng-disabled="!websiteToBeSuspended || !state">
+                        ng-disabled="saving || stateView || !websiteToBeSuspended || !state">
                     <i class="fas fa-save"></i>
                     {% trans "Apply Changes" %}
                 </button>
@@ -544,7 +548,7 @@
 
         <div ng-hide="websiteSuccess" class="alert alert-success">
             <i class="fas fa-check-circle"></i>
-            <span>{% trans "Website" %} <strong>{$ websiteStatus $}</strong> {% trans "successfully" %} {$ finalStatus $}.</span>
+            <span>{% trans "Website" %} <strong>{$ websiteStatus $}</strong> {% trans "is now" %} {$ finalStatus $}.</span>
         </div>
 
         <div ng-hide="couldNotConnect" class="alert alert-danger">

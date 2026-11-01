@@ -1,6 +1,19 @@
 import re
 
 
+def ensure_child_domain_state(connection, cursor):
+    """Upgrade existing installations without altering inherited suspension."""
+    query = "SHOW COLUMNS FROM websiteFunctions_childdomains LIKE 'state'"
+    cursor.execute(query)
+    if cursor.fetchone() is None:
+        cursor.execute('ALTER TABLE websiteFunctions_childdomains '
+                       'ADD state integer NOT NULL DEFAULT 1')
+        connection.commit()
+    cursor.execute(query)
+    if cursor.fetchone() is None:
+        raise RuntimeError('Required column websiteFunctions_childdomains.state is missing')
+
+
 def ensure_email_filter_tables(connection, cursor):
     """Keep email foreign keys compatible with the installed domain column."""
     cursor.execute("""SELECT CHARACTER_SET_NAME, COLLATION_NAME
