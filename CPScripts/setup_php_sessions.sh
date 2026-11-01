@@ -40,13 +40,17 @@ if [[ ! -e /usr/local/CyberCP/bin/cleansessions ]]; then
 	touch /usr/local/CyberCP/bin/cleansessions
 	chmod +x /usr/local/CyberCP/bin/cleansessions
 	cat >> /usr/local/CyberCP/bin/cleansessions <<"EOL"
-#!/bin/bash
-for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; session_time=$(/usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.gc_maxlifetime'| grep -Eo "[[:digit:]]+"|sort -u); find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin 120 -delete; done
+#!/bin/sh
+# CyberPanel legacy global PHP session purge retired: application lifetimes vary.
+# Retained as a no-op for existing cron entries. No session files are inspected.
+# Configure application-specific cleanup and monitor session storage.
+exit 0
 EOL
 
 fi
 
 # Create crontab only if not exist
+echo "WARNING: No new global PHP session purge is provisioned. Review any existing cleaner; configure application-specific cleanup and monitor session storage."
 echo "Installing PHP Session cleaning cron"
 command="/usr/local/CyberCP/bin/cleansessions >/dev/null 2>&1"
 job="09,39 * * * * $command"
