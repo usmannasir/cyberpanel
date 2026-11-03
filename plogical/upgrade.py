@@ -95,8 +95,8 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
                 known = parser.recovery_hint(binary, result.returncode, output)
                 mode = '--repair-webadmin-parser'
             if known:
-                wrapper = 'install-module-2.5.7-r7.sh'
-                checksum = 'b1627cfabb4185520b036219f36acce144eb2043a86d79ba31d97fd347b87738'
+                wrapper = 'install-module-2.5.7-r8.sh'
+                checksum = '7d87db1a64498153aadc15bcdf2cf179f44832964379732411f1dc144ffb7d96'
                 hint = (' Download https://cyberpanel.net/%s and verify SHA256 %s. '
                         'Then run bash %s %s and retry the upgrade.') % (wrapper, checksum, wrapper, mode)
         except Exception:

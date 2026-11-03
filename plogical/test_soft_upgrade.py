@@ -15,6 +15,7 @@ import time
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from urllib.error import HTTPError
 
 from plogical import softUpgrade
 
@@ -79,6 +80,29 @@ class PanelUpgradeTests(unittest.TestCase):
         softUpgrade.stage_release(stage, revision)
         self.assertEqual((stage / 'olsWatchdog.py').read_bytes(), (root / 'plogical/olsWatchdog.py').read_bytes())
         self.assertEqual((stage / 'watchdog.sh').read_bytes(), (root / 'CPScripts/watchdog.sh').read_bytes())
+        program = """import hashlib, importlib.util, sys
+from pathlib import Path
+stage = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location('isolated_service', str(stage / 'olsServiceControl.py'))
+service = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(service)
+assert Path(service.watchdog.__file__).parent == stage
+assert hashlib.sha256((stage / 'watchdog.sh').read_bytes()).hexdigest() == service.watchdog.COOPERATIVE
+"""
+        result = subprocess.run([sys.executable, '-I', '-B', '-c', program, str(stage)],
+                                cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertEqual(0, result.returncode, result.stderr.decode())
+        (stage / 'olsWatchdog.py').unlink()
+        missing = subprocess.run([sys.executable, '-I', '-B', '-c', program, str(stage)],
+                                 cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertNotEqual(0, missing.returncode)
+        self.assertIn(b'olsWatchdog.py', missing.stderr)
+        (self.release / 'olsWatchdog.py').unlink()
+        refused = self.root / 'refused-stage'
+        refused.mkdir()
+        with self.assertRaises(HTTPError) as failure:
+            softUpgrade.stage_release(refused, revision)
+        self.assertEqual(failure.exception.code, 404)
 
     def poll_job(self, job, admin=1, transport=True):
         path = Path(__file__).resolve().parents[1] / 'baseTemplate/views.py'

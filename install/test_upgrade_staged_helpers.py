@@ -115,6 +115,27 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         for name in ('plogical/olsWatchdog.py', 'CPScripts/watchdog.sh'):
             self.assertEqual((self.stage / Path(name).name).read_bytes(), (self.release / name).read_bytes())
+        program = """import hashlib, importlib.util, sys
+from pathlib import Path
+stage = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location('isolated_service', str(stage / 'olsServiceControl.py'))
+service = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(service)
+assert Path(service.watchdog.__file__).parent == stage
+assert hashlib.sha256((stage / 'watchdog.sh').read_bytes()).hexdigest() == service.watchdog.COOPERATIVE
+"""
+        imported = subprocess.run([sys.executable, '-I', '-B', '-c', program, str(self.stage)],
+                                  cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertEqual(0, imported.returncode, imported.stderr.decode())
+        (self.stage / 'olsWatchdog.py').unlink()
+        missing = subprocess.run([sys.executable, '-I', '-B', '-c', program, str(self.stage)],
+                                 cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertNotEqual(0, missing.returncode)
+        self.assertIn(b'olsWatchdog.py', missing.stderr)
+        (self.release / 'plogical/olsWatchdog.py').unlink()
+        refused = self.stage_sources()
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn('Failed to download olsWatchdog.py', refused.stdout)
 
     def test_stock_diagnostic_helper_is_from_selected_release(self):
         result = self.stage_sources()
