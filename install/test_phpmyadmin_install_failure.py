@@ -2,6 +2,7 @@
 import argparse
 import ast
 import io
+import grp
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
@@ -44,6 +45,53 @@ class PhpMyAdminFailureTests(unittest.TestCase):
         self.argv_patch.start()
         self.addCleanup(self.argv_patch.stop)
 
+    def test_fresh_account_is_ready_before_main_and_phpmyadmin_on_each_distro(self):
+        tree = ast.parse((ROOT / 'install/install.py').read_text())
+        cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'preFlightsChecks')
+        method = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'setupLSCPDAccount')
+        for distro in ('ubuntu', 'cent8'):
+            with self.subTest(distro=distro):
+                accounts = set()
+                events = []
+                def command(command, *args):
+                    events.append(command)
+                    if command == 'groupadd lscpd':
+                        accounts.add('group')
+                    elif command == 'useradd -g lscpd -M -d /usr/local/lscp lscpd':
+                        self.assertIn('group', accounts)
+                        accounts.add('user')
+                    else:
+                        self.fail('Unexpected account command ' + command)
+                    return True
+                def lookup(name):
+                    self.assertEqual(name, 'lscpd')
+                    events.append('pma group lookup')
+                    if 'group' not in accounts:
+                        raise KeyError(name)
+                    return SimpleNamespace(gr_gid=123)
+                process = Mock()
+                process.run.side_effect = lambda args, **kwargs: SimpleNamespace(
+                    returncode=0 if ('group' if args[0] == 'getent' else 'user') in accounts else 1)
+                helper = dict(subprocess=process, os=SimpleNamespace(EX_OSERR=71),
+                              preFlightsChecks=SimpleNamespace(call=command))
+                exec(compile(ast.Module(body=[method], type_ignores=[]), 'account-helper', 'exec'), helper)
+                self.checks.distro = distro
+                self.checks.setupLSCPDAccount.side_effect = lambda: helper['setupLSCPDAccount'](self.checks)
+                self.scope['get_distro'] = lambda: distro
+                def main(*args):
+                    self.assertEqual(accounts, {'group', 'user'})
+                    events.append('Main')
+                self.modules['installCyberPanel'].Main.side_effect = main
+                self.checks.download_install_phpmyadmin.side_effect = lambda: self.setup_method(
+                    peer_failure=lambda: grp.getgrnam('lscpd'), distro=distro)[0]
+                with patch.object(grp, 'getgrnam', lookup):
+                    for _ in range(2):
+                        self.scope['open'].return_value = io.StringIO()
+                        self.scope['main']()
+                self.assertEqual(events, ['groupadd lscpd',
+                    'useradd -g lscpd -M -d /usr/local/lscp lscpd',
+                    'Main', 'pma group lookup', 'Main', 'pma group lookup'])
+
     def assert_not_completed(self):
         self.checks.setupCLI.assert_not_called()
         self.checks.startDeferredServices.assert_not_called()
@@ -74,7 +122,7 @@ class PhpMyAdminFailureTests(unittest.TestCase):
         self.checks.startDeferredServices.assert_called_once_with()
         self.logs.writeToFile.assert_any_call('CyberPanel installation successfully completed!,80')
 
-    def setup_method(self, peer_failure=None, failed_command=None, move_status=0):
+    def setup_method(self, peer_failure=None, failed_command=None, move_status=0, distro='ubuntu'):
         tree = ast.parse((ROOT / 'install/install.py').read_text())
         cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'preFlightsChecks')
         method = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'download_install_phpmyadmin')
@@ -87,7 +135,7 @@ class PhpMyAdminFailureTests(unittest.TestCase):
         exec(compile(ast.fix_missing_locations(ast.Module(body=[method], type_ignores=[])), 'setup-method', 'exec'), scope)
         provision = Mock(side_effect=peer_failure)
         with patch('install.proxy_identity.ensure_pma_peer_key', provision):
-            result = scope['download_install_phpmyadmin'](SimpleNamespace(distro='ubuntu', remotemysql='OFF'))
+            result = scope['download_install_phpmyadmin'](SimpleNamespace(distro=distro, remotemysql='OFF'))
         return result, commands, provision
 
     def test_real_key_preparation_failure_reaches_main_as_failure(self):
