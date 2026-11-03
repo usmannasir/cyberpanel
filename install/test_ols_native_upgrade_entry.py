@@ -73,7 +73,7 @@ for matched in 1 0; do
         grep -Fq 'incompatible OpenLiteSpeed core ABI' /tmp/result
         if [[ "$matched" = 1 ]]; then
             grep -Fq 'install-module-2.5.7-r8.sh --repair-stock-module' /tmp/result
-            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r8.sh and verify SHA256 7d87db1a64498153aadc15bcdf2cf179f44832964379732411f1dc144ffb7d96' /tmp/result
+            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r8.sh and verify SHA256 aca525fdf433c1f07a5be80aa81dbde04a7065b0e995b7151262f5322095e45c' /tmp/result
         else
             if grep -Fq -- '--repair-stock-module' /tmp/result; then exit 1; fi
         fi
@@ -132,7 +132,7 @@ for branch in v3.0.8 SoftUpgrade,v3.0.8 prepackage; do
     fi
     grep -Fq '[PlainConf] [adminConfig:] Not support' /tmp/result
     grep -Fq 'install-module-2.5.7-r8.sh --repair-webadmin-parser' /tmp/result
-    grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r8.sh and verify SHA256 7d87db1a64498153aadc15bcdf2cf179f44832964379732411f1dc144ffb7d96' /tmp/result
+    grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r8.sh and verify SHA256 aca525fdf433c1f07a5be80aa81dbde04a7065b0e995b7151262f5322095e45c' /tmp/result
     test ! -e /tmp/lshttpd
     sha256sum -c /tmp/prior
 done

@@ -57,19 +57,21 @@ class StagedAssetsNativeTests(unittest.TestCase):
         self.html.write_text('<?php echo "old webadmin"; ?>')
         self.before = {p: p.read_bytes() for p in
                        (self.config, self.auth, self.website, self.html)}
+        self.marker_before = None
         self.before_paths = {str(p.relative_to(self.root)) for p in self.root.rglob('*')
                              if p.is_file() or p.is_symlink()}
 
     def apply_release(self):
         tx = self.module.SecurityAssetsTransaction(
-            str(self.archive), self.module.SECURITY_ASSETS_SHA256, str(self.root))
+            str(self.archive), self.module.SECURITY_ASSETS_SHA256, str(self.root),
+            webadmin_policy='preserve')
         staged = tx.verify(staged=True)
         self.assertEqual(staged['version'], '8.3.36')
         tx.apply()
         applied = tx.verify()
         self.assertEqual(applied['version'], '8.3.36')
         self.assertFalse(self.runtime.is_symlink())
-        self.assertTrue((self.root / 'admin/conf/enable_webadmin').is_file())
+        self.assertEqual(self.marker_state(), self.marker_before)
         for p in (self.config, self.auth, self.website):
             self.assertEqual(p.read_bytes(), self.before[p])
         self.assertNotEqual(self.html.read_bytes(), self.before[self.html])
@@ -80,12 +82,32 @@ class StagedAssetsNativeTests(unittest.TestCase):
         self.assertEqual(os.readlink(self.runtime), '../../lsphp83/bin/lsphp')
         for p, data in self.before.items():
             self.assertEqual(p.read_bytes(), data)
-        self.assertFalse((self.root / 'admin/conf/enable_webadmin').exists())
+        self.assertEqual(self.marker_state(), self.marker_before)
         after_paths = {str(p.relative_to(self.root)) for p in self.root.rglob('*')
                        if (p.is_file() or p.is_symlink()) and
                        not p.relative_to(self.root).parts[0].startswith(
                            '.cyberpanel-security-backup-')}
         self.assertEqual(after_paths, self.before_paths)
+
+    def marker_state(self):
+        marker = self.root / 'admin/conf/enable_webadmin'
+        if not os.path.lexists(marker):
+            return None
+        info = marker.lstat()
+        return (marker.read_bytes(), info.st_ino, info.st_uid, info.st_gid, info.st_mode)
+
+    def test_staged_release_native_preserves_acl_through_persisted_rollback(self):
+        marker = self.root / 'admin/conf/enable_webadmin'
+        marker.write_bytes(b'# existing restrictions\r\n127.0.0.1, 192.0.2.7  \n')
+        marker.chmod(0o640)
+        if os.geteuid() == 0:
+            os.chown(marker, 1234, 2345)
+        self.marker_before = self.marker_state()
+        self.before[marker] = marker.read_bytes()
+        self.before_paths.add('admin/conf/enable_webadmin')
+        tx = self.apply_release()
+        self.assertTrue(self.module.restore_security_assets(tx.backup_dir, str(self.root)))
+        self.assert_restored()
 
     def test_staged_release_native_apply_and_rollback(self):
         tx = self.apply_release()

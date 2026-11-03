@@ -79,7 +79,13 @@ def _disable_fresh_webadmin(data):
 class SecurityAssetsTransaction:
     """Prepare all bytes, validate PHP, then apply/rollback only approved paths."""
 
-    def __init__(self, archive_path, expected_sha256, server_root='/usr/local/lsws', fresh_install=False):
+    def __init__(self, archive_path, expected_sha256, server_root='/usr/local/lsws',
+                 fresh_install=False, webadmin_policy='preserve'):
+        # Both the supported stock and custom cores already use this marker as
+        # an independent enable/ACL gate. An absent marker must stay absent;
+        # an existing marker (including its ACL text) is outside this transaction.
+        if webadmin_policy != 'preserve':
+            raise ValueError('Unsupported WebAdmin state policy: ' + str(webadmin_policy))
         self.server_root = os.path.abspath(server_root)
         self.backup_dir = None
         self.touched = []
@@ -140,17 +146,6 @@ class SecurityAssetsTransaction:
                 raise RuntimeError('Unlisted files in OLS security assets')
         if not {_RUNTIME, _INI}.issubset({p[0] for p in prepared}):
             raise RuntimeError('OLS security assets lack isolated WebAdmin runtime')
-        if not fresh_install:
-            config = self._target('conf/httpd_config.conf')
-            with open(config, encoding='utf-8') as source:
-                text = source.read()
-            flags = re.findall(r'(?m)^[ \t]*disableWebAdmin[ \t]+([01])(?:[ \t]*(?:#.*)?)?$', text)
-            if len(flags) > 1:
-                raise RuntimeError('Ambiguous disableWebAdmin configuration')
-            marker = self._target('admin/conf/enable_webadmin')
-            if flags == ['0'] and not os.path.lexists(marker):
-                # 1.9.4 adds this second gate; preserve the prior explicit setting.
-                prepared.append(('admin/conf/enable_webadmin', b'', 0o644, marker))
         if fresh_install:
             target = self._target('conf/httpd_config.conf')
             with open(target, 'rb') as source:

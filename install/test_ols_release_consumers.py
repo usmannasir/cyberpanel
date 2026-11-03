@@ -222,6 +222,8 @@ class BundleFixture:
             # The helper's native PHP/archive tests live in test_ols_security_assets.
             # This fixture checks consumer sequencing and shared rollback behavior.
             def __init__(self, archive, digest, **kwargs):
+                if class_name == 'Upgrade' and kwargs.get('webadmin_policy') != 'preserve':
+                    raise AssertionError('The upgrader must explicitly preserve the WebAdmin gate')
                 if fixture.failure == 'asset-validation':
                     raise RuntimeError('injected asset validation failure')
                 self.backup_dir = tempfile.mkdtemp(dir=fixture.root)

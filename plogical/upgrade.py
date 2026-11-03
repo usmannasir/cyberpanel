@@ -96,7 +96,7 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
                 mode = '--repair-webadmin-parser'
             if known:
                 wrapper = 'install-module-2.5.7-r8.sh'
-                checksum = '7d87db1a64498153aadc15bcdf2cf179f44832964379732411f1dc144ffb7d96'
+                checksum = 'aca525fdf433c1f07a5be80aa81dbde04a7065b0e995b7151262f5322095e45c'
                 hint = (' Download https://cyberpanel.net/%s and verify SHA256 %s. '
                         'Then run bash %s %s and retry the upgrade.') % (wrapper, checksum, wrapper, mode)
         except Exception:
@@ -1319,7 +1319,8 @@ class Upgrade:
                     Upgrade.stdOut('ERROR: Security assets download failed; keeping the existing OLS bundle', 0)
                     return False
                 security_assets = assets_module.SecurityAssetsTransaction(
-                    security_archive, assets_module.SECURITY_ASSETS_SHA256, fresh_install=False)
+                    security_archive, assets_module.SECURITY_ASSETS_SHA256, fresh_install=False,
+                    webadmin_policy='preserve')
 
                 # Backups and replacement files share the installation filesystem,
                 # so a successful backup is mandatory and every replacement is atomic.
