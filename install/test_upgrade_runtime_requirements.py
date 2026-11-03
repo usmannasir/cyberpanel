@@ -130,7 +130,7 @@ chmod 755 lswsgi
         main = main.replace('/usr/local/CyberPanel/bin/python', str(self.runtime))
         main = main.replace('/usr/local/requirments.txt', str(self.requirements))
         main = main.replace('/tmp/cyberpanel-upgrade-output.XXXXXX', str(self.root/'output.XXXXXX'))
-        self.executable(self.runtime, "#!/bin/sh\nprintf 'Upgrade Completed\\nTypeError: expected string or bytes-like object\\n'\nexit 37\n")
+        self.executable(self.runtime, "#!/bin/sh\nif [ \"$1\" = -c ]; then exit \"${FAKE_IMPORT_EXIT:-1}\"; fi\nprintf 'Upgrade Completed\\nTypeError: expected string or bytes-like object\\n'\nexit 37\n")
         self.executable(self.system_runtime, '''#!/bin/sh
 mkdir -p "$3/bin"
 cat > "$3/bin/python" <<'FAKEPYTHON'
@@ -155,7 +155,13 @@ Main_Upgrade
         self.assertIn('fallback-run', result.stdout)
         self.assertNotIn('First upgrade attempt successful', result.stdout)
 
-    def test_successful_fallback_can_recover_failed_initial_upgrade(self):
+    def test_failure_after_primary_upgrade_began_never_reruns_the_upgrade(self):
+        result = self.run_upgrade_attempts(FAKE_IMPORT_EXIT=0)
+        self.assertEqual(37, result.returncode)
+        self.assertNotIn('fallback-run', result.stdout)
+        self.assertIn('Further service changes were stopped', result.stderr)
+
+    def test_successful_fallback_can_recover_missing_runtime_prerequisites(self):
         result = self.run_upgrade_attempts()
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn('fallback-run', result.stdout)

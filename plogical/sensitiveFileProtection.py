@@ -58,7 +58,7 @@ def _protected_content(content):
     return content.rstrip() + block
 
 
-def protect_vhost_file(vhost_file):
+def protect_vhost_file(vhost_file, changes=None):
     if not vhost_file or not os.path.isfile(vhost_file):
         return 0
 
@@ -68,6 +68,10 @@ def protect_vhost_file(vhost_file):
         protected = _protected_content(original)
         if protected == original:
             return 0
+
+        if changes is not None:
+            changes[vhost_file] = original, protected
+            return 1
 
         file_stat = os.stat(vhost_file)
         directory = os.path.dirname(vhost_file) or '.'
@@ -91,7 +95,7 @@ def protect_vhost_file(vhost_file):
         return -1
 
 
-def protect_vhost_tree(vhost_root='/usr/local/lsws/conf/vhosts'):
+def protect_vhost_tree(vhost_root='/usr/local/lsws/conf/vhosts', changes=None):
     results = {'examined': 0, 'updated': 0, 'skipped': 0, 'errors': 0}
     if not os.path.isdir(vhost_root):
         results['errors'] = 1
@@ -104,7 +108,7 @@ def protect_vhost_tree(vhost_root='/usr/local/lsws/conf/vhosts'):
         if not os.path.isfile(vhost_file):
             continue
         results['examined'] += 1
-        status = protect_vhost_file(vhost_file)
+        status = protect_vhost_file(vhost_file, changes=changes)
         if status == 1:
             results['updated'] += 1
         elif status == 0:

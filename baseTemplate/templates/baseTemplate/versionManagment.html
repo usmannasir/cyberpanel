@@ -259,7 +259,7 @@
         }
     </style>
 
-    <div class="page-wrapper" ng-controller="versionManagment">
+    <div class="page-wrapper" ng-controller="versionManagment" data-resume-upgrade="{{ resumeUpgrade|yesno:'1,0' }}">
         <div class="page-container">
             <div class="page-header">
                 <h1 class="page-title">{% trans "Version Management" %}</h1>
@@ -281,7 +281,7 @@
                 </div>
                 
                 <div class="btn-group">
-                    <button type="button" ng-click="upgrade()" class="btn btn-primary">
+                    <button type="button" ng-click="upgrade()" ng-disabled="!updateStarted || !upgradeLoading" class="btn btn-primary">
                         <i class="fas fa-arrow-up"></i>
                         {% trans "Upgrade CyberPanel to selected branch (Beta)" %}
                     </button>
@@ -321,6 +321,16 @@
                         <span class="info-value">{{ latestcomit }}</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="alert alert-warning" role="alert" ng-hide="updateError" ng-cloak>
+                <span ng-bind="errorMessage"></span>
+            </div>
+            <div class="alert alert-warning" role="status" ng-hide="couldNotConnect" ng-cloak>
+                {% trans "The panel connection was interrupted. Refresh this page to check the upgrade status." %}
+            </div>
+            <div class="alert alert-success" role="status" ng-hide="updateFinish" ng-cloak>
+                {% trans "CyberPanel upgrade completed." %}
             </div>
 
             <div class="content-card" ng-hide="upgradelogBox">

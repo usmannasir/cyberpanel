@@ -29,7 +29,9 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.release = self.root / 'http/v3.0.8'
         for name in ('plogical/upgrade.py', 'cyberpanel_version.py',
                      'cyberpanel_firewall_migration.py', 'lscpd_binary.py',
-                     'plogical/olsSecurityAssets.py', 'plogical/olsParserRecovery.py'):
+                     'plogical/olsSecurityAssets.py', 'plogical/olsParserRecovery.py',
+                     'plogical/olsStockClassifier.py', 'plogical/olsNativeValidation.py',
+                     'plogical/olsServiceControl.py'):
             target = self.release / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, target)
@@ -93,6 +95,32 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual((self.stage / 'olsParserRecovery.py').read_bytes(),
                          (self.release / 'plogical/olsParserRecovery.py').read_bytes())
+
+    def test_service_controller_is_staged_and_required(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual((self.stage / 'olsServiceControl.py').read_bytes(),
+                         (self.release / 'plogical/olsServiceControl.py').read_bytes())
+        (self.release / 'plogical/olsServiceControl.py').unlink()
+        self.assertNotEqual(0, self.stage_sources().returncode)
+
+    def test_missing_required_native_validation_helper_stops_before_upgrade(self):
+        (self.release / 'plogical/olsNativeValidation.py').unlink()
+        result = self.stage_sources()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('Failed to download olsNativeValidation.py', result.stdout)
+
+    def test_stock_diagnostic_helper_is_from_selected_release(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual((self.stage / 'olsStockClassifier.py').read_bytes(),
+                         (self.release / 'plogical/olsStockClassifier.py').read_bytes())
+
+    def test_missing_stock_classifier_stops_before_upgrade(self):
+        (self.release / 'plogical/olsStockClassifier.py').unlink()
+        result = self.stage_sources()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('Failed to download olsStockClassifier.py', result.stdout)
 
     def test_missing_parser_diagnostic_helper_stops_staging(self):
         (self.release / 'plogical/olsParserRecovery.py').unlink()

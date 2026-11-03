@@ -585,6 +585,21 @@ increment();
 
 app.controller('versionManagment', function ($scope, $http, $timeout) {
 
+    var pendingPoll = null;
+    var disposed = false;
+    var failedPolls = 0;
+
+    function schedulePoll(delay) {
+        if (disposed) return;
+        if (pendingPoll) $timeout.cancel(pendingPoll);
+        pendingPoll = $timeout(getUpgradeStatus, delay);
+    }
+
+    $scope.$on('$destroy', function () {
+        disposed = true;
+        if (pendingPoll) $timeout.cancel(pendingPoll);
+    });
+
     $scope.upgradeLoading = true;
     $scope.upgradelogBox = true;
 
@@ -596,6 +611,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
 
     $scope.upgrade = function () {
 
+        failedPolls = 0;
         $scope.upgradeLoading = false;
         $scope.updateError = true;
         $scope.updateStarted = true;
@@ -638,6 +654,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
 
         function cantLoadInitialData(response) {
 
+            $scope.upgradeLoading = true;
             $scope.updateError = true;
             $scope.updateStarted = true;
             $scope.updateFinish = true;
@@ -650,7 +667,9 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
 
 
     function getUpgradeStatus() {
+        if (disposed) return;
 
+        pendingPoll = null;
         $scope.upgradeLoading = false;
 
         url = "/base/UpgradeStatus";
@@ -668,13 +687,22 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
-            console.log(response.data.upgradeLog);
+            failedPolls = 0;
+            $scope.couldNotConnect = true;
 
+
+            if (response.data.upgradeStatus === 0) {
+                $scope.updateError = false;
+                $scope.upgradeLoading = true;
+                $scope.updateStarted = true;
+                $scope.updateFinish = true;
+                $scope.errorMessage = response.data.error_message;
+                return;
+            }
 
             if (response.data.upgradeStatus === 1) {
 
                 if (response.data.finished === 1) {
-                    $timeout.cancel();
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
                     $scope.upgradeLoading = true;
@@ -686,23 +714,31 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                 } else {
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
-                    timeout(getUpgradeStatus, 2000);
+                    schedulePoll(2000);
                 }
             }
 
         }
 
         function cantLoadInitialDatas(response) {
-
-            $scope.updateError = true;
-            $scope.updateStarted = true;
-            $scope.updateFinish = true;
             $scope.couldNotConnect = false;
-
+            $scope.updateFinish = true;
+            if (++failedPolls <= 20) {
+                schedulePoll(3000);
+            } else {
+                $scope.updateStarted = true;
+                $scope.upgradeLoading = true;
+            }
         }
 
 
     };
+
+    var panel = document.querySelector('[data-resume-upgrade]');
+    if (panel && panel.getAttribute('data-resume-upgrade') === '1') {
+        $scope.updateStarted = false;
+        getUpgradeStatus();
+    }
 
 });
 

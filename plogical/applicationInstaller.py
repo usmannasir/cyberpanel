@@ -108,7 +108,9 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
 
     def UpgradeCP(self):
-        command = f'/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/upgrade.py "SoftUpgrade,{self.data["branchSelect"]}"'
+        branch = shlex.quote(self.data["branchSelect"])
+        job = shlex.quote(self.data["upgradeRun"])
+        command = f'/usr/local/CyberPanel/bin/python -I /usr/local/CyberCP/plogical/softUpgrade.py {branch} {job}'
         ProcessUtilities.executioner(command)
 
     @staticmethod

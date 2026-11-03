@@ -220,13 +220,115 @@ if [[ "$Server_Country" = *"CN"* ]] ; then
 fi
 }
 
-Protect_Custom_OLS_From_APT() {
-  # APT owns these paths even when our ABI-matched overlay supplies their bytes.
-  # Keep that package held across upgrades and unattended package maintenance.
-  local distro_id core module validation validation_status held package package_status query_status
+OLS_Pinned_Helper() {
+  local target="$1" name="$2" pin="$3" url="$4"
+  if cp "/usr/local/CyberCP/plogical/$name" "$target" 2>/dev/null &&
+      printf '%s  %s\n' "$pin" "$target" | sha256sum --check --status; then
+    return 0
+  fi
+  curl -fsSL --connect-timeout 5 --max-time 20 -H 'Accept: application/vnd.github.raw+json' "$url" -o "$target" &&
+    printf '%s  %s\n' "$pin" "$target" | sha256sum --check --status
+}
+
+OLS_Custom_Config_Test() (
+  local work pin blob
+  pin=1ffa5803288bba5296d1b57ac1264670ca260bc5e6e2b3f436105cd689b85d9d
+  blob=f0a7b30a5f5641fd635cfa27664c08ab53dd4e01
+  work=$(mktemp -d) || exit 78
+  trap 'rm -rf -- "$work"' EXIT
+  if ! OLS_Pinned_Helper "$work/olsNativeValidation.py" olsNativeValidation.py "$pin" \
+       "https://api.github.com/repos/usmannasir/cyberpanel/git/blobs/$blob" &&
+     ! OLS_Pinned_Helper "$work/olsNativeValidation.py" olsNativeValidation.py "$pin" \
+       https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/olsNativeValidation.py; then
+    echo 'Cannot obtain the checksum-verified native OLS validation helper.' >&2
+    exit 78
+  fi
+  python3 -IB "$work/olsNativeValidation.py" "$1"
+)
+
+OLS_Recovery_Hint() (
+  local core="$1" status="$2" output="$3" work method file wrapper checksum
+  if [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
+    method=recovery_hint
+    file=olsParserRecovery.py
+    wrapper=install-module-2.5.7-r5.sh
+    checksum=fced298dfdf0ee8bb60f59d02868bab8a3abc724a86dccfd74001ecca545c286
+  elif [[ "$output" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+    method=stock_recovery_hint
+    file=olsStockClassifier.py
+    wrapper=install-module-2.5.7-r6.sh
+    checksum=0f9f2e3e4429ba00a12431a901d84b77244a772ef1e07bc0a0061e15f94486c2
+  else
+    return 0
+  fi
+  work=$(mktemp -d) || return 0
+  trap 'rm -rf -- "$work"' EXIT
+  OLS_Pinned_Helper "$work/olsParserRecovery.py" olsParserRecovery.py \
+    26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
+    https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py || return 0
+  if [[ "$file" == olsStockClassifier.py ]]; then
+    OLS_Pinned_Helper "$work/$file" "$file" 4b284b4f1775a116ae61ad305edf4b4a22a9744b52b1db96974d6dfb2683afc0 \
+      https://cyberpanel.net/ols-stock-classifier-2.5.7-r6.py || return 0
+  fi
+  printf '%s\n' "$output" | python3 -IB -c '
+import os, runpy, sys
+sys.path.insert(0, os.path.dirname(sys.argv[1]))
+hint = runpy.run_path(sys.argv[1])[sys.argv[4]](sys.argv[2], int(sys.argv[3]), sys.stdin.read())
+if hint:
+    print(hint.strip())
+    print("Download https://cyberpanel.net/%s and verify SHA256 %s before running it." % tuple(sys.argv[5:7]))
+' "$work/$file" "$core" "$status" "$method" "$wrapper" "$checksum"
+)
+
+Protect_Custom_OLS_RPM_Packages() {
+  local target owner owners status package
+  OLS_RPM_EXCLUDES=()
+  local names=()
+  for target in "$1" "$2" "$3"; do
+    if [[ "$target" != "$1" && ! -e "$target" && ! -L "$target" ]]; then
+      continue
+    fi
+    owners=$(LC_ALL=C rpm -q --queryformat '%{NAME}\n' --file "$target" 2>&1)
+    status=$?
+    if [[ "$status" -eq 1 && "$target" != "$1" && "$owners" == "file $target is not owned by any package" ]]; then
+      continue  # The CyberPanel module is normally installed by the overlay.
+    fi
+    if [[ "$status" -ne 0 || -z "$owners" ]]; then
+      echo "Cannot determine RPM ownership for $target. Stopping before package work." >&2
+      return 1
+    fi
+    while IFS= read -r owner; do
+      case "$owner" in
+        openlitespeed) ;;
+        ols-modsecurity)
+          if [[ "$target" != "$3" ]]; then
+            echo "Unexpected ModSecurity RPM ownership for $target. Stopping before package work." >&2
+            return 1
+          fi ;;
+        *) echo "Unexpected RPM owner for $target. Stopping before package work." >&2; return 1 ;;
+      esac
+      if [[ ! " ${names[*]} " == *" $owner "* ]]; then
+        names+=("$owner")
+      fi
+    done <<< "$owners"
+  done
+  for package in "${names[@]}"; do
+    OLS_RPM_EXCLUDES+=("--exclude=$package")
+  done
+}
+
+Protect_Custom_OLS_From_Packages() {
+  # Native validation must precede repository setup. Preserve the Ubuntu APT
+  # hold and exclude only verified RPM owners during this CyberPanel upgrade.
+  local distro_id family core module validation validation_status held package package_status query_status
+  OLS_RPM_EXCLUDES=()
   local packages=(openlitespeed)
   distro_id=$(. /etc/os-release; printf '%s' "$ID")
-  [[ "$distro_id" == "ubuntu" ]] || return 0
+  case "${distro_id,,}" in
+    ubuntu) family=apt ;;
+    almalinux|rhel|centos|rocky|cloudlinux|ol|openeuler) family=rpm ;;
+    *) return 0 ;;
+  esac
   core=/usr/local/lsws/bin/openlitespeed
   module=/usr/local/lsws/modules/cyberpanel_ols.so
   [[ -f "$core" ]] || return 0
@@ -236,10 +338,11 @@ Protect_Custom_OLS_From_APT() {
     if grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module" 2>/dev/null; then
       validation=$(timeout 30 "$core" -t 2>&1)
       validation_status=$?
-      if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* ]] ||
+      if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]] ||
          [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
         echo 'ERROR: Stock OLS with an existing CyberPanel module failed validation; no package changes attempted. Preserve logs and recover the verified paired bundle before retrying; do not restart OLS or remove security configuration to bypass this check.'
-        printf '%s\n' "${validation: -2000}"
+        printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
+        OLS_Recovery_Hint "$core" "$validation_status" "$validation"
         return 1
       fi
     fi
@@ -249,13 +352,18 @@ Protect_Custom_OLS_From_APT() {
     echo 'ERROR: Incomplete custom OLS bundle; no package changes attempted.'
     return 1
   fi
-  validation=$(timeout 30 "$core" -t 2>&1)
+  validation=$(OLS_Custom_Config_Test "$core" 2>&1)
   validation_status=$?
-  if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* ]] ||
+  if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]] ||
      [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
     echo 'ERROR: Custom OLS configuration failed validation; no package changes attempted.'
-    printf '%s\n' "${validation: -2000}"
+    printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
+    OLS_Recovery_Hint "$core" "$validation_status" "$validation"
     return 1
+  fi
+  if [[ "$family" == rpm ]]; then
+    Protect_Custom_OLS_RPM_Packages "$core" "$module" /usr/local/lsws/modules/mod_security.so
+    return $?
   fi
   case "$(dpkg-query -W -f='${Status}' openlitespeed 2>/dev/null)" in
     'install ok installed'|'hold ok installed') ;;
@@ -552,7 +660,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
     curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo
   fi
   yum clean all
-  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y; fi
+  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1; fi
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
@@ -620,7 +728,7 @@ EOF
     fi
     yum install yum-plugin-priorities -y
 
-    if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y; fi
+    if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1; fi
 
     yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel bind-utils
 
@@ -736,7 +844,7 @@ if [[ "$Server_OS" = "openEuler" ]] ; then
   rm -f /etc/yum.repos.d/litespeed.repo
 
   yum clean all
-  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y; fi
+  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1; fi
 
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat bind-utils
   dnf install gpgme-devel -y
@@ -1232,6 +1340,15 @@ fi
 if grep -q 'olsParserRecovery.py' upgrade.py; then
   Download_Upgrade_Source "plogical/olsParserRecovery.py" "olsParserRecovery.py" "^def require_known_failure(" || exit 1
 fi
+if grep -q 'olsServiceControl.py' upgrade.py; then
+  Download_Upgrade_Source "plogical/olsServiceControl.py" "olsServiceControl.py" "^class OLSService:" || exit 1
+fi
+if grep -q 'olsNativeValidation.py' upgrade.py; then
+  Download_Upgrade_Source "plogical/olsNativeValidation.py" "olsNativeValidation.py" "^def validate(" || exit 1
+fi
+if grep -q 'olsStockClassifier.py' upgrade.py; then
+  Download_Upgrade_Source "plogical/olsStockClassifier.py" "olsStockClassifier.py" "^def stock_recovery_hint(" || exit 1
+fi
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py
@@ -1288,25 +1405,39 @@ if ! upgrade_output_file=$(mktemp /tmp/cyberpanel-upgrade-output.XXXXXX); then
     UPGRADE_FAILED=1
     return 1
 fi
-/usr/local/CyberPanel/bin/python -u upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log "$upgrade_output_file"
-upgrade_status=("${PIPESTATUS[@]}")
-RETURN_CODE=${upgrade_status[0]}
-
-rm -f "$upgrade_output_file"
-# A successful tee must not mask Python failures, nor may logging failures
-# turn into a successful upgrade.
-if [[ "$RETURN_CODE" -eq 0 && "${upgrade_status[1]}" -ne 0 ]]; then
-    RETURN_CODE=${upgrade_status[1]}
+local started_upgrade=0
+if /usr/local/CyberPanel/bin/python -c 'import django, MySQLdb'; then
+    started_upgrade=1
+    /usr/local/CyberPanel/bin/python -u upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log "$upgrade_output_file"
+    upgrade_status=("${PIPESTATUS[@]}")
+    RETURN_CODE=${upgrade_status[0]}
+    if [[ "$RETURN_CODE" -eq 0 && "${upgrade_status[1]}" -ne 0 ]]; then
+        RETURN_CODE=${upgrade_status[1]}
+    fi
+else
+    RETURN_CODE=1
 fi
+rm -f "$upgrade_output_file"
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Python upgrade.py returned code: $RETURN_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# An OLS preflight/transaction refusal cannot be repaired by switching Python.
+# Exit before the fallback and all post-upgrade service changes.
+if [[ "$RETURN_CODE" -eq 78 ]]; then
+    echo "Upgrade stopped at the OpenLiteSpeed check. See the diagnostic above." >&2
+    exit 78
+fi
+if [[ "$started_upgrade" -eq 1 && "$RETURN_CODE" -ne 0 ]]; then
+    echo "The upgrade process failed. Review the log before retrying. Further service changes were stopped." >&2
+    exit "$RETURN_CODE"
+fi
 
 # Check if the command was successful (return code 0)
 if [ $RETURN_CODE -eq 0 ]; then
     echo "Upgrade successful."
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt successful" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] First upgrade attempt failed with code $RETURN_CODE, starting fallback..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] The primary Python could not load the upgrade dependencies. Starting isolated fallback..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 
   rm -rf /usr/local/CyberPanelTemp
@@ -1350,6 +1481,9 @@ fi
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -rf /usr/local/CyberPanelTemp
 
+fi
+if [[ "$UPGRADE_FAILED" -ne 0 ]]; then
+    exit 1
 fi
 
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting post-upgrade cleanup..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1900,7 +2034,7 @@ Set_Default_Variables
 
 Check_Server_IP "$@"
 
-Protect_Custom_OLS_From_APT || exit 1
+Protect_Custom_OLS_From_Packages || exit 1
 
 Check_OS
 
@@ -1914,7 +2048,7 @@ fi
 
 Check_CSF_Target_Support || exit 1
 
-Pre_Upgrade_Setup_Repository
+Pre_Upgrade_Setup_Repository || exit 1
 
 Pre_Upgrade_Setup_Git_URL
 

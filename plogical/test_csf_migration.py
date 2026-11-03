@@ -308,7 +308,11 @@ class CSFUpgradeRequestTests(unittest.TestCase):
     def test_panel_without_csf_keeps_existing_worker_launch(self):
         response, acl, worker, imports = self.panel_request(False)
         self.assertEqual({'upgrade': 1}, json.loads(response))
-        worker.assert_called_once_with('UpgradeCP', {'branchSelect': 'stable'})
+        self.assertEqual(worker.call_count, 1)
+        command, arguments = worker.call_args.args
+        self.assertEqual(command, 'UpgradeCP')
+        self.assertEqual(arguments['branchSelect'], 'stable')
+        self.assertRegex(arguments['upgradeRun'], r'^[0-9a-f]{32}$')
         worker.return_value.start.assert_called_once_with()
 
     def test_panel_nonadmin_keeps_acl_denial(self):

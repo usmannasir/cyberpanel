@@ -63,6 +63,17 @@ class ReleaseConsumerTests(unittest.TestCase):
         with mock.patch.object(builtins, 'open', side_effect=OSError('missing')):
             self.assertIsNone(detect())
 
+    def test_upgrade_aborts_on_failed_or_inconclusive_runtime_probe(self):
+        verify = load_method(ROOT / 'plogical/upgrade.py', 'Upgrade', 'checkGlibcCompat')
+        verify.__globals__['subprocess'] = subprocess
+        for code, output in ((1, 'not a dynamic executable'), (0, ''),
+                             (0, 'libfoo.so => not found'), (1, 'libc.so => /lib/libc.so')):
+            result = SimpleNamespace(returncode=code, stdout=output, stderr='')
+            with self.subTest(code=code, output=output), mock.patch.object(subprocess, 'run', return_value=result):
+                self.assertFalse(verify('candidate'))
+        with mock.patch.object(subprocess, 'run', side_effect=OSError('ldd unavailable')):
+            self.assertFalse(verify('candidate'))
+
     def test_checksum_verifiers_fail_closed_and_accept_only_matching_bytes(self):
         with tempfile.NamedTemporaryFile() as artifact:
             artifact.write(b'verified binary')
@@ -161,10 +172,13 @@ class BundleFixture:
                            for kind, data in payloads.items() if kind != 'assets'}
         fake_os = SimpleNamespace(
             path=SimpleNamespace(exists=lambda p: self.path(p).exists(),
+                                 lexists=lambda p: os.path.lexists(self.path(p)),
                                  samefile=self.samefile, join=os.path.join,
                                  dirname=os.path.dirname, basename=os.path.basename),
             makedirs=lambda p, **kw: os.makedirs(self.path(p), **kw),
-            chmod=lambda p, mode: os.chmod(self.path(p), mode),
+            fsync=os.fsync, chmod=lambda p, mode: os.chmod(self.path(p), mode),
+            lstat=lambda p: os.lstat(self.path(p)),
+            chown=lambda p, uid, gid, **kw: os.chown(self.path(p), uid, gid, **kw),
             replace=self.replace, remove=lambda p: os.remove(self.path(p)))
         fake_temp = SimpleNamespace(
             TemporaryDirectory=lambda **kw: tempfile.TemporaryDirectory(dir=self.root),
@@ -175,6 +189,30 @@ class BundleFixture:
         assets_url = 'https://fixture.invalid/security-assets.tar.gz'
         self.by_url[assets_url] = 'assets'
 
+        class FixtureService:
+            def __init__(self, *args, **kwargs):
+                self.unit = None
+
+            def state(self):
+                fixture.run(['lswsctrl', 'status'])
+                if fixture.active and not fixture.samefile('/proc/123/exe', fixture.core):
+                    raise RuntimeError('Fixture master differs from the installed binary')
+                return (123, '1', None) if fixture.active else None
+
+            def settled_state(self):
+                return self.state()
+
+            def verify_mapped_bundle(self, state):
+                pass  # Real mapped-image verification runs in the native controller fixture.
+
+            def change(self, action, expected):
+                if self.state() != expected:
+                    raise RuntimeError('Fixture service changed')
+                result = fixture.run(['lswsctrl', action])
+                if result.returncode or bool(self.state()) != (action == 'start'):
+                    raise RuntimeError('Fixture controller failed: ' + action)
+                return self.state()
+
         class AssetTransaction:
             # The helper's native PHP/archive tests live in test_ols_security_assets.
             # This fixture checks consumer sequencing and shared rollback behavior.
@@ -182,13 +220,16 @@ class BundleFixture:
                 if fixture.failure == 'asset-validation':
                     raise RuntimeError('injected asset validation failure')
                 self.backup_dir = tempfile.mkdtemp(dir=fixture.root)
+                (Path(self.backup_dir) / 'rollback.json').write_text('{"previous":{},"entries":[]}')
                 self.applied = False
+                self.touched = []
 
             def apply(self):
                 if fixture.active:
                     raise AssertionError('Assets must be replaced only while OLS is stopped')
                 fixture.path(fixture.admin).write_bytes(b'new-admin')
                 self.applied = True
+                self.touched.append(fixture.admin)
                 if fixture.failure == 'asset-apply':
                     raise RuntimeError('injected asset write failure')
 
@@ -218,11 +259,16 @@ class BundleFixture:
         tree = ast.parse(source.read_text())
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == class_name)
         cls.body = [n for n in cls.body if isinstance(n, ast.FunctionDef) and
-                    n.name in ('installCustomOLSBinaries', 'verifyChecksum', 'checkGlibcCompat', 'rollbackOLSBinary')]
-        namespace = dict(os=fake_os, re=__import__('re'), shutil=SimpleNamespace(copy2=self.copy2,
+                    n.name in ('installCustomOLSBinaries', 'verifyChecksum', 'checkGlibcCompat', 'copyOLSBackup', 'rollbackOLSBinary')]
+        namespace = dict(os=fake_os, re=__import__('re'), tempfile=fake_temp, shutil=SimpleNamespace(copy2=self.copy2,
                                                move=lambda src, dst: shutil.move(self.path(src), self.path(dst))),
                          subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
                          time=SimpleNamespace(sleep=lambda seconds: None), logging=mock.Mock(),
+                         OLSUpgradeFailure=RuntimeError,
+                         load_ols_diagnostic_helper=lambda name: SimpleNamespace(
+                             validate=lambda binary: self.run([binary, '-t']), OLSService=FixtureService,
+                             original_record=lambda path: None, bundle_records=lambda *args: ({}, {}),
+                             verify_originals=lambda *args: None, verify_installed=lambda *args: None, recovery_hint=lambda *args: ''),
                          load_ols_security_assets=lambda: imports('plogical.olsSecurityAssets'),
                          open=lambda p, *a, **kw: open(self.path(p), *a, **kw),
                          __builtins__=dict(vars(builtins), __import__=imports))
@@ -265,10 +311,12 @@ class BundleFixture:
         return (self.active and self.failure != 'unrelated-process' and
                 self.path(target).read_bytes() == self.active_bytes)
 
-    def copy2(self, source, destination):
+    def copy2(self, source, destination, **kwargs):
+        if self.failure == 'partial-restore' and str(source).endswith('mod_security.so.backup') and str(destination).endswith('.restore'):
+            raise OSError('injected WAF restoration failure')
         if self.failure == 'backup' and str(destination).endswith('mod_security.so.backup'):
             raise OSError('injected backup failure')
-        return shutil.copy2(self.path(source), self.path(destination))
+        return shutil.copy2(self.path(source), self.path(destination), **kwargs)
 
     def replace(self, source, destination):
         if self.failure == 'module-write' and str(source).endswith('module.new'):
@@ -292,13 +340,16 @@ class BundleFixture:
         elif args[-1] == 'start':
             self.start_bundles.append(self.bundle())
             data = self.path(self.core).read_bytes()
-            self.active = not ((self.failure == 'startup' and data == b'new-core') or self.failure == 'rollback-start')
+            self.active = not ((self.failure in ('startup', 'partial-restore') and data == b'new-core') or self.failure == 'rollback-start')
             self.active_bytes = data
             code = 0 if self.active else 1
         elif args[-1] == '-t':
-            code = 2 if self.failure == 'config' else 0
+            code = 2 if self.failure == 'config' and self.path(self.core).read_bytes() == b'new-core' else 0
             stdout = '[ERROR] injected candidate configuration failure' if code else ''
         elif args[-1] == '-v':
+            if self.failure == 'unexpected-start':
+                self.active = True
+                self.active_bytes = self.path(self.core).read_bytes()
             if self.failure == 'version-timeout':
                 raise subprocess.TimeoutExpired(args, 10)
             stdout = 'OpenLiteSpeed/2.5.5'
@@ -402,6 +453,56 @@ class BundleTransactionTests(unittest.TestCase):
                 self.assertEqual(f.bundle(), f.old)
                 self.assertTrue(f.active)
                 self.assertEqual(f.active_bytes, b'old-core')
+
+    def test_cannot_stop_an_unrequested_live_service_or_roll_back_under_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', 'unexpected-start')
+            f.active = False
+            self.assertFalse(f.call())
+            self.assertTrue(f.active)
+            self.assertEqual(f.path(f.core).read_bytes(), b'new-core')
+            self.assertFalse(any(args[-1] in ('stop', 'start') for args in f.commands))
+
+    def test_incomplete_persisted_receipt_is_refused_before_stopping_service(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade')
+            backup = f.path('/usr/local/lsws/backup-legacy-test')
+            backup.mkdir()
+            (backup / 'openlitespeed.backup').write_bytes(b'old-core')
+            self.assertFalse(f.rollback(str(backup), f.core, f.module))
+            self.assertTrue(f.active)
+            self.assertFalse(any(args[-1] in ('stop', 'start') for args in f.commands))
+
+    def test_partial_restore_never_restarts_the_old_core(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', 'partial-restore')
+            self.assertFalse(f.call())
+            self.assertFalse(f.active)
+            self.assertEqual(len(f.start_bundles), 1)
+            self.assertNotEqual(f.bundle(), f.old)
+
+    def test_persisted_rollback_of_stopped_install_remains_stopped(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade')
+            f.active = False
+            self.assertTrue(f.call())
+            backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+            self.assertTrue(f.rollback(str(backup), f.core, f.module))
+            self.assertFalse(f.active)
+            self.assertEqual(f.start_bundles, [])
+            self.assertEqual(f.bundle(), f.old)
+
+    def test_upgrade_rollback_preserves_package_owned_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', 'startup')
+            path = f.path(f.module)
+            old_name = path.name + '.vendor'
+            path.rename(path.with_name(old_name))
+            path.symlink_to(old_name)
+            self.assertFalse(f.call())
+            self.assertEqual(os.readlink(path), old_name)
+            self.assertEqual(f.bundle(), f.old)
+            self.assertTrue(f.active)
 
     def test_persisted_rollback_restores_assets_and_reports_restart_failure(self):
         with tempfile.TemporaryDirectory() as directory:

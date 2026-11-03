@@ -70,7 +70,7 @@ def versionManagement(request):
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
                  'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
+                 "Notecheck": notechk, "resumeUpgrade": bool(request.session.get("softUpgradeRun"))}
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
@@ -315,8 +315,12 @@ def upgrade(request):
 
         from plogical.applicationInstaller import ApplicationInstaller
 
-        extraArgs = {}
-        extraArgs['branchSelect'] = data["branchSelect"]
+        import time
+        import uuid
+        job = uuid.uuid4().hex
+        request.session['softUpgradeRun'] = job
+        request.session['softUpgradeStarted'] = time.time()
+        extraArgs = {'branchSelect': data["branchSelect"], 'upgradeRun': job}
         background = ApplicationInstaller('UpgradeCP', extraArgs)
         background.start()
 
@@ -325,7 +329,7 @@ def upgrade(request):
         return HttpResponse(json_data)
 
     except KeyError:
-        adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
+        adminData = {"upgrade": 0, "error_message": "Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
 
@@ -341,9 +345,37 @@ def upgradeStatus(request):
 
         try:
             if request.method == 'POST':
-                from plogical.upgrade import Upgrade
-
-                path = Upgrade.LogPathNew
+                job = request.session.get('softUpgradeRun')
+                if job:
+                    import time
+                    from plogical.softUpgrade import status_path
+                    status_path(job)  # Validate the session-owned identifier before building the command.
+                    command = '/usr/local/CyberPanel/bin/python -I /usr/local/CyberCP/plogical/softUpgrade.py --status ' + job
+                    result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+                    if not result or not result[0]:
+                        return HttpResponse(json.dumps({'error_message': 'Current upgrade status is unavailable.'}), status=503)
+                    status = json.loads(result[1])
+                    if status['state'] == 'missing':
+                        if time.time() - request.session['softUpgradeStarted'] > 120:
+                            status = {'state': 'failed', 'message': 'The upgrade launcher has no status record. Check the panel service log before retrying.'}
+                        else:
+                            status = {'state': 'starting'}
+                    if status['state'] == 'failed':
+                        return HttpResponse(json.dumps({'finished': 1, 'upgradeStatus': 0,
+                                            'error_message': status['message']}))
+                    # Read the existing log directly; importing the upgrade program
+                    # in a polling request can invoke its settings recovery path.
+                    try:
+                        descriptor = os.open('/home/cyberpanel/upgrade_logs', os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                        with os.fdopen(descriptor, 'rb') as upgrade_log:
+                            size = os.fstat(descriptor).st_size
+                            upgrade_log.seek(max(0, size - 64 * 1024))
+                            log = upgrade_log.read(64 * 1024).decode('utf-8', errors='replace')
+                    except OSError:
+                        log = ''
+                    return HttpResponse(json.dumps({'finished': int(status['state'] == 'complete'),
+                                        'upgradeStatus': 1, 'upgradeLog': log, 'error_message': 'None'}))
+                path = '/home/cyberpanel/upgrade_logs'
 
                 try:
                     upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')
