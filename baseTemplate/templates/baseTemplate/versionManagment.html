@@ -265,6 +265,11 @@
                 <h1 class="page-title">{% trans "Version Management" %}</h1>
                 <p class="page-subtitle">{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
             </div>
+            {% if releaseMetadataUnavailable %}
+            <div class="alert alert-warning" role="status">
+                {% trans "Latest release information is temporarily unavailable. Current version information and upgrade status remain available." %}
+            </div>
+            {% endif %}
             {% if Notecheck %}
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -277,7 +282,10 @@
                 
                 <div class="form-group">
                     <label for="branchSelect" class="form-label">{% trans "Select Branch" %}</label>
-                    <select ng-model="branchSelect" id="branchSelect" class="form-select"></select>
+                    <select ng-model="branchSelect" ng-init="branchSelect='{{ currentRelease|default:'stable' }}'" id="branchSelect" class="form-select">
+                        <option value="stable">stable</option>
+                        {% if currentRelease %}<option value="{{ currentRelease }}">{{ currentRelease }}</option>{% endif %}
+                    </select>
                 </div>
                 
                 <div class="btn-group">
@@ -310,15 +318,15 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">{% trans "Latest Version" %}</span>
-                        <span class="info-value">{{ latestVersion }}</span>
+                        <span class="info-value">{% if latestVersion %}{{ latestVersion }}{% else %}{% trans "Unavailable" %}{% endif %}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">{% trans "Latest Build" %}</span>
-                        <span class="info-value">{{ latestBuild }}</span>
+                        <span class="info-value">{% if latestBuild %}{{ latestBuild }}{% else %}{% trans "Unavailable" %}{% endif %}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">{% trans "Latest Commit" %}</span>
-                        <span class="info-value">{{ latestcomit }}</span>
+                        <span class="info-value">{% if latestcomit %}{{ latestcomit }}{% else %}{% trans "Unavailable" %}{% endif %}</span>
                     </div>
                 </div>
             </div>
@@ -350,32 +358,43 @@
         // Function to populate the branch dropdown
         function populateBranches(branches) {
             var branchSelect = document.getElementById("branchSelect");
+            var existing = new Set(Array.from(branchSelect.options, option => option.value));
             for (let i = branches.length - 1; i >= 0; i--) {
                 const branch = branches[i];
+                if (typeof branch !== "string" ||
+                    !/^v[0-9]+(?:\.[0-9]+)+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$/.test(branch) ||
+                    branch.indexOf("dev") !== -1 || branch.indexOf("version-counter") !== -1 ||
+                    existing.has(branch)) continue;
                 var option = document.createElement("option");
                 option.value = branch;
                 option.text = branch;
-                if (branch.startsWith("v") && branch.indexOf("dev") === -1 && branch.indexOf("version-counter") === -1) {
-                    branchSelect.appendChild(option);
-                }
+                branchSelect.appendChild(option);
+                existing.add(branch);
             }
-
         }
 
         function getBranches(url, branches, page) {
             if (!page) page = 1;
-            fetch(url + '?page=' + page)
-                .then((response) => response.json())
+            return fetch(url + '?page=' + page)
+                .then((response) => {
+                    if (!response.ok) throw new Error('Branch information unavailable');
+                    return response.json();
+                })
                 .then((data) => {
+                    if (!Array.isArray(data) || data.some(branch =>
+                        !branch || typeof branch.name !== "string")) {
+                        throw new Error('Invalid branch information');
+                    }
                     if (data.length === 0) {
                         populateBranches(branches);
+                    } else if (page < 20) {
+                        return getBranches(url, branches.concat(data.map(branch => branch.name)), page + 1);
                     } else {
-                        const branchNames = data.map(branch => branch.name);
-                        branches = branches.concat(branchNames);
-                        getBranches(url, branches, page + 1);
+                        populateBranches(branches.concat(data.map(branch => branch.name)));
                     }
                 })
                 .catch((error) => {
+                    // Keep the server-rendered stable/current release choices.
                     console.error('Error fetching branches: ' + error);
                 });
         }
