@@ -70,7 +70,7 @@ def versionManagement(request):
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
                  'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk, "resumeUpgrade": bool(request.session.get("softUpgradeRun"))}
+                 "Notecheck": notechk}
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
@@ -289,7 +289,7 @@ def versionManagment(request):
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
                  'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
+                 "Notecheck": notechk, "resumeUpgrade": bool(request.session.get("softUpgradeRun"))}
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
