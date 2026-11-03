@@ -88,7 +88,7 @@ class ServiceControlTests(unittest.TestCase):
             conf.write_bytes(b'old\r\n')
             conf.chmod(0o640)
             svc = Mock(root=root)
-            svc.state.return_value = (123, '1', 'lshttpd.service')
+            svc.state.return_value = svc.prepare_state.return_value = (123, '1', 'lshttpd.service')
 
             def validate():
                 if conf.read_text() == 'broken\n':
@@ -108,7 +108,7 @@ class ServiceControlTests(unittest.TestCase):
             conf.parent.mkdir()
             conf.write_text('before')
             svc = Mock(root=root)
-            svc.state.return_value = (123, '4', None)
+            svc.state.return_value = svc.prepare_state.return_value = (123, '4', None)
             svc.reload.side_effect = [RuntimeError('failed reload'), None]
             with self.assertRaisesRegex(RuntimeError, 'failed reload'):
                 control.apply_config_changes({str(conf): ('before', 'after')}, Mock(), svc)
@@ -122,7 +122,7 @@ class ServiceControlTests(unittest.TestCase):
             conf.parent.mkdir()
             conf.write_text('operator edit')
             svc = Mock(root=root)
-            svc.state.return_value = None
+            svc.state.return_value = svc.prepare_state.return_value = None
             with self.assertRaisesRegex(RuntimeError, 'changed during migration'):
                 control.apply_config_changes({str(conf): ('old', 'another edit')}, Mock(), svc)
             self.assertEqual(conf.read_text(), 'operator edit')
@@ -135,7 +135,7 @@ class ServiceControlTests(unittest.TestCase):
             conf.parent.mkdir()
             conf.write_text('old')
             svc = Mock(root=root)
-            svc.state.return_value = None
+            svc.state.return_value = svc.prepare_state.return_value = None
             control.apply_config_changes({str(conf): ('old', 'new')}, Mock(), svc)
             self.assertEqual(conf.read_text(), 'new')
             svc.reload.assert_not_called()

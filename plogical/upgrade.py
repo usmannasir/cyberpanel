@@ -89,15 +89,16 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
             parser = load_ols_diagnostic_helper('olsParserRecovery.py')
             if 'incompatible OpenLiteSpeed core ABI' in output:
                 stock = load_ols_diagnostic_helper('olsStockClassifier.py')
-                hint = stock.stock_recovery_hint(binary, result.returncode, output, parser)
-                wrapper = 'install-module-2.5.7-r6.sh'
-                checksum = '0f9f2e3e4429ba00a12431a901d84b77244a772ef1e07bc0a0061e15f94486c2'
+                known = stock.stock_recovery_hint(binary, result.returncode, output, parser)
+                mode = '--repair-stock-module'
             else:
-                hint = parser.recovery_hint(binary, result.returncode, output)
-                wrapper = 'install-module-2.5.7-r5.sh'
-                checksum = 'fced298dfdf0ee8bb60f59d02868bab8a3abc724a86dccfd74001ecca545c286'
-            if hint:
-                hint += ' Download https://cyberpanel.net/%s and verify SHA256 %s before running it.' % (wrapper, checksum)
+                known = parser.recovery_hint(binary, result.returncode, output)
+                mode = '--repair-webadmin-parser'
+            if known:
+                wrapper = 'install-module-2.5.7-r7.sh'
+                checksum = 'b1627cfabb4185520b036219f36acce144eb2043a86d79ba31d97fd347b87738'
+                hint = (' Download https://cyberpanel.net/%s and verify SHA256 %s. '
+                        'Then run bash %s %s and retry the upgrade.') % (wrapper, checksum, wrapper, mode)
         except Exception:
             pass  # Diagnostic helpers must never waive the original failure.
         raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
@@ -1287,8 +1288,7 @@ class Upgrade:
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
             lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
             service = lifecycle.OLSService()
-            initial_state = service.state()
-            service.verify_mapped_bundle(initial_state)
+            initial_state = service.prepare_state()
             # Keep the core and both modules on the same verified release, including
             # upgrades from installations that did not previously have ModSecurity.
             required = [

@@ -31,7 +31,7 @@ class StagedUpgradeHelperTests(unittest.TestCase):
                      'cyberpanel_firewall_migration.py', 'lscpd_binary.py',
                      'plogical/olsSecurityAssets.py', 'plogical/olsParserRecovery.py',
                      'plogical/olsStockClassifier.py', 'plogical/olsNativeValidation.py',
-                     'plogical/olsServiceControl.py'):
+                     'plogical/olsServiceControl.py', 'plogical/olsWatchdog.py', 'CPScripts/watchdog.sh'):
             target = self.release / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, target)
@@ -109,6 +109,12 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         result = self.stage_sources()
         self.assertNotEqual(0, result.returncode)
         self.assertIn('Failed to download olsNativeValidation.py', result.stdout)
+
+    def test_controller_includes_verified_watchdog_migration_sources(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        for name in ('plogical/olsWatchdog.py', 'CPScripts/watchdog.sh'):
+            self.assertEqual((self.stage / Path(name).name).read_bytes(), (self.release / name).read_bytes())
 
     def test_stock_diagnostic_helper_is_from_selected_release(self):
         result = self.stage_sources()

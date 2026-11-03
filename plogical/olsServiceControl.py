@@ -1,5 +1,6 @@
 """Identify and control only the verified OpenLiteSpeed installation during an upgrade."""
 import hashlib
+import importlib.util
 import locale
 import os
 from pathlib import Path
@@ -7,6 +8,11 @@ import re
 import stat
 import subprocess
 import time
+
+
+_watchdog_spec = importlib.util.spec_from_file_location('olsWatchdog', str(Path(__file__).with_name('olsWatchdog.py')))
+watchdog = importlib.util.module_from_spec(_watchdog_spec)
+_watchdog_spec.loader.exec_module(watchdog)
 
 
 CONTROLLER_HASHES = {
@@ -122,6 +128,8 @@ class OLSService:
             raise RuntimeError('Unknown OLS manager in recovery receipt')
         self.unit = unit
         self.manager_identified = unit is not None
+        self.draining = None
+        self.watch_lock = None
 
     def controller(self):
         directory = self.root / 'bin'
@@ -181,7 +189,29 @@ class OLSService:
         if not pid and values.get('ActiveState') not in ('failed', 'inactive'):
             raise RuntimeError('OLS systemd unit is not established as stopped')
 
+    def inspect_state(self, allow_legacy=True):
+        if self.watch_lock is not None and watchdog.lock_identity(self.root) != self.watch_lock:
+            raise RuntimeError('OLS watchdog transaction lock inode changed')
+        monitors = watchdog.inspect_watchdog(self.root, self.proc, allow_legacy)
+        state = self._native_state()
+        if monitors and not state and allow_legacy:
+            raise RuntimeError('Stopped OLS has an active auto-start watchdog. Resolve its monitoring policy before upgrading.')
+        return state
+
+    def prepare_state(self, script=None):
+        initial = self.inspect_state()
+        self.verify_mapped_bundle(initial)
+        if watchdog.inspect_watchdog(self.root, self.proc, allow_legacy=True):
+            self.watch_lock = watchdog.lock_identity(self.root, require_exclusive=True)
+        watchdog.prepare_watchdog(self.root, bool(initial), self.proc, script)
+        if self.state() != initial:
+            raise RuntimeError('OLS changed state during watchdog handoff')
+        return initial
+
     def state(self):
+        return self.inspect_state(allow_legacy=False)
+
+    def _native_state(self):
         self.controller()
         result = run([str(self.control), 'status'])
         matched = re.findall(r'is running with PID ([1-9][0-9]*)\.', result.stdout)
@@ -232,6 +262,8 @@ class OLSService:
                 seen.add(pid)
                 pid = processes[pid][0]
         owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
+        if self.draining is not None and (master, processes[master][1], owner) == self.draining:
+            raise OLSWorkersRemain('Original OLS master is draining after its verified stop action')
         self.verify_unit_claims(master, owner)
         if self.manager_identified and owner != self.unit:
             raise RuntimeError('OLS changed its service manager')
@@ -280,24 +312,28 @@ class OLSService:
         result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         if result.returncode:
             raise RuntimeError('OpenLiteSpeed service %s failed' % action)
-        deadline = time.monotonic() + 25
-        while time.monotonic() < deadline:
-            try:
-                state = self.state()
-            except OLSWorkersRemain:
-                # Master PID removal can precede worker exit. A pending
-                # transition is never evidence that files may be replaced.
-                time.sleep(0.25)
-                continue
-            if bool(state) == wanted_running:
-                if state:
-                    time.sleep(1)
-                    if self.state() != state:
-                        raise RuntimeError('OLS master did not remain stable after startup')
-                    self.verify_mapped_bundle(state)
-                return state
-            time.sleep(1)
-        raise RuntimeError('OpenLiteSpeed did not ' + action)
+        self.draining = expected if action == 'stop' else None
+        try:
+            deadline = time.monotonic() + 25
+            while time.monotonic() < deadline:
+                try:
+                    state = self.state()
+                except OLSWorkersRemain:
+                    # Master PID removal can precede worker exit. A pending
+                    # transition is never evidence that files may be replaced.
+                    time.sleep(0.25)
+                    continue
+                if bool(state) == wanted_running:
+                    if state:
+                        time.sleep(1)
+                        if self.state() != state:
+                            raise RuntimeError('OLS master did not remain stable after startup')
+                        self.verify_mapped_bundle(state)
+                    return state
+                time.sleep(1)
+            raise RuntimeError('OpenLiteSpeed did not ' + action)
+        finally:
+            self.draining = None
 
     def reload(self, expected):
         if expected is None or self.state() != expected:
@@ -344,8 +380,8 @@ def replace_config(path, expected, content):
 
 def apply_config_changes(changes, validate, service):
     """Validate both sides of a config-only migration and retain service state."""
-    initial = service.state()
     validate()
+    initial = service.prepare_state()
     originals = []
     activation_attempted = False
     try:

@@ -72,8 +72,9 @@ def prepare():
     stage = Path('/tmp/staged-consumer')
     stage.mkdir()
     for name in ('upgrade', 'olsSecurityAssets', 'olsParserRecovery', 'olsStockClassifier',
-                 'olsNativeValidation', 'olsServiceControl'):
+                 'olsNativeValidation', 'olsServiceControl', 'olsWatchdog'):
         shutil.copy2('/src/plogical/' + name + '.py', str(stage))
+    shutil.copy2('/src/CPScripts/watchdog.sh', str(stage))
     for name in ('cyberpanel_firewall_migration.py', 'cyberpanel_version.py', 'lscpd_binary.py'):
         shutil.copy2('/src/' + name, str(stage))
     (stage / 'MySQLdb.py').touch()

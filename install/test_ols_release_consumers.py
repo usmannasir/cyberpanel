@@ -193,6 +193,11 @@ class BundleFixture:
             def __init__(self, *args, **kwargs):
                 self.unit = None
 
+            def prepare_state(self):
+                state = self.state()
+                self.verify_mapped_bundle(state)
+                return state
+
             def state(self):
                 fixture.run(['lswsctrl', 'status'])
                 if fixture.active and not fixture.samefile('/proc/123/exe', fixture.core):

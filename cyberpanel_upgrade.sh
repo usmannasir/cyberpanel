@@ -247,17 +247,17 @@ OLS_Custom_Config_Test() (
 )
 
 OLS_Recovery_Hint() (
-  local core="$1" status="$2" output="$3" work method file wrapper checksum
+  local core="$1" status="$2" output="$3" work method file mode
+  local wrapper=install-module-2.5.7-r7.sh
+  local checksum=b1627cfabb4185520b036219f36acce144eb2043a86d79ba31d97fd347b87738
   if [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
     method=recovery_hint
     file=olsParserRecovery.py
-    wrapper=install-module-2.5.7-r5.sh
-    checksum=fced298dfdf0ee8bb60f59d02868bab8a3abc724a86dccfd74001ecca545c286
+    mode=--repair-webadmin-parser
   elif [[ "$output" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
     method=stock_recovery_hint
     file=olsStockClassifier.py
-    wrapper=install-module-2.5.7-r6.sh
-    checksum=0f9f2e3e4429ba00a12431a901d84b77244a772ef1e07bc0a0061e15f94486c2
+    mode=--repair-stock-module
   else
     return 0
   fi
@@ -275,9 +275,9 @@ import os, runpy, sys
 sys.path.insert(0, os.path.dirname(sys.argv[1]))
 hint = runpy.run_path(sys.argv[1])[sys.argv[4]](sys.argv[2], int(sys.argv[3]), sys.stdin.read())
 if hint:
-    print(hint.strip())
-    print("Download https://cyberpanel.net/%s and verify SHA256 %s before running it." % tuple(sys.argv[5:7]))
-' "$work/$file" "$core" "$status" "$method" "$wrapper" "$checksum"
+    print("Download https://cyberpanel.net/%s and verify SHA256 %s." % tuple(sys.argv[5:7]))
+    print("Then run bash %s %s and retry the upgrade." % (sys.argv[5], sys.argv[7]))
+' "$work/$file" "$core" "$status" "$method" "$wrapper" "$checksum" "$mode"
 )
 
 Protect_Custom_OLS_RPM_Packages() {
@@ -1342,6 +1342,10 @@ if grep -q 'olsParserRecovery.py' upgrade.py; then
 fi
 if grep -q 'olsServiceControl.py' upgrade.py; then
   Download_Upgrade_Source "plogical/olsServiceControl.py" "olsServiceControl.py" "^class OLSService:" || exit 1
+  if grep -q 'olsWatchdog.py' olsServiceControl.py; then
+    Download_Upgrade_Source "plogical/olsWatchdog.py" "olsWatchdog.py" "^def prepare_watchdog(" || exit 1
+    Download_Upgrade_Source "CPScripts/watchdog.sh" "watchdog.sh" "^#!/bin/bash" || exit 1
+  fi
 fi
 if grep -q 'olsNativeValidation.py' upgrade.py; then
   Download_Upgrade_Source "plogical/olsNativeValidation.py" "olsNativeValidation.py" "^def validate(" || exit 1
@@ -1752,15 +1756,8 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
   chmod 700 /usr/bin/cyberpanel_utility
 fi
 
-if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
-	watchdog kill
-	rm -f /etc/cyberpanel/watchdog.sh
-	rm -f /usr/local/bin/watchdog
-	wget -O /etc/cyberpanel/watchdog.sh "${Git_Content_URL}/${Branch_Name}/CPScripts/watchdog.sh"
-	chmod 700 /etc/cyberpanel/watchdog.sh
-	ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
-	watchdog status
-fi
+# The OLS transaction preserves the existing watch policy. Replacing or
+# stopping all CyberPanel watchdog processes here would also affect unrelated services.
 
 
 rm -f /usr/local/composer.sh

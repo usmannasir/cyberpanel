@@ -89,7 +89,12 @@ def stage_release(stage, revision):
             content = response.read(2 * 1024 * 1024 + 1)
         if len(content) > 2 * 1024 * 1024:
             raise ValueError('Unexpected release file size: ' + path)
-        tree = ast.parse(content, filename=path)
+        if path == 'CPScripts/watchdog.sh':
+            if not content.startswith(b'#!/bin/bash\n'):
+                raise ValueError('Invalid release watchdog script')
+            tree = None
+        else:
+            tree = ast.parse(content, filename=path)
         (stage / Path(path).name).write_bytes(content)
         return content.decode('utf-8'), tree
 
@@ -100,7 +105,10 @@ def stage_release(stage, revision):
         raise ValueError('This release requires an installed OLS helper. Choose the current stable release.')
     for marker, path in HELPERS:
         if marker in source:
-            fetch(path)
+            helper, _ = fetch(path)
+            if path == 'plogical/olsServiceControl.py' and 'olsWatchdog.py' in helper:
+                fetch('plogical/olsWatchdog.py')
+                fetch('CPScripts/watchdog.sh')
 
 
 def run(branch, lock_fd=None):

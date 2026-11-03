@@ -64,6 +64,22 @@ class PanelUpgradeTests(unittest.TestCase):
         self.assertEqual(softUpgrade.run('v3.0.8'), 0)
         self.assertEqual(self.receipt.read_text(), 'SoftUpgrade,v3.0.8 ' + self.expected)
 
+    def test_stages_watchdog_from_service_helpers_selected_revision(self):
+        # This target declares its dependency in the controller, not in the entry script.
+        source = self.release / 'upgrade.py'
+        source.write_text(source.read_text() + "\ncontroller = 'olsServiceControl.py'\n")
+        root = Path(__file__).resolve().parents[1]
+        for name in ('plogical/olsServiceControl.py', 'plogical/olsWatchdog.py', 'CPScripts/watchdog.sh'):
+            destination = self.release.parent / name
+            destination.parent.mkdir(exist_ok=True)
+            destination.write_bytes((root / name).read_bytes())
+        revision = softUpgrade.resolve_release('v3.0.8')
+        stage = self.root / 'stage'
+        stage.mkdir()
+        softUpgrade.stage_release(stage, revision)
+        self.assertEqual((stage / 'olsWatchdog.py').read_bytes(), (root / 'plogical/olsWatchdog.py').read_bytes())
+        self.assertEqual((stage / 'watchdog.sh').read_bytes(), (root / 'CPScripts/watchdog.sh').read_bytes())
+
     def poll_job(self, job, admin=1, transport=True):
         path = Path(__file__).resolve().parents[1] / 'baseTemplate/views.py'
         view = next(node for node in ast.parse(path.read_text()).body
