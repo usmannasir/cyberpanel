@@ -1,5 +1,10 @@
 """Coordinate the CyberPanel OLS watchdog with an exclusively locked OLS upgrade."""
+import ctypes
+import errno
 import fcntl
+import operator
+import platform
+import sys
 import hashlib
 import os
 from pathlib import Path
@@ -194,6 +199,49 @@ def lock_identity(root, require_exclusive=False):
         os.close(fd)
 
 
+def _pidfd_open(pid):
+    native = getattr(os, 'pidfd_open', None)
+    if native is not None:
+        return native(pid)
+    # Linux x86_64 unistd_64.h: pidfd_open=434 (Linux 5.3+). Python 3.8
+    # can use the kernel facility even though it lacks the stdlib binding.
+    if (sys.platform != 'linux' or platform.machine() != 'x86_64' or
+            ctypes.sizeof(ctypes.c_void_p) != 8):
+        raise OSError(errno.ENOSYS, 'PID-safe watchdog handoff is unavailable on this architecture')
+    pid = operator.index(pid)
+    if not 0 <= pid <= 0x7fffffff:
+        raise OverflowError('PID is outside the Linux pid_t range')
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    result = libc.syscall(ctypes.c_long(434), ctypes.c_int(pid), ctypes.c_uint(0))
+    if result < 0:
+        code = ctypes.get_errno()
+        raise OSError(code, os.strerror(code))
+    return int(result)
+
+
+def _pidfd_send_signal(descriptor, signum):
+    native = getattr(signal, 'pidfd_send_signal', None)
+    if native is not None:
+        return native(descriptor, signum)
+    # Linux x86_64 unistd_64.h: pidfd_send_signal=424 (Linux 5.1+).
+    # Always signal through the open descriptor; never fall back to kill(pid).
+    if (sys.platform != 'linux' or platform.machine() != 'x86_64' or
+            ctypes.sizeof(ctypes.c_void_p) != 8):
+        raise OSError(errno.ENOSYS, 'PID-safe watchdog handoff is unavailable on this architecture')
+    descriptor, signum = operator.index(descriptor), operator.index(signum)
+    if not 0 <= descriptor <= 0x7fffffff or not 0 <= signum <= 0x7fffffff:
+        raise OverflowError('PID descriptor or signal is outside the Linux integer range')
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    result = libc.syscall(ctypes.c_long(424), ctypes.c_int(descriptor),
+                          ctypes.c_int(signum), ctypes.c_void_p(), ctypes.c_uint(0))
+    if result < 0:
+        code = ctypes.get_errno()
+        raise OSError(code, os.strerror(code))
+    return None
+
+
 def prepare_watchdog(root, running, proc='/proc', script=None):
     """Called under the installer's exclusive lock. Retire only an attested idle worker."""
     records = inspect_watchdog(root, proc, allow_legacy=True)
@@ -204,8 +252,6 @@ def prepare_watchdog(root, running, proc='/proc', script=None):
     legacy = next((r for r in records if r[2] == 'legacy'), None)
     if legacy is None:
         return
-    if not (hasattr(os, 'pidfd_open') and hasattr(signal, 'pidfd_send_signal')):
-        raise RuntimeError('This runtime lacks PID-safe watchdog handoff. Arrange a targeted OLS watchdog maintenance window before upgrading.')
     if not ALIAS.is_symlink() or ALIAS.resolve() != SCRIPT or SCRIPT.is_symlink():
         raise RuntimeError(REFUSAL)
     trusted_file(SCRIPT)
@@ -218,7 +264,7 @@ def prepare_watchdog(root, running, proc='/proc', script=None):
     current = hash_file(SCRIPT)
     if current not in (LEGACY, COOPERATIVE):
         raise RuntimeError(REFUSAL)
-    pidfd = os.pidfd_open(legacy[0])
+    pidfd = _pidfd_open(legacy[0])
     try:
         child = idle_legacy(legacy, proc)
         pending = next((r for r in records if r[2] == 'cooperative'), None)
@@ -250,7 +296,7 @@ def prepare_watchdog(root, running, proc='/proc', script=None):
         # It survives launcher exit and cannot enter check_service under our lock.
         if idle_legacy(legacy, proc) != child:
             raise RuntimeError(REFUSAL)
-        signal.pidfd_send_signal(pidfd, signal.SIGTERM)
+        _pidfd_send_signal(pidfd, signal.SIGTERM)
         if not select.select([pidfd], [], [], 5)[0]:
             raise RuntimeError('The old OLS monitor did not retire; OLS was not changed')
         # This exact sleep was still alive after the shell's exit; it could

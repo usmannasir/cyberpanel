@@ -234,6 +234,8 @@ class InstallCyberPanel:
                             (int(release.group(1)), int(release.group(2)))
                             if release else None
                         )
+                        if releaseVersion == (20, 4):
+                            return 'ubuntu20'
                         if releaseVersion and releaseVersion < (22, 4):
                             InstallCyberPanel.stdOut(
                                 "Ubuntu %s.%s detected: custom OLS binary "
@@ -369,8 +371,7 @@ class InstallCyberPanel:
             platform = self.detectPlatform()
             InstallCyberPanel.stdOut(f"Detected platform: {platform}", 1)
 
-            # Some platforms intentionally skip the custom overlay (e.g. Ubuntu 20.04,
-            # where the binary's GLIBC requirement isn't met) and keep stock OLS.
+            # Platforms outside the validated compatibility matrix keep stock OLS.
             if platform == 'skip':
                 InstallCyberPanel.stdOut("Custom binary installation skipped for this platform; using standard OLS", 1)
                 return True  # Not a failure, just skip
@@ -380,7 +381,13 @@ class InstallCyberPanel:
             # The ABI marker prevents incompatible stock-core loading.
             # EL10 uses its dedicated ABI-matched release set. Existing platform
             # mappings use the same release with native runtime dependencies.
-            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel8',
+            BINARY_CONFIGS = {'ubuntu20': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-ubuntu20',
+                          'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu20.so',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu20.so',
+                          'sha256': {'binary': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b',
+                                     'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
+                                     'modsec': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708'}},
+             'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel8',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
                        'sha256': {'binary': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b',

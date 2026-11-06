@@ -22,7 +22,10 @@ class modSec:
 
     # Compatible ModSecurity binaries (built against custom OLS headers)
     # These prevent ABI incompatibility crashes (Signal 11/SIGSEGV)
-    MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
+    MODSEC_COMPATIBLE = {'ubuntu20': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu20.so',
+                  'sha256': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708',
+                  'core_sha256': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b'},
+     'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
                'sha256': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708',
                'core_sha256': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b'},
      'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
@@ -48,6 +51,8 @@ class modSec:
             version = values.get('VERSION_ID', '').strip('"\'')
             major = int(version.split('.')[0])
             if os_id == 'ubuntu':
+                if version == '20.04':
+                    return 'ubuntu20'
                 if major == 26:
                     return 'ubuntu26'
                 if major in (22, 24):

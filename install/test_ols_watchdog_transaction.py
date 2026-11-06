@@ -133,7 +133,7 @@ def guest():
             successors.append((process.pid, fields[19], 'cooperative'))
             return process
         with patch('olsWatchdog.subprocess.Popen', side_effect=start_successor), \
-                patch('olsWatchdog.signal.pidfd_send_signal', side_effect=RuntimeError('injected interruption')):
+                patch('olsWatchdog._pidfd_send_signal', side_effect=RuntimeError('injected interruption')):
             try:
                 prepare_watchdog(root, True, script='/candidate')
             except RuntimeError as error:

@@ -1059,10 +1059,11 @@ class Upgrade:
                 with open('/etc/lsb-release', 'r') as f:
                     content = f.read()
                     if 'Ubuntu' in content or 'ubuntu' in content:
-                        # The 'ubuntu' artifact is built on 22.04 (needs GLIBC_2.34) and
-                        # does NOT run on anything older, e.g. 20.04 = glibc 2.31
-                        # (ticket #OXHTOK7AH). Skip the overlay there and keep stock OLS.
+                        # Ubuntu 20 uses its separately validated glibc 2.31 tuple.
+                        # Other older releases retain the existing stock-only policy.
                         release = re.search(r'DISTRIB_RELEASE=(\d+)\.(\d+)', content)
+                        if release and (int(release.group(1)), int(release.group(2))) == (20, 4):
+                            return 'ubuntu20'
                         if release and (int(release.group(1)), int(release.group(2))) < (22, 4):
                             Upgrade.stdOut(f"Ubuntu {release.group(1)}.{release.group(2)} detected: custom OLS binary requires GLIBC_2.34 (Ubuntu 22.04+); keeping stock OLS", 0)
                             return 'skip'
@@ -1202,8 +1203,7 @@ class Upgrade:
             platform = Upgrade.detectPlatform()
             Upgrade.stdOut(f"Detected platform: {platform}", 0)
 
-            # Some platforms intentionally skip the custom overlay (e.g. Ubuntu 20.04,
-            # where the binary's GLIBC requirement isn't met) and keep stock OLS.
+            # Platforms outside the validated compatibility matrix keep stock OLS.
             if platform == 'skip':
                 Upgrade.stdOut("Custom binary installation skipped for this platform; using standard OLS", 0)
                 return None  # Intentionally keep the installed bundle.
@@ -1215,7 +1215,13 @@ class Upgrade:
             #   Cloudflare 520 storms); adds a real `ls_enabled 0` kill-switch. NEVER ship 2.7.0-2.7.3 again.
             # EL10 uses its dedicated ABI-matched release set. Existing platform
             # mappings use the same release with native runtime dependencies.
-            BINARY_CONFIGS = {'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel8',
+            BINARY_CONFIGS = {'ubuntu20': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-ubuntu20',
+                          'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu20.so',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu20.so',
+                          'sha256': {'binary': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b',
+                                     'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
+                                     'modsec': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708'}},
+             'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel8',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel8.so',
                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
                        'sha256': {'binary': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b',

@@ -39,7 +39,7 @@ class ReleaseConsumerTests(unittest.TestCase):
         install = binary_configs(ROOT / 'install/installCyberPanel.py', 'InstallCyberPanel')
         upgrade = binary_configs(ROOT / 'plogical/upgrade.py', 'Upgrade')
         self.assertEqual(install, upgrade)
-        self.assertEqual(set(install), {'ubuntu', 'ubuntu26', 'rhel8', 'rhel9', 'rhel10'})
+        self.assertEqual(set(install), {'ubuntu20', 'ubuntu', 'ubuntu26', 'rhel8', 'rhel9', 'rhel10'})
         modsec = load_modsec().MODSEC_COMPATIBLE
         self.assertEqual(set(modsec), set(install))
         for platform, config in install.items():
@@ -51,7 +51,8 @@ class ReleaseConsumerTests(unittest.TestCase):
     def test_modsecurity_detects_native_abis_and_refuses_unsupported_versions(self):
         detect = load_modsec().detectPlatform
         cases = [('ubuntu', '22.04', 'ubuntu'), ('ubuntu', '24.04', 'ubuntu'),
-                 ('ubuntu', '26.04', 'ubuntu26'), ('ubuntu', '20.04', None),
+                 ('ubuntu', '26.04', 'ubuntu26'), ('ubuntu', '20.04', 'ubuntu20'),
+                 ('ubuntu', '18.04', None), ('ubuntu', '20.10', None),
                  ('almalinux', '10.1', 'rhel10'), ('rocky', '9', 'rhel9'),
                  ('rhel', '8.10', 'rhel8'), ('debian', '12', 'ubuntu'),
                  ('debian', '10', None), ('alpine', '3.22', None)]
