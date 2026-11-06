@@ -3,10 +3,13 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import MagicMock, patch
 
 try:
+    import install.check_release_delivery as delivery
     from install.check_release_delivery import IncompleteRelease, verify
 except ModuleNotFoundError:
+    import check_release_delivery as delivery
     from check_release_delivery import IncompleteRelease, verify
 
 
@@ -66,6 +69,17 @@ class DeliveryGateTests(unittest.TestCase):
                 self.plan['artifacts'] = {url: hashlib.sha256(b'wrapper').hexdigest()}
                 with self.assertRaisesRegex(IncompleteRelease, 'Invalid public artifact URL'):
                     self.check()
+
+    def test_native_artifacts_allow_larger_payloads_without_relaxing_source_limit(self):
+        body = b'x' * (5 * 1024 * 1024)
+        response = MagicMock()
+        response.status = 200
+        response.read.side_effect = lambda maximum: body[:maximum]
+        with patch.object(delivery, 'urlopen') as opened:
+            opened.return_value.__enter__.return_value = response
+            self.assertEqual(body, delivery.public_artifact('https://cyberpanel.net/native-artifact'))
+            with self.assertRaisesRegex(IncompleteRelease, 'exceeded expected size'):
+                delivery.public_file('stable', 'plogical/upgrade.py')
 
     def test_both_required_os_receipts_are_required(self):
         self.receipts.pop()

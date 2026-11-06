@@ -48,14 +48,14 @@ def public_head(ref):
 
 
 def public_file(ref, path):
-    return public_artifact('%s/%s/%s' % (RAW, ref, path))
+    return public_artifact('%s/%s/%s' % (RAW, ref, path), maximum=4 * 1024 * 1024)
 
 
-def public_artifact(url):
+def public_artifact(url, maximum=128 * 1024 * 1024):
     with urlopen(url, timeout=45) as response:
         require(response.status == 200, 'Public source download was not HTTP 200')
-        data = response.read(4 * 1024 * 1024 + 1)
-    require(len(data) <= 4 * 1024 * 1024, 'Public source exceeded expected size')
+        data = response.read(maximum + 1)
+    require(len(data) <= maximum, 'Public download exceeded expected size')
     return data
 
 
