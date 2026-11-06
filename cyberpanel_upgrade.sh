@@ -248,8 +248,8 @@ OLS_Custom_Config_Test() (
 
 OLS_Recovery_Hint() (
   local core="$1" status="$2" output="$3" work method file mode
-  local wrapper=install-module-2.5.7-r8.sh
-  local checksum=aca525fdf433c1f07a5be80aa81dbde04a7065b0e995b7151262f5322095e45c
+  local wrapper=install-module-2.5.7-r9.sh
+  local checksum=45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9
   if [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
     method=recovery_hint
     file=olsParserRecovery.py

@@ -20,6 +20,7 @@ class DeliveryGateTests(unittest.TestCase):
         self.plan = {'schema': 1, 'tree': 'a' * 40,
                      'refs': {'stable': 'b' * 40, 'v3.0.8': 'c' * 40},
                      'files': {'plogical/upgrade.py': hashlib.sha256(b'fixed').hexdigest()},
+                     'artifacts': {'https://cyberpanel.net/test-release.sh': hashlib.sha256(b'wrapper').hexdigest()},
                      'environments': ['ubuntu22', 'alma9']}
         self.receipts = []
         for environment in self.plan['environments']:
@@ -39,7 +40,8 @@ class DeliveryGateTests(unittest.TestCase):
     def check(self, **kwargs):
         return verify(self.plan, self.receipts,
                       head=kwargs.get('head', lambda ref: self.plan['refs'][ref]),
-                      fetch=kwargs.get('fetch', lambda ref, path: b'fixed'))
+                      fetch=kwargs.get('fetch', lambda ref, path: b'fixed'),
+                      artifact_fetch=kwargs.get('artifact_fetch', lambda url: b'wrapper'))
 
     def test_candidate_passes_cannot_hide_old_public_heads(self):
         with self.assertRaisesRegex(IncompleteRelease, 'Public ref still differs'):
@@ -48,6 +50,22 @@ class DeliveryGateTests(unittest.TestCase):
     def test_raw_public_files_must_match_even_when_refs_match(self):
         with self.assertRaisesRegex(IncompleteRelease, 'Official public source differs'):
             self.check(fetch=lambda ref, path: b'old source')
+
+    def test_recovery_artifact_must_be_delivered_as_well_as_source(self):
+        with self.assertRaisesRegex(IncompleteRelease, 'release artifact differs'):
+            self.check(artifact_fetch=lambda url: b'old wrapper')
+
+    def test_artifact_dependencies_cannot_be_silently_omitted(self):
+        del self.plan['artifacts']
+        with self.assertRaisesRegex(IncompleteRelease, 'Declare external release artifacts'):
+            self.check()
+
+    def test_artifact_urls_require_the_official_tls_origin(self):
+        for url in ('http://cyberpanel.net/test-release.sh', 'https://private.example/test-release.sh'):
+            with self.subTest(url=url):
+                self.plan['artifacts'] = {url: hashlib.sha256(b'wrapper').hexdigest()}
+                with self.assertRaisesRegex(IncompleteRelease, 'Invalid public artifact URL'):
+                    self.check()
 
     def test_both_required_os_receipts_are_required(self):
         self.receipts.pop()

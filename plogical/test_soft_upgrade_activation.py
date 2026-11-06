@@ -150,6 +150,52 @@ class ActivationTests(unittest.TestCase):
                     with self.assertRaises(RuntimeError):
                         app.require_job_scope(self.job)
 
+    def native_fixture(self):
+        proc = self.root / 'proc'
+        directory = proc / '42'
+        directory.mkdir(parents=True)
+        binary = self.root / 'lscpd'
+        binary.write_bytes(b'verified native executable')
+        (directory / 'exe').symlink_to(binary)
+        fields = ['0'] * 20
+        fields[0], fields[1], fields[19] = 'S', '1', '1234'
+        (directory / 'stat').write_text('42 (lscpd) ' + ' '.join(fields))
+        (directory / 'cgroup').write_text('0::/system.slice/lscpd.service\n')
+        pid = self.root / 'lscpd.pid'
+        pid.write_text('42\n')
+        return proc, binary, pid
+
+    def test_native_master_works_when_vendor_unit_has_no_tracked_mainpid(self):
+        proc, binary, pid = self.native_fixture()
+        self.assertEqual(app.native_panel_master(0, '/system.slice/lscpd.service', pid, binary, proc),
+                         {'pid': 42, 'start_ticks': '1234'})
+        self.assertEqual(app.native_panel_master(42, '/system.slice/lscpd.service', pid, binary, proc),
+                         {'pid': 42, 'start_ticks': '1234'})
+
+    def test_nonzero_manager_disagreement_and_wrong_native_identity_are_refused(self):
+        proc, binary, pid = self.native_fixture()
+        with self.assertRaisesRegex(RuntimeError, 'manager disagrees'):
+            app.native_panel_master(43, '/system.slice/lscpd.service', pid, binary, proc)
+        with self.assertRaisesRegex(RuntimeError, 'different control group'):
+            app.native_panel_master(0, '/other.service', pid, binary, proc)
+        other = self.root / 'different-binary'
+        other.write_bytes(b'different inode')
+        with self.assertRaisesRegex(RuntimeError, 'installed executable'):
+            app.native_panel_master(0, '/system.slice/lscpd.service', pid, other, proc)
+
+    def test_untrusted_pid_file_and_stale_native_pid_cannot_prove_activation(self):
+        proc, binary, pid = self.native_fixture()
+        pid.chmod(0o666)
+        with self.assertRaisesRegex(RuntimeError, 'PID file'):
+            app.native_panel_master(0, '/system.slice/lscpd.service', pid, binary, proc)
+        pid.chmod(0o600)
+        pid.write_text('999\n')
+        self.assertIsNone(app.native_panel_master(0, '/system.slice/lscpd.service', pid, binary, proc))
+        pid.unlink()
+        pid.symlink_to(proc / '42' / 'stat')
+        with self.assertRaisesRegex(RuntimeError, 'PID file'):
+            app.native_panel_master(0, '/system.slice/lscpd.service', pid, binary, proc)
+
     def test_worker_stdout_stderr_and_stdin_are_independent_of_parent_pipes(self):
         script = ('import sys\nfrom pathlib import Path\n'
                   'sys.path.insert(0, %r)\nfrom plogical import softUpgrade as app\n'

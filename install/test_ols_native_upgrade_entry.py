@@ -72,8 +72,8 @@ for matched in 1 0; do
         fi
         grep -Fq 'incompatible OpenLiteSpeed core ABI' /tmp/result
         if [[ "$matched" = 1 ]]; then
-            grep -Fq 'install-module-2.5.7-r8.sh --repair-stock-module' /tmp/result
-            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r8.sh and verify SHA256 aca525fdf433c1f07a5be80aa81dbde04a7065b0e995b7151262f5322095e45c' /tmp/result
+            grep -Fq 'install-module-2.5.7-r9.sh --repair-stock-module' /tmp/result
+            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r9.sh and verify SHA256 45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9' /tmp/result
         else
             if grep -Fq -- '--repair-stock-module' /tmp/result; then exit 1; fi
         fi
@@ -131,8 +131,8 @@ for branch in v3.0.8 SoftUpgrade,v3.0.8 prepackage; do
         test "$code" = 78
     fi
     grep -Fq '[PlainConf] [adminConfig:] Not support' /tmp/result
-    grep -Fq 'install-module-2.5.7-r8.sh --repair-webadmin-parser' /tmp/result
-    grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r8.sh and verify SHA256 aca525fdf433c1f07a5be80aa81dbde04a7065b0e995b7151262f5322095e45c' /tmp/result
+    grep -Fq 'install-module-2.5.7-r9.sh --repair-webadmin-parser' /tmp/result
+    grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r9.sh and verify SHA256 45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9' /tmp/result
     test ! -e /tmp/lshttpd
     sha256sum -c /tmp/prior
 done
@@ -224,7 +224,7 @@ package_work() {
 }
 code=0; package_work >/tmp/refusal 2>&1 || code=$?
 test "$code" = 1 && test ! -e /tmp/package-work-started
-grep -Fq 'install-module-2.5.7-r8.sh --repair-webadmin-parser' /tmp/refusal
+grep -Fq 'install-module-2.5.7-r9.sh --repair-webadmin-parser' /tmp/refusal
 cp /stage/openlitespeed /usr/local/lsws/bin/new-core
 mv /usr/local/lsws/bin/new-core /usr/local/lsws/bin/openlitespeed
 sha256sum /usr/local/lsws/{bin/openlitespeed,modules/cyberpanel_ols.so,modules/mod_security.so,conf/httpd_config.conf} >/tmp/prior

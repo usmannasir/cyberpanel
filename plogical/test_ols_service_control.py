@@ -8,6 +8,108 @@ from unittest.mock import Mock, patch
 from plogical import olsServiceControl as control
 
 
+class NativeDrainingStateTests(unittest.TestCase):
+    """Exercise the actual /proc classifier when the stopped master exits first."""
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.binary = self.root / 'bin/openlitespeed'
+        self.binary.parent.mkdir()
+        self.binary.write_bytes(b'installed core fixture')
+        self.proc = self.root / 'proc'
+        self.proc.mkdir()
+        self.worker(124, '22')
+        self.service = control.OLSService(self.root, self.proc)
+        self.service.draining = (123, '11', 'lshttpd.service')
+        self.service._draining_processes = {123: '11', 124: '22'}
+        for target, value in [('controller', None), ('verify_unit_claims', None), ('systemd', None)]:
+            patcher = patch.object(self.service, target, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = patch.object(control, 'run', return_value=SimpleNamespace(stdout='OLS is running with PID 123.'))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def worker(self, pid, ticks, state='S', executable=None, group='lshttpd.service'):
+        entry = self.proc / str(pid)
+        entry.mkdir()
+        (entry / 'comm').write_text('openlitespeed\n')
+        (entry / 'exe').symlink_to(executable or self.binary)
+        fields = [state, '1'] + ['0'] * 17 + [ticks]
+        (entry / 'stat').write_text('%s (openlitespeed) %s\n' % (pid, ' '.join(fields)))
+        (entry / 'cgroup').write_text('0::/system.slice/' + group + '\n')
+        return entry
+
+    def test_verified_stop_waits_when_master_disappears_before_known_worker(self):
+        with self.assertRaises(control.OLSWorkersRemain):
+            self.service._native_state()
+        self.service.systemd.assert_not_called()
+
+    def test_actual_stop_records_workers_and_waits_for_an_empty_proc_snapshot(self):
+        self.worker(123, '11')
+        worker_stat = self.proc / '124/stat'
+        worker_stat.write_text(worker_stat.read_text().replace(') S 1 ', ') S 123 '))
+        self.service.draining = None
+        self.service._draining_processes = {}
+        original = self.service._native_state()
+        self.assertEqual(self.service._observed_processes, {123: '11', 124: '22'})
+
+        def remove(pid):
+            for path in (self.proc / str(pid)).iterdir(): path.unlink()
+            (self.proc / str(pid)).rmdir()
+
+        def stop(command, **kwargs):
+            self.assertEqual(command, ['systemctl', 'stop', 'lshttpd.service'])
+            remove(123)
+            worker_stat.write_text(worker_stat.read_text().replace(') S 123 ', ') S 1 '))
+            return SimpleNamespace(returncode=0)
+
+        def finish_drain(delay):
+            self.assertEqual(delay, .25)
+            self.assertEqual(self.service._draining_processes, {123: '11', 124: '22'})
+            remove(124)
+
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=stop), \
+                patch.object(control.time, 'sleep', side_effect=finish_drain) as sleep:
+            self.assertIsNone(self.service.change('stop', original))
+        sleep.assert_called_once()
+        self.assertEqual(self.service._draining_processes, {})
+
+    def test_master_first_exit_is_not_treated_as_success_with_live_workers(self):
+        with self.assertRaises(control.OLSWorkersRemain):
+            self.service._native_state()
+        for path in (self.proc / '124').iterdir():
+            path.unlink()
+        (self.proc / '124').rmdir()
+        self.assertIsNone(self.service._native_state())
+        self.service.systemd.assert_called_once_with(None)
+
+    def test_unrelated_or_reused_pid_and_changed_cgroup_still_refuse(self):
+        for mutation in ('not-stopping', 'other-master', 'unknown-worker', 'reused-worker', 'other-cgroup'):
+            with self.subTest(mutation=mutation):
+                self.service.draining = (123, '11', 'lshttpd.service')
+                self.service._draining_processes = {123: '11', 124: '22'}
+                if mutation == 'not-stopping': self.service.draining = None
+                if mutation == 'other-master': self.service.draining = (999, '11', 'lshttpd.service')
+                if mutation == 'unknown-worker': self.service._draining_processes = {123: '11'}
+                if mutation == 'reused-worker': self.service._draining_processes[124] = 'different-start'
+                group = 'other.service' if mutation == 'other-cgroup' else 'lshttpd.service'
+                (self.proc / '124/cgroup').write_text('0::/system.slice/' + group + '\n')
+                with self.assertRaises(RuntimeError) as error:
+                    self.service._native_state()
+                self.assertNotIsInstance(error.exception, control.OLSWorkersRemain)
+
+    def test_foreign_litespeed_binary_still_refuses_during_known_stop(self):
+        foreign = self.root / 'foreign'
+        foreign.write_bytes(b'unrelated binary')
+        self.worker(125, '33', executable=foreign)
+        with self.assertRaisesRegex(RuntimeError, 'different or deleted'):
+            self.service._native_state()
+
+
 class ServiceControlTests(unittest.TestCase):
     def test_rejects_unknown_owners_and_unproven_cgroups(self):
         for cgroup in ('', '3:cpu:/foo', '0::/system.slice/other.service',

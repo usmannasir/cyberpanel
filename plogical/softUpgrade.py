@@ -146,6 +146,8 @@ def run(branch, lock_fd=None):
 SYSTEMCTL = '/usr/bin/systemctl'
 SYSTEMD_RUN = '/usr/bin/systemd-run'
 PANEL_CONF = Path('/usr/local/lscp/conf')
+PANEL_PID = Path('/tmp/lscpd/lscpd.pid')
+PANEL_BINARY = Path('/usr/local/lscp/bin/lscpd')
 
 
 def process_identity(pid, proc=Path('/proc')):
@@ -159,6 +161,33 @@ def process_identity(pid, proc=Path('/proc')):
         return None
 
 
+def native_panel_master(manager_pid, group, pid_path=PANEL_PID, binary=PANEL_BINARY, proc=Path('/proc')):
+    # Older vendor units omit PIDFile, and systemd cannot always guess a main
+    # process after restart. Verify the controller's native PID rather than
+    # treating a healthy but untracked daemon as activated without identity.
+    try:
+        info = pid_path.lstat()
+    except FileNotFoundError:
+        return None
+    if not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o022:
+        raise RuntimeError('Cannot verify the native panel PID file.')
+    text = pid_path.read_text().strip()
+    if not re.fullmatch(r'[1-9][0-9]{0,9}', text):
+        raise RuntimeError('The native panel PID file is invalid.')
+    pid = int(text)
+    if manager_pid and manager_pid != pid:
+        raise RuntimeError('The panel service manager disagrees with the native controller PID.')
+    identity = process_identity(pid, proc)
+    if identity is None:
+        return None
+    directory = proc / text
+    if not os.path.samefile(str(directory / 'exe'), str(binary)):
+        raise RuntimeError('The native panel PID does not identify the installed executable.')
+    if not any(line.rsplit(':', 1)[-1] == group for line in (directory / 'cgroup').read_text().splitlines()):
+        raise RuntimeError('The native panel PID belongs to a different control group.')
+    return identity
+
+
 def panel_state():
     result = subprocess.run([SYSTEMCTL, 'show', 'lscpd', '--property=MainPID,ActiveState,ControlGroup'],
                             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -167,11 +196,14 @@ def panel_state():
     group = values.get('ControlGroup', '')
     if not group or not group.startswith('/') or not group.endswith('/lscpd.service'):
         raise RuntimeError('Cannot verify the panel service control group.')
-    master = process_identity(values.get('MainPID', '0'))
+    manager_pid = int(values.get('MainPID', '0'))
+    master = native_panel_master(manager_pid, group)
     workers = []
+    native = []
     for path in Path('/proc').glob('[0-9]*'):
         try:
-            if (path / 'comm').read_text().strip() != 'lswsgi':
+            name = (path / 'comm').read_text().strip()
+            if name not in ('lswsgi', 'lscpd'):
                 continue
             if not any(line.rsplit(':', 1)[-1] == group for line in (path / 'cgroup').read_text().splitlines()):
                 continue
@@ -179,10 +211,19 @@ def panel_state():
             if identity:
                 fields = (path / 'stat').read_text().rsplit(')', 1)[-1].split()
                 identity['ppid'] = int(fields[1])
-                workers.append(identity)
+                if name == 'lswsgi':
+                    workers.append(identity)
+                else:
+                    if not os.path.samefile(str(path / 'exe'), str(PANEL_BINARY)):
+                        raise RuntimeError('A different panel executable is active.')
+                    native.append(identity)
         except (OSError, ValueError):
             continue
-    return {'master': master, 'workers': workers, 'active': values.get('ActiveState') == 'active'}
+    if master and (not any(p['pid'] == master['pid'] for p in native) or not all(
+            worker_belongs_to_master(p, master) for p in native)):
+        raise RuntimeError('The panel native processes do not share the verified master.')
+    return {'master': master, 'workers': workers, 'active': values.get('ActiveState') == 'active',
+            'manager_pid': manager_pid}
 
 
 def panel_endpoint(conf=PANEL_CONF):

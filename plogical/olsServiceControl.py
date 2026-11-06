@@ -129,6 +129,8 @@ class OLSService:
         self.unit = unit
         self.manager_identified = unit is not None
         self.draining = None
+        self._observed_processes = {}
+        self._draining_processes = {}
         self.watch_lock = None
 
     def controller(self):
@@ -211,6 +213,21 @@ class OLSService:
     def state(self):
         return self.inspect_state(allow_legacy=False)
 
+    def verified_draining_workers(self, processes):
+        """Only wait for identities observed before our verified stop action."""
+        if not self.draining or not self._draining_processes:
+            return False
+        for pid, (_, ticks) in processes.items():
+            if self._draining_processes.get(pid) != ticks:
+                return False
+            try:
+                owner = process_owner((self.proc / str(pid) / 'cgroup').read_text())
+            except (FileNotFoundError, ProcessLookupError):
+                continue  # Disappearance still requires a fresh empty snapshot.
+            if owner != self.draining[2]:
+                return False
+        return True
+
     def _native_state(self):
         self.controller()
         result = run([str(self.control), 'status'])
@@ -239,21 +256,35 @@ class OLSService:
                 continue
         if not master:
             if processes:
+                if self.draining and not self.verified_draining_workers(processes):
+                    raise RuntimeError('An unverified OLS process appeared during shutdown')
                 raise OLSWorkersRemain('OLS status missed a running process')
             self.verify_unit_claims(None, None)
             self.systemd(None)
+            self._observed_processes = {}
             return None
         if master not in processes:
             # kill -0 in the vendor script can still see a dead/zombie PID.
             try:
-                dead = (self.proc / str(master) / 'stat').read_text().rsplit(')', 1)[1].split()[0] in ('Z', 'X', 'x')
+                master_fields = (self.proc / str(master) / 'stat').read_text().rsplit(')', 1)[1].split()
+                dead = master_fields[0] in ('Z', 'X', 'x')
             except (FileNotFoundError, ProcessLookupError):
+                master_fields = None
                 dead = True
             if dead and not processes:
                 self.verify_unit_claims(None, None)
                 self.systemd(None)
+                self._observed_processes = {}
                 return None
-            raise RuntimeError('OLS status PID does not identify the installed master')
+            if (dead and self.draining and master == self.draining[0] and
+                    (master_fields is None or master_fields[19] == self.draining[1]) and
+                    self.verified_draining_workers(processes)):
+                # The PID file may outlive the master while its known workers
+                # finish exiting. This is a pending stop, never a stopped state.
+                raise OLSWorkersRemain('Original OLS master exited while its verified workers drain')
+            raise RuntimeError('OLS status PID does not identify the installed master '
+                               '(reported=%s, live=%s, stopping=%s)' %
+                               (master, sorted(processes), self.draining is not None))
         for pid in processes:
             seen = set()
             while pid != master:
@@ -270,6 +301,7 @@ class OLSService:
         self.unit = owner
         self.manager_identified = True
         self.systemd(master)
+        self._observed_processes = {pid: entry[1] for pid, entry in processes.items()}
         return master, processes[master][1], owner
 
     def settled_state(self):
@@ -308,11 +340,13 @@ class OLSService:
         if bool(expected) == wanted_running:
             return expected
         self.verify_mapped_bundle(expected)
+        observed = dict(self._observed_processes)
         command = ['systemctl', action, self.unit] if self.unit else [str(self.control), action]
         result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         if result.returncode:
             raise RuntimeError('OpenLiteSpeed service %s failed' % action)
         self.draining = expected if action == 'stop' else None
+        self._draining_processes = observed if action == 'stop' else {}
         try:
             deadline = time.monotonic() + 25
             while time.monotonic() < deadline:
@@ -334,6 +368,7 @@ class OLSService:
             raise RuntimeError('OpenLiteSpeed did not ' + action)
         finally:
             self.draining = None
+            self._draining_processes = {}
 
     def reload(self, expected):
         if expected is None or self.state() != expected:

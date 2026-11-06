@@ -11,6 +11,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from urllib.request import urlopen
+from urllib.parse import urlsplit
 
 REPOSITORY = 'https://github.com/usmannasir/cyberpanel.git'
 RAW = 'https://raw.githubusercontent.com/usmannasir/cyberpanel'
@@ -47,7 +48,11 @@ def public_head(ref):
 
 
 def public_file(ref, path):
-    with urlopen('%s/%s/%s' % (RAW, ref, path), timeout=45) as response:
+    return public_artifact('%s/%s/%s' % (RAW, ref, path))
+
+
+def public_artifact(url):
+    with urlopen(url, timeout=45) as response:
         require(response.status == 200, 'Public source download was not HTTP 200')
         data = response.read(4 * 1024 * 1024 + 1)
     require(len(data) <= 4 * 1024 * 1024, 'Public source exceeded expected size')
@@ -84,10 +89,12 @@ def validate_acceptance(plan, receipt):
     verify_artifact(gui['screenshot_file'], gui['screenshot_sha256'], 'browser screenshot')
 
 
-def verify(plan, receipts, head=public_head, fetch=public_file):
+def verify(plan, receipts, head=public_head, fetch=public_file, artifact_fetch=public_artifact):
     require(plan['schema'] == 1, 'Unsupported release plan schema')
     require(re.fullmatch(r'[0-9a-f]{40}', plan['tree']) is not None, 'Invalid sealed tree')
     require(plan['refs'] and plan['files'] and plan['environments'], 'Incomplete release plan')
+    require('artifacts' in plan and isinstance(plan['artifacts'], dict),
+            'Declare external release artifacts explicitly, including an empty mapping if none')
     require(len(set(plan['environments'])) == len(plan['environments']), 'Duplicate environments')
     for ref, revision in plan['refs'].items():
         require(re.fullmatch(r'stable|v[0-9]+(?:\.[0-9]+)+', ref) is not None, 'Invalid release ref')
@@ -103,6 +110,15 @@ def verify(plan, receipts, head=public_head, fetch=public_file):
             actual = digest(fetch(ref, path))
             require(actual == expected, 'Official public source differs: %s/%s' % (ref, path))
             results[ref + '/' + path] = actual
+    artifacts = {}
+    for url, expected in sorted(plan['artifacts'].items()):
+        parts = urlsplit(url)
+        require(parts.scheme == 'https' and parts.netloc == 'cyberpanel.net' and
+                not parts.query and not parts.fragment, 'Invalid public artifact URL')
+        require(re.fullmatch(r'[0-9a-f]{64}', expected) is not None, 'Invalid public artifact digest')
+        actual = digest(artifact_fetch(url))
+        require(actual == expected, 'Official release artifact differs: ' + url)
+        artifacts[url] = actual
     observed = []
     for receipt in receipts:
         validate_acceptance(plan, receipt)
@@ -114,6 +130,7 @@ def verify(plan, receipts, head=public_head, fetch=public_file):
         require(head(ref) == revision, 'Public ref moved during verification: ' + ref)
     return {'state': 'public_delivery_verified', 'verified_utc': datetime.now(timezone.utc).isoformat(),
             'tree': plan['tree'], 'refs': plan['refs'], 'public_file_hashes': results,
+            'public_artifact_hashes': artifacts,
             'environments': observed, 'customer_confirmation': 'not established by this gate'}
 
 
