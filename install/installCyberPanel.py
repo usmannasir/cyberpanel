@@ -384,7 +384,7 @@ class InstallCyberPanel:
             BINARY_CONFIGS = {'ubuntu20': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-ubuntu20',
                           'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu20.so',
                           'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu20.so',
-                          'sha256': {'binary': 'faead59c15e2ff5d24ec03ad6920af4736c655ecd582a98e367c7fcdb75e807e',
+                          'sha256': {'binary': 'bfaae89a804d1293e70eccc34e748bd28d8d01ab87acd037975a1da32b047d17',
                                      'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
                                      'modsec': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708'}},
              'rhel8': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel8',
