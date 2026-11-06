@@ -29,7 +29,9 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.release = self.root / 'http/v3.0.8'
         for name in ('plogical/upgrade.py', 'cyberpanel_version.py',
                      'cyberpanel_firewall_migration.py', 'lscpd_binary.py',
-                     'plogical/olsSecurityAssets.py', 'plogical/olsParserRecovery.py'):
+                     'plogical/olsSecurityAssets.py', 'plogical/olsParserRecovery.py',
+                     'plogical/olsStockClassifier.py', 'plogical/olsNativeValidation.py',
+                     'plogical/olsServiceControl.py', 'plogical/olsWatchdog.py', 'CPScripts/watchdog.sh'):
             target = self.release / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, target)
@@ -93,6 +95,59 @@ class StagedUpgradeHelperTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual((self.stage / 'olsParserRecovery.py').read_bytes(),
                          (self.release / 'plogical/olsParserRecovery.py').read_bytes())
+
+    def test_service_controller_is_staged_and_required(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual((self.stage / 'olsServiceControl.py').read_bytes(),
+                         (self.release / 'plogical/olsServiceControl.py').read_bytes())
+        (self.release / 'plogical/olsServiceControl.py').unlink()
+        self.assertNotEqual(0, self.stage_sources().returncode)
+
+    def test_missing_required_native_validation_helper_stops_before_upgrade(self):
+        (self.release / 'plogical/olsNativeValidation.py').unlink()
+        result = self.stage_sources()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('Failed to download olsNativeValidation.py', result.stdout)
+
+    def test_controller_includes_verified_watchdog_migration_sources(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        for name in ('plogical/olsWatchdog.py', 'CPScripts/watchdog.sh'):
+            self.assertEqual((self.stage / Path(name).name).read_bytes(), (self.release / name).read_bytes())
+        program = """import hashlib, importlib.util, sys
+from pathlib import Path
+stage = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location('isolated_service', str(stage / 'olsServiceControl.py'))
+service = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(service)
+assert Path(service.watchdog.__file__).parent == stage
+assert hashlib.sha256((stage / 'watchdog.sh').read_bytes()).hexdigest() == service.watchdog.COOPERATIVE
+"""
+        imported = subprocess.run([sys.executable, '-I', '-B', '-c', program, str(self.stage)],
+                                  cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertEqual(0, imported.returncode, imported.stderr.decode())
+        (self.stage / 'olsWatchdog.py').unlink()
+        missing = subprocess.run([sys.executable, '-I', '-B', '-c', program, str(self.stage)],
+                                 cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertNotEqual(0, missing.returncode)
+        self.assertIn(b'olsWatchdog.py', missing.stderr)
+        (self.release / 'plogical/olsWatchdog.py').unlink()
+        refused = self.stage_sources()
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn('Failed to download olsWatchdog.py', refused.stdout)
+
+    def test_stock_diagnostic_helper_is_from_selected_release(self):
+        result = self.stage_sources()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual((self.stage / 'olsStockClassifier.py').read_bytes(),
+                         (self.release / 'plogical/olsStockClassifier.py').read_bytes())
+
+    def test_missing_stock_classifier_stops_before_upgrade(self):
+        (self.release / 'plogical/olsStockClassifier.py').unlink()
+        result = self.stage_sources()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('Failed to download olsStockClassifier.py', result.stdout)
 
     def test_missing_parser_diagnostic_helper_stops_staging(self):
         (self.release / 'plogical/olsParserRecovery.py').unlink()

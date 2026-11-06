@@ -193,7 +193,7 @@ test('existing single dashboard script has a cache suffix for this change', () =
     const text = fs.readFileSync(path.join(root, 'baseTemplate/templates/baseTemplate/index.html'), 'utf8');
     const scripts = text.match(/<script[^>]+baseTemplate\/custom-js\/system-status\.js[^>]*>/g);
     assert.equal(scripts.length, 1);
-    assert.ok(scripts[0].includes('?v={{ CP_VERSION }}-dashboard-acl-2'));
+    assert.ok(scripts[0].includes('?v={{ CP_VERSION }}-dashboard-acl-3'));
 });
 
 
@@ -254,4 +254,82 @@ test('local v4 asset is loaded once, before dashboard bootstrap, with visible er
     assert.match(html, /ng-show="adminWidgetsError"[^>]*role="alert"/);
     assert.match(html, /ng-show="systemChartsError"[^>]*role="alert"/);
     assert.equal((html.match(/class="chart-container" ng-hide="systemChartsError"/g) || []).length, 3);
+});
+
+function upgradeScreen(resume) {
+    const start = source.indexOf("app.controller('versionManagment'");
+    const end = source.indexOf("app.controller('designtheme'", start);
+    let controller;
+    let destroy;
+    const requests = [];
+    const timers = [];
+    const scope = {$on(event, listener) { if (event === '$destroy') destroy = listener; }};
+    const schedule = (handler, delay) => {
+        const timer = {handler, delay, canceled: false};
+        timers.push(timer);
+        return timer;
+    };
+    schedule.cancel = timer => { timer.canceled = true; };
+    const context = {
+        app: {controller(name, fn) { assert.equal(name, 'versionManagment'); controller = fn; }},
+        document: {
+            getElementById: () => ({value: 'v3.0.8'}),
+            querySelector: () => ({getAttribute: () => resume ? '1' : '0'})
+        },
+        getCookie: () => null
+    };
+    vm.runInNewContext(source.slice(start, end), context, {filename: 'system-status.js'});
+    const http = {
+        post(url) {
+            return {then(success, failure) { requests.push({url, success, failure}); }};
+        }
+    };
+    controller(scope, http, schedule);
+    return {scope, requests, timers, destroy: () => destroy()};
+}
+
+test('upgrade screen polls a running job and displays the worker failure', () => {
+    const ui = upgradeScreen(false);
+    ui.scope.upgrade();
+    assert.equal(ui.requests[0].url, '/base/upgrade');
+    ui.requests[0].success({data: {upgrade: 1}});
+    assert.equal(ui.requests[1].url, '/base/UpgradeStatus');
+    ui.requests[1].success({data: {finished: 0, upgradeStatus: 1, upgradeLog: 'checking'}});
+    assert.equal(ui.timers[0].delay, 2000);
+    ui.timers[0].handler();
+    ui.requests[2].success({data: {finished: 1, upgradeStatus: 0, error_message: 'Native preflight failed'}});
+    assert.equal(ui.scope.updateError, false);
+    assert.equal(ui.scope.errorMessage, 'Native preflight failed');
+    assert.equal(ui.scope.updateStarted, true);
+    assert.equal(ui.timers.length, 1);
+    const template = fs.readFileSync(path.join(root, 'baseTemplate/templates/baseTemplate/versionManagment.html'), 'utf8');
+    assert.match(template, /role="alert" ng-hide="updateError"[^>]*>\s*<span ng-bind="errorMessage"/);
+});
+
+test('upgrade screen can resume after refresh and a temporary loss of the panel', () => {
+    const ui = upgradeScreen(true);
+    assert.equal(ui.requests[0].url, '/base/UpgradeStatus');
+    ui.requests[0].failure({status: 502});
+    assert.equal(ui.scope.couldNotConnect, false);
+    assert.equal(ui.timers[0].delay, 3000);
+    ui.timers[0].handler();
+    ui.requests[1].success({data: {finished: 1, upgradeStatus: 1, upgradeLog: 'complete'}});
+    assert.equal(ui.scope.updateFinish, false);
+    assert.equal(ui.scope.updateError, true);
+    assert.equal(ui.scope.couldNotConnect, true);
+    assert.equal(ui.scope.upgradeLog, 'complete');
+});
+
+test('destroying an active upgrade page cancels its own pending poll', () => {
+    const ui = upgradeScreen(true);
+    ui.requests[0].success({data: {finished: 0, upgradeStatus: 1, upgradeLog: 'running'}});
+    ui.destroy();
+    assert.equal(ui.timers[0].canceled, true);
+});
+
+test('an outstanding upgrade response cannot reschedule a destroyed page', () => {
+    const ui = upgradeScreen(true);
+    ui.destroy();
+    ui.requests[0].success({data: {finished: 0, upgradeStatus: 1, upgradeLog: 'running'}});
+    assert.equal(ui.timers.length, 0);
 });

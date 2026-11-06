@@ -22,6 +22,7 @@ class UpgradeLiveOutputTests(unittest.TestCase):
         start = SOURCE.index('Main_Upgrade() {')
         end = SOURCE.index('# Check if the command was successful', start)
         self.code = SOURCE[start:end] + '\nreturn "$RETURN_CODE"\n}\nMain_Upgrade\n'
+        self.code = self.code.replace("'import django, MySQLdb'", "'import os, sys'")
         self.code = self.code.replace('/usr/local/CyberPanel/bin/python', shlex.quote(sys.executable))
         self.code = self.code.replace('/var/log/cyberpanel_upgrade_debug.log', shlex.quote(str(self.log)))
         self.code = self.code.replace('/tmp/cyberpanel-upgrade-output.XXXXXX', shlex.quote(str(self.root / 'output.XXXXXX')))
@@ -32,6 +33,12 @@ class UpgradeLiveOutputTests(unittest.TestCase):
         return subprocess.run(['/bin/bash', '-c', self.code], cwd=self.root,
                               env=dict(self.env, **environment), capture_output=True,
                               text=True, timeout=10)
+
+    def test_ols_refusal_stops_without_retry_or_post_upgrade(self):
+        result = self.run_upgrade("import sys; print('OLS reason', file=sys.stderr); sys.exit(78)")
+        self.assertEqual(result.returncode, 78)
+        self.assertIn('OLS reason', self.log.read_text())
+        self.assertIn('stopped at the OpenLiteSpeed check', result.stderr)
 
     def test_progress_reaches_console_and_log_while_upgrade_is_running(self):
         # No flush=True: the production invocation must disable Python buffering.

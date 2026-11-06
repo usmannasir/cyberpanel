@@ -148,6 +148,42 @@ fi
 
 
 
+# An OLS upgrade and the OLS watchdog must never control the service together.
+# Re-exec makes the protocol distinguishable from an old Bash loop whose
+# script pathname has already been updated on disk.
+if [[ $NAME == lsws ]]; then
+    if [[ ${2:-} != --ols-lock-v1 ]]; then
+        exec /bin/bash "$(readlink -f -- "$0")" "$1" --ols-lock-v1
+    fi
+    if [[ $# == 5 ]]; then
+        prior_pid=$3
+        prior_ticks=$4
+        ready_fd=$5
+        [[ $prior_pid =~ ^[1-9][0-9]*$ && $prior_ticks =~ ^[1-9][0-9]*$ && $ready_fd =~ ^[0-9]+$ ]] || exit 1
+        printf 'ready\n' >&"$ready_fd" || exit 1
+        exec {ready_fd}>&-
+        while IFS= read -r prior_stat < "/proc/$prior_pid/stat" 2>/dev/null; do
+            prior_stat=${prior_stat##*) }
+            read -ra fields <<< "$prior_stat"
+            [[ ${fields[19]} == "$prior_ticks" && ${fields[0]} != Z ]] || break
+            sleep 1
+        done
+    elif [[ $# != 2 ]]; then
+        exit 1
+    fi
+    while :; do
+        (
+            umask 077
+            lock=/usr/local/lsws/.ols-bundle-install.lock
+            [[ ! -L "$lock" && ( ! -e "$lock" || -f "$lock" ) ]] || exit 1
+            exec 9>>"$lock" || exit 1
+            flock -sn 9 || exit 0
+            ( exec 9>&-; check_service )
+        )
+        sleep 60
+    done
+fi
+
 while [ true = true ]
 	do
 		if [[ $NAME == "pdns" ]] ; then

@@ -258,40 +258,57 @@ def getLoadAverage(request):
         return HttpResponse("Not allowed.")
 
 
+def _latest_release_metadata():
+    """Optional remote display data must not prevent upgrade status resumption."""
+    import re
+    result = {'latestVersion': None, 'latestBuild': None, 'latestcomit': None,
+              'releaseMetadataUnavailable': False}
+    try:
+        response = requests.get('https://cyberpanel.net/version.txt', timeout=(3, 5))
+        response.raise_for_status()
+        latest = response.json()
+        if not isinstance(latest, dict):
+            raise ValueError('Invalid release metadata')
+        number, build = latest.get('version'), latest.get('build')
+        if (not isinstance(number, str) or
+                not re.fullmatch(r'[0-9]{1,4}(?:\.[0-9]{1,4}){1,3}', number) or
+                isinstance(build, bool) or not isinstance(build, (str, int)) or
+                not re.fullmatch(r'[0-9]{1,5}', str(build))):
+            raise ValueError('Invalid release version')
+        result.update(latestVersion=number, latestBuild=str(build))
+        url = ('https://api.github.com/repos/usmannasir/cyberpanel/commits'
+               '?sha=v%s.%s' % (number, build))
+        response = requests.get(url, timeout=(3, 5))
+        response.raise_for_status()
+        commits = response.json()
+        if not isinstance(commits, list) or not commits or not isinstance(commits[0], dict):
+            raise ValueError('Invalid commit metadata')
+        commit = commits[0].get('sha')
+        if not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}', commit):
+            raise ValueError('Invalid release commit')
+        result['latestcomit'] = commit
+    except (requests.RequestException, ValueError, TypeError):
+        result['releaseMetadataUnavailable'] = True
+    return result
+
+
 @ensure_csrf_cookie
 def versionManagment(request):
-    ## Get latest version
-
-    getVersion = requests.get('https://cyberpanel.net/version.txt')
-    latest = getVersion.json()
-    latestVersion = latest['version']
-    latestBuild = latest['build']
-
-    ## Get local version
-
-    currentVersion = VERSION
-    currentBuild = str(BUILD)
-
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.CyberCPLogFileWriter.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
-    notechk = True
-
-    if (Currentcomt == latestcomit):
-        notechk = False
-
-    template = 'baseTemplate/versionManagment.html'
-    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
-
-    proc = httpProc(request, template, finalData, 'versionManagement')
+    import re
+    latest = _latest_release_metadata()
+    currentRelease = 'v%s.%s' % (VERSION, BUILD)
+    if not re.fullmatch(r'v[0-9]{1,4}(?:\.[0-9]{1,4}){2,4}', currentRelease):
+        currentRelease = None
+    currentCommit = ProcessUtilities.outputExecutioner(
+        'git -C /usr/local/CyberCP/ rev-parse HEAD').rstrip("\n")
+    finalData = {'build': str(BUILD), 'currentVersion': VERSION,
+                 'Currentcomt': currentCommit, 'currentRelease': currentRelease,
+                 'Notecheck': bool(latest['latestcomit'] and
+                                   currentCommit != latest['latestcomit']),
+                 'resumeUpgrade': bool(request.session.get('softUpgradeRun'))}
+    finalData.update(latest)
+    proc = httpProc(request, 'baseTemplate/versionManagment.html',
+                    finalData, 'versionManagement')
     return proc.render()
 
 
@@ -315,8 +332,12 @@ def upgrade(request):
 
         from plogical.applicationInstaller import ApplicationInstaller
 
-        extraArgs = {}
-        extraArgs['branchSelect'] = data["branchSelect"]
+        import time
+        import uuid
+        job = uuid.uuid4().hex
+        request.session['softUpgradeRun'] = job
+        request.session['softUpgradeStarted'] = time.time()
+        extraArgs = {'branchSelect': data["branchSelect"], 'upgradeRun': job}
         background = ApplicationInstaller('UpgradeCP', extraArgs)
         background.start()
 
@@ -325,7 +346,7 @@ def upgrade(request):
         return HttpResponse(json_data)
 
     except KeyError:
-        adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
+        adminData = {"upgrade": 0, "error_message": "Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
 
@@ -341,9 +362,37 @@ def upgradeStatus(request):
 
         try:
             if request.method == 'POST':
-                from plogical.upgrade import Upgrade
-
-                path = Upgrade.LogPathNew
+                job = request.session.get('softUpgradeRun')
+                if job:
+                    import time
+                    from plogical.softUpgrade import status_path
+                    status_path(job)  # Validate the session-owned identifier before building the command.
+                    command = '/usr/local/CyberPanel/bin/python -I /usr/local/CyberCP/plogical/softUpgrade.py --status ' + job
+                    result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+                    if not result or not result[0]:
+                        return HttpResponse(json.dumps({'error_message': 'Current upgrade status is unavailable.'}), status=503)
+                    status = json.loads(result[1])
+                    if status['state'] == 'missing':
+                        if time.time() - request.session['softUpgradeStarted'] > 120:
+                            status = {'state': 'failed', 'message': 'The upgrade launcher has no status record. Check the panel service log before retrying.'}
+                        else:
+                            status = {'state': 'starting'}
+                    if status['state'] == 'failed':
+                        return HttpResponse(json.dumps({'finished': 1, 'upgradeStatus': 0,
+                                            'error_message': status['message']}))
+                    # Read the existing log directly; importing the upgrade program
+                    # in a polling request can invoke its settings recovery path.
+                    try:
+                        descriptor = os.open('/home/cyberpanel/upgrade_logs', os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                        with os.fdopen(descriptor, 'rb') as upgrade_log:
+                            size = os.fstat(descriptor).st_size
+                            upgrade_log.seek(max(0, size - 64 * 1024))
+                            log = upgrade_log.read(64 * 1024).decode('utf-8', errors='replace')
+                    except OSError:
+                        log = ''
+                    return HttpResponse(json.dumps({'finished': int(status['state'] == 'complete'),
+                                        'upgradeStatus': 1, 'upgradeLog': log, 'error_message': 'None'}))
+                path = '/home/cyberpanel/upgrade_logs'
 
                 try:
                     upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')

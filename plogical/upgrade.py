@@ -47,24 +47,73 @@ def load_ols_security_assets():
     return module
 
 
+class OLSUpgradeFailure(RuntimeError):
+    """The current OLS state or bundle failed validation or installation."""
+
+
+@contextmanager
+def ols_upgrade_lock(root='/usr/local/lsws'):
+    """Serialize preflight and replacement with the standalone bundle installer."""
+    import fcntl
+    descriptor = os.open(os.path.join(root, '.ols-bundle-install.lock'),
+                         os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise OLSUpgradeFailure('Another OpenLiteSpeed bundle transaction is in progress.') from error
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def load_ols_diagnostic_helper(filename):
+    import importlib.util
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    spec = importlib.util.spec_from_file_location('upgrade_' + filename[:-3], path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
-    result = subprocess.run([binary, '-t'], capture_output=True, text=True, timeout=30)
+    try:
+        validator = load_ols_diagnostic_helper('olsNativeValidation.py')
+        result = validator.validate(binary)
+    except Exception as error:
+        raise OLSUpgradeFailure('Cannot verify OpenLiteSpeed configuration: ' + str(error)) from error
     output = (result.stdout or '') + (result.stderr or '')
-    # OLS uses 0 for clean configurations, 1 for warnings, and 2 for errors.
-    if result.returncode not in (0, 1) or '[ERROR]' in output:
+    if result.returncode not in (0, 1) or any(level in output for level in ('[ERROR]', '[FATAL]', 'incompatible OpenLiteSpeed core ABI')):
         hint = ''
         try:
-            # The diagnostic helper must come from this checkout, not installed code.
-            import importlib.util
-            helper = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'olsParserRecovery.py')
-            spec = importlib.util.spec_from_file_location('upgrade_ols_parser_recovery', helper)
-            recovery = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(recovery)
-            hint = recovery.recovery_hint(binary, result.returncode, output)
+            parser = load_ols_diagnostic_helper('olsParserRecovery.py')
+            if 'incompatible OpenLiteSpeed core ABI' in output:
+                stock = load_ols_diagnostic_helper('olsStockClassifier.py')
+                known = stock.stock_recovery_hint(binary, result.returncode, output, parser)
+                mode = '--repair-stock-module'
+            else:
+                known = parser.recovery_hint(binary, result.returncode, output)
+                mode = '--repair-webadmin-parser'
+            if known:
+                wrapper = 'install-module-2.5.7-r9.sh'
+                checksum = '45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9'
+                hint = (' Download https://cyberpanel.net/%s and verify SHA256 %s. '
+                        'Then run bash %s %s and retry the upgrade.') % (wrapper, checksum, wrapper, mode)
         except Exception:
-            pass  # Optional diagnostics must never mask or waive the original failure.
-        raise RuntimeError('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
+            pass  # Diagnostic helpers must never waive the original failure.
+        raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
     return output
+
+
+def apply_ols_config_changes(changes):
+    if not changes:
+        return
+    try:
+        with ols_upgrade_lock():
+            helper = load_ols_diagnostic_helper('olsServiceControl.py')
+            helper.apply_config_changes(changes, validate_ols_configuration, helper.OLSService())
+    except Exception as error:
+        raise OLSUpgradeFailure('OpenLiteSpeed configuration migration failed: ' + str(error)) from error
 
 
 def stagger_renewal_cron(data):
@@ -1115,25 +1164,25 @@ class Upgrade:
 
     @staticmethod
     def checkGlibcCompat(binary_path):
-        """Pre-flight ABI check: ldd the downloaded binary and fail if any
-        shared library is unresolved ('not found'). Prevents installing a
-        binary that can't load on this OS (the GLIBC/libcrypt outage class).
-        A fully static binary reports 'not a dynamic executable' (no
-        'not found') and passes. ldd being unavailable is non-blocking.
-        """
+        """All pinned release cores and modules are dynamic ELF files."""
         try:
-            result = subprocess.run(['ldd', binary_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
-            output = (result.stdout or '') + (result.stderr or '')
-            if 'not found' in output:
-                Upgrade.stdOut("ERROR: Downloaded binary has unresolved libraries (incompatible with this OS):", 0)
-                for line in output.splitlines():
-                    if 'not found' in line:
-                        Upgrade.stdOut(f"  {line.strip()}", 0)
-                return False
-            return True
-        except Exception as msg:
-            Upgrade.stdOut(f"WARNING: Could not run ldd pre-check ({msg}); continuing", 0)
-            return True
+            result = subprocess.run(['ldd', binary_path], stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, universal_newlines=True, timeout=15)
+        except (OSError, subprocess.SubprocessError) as error:
+            Upgrade.stdOut('ERROR: Could not verify the OLS runtime libraries: ' + str(error), 0)
+            return False
+        output = (result.stdout or '') + (result.stderr or '')
+        if result.returncode or 'not found' in output or '=>' not in output:
+            Upgrade.stdOut('ERROR: OLS runtime libraries did not validate: ' + output[-2000:], 0)
+            return False
+        return True
+
+    @staticmethod
+    def copyOLSBackup(source, destination):
+        # Package-owned symlinks and owners are part of the rollback state.
+        info = os.lstat(source)
+        shutil.copy2(source, destination, follow_symlinks=False)
+        os.chown(destination, info.st_uid, info.st_gid, follow_symlinks=False)
 
     @staticmethod
     def installCustomOLSBinaries():
@@ -1147,7 +1196,7 @@ class Upgrade:
                 Upgrade.stdOut("WARNING: Custom binaries only available for x86_64", 0)
                 Upgrade.stdOut("Skipping custom binary installation", 0)
                 Upgrade.stdOut("Standard OLS will be used", 0)
-                return True  # Not a failure, just skip
+                return None  # Intentionally keep the installed bundle.
 
             # Detect platform
             platform = Upgrade.detectPlatform()
@@ -1157,7 +1206,7 @@ class Upgrade:
             # where the binary's GLIBC requirement isn't met) and keep stock OLS.
             if platform == 'skip':
                 Upgrade.stdOut("Custom binary installation skipped for this platform; using standard OLS", 0)
-                return True  # Not a failure, just skip
+                return None  # Intentionally keep the installed bundle.
 
             # Paired security core 2.5.7 and unchanged paid module 2.7.7 release artifacts.
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
@@ -1201,7 +1250,7 @@ class Upgrade:
             if not config:
                 Upgrade.stdOut(f"ERROR: No binaries available for platform {platform}", 0)
                 Upgrade.stdOut("Skipping custom binary installation", 0)
-                return True  # Not fatal
+                return None  # No compatible overlay.
 
             assets_module = load_ols_security_assets()
 
@@ -1216,7 +1265,7 @@ class Upgrade:
                         "keeping stock OLS",
                         0,
                     )
-                    return True
+                    return False
             elif platform == 'ubuntu26':
                 Upgrade.stdOut(
                     "Installing Ubuntu 26 ModSecurity runtime dependencies...",
@@ -1232,12 +1281,14 @@ class Upgrade:
                         "runtime dependencies; keeping the existing OLS set",
                         0,
                     )
-                    return True
+                    return False
 
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
-            control = '/usr/local/lsws/bin/lswsctrl'
+            lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
+            service = lifecycle.OLSService()
+            initial_state = service.prepare_state()
             # Keep the core and both modules on the same verified release, including
             # upgrades from installations that did not previously have ModSecurity.
             required = [
@@ -1249,24 +1300,9 @@ class Upgrade:
             import tempfile
             import re
 
-            def running():
-                result = subprocess.run([control, 'status'], stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
-                match = re.search(r'is running with PID ([1-9][0-9]*)\.', result.stdout or '')
-                if not match:
-                    if 'is not running.' in (result.stdout or ''):
-                        return False
-                    raise RuntimeError('Cannot determine OpenLiteSpeed service state')
-                try:
-                    if os.path.samefile('/proc/%s/exe' % match.group(1), OLS_BINARY_PATH):
-                        return True
-                except OSError:
-                    pass
-                raise RuntimeError('OpenLiteSpeed PID does not identify the installed executable')
-
             # Keep downloads private and validate the complete required set before
             # stopping the service or replacing any live bundle file.
-            with tempfile.TemporaryDirectory(prefix='cyberpanel-ols-') as staging:
+            with tempfile.TemporaryDirectory(prefix='.cyberpanel-ols-stage-', dir='/usr/local/lsws') as staging:
                 downloads = {}
                 for kind, url, target, mode, backup_name in required:
                     candidate = os.path.join(staging, kind)
@@ -1283,7 +1319,8 @@ class Upgrade:
                     Upgrade.stdOut('ERROR: Security assets download failed; keeping the existing OLS bundle', 0)
                     return False
                 security_assets = assets_module.SecurityAssetsTransaction(
-                    security_archive, assets_module.SECURITY_ASSETS_SHA256, fresh_install=False)
+                    security_archive, assets_module.SECURITY_ASSETS_SHA256, fresh_install=False,
+                    webadmin_policy='preserve')
 
                 # Backups and replacement files share the installation filesystem,
                 # so a successful backup is mandatory and every replacement is atomic.
@@ -1293,9 +1330,9 @@ class Upgrade:
                     dir='/usr/local/lsws')
                 previous = {}
                 for kind, url, target, mode, backup_name in required:
-                    previous[target] = os.path.exists(target)
+                    previous[target] = os.path.lexists(target)
                     if previous[target]:
-                        shutil.copy2(target, os.path.join(backup_dir, backup_name))
+                        Upgrade.copyOLSBackup(target, os.path.join(backup_dir, backup_name))
                     else:
                         with open(os.path.join(backup_dir, backup_name + '.absent'), 'w'):
                             pass
@@ -1303,19 +1340,28 @@ class Upgrade:
                     shutil.copy2(downloads[kind], candidate)
                     os.chmod(candidate, mode)
 
+                originals, candidates = lifecycle.bundle_records(required, backup_dir, config['sha256'], security_assets)
                 with open(os.path.join(backup_dir, 'security_assets_backup.json'), 'w') as receipt:
-                    json.dump({'backup_dir': security_assets.backup_dir}, receipt)
+                    json.dump({'backup_dir': security_assets.backup_dir,
+                               'was_running': bool(initial_state), 'unit': service.unit}, receipt)
+                    receipt.flush()
+                    os.fsync(receipt.fileno())
 
-                was_running = running()
+                if service.state() != initial_state:
+                    raise RuntimeError('OpenLiteSpeed service changed during staging')
+                # Downloads and PHP verification can take minutes. Ensure the
+                # on-disk original remains a valid rollback before stopping it.
+                validate_ols_configuration(OLS_BINARY_PATH)
+                lifecycle.verify_originals(originals)
                 stopped = False
+                start_attempted = False
                 touched = []
                 try:
-                    if was_running:
+                    if initial_state:
                         stopped = True
-                        result = subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE, timeout=60)
-                        if result.returncode != 0 or running():
-                            raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                        service.change('stop', initial_state)
+                    if service.state():
+                        raise RuntimeError('OLS started outside this transaction before replacement')
                     security_assets.apply()
                     for kind, url, target, mode, backup_name in required:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
@@ -1325,49 +1371,53 @@ class Upgrade:
                                             stderr=subprocess.PIPE, universal_newlines=True, timeout=10)
                     if result.returncode != 0 or 'LiteSpeed' not in ((result.stdout or '') + (result.stderr or '')):
                         raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
+                    lifecycle.verify_installed(candidates)
                     validate_ols_configuration(OLS_BINARY_PATH)
-                    if was_running:
-                        # Daemon children inherit output pipes; do not wait for pipe EOF.
-                        result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
-                                                stderr=subprocess.DEVNULL, timeout=60)
-                        time.sleep(3)
-                        if result.returncode != 0 or not running():
-                            raise RuntimeError('OpenLiteSpeed did not start with the new bundle')
+                    if initial_state:
+                        start_attempted = True
+                        service.change('start', None)
+                    elif service.state() is not None:
+                        raise RuntimeError('Previously stopped OpenLiteSpeed started unexpectedly')
                     Upgrade.stdOut('Custom OLS bundle installed; backup: ' + backup_dir, 0)
                     return True
                 except Exception as error:
                     Upgrade.stdOut('ERROR: %s; restoring the previous OLS bundle' % error, 0)
                     try:
-                        if touched:
-                            # Atomic restoration is safe even if a failed start left
-                            # a mapped executable; stop before restarting the old set.
+                        current = service.settled_state()
+                        if touched or security_assets.touched:
+                            if current:
+                                if not start_attempted or current == initial_state:
+                                    raise RuntimeError('Unrequested live process; no rollback writes attempted')
+                                service.change('stop', current)
+                            if service.state():
+                                raise RuntimeError('Cannot prove OLS stopped; no rollback writes attempted')
+                            errors = []
                             try:
-                                subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
-                                               stderr=subprocess.PIPE, timeout=60)
-                            except Exception:
-                                pass  # Restore files even if the control command failed.
-                            security_assets.rollback()
+                                security_assets.rollback()
+                            except Exception as asset_error:
+                                errors.append(str(asset_error))
                             for target, backup_name in reversed(touched):
-                                if previous[target]:
-                                    restored = os.path.join(backup_dir, backup_name + '.restore')
-                                    shutil.copy2(os.path.join(backup_dir, backup_name), restored)
-                                    os.replace(restored, target)
-                                elif os.path.exists(target):
-                                    os.remove(target)
-                        else:
-                            security_assets.rollback()
-                        if was_running and stopped:
-                            result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
-                                                    stderr=subprocess.DEVNULL, timeout=60)
-                            time.sleep(3)
-                            if result.returncode != 0 or not running():
-                                raise RuntimeError('Previous bundle restored, but OpenLiteSpeed did not restart')
+                                try:
+                                    if previous[target]:
+                                        restored = os.path.join(backup_dir, backup_name + '.restore')
+                                        Upgrade.copyOLSBackup(os.path.join(backup_dir, backup_name), restored)
+                                        os.replace(restored, target)
+                                    elif os.path.lexists(target):
+                                        os.remove(target)
+                                except Exception as file_error:
+                                    errors.append(str(file_error))
+                            if errors:
+                                raise RuntimeError('Incomplete restoration: ' + ', '.join(errors))
+                        lifecycle.verify_originals(originals)
+                        if initial_state and stopped and not service.state():
+                            validate_ols_configuration(OLS_BINARY_PATH)
+                            service.change('start', None)
                     except Exception as rollback_error:
                         Upgrade.stdOut('ERROR: OLS rollback requires attention: %s; backup: %s' %
                                       (rollback_error, backup_dir), 0)
                     return False
         except Exception as error:
-            Upgrade.stdOut('ERROR: Custom OLS overlay aborted: %s; existing bundle retained' % error, 0)
+            Upgrade.stdOut('ERROR: Custom OLS overlay aborted: %s' % error, 0)
             return False
 
     @staticmethod
@@ -1378,77 +1428,63 @@ class Upgrade:
 
             backup_binary = os.path.join(backup_dir, "openlitespeed.backup")
 
-            if os.path.exists(backup_binary):
+            if os.path.lexists(backup_binary):
                 # Resolve support code before stopping the running service.
                 assets_receipt = os.path.join(backup_dir, 'security_assets_backup.json')
                 assets_module = load_ols_security_assets() if os.path.exists(assets_receipt) else None
-                # Stop OLS before rollback
-                Upgrade.stdOut("Stopping OpenLiteSpeed for rollback...", 0)
-                stopped = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
-                status = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'status'],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             universal_newlines=True, timeout=30)
-                if stopped.returncode != 0 or 'is not running.' not in (status.stdout or ''):
-                    Upgrade.stdOut('ERROR: OpenLiteSpeed did not stop; rollback files were not replaced', 0)
-                    return False
-
-                # Older bundle backups predate the separately staged support assets.
-                if os.path.exists(assets_receipt):
+                receipt = {}
+                if assets_module:
                     import json
-                    with open(assets_receipt) as receipt:
-                        assets_backup = json.load(receipt)['backup_dir']
-                    assets_module.restore_security_assets(assets_backup)
-
-                # Restore binary (remove first: cp onto a mapped binary = ETXTBSY)
-                if os.path.exists(binary_path):
-                    os.remove(binary_path)
-                shutil.copy2(backup_binary, binary_path)
-                os.chmod(binary_path, 0o755)
-                Upgrade.stdOut(f"Restored binary from {backup_binary}", 0)
-
-                # Restore module and ModSecurity backups so the old core is
-                # never paired with a newer, possibly ABI-incompatible module
-                for backup_name, target in (
-                        ("cyberpanel_ols.so.backup", module_path or "/usr/local/lsws/modules/cyberpanel_ols.so"),
-                        ("mod_security.so.backup", "/usr/local/lsws/modules/mod_security.so")):
+                    with open(assets_receipt) as source:
+                        receipt = json.load(source)
+                lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
+                service = lifecycle.OLSService(os.path.dirname(os.path.dirname(binary_path)), unit=receipt.get('unit'))
+                originals = {}
+                if assets_module:
+                    with open(os.path.join(receipt['backup_dir'], 'rollback.json')) as source:
+                        assets_state = json.load(source)
+                    originals.update({entry['target']: assets_state['previous'][entry['path']]
+                                      for entry in assets_state['entries']})
+                bundle = [('openlitespeed.backup', binary_path),
+                          ('cyberpanel_ols.so.backup', module_path or '/usr/local/lsws/modules/cyberpanel_ols.so'),
+                          ('mod_security.so.backup', '/usr/local/lsws/modules/mod_security.so')]
+                for backup_name, target in bundle:
                     backup_file = os.path.join(backup_dir, backup_name)
-                    if os.path.exists(backup_file):
-                        if os.path.exists(target):
-                            os.remove(target)
-                        shutil.copy2(backup_file, target)
-                        os.chmod(target, 0o644)
-                        Upgrade.stdOut(f"Restored {os.path.basename(target)} from backup", 0)
-                    elif os.path.exists(backup_file + '.absent') and os.path.exists(target):
+                    exists = os.path.lexists(backup_file)
+                    absent = os.path.exists(backup_file + '.absent')
+                    if exists == absent:
+                        raise RuntimeError('Incomplete or contradictory OLS rollback receipt: ' + backup_name)
+                    originals[target] = lifecycle.original_record(backup_file)
+
+                current = service.state()
+                restore_running = receipt.get('was_running', bool(current))
+                if current:
+                    service.change('stop', current)
+                if service.state():
+                    raise RuntimeError('Cannot establish a stopped service before rollback')
+                if assets_module:
+                    assets_module.restore_security_assets(receipt['backup_dir'])
+
+                # Restore links as links and use a same-filesystem atomic swap.
+                for backup_name, target in bundle:
+                    backup_file = os.path.join(backup_dir, backup_name)
+                    if os.path.lexists(backup_file):
+                        with tempfile.TemporaryDirectory(prefix='.restore-', dir=backup_dir) as temporary:
+                            restored = os.path.join(temporary, 'file')
+                            Upgrade.copyOLSBackup(backup_file, restored)
+                            os.replace(restored, target)
+                    elif os.path.exists(backup_file + '.absent') and os.path.lexists(target):
                         os.remove(target)
-                        Upgrade.stdOut(f"Removed {os.path.basename(target)} absent from previous bundle", 0)
 
-                # Start OLS after rollback
-                Upgrade.stdOut("Starting OpenLiteSpeed after rollback...", 0)
-                result = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+                lifecycle.verify_originals(originals)
+                if restore_running:
+                    validate_ols_configuration(binary_path)
+                    service.change('start', None)
+                elif service.state():
+                    raise RuntimeError('Previously stopped service started during rollback')
+                Upgrade.stdOut('Restored OLS bundle and prior service state', 0)
+                return True
 
-                # Verify OLS started
-                import time
-                time.sleep(3)
-
-                import re
-                status = subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'status'],
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        universal_newlines=True, timeout=30)
-                match = re.search(r'is running with PID ([1-9][0-9]*)\.', status.stdout or '')
-                restored_running = False
-                if result.returncode == 0 and match:
-                    try:
-                        restored_running = os.path.samefile('/proc/%s/exe' % match.group(1), binary_path)
-                    except OSError:
-                        pass
-                if restored_running:
-                    Upgrade.stdOut("OpenLiteSpeed started successfully after rollback", 0)
-                    return True
-                else:
-                    Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after rollback", 0)
-                    return False  # Restored files alone do not prove a successful rollback.
             else:
                 Upgrade.stdOut(f"ERROR: Backup not found at {backup_binary}", 0)
                 return False
@@ -3874,15 +3910,16 @@ passdb {
 
         try:
             from plogical.sensitiveFileProtection import protect_vhost_tree
-            results = protect_vhost_tree()
+            changes = {}
+            results = protect_vhost_tree(changes=changes)
+            apply_ols_config_changes(changes)
             Upgrade.stdOut(
                 'Sensitive-file protection: examined=%s updated=%s skipped=%s errors=%s' % (
                     results['examined'], results['updated'], results['skipped'], results['errors']),
                 0,
             )
-            if results['updated']:
-                command = '/usr/local/lsws/bin/lswsctrl reload'
-                Upgrade.executioner(command, command, 0)
+        except OLSUpgradeFailure:
+            raise
         except BaseException as msg:
             Upgrade.stdOut('Sensitive-file protection migration error: ' + str(msg), 0)
 
@@ -5438,9 +5475,14 @@ pm.max_spare_servers = 3
     @staticmethod
     def upgrade(branch):
         requireCSFMigration()
-        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            # Abort before any bundle replacement or service stop on broken input.
-            validate_ols_configuration()
+        has_ols = os.path.exists('/usr/local/lsws/bin/openlitespeed')
+        if has_ols:
+            with ols_upgrade_lock():
+                validate_ols_configuration()
+                # The transaction owns validation, rollback and service state.
+                # Preserve administrator-selected module and AutoSSL settings.
+                if Upgrade.installCustomOLSBinaries() is False:
+                    raise OLSUpgradeFailure("Custom OLS bundle installation failed; upgrade stopped before further service changes. Check the upgrade log and any rollback diagnostics.")
 
         if branch.find('SoftUpgrade') > -1:
             Upgrade.SoftUpgrade = 1
@@ -5469,7 +5511,7 @@ pm.max_spare_servers = 3
 
         ## Add LSPHP7.4 TO LSWS Ent configs
 
-        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+        if not has_ols:
             # This is Enterprise LSWS
             if os.path.exists('httpd_config.xml'):
                 os.remove('httpd_config.xml')
@@ -5478,73 +5520,6 @@ pm.max_spare_servers = 3
             Upgrade.executioner(command, command, 0)
             # os.remove('/usr/local/lsws/conf/httpd_config.xml')
             # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
-        else:
-            # This is OpenLiteSpeed - install/upgrade custom binaries
-            Upgrade.stdOut("Detected OpenLiteSpeed installation", 0)
-            Upgrade.stdOut("Installing/upgrading custom binaries with .htaccess PHP config support...", 0)
-
-            # Install custom binaries
-            if Upgrade.installCustomOLSBinaries():
-                # Configure the custom module
-                Upgrade.configureCustomModule()
-
-                # Enable Auto-SSL if not already configured
-                conf_path = '/usr/local/lsws/conf/httpd_config.conf'
-                try:
-                    import re
-                    with open(conf_path, 'r') as f:
-                        content = f.read()
-                    if 'autoSSL' not in content:
-                        content = re.sub(
-                            r'(adminEmails\s+\S+)',
-                            r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
-                            content,
-                            count=1
-                        )
-                        with open(conf_path, 'w') as f:
-                            f.write(content)
-                        Upgrade.stdOut("Auto-SSL enabled in httpd_config.conf", 0)
-                except Exception as e:
-                    Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
-
-                # Recheck module/Auto-SSL edits before stopping the running service.
-                validate_ols_configuration()
-
-                # Full stop/start (NOT graceful restart) to apply config changes:
-                # graceful does not reliably re-exec the binary or reload modules
-                Upgrade.stdOut("Restarting OpenLiteSpeed (full stop/start)...", 0)
-                command = '/usr/local/lsws/bin/lswsctrl stop'
-                Upgrade.executioner(command, 'Stop OpenLiteSpeed', 0)
-                command = '/usr/local/lsws/bin/lswsctrl start'
-                Upgrade.executioner(command, 'Start OpenLiteSpeed', 0, detach_output=True)
-
-                # Verify OLS started successfully after restart
-                import time
-                time.sleep(5)  # Give OLS time to start
-
-                result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if result.returncode != 0:
-                    Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after upgrade!", 0)
-                    Upgrade.stdOut("Attempting auto-rollback...", 0)
-
-                    # Find the most recent backup directory
-                    backup_base = '/usr/local/lsws'
-                    backups = [d for d in os.listdir(backup_base) if d.startswith('backup-')]
-                    if backups:
-                        backups.sort(reverse=True)  # Most recent first
-                        latest_backup = os.path.join(backup_base, backups[0])
-                        if Upgrade.rollbackOLSBinary(latest_backup, '/usr/local/lsws/bin/openlitespeed'):
-                            Upgrade.stdOut("Auto-rollback completed successfully", 0)
-                        else:
-                            Upgrade.stdOut("ERROR: Auto-rollback failed! Manual intervention may be required.", 0)
-                    else:
-                        Upgrade.stdOut("ERROR: No backup found for rollback!", 0)
-                else:
-                    Upgrade.stdOut("OpenLiteSpeed restarted successfully", 0)
-            else:
-                raise RuntimeError("Custom OLS bundle installation failed; upgrade stopped before further service changes. Check the upgrade log and any rollback diagnostics.")
-
         Upgrade.updateRepoURL()
 
         os.chdir("/usr/local")
@@ -6399,10 +6374,13 @@ pm.max_spare_servers = 3
             # Fix 2: Ensure Apache proxy backends are configured in OLS/LSWS
             print("Checking OpenLiteSpeed proxy backend configurations...")
             lsws_config = "/usr/local/lsws/conf/httpd_config.conf"
+            is_ols = os.path.exists('/usr/local/lsws/bin/openlitespeed')
+            ols_changes = {}
             
             if os.path.exists(lsws_config):
                 with open(lsws_config, 'r') as f:
                     lsws_content = f.read()
+                original_lsws_content = lsws_content
                 
                 modified = False
                 
@@ -6441,8 +6419,11 @@ extprocessor proxyApacheBackendSSL {
                     print("Added proxyApacheBackendSSL extprocessor configuration")
                 
                 if modified:
-                    with open(lsws_config, 'w') as f:
-                        f.write(lsws_content)
+                    if is_ols:
+                        ols_changes[lsws_config] = original_lsws_content, lsws_content
+                    else:
+                        with open(lsws_config, 'w') as f:
+                            f.write(lsws_content)
                     print("Updated OpenLiteSpeed configuration with Apache proxy backends")
             
             # Fix 3: Create/Update .htaccess files ONLY for domains actually using Apache
@@ -6572,8 +6553,11 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                                 new_content = vhost_content
                             
                             if new_content != vhost_content:
-                                with open(ols_vhost_path, 'w') as f:
-                                    f.write(new_content)
+                                if is_ols:
+                                    ols_changes[ols_vhost_path] = vhost_content, new_content
+                                else:
+                                    with open(ols_vhost_path, 'w') as f:
+                                        f.write(new_content)
                                 ols_fixed += 1
                                 print(f"Fixed OLS vhost configuration for: {domain}")
                         
@@ -6680,8 +6664,11 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             Upgrade.executioner(command, command, 0, True)
             
             # Restart OpenLiteSpeed
-            command = 'systemctl restart lsws'
-            Upgrade.executioner(command, command, 0, True)
+            if is_ols:
+                apply_ols_config_changes(ols_changes)
+            else:
+                command = 'systemctl restart lsws'
+                Upgrade.executioner(command, command, 0, True)
             
             # Restart PHP-FPM services
             if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
@@ -6695,6 +6682,8 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             
             print("Apache configuration fix completed successfully!")
             
+        except OLSUpgradeFailure:
+            raise
         except Exception as e:
             print(f"Error during Apache configuration fix: {str(e)}")
 
@@ -6706,7 +6695,11 @@ def main():
 
     args = parser.parse_args()
 
-    Upgrade.upgrade(args.branch)
+    try:
+        Upgrade.upgrade(args.branch)
+    except OLSUpgradeFailure as error:
+        print(str(error), file=sys.stderr)
+        sys.exit(78)  # EX_CONFIG: another Python environment cannot repair the OLS installation.
 
 
 if __name__ == "__main__":

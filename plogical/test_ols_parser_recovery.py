@@ -97,8 +97,8 @@ class ClassifierTests(unittest.TestCase):
         warnings = [warning + '[cyberpanel_ols] License validation failed - module features disabled',
                     warning + '[config:server:vhosts:vhost:Example] Uid of %s/ is 0, smaller than minimum requirement 11, use server uid!' % example,
                     warning + '[config:server:vhosts:vhost:Example] Gid of %s/ is 65534, smaller than minimum requirement 10, use server gid!' % example]
-        with patch.object(Path, 'stat', return_value=type('Info', (), {'st_uid': 0, 'st_gid': 0})()), \
-                patch.object(Path, 'is_dir', return_value=True):
+        with patch.object(recovery, 'example_ownership', return_value=(0, 0)), \
+                patch.object(recovery, 'server_gid', return_value=65534):
             self.assertEqual(self.settings, self.check(output=self.diagnostics() + '\n'.join(warnings)))
             with self.assertRaises(RuntimeError):
                 self.check(output=self.diagnostics() + warning + '[cyberpanel_ols] ABI mismatch')

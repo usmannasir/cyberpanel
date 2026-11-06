@@ -3027,8 +3027,7 @@ def main():
 
     import installCyberPanel
 
-    if distro == ubuntu:
-        checks.setupLSCPDAccount()
+    checks.setupLSCPDAccount()
 
     if ent == 0:
         installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql,

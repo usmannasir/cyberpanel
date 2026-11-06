@@ -87,6 +87,21 @@ class SensitiveFileProtectionTests(unittest.TestCase):
         finally:
             os.unlink(path)
 
+    def test_planning_upgrade_protection_leaves_original_for_transaction(self):
+        with tempfile.TemporaryDirectory() as root:
+            domain = os.path.join(root, 'one.test')
+            os.mkdir(domain)
+            path = os.path.join(domain, 'vhost.conf')
+            with open(path, 'w') as handle:
+                handle.write('docRoot /tmp\n')
+            changes = {}
+            self.assertEqual(protect_vhost_tree(root, changes=changes)['updated'], 1)
+            before, after = changes[path]
+            self.assertNotIn(BEGIN_MARKER, before)
+            self.assertIn(BEGIN_MARKER, after)
+            with open(path) as handle:
+                self.assertEqual(handle.read(), before)
+
     def test_vhost_tree_reports_updates_and_skips(self):
         with tempfile.TemporaryDirectory() as root:
             for name in ('one.test', 'two.test'):

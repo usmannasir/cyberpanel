@@ -62,7 +62,7 @@ class SecurityAssetsTests(unittest.TestCase):
         with patch.object(tx, 'verify', return_value={}):
             tx.apply()
         self.assertFalse(self.runtime.is_symlink())
-        self.assertTrue((self.root / 'admin/conf/enable_webadmin').exists())
+        self.assertFalse((self.root / 'admin/conf/enable_webadmin').exists())
         self.assertEqual(self.runtime.read_bytes(), b'fixed-standalone-runtime')
         self.assertEqual(self.website.read_bytes(), b'website-runtime')
         self.assertFalse((self.root / 'add-ons').exists())
@@ -73,6 +73,85 @@ class SecurityAssetsTests(unittest.TestCase):
         self.assertEqual(os.readlink(self.runtime), '../../lsphp83/bin/lsphp')
         self.assertFalse((self.root / 'admin/cyberpanel-php').exists())
         self.assertFalse((self.root / 'admin/html').exists())
+
+    def marker_state(self):
+        marker = self.root / 'admin/conf/enable_webadmin'
+        if not os.path.lexists(marker):
+            return None
+        info = marker.lstat()
+        return (info.st_ino, info.st_uid, info.st_gid, info.st_mode,
+                os.readlink(marker) if marker.is_symlink() else marker.read_bytes())
+
+    def test_upgrade_preserves_marker_gate_for_all_configuration_states(self):
+        config = self.root / 'conf/httpd_config.conf'
+        marker = self.root / 'admin/conf/enable_webadmin'
+        for flag in ('', 'disableWebAdmin 0\n', 'disableWebAdmin 1\n'):
+            for content in (None, b'', b'# retained ACL\r\n127.0.0.1, 192.0.2.7  \n'):
+                with self.subTest(flag=flag, content=content):
+                    if os.path.lexists(marker):
+                        marker.unlink()
+                    if content is not None:
+                        marker.write_bytes(content)
+                        marker.chmod(0o640)
+                        if os.geteuid() == 0:
+                            os.chown(marker, 1234, 2345)
+                    config.write_bytes(('serverName test\n' + flag).encode())
+                    before_config = config.read_bytes()
+                    before_marker = self.marker_state()
+                    tx = self.prepare()
+                    self.assertFalse(any(e['path'].startswith(('conf/', 'admin/conf/'))
+                                         for e in tx.entries))
+                    self.assertEqual(self.marker_state(), before_marker)
+                    with patch.object(tx, 'verify', return_value={}):
+                        tx.apply()
+                    self.assertEqual(self.marker_state(), before_marker)
+                    self.assertEqual(config.read_bytes(), before_config)
+                    tx.rollback()
+                    self.assertEqual(self.marker_state(), before_marker)
+                    self.assertEqual(config.read_bytes(), before_config)
+                    self.assertTrue(self.runtime.is_symlink())
+
+    def test_existing_marker_link_is_not_followed_or_normalized(self):
+        target = Path(self.temp.name) / 'external-acl'
+        target.write_bytes(b'127.0.0.1\n')
+        (self.root / 'admin/conf/enable_webadmin').symlink_to(target)
+        before = self.marker_state()
+        tx = self.prepare()
+        with patch.object(tx, 'verify', return_value={}):
+            tx.apply()
+        self.assertEqual(self.marker_state(), before)
+        tx.rollback()
+        self.assertEqual(self.marker_state(), before)
+        self.assertEqual(target.read_bytes(), b'127.0.0.1\n')
+
+    def test_failed_apply_and_persisted_rollback_preserve_acl_marker(self):
+        marker = self.root / 'admin/conf/enable_webadmin'
+        marker.write_bytes(b'# keep exact formatting\r\n127.0.0.1  \n')
+        marker.chmod(0o600)
+        if os.geteuid() == 0:
+            os.chown(marker, 1234, 2345)
+        before = self.marker_state()
+        tx = self.prepare()
+        with patch.object(tx, 'verify', side_effect=RuntimeError('post-apply failure')):
+            with self.assertRaisesRegex(RuntimeError, 'post-apply failure'):
+                tx.apply()
+        self.assertEqual(self.marker_state(), before)
+        self.assertTrue(self.runtime.is_symlink())
+        tx = self.prepare()
+        with patch.object(tx, 'verify', return_value={}):
+            tx.apply()
+        self.assertTrue(restore_security_assets(tx.backup_dir, str(self.root)))
+        self.assertEqual(self.marker_state(), before)
+        self.assertTrue(self.runtime.is_symlink())
+
+    def test_unknown_webadmin_policy_refuses_before_preparation(self):
+        archive, digest = self.archive()
+        with self.assertRaisesRegex(ValueError, 'Unsupported WebAdmin'):
+            SecurityAssetsTransaction(archive, digest, str(self.root),
+                                      webadmin_policy='enable')
+        self.assertFalse(list(self.root.glob('.cyberpanel-security-backup-*')))
+        self.assertFalse((self.root / 'admin/conf/enable_webadmin').exists())
+        self.assertTrue(self.runtime.is_symlink())
 
     def test_installed_optional_component_receives_new_source_files(self):
         component = self.root / 'add-ons/webcachemgr'
