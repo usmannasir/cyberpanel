@@ -46,6 +46,28 @@ class DeliveryGateTests(unittest.TestCase):
                       fetch=kwargs.get('fetch', lambda ref, path: b'fixed'),
                       artifact_fetch=kwargs.get('artifact_fetch', lambda url: b'wrapper'))
 
+    def ubuntu20_artifact(self):
+        self.plan['artifacts']['https://cyberpanel.net/openlitespeed-2.5.7-x86_64-ubuntu20'] = hashlib.sha256(b'wrapper').hexdigest()
+
+    def test_ubuntu20_artifacts_cannot_use_only_newer_os_acceptance(self):
+        self.ubuntu20_artifact()
+        with self.assertRaisesRegex(IncompleteRelease, 'Ubuntu 20 acceptance'):
+            self.check()
+
+    def test_ubuntu20_plan_label_does_not_replace_actual_receipt(self):
+        self.ubuntu20_artifact()
+        self.plan['environments'].append('ubuntu20')
+        with self.assertRaisesRegex(IncompleteRelease, 'OS acceptance'):
+            self.check()
+
+    def test_ubuntu20_artifact_with_matching_acceptance_can_pass(self):
+        self.ubuntu20_artifact()
+        self.plan['environments'].append('ubuntu20')
+        receipt = copy.deepcopy(self.receipts[0])
+        receipt['environment'] = 'ubuntu20'
+        self.receipts.append(receipt)
+        self.assertEqual(self.check()['state'], 'public_delivery_verified')
+
     def test_candidate_passes_cannot_hide_old_public_heads(self):
         with self.assertRaisesRegex(IncompleteRelease, 'Public ref still differs'):
             self.check(head=lambda ref: '0' * 40)

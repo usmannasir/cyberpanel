@@ -98,6 +98,10 @@ def verify(plan, receipts, head=public_head, fetch=public_file, artifact_fetch=p
     require('artifacts' in plan and isinstance(plan['artifacts'], dict),
             'Declare external release artifacts explicitly, including an empty mapping if none')
     require(len(set(plan['environments'])) == len(plan['environments']), 'Duplicate environments')
+    if any(re.search(r'(?:^|[-/])ubuntu20(?:[./-]|$)', urlsplit(url).path)
+           for url in plan['artifacts']):
+        require('ubuntu20' in plan['environments'],
+                'Ubuntu 20 release artifacts require Ubuntu 20 acceptance')
     for ref, revision in plan['refs'].items():
         require(re.fullmatch(r'stable|v[0-9]+(?:\.[0-9]+)+', ref) is not None, 'Invalid release ref')
         require(re.fullmatch(r'[0-9a-f]{40}', revision) is not None, 'Invalid published commit')
