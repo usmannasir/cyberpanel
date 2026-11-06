@@ -153,7 +153,10 @@ assert hashlib.sha256((stage / 'watchdog.sh').read_bytes()).hexdigest() == servi
 
     def test_panel_worker_and_poll_report_completed_release(self):
         job = '1' * 32
-        self.assertEqual(softUpgrade.run_panel_job('v3.0.8', job), 0)
+        with patch.object(softUpgrade, 'activate_panel_runtime', return_value={'fresh': True}) as activation:
+            self.assertEqual(softUpgrade.run_panel_job('v3.0.8', job), 0)
+        activation.assert_called_once()
+        self.assertEqual(softUpgrade.read_status(job)['activation'], {'fresh': True})
         self.assertEqual(self.receipt.read_text(), 'SoftUpgrade,v3.0.8 ' + self.expected)
         self.assertEqual(softUpgrade.status_path(job).stat().st_mode & 0o777, 0o600)
         response = self.poll_job(job)

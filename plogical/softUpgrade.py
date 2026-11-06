@@ -4,9 +4,15 @@ import fcntl
 import json
 import os
 import re
+import hashlib
+import http.client
+import socket
+import ssl
+import stat
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -58,11 +64,13 @@ def read_status(job):
     return record
 
 
-def record_status(job, state, message=''):
+def record_status(job, state, message='', activation=None):
     path = status_path(job)
     STATUS_ROOT.mkdir(exist_ok=True, mode=0o755)
     with tempfile.NamedTemporaryFile(mode='w', dir=STATUS_ROOT, delete=False) as output:
         record = {'state': state, 'message': message}
+        if activation is not None:
+            record['activation'] = activation
         if state in ('starting', 'running'):
             record['pid'] = os.getpid()
             record['start_ticks'] = live_start_ticks(Path('/proc/self/stat').read_text())
@@ -71,9 +79,14 @@ def record_status(job, state, message=''):
     os.replace(output.name, path)
 
 
-def resolve_release(branch):
+def validate_branch(branch):
     if not re.fullmatch(r'stable|v[0-9]+(?:\.[0-9]+)+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?', branch):
         raise ValueError('Select a stable CyberPanel release branch.')
+    return branch
+
+
+def resolve_release(branch):
+    validate_branch(branch)
     ref = 'refs/heads/' + branch
     result = subprocess.run(['git', 'ls-remote', '--exit-code', REPOSITORY, ref],
                             check=True, stdout=subprocess.PIPE, universal_newlines=True, timeout=30)
@@ -130,6 +143,173 @@ def run(branch, lock_fd=None):
         return 0
 
 
+SYSTEMCTL = '/usr/bin/systemctl'
+SYSTEMD_RUN = '/usr/bin/systemd-run'
+PANEL_CONF = Path('/usr/local/lscp/conf')
+
+
+def process_identity(pid, proc=Path('/proc')):
+    try:
+        content = (proc / str(pid) / 'stat').read_text()
+        ticks = live_start_ticks(content)
+        if ticks is None:
+            return None
+        return {'pid': int(pid), 'start_ticks': ticks}
+    except (OSError, ValueError):
+        return None
+
+
+def panel_state():
+    result = subprocess.run([SYSTEMCTL, 'show', 'lscpd', '--property=MainPID,ActiveState,ControlGroup'],
+                            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True, timeout=10)
+    values = dict(line.split('=', 1) for line in result.stdout.splitlines() if '=' in line)
+    group = values.get('ControlGroup', '')
+    if not group or not group.startswith('/') or not group.endswith('/lscpd.service'):
+        raise RuntimeError('Cannot verify the panel service control group.')
+    master = process_identity(values.get('MainPID', '0'))
+    workers = []
+    for path in Path('/proc').glob('[0-9]*'):
+        try:
+            if (path / 'comm').read_text().strip() != 'lswsgi':
+                continue
+            if not any(line.rsplit(':', 1)[-1] == group for line in (path / 'cgroup').read_text().splitlines()):
+                continue
+            identity = process_identity(path.name)
+            if identity:
+                fields = (path / 'stat').read_text().rsplit(')', 1)[-1].split()
+                identity['ppid'] = int(fields[1])
+                workers.append(identity)
+        except (OSError, ValueError):
+            continue
+    return {'master': master, 'workers': workers, 'active': values.get('ActiveState') == 'active'}
+
+
+def panel_endpoint(conf=PANEL_CONF):
+    binding = (conf / 'bind.conf').read_text().strip()
+    if not binding:
+        return '127.0.0.1', 8090
+    match = re.fullmatch(r'(\*|\[[0-9a-fA-F:]+\]|[0-9a-fA-F:.]+):([0-9]{1,5})', binding)
+    if not match or not 1 <= int(match.group(2)) <= 65535:
+        raise RuntimeError('Cannot verify the configured panel listen address.')
+    address = match.group(1).strip('[]')
+    return ('127.0.0.1' if address in ('*', '0.0.0.0') else '::1' if address == '::' else address), int(match.group(2))
+
+
+def probe_panel(conf=PANEL_CONF):
+    # This local readiness check trusts the root-owned installed leaf certificate
+    # by exact DER pin, including a panel's default self-signed certificate.
+    pem = (conf / 'cert.pem').read_text()
+    match = re.search(r'-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----', pem, re.S)
+    if not match:
+        raise RuntimeError('Cannot read the installed panel certificate.')
+    expected = ssl.PEM_cert_to_DER_cert(match.group(0))
+    address, port = panel_endpoint(conf)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    context.verify_mode = ssl.CERT_NONE
+    with socket.create_connection((address, port), timeout=3) as connection:
+        with context.wrap_socket(connection, server_hostname='localhost') as secured:
+            if secured.getpeercert(binary_form=True) != expected:
+                raise RuntimeError('The panel readiness endpoint certificate does not match the installed certificate.')
+            secured.sendall(b'GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n')
+            response = http.client.HTTPResponse(secured)
+            response.begin()
+            body = response.read(256 * 1024 + 1)
+            if response.status != 200 or not body or len(body) > 256 * 1024 or b'<html' not in body.lower():
+                raise RuntimeError('The restarted panel did not return its login page.')
+    return {'http_status': 200, 'certificate_sha256': hashlib.sha256(expected).hexdigest()}
+
+
+def worker_belongs_to_master(worker, master):
+    pid = worker['pid']
+    for unused in range(32):
+        if pid == master['pid']:
+            return True
+        try:
+            fields = (Path('/proc') / str(pid) / 'stat').read_text().rsplit(')', 1)[-1].split()
+            pid = int(fields[1])
+        except (OSError, ValueError):
+            return False
+        if pid <= 1:
+            return False
+    return False
+
+
+def activate_panel_runtime(lock_fd, timeout=90):
+    before = panel_state()
+    subprocess.run([SYSTEMCTL, 'restart', 'lscpd'], check=True, timeout=90,
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=(lock_fd,))
+    deadline = time.monotonic() + timeout
+    last_error = 'The panel has not loaded a fresh application worker.'
+    while time.monotonic() < deadline:
+        try:
+            after = panel_state()
+            master = after['master']
+            retired = ([before['master']] if before['master'] else []) + before['workers']
+            if not after['active'] or not master or any(process_identity(p['pid']) ==
+                    {'pid': p['pid'], 'start_ticks': p['start_ticks']} for p in retired):
+                raise RuntimeError('The previous panel runtime is still draining.')
+            health = probe_panel()
+            after = panel_state()
+            if not after['active'] or after['master'] != master or not after['workers'] or not all(
+                    int(worker['start_ticks']) >= int(master['start_ticks']) and
+                    worker_belongs_to_master(worker, master) for worker in after['workers']):
+                raise RuntimeError('The panel has not loaded a fresh application worker.')
+            return dict(health, master=master, workers=after['workers'],
+                        previous_runtime_retired=True)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, http.client.HTTPException) as error:
+            last_error = str(error)
+        time.sleep(.2)
+    raise RuntimeError('Panel runtime activation failed: ' + last_error)
+
+
+def require_job_scope(job):
+    expected = '/cyberpanel-soft-upgrade-%s.scope' % job
+    groups = [line.rsplit(':', 1)[-1] for line in Path('/proc/self/cgroup').read_text().splitlines()]
+    if any('/lscpd.service/' in group or group.endswith('/lscpd.service') for group in groups) or not any(
+            group.endswith(expected) for group in groups):
+        raise RuntimeError('The upgrade worker must run in its independent systemd scope.')
+
+
+def worker_io(job):
+    STATUS_ROOT.mkdir(exist_ok=True, mode=0o755)
+    descriptor = os.open(str(status_path(job)) + '.launcher.log',
+                         os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_NOFOLLOW, 0o600)
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid():
+            raise RuntimeError('Cannot verify the upgrade worker log.')
+        os.dup2(descriptor, 1)
+        os.dup2(descriptor, 2)
+    finally:
+        os.close(descriptor)
+    descriptor = os.open(os.devnull, os.O_RDONLY)
+    try:
+        os.dup2(descriptor, 0)
+    finally:
+        os.close(descriptor)
+
+
+def launch_panel_job(branch, job):
+    validate_branch(branch)
+    status_path(job)
+    record_status(job, 'starting')
+    try:
+        result = subprocess.run([SYSTEMD_RUN, '--scope', '--quiet', '--slice=system.slice',
+                                 '--unit=cyberpanel-soft-upgrade-' + job, '--',
+                                 sys.executable, '-I', str(Path(__file__).resolve()),
+                                 '--worker', branch, job], start_new_session=True,
+                                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.PIPE, universal_newlines=True)
+        status = read_status(job)
+        if status.get('state') not in ('complete', 'failed'):
+            raise RuntimeError('The independent upgrade worker stopped without a terminal result.')
+        return result.returncode
+    except Exception as error:
+        record_status(job, 'failed', 'Could not launch the independent upgrade worker: ' + str(error))
+        return 1
+
+
 def run_panel_job(branch, job):
     record_status(job, 'starting')
     try:
@@ -140,7 +320,8 @@ def run_panel_job(branch, job):
                 raise RuntimeError('Another panel upgrade is in progress.')
             record_status(job, 'running')
             run(branch, lock_fd=lock.fileno())
-            record_status(job, 'complete')
+            activation = activate_panel_runtime(lock.fileno())
+            record_status(job, 'complete', activation=activation)
             return 0
     except Exception as error:
         record_status(job, 'failed', str(error))
@@ -151,5 +332,10 @@ def run_panel_job(branch, job):
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--status':
         print(json.dumps(read_status(sys.argv[2])))
+    elif len(sys.argv) == 4 and sys.argv[1] == '--worker':
+        status_path(sys.argv[3])
+        require_job_scope(sys.argv[3])
+        worker_io(sys.argv[3])
+        sys.exit(run_panel_job(sys.argv[2], sys.argv[3]))
     else:
-        sys.exit(run_panel_job(sys.argv[1], sys.argv[2]))
+        sys.exit(launch_panel_job(sys.argv[1], sys.argv[2]))
