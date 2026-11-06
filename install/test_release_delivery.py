@@ -81,6 +81,19 @@ class DeliveryGateTests(unittest.TestCase):
             with self.assertRaisesRegex(IncompleteRelease, 'exceeded expected size'):
                 delivery.public_file('stable', 'plogical/upgrade.py')
 
+    def test_public_verification_identifies_itself_and_keeps_the_exact_url(self):
+        response = MagicMock()
+        response.status = 200
+        response.read.return_value = b'verified public bytes'
+        url = 'https://cyberpanel.net/test-release.sh'
+        with patch.object(delivery, 'urlopen') as opened:
+            opened.return_value.__enter__.return_value = response
+            self.assertEqual(b'verified public bytes', delivery.public_artifact(url))
+        request = opened.call_args[0][0]
+        self.assertEqual(url, request.full_url)
+        self.assertEqual('CyberPanel-Release-Verification/1.0', request.get_header('User-agent'))
+        self.assertEqual('identity', request.get_header('Accept-encoding'))
+
     def test_both_required_os_receipts_are_required(self):
         self.receipts.pop()
         with self.assertRaisesRegex(IncompleteRelease, 'OS acceptance'):

@@ -10,11 +10,12 @@ import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from urllib.parse import urlsplit
 
 REPOSITORY = 'https://github.com/usmannasir/cyberpanel.git'
 RAW = 'https://raw.githubusercontent.com/usmannasir/cyberpanel'
+USER_AGENT = 'CyberPanel-Release-Verification/1.0'
 
 
 class IncompleteRelease(ValueError):
@@ -52,7 +53,8 @@ def public_file(ref, path):
 
 
 def public_artifact(url, maximum=128 * 1024 * 1024):
-    with urlopen(url, timeout=45) as response:
+    request = Request(url, headers={'User-Agent': USER_AGENT, 'Accept-Encoding': 'identity'})
+    with urlopen(request, timeout=45) as response:
         require(response.status == 200, 'Public source download was not HTTP 200')
         data = response.read(maximum + 1)
     require(len(data) <= maximum, 'Public download exceeded expected size')
