@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 REPO = Path(__file__).resolve().parent.parent
 IMAGE = os.environ.get('CP_OLS_NATIVE_SERVICE_IMAGE')
@@ -25,6 +25,32 @@ def wait_for(predicate):
             return result
         time.sleep(.04)
     raise AssertionError('Timed out waiting for the watchdog fixture')
+
+
+def wait_for_watchdog_snapshot(inspect, expected, live_identity, timeout=2):
+    """Wait only for an exact read-only snapshot of this fixture's known owners."""
+    expected = sorted(expected)
+    deadline = time.monotonic() + timeout
+    last_refusal = None
+    while time.monotonic() < deadline:
+        for pid, ticks, unused_kind in expected:
+            if live_identity(pid) != ticks:
+                raise RuntimeError('A known watchdog fixture identity changed')
+        try:
+            observed = inspect()
+        except RuntimeError as error:
+            # A /proc snapshot can cross a Bash child fork/exec boundary. The
+            # production guard keeps refusing; no handoff or mutation is retried.
+            last_refusal = error
+            time.sleep(.04)
+            continue
+        if sorted(record[:3] for record in observed) != expected:
+            raise AssertionError('Unexpected watchdog in the fixture snapshot')
+        for pid, ticks, unused_kind in expected:
+            if live_identity(pid) != ticks:
+                raise RuntimeError('A known watchdog fixture identity changed')
+        return observed
+    raise RuntimeError('Watchdog fixture snapshot did not settle: ' + str(last_refusal))
 
 
 def guest():
@@ -99,14 +125,28 @@ def guest():
         before = Path('/tmp/controller').read_text()
         # Crash boundary between successor acknowledgement and retiring the
         # original. The retry must adopt that waiter, not launch a duplicate.
-        with patch('olsWatchdog.signal.pidfd_send_signal', side_effect=RuntimeError('injected interruption')):
+        successors = []
+        original_popen = subprocess.Popen
+        def start_successor(*args, **kwargs):
+            process = original_popen(*args, **kwargs)
+            fields = process_fields(Path('/proc') / str(process.pid))
+            successors.append((process.pid, fields[19], 'cooperative'))
+            return process
+        with patch('olsWatchdog.subprocess.Popen', side_effect=start_successor), \
+                patch('olsWatchdog.signal.pidfd_send_signal', side_effect=RuntimeError('injected interruption')):
             try:
                 prepare_watchdog(root, True, script='/candidate')
             except RuntimeError as error:
                 assert 'injected interruption' in str(error)
             else:
                 raise AssertionError('Missing interrupted handoff')
-        waiting = inspect_watchdog(root, allow_legacy=True)
+        assert len(successors) == 1
+        def live_identity(pid):
+            fields = process_fields(Path('/proc') / str(pid))
+            return fields[19] if fields[0] not in ('X', 'Z') else None
+        waiting = wait_for_watchdog_snapshot(
+            lambda: inspect_watchdog(root, allow_legacy=True),
+            [original[0][:3], successors[0]], live_identity)
         assert len(waiting) == 2 and hash_file(SCRIPT) == COOPERATIVE and idle(old)
         waiter = next(r[0] for r in waiting if r[2] == 'cooperative')
         prepare_watchdog(root, True, script='/candidate')
@@ -128,6 +168,48 @@ def guest():
     launch(['/bin/bash', str(SCRIPT), 'lsws'])
     wait_for(lambda: Path('/tmp/locked-check').is_file())
     print('positive handoff; stopped/ambiguous refusal; shared-lock exclusion; no inherited lock; MariaDB preserved')
+
+
+class WatchdogSnapshotReadinessTests(unittest.TestCase):
+    def setUp(self):
+        self.expected = [(12, '100', 'legacy'), (34, '200', 'cooperative')]
+        self.observed = [entry + (1, ['lsws']) for entry in self.expected]
+        self.identities = {12: '100', 34: '200'}
+
+    def test_transient_refusal_requires_a_fresh_exact_snapshot(self):
+        inspect = Mock(side_effect=[RuntimeError('missing executing descriptor'), self.observed])
+        with patch.object(time, 'sleep'):
+            self.assertEqual(wait_for_watchdog_snapshot(
+                inspect, self.expected, self.identities.get), self.observed)
+        self.assertEqual(inspect.call_count, 2)
+
+    def test_persistent_foreign_candidate_refusal_is_not_accepted(self):
+        inspect = Mock(side_effect=RuntimeError('unverified foreign candidate'))
+        with patch.object(time, 'monotonic', side_effect=[0, 0, .04, .08, .12]), \
+                patch.object(time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'did not settle.*foreign candidate'):
+                wait_for_watchdog_snapshot(inspect, self.expected, self.identities.get, timeout=.1)
+        self.assertEqual(inspect.call_count, 3)
+
+    def test_unknown_watcher_in_a_complete_snapshot_is_immediately_rejected(self):
+        inspect = Mock(return_value=self.observed + [(56, '300', 'cooperative', 1, ['lsws'])])
+        with self.assertRaisesRegex(AssertionError, 'Unexpected watchdog'):
+            wait_for_watchdog_snapshot(inspect, self.expected, self.identities.get)
+        inspect.assert_called_once()
+
+    def test_changed_known_identity_is_rejected_before_snapshot(self):
+        inspect = Mock()
+        self.identities[34] = 'reused-pid'
+        with self.assertRaisesRegex(RuntimeError, 'identity changed'):
+            wait_for_watchdog_snapshot(inspect, self.expected, self.identities.get)
+        inspect.assert_not_called()
+
+    def test_known_identity_must_survive_the_snapshot(self):
+        def inspect():
+            self.identities[34] = 'reused-pid'
+            return self.observed
+        with self.assertRaisesRegex(RuntimeError, 'identity changed'):
+            wait_for_watchdog_snapshot(inspect, self.expected, self.identities.get)
 
 
 class WatchdogTransactionTests(unittest.TestCase):
