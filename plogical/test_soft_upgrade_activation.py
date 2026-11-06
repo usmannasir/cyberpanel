@@ -9,6 +9,7 @@ import subprocess
 import ssl
 import sys
 import tempfile
+import time
 import threading
 import unittest
 from types import SimpleNamespace
@@ -27,38 +28,139 @@ class ActivationTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
         self.job = 'a' * 32
 
-    def test_legacy_two_argument_launcher_selects_independent_scope(self):
-        def run(argv, **kwargs):
+    def test_launcher_returns_after_live_worker_ack_without_waiting_for_upgrade(self):
+        child = {'pid': 4242, 'start_ticks': '99'}
+        def popen(argv, **kwargs):
             self.assertEqual(argv[:3], [app.SYSTEMD_RUN, '--scope', '--quiet'])
-            self.assertIn('--unit=cyberpanel-soft-upgrade-' + self.job, argv)
             self.assertEqual(argv[-3:], ['--worker', 'v3.0.8', self.job])
             self.assertTrue(kwargs['start_new_session'])
-            self.assertEqual(kwargs['stdin'], subprocess.DEVNULL)
-            self.assertEqual(kwargs['stdout'], subprocess.DEVNULL)
-            self.assertEqual(app.read_status(self.job)['state'], 'starting')
-            app.record_status(self.job, 'complete', activation={'checked': True})
-            return SimpleNamespace(returncode=0, stderr='')
-        with patch.object(app.subprocess, 'run', side_effect=run):
+            self.assertEqual(kwargs['stderr'], subprocess.DEVNULL)
+            app.status_path(self.job).write_text(json.dumps(dict(child, state='starting')))
+            return SimpleNamespace(poll=lambda: None)
+        with patch.object(app.subprocess, 'Popen', side_effect=popen), \
+                patch.object(app, 'read_status', return_value=dict(child, state='starting')), \
+                patch.object(app, 'process_identity', return_value=child), \
+                patch.object(app, 'require_job_scope') as scope:
             self.assertEqual(app.launch_panel_job('v3.0.8', self.job), 0)
-        self.assertEqual(app.read_status(self.job)['activation'], {'checked': True})
+        scope.assert_called_once_with(self.job, child['pid'])
+        self.assertEqual(json.loads(app.admission_path(self.job).read_text()), dict(child, decision='accept'))
+        self.assertEqual(json.loads(app.status_path(self.job).read_text())['state'], 'starting')
+
+    def test_real_child_stays_running_after_admission_returns(self):
+        real_popen = subprocess.Popen
+        code = ('import sys,time;from pathlib import Path;sys.path.insert(0,%r);'
+                'from plogical import softUpgrade as app;app.STATUS_ROOT=Path(%r);'
+                'app.await_worker_admission(%r);time.sleep(10)') % (
+                    str(Path(__file__).resolve().parents[1]), str(app.STATUS_ROOT), self.job)
+        children = []
+        def popen(argv, **kwargs):
+            child = real_popen([sys.executable, '-I', '-c', code], **kwargs)
+            children.append(child)
+            return child
+        try:
+            with patch.object(app.subprocess, 'Popen', side_effect=popen), \
+                    patch.object(app, 'require_job_scope'):
+                started = time.monotonic()
+                self.assertEqual(app.launch_panel_job('v3.0.8', self.job, timeout=5), 0)
+                self.assertLess(time.monotonic() - started, 4)
+            self.assertIsNone(children[0].poll())
+            self.assertEqual(app.read_status(self.job)['state'], 'starting')
+        finally:
+            for child in children:
+                child.terminate()
+                child.wait(timeout=5)
+
+    def test_lock_refusal_never_announces_ready_or_receives_admission(self):
+        app.STATUS_ROOT.mkdir()
+        with (app.STATUS_ROOT / '.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with patch.object(app, 'await_worker_admission') as admission, patch.object(app.sys, 'stderr'):
+                self.assertEqual(app.run_panel_job('v3.0.8', self.job, require_admission=True), 1)
+            admission.assert_not_called()
+        self.assertFalse(app.admission_path(self.job).exists())
 
     def test_invalid_job_or_branch_never_launches_a_scope(self):
-        with patch.object(app.subprocess, 'run') as run:
+        with patch.object(app.subprocess, 'Popen') as popen:
             for branch, job in [('v3.0.8;id', self.job), ('v3.0.8', '../escape')]:
                 with self.assertRaises(ValueError):
                     app.launch_panel_job(branch, job)
-            run.assert_not_called()
+            popen.assert_not_called()
 
     def test_failed_scope_admission_is_terminal_failure(self):
-        with patch.object(app.subprocess, 'run', side_effect=OSError('systemd unavailable')):
+        with patch.object(app.subprocess, 'Popen', side_effect=OSError('systemd unavailable')):
             self.assertEqual(app.launch_panel_job('v3.0.8', self.job), 1)
         self.assertEqual(app.read_status(self.job)['state'], 'failed')
-        self.assertIn('independent upgrade worker', app.read_status(self.job)['message'])
+        self.assertEqual(json.loads(app.admission_path(self.job).read_text())['decision'], 'cancel')
 
     def test_scope_exit_without_worker_result_cannot_report_complete(self):
-        with patch.object(app.subprocess, 'run', return_value=SimpleNamespace(returncode=1)):
+        with patch.object(app.subprocess, 'Popen', return_value=SimpleNamespace(poll=lambda: 1)):
             self.assertEqual(app.launch_panel_job('v3.0.8', self.job), 1)
         self.assertEqual(app.read_status(self.job)['state'], 'failed')
+
+    def test_timeout_never_authorizes_a_late_worker(self):
+        with patch.object(app.subprocess, 'Popen', return_value=SimpleNamespace(poll=lambda: None)):
+            self.assertEqual(app.launch_panel_job('v3.0.8', self.job, timeout=0), 1)
+        self.assertEqual(json.loads(app.admission_path(self.job).read_text())['decision'], 'cancel')
+        with self.assertRaisesRegex(RuntimeError, 'timed out'):
+            app.await_worker_admission(self.job, timeout=0)
+        self.assertEqual(json.loads(app.admission_path(self.job).read_text())['decision'], 'cancel')
+
+    def test_worker_only_accepts_its_exact_pid_and_start_identity(self):
+        app.STATUS_ROOT.mkdir()
+        own = app.process_identity(os.getpid())
+        app.admission_path(self.job).write_text(json.dumps(dict(own, decision='accept')))
+        app.await_worker_admission(self.job, timeout=1)
+        app.admission_path(self.job).write_text(json.dumps(dict(own, start_ticks='wrong')))
+        with self.assertRaisesRegex(RuntimeError, 'authorize'):
+            app.await_worker_admission(self.job, timeout=0.01)
+
+    def test_cancel_is_immutable_even_when_ready_arrives_late(self):
+        app.STATUS_ROOT.mkdir()
+        cancel = app.decide_admission(self.job, {'decision': 'cancel'})
+        self.assertEqual(app.decide_admission(self.job, {'decision': 'accept', 'pid': 99}), cancel)
+        with self.assertRaisesRegex(RuntimeError, 'authorize'):
+            app.await_worker_admission(self.job, timeout=1)
+
+    def test_accept_winner_cannot_be_overwritten_by_timeout_cancel(self):
+        app.STATUS_ROOT.mkdir()
+        accept = dict(app.process_identity(os.getpid()), decision='accept')
+        self.assertEqual(app.decide_admission(self.job, accept), accept)
+        self.assertEqual(app.decide_admission(self.job, {'decision': 'cancel'}), accept)
+        app.await_worker_admission(self.job, timeout=0)
+
+    def test_simultaneous_accept_and_cancel_have_one_complete_atomic_winner(self):
+        app.STATUS_ROOT.mkdir()
+        for index in range(10):
+            job = ('%032x' % (index + 1))
+            gate = threading.Barrier(2)
+            results = []
+            errors = []
+            def compete(value):
+                try:
+                    gate.wait(timeout=5)
+                    results.append(app.decide_admission(job, value))
+                except Exception as error:
+                    errors.append(error)
+            threads = [threading.Thread(target=compete, args=(value,)) for value in (
+                {'decision': 'cancel'}, {'decision': 'accept', 'pid': 123, 'start_ticks': '4'})]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(timeout=5)
+                self.assertFalse(thread.is_alive())
+            self.assertFalse(errors)
+            self.assertEqual(len(results), 2)
+            self.assertEqual(results[0], results[1])
+            self.assertEqual(json.loads(app.admission_path(job).read_text()), results[0])
+
+    def test_parent_rejects_wrong_scope_without_admitting(self):
+        child = {'pid': 4242, 'start_ticks': '99'}
+        with patch.object(app.subprocess, 'Popen'), \
+                patch.object(app, 'read_status', return_value=dict(child, state='starting')), \
+                patch.object(app, 'process_identity', return_value=child), \
+                patch.object(app, 'require_job_scope', side_effect=RuntimeError('wrong scope')):
+            self.assertEqual(app.launch_panel_job('v3.0.8', self.job), 1)
+        self.assertEqual(json.loads(app.admission_path(self.job).read_text())['decision'], 'cancel')
 
     def test_upgrade_failure_does_not_restart_panel(self):
         with patch.object(app, 'run', side_effect=RuntimeError('native refused')), \

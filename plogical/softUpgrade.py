@@ -304,9 +304,9 @@ def activate_panel_runtime(lock_fd, timeout=90):
     raise RuntimeError('Panel runtime activation failed: ' + last_error)
 
 
-def require_job_scope(job):
+def require_job_scope(job, pid='self'):
     expected = '/cyberpanel-soft-upgrade-%s.scope' % job
-    groups = [line.rsplit(':', 1)[-1] for line in Path('/proc/self/cgroup').read_text().splitlines()]
+    groups = [line.rsplit(':', 1)[-1] for line in Path('/proc/%s/cgroup' % pid).read_text().splitlines()]
     if any('/lscpd.service/' in group or group.endswith('/lscpd.service') for group in groups) or not any(
             group.endswith(expected) for group in groups):
         raise RuntimeError('The upgrade worker must run in its independent systemd scope.')
@@ -331,34 +331,96 @@ def worker_io(job):
         os.close(descriptor)
 
 
-def launch_panel_job(branch, job):
+def admission_path(job):
+    return Path(str(status_path(job)) + '.admitted')
+
+
+def decide_admission(job, decision):
+    """Accept and cancel compete for one immutable, fully written decision."""
+    with tempfile.NamedTemporaryFile(mode='w', dir=STATUS_ROOT, delete=False) as output:
+        temporary = output.name
+        json.dump(decision, output)
+        os.chmod(temporary, 0o600)
+    try:
+        try:
+            os.link(temporary, str(admission_path(job)))
+            return decision
+        except FileExistsError:
+            return json.loads(admission_path(job).read_text())
+    finally:
+        os.unlink(temporary)
+
+
+def await_worker_admission(job, timeout=30):
+    """No upgrade may begin without the short-lived caller's checked handoff."""
+    record_status(job, 'starting')
+    own = process_identity(os.getpid())
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            admitted = json.loads(admission_path(job).read_text())
+        except FileNotFoundError:
+            admitted = None
+        if admitted == dict(own, decision='accept'):
+            return
+        if admitted is not None or read_status(job).get('state') == 'failed':
+            raise RuntimeError('The upgrade caller did not authorize the worker handoff.')
+        time.sleep(0.1)
+    decision = decide_admission(job, {'decision': 'cancel'})
+    if decision == dict(own, decision='accept'):
+        return
+    raise RuntimeError('The upgrade worker handoff timed out before admission.')
+
+
+def launch_panel_job(branch, job, timeout=20):
     validate_branch(branch)
     status_path(job)
+    if admission_path(job).exists():
+        raise RuntimeError('This upgrade run was already admitted.')
     record_status(job, 'starting')
+    caller = os.getpid()
     try:
-        result = subprocess.run([SYSTEMD_RUN, '--scope', '--quiet', '--slice=system.slice',
-                                 '--unit=cyberpanel-soft-upgrade-' + job, '--',
-                                 sys.executable, '-I', str(Path(__file__).resolve()),
-                                 '--worker', branch, job], start_new_session=True,
-                                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                stderr=subprocess.PIPE, universal_newlines=True)
-        status = read_status(job)
-        if status.get('state') not in ('complete', 'failed'):
-            raise RuntimeError('The independent upgrade worker stopped without a terminal result.')
-        return result.returncode
+        process = subprocess.Popen([SYSTEMD_RUN, '--scope', '--quiet', '--slice=system.slice',
+                                    '--unit=cyberpanel-soft-upgrade-' + job, '--',
+                                    sys.executable, '-I', str(Path(__file__).resolve()),
+                                    '--worker', branch, job], start_new_session=True,
+                                   stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            status = read_status(job)
+            if status.get('state') == 'failed':
+                raise RuntimeError(status.get('message', 'Worker admission failed.'))
+            if status.get('state') == 'starting' and status.get('pid') != caller:
+                identity = process_identity(status['pid'])
+                if identity != {'pid': status['pid'], 'start_ticks': status.get('start_ticks')}:
+                    raise RuntimeError('The upgrade worker identity changed during admission.')
+                require_job_scope(job, identity['pid'])
+                if decide_admission(job, dict(identity, decision='accept')).get('decision') != 'accept':
+                    raise RuntimeError('The worker handoff was cancelled before admission.')
+                # Never wait for the scope: the old WSGI process must be able to
+                # finish its ApplicationInstaller thread before runtime activation.
+                return 0
+            if process.poll() is not None:
+                raise RuntimeError('The independent worker exited before admission.')
+            time.sleep(0.1)
+        raise RuntimeError('The independent worker did not become ready before admission timed out.')
     except Exception as error:
+        decide_admission(job, {'decision': 'cancel'})
         record_status(job, 'failed', 'Could not launch the independent upgrade worker: ' + str(error))
         return 1
 
 
-def run_panel_job(branch, job):
-    record_status(job, 'starting')
+def run_panel_job(branch, job, require_admission=False):
+    STATUS_ROOT.mkdir(exist_ok=True, mode=0o755)
     try:
         with (STATUS_ROOT / '.lock').open('a') as lock:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 raise RuntimeError('Another panel upgrade is in progress.')
+            if require_admission:
+                await_worker_admission(job)
             record_status(job, 'running')
             run(branch, lock_fd=lock.fileno())
             activation = activate_panel_runtime(lock.fileno())
@@ -377,6 +439,6 @@ if __name__ == '__main__':
         status_path(sys.argv[3])
         require_job_scope(sys.argv[3])
         worker_io(sys.argv[3])
-        sys.exit(run_panel_job(sys.argv[2], sys.argv[3]))
+        sys.exit(run_panel_job(sys.argv[2], sys.argv[3], require_admission=True))
     else:
         sys.exit(launch_panel_job(sys.argv[1], sys.argv[2]))
