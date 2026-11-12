@@ -1,34 +1,51 @@
 name: sync2gitee
+
 on:
   push:
-    branches:
-      - '**'
+    branches: ['**']
+    tags: ['**']
   pull_request:
-    branches:
-      - '**'
-  create:
-    branches:
-      - '**'
-  delete:
-    branches:    
-      - '**' 
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitee-sync-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   repo-sync:
-    env:
-      dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-      dst_token: ${{ secrets.GITEE_TOKEN }}
-      gitee_user: ${{ secrets.GITEE_USER }}
+    if: github.event_name == 'pull_request' || !github.event.deleted
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-      - name: sync github -> gitee
-        uses: Yikun/hub-mirror-action@master
-        if: env.dst_key && env.dst_token && env.gitee_user
-        with:
-          src: 'github/${{ github.repository_owner }}'
-          dst: 'gitee/${{ secrets.GITEE_USER }}'
-          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-          dst_token:  ${{ secrets.GITEE_TOKEN }}
-          static_list: ${{ github.event.repository.name }}
+
+      - name: Verify the proposed merge can advance its Gitee branch
+        if: github.event_name == 'pull_request'
+        run: |
+          bash .github/scripts/sync-gitee.sh check \
+            "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_REF" \
+            https://gitee.com/qtwrk/cyberpanel.git "refs/heads/$GITHUB_BASE_REF"
+
+      - name: Sync the pushed branch or tag to Gitee
+        if: github.event_name == 'push'
+        env:
+          GITEE_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+          GITEE_USER: ${{ secrets.GITEE_USER }}
+        run: |
+          set -euo pipefail
+          [[ "$GITEE_USER" =~ ^[A-Za-z0-9_-]+$ ]]
+          test -n "$GITEE_PRIVATE_KEY"
+          umask 077
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          printf '%s\n' "$GITEE_PRIVATE_KEY" > "$ssh_dir/key"
+          # https://help.gitee.com/account/gitees-ssh-key-fingerprints
+          printf '%s\n' 'gitee.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEKxHSJ7084RmkJ4YdEi5tngynE8aZe2uEoVVsB/OvYN' > "$ssh_dir/known_hosts"
+          export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o UserKnownHostsFile=$ssh_dir/known_hosts -i $ssh_dir/key"
+          bash .github/scripts/sync-gitee.sh push \
+            "https://github.com/$GITHUB_REPOSITORY.git" "$GITHUB_REF" \
+            "git@gitee.com:$GITEE_USER/cyberpanel.git" "$GITHUB_REF"
