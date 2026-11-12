@@ -20,6 +20,7 @@ except:
 import plogical.CyberCPLogFileWriter as logging
 import json
 import shlex
+import socket
 import subprocess
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
@@ -930,19 +931,20 @@ class MailServerManager(multi.Thread):
             return HttpResponse(final_json)
 
     def install_postfix_dovecot(self):
+        distro = ProcessUtilities.decideDistro()
         try:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if distro == ProcessUtilities.centos or distro == ProcessUtilities.cent8:
                 command = 'yum remove postfix -y'
                 ProcessUtilities.executioner(command)
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            elif distro in (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20):
                 command = 'apt-get -y remove postfix'
                 ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing postfix..,10')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if distro == ProcessUtilities.centos:
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            elif distro == ProcessUtilities.cent8:
 
                 command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                 ProcessUtilities.executioner(command)
@@ -965,7 +967,6 @@ class MailServerManager(multi.Thread):
 
             ProcessUtilities.executioner(command)
             
-            import socket
             # We are going to leverage postconfig -e to edit the settings for hostname
             command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
             ProcessUtilities.executioner(command)
@@ -980,7 +981,7 @@ class MailServerManager(multi.Thread):
             
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if distro == ProcessUtilities.centos or distro == ProcessUtilities.cent8:
                 pass
             else:
                 command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
@@ -989,16 +990,16 @@ class MailServerManager(multi.Thread):
 
             ##
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if distro == ProcessUtilities.centos:
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            elif distro == ProcessUtilities.cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             else:
                 command = 'apt-get -y install dovecot-mysql'
 
             ProcessUtilities.executioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if distro == ProcessUtilities.ubuntu:
 
                 command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
                 subprocess.call(command, shell=True)
@@ -1240,7 +1241,7 @@ class MailServerManager(multi.Thread):
             ProcessUtilities.executioner(command)
 
             # Cleanup config files for ubuntu
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() in (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20):
                 self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
                 self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/main.cf", "/usr/libexec/postfix",
                                               "/usr/lib/postfix/sbin")
@@ -1374,7 +1375,7 @@ class MailServerManager(multi.Thread):
             command = "chmod 755 " + main
             ProcessUtilities.executioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() in (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20):
                 command = "mkdir -p /etc/pki/dovecot/private/"
                 ProcessUtilities.executioner(command)
 
@@ -1479,7 +1480,7 @@ milter_default_action = accept
             writeToFile.write(configData)
             writeToFile.close()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() in (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20):
                 data = open(openDKIMConfigurePath, 'r').readlines()
                 writeToFile = open(openDKIMConfigurePath, 'w')
                 for items in data:
@@ -1668,7 +1669,7 @@ milter_default_action = accept
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         ProcessUtilities.executioner(command)
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.cent8:
+        if ProcessUtilities.decideDistro() in (ProcessUtilities.centos, ProcessUtilities.cent8):
 
             command = 'chown root:pdns /etc/pdns/pdns.conf'
             ProcessUtilities.executioner(command)
@@ -1693,7 +1694,7 @@ milter_default_action = accept
             from plogical.processUtilities import ProcessUtilities
             
             # Determine distribution
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() in (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20):
                 # Install dovecot-sieve and dovecot-managesieved
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-sieve dovecot-managesieved'
                 ProcessUtilities.executioner(command)
