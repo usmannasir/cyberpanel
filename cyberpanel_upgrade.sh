@@ -258,6 +258,8 @@ OLS_Recovery_Hint() (
     method=stock_recovery_hint
     file=olsStockClassifier.py
     mode=--repair-stock-module
+    wrapper=install-module-2.5.7-r10.sh
+    checksum=c8891504149a7508d5b95eefa172a22a34002b772d8bdb564158379a719c5a3a
   else
     return 0
   fi
@@ -267,8 +269,8 @@ OLS_Recovery_Hint() (
     26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
     https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py || return 0
   if [[ "$file" == olsStockClassifier.py ]]; then
-    OLS_Pinned_Helper "$work/$file" "$file" 4b284b4f1775a116ae61ad305edf4b4a22a9744b52b1db96974d6dfb2683afc0 \
-      https://cyberpanel.net/ols-stock-classifier-2.5.7-r6.py || return 0
+    OLS_Pinned_Helper "$work/$file" "$file" 8ebc396e660ea299c9ca967c445ab18300f93489042377b0b4d2b95c712180d2 \
+      https://cyberpanel.net/ols-stock-classifier-2.5.7-r10.py || return 0
   fi
   printf '%s\n' "$output" | python3 -IB -c '
 import os, runpy, sys

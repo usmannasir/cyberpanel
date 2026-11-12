@@ -1,9 +1,12 @@
 """Read-only classifier for the supported stock OpenLiteSpeed ABI mismatch."""
 import hashlib
 import platform
+import re
 from pathlib import Path
 
 STOCK_CORE = '9ac9627a2678f366c97066c68f16b4a7ca07b692c7967da2f60a0993eade7377'
+# openlitespeed 1.9.4-3+noble, verified against the signed LiteSpeed APT index.
+NOBLE_194_3_CORE = '54d84931a7dd46fef4485e5f6580db6884532aa3d00f4e41659451d6b15521bb'
 PAIRED_MODULE = '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b'
 # Verified distribution package bytes; the platform key is also the pinned
 # *candidate* native artifact family. A matching OS name alone is never proof.
@@ -46,19 +49,54 @@ def digest(path):
 def require_bytes(root, selected):
     _, stock_core, paired_module, _ = require_platform(selected)
     root = Path(root)
-    for name, expected in [('bin/openlitespeed', stock_core),
-                           ('modules/cyberpanel_ols.so', paired_module)]:
+    accepted_cores = (stock_core, NOBLE_194_3_CORE) if stock_core == STOCK_CORE else (stock_core,)
+    for name, expected in [('bin/openlitespeed', accepted_cores),
+                           ('modules/cyberpanel_ols.so', (paired_module,))]:
         path = root / name
-        if path.is_symlink() or not path.is_file() or digest(path) != expected:
+        if path.is_symlink() or not path.is_file() or digest(path) not in expected:
             raise RuntimeError('Unrecognized stock recovery input: ' + name)
+
+
+
+def without_default_autossl_warnings(root, lines):
+    """Recognize only the installed defaults the Noble vendor core skips."""
+    config = root / 'conf/httpd_config.conf'
+    warning = re.compile(
+        r'[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6} '
+        r'\[WARN\] \[PlainConf\] \[httpServerConfig:\] Not support '
+        r'\[(autossl 1|acmeemail admin@cyberpanel\.net)\] in file '
+        + re.escape(str(config)) + r':([1-9][0-9]{0,7})'
+    )
+    if config.is_symlink() or not config.is_file():
+        return lines
+    configured = config.read_text(encoding='utf-8').splitlines()
+    remaining, seen = [], set()
+    for line in lines:
+        match = warning.fullmatch(line)
+        if match:
+            directive, number = match.groups()
+            index = int(number) - 1
+            if (directive not in seen and index < len(configured)
+                    and ' '.join(configured[index].lower().split()) == directive):
+                seen.add(directive)
+                continue
+        remaining.append(line)
+    return remaining
 
 
 def require_stock(root, selected, returncode, output, classifier=None):
     require_bytes(root, selected)
+    root = Path(root).absolute()
     lines = output.splitlines()
+    original_count = len(lines)
+    if (returncode == 1 and any('[httpServerConfig:] Not support [' in line for line in lines)
+            and require_platform(selected)[1] == STOCK_CORE
+            and digest(root/'bin/openlitespeed') == NOBLE_194_3_CORE):
+        lines = without_default_autossl_warnings(root, lines)
     if returncode == 0 and lines == [DIAGNOSTIC]:
         return []
-    if returncode != 1 or lines.count(DIAGNOSTIC) != 1 or len(lines) not in (2, 3):
+    if (returncode != 1 or lines.count(DIAGNOSTIC) != 1 or len(lines) > 3
+            or (len(lines) == 1 and original_count == 1)):
         raise RuntimeError('Unrecognized stock core ABI or diagnostic status')
     if classifier is None:
         import olsParserRecovery as classifier
@@ -76,4 +114,4 @@ def stock_recovery_hint(binary, returncode, output, classifier=None):
     except (OSError, RuntimeError, ValueError, ImportError):
         return ''
     return (' Known stock core/module mismatch. Use the checksum-verified '
-            'install-module-2.5.7-r6.sh --repair-stock-module and rerun the upgrade.')
+            'install-module-2.5.7-r10.sh --repair-stock-module and rerun the upgrade.')

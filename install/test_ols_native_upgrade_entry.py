@@ -51,6 +51,9 @@ config=/usr/local/lsws/conf/httpd_config.conf
 if ! grep -q '^module cyberpanel_ols' "$config"; then
     printf '\nmodule cyberpanel_ols {\n ls_enabled 1\n}\n' >>"$config"
 fi
+if [[ "$(sha256sum "$core" | cut -d' ' -f1)" = 54d84931a7dd46fef4485e5f6580db6884532aa3d00f4e41659451d6b15521bb ]]; then
+    printf '\nautoSSL 1\nacmeEmail admin@cyberpanel.net\n' >>"$config"
+fi
 sed -n '/^OLS_Pinned_Helper() {/,/^Check_OS() {/p' /src/cyberpanel_upgrade.sh | sed '$d' >/tmp/guard.sh
 source /tmp/guard.sh
 for matched in 1 0; do
@@ -59,7 +62,9 @@ for matched in 1 0; do
         printf '\0' >>"$module"
     fi
     sha256sum "$core" "$module" "$config" >/tmp/prior
-    "$core" -t >/tmp/native 2>&1
+    native_status=0
+    "$core" -t >/tmp/native 2>&1 || native_status=$?
+    test "$native_status" -le 1
     grep -Fxq '[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed core ABI (expected CyberPanel OLS 2.5.2)' /tmp/native
     for branch in v3.0.8 SoftUpgrade,v3.0.8 prepackage; do
         code=0
@@ -72,8 +77,8 @@ for matched in 1 0; do
         fi
         grep -Fq 'incompatible OpenLiteSpeed core ABI' /tmp/result
         if [[ "$matched" = 1 ]]; then
-            grep -Fq 'install-module-2.5.7-r9.sh --repair-stock-module' /tmp/result
-            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r9.sh and verify SHA256 45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9' /tmp/result
+            grep -Fq 'install-module-2.5.7-r10.sh --repair-stock-module' /tmp/result
+            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r10.sh and verify SHA256 c8891504149a7508d5b95eefa172a22a34002b772d8bdb564158379a719c5a3a' /tmp/result
         else
             if grep -Fq -- '--repair-stock-module' /tmp/result; then exit 1; fi
         fi
