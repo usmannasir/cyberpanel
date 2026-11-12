@@ -879,7 +879,10 @@ class MailServerManager(multi.Thread):
     #######
 
     def checkIfMailServerSSLIssued(self):
+        self.MailSSL = 0
         postfixPath = '/etc/postfix/main.cf'
+        if not os.path.isfile(postfixPath):
+            return 0
 
         postFixData = ProcessUtilities.outputExecutioner('cat %s' % (postfixPath))
 
@@ -965,18 +968,6 @@ class MailServerManager(multi.Thread):
                 command = 'apt-get -y install postfix'
                 # os.remove(file_name)
 
-            ProcessUtilities.executioner(command)
-            
-            # We are going to leverage postconfig -e to edit the settings for hostname
-            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
-            ProcessUtilities.executioner(command)
-            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
-            ProcessUtilities.executioner(command)
-
-            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
-            # to the fqdn from socket if the default is still found
-            postfix_main = '/etc/postfix/main.cf'
-            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), postfix_main)
             ProcessUtilities.executioner(command)
             
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
@@ -1257,6 +1248,9 @@ class MailServerManager(multi.Thread):
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_email2email.cf",
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/main.cf", main)
+
+            mail_hostname = getattr(self, 'mailHostName', None) or socket.getfqdn()
+            ProcessUtilities.executioner('postconf -e ' + shlex.quote('myhostname = ' + mail_hostname))
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/master.cf", master)
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot.conf", dovecot)
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
@@ -1696,7 +1690,7 @@ milter_default_action = accept
             # Determine distribution
             if ProcessUtilities.decideDistro() in (ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20):
                 # Install dovecot-sieve and dovecot-managesieved
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-sieve dovecot-managesieved'
+                command = 'env DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-sieve dovecot-managesieved'
                 ProcessUtilities.executioner(command)
             else:
                 # For CentOS/AlmaLinux/OpenEuler
@@ -1877,6 +1871,8 @@ protocol sieve {
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(
+                self.extraArgs['tempStatusPath'], '%s [ResetEmailConfigurations][404]' % msg)
             final_dic = {'installOpenDKIM': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
