@@ -77,8 +77,8 @@ for matched in 1 0; do
         fi
         grep -Fq 'incompatible OpenLiteSpeed core ABI' /tmp/result
         if [[ "$matched" = 1 ]]; then
-            grep -Fq 'install-module-2.5.7-r10.sh --repair-stock-module' /tmp/result
-            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r10.sh and verify SHA256 c8891504149a7508d5b95eefa172a22a34002b772d8bdb564158379a719c5a3a' /tmp/result
+            grep -Fq 'install-module-2.5.7-r11.sh --repair-stock-module' /tmp/result
+            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-r11.sh and verify SHA256 2423cc78ec03ac03952f6db8cb26418b1995307480b9abc84a703f5250745218' /tmp/result
         else
             if grep -Fq -- '--repair-stock-module' /tmp/result; then exit 1; fi
         fi

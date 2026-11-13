@@ -258,8 +258,8 @@ OLS_Recovery_Hint() (
     method=stock_recovery_hint
     file=olsStockClassifier.py
     mode=--repair-stock-module
-    wrapper=install-module-2.5.7-r10.sh
-    checksum=c8891504149a7508d5b95eefa172a22a34002b772d8bdb564158379a719c5a3a
+    wrapper=install-module-2.5.7-r11.sh
+    checksum=2423cc78ec03ac03952f6db8cb26418b1995307480b9abc84a703f5250745218
   else
     return 0
   fi
