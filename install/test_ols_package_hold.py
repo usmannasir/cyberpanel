@@ -43,6 +43,15 @@ esac''',
 case " $* " in *" --exclude=openlitespeed "*) ;; *) printf stock-core >"$CORE" ;; esac
 case " $* " in *" --exclude=ols-modsecurity "*) ;; *) printf stock-waf >"$WAF" ;; esac''',
             'timeout': '[ "$1" = 30 ] || exit 99; shift; [ "${SIMULATE_TIMEOUT:-0}" = 0 ] || exit 124; exec "$@"',
+            'sha256sum': '''case "${@: -1}" in
+ "$CORE") digest="${LEGACY_CORE_HASH:-}" ;;
+ "$MODULE") digest="${LEGACY_MODULE_HASH:-}" ;;
+esac
+if [ -n "${digest:-}" ] && [ -f "${@: -1}" ]; then
+    printf '%s  %s\\n' "$digest" "${@: -1}"
+else
+    exec /usr/bin/sha256sum "$@"
+fi''',
             'dpkg-query': '''if [ "${@: -1}" = ols-modsecurity ]; then
 printf "%s" "${WAF_PACKAGE_STATUS-install ok installed}"; exit "${WAF_QUERY_STATUS:-0}"
 fi
@@ -73,7 +82,8 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
 
     def run_upgrade(self, command=None, **env):
         environment = dict(os.environ, PATH=str(self.bin) + os.pathsep + os.environ['PATH'],
-                           CORE=str(self.core), WAF=str(self.waf), WAF_PACKAGE_STATUS="install ok installed",
+                           CORE=str(self.core), MODULE=str(self.module), WAF=str(self.waf),
+                           WAF_PACKAGE_STATUS="install ok installed",
                            HOLDS=str(self.holds), EVENTS=str(self.events))
         environment.update(env)
         return subprocess.run(['bash', '-c', self.guard + '\nProtect_Custom_OLS_From_Packages || exit 1\n' +
@@ -126,6 +136,31 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
         self.assertEqual(self.run_upgrade().returncode, 0)
         self.assertEqual(self.holds.read_text(), 'other-package\n')
         self.assertEqual(self.core.read_text(), 'stock replacement')
+
+    def test_unmarked_legacy_ubuntu_pair_requires_both_verified_files(self):
+        self.release.write_text('ID=ubuntu\nVERSION_ID="24.04"\n')
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
+        self.module.write_text('legacy module without ABI marker')
+        original = self.core.read_bytes()
+        core_hash = '2a836d4bf17fe5152d15dd60fd3817c1d3c294b48b35f12b776fa2efb7771422'
+        module_hash = 'f1c1ab881625fa6fe6545e45283220e86245a1e3c96e29c4d86af9ab15fd6c2b'
+
+        for reported_module_hash in ('', module_hash):
+            with self.subTest(module_verified=bool(reported_module_hash)):
+                self.holds.write_text('other-package\n')
+                self.events.write_text('')
+                result = self.run_upgrade(
+                    LEGACY_CORE_HASH=core_hash, LEGACY_MODULE_HASH=reported_module_hash,
+                    WAF_PACKAGE_STATUS='', WAF_QUERY_STATUS='1',
+                    VALIDATION_STATUS='1', VALIDATION_OUTPUT='[WARN] License validation failed',
+                )
+                self.assertEqual(self.core.read_bytes(), original)
+                if reported_module_hash:
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn('openlitespeed\n', self.holds.read_text())
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assert_no_apt()
 
     def test_installed_waf_hold_failure_or_ineffective_hold_aborts(self):
         for env in ({'HOLD_FAIL_PACKAGE': 'ols-modsecurity'},

@@ -323,6 +323,7 @@ Protect_Custom_OLS_From_Packages() {
   # Native validation must precede repository setup. Preserve the Ubuntu APT
   # hold and exclude only verified RPM owners during this CyberPanel upgrade.
   local distro_id family core module validation validation_status held package package_status query_status
+  local custom_core=0 legacy_core=0 core_digest module_digest
   OLS_RPM_EXCLUDES=()
   local packages=(openlitespeed)
   distro_id=$(. /etc/os-release; printf '%s' "$ID")
@@ -334,9 +335,24 @@ Protect_Custom_OLS_From_Packages() {
   core=/usr/local/lsws/bin/openlitespeed
   module=/usr/local/lsws/modules/cyberpanel_ols.so
   [[ -f "$core" ]] || return 0
-  # This marker is also used by plogical/modSec.py to recognize custom cores.
+  # The Ubuntu 2.5.0 / 2.7.3 release predates the ABI marker. Verify both
+  # release files before treating it as a custom installation.
+  if grep -aFq 'cyberpanel_lsi_api_abi_v1' "$core"; then
+    custom_core=1
+  elif [[ "$family" == apt ]]; then
+    core_digest=$(sha256sum -- "$core") || return 1
+    if [[ "${core_digest%% *}" == 2a836d4bf17fe5152d15dd60fd3817c1d3c294b48b35f12b776fa2efb7771422 ]]; then
+      module_digest=$(sha256sum -- "$module" 2>/dev/null) || module_digest=
+      if [[ "${module_digest%% *}" != f1c1ab881625fa6fe6545e45283220e86245a1e3c96e29c4d86af9ab15fd6c2b ]]; then
+        echo 'ERROR: Incomplete legacy CyberPanel OLS bundle; no package changes attempted.'
+        return 1
+      fi
+      legacy_core=1
+      custom_core=1
+    fi
+  fi
   # A module filename alone must never pin a stock/unsupported installation.
-  if ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$core"; then
+  if [[ "$custom_core" == 0 ]]; then
     if grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module" 2>/dev/null; then
       validation=$(timeout 30 "$core" -t 2>&1)
       validation_status=$?
@@ -350,7 +366,7 @@ Protect_Custom_OLS_From_Packages() {
     fi
     return 0
   fi
-  if [[ ! -x "$core" ]] || ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module"; then
+  if [[ ! -x "$core" ]] || { [[ "$legacy_core" == 0 ]] && ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module"; }; then
     echo 'ERROR: Incomplete custom OLS bundle; no package changes attempted.'
     return 1
   fi
