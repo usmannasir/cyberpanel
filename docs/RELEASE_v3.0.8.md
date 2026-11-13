@@ -12,6 +12,8 @@ runtime limitation are recorded in CHANGELOG.md.
   website and webmail regression suites, separating opt-in/environment skips.
 - Preserve the retained QA server's full deployed tree, configuration, SQL state
   and custom OpenLiteSpeed/module before any public-updater test.
+- Apply the [OpenLiteSpeed upgrade release gate](../CONTRIBUTING.md#openlitespeed-upgrade-release-gate)
+  before pushing changes that can affect the installed bundle or package handling.
 - Verify a clean installation from the published candidate and the official
   updater on an owned retained panel. Compare installed commit and served assets.
 - Verify authenticated website, database, backup/restore, File Manager,
