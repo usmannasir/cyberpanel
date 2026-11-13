@@ -17,6 +17,7 @@ from django.utils import translation
 from django.views.decorators.http import require_POST
 from cyberpanel_version import BUILD, VERSION
 from loginSystem.twoFactor import consume_recovery_code
+from plogical.clientIP import get_client_ip
 # Create your views here.
 
 
@@ -122,9 +123,7 @@ def verifyLogin(request):
                 request.session.cycle_key()
                 request.session['userID'] = admin.pk
 
-                ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
-                if ipAddr is None:
-                    ipAddr = request.META.get('REMOTE_ADDR')
+                ipAddr = get_client_ip(request)
 
                 if ipAddr.find(':') > -1:
                     ipAddr = ':'.join(ipAddr.split(':')[:3])

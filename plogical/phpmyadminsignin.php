@@ -46,11 +46,20 @@ function requestPMAPanel($validationURL, $fields) {
     if (!preg_match('/^[A-Za-z0-9]{16,128}$/D', $sessionID)) {
         return false;
     }
-    $clientIP = isset($_SERVER['HTTP_CF_CONNECTING_IP'])
-        ? (string) $_SERVER['HTTP_CF_CONNECTING_IP']
-        : (isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '');
-    if (filter_var($clientIP, FILTER_VALIDATE_IP) === false) {
+    // The panel decides which address the session check uses (see
+    // plogical/clientIP.py): it gets the address this request came from, and
+    // any CF-Connecting-IP the browser sent, which it only believes when that
+    // address belongs to Cloudflare.
+    $peerIP = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    if (filter_var($peerIP, FILTER_VALIDATE_IP) === false) {
         return false;
+    }
+    $headers = array('X-CyberPanel-Peer: ' . $peerIP);
+    if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        $forwardedIP = trim((string) $_SERVER['HTTP_CF_CONNECTING_IP']);
+        if (filter_var($forwardedIP, FILTER_VALIDATE_IP) !== false) {
+            $headers[] = 'CF-Connecting-IP: ' . $forwardedIP;
+        }
     }
 
     if ($validationURL === false || !function_exists('curl_init')) {
@@ -71,7 +80,7 @@ function requestPMAPanel($validationURL, $fields) {
             PHP_QUERY_RFC3986
         ),
         CURLOPT_COOKIE => 'cyberpanel_sessionid=' . $sessionID,
-        CURLOPT_HTTPHEADER => array('CF-Connecting-IP: ' . $clientIP),
+        CURLOPT_HTTPHEADER => $headers,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => false,
         CURLOPT_CONNECTTIMEOUT => 2,
