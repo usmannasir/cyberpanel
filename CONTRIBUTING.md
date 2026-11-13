@@ -222,6 +222,35 @@ CyberPanel follows semantic versioning (MAJOR.MINOR.PATCH):
 - **Hotfixes**: As critical issues arise
 - **Development**: Continuous integration
 
+### OpenLiteSpeed upgrade release gate
+
+Before pushing changes to the OpenLiteSpeed bundle, upgrade scripts, or package
+handling to `stable` or a numbered release branch, test the exact candidate
+over SSH and in a browser on an isolated Linux installation.
+
+1. Run `python3 -m unittest install.test_ols_package_hold` on Linux. The guard
+   must run before any package changes. It must preserve verified custom
+   bundles, stop on a failed validation or hold, and leave stock installations
+   on their normal package path. If the candidate branch predates the suite,
+   bring forward the package guard and regression tests from the supported
+   release before validating the candidate.
+2. For Ubuntu package changes, test with a real vendor update available.
+   Include the Ubuntu 24.04 fixture from ticket 1UN4TH: custom OpenLiteSpeed
+   2.5.0, CyberPanel module 2.7.3, the stock `openlitespeed 1.9.2-1+noble`
+   package record, and no separate `ols-modsecurity` package. This older custom
+   pair predates the ABI marker. Verify both published file checksums, confirm
+   the guard holds `openlitespeed` before APT runs, and compare the core and
+   module checksums after APT. A package version or a successful config test
+   alone cannot establish which binary APT will replace. [Legacy bundle
+   checksums and regression](https://github.com/usmannasir/cyberpanel/commit/95fbd5049aa95782a168adcb359b45ec7699463e).
+3. Complete the OpenLiteSpeed bundle upgrade. Check the installed core and
+   module checksums, configuration preservation, and service restart over SSH.
+   Use a browser to load a hosted PHP test page and, when enabled, the WebAdmin
+   sign-in page. Preserve the site's existing WebAdmin policy.
+4. Record the candidate commit, Ubuntu and package versions, before/after
+   checksums, and browser results with the release notes. Hold the production
+   push if any applicable check fails or is still pending.
+
 ## 💬 Community
 
 ### **Getting Help**
