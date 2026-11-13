@@ -424,6 +424,13 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    @staticmethod
+    def _record_zone(record):
+        if record.domainOwner is not None:
+            return record.domainOwner
+        # Records written directly to PowerDNS can lack CyberPanel's foreign key.
+        return Domains.objects.get(pk=record.domain_id)
+
     def updateRecord(self, userID = None, data = None):
         try:
 
@@ -441,10 +448,9 @@ class DNSManager:
                 return ACLManager.loadErrorJson()
 
             record = Records.objects.get(pk=data['id'])
+            zone = self._record_zone(record)
 
-            if ACLManager.VerifyRecordOwner(currentACL, record, zoneDomain) == 1:
-                pass
-            else:
+            if currentACL['admin'] != 1 and zone.name != zoneDomain:
                 return ACLManager.loadErrorJson()
 
             if data['nameNow'] != None:
@@ -466,7 +472,7 @@ class DNSManager:
             record.save()
 
             if record.type != 'SOA':
-                DNS.incrementSOASerial(record.domainOwner)
+                DNS.incrementSOASerial(zone)
 
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -490,13 +496,10 @@ class DNSManager:
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnershipZone(delRecord.domainOwner.name, admin, currentACL) == 1:
-                pass
-            else:
+            zone = self._record_zone(delRecord)
+            if ACLManager.checkOwnershipZone(zone.name, admin, currentACL) != 1:
                 return ACLManager.loadError()
 
-
-            zone = delRecord.domainOwner
             recordType = delRecord.type
             delRecord.delete()
 
