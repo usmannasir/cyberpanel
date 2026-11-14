@@ -2,8 +2,9 @@ import ast
 from pathlib import Path
 import subprocess
 import tempfile
+import types
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import call, Mock, mock_open, patch
 
 from plogical.sieveUpgrade import (prepare_sieve_upgrade,
                                   SieveConfigCheckpoint, activate_sieve_config)
@@ -87,6 +88,40 @@ class SieveUpgradeTests(unittest.TestCase):
         checkpoint.restore.assert_not_called()
 
     def test_real_setup_stops_before_config_access_when_preflight_fails(self):
+        namespace, fake_upgrade = self.load_setup_sieve()
+        with patch('plogical.sieveUpgrade.prepare_sieve_upgrade', return_value=False), \
+                patch('builtins.open', side_effect=AssertionError('config must not be opened')), \
+                patch('plogical.sieveUpgrade.SieveConfigCheckpoint') as checkpoint:
+            namespace['setupSieve']()
+        checkpoint.assert_not_called()
+        fake_upgrade.executioner.assert_not_called()
+
+    def test_repeated_successful_setup_preserves_firewall_policy(self):
+        namespace, fake_upgrade = self.load_setup_sieve()
+        firewall_module = types.ModuleType('plogical.firewallUtilities')
+        firewall_module.FirewallUtilities = Mock()
+        namespace['preserving_csf'] = Mock(return_value=False)
+        namespace['os'].path.exists.side_effect = lambda path: path in (
+            '/etc/dovecot/dovecot.conf', '/etc/dovecot/conf.d/20-managesieve.conf')
+        config = mock_open(read_data='protocols = imap sieve\n'
+                                     'lda_mailbox_autocreate = yes\n'
+                                     'sieve_dir = ~/sieve\n'
+                                     'inet_listener sieve\n'
+                                     'service managesieve\n')
+        with patch('plogical.sieveUpgrade.prepare_sieve_upgrade', return_value=True), \
+                patch('plogical.sieveUpgrade.activate_sieve_config', return_value=True) as activate, \
+                patch('plogical.sieveUpgrade.SieveConfigCheckpoint'), \
+                patch('builtins.open', config), \
+                patch.dict('sys.modules', {firewall_module.__name__: firewall_module}):
+            namespace['setupSieve']()
+            namespace['setupSieve']()
+        self.assertEqual(2, activate.call_count)
+        self.assertEqual([call('Sieve setup complete!', 0)] * 2, fake_upgrade.stdOut.call_args_list)
+        firewall_module.FirewallUtilities.addSieveFirewallRule.assert_not_called()
+        fake_upgrade.executioner.assert_not_called()
+
+    @staticmethod
+    def load_setup_sieve():
         source = Path(__file__).with_name('upgrade.py').read_text()
         tree = ast.parse(source)
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Upgrade')
@@ -97,12 +132,7 @@ class SieveUpgradeTests(unittest.TestCase):
         fake_os.path.exists.return_value = True
         namespace = {'os': fake_os, 'Upgrade': fake_upgrade}
         exec(compile(module, '<real setupSieve>', 'exec'), namespace)
-        with patch('plogical.sieveUpgrade.prepare_sieve_upgrade', return_value=False), \
-                patch('builtins.open', side_effect=AssertionError('config must not be opened')), \
-                patch('plogical.sieveUpgrade.SieveConfigCheckpoint') as checkpoint:
-            namespace['setupSieve']()
-        checkpoint.assert_not_called()
-        fake_upgrade.executioner.assert_not_called()
+        return namespace, fake_upgrade
 
 
 if __name__ == '__main__':

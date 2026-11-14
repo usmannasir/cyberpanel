@@ -3588,16 +3588,7 @@ protocol sieve {
             if not activate_sieve_config(checkpoint, Upgrade.stdOut):
                 return
 
-            # Open firewall port
-            try:
-                from plogical.firewallUtilities import FirewallUtilities
-                if preserving_csf():
-                    Upgrade.stdOut('Preserving CSF rules; Sieve port policy is unchanged.')
-                else:
-                    FirewallUtilities.addSieveFirewallRule()
-            except:
-                pass
-
+            # Existing installations retain the administrator's Sieve access policy.
             Upgrade.stdOut("Sieve setup complete!", 0)
 
         except BaseException as msg:
