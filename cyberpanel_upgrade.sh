@@ -250,16 +250,16 @@ OLS_Recovery_Hint() (
   local core="$1" status="$2" output="$3" work method file mode
   local wrapper=install-module-2.5.7-r9.sh
   local checksum=45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9
-  if [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
-    method=recovery_hint
-    file=olsParserRecovery.py
-    mode=--repair-webadmin-parser
-  elif [[ "$output" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+  if [[ "$output" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
     method=stock_recovery_hint
     file=olsStockClassifier.py
     mode=--repair-stock-module
-    wrapper=install-module-2.5.7-r12.sh
-    checksum=c461afac34a0367e1e10661f8e9fd6313874dbf71d495960d88987550f304e4b
+    wrapper=install-module-2.5.7-r13.sh
+    checksum=af8c97c548fe8a74066df45a5c603fccee227b2f8f8c840e0b2c266566ea481b
+  elif [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
+    method=recovery_hint
+    file=olsParserRecovery.py
+    mode=--repair-webadmin-parser
   else
     return 0
   fi
@@ -269,8 +269,8 @@ OLS_Recovery_Hint() (
     26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
     https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py || return 0
   if [[ "$file" == olsStockClassifier.py ]]; then
-    OLS_Pinned_Helper "$work/$file" "$file" 200c02488000e15bf86ae53c6512436f96d046f9fac464f616cf5a135cfb56bb \
-      https://cyberpanel.net/ols-stock-classifier-2.5.7-r12.py || return 0
+    OLS_Pinned_Helper "$work/$file" "$file" f5b463039060ce43e3a8398e9b6e63c67e6502deb93020e39d65d9a79e802e10 \
+      https://cyberpanel.net/ols-stock-classifier-2.5.7-r13.py || return 0
   fi
   printf '%s\n' "$output" | python3 -IB -c '
 import os, runpy, sys
