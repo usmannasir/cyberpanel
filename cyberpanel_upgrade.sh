@@ -254,8 +254,8 @@ OLS_Recovery_Hint() (
     method=stock_recovery_hint
     file=olsStockClassifier.py
     mode=--repair-stock-module
-    wrapper=install-module-2.5.7-r14.sh
-    checksum=c2db9dccca842e80d45dcaa93bb03d62ef469766a41fc52a598941a4bb8a4e9c
+    wrapper=install-module-2.5.7-r15.sh
+    checksum=33412d7aa588d4bde01b3dfeaa08d2380acda24120bac2d29d914ade1641910e
   elif [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
     method=recovery_hint
     file=olsParserRecovery.py
