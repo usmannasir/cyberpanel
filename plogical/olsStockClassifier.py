@@ -7,16 +7,22 @@ from pathlib import Path
 STOCK_CORE = '9ac9627a2678f366c97066c68f16b4a7ca07b692c7967da2f60a0993eade7377'
 # openlitespeed 1.9.4-3+noble, verified against the signed LiteSpeed APT index.
 NOBLE_194_3_CORE = '54d84931a7dd46fef4485e5f6580db6884532aa3d00f4e41659451d6b15521bb'
+# openlitespeed 1.9.4-1+jammy amd64, extracted from the LiteSpeed archive.
+JAMMY_194_1_CORE = 'a66855d898427e0241991eb55d83e29771995ef3abd0e5c31c4fbc64b7b4364a'
+JAMMY_194_3_CORE = '34f1d526e181a9eec1a5297d5c8692add81f9c83153246fec51b1774739f7f87'
+# openlitespeed 1.9.4-3.el9 x86_64, verified against the LiteSpeed RPM payload.
+EL9_194_3_CORE = '1788aef94ca79d824f80ecbfbc1faf916f68b3d6688feb8e986eead2795ec8e2'
+EL9_194_1_CORE = 'c8b28ee77643d6d0fb9f1ca08f2df2f1f9175fd72c9917d7265283a01098b83d'
 PAIRED_MODULE = '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b'
 # Verified distribution package bytes; the platform key is also the pinned
 # *candidate* native artifact family. A matching OS name alone is never proof.
 STOCK_PROFILES = {
-    ('almalinux', '9.8'): ('rhel9', 'c8b28ee77643d6d0fb9f1ca08f2df2f1f9175fd72c9917d7265283a01098b83d',
+    ('almalinux', '9.8'): ('rhel9', EL9_194_1_CORE,
         '7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb',
         '1b2eb923dd040ad50bd80bbf10f903b92b2dea00e3f54bcae0de2b21a7324f1f'),
     ('ubuntu', '24.04'): ('ubuntu', STOCK_CORE, PAIRED_MODULE,
         'b41fc8e2941ed2fe8602279ace857ea88b2e5d691e7260fc7af4ab4ed9663eda'),
-    ('ubuntu', '22.04'): ('ubuntu', '34f1d526e181a9eec1a5297d5c8692add81f9c83153246fec51b1774739f7f87', PAIRED_MODULE,
+    ('ubuntu', '22.04'): ('ubuntu', JAMMY_194_3_CORE, PAIRED_MODULE,
         '83c8aa0f9f63e5b29b225a2cf41132625421b39b217492b86ede3b26eb5ac3bd'),
 }
 
@@ -49,7 +55,12 @@ def digest(path):
 def require_bytes(root, selected):
     _, stock_core, paired_module, _ = require_platform(selected)
     root = Path(root)
-    accepted_cores = (stock_core, NOBLE_194_3_CORE) if stock_core == STOCK_CORE else (stock_core,)
+    additional_cores = {
+        STOCK_CORE: (NOBLE_194_3_CORE,),
+        JAMMY_194_3_CORE: (JAMMY_194_1_CORE,),
+        EL9_194_1_CORE: (EL9_194_3_CORE,),
+    }
+    accepted_cores = (stock_core,) + additional_cores.get(stock_core, ())
     for name, expected in [('bin/openlitespeed', accepted_cores),
                            ('modules/cyberpanel_ols.so', (paired_module,))]:
         path = root / name
@@ -59,7 +70,7 @@ def require_bytes(root, selected):
 
 
 def without_default_autossl_warnings(root, lines):
-    """Recognize only the installed defaults the Noble vendor core skips."""
+    """Recognize only the installed defaults these vendor cores skip."""
     config = root / 'conf/httpd_config.conf'
     warning = re.compile(
         r'[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6} '
@@ -90,8 +101,7 @@ def require_stock(root, selected, returncode, output, classifier=None):
     lines = output.splitlines()
     original_count = len(lines)
     if (returncode == 1 and any('[httpServerConfig:] Not support [' in line for line in lines)
-            and require_platform(selected)[1] == STOCK_CORE
-            and digest(root/'bin/openlitespeed') == NOBLE_194_3_CORE):
+            and digest(root/'bin/openlitespeed') in (NOBLE_194_3_CORE, JAMMY_194_1_CORE, EL9_194_3_CORE)):
         lines = without_default_autossl_warnings(root, lines)
     if returncode == 0 and lines == [DIAGNOSTIC]:
         return []
@@ -114,4 +124,4 @@ def stock_recovery_hint(binary, returncode, output, classifier=None):
     except (OSError, RuntimeError, ValueError, ImportError):
         return ''
     return (' Known stock core/module mismatch. Use the checksum-verified '
-            'install-module-2.5.7-r11.sh --repair-stock-module and rerun the upgrade.')
+            'install-module-2.5.7-r12.sh --repair-stock-module and rerun the upgrade.')
