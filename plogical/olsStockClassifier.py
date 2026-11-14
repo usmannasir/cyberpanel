@@ -127,10 +127,11 @@ def require_stock(root, selected, returncode, output, classifier=None):
     root = Path(root).absolute()
     lines = output.splitlines()
     original_count = len(lines)
-    if (returncode == 1 and any('[httpServerConfig:] Not support [' in line for line in lines)
-            and digest(root/'bin/openlitespeed') in (NOBLE_194_3_CORE, JAMMY_194_1_CORE, EL9_194_3_CORE)):
+    if (returncode in (1, 2) and any('[httpServerConfig:] Not support [' in line for line in lines)
+            and digest(root/'bin/openlitespeed') in (
+                STOCK_CORE, NOBLE_194_3_CORE, RESOLUTE_194_3_CORE, JAMMY_194_1_CORE, EL9_194_3_CORE)):
         lines = without_default_autossl_warnings(root, lines)
-    if returncode == 0 and lines == [DIAGNOSTIC]:
+    if lines == [DIAGNOSTIC] and (returncode == 0 or (returncode == 1 and original_count > 1)):
         return []
     if noble_webadmin_throttle_rejection(root, returncode, lines):
         return []
@@ -153,4 +154,4 @@ def stock_recovery_hint(binary, returncode, output, classifier=None):
     except (OSError, RuntimeError, ValueError, ImportError):
         return ''
     return (' Known stock core/module mismatch. Use the checksum-verified '
-            'install-module-2.5.7-r13.sh --repair-stock-module and rerun the upgrade.')
+            'install-module-2.5.7-r14.sh --repair-stock-module and rerun the upgrade.')
