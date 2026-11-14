@@ -1697,11 +1697,7 @@ milter_default_action = accept
                 command = 'yum -y install dovecot-pigeonhole'
                 ProcessUtilities.executioner(command)
             
-            # Add Sieve port 4190 to firewall
-            from plogical.firewallUtilities import FirewallUtilities
-            FirewallUtilities.addSieveFirewallRule()
-            
-            # Configure Sieve in dovecot
+            # Configure Dovecot without changing the existing Sieve access policy.
             self.configureSieveInDovecot()
             
             logging.CyberCPLogFileWriter.writeToFile("Sieve reinstalled and configured after email reset")
