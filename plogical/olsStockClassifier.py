@@ -154,4 +154,4 @@ def stock_recovery_hint(binary, returncode, output, classifier=None):
     except (OSError, RuntimeError, ValueError, ImportError):
         return ''
     return (' Known stock core/module mismatch. Use the checksum-verified '
-            'install-module-2.5.7-r14.sh --repair-stock-module and rerun the upgrade.')
+            'install-module-2.5.7-r15.sh --repair-stock-module and rerun the upgrade.')
