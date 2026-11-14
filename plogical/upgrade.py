@@ -96,8 +96,8 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
                 mode = '--repair-webadmin-parser'
             if known:
                 if mode == '--repair-stock-module':
-                    wrapper = 'install-module-2.5.7-r12.sh'
-                    checksum = 'c461afac34a0367e1e10661f8e9fd6313874dbf71d495960d88987550f304e4b'
+                    wrapper = 'install-module-2.5.7-r13.sh'
+                    checksum = 'af8c97c548fe8a74066df45a5c603fccee227b2f8f8c840e0b2c266566ea481b'
                 else:
                     wrapper = 'install-module-2.5.7-r9.sh'
                     checksum = '45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9'

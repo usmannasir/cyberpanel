@@ -7,6 +7,8 @@ from pathlib import Path
 STOCK_CORE = '9ac9627a2678f366c97066c68f16b4a7ca07b692c7967da2f60a0993eade7377'
 # openlitespeed 1.9.4-3+noble, verified against the signed LiteSpeed APT index.
 NOBLE_194_3_CORE = '54d84931a7dd46fef4485e5f6580db6884532aa3d00f4e41659451d6b15521bb'
+# openlitespeed 1.9.4-3+resolute, verified against the signed LiteSpeed APT index.
+RESOLUTE_194_3_CORE = 'ab860ab89dfeb6f157bbfc62786ae4ff5c401fd427310d53a0edc1ccbd58df87'
 # openlitespeed 1.9.4-1+jammy amd64, extracted from the LiteSpeed archive.
 JAMMY_194_1_CORE = 'a66855d898427e0241991eb55d83e29771995ef3abd0e5c31c4fbc64b7b4364a'
 JAMMY_194_3_CORE = '34f1d526e181a9eec1a5297d5c8692add81f9c83153246fec51b1774739f7f87'
@@ -24,6 +26,8 @@ STOCK_PROFILES = {
         'b41fc8e2941ed2fe8602279ace857ea88b2e5d691e7260fc7af4ab4ed9663eda'),
     ('ubuntu', '22.04'): ('ubuntu', JAMMY_194_3_CORE, PAIRED_MODULE,
         '83c8aa0f9f63e5b29b225a2cf41132625421b39b217492b86ede3b26eb5ac3bd'),
+    ('ubuntu', '26.04'): ('ubuntu26', RESOLUTE_194_3_CORE, PAIRED_MODULE,
+        '453f86d0adc560c7b33a425719e912481c8fd97b6099ab5801f90a49106325e9'),
 }
 
 DIAGNOSTIC = ('[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed '
@@ -95,6 +99,29 @@ def without_default_autossl_warnings(root, lines):
     return remaining
 
 
+def noble_webadmin_throttle_rejection(root, returncode, lines):
+    """Recognize the verified stock Noble parser diagnostic without editing the config."""
+    if (returncode != 2 or len(lines) != 2 or lines.count(DIAGNOSTIC) != 1
+            or digest(root / 'bin/openlitespeed') != STOCK_CORE):
+        return False
+    config = root / 'admin/conf/admin_config.conf'
+    if config.is_symlink() or not config.is_file():
+        return False
+    diagnostic = next(line for line in lines if line != DIAGNOSTIC)
+    match = re.fullmatch(
+        r'(?:\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+ )?\[ERROR\] '
+        r'(?:\[\d+\] )?\[PlainConf\] \[adminConfig:\] Not support '
+        r'\[throttleenabled 1\] in file ' + re.escape(str(config)) + r':([1-9][0-9]{0,7})',
+        diagnostic,
+    )
+    if not match:
+        return False
+    configured = config.read_text(encoding='utf-8').splitlines()
+    index = int(match[1]) - 1
+    return index < len(configured) and bool(re.fullmatch(
+        r'\s*throttleEnabled\s+1\s*(?:#.*)?', configured[index], re.I))
+
+
 def require_stock(root, selected, returncode, output, classifier=None):
     require_bytes(root, selected)
     root = Path(root).absolute()
@@ -104,6 +131,8 @@ def require_stock(root, selected, returncode, output, classifier=None):
             and digest(root/'bin/openlitespeed') in (NOBLE_194_3_CORE, JAMMY_194_1_CORE, EL9_194_3_CORE)):
         lines = without_default_autossl_warnings(root, lines)
     if returncode == 0 and lines == [DIAGNOSTIC]:
+        return []
+    if noble_webadmin_throttle_rejection(root, returncode, lines):
         return []
     if (returncode != 1 or lines.count(DIAGNOSTIC) != 1 or len(lines) > 3
             or (len(lines) == 1 and original_count == 1)):
@@ -124,4 +153,4 @@ def stock_recovery_hint(binary, returncode, output, classifier=None):
     except (OSError, RuntimeError, ValueError, ImportError):
         return ''
     return (' Known stock core/module mismatch. Use the checksum-verified '
-            'install-module-2.5.7-r12.sh --repair-stock-module and rerun the upgrade.')
+            'install-module-2.5.7-r13.sh --repair-stock-module and rerun the upgrade.')
