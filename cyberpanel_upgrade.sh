@@ -254,8 +254,8 @@ OLS_Recovery_Hint() (
     method=stock_recovery_hint
     file=olsStockClassifier.py
     mode=--repair-stock-module
-    wrapper=install-module-2.5.7-r13.sh
-    checksum=af8c97c548fe8a74066df45a5c603fccee227b2f8f8c840e0b2c266566ea481b
+    wrapper=install-module-2.5.7-r14.sh
+    checksum=c2db9dccca842e80d45dcaa93bb03d62ef469766a41fc52a598941a4bb8a4e9c
   elif [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
     method=recovery_hint
     file=olsParserRecovery.py
@@ -269,8 +269,8 @@ OLS_Recovery_Hint() (
     26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
     https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py || return 0
   if [[ "$file" == olsStockClassifier.py ]]; then
-    OLS_Pinned_Helper "$work/$file" "$file" f5b463039060ce43e3a8398e9b6e63c67e6502deb93020e39d65d9a79e802e10 \
-      https://cyberpanel.net/ols-stock-classifier-2.5.7-r13.py || return 0
+    OLS_Pinned_Helper "$work/$file" "$file" 8244d977811af110f0ea5e7f9663ac6e88d4a9eaab655c31704423e8c5d96631 \
+      https://cyberpanel.net/ols-stock-classifier-2.5.7-r14.py || return 0
   fi
   printf '%s\n' "$output" | python3 -IB -c '
 import os, runpy, sys
