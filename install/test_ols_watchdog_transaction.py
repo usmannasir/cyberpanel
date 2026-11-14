@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 import time
 import unittest
 from unittest.mock import Mock, patch
@@ -210,6 +211,24 @@ class WatchdogSnapshotReadinessTests(unittest.TestCase):
             return self.observed
         with self.assertRaisesRegex(RuntimeError, 'identity changed'):
             wait_for_watchdog_snapshot(inspect, self.expected, self.identities.get)
+
+
+class WatchdogScopeTests(unittest.TestCase):
+    def test_boot_watchdog_is_accepted_only_in_the_exact_rc_local_unit(self):
+        from plogical.olsWatchdog import manual_session
+
+        with TemporaryDirectory() as directory:
+            entry = Path(directory)
+            for scope, allowed in (
+                ('0::/system.slice/rc-local.service', True),
+                ('1:name=systemd:/system.slice/rc-local.service', True),
+                ('0::/system.slice/another.service', False),
+                ('0::/system.slice/rc-local.service/child.scope', False),
+                ('0::/system.slice/rc-local.service\n1:name=systemd:/init.scope', False),
+            ):
+                with self.subTest(scope=scope):
+                    (entry / 'cgroup').write_text(scope + '\n')
+                    self.assertEqual(manual_session(entry), allowed)
 
 
 class WatchdogTransactionTests(unittest.TestCase):

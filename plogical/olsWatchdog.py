@@ -132,7 +132,9 @@ def manual_session(entry):
         return False
     path = candidates[0]
     parts = path.strip('/').split('/')
-    return (path in ('/', '/init.scope') or
+    # AlmaLinux's rc-local.service leaves the boot-started watchdog in its
+    # own cgroup after rc.local exits. Limit this to the exact systemd unit.
+    return (path in ('/', '/init.scope', '/system.slice/rc-local.service') or
             (len(parts) == 3 and parts[0] == 'user.slice' and parts[1].startswith('user-') and
              parts[1].endswith('.slice') and parts[2].startswith('session-') and parts[2].endswith('.scope')))
 
