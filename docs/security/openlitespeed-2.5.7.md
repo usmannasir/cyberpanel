@@ -42,3 +42,11 @@ Use filenames ending `2.5.7-r2` for the shared installer and cPanel/Plesk/standa
 [Installer revision 2 manifest](https://cyberpanel.net/openlitespeed-2.5.7-r2-manifest.json) Â· [Revision 2 validation](https://cyberpanel.net/openlitespeed-2.5.7-r2-validation.json) Â· [Core/source manifest](https://cyberpanel.net/openlitespeed-2.5.7-manifest.json) Â· [Source archive](https://cyberpanel.net/openlitespeed-2.5.7-source.tar.gz)
 
 The source archive SHA-256 is `99b5b9886d52281f5cc90d5925ba29b896c463ab2ea8b9f76368a7ae479d36ee`; it contains the exact parser, WebAdmin application, tests and build provenance and excludes licensed module source. Security assets SHA-256: `1a7720d214a6030a13efee45c6f46afd5fe3b373f4b78e5a824d23278d18cad0`.
+
+## CyberPanel OWASP CRS recovery
+
+On Ubuntu 22.04, 24.04, and 26.04 and on AlmaLinux 9.8, the stock OpenLiteSpeed recovery path accepts CyberPanel's bundled OWASP CRS 3.3.2 when the rules are stored in their original include files. It checks the rule and data files before installing the paired core and WAF and preserves the existing configuration. The installer and normal upgrade use the same updated binaries for those native artifact families.
+
+The updated core handles valid multiline module configuration without a fixed-size parameter buffer. It rejects an invalid module configuration safely. ModSecurity applies the first successfully loaded engine setting at the site's own scope and preserves an explicit monitor-only or disabled mode.
+
+[GitHub issue #1989](https://github.com/usmannasir/cyberpanel/issues/1989) · [Corresponding source and build recipes](https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-source.tar.gz)

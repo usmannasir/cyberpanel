@@ -146,13 +146,13 @@ class CustomOLSPlatformTests(unittest.TestCase):
 
                 config = binary_configs(path, class_name)['ubuntu26']
                 self.assertTrue(config['url'].endswith(
-                    'openlitespeed-2.5.7-x86_64-ubuntu'
+                    'openlitespeed-2.5.7-crs-scopes-x86_64-ubuntu'
                 ))
                 self.assertTrue(config['module_url'].endswith(
                     'cyberpanel_ols-2.7.7-x86_64-ubuntu.so'
                 ))
                 self.assertTrue(config['modsec_url'].endswith(
-                    'mod_security-2.5.6-x86_64-ubuntu26.so'
+                    'mod_security-crs-scopes-x86_64-ubuntu26.so'
                 ))
                 for checksum in config['sha256'].values():
                     self.assertRegex(checksum, r'^(?:[0-9a-f]{64}|PENDING_(?:CORE|MODULE|MODSEC)_2_[57]_[47]_(?:UBUNTU(?:26)?|RHEL(?:8|9|10)))$')
@@ -161,13 +161,13 @@ class CustomOLSPlatformTests(unittest.TestCase):
         expected = {
             self.install_path: {
                 'rhel8': ('2.5.7', '2.7.7'),
-                'rhel9': ('2.5.7', '2.7.7'),
-                'ubuntu': ('2.5.7', '2.7.7'),
+                'rhel9': ('2.5.7-crs-scopes', '2.7.7'),
+                'ubuntu': ('2.5.7-crs-scopes', '2.7.7'),
             },
             self.upgrade_path: {
                 'rhel8': ('2.5.7', '2.7.7'),
-                'rhel9': ('2.5.7', '2.7.7'),
-                'ubuntu': ('2.5.7', '2.7.7'),
+                'rhel9': ('2.5.7-crs-scopes', '2.7.7'),
+                'ubuntu': ('2.5.7-crs-scopes', '2.7.7'),
             },
         }
 

@@ -25,18 +25,37 @@ class modSec:
     MODSEC_COMPATIBLE = {'rhel8': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel8.so',
                'sha256': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708',
                'core_sha256': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b'},
-     'rhel9': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
-               'sha256': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9',
-               'core_sha256': '03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec'},
+     'rhel9': {'url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-rhel9.so',
+               'sha256': 'e45ab08d016a22b5cb3ae4a10babeb848a1a6a8f14c9bc49d288a25462f872f1',
+               'core_sha256': '0792b848f9912ee092f17272575513a960bcc23e5a237e95b8c632e7ed2513df'},
      'rhel10': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel10.so',
                 'sha256': 'a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde',
                 'core_sha256': 'fb65d7f438da8f7dfa4057b9c42d5f0b50d8b742e0e9bef1959fc0b432837c96'},
-     'ubuntu': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
-                'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
-                'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'},
-     'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
-                  'sha256': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae',
-                  'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'}}
+     'ubuntu': {'url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
+                'sha256': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe',
+                'core_sha256': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5'},
+     'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu26.so',
+                  'sha256': '3f6711cb51fe2fb896a54582d01d19f92f48fabc89b43a07667af54c42115153',
+                  'core_sha256': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5'}}
+
+    # Accept the previous official pair on installations awaiting upgrade.
+    MODSEC_PREVIOUS = {
+        'ubuntu': {
+            'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
+            'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
+            'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f',
+        },
+        'ubuntu26': {
+            'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
+            'sha256': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae',
+            'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f',
+        },
+        'rhel9': {
+            'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
+            'sha256': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9',
+            'core_sha256': '03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec',
+        },
+    }
 
     @staticmethod
     def detectPlatform():
@@ -74,8 +93,12 @@ class modSec:
                 return False
             with open('/usr/local/lsws/bin/openlitespeed', 'rb') as core:
                 core_bytes = core.read()
+                core_digest = hashlib.sha256(core_bytes).hexdigest()
+                if core_digest != config.get('core_sha256'):
+                    config = modSec.MODSEC_PREVIOUS.get(platform, {})
                 if (b'cyberpanel_lsi_api_abi_v1' not in core_bytes or
-                        hashlib.sha256(core_bytes).hexdigest() != config.get('core_sha256')):
+                        core_digest != config.get('core_sha256') or
+                        not re.fullmatch(r'[0-9a-f]{64}', config.get('sha256', ''))):
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Upgrade CyberPanel to the complete compatible OpenLiteSpeed security bundle before installing this ModSecurity build")
                     return False

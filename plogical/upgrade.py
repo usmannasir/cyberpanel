@@ -96,8 +96,8 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
                 mode = '--repair-webadmin-parser'
             if known:
                 if mode == '--repair-stock-module':
-                    wrapper = 'install-module-2.5.7-r16.sh'
-                    checksum = '2eaceb3d9cb61f023134df03fc8b833975a35d119d98fc59c46d00e0b2063cad'
+                    wrapper = 'install-module-2.5.7-crs-r7.sh'
+                    checksum = '242d0634be808c9dfa225564a4f62e92a0148d8eadc040a227b5c26df2a61016'
                 else:
                     wrapper = 'install-module-2.5.7-r9.sh'
                     checksum = '45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9'
@@ -1225,30 +1225,30 @@ class Upgrade:
                        'sha256': {'binary': 'b03111ae378b56cb487c3cb57d19e1f0adc1145516454f1eb7a7093661ccbc2b',
                                   'module': 'c28caa4c0d8ef4c021ae347079481db5d21ed52eb60a7edffe3d2cf8239f6733',
                                   'modsec': '12b5139447af8c5a17a9d278746f0d5f20e90e2a620951a15e4945ab0a75f708'}},
-             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel9',
+             'rhel9': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-x86_64-rhel9',
                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel9.so',
-                       'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
-                       'sha256': {'binary': '03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec',
+                       'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-rhel9.so',
+                       'sha256': {'binary': '0792b848f9912ee092f17272575513a960bcc23e5a237e95b8c632e7ed2513df',
                                   'module': '7a4d92b6050581e17585cb7be9369d6e7d0496e051fa158a65c049c78db8aedb',
-                                  'modsec': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9'}},
+                                  'modsec': 'e45ab08d016a22b5cb3ae4a10babeb848a1a6a8f14c9bc49d288a25462f872f1'}},
              'rhel10': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-rhel10',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-rhel10.so',
                         'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel10.so',
                         'sha256': {'binary': 'fb65d7f438da8f7dfa4057b9c42d5f0b50d8b742e0e9bef1959fc0b432837c96',
                                    'module': 'edc783f288ba4d5baf4a51748900ddd8f13ccb147ed88ffee73e4fb559b20db2',
                                    'modsec': 'a6748193c53193accdba1799019a1149fa6fbddc4bca847f1a6361450b006bde'}},
-             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-ubuntu',
+             'ubuntu': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-x86_64-ubuntu',
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
-                        'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
-                        'sha256': {'binary': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
+                        'sha256': {'binary': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5',
                                    'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
-                                   'modsec': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536'}},
-             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-x86_64-ubuntu',
+                                   'modsec': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe'}},
+             'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-x86_64-ubuntu',
                           'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
-                          'modsec_url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
-                          'sha256': {'binary': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f',
+                          'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu26.so',
+                          'sha256': {'binary': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5',
                                      'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
-                                     'modsec': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae'}}}
+                                     'modsec': '3f6711cb51fe2fb896a54582d01d19f92f48fabc89b43a07667af54c42115153'}}}
 
             config = BINARY_CONFIGS.get(platform)
             if not config:
