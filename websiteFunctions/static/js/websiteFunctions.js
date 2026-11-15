@@ -2568,10 +2568,6 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 $scope.WebSitesList = JSON.parse(response.data.data);
                 $scope.pagination = response.data.pagination;
                 $("#listFail").hide();
-                // Expand the first site by default
-                if ($scope.WebSitesList.length > 0) {
-                    $scope.expandedSites[$scope.WebSitesList[0].domain] = true;
-                }
             } else {
                 $("#listFail").fadeIn();
                 $scope.errorMessage = response.data.error_message;
@@ -5756,10 +5752,6 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 $scope.WebSitesList = JSON.parse(response.data.data);
                 $scope.pagination = response.data.pagination;
                 $("#listFail").hide();
-                // Expand the first site by default
-                if ($scope.WebSitesList.length > 0) {
-                    $scope.expandedSites[$scope.WebSitesList[0].domain] = true;
-                }
             } else {
                 $("#listFail").fadeIn();
                 $scope.errorMessage = response.data.error_message;
@@ -9281,10 +9273,6 @@ app.controller('listWebsites', function ($scope, $http, $window) {
                 $scope.WebSitesList = JSON.parse(response.data.data);
                 $scope.pagination = response.data.pagination;
                 $("#listFail").hide();
-                // Expand the first site by default
-                if ($scope.WebSitesList.length > 0) {
-                    $scope.expandedSites[$scope.WebSitesList[0].domain] = true;
-                }
             } else {
                 $("#listFail").fadeIn();
                 $scope.errorMessage = response.data.error_message;
@@ -9777,10 +9765,6 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
                 $scope.pagination = response.data.pagination;
                 $scope.clients = JSON.parse(response.data.data);
                 $("#listFail").hide();
-                // Expand the first site by default
-                if ($scope.WebSitesList.length > 0) {
-                    $scope.expandedSites[$scope.WebSitesList[0].domain] = true;
-                }
             } else {
                 $("#listFail").fadeIn();
                 $scope.errorMessage = response.data.error_message;
