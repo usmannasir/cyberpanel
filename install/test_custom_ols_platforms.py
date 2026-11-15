@@ -90,6 +90,31 @@ class CustomOLSPlatformTests(unittest.TestCase):
     install_path = ROOT / 'install' / 'installCyberPanel.py'
     upgrade_path = ROOT / 'plogical' / 'upgrade.py'
 
+    def test_supported_ubuntu_repo_keys_are_readable_before_refresh(self):
+        path = ROOT / 'install/install.py'
+        for release in (22.04, 24.04, 26.04):
+            with self.subTest(release=release):
+                method = load_method(path, 'preFlightsChecks', 'installCyberPanelRepo')
+                preflight = mock.Mock()
+                method.__globals__.update(
+                    ubuntu='ubuntu', get_Ubuntu_release=lambda: release,
+                    S_IRWXU=0o700, S_IRWXG=0o070, preFlightsChecks=preflight,
+                )
+                fake = mock.Mock(distro='ubuntu')
+                keyrings = (
+                    '/etc/apt/trusted.gpg.d/lst_debian_repo.gpg',
+                    '/etc/apt/trusted.gpg.d/lst_repo.gpg',
+                )
+                events = []
+                preflight.call.side_effect = lambda command, *args: events.append(command)
+                with mock.patch.object(os.path, 'exists', return_value=True), \
+                     mock.patch.object(os.path, 'getsize', return_value=100), \
+                     mock.patch.object(os, 'chmod', side_effect=lambda path, mode: events.append((path, mode))):
+                    method(fake)
+                refresh = events.index('apt-get update -y -o APT::Update::Error-Mode=any')
+                for keyring in keyrings:
+                    self.assertLess(events.index((keyring, 0o644)), refresh)
+
     def test_almalinux_10_uses_dedicated_artifacts(self):
         os_release = 'NAME="AlmaLinux"\nVERSION="10.1"\nVERSION_ID="10.1"\n'
         cases = (

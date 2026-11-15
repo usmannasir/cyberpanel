@@ -563,7 +563,7 @@ class preFlightsChecks:
                 command = "./" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                if get_Ubuntu_release() >= 24.0:
+                if get_Ubuntu_release() >= 22.0:
                     # APT verifies repository keys as its unprivileged user.
                     # LiteSpeed's helper inherits the installer's umask.
                     for key_file in ('/etc/apt/trusted.gpg.d/lst_debian_repo.gpg',
@@ -590,7 +590,7 @@ class preFlightsChecks:
                         f.write(f"#deb http://rpms.litespeedtech.com/edge/debian/ {codename} main\n")
                     wrote_repo = True
 
-                if get_Ubuntu_release() >= 24.0:
+                if get_Ubuntu_release() >= 22.0:
                     # The helper may return success even when its APT refresh only
                     # emitted warnings. Require a usable package index before installing packages.
                     command = 'apt-get update -y -o APT::Update::Error-Mode=any'
