@@ -531,15 +531,25 @@ class InstallCyberPanel:
                 def service_command(action):
                     return ['systemctl', action, unit] if unit else [control, action]
 
+                def stop_service():
+                    result = subprocess.run(service_command('stop'), stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE, timeout=60)
+                    if result.returncode == 0:
+                        # The vendor unit uses delay-stop and KillMode=none.
+                        # systemd can report inactive while the OLS master drains.
+                        for attempt in range(26 if unit else 1):
+                            if not running():
+                                return
+                            if unit and attempt < 25:
+                                time.sleep(1)
+                    raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+
                 stopped = False
                 touched = []
                 try:
                     if was_running:
                         stopped = True
-                        result = subprocess.run(service_command('stop'), stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE, timeout=60)
-                        if result.returncode != 0 or running():
-                            raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
+                        stop_service()
                     security_assets.apply()
                     for kind, url, target, mode, backup_name in required:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
@@ -564,11 +574,14 @@ class InstallCyberPanel:
                         if touched:
                             # Atomic restoration is safe even if a failed start left
                             # a mapped executable; stop before restarting the old set.
-                            try:
-                                subprocess.run(service_command('stop'), stdout=subprocess.PIPE,
-                                               stderr=subprocess.PIPE, timeout=60)
-                            except Exception:
-                                pass  # Restore files even if the control command failed.
+                            if unit:
+                                stop_service()
+                            else:
+                                try:
+                                    subprocess.run(service_command('stop'), stdout=subprocess.PIPE,
+                                                   stderr=subprocess.PIPE, timeout=60)
+                                except Exception:
+                                    pass  # Keep legacy unmanaged controller rollback behavior.
                             security_assets.rollback()
                             for target, backup_name in reversed(touched):
                                 if previous[target]:

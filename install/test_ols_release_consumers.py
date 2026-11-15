@@ -164,6 +164,7 @@ class BundleFixture:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
         self.managed = False
+        self.draining = 0
         self.active_bytes = b'old-core'
         payloads = {'binary': b'new-core', 'module': b'new-module', 'modsec': b'new-waf', 'assets': b'verified-assets'}
         config = binary_configs(source, class_name)['ubuntu']
@@ -343,10 +344,16 @@ class BundleFixture:
             pid = 514 if self.failure == 'other-manager-pid' else 123
             stdout = f'Id=lshttpd.service\nLoadState=loaded\nActiveState=active\nMainPID={pid}\n'
         elif args[-1] == 'status':
+            if self.draining:
+                self.draining -= 1
+                if not self.draining:
+                    self.active = False
             stdout = 'litespeed is running with PID 123.' if self.active else '[ERROR] litespeed is not running.'
         elif args[-1] == 'stop' or args[:2] == ['systemctl', 'stop']:
             if self.failure == 'stop':
                 code = 1
+            elif self.managed:
+                self.draining = 3
             else:
                 self.active = False
         elif args[-1] == 'start' or args[:2] == ['systemctl', 'start']:
