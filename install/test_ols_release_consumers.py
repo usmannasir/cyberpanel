@@ -20,7 +20,7 @@ def load_modsec():
     original = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'modSec')
     selected = []
     for node in original.body:
-        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'MODSEC_COMPATIBLE' for t in node.targets):
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id in ('MODSEC_COMPATIBLE', 'MODSEC_PREVIOUS') for t in node.targets):
             selected.append(node)
         if isinstance(node, ast.FunctionDef) and node.name in ('detectPlatform', 'downloadCompatibleModSec'):
             selected.append(node)
@@ -113,32 +113,35 @@ class ReleaseConsumerTests(unittest.TestCase):
         download.assert_not_called()
 
     def test_verified_modsecurity_is_installed_only_when_dependencies_resolve(self):
-        for mismatch, missing, accepted in [(False, False, True), (True, False, False), (False, True, False)]:
-            with self.subTest(mismatch=mismatch, missing=missing), tempfile.TemporaryDirectory() as directory:
-                target = load_modsec()
-                target.MODSEC_COMPATIBLE['ubuntu']['sha256'] = hashlib.sha256(b'module').hexdigest()
-                target.MODSEC_COMPATIBLE['ubuntu']['core_sha256'] = hashlib.sha256(b'core cyberpanel_lsi_api_abi_v1').hexdigest()
-                real_open = builtins.open
-                real_temp = tempfile.TemporaryDirectory
+        for legacy in (False, True):
+            for mismatch, missing, accepted in [(False, False, True), (True, False, False), (False, True, False)]:
+                with self.subTest(legacy=legacy, mismatch=mismatch, missing=missing), tempfile.TemporaryDirectory() as directory:
+                    target = load_modsec()
+                    selected = target.MODSEC_PREVIOUS if legacy else target.MODSEC_COMPATIBLE
+                    selected['ubuntu']['sha256'] = hashlib.sha256(b'module').hexdigest()
+                    selected['ubuntu']['core_sha256'] = hashlib.sha256(b'core cyberpanel_lsi_api_abi_v1').hexdigest()
+                    real_open = builtins.open
+                    real_temp = tempfile.TemporaryDirectory
 
-                def opening(path, *args, **kwargs):
-                    if str(path) == '/usr/local/lsws/bin/openlitespeed':
-                        return io.BytesIO(b'core cyberpanel_lsi_api_abi_v1')
-                    return real_open(path, *args, **kwargs)
+                    def opening(path, *args, **kwargs):
+                        if str(path) == '/usr/local/lsws/bin/openlitespeed':
+                            return io.BytesIO(b'core cyberpanel_lsi_api_abi_v1')
+                        return real_open(path, *args, **kwargs)
 
-                def download(args):
-                    Path(args[-1]).write_bytes(b'wrong' if mismatch else b'module')
-                    return 0
+                    def download(args):
+                        self.assertIn(selected['ubuntu']['url'], args)
+                        Path(args[-1]).write_bytes(b'wrong' if mismatch else b'module')
+                        return 0
 
-                result = SimpleNamespace(returncode=0, stdout='libcrypto => not found' if missing else 'libcrypto => /lib/libcrypto.so', stderr='')
-                with mock.patch.object(builtins, 'open', side_effect=opening), \
-                     mock.patch.object(tempfile, 'TemporaryDirectory', side_effect=lambda **kw: real_temp(dir=directory)), \
-                     mock.patch.object(subprocess, 'call', side_effect=download), \
-                     mock.patch.object(subprocess, 'run', return_value=result), \
-                     mock.patch.object(os.path, 'exists', return_value=False), \
-                     mock.patch.object(os, 'replace') as replace:
-                    self.assertEqual(target.downloadCompatibleModSec('ubuntu'), accepted)
-                self.assertEqual(replace.call_count, int(accepted))
+                    result = SimpleNamespace(returncode=0, stdout='libcrypto => not found' if missing else 'libcrypto => /lib/libcrypto.so', stderr='')
+                    with mock.patch.object(builtins, 'open', side_effect=opening), \
+                         mock.patch.object(tempfile, 'TemporaryDirectory', side_effect=lambda **kw: real_temp(dir=directory)), \
+                         mock.patch.object(subprocess, 'call', side_effect=download), \
+                         mock.patch.object(subprocess, 'run', return_value=result), \
+                         mock.patch.object(os.path, 'exists', return_value=False), \
+                         mock.patch.object(os, 'replace') as replace:
+                        self.assertEqual(target.downloadCompatibleModSec('ubuntu'), accepted)
+                    self.assertEqual(replace.call_count, int(accepted))
 
 class BundleFixture:
     """Run the real consumer method against an isolated filesystem and service."""
