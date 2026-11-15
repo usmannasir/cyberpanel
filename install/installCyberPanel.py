@@ -455,11 +455,11 @@ class InstallCyberPanel:
                 match = re.search(r'is running with PID ([1-9][0-9]*)\.', result.stdout or '')
                 if not match:
                     if 'is not running.' in (result.stdout or ''):
-                        return False
+                        return None
                     raise RuntimeError('Cannot determine OpenLiteSpeed service state')
                 try:
                     if os.path.samefile('/proc/%s/exe' % match.group(1), OLS_BINARY_PATH):
-                        return True
+                        return match.group(1)
                 except OSError:
                     pass
                 raise RuntimeError('OpenLiteSpeed PID does not identify the installed executable')
@@ -509,12 +509,34 @@ class InstallCyberPanel:
                     json.dump({'backup_dir': security_assets.backup_dir}, receipt)
 
                 was_running = running()
+                unit = None
+                if was_running and os.path.isdir('/run/systemd/system'):
+                    # A direct controller stop can trigger the unit's restart
+                    # policy while the installer is replacing the bundle.
+                    result = subprocess.run([
+                        'systemctl', 'show', 'lsws.service',
+                        '--property=Id,LoadState,ActiveState,MainPID',
+                    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        universal_newlines=True, timeout=30)
+                    properties = dict(line.split('=', 1) for line in result.stdout.splitlines()
+                                      if '=' in line)
+                    if properties.get('LoadState') != 'not-found':
+                        if (result.returncode or properties.get('LoadState') != 'loaded' or
+                                properties.get('Id') not in ('lsws.service', 'lshttpd.service', 'openlitespeed.service') or
+                                properties.get('ActiveState') != 'active' or
+                                properties.get('MainPID') != was_running):
+                            raise RuntimeError('OpenLiteSpeed systemd unit does not own the confirmed master PID')
+                        unit = properties['Id']
+
+                def service_command(action):
+                    return ['systemctl', action, unit] if unit else [control, action]
+
                 stopped = False
                 touched = []
                 try:
                     if was_running:
                         stopped = True
-                        result = subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
+                        result = subprocess.run(service_command('stop'), stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE, timeout=60)
                         if result.returncode != 0 or running():
                             raise RuntimeError('OpenLiteSpeed did not stop; bundle was not replaced')
@@ -529,7 +551,7 @@ class InstallCyberPanel:
                         raise RuntimeError('The new OpenLiteSpeed binary failed its version check')
                     if was_running:
                         # Daemon children inherit output pipes; do not wait for pipe EOF.
-                        result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
+                        result = subprocess.run(service_command('start'), stdout=subprocess.DEVNULL,
                                                 stderr=subprocess.DEVNULL, timeout=60)
                         time.sleep(3)
                         if result.returncode != 0 or not running():
@@ -543,7 +565,7 @@ class InstallCyberPanel:
                             # Atomic restoration is safe even if a failed start left
                             # a mapped executable; stop before restarting the old set.
                             try:
-                                subprocess.run([control, 'stop'], stdout=subprocess.PIPE,
+                                subprocess.run(service_command('stop'), stdout=subprocess.PIPE,
                                                stderr=subprocess.PIPE, timeout=60)
                             except Exception:
                                 pass  # Restore files even if the control command failed.
@@ -558,7 +580,7 @@ class InstallCyberPanel:
                         else:
                             security_assets.rollback()
                         if was_running and stopped:
-                            result = subprocess.run([control, 'start'], stdout=subprocess.DEVNULL,
+                            result = subprocess.run(service_command('start'), stdout=subprocess.DEVNULL,
                                                     stderr=subprocess.DEVNULL, timeout=60)
                             time.sleep(3)
                             if result.returncode != 0 or not running():
