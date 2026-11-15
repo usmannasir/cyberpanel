@@ -163,6 +163,7 @@ class BundleFixture:
             target = self.path(name)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
+        self.managed = False
         self.active_bytes = b'old-core'
         payloads = {'binary': b'new-core', 'module': b'new-module', 'modsec': b'new-waf', 'assets': b'verified-assets'}
         config = binary_configs(source, class_name)['ubuntu']
@@ -173,6 +174,7 @@ class BundleFixture:
         fake_os = SimpleNamespace(
             path=SimpleNamespace(exists=lambda p: self.path(p).exists(),
                                  lexists=lambda p: os.path.lexists(self.path(p)),
+                                 isdir=lambda p: self.managed and p == '/run/systemd/system',
                                  samefile=self.samefile, join=os.path.join,
                                  dirname=os.path.dirname, basename=os.path.basename),
             makedirs=lambda p, **kw: os.makedirs(self.path(p), **kw),
@@ -337,14 +339,17 @@ class BundleFixture:
             stdout = 'libmissing.so => not found' if self.failure == 'waf-abi' and args[1].endswith('/modsec') else 'libc.so => /lib/libc.so'
         elif args[0] == 'pgrep':
             code = 0 if self.active else 1
+        elif args[:2] == ['systemctl', 'show']:
+            pid = 514 if self.failure == 'other-manager-pid' else 123
+            stdout = f'Id=lshttpd.service\nLoadState=loaded\nActiveState=active\nMainPID={pid}\n'
         elif args[-1] == 'status':
             stdout = 'litespeed is running with PID 123.' if self.active else '[ERROR] litespeed is not running.'
-        elif args[-1] == 'stop':
+        elif args[-1] == 'stop' or args[:2] == ['systemctl', 'stop']:
             if self.failure == 'stop':
                 code = 1
             else:
                 self.active = False
-        elif args[-1] == 'start':
+        elif args[-1] == 'start' or args[:2] == ['systemctl', 'start']:
             self.start_bundles.append(self.bundle())
             data = self.path(self.core).read_bytes()
             self.active = not ((self.failure in ('startup', 'partial-restore') and data == b'new-core') or self.failure == 'rollback-start')
@@ -370,6 +375,23 @@ class BundleFixture:
 
 
 class BundleTransactionTests(unittest.TestCase):
+    def test_fresh_install_stops_and_starts_the_systemd_unit_that_owns_ols(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = BundleFixture(directory, ROOT / 'install/installCyberPanel.py', 'InstallCyberPanel')
+            fixture.managed = True
+            self.assertTrue(fixture.call())
+            self.assertIn(('systemctl', 'stop', 'lshttpd.service'), fixture.commands)
+            self.assertIn(('systemctl', 'start', 'lshttpd.service'), fixture.commands)
+
+    def test_fresh_install_refuses_to_stop_a_mismatched_systemd_unit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = BundleFixture(directory, ROOT / 'install/installCyberPanel.py', 'InstallCyberPanel',
+                                    failure='other-manager-pid')
+            fixture.managed = True
+            self.assertFalse(fixture.call())
+            self.assertEqual(fixture.bundle(), fixture.old)
+            self.assertFalse(any(command[:2] == ('systemctl', 'stop') for command in fixture.commands))
+
     def test_upgrade_candidate_invalid_config_restores_before_start(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', failure='config')
