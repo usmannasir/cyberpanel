@@ -867,6 +867,12 @@ def require_full_waf_keys(text):
         raise RuntimeError('Control characters in OLS configuration are unsupported')
     parameter_block = None
     for line in logical.split('\n'):
+        # OLS reparses text after a closing brace as another directive. Do not
+        # let a first-token-only inspection miss a module or WAF parameter.
+        if re.match(r'^[ \t]*}[ \t]*[^ \t#]', line):
+            raise RuntimeError('Trailing directives after an OLS closing brace are unsupported')
+        if re.match(r'^[ \t]*(?i:mod_security)::', line):
+            raise RuntimeError('Qualified ModSecurity parameter syntax is unsupported')
         if parameter_block and line.strip(' \t') == parameter_block:
             parameter_block = None
             continue

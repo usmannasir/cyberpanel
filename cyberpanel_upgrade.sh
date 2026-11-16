@@ -255,7 +255,7 @@ OLS_Recovery_Hint() (
     file=olsStockClassifier.py
     mode=--repair-stock-module
     wrapper=install-module-2.5.7-crs-r8.sh
-    checksum=382c37a10fc6d919f83a24b4905c8d120dd25436611a4df061f11de112f61bd5
+    checksum=b8f3cd6c98029e3ff4d9cdcec1c43c03546ecadacd3a6688286f1198476f4357
   elif [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
     method=recovery_hint
     file=olsParserRecovery.py

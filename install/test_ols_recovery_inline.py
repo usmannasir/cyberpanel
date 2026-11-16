@@ -149,6 +149,18 @@ class InlinePolicyTests(unittest.TestCase):
             with self.subTest(body=body), self.assertRaisesRegex(RuntimeError, 'alternate parameter block'):
                 verify(['param <<<END\n' + body + '\nEND\n'])
 
+    def test_trailing_and_qualified_directives_refused(self):
+        for text in ('}modsecurity_rules_remote key https://example.invalid/rules',
+                     '} modsecurity_rules_file /tmp/rules.conf',
+                     "} modsecurity_r 'SecRuleEngine Off'",
+                     '} module third_party {',
+                     'mod_security::modsecurity_rules_remote key https://example.invalid/rules'):
+            with self.subTest(text=text), self.assertRaises(RuntimeError):
+                verify([text])
+            with self.subTest(policy='stock', text=text), self.assertRaises(RuntimeError):
+                namespace['stock_config_policy'](text, ROOT)
+        verify(['}\n} # stock closing brace with comment\n'])
+
     def test_shipped_stock_configuration_templates(self):
         templates = (BASE / 'litespeed/conf/httpd_config.conf',
                      BASE.parent / 'serverStatus/litespeed/conf/httpd_config.conf')
