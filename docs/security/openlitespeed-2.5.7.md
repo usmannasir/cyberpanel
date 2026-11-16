@@ -50,3 +50,24 @@ On Ubuntu 22.04, 24.04, and 26.04 and on AlmaLinux 9.8, the stock OpenLiteSpeed 
 The updated core handles valid multiline module configuration without a fixed-size parameter buffer. It rejects an invalid module configuration safely. ModSecurity applies the first successfully loaded engine setting at the site's own scope and preserves an explicit monitor-only or disabled mode.
 
 [GitHub issue #1989](https://github.com/usmannasir/cyberpanel/issues/1989) · [Corresponding source and build recipes](https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-source.tar.gz)
+
+## Quoted inline method policy in stock recovery
+
+CRS stock recovery R8 preserves quoted inline modsecurity_rules blocks,
+including a vhost's phase-one SecAction setting tx.allowed_methods.
+The recovery inspector accepts the static method assignment together with
+id, phase:1, nolog, pass, and t:none. It does not rewrite the rule,
+change the allowed methods, remove CRS includes, or disable ModSecurity.
+
+Matching quote delimiters, literal method names and complete parameter names
+are required. Dynamic assignments, additional actions, ambiguous quoting and
+external dependencies remain unsupported. The native isolated configuration
+check still validates the complete rule graph before the service transaction.
+Keep a snapshot and use the exact checksum-pinned wrapper supplied by the
+upgrade preflight. Do not substitute an older recovery revision or bypass its
+checks when recovery refuses a configuration.
+
+The versioned recovery helper is maintained in
+install/olsRecoveryPreflight.py; its focused regression tests are
+install/test_ols_recovery_inline.py. Release and customer verification are
+recorded separately.
