@@ -35,6 +35,7 @@ class FirewallStaticBundleTests(unittest.TestCase):
     def test_security_page_spinners_follow_legacy_loading_flag_semantics(self):
         root = os.path.dirname(os.path.dirname(__file__))
         templates = (
+            ('firewall.html', 'rulesLoading'),
             ('modSecurity.html', 'modsecLoading'),
             ('modSecurityRules.html', 'modsecLoading'),
             ('modSecurityRulesPacks.html', 'modsecLoading'),
