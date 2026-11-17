@@ -27,7 +27,7 @@ class FirewallStaticBundleTests(unittest.TestCase):
             os.path.join(root, 'firewall', 'templates', 'firewall', 'notAvailableAV.html'),
             os.path.join(root, 'firewall', 'templates', 'firewall', 'modSecurityRulesPacks.html'),
         )
-        expected = "{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}-2"
+        expected = "{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}-5"
         for template in templates:
             with self.subTest(template=template), open(template, encoding='utf-8') as template_file:
                 self.assertIn(expected, template_file.read())
