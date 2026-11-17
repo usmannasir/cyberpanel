@@ -154,4 +154,34 @@ def stock_recovery_hint(binary, returncode, output, classifier=None):
     except (OSError, RuntimeError, ValueError, ImportError):
         return ''
     return (' Known stock core/module mismatch. Use the checksum-verified '
-            'install-module-2.5.7-crs-r8.sh --repair-stock-module and rerun the upgrade.')
+            'install-module-2.5.7-jammy-r1.sh --repair-stock-module and rerun the upgrade.')
+
+
+# The Jammy -1 vendor WAF and this reviewed POSIX drain controller are
+# admitted only as an exact tuple, never as an OS-wide controller exception.
+JAMMY_194_1_WAF = '189d9a06d3924e75aeb6945b796c37c54a63a5b26a23b004fc04411605249957'
+JAMMY_DRAIN_CONTROLLER = '83435cff252f314ec65c0b61c7eba01289c721a2bf4e4351a402501b6f4bf709'
+
+
+def stock_waf_hashes(root, selected):
+    require_bytes(root, selected)
+    _, core, _, stock_waf = require_platform(selected)
+    result = {stock_waf}
+    if core == JAMMY_194_3_CORE and digest(Path(root)/'bin/openlitespeed') == JAMMY_194_1_CORE:
+        result.add(JAMMY_194_1_WAF)
+    return frozenset(result)
+
+
+def reviewed_jammy_controller(root, selected):
+    root = Path(root)
+    _, core, module, _ = require_platform(selected)
+    if core != JAMMY_194_3_CORE:
+        return False
+    for rel, expected in (('bin/openlitespeed', JAMMY_194_1_CORE),
+                          ('modules/cyberpanel_ols.so', PAIRED_MODULE),
+                          ('modules/mod_security.so', JAMMY_194_1_WAF),
+                          ('bin/lswsctrl.open', JAMMY_DRAIN_CONTROLLER)):
+        path = root/rel
+        if path.is_symlink() or not path.is_file() or digest(path) != expected:
+            return False
+    return True

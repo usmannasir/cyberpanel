@@ -78,6 +78,8 @@ def load_ols_diagnostic_helper(filename):
 
 def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
     try:
+        lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
+        lifecycle.OLSService(os.path.dirname(os.path.dirname(binary))).verify_stock_recovery_policy()
         validator = load_ols_diagnostic_helper('olsNativeValidation.py')
         result = validator.validate(binary)
     except Exception as error:
@@ -96,8 +98,8 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
                 mode = '--repair-webadmin-parser'
             if known:
                 if mode == '--repair-stock-module':
-                    wrapper = 'install-module-2.5.7-crs-r8.sh'
-                    checksum = 'b8f3cd6c98029e3ff4d9cdcec1c43c03546ecadacd3a6688286f1198476f4357'
+                    wrapper = 'install-module-2.5.7-jammy-r1.sh'
+                    checksum = 'ca12625c2b33cf9e70fb9c88c91e13fbe60ec77240f6ea8a5a48a8b27efb7481'
                 else:
                     wrapper = 'install-module-2.5.7-r9.sh'
                     checksum = '45390adf477eff7cc0ff1a9d03c98f7fe88b45758708aa0243196e855e1699e9'
@@ -115,7 +117,10 @@ def apply_ols_config_changes(changes):
     try:
         with ols_upgrade_lock():
             helper = load_ols_diagnostic_helper('olsServiceControl.py')
-            helper.apply_config_changes(changes, validate_ols_configuration, helper.OLSService())
+            service = helper.OLSService()
+            service.verify_stock_recovery_policy()
+            service.authorize_recovered_jammy_controller()
+            helper.apply_config_changes(changes, validate_ols_configuration, service)
     except Exception as error:
         raise OLSUpgradeFailure('OpenLiteSpeed configuration migration failed: ' + str(error)) from error
 
@@ -1070,6 +1075,8 @@ class Upgrade:
                         if release and (int(release.group(1)), int(release.group(2))) < (22, 4):
                             Upgrade.stdOut(f"Ubuntu {release.group(1)}.{release.group(2)} detected: custom OLS binary requires GLIBC_2.34 (Ubuntu 22.04+); keeping stock OLS", 0)
                             return 'skip'
+                        if release and (int(release.group(1)), int(release.group(2))) == (22, 4):
+                            return 'ubuntu22'
                         if release and int(release.group(1)) == 26:
                             return 'ubuntu26'
                         return 'ubuntu'
@@ -1243,6 +1250,12 @@ class Upgrade:
                         'sha256': {'binary': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5',
                                    'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
                                    'modsec': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe'}},
+             'ubuntu22': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-jammy-r1-x86_64-ubuntu',
+                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
+                        'sha256': {'binary': '863687f29a529d379224fe32115d9326028038dd2d38e5aac26ddb4bc5a3bf55',
+                                   'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
+                                   'modsec': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe'}},
              'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-x86_64-ubuntu',
                           'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
                           'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu26.so',
@@ -1292,6 +1305,8 @@ class Upgrade:
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
             lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
             service = lifecycle.OLSService()
+            service.verify_stock_recovery_policy(config['sha256']['binary'])
+            service.authorize_recovered_jammy_controller()
             initial_state = service.prepare_state()
             # Keep the core and both modules on the same verified release, including
             # upgrades from installations that did not previously have ModSecurity.
@@ -1443,6 +1458,14 @@ class Upgrade:
                         receipt = json.load(source)
                 lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
                 service = lifecycle.OLSService(os.path.dirname(os.path.dirname(binary_path)), unit=receipt.get('unit'))
+                policy = service.verify_stock_recovery_policy()
+                if policy:
+                    from pathlib import Path
+                    backup_core = Path(backup_binary)
+                    if backup_core.is_symlink() or not backup_core.is_file():
+                        raise RuntimeError('Policy-aware rollback requires a regular core backup')
+                    service.verify_stock_recovery_policy(lifecycle.digest(backup_core))
+                service.authorize_recovered_jammy_controller()
                 originals = {}
                 if assets_module:
                     with open(os.path.join(receipt['backup_dir'], 'rollback.json')) as source:

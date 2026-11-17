@@ -3,10 +3,12 @@ import hashlib
 import importlib.util
 import locale
 import os
+import platform
 from pathlib import Path
 import re
 import stat
 import subprocess
+import tempfile
 import time
 
 
@@ -22,6 +24,123 @@ CONTROLLER_HASHES = {
 ENV_HASH = '1851443bf9fa883d94967751e705611d5a630bfb0f5bf05553d73b6ed89edeb8'
 UNIT_HASH = 'e1a05ef5fbaba9b5eed156ac77fe4b91019cd0e433bfefd46cdfa02af78b199d'
 VENDOR_UNITS = {'lsws.service', 'lshttpd.service', 'openlitespeed.service'}
+REVIEWED_JAMMY_CONTROLLER = '83435cff252f314ec65c0b61c7eba01289c721a2bf4e4351a402501b6f4bf709'
+RECOVERED_JAMMY_BUNDLE = (
+    '863687f29a529d379224fe32115d9326028038dd2d38e5aac26ddb4bc5a3bf55',
+    '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
+    '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe',
+)
+RECOVERY_POLICY_NAME = '.cyberpanel-stock-recovery-policy'
+RECOVERY_POLICY_BYTES = b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n'
+RECOVERY_POLICY_DIAGNOSTIC = '[StockRecovery] Native AutoSSL remains inactive to preserve stock behavior'
+
+
+def recovery_policy_identity(root):
+    """Read one bounded, root-owned policy without following links or FIFOs."""
+    root = Path(root)
+    path = root / RECOVERY_POLICY_NAME
+    # Opening the directory pins the parent used for every subsequent operation.
+    directory = os.open(str(root), os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        try:
+            fd = os.open(RECOVERY_POLICY_NAME, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
+                         dir_fd=directory)
+        except FileNotFoundError:
+            return None
+        except OSError as error:
+            raise RuntimeError('Unsafe stock recovery policy: ' + str(path)) from error
+        try:
+            parent = os.fstat(directory)
+            before = os.fstat(fd)
+            fields = ('st_dev', 'st_ino', 'st_mode', 'st_uid', 'st_gid', 'st_nlink',
+                      'st_size', 'st_mtime_ns', 'st_ctime_ns')
+            identity = tuple(getattr(before, name) for name in fields)
+            if (parent.st_uid != 0 or parent.st_mode & 0o022 or not stat.S_ISREG(before.st_mode)
+                    or before.st_uid != 0 or before.st_nlink != 1
+                    or stat.S_IMODE(before.st_mode) != 0o600
+                    or before.st_size != len(RECOVERY_POLICY_BYTES)):
+                raise RuntimeError('Unsafe stock recovery policy metadata: ' + str(path))
+            if os.read(fd, len(RECOVERY_POLICY_BYTES) + 1) != RECOVERY_POLICY_BYTES:
+                raise RuntimeError('Unknown stock recovery policy content: ' + str(path))
+            current = os.stat(RECOVERY_POLICY_NAME, dir_fd=directory, follow_symlinks=False)
+            if (identity != tuple(getattr(os.fstat(fd), name) for name in fields)
+                    or identity != tuple(getattr(current, name) for name in fields)
+                    or not os.path.samestat(parent, root.lstat())):
+                raise RuntimeError('Stock recovery policy changed while reading')
+            return identity
+        finally:
+            os.close(fd)
+    finally:
+        os.close(directory)
+
+
+class RecoveryPolicy:
+    """An absent policy is created only while stopped; rollback removes only ours."""
+    def __init__(self, root):
+        self.root = Path(root)
+        parent = self.root.lstat()
+        if not stat.S_ISDIR(parent.st_mode) or parent.st_uid != 0 or parent.st_mode & 0o022:
+            raise RuntimeError('Unsafe stock recovery policy parent')
+        self.parent_identity = (parent.st_dev, parent.st_ino, parent.st_uid, parent.st_gid, parent.st_mode)
+        self.original = recovery_policy_identity(root)
+        self.created = None
+
+    def verify(self):
+        parent = self.root.lstat()
+        if self.parent_identity != (parent.st_dev, parent.st_ino, parent.st_uid, parent.st_gid, parent.st_mode):
+            raise RuntimeError('Stock recovery policy parent changed')
+        expected = self.created if self.created is not None else self.original
+        if recovery_policy_identity(self.root) != expected:
+            raise RuntimeError('Stock recovery policy changed during the transaction')
+        return expected
+
+    def apply(self):
+        self.verify()
+        if self.original is not None or self.created is not None:
+            return
+        fd, temporary = tempfile.mkstemp(prefix='.ols-policy-', dir=str(self.root))
+        try:
+            with os.fdopen(fd, 'wb') as output:
+                os.fchmod(output.fileno(), 0o600)
+                os.fchown(output.fileno(), 0, 0)
+                output.write(RECOVERY_POLICY_BYTES)
+                output.flush()
+                os.fsync(output.fileno())
+            self.verify()
+            # link is an atomic no-overwrite publication; never replace a new file.
+            os.link(temporary, str(self.root / RECOVERY_POLICY_NAME), follow_symlinks=False)
+            os.unlink(temporary)
+            self.created = recovery_policy_identity(self.root)
+            directory = os.open(str(self.root), os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        finally:
+            if os.path.lexists(temporary):
+                os.unlink(temporary)
+
+    def rollback(self):
+        self.verify()
+        if self.created is not None:
+            os.unlink(str(self.root / RECOVERY_POLICY_NAME))
+            self.created = None
+            directory = os.open(str(self.root), os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        self.verify()
+
+
+def jammy_platform():
+    values = {}
+    for line in Path('/etc/os-release').read_text().splitlines():
+        if '=' in line:
+            key, value = line.split('=', 1)
+            values[key] = value.strip().strip(chr(34) + chr(39))
+    return (values.get('ID') == 'ubuntu' and values.get('VERSION_ID') == '22.04'
+            and platform.machine() in ('x86_64', 'amd64'))
 
 
 def digest(path):
@@ -132,13 +251,142 @@ class OLSService:
         self._observed_processes = {}
         self._draining_processes = {}
         self.watch_lock = None
+        self._reviewed_stock_controller = None
+        self._recovery_policy = None
+        self._observed_policy_identity = None
+        self._policy_checked = False
+
+    def bind_recovery_policy(self, policy, original_core, candidate_core):
+        if not jammy_platform() or candidate_core != RECOVERED_JAMMY_BUNDLE[0]:
+            raise RuntimeError('Stock recovery policy requires the pinned Jammy core')
+        self._recovery_policy = (policy, original_core, candidate_core)
+        policy.verify()
+
+    def verify_stock_recovery_policy(self, candidate_core_sha256=None):
+        identity = recovery_policy_identity(self.root)
+        if self._recovery_policy is not None:
+            policy, original_core, candidate_core = self._recovery_policy
+            policy.verify()
+            if candidate_core_sha256 is not None and candidate_core_sha256 != candidate_core:
+                raise RuntimeError('Candidate does not support the stock recovery policy')
+            if identity is not None:
+                if self.binary.is_symlink() or not self.binary.is_file():
+                    raise RuntimeError('Stock recovery policy requires a regular installed core')
+                if digest(self.binary) not in (original_core, candidate_core):
+                    raise RuntimeError('Installed core differs from the policy transaction')
+            return identity
+        if self._policy_checked and identity != self._observed_policy_identity:
+            raise RuntimeError('Stock recovery policy identity changed, appeared or disappeared')
+        if identity is None:
+            self._policy_checked = True
+            return None
+        if candidate_core_sha256 is None:
+            if self.binary.is_symlink() or not self.binary.is_file():
+                raise RuntimeError('Stock recovery policy requires a regular installed core')
+            expected = digest(self.binary)
+        else:
+            expected = candidate_core_sha256
+        if not jammy_platform() or expected != RECOVERED_JAMMY_BUNDLE[0]:
+            raise RuntimeError('Installed or candidate core does not support the stock recovery policy')
+        self._observed_policy_identity = identity
+        self._policy_checked = True
+        return identity
+
+    def _bind_reviewed_controller(self, names, original, candidate):
+        if self.unit not in (None, 'lshttpd.service'):
+            raise RuntimeError('Reviewed controller requires lshttpd.service')
+        identity = self.reviewed_controller_identity()
+        if identity is None:
+            raise RuntimeError('Reviewed controller command path is not pinned')
+        self._reviewed_stock_controller = (names, original, candidate, identity)
+        # The edited stop() branch must never be used for live host control.
+        # The pinned unit is reverified with ExecStop=delay-stop at every state.
+        self.unit = 'lshttpd.service'
+        self.manager_identified = True
+
+    def reviewed_controller_requested(self):
+        directory = self.root/'bin'
+        if (self.root.is_symlink() or directory.is_symlink()
+                or self.control.resolve().parent != directory or not self.control.is_file()):
+            raise RuntimeError('The OLS controller command path cannot be verified')
+        return digest(self.control) == REVIEWED_JAMMY_CONTROLLER
+
+    def authorize_stock_controller(self, selected):
+        """Bind the reviewed controller to one exact stock transaction only."""
+        from olsStockClassifier import reviewed_jammy_controller
+        if not self.reviewed_controller_requested():
+            return
+        if not reviewed_jammy_controller(self.root, selected):
+            raise RuntimeError('Reviewed controller requires the exact Jammy stock tuple')
+        from installBundle import release_set
+        names = ('bin/openlitespeed', 'modules/cyberpanel_ols.so', 'modules/mod_security.so')
+        original = tuple(digest(self.root/name) for name in names)
+        candidate = tuple(release_set(selected)[kind] for kind in ('binary', 'module', 'modsec'))
+        self._bind_reviewed_controller(names, original, candidate)
+
+    def authorize_recovered_jammy_controller(self):
+        """Ordinary upgrades may retain the exact verified CRS recovery bundle.
+
+        No stock grant, hash wildcard or package-name inference is used here.
+        This works when this helper is loaded alone from an upgrade staging tree.
+        """
+        if not self.reviewed_controller_requested():
+            return
+        names = ('bin/openlitespeed', 'modules/cyberpanel_ols.so', 'modules/mod_security.so')
+        controller = self.root/'bin/lswsctrl.open'
+        if (not jammy_platform() or controller.is_symlink() or not controller.is_file()
+                or digest(controller) != REVIEWED_JAMMY_CONTROLLER
+                or any((self.root/name).is_symlink() or not (self.root/name).is_file() for name in names)
+                or tuple(digest(self.root/name) for name in names) != RECOVERED_JAMMY_BUNDLE):
+            raise RuntimeError('Reviewed controller requires the exact recovered Jammy bundle')
+        if self.verify_stock_recovery_policy() is None:
+            raise RuntimeError('Reviewed recovered controller requires the stock recovery policy')
+        self._bind_reviewed_controller(names, RECOVERED_JAMMY_BUNDLE, RECOVERED_JAMMY_BUNDLE)
+
+    def reviewed_controller_identity(self):
+        path = self.root/'bin/lswsctrl.open'
+        if (not self.control.is_symlink() or os.readlink(str(self.control)) != 'lswsctrl.open'
+                or path.is_symlink() or not path.is_file()
+                or self.control.resolve() != path.resolve()
+                or digest(self.control) != REVIEWED_JAMMY_CONTROLLER):
+            return None
+        target, link = path.stat(), self.control.lstat()
+        fields = ('st_dev', 'st_ino', 'st_mode', 'st_uid', 'st_gid', 'st_ctime_ns')
+        return (tuple(getattr(target, name) for name in fields),
+                tuple(getattr(link, name) for name in fields), os.readlink(str(self.control)))
+
+    def reviewed_stock_controller(self):
+        if self._reviewed_stock_controller is None:
+            return False
+        if not jammy_platform() or self.unit != 'lshttpd.service':
+            return False
+        names, original, candidate, identity = self._reviewed_stock_controller
+        path = self.root/'bin/lswsctrl.open'
+        if path.is_symlink() or not path.is_file() or digest(path) != REVIEWED_JAMMY_CONTROLLER:
+            return False
+        if self.reviewed_controller_identity() != identity:
+            return False
+        if any((self.root/name).is_symlink() or not (self.root/name).is_file() for name in names):
+            return False
+        values = tuple(digest(self.root/name) for name in names)
+        # Known partial placement can be inspected only to prove quiescence
+        # before rollback. It must never be started or treated as a live bundle.
+        return all(value in (old, new) for value, old, new in zip(values, original, candidate))
+
+    def reviewed_bundle_complete(self):
+        if self._reviewed_stock_controller is None:
+            return True
+        names, original, candidate, _ = self._reviewed_stock_controller
+        return tuple(digest(self.root/name) for name in names) in (original, candidate)
 
     def controller(self):
+        self.verify_stock_recovery_policy()
         directory = self.root / 'bin'
         env = directory / 'lsws_env'
         if (self.root.is_symlink() or directory.is_symlink() or
                 self.control.resolve().parent != directory or not self.control.is_file() or
-                digest(self.control) not in CONTROLLER_HASHES or env.is_symlink() or
+                (not self.reviewed_stock_controller() if self._reviewed_stock_controller is not None
+                 else digest(self.control) not in CONTROLLER_HASHES) or env.is_symlink() or
                 not env.is_file() or digest(env) != ENV_HASH):
             raise RuntimeError('The OLS controller or its PID configuration cannot be verified')
         if (os.path.lexists(str(self.root / 'admin/tmp/.restart')) or
@@ -254,6 +502,8 @@ class OLSService:
                     processes[int(entry.name)] = (int(fields[1]), fields[19])
             except (FileNotFoundError, ProcessLookupError):
                 continue
+        if not self.reviewed_bundle_complete() and (master or processes):
+            raise RuntimeError('A partially placed OLS bundle is not independently stopped')
         if not master:
             if processes:
                 if self.draining and not self.verified_draining_workers(processes):
@@ -292,7 +542,16 @@ class OLSService:
                     raise RuntimeError('An unmanaged OLS process is also running')
                 seen.add(pid)
                 pid = processes[pid][0]
-        owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
+        try:
+            owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
+        except (FileNotFoundError, ProcessLookupError):
+            if (self.draining is not None and (master, processes[master][1]) == self.draining[:2]
+                    and self.verified_draining_workers(processes)):
+                # The verified master can exit after the /proc scan but before
+                # this read. Never infer quiescence from that race: the bounded
+                # stop loop must obtain a fresh empty snapshot with unit proof.
+                raise OLSWorkersRemain('Original OLS master exited during ownership inspection')
+            raise
         if self.draining is not None and (master, processes[master][1], owner) == self.draining:
             raise OLSWorkersRemain('Original OLS master is draining after its verified stop action')
         self.verify_unit_claims(master, owner)
@@ -337,6 +596,12 @@ class OLSService:
         if action not in ('stop', 'start') or self.state() != expected:
             raise RuntimeError('OLS changed state before the ' + action + ' action')
         wanted_running = action == 'start'
+        if wanted_running and self._recovery_policy is not None:
+            policy, original_core, candidate_core = self._recovery_policy
+            if digest(self.binary) == candidate_core and policy.verify() is None:
+                raise RuntimeError('Cannot start the recovered core without its stock recovery policy')
+        if wanted_running and not self.reviewed_bundle_complete():
+            raise RuntimeError('Cannot start a partially placed OLS bundle; restore the complete originals first')
         if bool(expected) == wanted_running:
             return expected
         self.verify_mapped_bundle(expected)

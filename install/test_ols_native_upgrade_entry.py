@@ -38,7 +38,7 @@ if [[ -f /paid-module.so ]]; then
     fi
     chown 65534:65534 "$root/Example/html"
 fi
-cp /src/plogical/{upgrade,olsSecurityAssets,olsParserRecovery,olsStockClassifier,olsNativeValidation}.py \
+cp /src/plogical/{upgrade,olsSecurityAssets,olsParserRecovery,olsStockClassifier,olsNativeValidation,olsServiceControl,olsWatchdog}.py \
    /src/{cyberpanel_firewall_migration,cyberpanel_version,lscpd_binary}.py /tmp/stage
 cp /tmp/stage/ols{StockClassifier,ParserRecovery,NativeValidation}.py /usr/local/CyberCP/plogical/
 # Stub only imports for DB/client settings. No DB should ever be contacted.
@@ -77,8 +77,8 @@ for matched in 1 0; do
         fi
         grep -Fq 'incompatible OpenLiteSpeed core ABI' /tmp/result
         if [[ "$matched" = 1 ]]; then
-            grep -Fq 'install-module-2.5.7-crs-r8.sh --repair-stock-module' /tmp/result
-            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-crs-r8.sh and verify SHA256 b8f3cd6c98029e3ff4d9cdcec1c43c03546ecadacd3a6688286f1198476f4357' /tmp/result
+            grep -Fq 'install-module-2.5.7-jammy-r1.sh --repair-stock-module' /tmp/result
+            grep -Fq 'https://cyberpanel.net/install-module-2.5.7-jammy-r1.sh and verify SHA256 ca12625c2b33cf9e70fb9c88c91e13fbe60ec77240f6ea8a5a48a8b27efb7481' /tmp/result
         else
             if grep -Fq -- '--repair-stock-module' /tmp/result; then exit 1; fi
         fi
@@ -112,7 +112,7 @@ class NativeCustomEntryTests(unittest.TestCase):
 set -eu
 mkdir -p /usr/local/lsws /usr/local/CyberCP/{CyberCP,plogical} /tmp/stage
 cp -a /fixture/. /usr/local/lsws/
-cp /src/plogical/{upgrade,olsSecurityAssets,olsParserRecovery,olsStockClassifier,olsNativeValidation}.py \
+cp /src/plogical/{upgrade,olsSecurityAssets,olsParserRecovery,olsStockClassifier,olsNativeValidation,olsServiceControl,olsWatchdog}.py \
    /src/{cyberpanel_firewall_migration,cyberpanel_version,lscpd_binary}.py /tmp/stage
 cp /tmp/stage/ols{ParserRecovery,StockClassifier,NativeValidation}.py /usr/local/CyberCP/plogical/
 touch /usr/local/CyberCP/CyberCP/{__init__,settings}.py /tmp/stage/MySQLdb.py

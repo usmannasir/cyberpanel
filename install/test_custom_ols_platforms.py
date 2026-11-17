@@ -115,6 +115,26 @@ class CustomOLSPlatformTests(unittest.TestCase):
                 for keyring in keyrings:
                     self.assertLess(events.index((keyring, 0o644)), refresh)
 
+    def test_only_jammy_selects_the_policy_aware_core(self):
+        for path, class_name, static in ((self.install_path, 'InstallCyberPanel', False),
+                                         (self.upgrade_path, 'Upgrade', True)):
+            detect = load_method(path, class_name, 'detectPlatform')
+            for release, expected in (('20.04', 'skip'), ('22.04', 'ubuntu22'),
+                                      ('24.04', 'ubuntu'), ('26.04', 'ubuntu26')):
+                with self.subTest(path=path.name, release=release), \
+                        mock.patch.object(os.path, 'exists', side_effect=lambda p: p == '/etc/lsb-release'), \
+                        mock.patch.object(builtins, 'open', mock.mock_open(read_data='DISTRIB_ID=Ubuntu\nDISTRIB_RELEASE='+release+'\n')):
+                    self.assertEqual(detect() if static else detect(None), expected)
+            configs = binary_configs(path, class_name)
+            jammy = configs['ubuntu22']
+            self.assertEqual(jammy['url'], 'https://cyberpanel.net/openlitespeed-2.5.7-jammy-r1-x86_64-ubuntu')
+            self.assertNotEqual(jammy['sha256']['binary'], configs['ubuntu']['sha256']['binary'])
+            for kind, url in (('module', 'module_url'), ('modsec', 'modsec_url')):
+                self.assertEqual(jammy[url], configs['ubuntu'][url])
+                self.assertEqual(jammy['sha256'][kind], configs['ubuntu']['sha256'][kind])
+            self.assertEqual(configs['ubuntu']['sha256']['binary'], 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5')
+            self.assertEqual(configs['ubuntu26']['sha256']['binary'], configs['ubuntu']['sha256']['binary'])
+
     def test_almalinux_10_uses_dedicated_artifacts(self):
         os_release = 'NAME="AlmaLinux"\nVERSION="10.1"\nVERSION_ID="10.1"\n'
         cases = (

@@ -19,7 +19,7 @@ def load():
     ns = {'os':os, 'subprocess':subprocess, 'shlex':shlex, 'Upgrade':upgrade, 'ols_upgrade_lock':nullcontext, 'OLSUpgradeFailure':RuntimeError, 'requireCSFMigration':Mock()}
     ns['load_ols_diagnostic_helper'] = lambda name: SimpleNamespace(
         validate=lambda binary: subprocess.run([binary, '-t']), recovery_hint=lambda *args: '',
-        stock_recovery_hint=lambda *args: '')
+        stock_recovery_hint=lambda *args: '', OLSService=Mock())
     exec(compile(ast.fix_missing_locations(ast.Module(body=[helper,method],type_ignores=[])), 'upgrade.py','exec'),ns)
     return ns
 
@@ -35,9 +35,45 @@ class UpgradePreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'in progress'), ns['ols_upgrade_lock'](root):
                 self.fail('second transaction entered')
 
+    def test_config_migration_authorizes_controller_before_applying_changes(self):
+        tree = ast.parse(Path(__file__).with_name('upgrade.py').read_text())
+        node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'apply_ols_config_changes')
+        for refused in (False, True):
+            with self.subTest(refused=refused):
+                service = Mock()
+                if refused:
+                    service.authorize_recovered_jammy_controller.side_effect = RuntimeError('unreviewed bundle')
+                helper = Mock(OLSService=Mock(return_value=service))
+                def apply(changes, validate, actual):
+                    service.verify_stock_recovery_policy.assert_called_once_with()
+                    service.authorize_recovered_jammy_controller.assert_called_once_with()
+                    self.assertIs(actual, service)
+                helper.apply_config_changes.side_effect = apply
+                ns = dict(ols_upgrade_lock=nullcontext, load_ols_diagnostic_helper=lambda name: helper,
+                          validate_ols_configuration=Mock(), OLSUpgradeFailure=RuntimeError)
+                exec(compile(ast.Module(body=[node], type_ignores=[]), 'upgrade.py', 'exec'), ns)
+                if refused:
+                    with self.assertRaisesRegex(RuntimeError, 'unreviewed bundle'):
+                        ns['apply_ols_config_changes']([('config', b'new')])
+                    helper.apply_config_changes.assert_not_called()
+                else:
+                    ns['apply_ols_config_changes']([('config', b'new')])
+                    helper.apply_config_changes.assert_called_once()
+
+    def test_policy_refusal_happens_before_native_validation(self):
+        ns = load()
+        lifecycle, validator = Mock(), Mock()
+        lifecycle.OLSService.return_value.verify_stock_recovery_policy.side_effect = RuntimeError('core lacks policy support')
+        ns['load_ols_diagnostic_helper'] = lambda name: lifecycle if name == 'olsServiceControl.py' else validator
+        with self.assertRaisesRegex(RuntimeError, 'core lacks policy support'):
+            ns['validate_ols_configuration']()
+        validator.validate.assert_not_called()
+
     def test_native_exit_codes(self):
         ns = load()
-        for code, output, accepted in [(0,'',True),(1,'[WARN] fixture',True),(2,'[ERROR] fixture',False),(-11,'',False),(0,'[ERROR] fixture',False),(1,'[FATAL] fixture',False),(0,'incompatible OpenLiteSpeed core ABI',False)]:
+        for code, output, accepted in [(0,'',True),(1,'[WARN] fixture',True),
+                                       (1,'[StockRecovery] Native AutoSSL remains inactive to preserve stock behavior',True),
+                                       (1,'[StockRecovery] Native AutoSSL remains inactive to preserve stock behavior\n[ERROR] fixture',False),(2,'[ERROR] fixture',False),(-11,'',False),(0,'[ERROR] fixture',False),(1,'[FATAL] fixture',False),(0,'incompatible OpenLiteSpeed core ABI',False)]:
             with self.subTest(code=code,output=output), patch.object(subprocess,'run',return_value=SimpleNamespace(returncode=code,stdout=output,stderr='')):
                 if accepted:ns['validate_ols_configuration']()
                 else:

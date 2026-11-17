@@ -254,8 +254,8 @@ OLS_Recovery_Hint() (
     method=stock_recovery_hint
     file=olsStockClassifier.py
     mode=--repair-stock-module
-    wrapper=install-module-2.5.7-crs-r8.sh
-    checksum=b8f3cd6c98029e3ff4d9cdcec1c43c03546ecadacd3a6688286f1198476f4357
+    wrapper=install-module-2.5.7-jammy-r1.sh
+    checksum=ca12625c2b33cf9e70fb9c88c91e13fbe60ec77240f6ea8a5a48a8b27efb7481
   elif [[ "$output" == *'[PlainConf] [adminConfig:] Not support ['* ]]; then
     method=recovery_hint
     file=olsParserRecovery.py
@@ -269,8 +269,8 @@ OLS_Recovery_Hint() (
     26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
     https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py || return 0
   if [[ "$file" == olsStockClassifier.py ]]; then
-    OLS_Pinned_Helper "$work/$file" "$file" 8244d977811af110f0ea5e7f9663ac6e88d4a9eaab655c31704423e8c5d96631 \
-      https://cyberpanel.net/ols-stock-classifier-2.5.7-r14.py || return 0
+    OLS_Pinned_Helper "$work/$file" "$file" f7efa2ae9aed187deda899411734a0ca97a8e5bc1e92073b90cf534fee38caa6 \
+      https://cyberpanel.net/ols-stock-classifier-2.5.7-jammy-r1.py || return 0
   fi
   printf '%s\n' "$output" | python3 -IB -c '
 import os, runpy, sys
@@ -334,6 +334,23 @@ Protect_Custom_OLS_From_Packages() {
   esac
   core=/usr/local/lsws/bin/openlitespeed
   module=/usr/local/lsws/modules/cyberpanel_ols.so
+  # A stock-recovery policy must never be handed to an older core that
+  # ignores it and silently activates AutoSSL before the Python upgrader runs.
+  if [[ -e /usr/local/lsws/.cyberpanel-stock-recovery-policy || -L /usr/local/lsws/.cyberpanel-stock-recovery-policy ]]; then
+    if [[ "$distro_id" != ubuntu || "$(. /etc/os-release; printf '%s' "$VERSION_ID")" != 22.04 ]]; then
+      echo 'ERROR: The stock recovery policy requires the verified Jammy core; no package changes attempted.'
+      return 1
+    fi
+    if [[ ! -f "$core" || -L "$core" ]]; then
+      echo 'ERROR: The stock recovery policy requires a regular verified core; no package changes attempted.'
+      return 1
+    fi
+    core_digest=$(sha256sum -- "$core") || return 1
+    if [[ "${core_digest%% *}" != 863687f29a529d379224fe32115d9326028038dd2d38e5aac26ddb4bc5a3bf55 ]]; then
+      echo 'ERROR: The installed OLS core cannot enforce the stock recovery policy; no package changes attempted.'
+      return 1
+    fi
+  fi
   [[ -f "$core" ]] || return 0
   # The Ubuntu 2.5.0 / 2.7.3 release predates the ABI marker. Verify both
   # release files before treating it as a custom installation.
@@ -573,7 +590,39 @@ fi
 }
 # check command success or not
 
+Existing_Certificate_Pair_Valid() {
+  local cert_path="$1" key_path="$2" certificate_key private_key
+  [[ -f "$cert_path" && -s "$cert_path" && -f "$key_path" && -s "$key_path" ]] || return 1
+  openssl x509 -in "$cert_path" -noout -checkend 0 >/dev/null 2>&1 || return 1
+  certificate_key=$(openssl x509 -in "$cert_path" -pubkey -noout 2>/dev/null) || return 1
+  private_key=$(openssl pkey -in "$key_path" -pubout -passin pass: 2>/dev/null) || return 1
+  [[ -n "$certificate_key" && "$certificate_key" == "$private_key" ]]
+}
+
 Regenerate_Cert() {
+  local key_path cert_path
+  case "$1" in
+    8090)
+      key_path="/usr/local/lscp/conf/key.pem"
+      cert_path="/usr/local/lscp/conf/cert.pem"
+      ;;
+    7080)
+      if [[ -f /usr/local/lsws/admin/conf/webadmin.key ]]; then
+        key_path="/usr/local/lsws/admin/conf/webadmin.key"
+        cert_path="/usr/local/lsws/admin/conf/webadmin.crt"
+      else
+        key_path="/usr/local/lsws/admin/conf/cert/admin.key"
+        cert_path="/usr/local/lsws/admin/conf/cert/admin.crt"
+      fi
+      ;;
+    *) return 1 ;;
+  esac
+  # Installer defaults keep mail@example.com in their subject. That identifies
+  # their origin, not a broken pair; an upgrade must retain a usable TLS identity.
+  if Existing_Certificate_Pair_Valid "$cert_path" "$key_path"; then
+    echo "Preserving the existing certificate and private key for port $1."
+    return 0
+  fi
   cat <<EOF >/usr/local/CyberCP/cert_conf
 [req]
 prompt=no
@@ -594,21 +643,10 @@ dnQualifier = CyberPanel
 [server_exts]
 extendedKeyUsage = 1.3.6.1.5.5.7.3.1
 EOF
-  if [[ $1 == "8090" ]]; then
-    openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
-  fi
-
-  if [[ $1 == "7080" ]]; then
-    if [[ -f /usr/local/lsws/admin/conf/webadmin.key ]]; then
-      key_path="/usr/local/lsws/admin/conf/webadmin.key"
-      cert_path="/usr/local/lsws/admin/conf/webadmin.crt"
-    else
-      key_path="/usr/local/lsws/admin/conf/cert/admin.key"
-      cert_path="/usr/local/lsws/admin/conf/cert/admin.crt"
-    fi
-    openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout $key_path -out $cert_path
-  fi
+  openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout "$key_path" -out "$cert_path"
+  local result=$?
   rm -f /usr/local/CyberCP/cert_conf
+  return "$result"
 }
 
 Retry_Command() {

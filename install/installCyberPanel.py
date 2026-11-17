@@ -242,6 +242,8 @@ class InstallCyberPanel:
                                 1,
                             )
                             return 'skip'
+                        if releaseVersion == (22, 4):
+                            return 'ubuntu22'
                         if releaseVersion and releaseVersion[0] == 26:
                             return 'ubuntu26'
                         return 'ubuntu'
@@ -402,6 +404,12 @@ class InstallCyberPanel:
                         'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
                         'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
                         'sha256': {'binary': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5',
+                                   'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
+                                   'modsec': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe'}},
+             'ubuntu22': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-jammy-r1-x86_64-ubuntu',
+                        'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.7-x86_64-ubuntu.so',
+                        'modsec_url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
+                        'sha256': {'binary': '863687f29a529d379224fe32115d9326028038dd2d38e5aac26ddb4bc5a3bf55',
                                    'module': '41ae567f45931691e34facf1914bf78bb95236d9f8b1ee75d455cbbc19ca6d8b',
                                    'modsec': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe'}},
              'ubuntu26': {'url': 'https://cyberpanel.net/openlitespeed-2.5.7-crs-scopes-x86_64-ubuntu',
