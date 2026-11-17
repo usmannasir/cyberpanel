@@ -94,3 +94,40 @@ class SecurityMiddlewareTests(unittest.TestCase):
         )(request)
 
         self.assertNotEqual(b'database-view-reached', response.content)
+
+    def firewall_request(self, path, fields):
+        request = RequestFactory().post(path, data=json.dumps(fields),
+                                        content_type='application/json')
+        request.session = {'userID': 1}
+        return secMiddleware(lambda unused: HttpResponse('firewall-view-reached'))(request)
+
+    def test_firewall_source_fields_allow_valid_ipv4_and_ipv6(self):
+        for path in ('/firewall/addRule', '/firewall/deleteRule'):
+            for address in ('192.0.2.44/32', '2001:db8::/64',
+                            '2001:db8:1234:5678:90ab:cdef:1234:5678/128'):
+                with self.subTest(path=path, address=address):
+                    response = self.firewall_request(path, {'ruleIP':address})
+                    self.assertEqual(response.content,b'firewall-view-reached')
+                    self.assertEqual(response['X-Content-Type-Options'],'nosniff')
+
+    def test_firewall_source_validation_rejects_metacharacters_and_invalid_types(self):
+        for address in ('2001:db8::1;id','2001:db8::1|id','$(id)',
+                        '2001:db8::1\\n','fe80::1%eth0','[2001:db8::1]',
+                        '2001:db8::1/129','foo:bar', None, 0, ['2001:db8::1']):
+            with self.subTest(address=address):
+                response = self.firewall_request('/firewall/addRule',{'ruleIP':address})
+                self.assertNotEqual(response.content,b'firewall-view-reached')
+                self.assertIn(b'valid IPv4 or IPv6',response.content)
+
+    def test_firewall_source_allowance_does_not_cover_other_fields_or_routes(self):
+        cases = [
+            ('/firewall/addRule',{'ruleName':'qa:bad','ruleIP':'2001:db8::1'}),
+            ('/firewall/addRule',{'rulePort':'15433;id','ruleIP':'2001:db8::1'}),
+            ('/firewall/addRule',{'ruleProtocol':'tcp;id','ruleIP':'2001:db8::1'}),
+            ('/firewall/other',{'ruleIP':'2001:db8::1'}),
+            ('/firewall/addRuleExtra',{'ruleIP':'2001:db8::1'}),
+        ]
+        for path, fields in cases:
+            with self.subTest(path=path, fields=fields):
+                self.assertNotEqual(self.firewall_request(path,fields).content,
+                                    b'firewall-view-reached')

@@ -4,6 +4,7 @@ import os.path
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.shortcuts import HttpResponse, render
 import json
+import ipaddress
 import re
 from loginSystem.models import Administrator
 from CyberCP.sessionSecurity import get_client_ip, session_ip_matches
@@ -167,6 +168,23 @@ class secMiddleware:
                     valueAlreadyChecked = 0
 
                     # Key/value scanning logging removed
+
+                    # Only these firewall source fields accept IPv6 punctuation.
+                    # Parse the complete value before bypassing the generic scanner;
+                    # other fields and endpoints keep their existing restrictions.
+                    if key == 'ruleIP' and pathActual in (
+                        '/firewall/addRule', '/firewall/deleteRule',
+                    ):
+                        try:
+                            if not isinstance(value, str) or '%' in value:
+                                raise ValueError('Invalid source address')
+                            ipaddress.ip_network(value, strict=False)
+                        except ValueError:
+                            message = 'Enter a valid IPv4 or IPv6 source address or CIDR.'
+                            return self._security_headers(HttpResponse(json.dumps({
+                                'error_message': message, 'errorMessage': message,
+                            }), content_type='application/json'))
+                        continue
 
                     # Skip validation for ports key to allow port ranges with colons
                     # but only for CSF modifyPorts endpoint

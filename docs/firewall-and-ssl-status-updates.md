@@ -57,3 +57,25 @@ upgrade merely to exercise the no-CSF path on a live server.
 Exercise both Manage SSL pages against controlled valid, expired, future,
 short-lived, missing and malformed certificate fixtures. Restore the fixture
 files and records afterward. Preserve exact-file backups for a targeted deployment.
+
+
+## Source-restricted firewalld rules
+
+Manual firewall entries now use the requested IPv4 or IPv6 source family only.
+Intentional service openings explicitly request dual-stack behavior. Runtime
+and permanent rules are changed separately with readback; no global reload
+drops runtime-only operator rules. Failed writes undo only completed changes.
+Existing rules are not adopted on create, and deletion uses the stored record
+identity instead of client-supplied ports or addresses. Equivalent duplicate
+panel records require review before removal.
+
+The page shows CyberPanel records separately from read-only runtime and permanent
+firewalld zone inventories. Historical unrestricted IPv6 rules are preserved:
+their ownership and service dependencies cannot be inferred from a panel row.
+The source field migration preserves records and allows full IPv6 CIDRs.
+
+Validation: python3 -m unittest firewall.test_firewalld_rules includes pure
+rule/caller checks and integration checks when firewall-offline-cmd is installed.
+Run the integration suite in an isolated AlmaLinux firewalld environment.
+python3 -m firewall.live_firewalld_acceptance is an explicit disposable-daemon
+acceptance script, never a command to run on a customer firewall.

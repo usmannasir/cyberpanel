@@ -66,6 +66,9 @@ class UpgradeCyberPanel:
         Upgrade.CLMigrations()
         Upgrade.IncBackupMigrations()
         Upgrade.applyLoginSystemMigrations()
+        if not Upgrade.applyFirewallMigrations():
+            self.PostStatus('Required firewall database migrations failed. [404]')
+            return 0
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()

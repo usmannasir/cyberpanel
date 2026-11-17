@@ -63,7 +63,7 @@ class HAManager(multi.Thread):
                     return 0
 
             try:
-                FirewallUtilities.addRule('tcp', '2377', "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', '2377', "0.0.0.0/0", dual_stack=True)
                 fwRule = FirewallRules(name="Docker", port='2377', proto="tcp")
                 fwRule.save()
             except:

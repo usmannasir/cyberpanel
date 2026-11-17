@@ -107,6 +107,8 @@ app.controller('firewallController', function ($scope, $http) {
 
     function populateCurrentRecords() {
 
+        $scope.firewalld = null;
+        $scope.firewalldRead = false;
         $scope.rulesLoading = false;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
@@ -127,8 +129,10 @@ app.controller('firewallController', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.firewalldRead = true;
             if (response.data.fetchStatus === 1) {
                 $scope.rules = JSON.parse(response.data.data);
+                $scope.firewalld = response.data.firewalld;
                 $scope.rulesLoading = true;
             }
             else {
@@ -138,6 +142,8 @@ app.controller('firewallController', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.firewalldRead = true;
+            $scope.rulesLoading = true;
             $scope.couldNotConnect = false;
 
         }
@@ -1224,8 +1230,6 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
 
     var owaspInstalled = false;
     var comodoInstalled = false;
-    var counterOWASP = 0;
-    var counterComodo = 0;
     var updatingOWASPStatus = false;
     var updatingComodoStatus = false;
 
@@ -1234,45 +1238,34 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
 
         // Prevent triggering installation when status check updates the toggle
         if (updatingOWASPStatus) {
-            counterOWASP = counterOWASP + 1;  // Still increment counter
             return;
         }
 
         owaspInstalled = $(this).prop('checked');
         $scope.ruleFiles = true;
 
-        if (counterOWASP !== 0) {
-            if (owaspInstalled === true) {
-                installModSecRulesPack('installOWASP');
-            } else {
-                installModSecRulesPack('disableOWASP')
-            }
+        if (owaspInstalled === true) {
+            installModSecRulesPack('installOWASP');
+        } else {
+            installModSecRulesPack('disableOWASP')
         }
-
-        counterOWASP = counterOWASP + 1;
     });
 
     $('#comodoInstalled').change(function () {
 
         // Prevent triggering installation when status check updates the toggle
         if (updatingComodoStatus) {
-            counterComodo = counterComodo + 1;  // Still increment counter
             return;
         }
 
         $scope.ruleFiles = true;
         comodoInstalled = $(this).prop('checked');
 
-        if (counterComodo !== 0) {
-
-            if (comodoInstalled === true) {
-                installModSecRulesPack('installComodo');
-            } else {
-                installModSecRulesPack('disableComodo')
-            }
+        if (comodoInstalled === true) {
+            installModSecRulesPack('installComodo');
+        } else {
+            installModSecRulesPack('disableComodo')
         }
-
-        counterComodo = counterComodo + 1;
 
     });
 

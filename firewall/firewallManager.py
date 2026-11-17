@@ -82,7 +82,12 @@ class FirewallManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            try:
+                firewalld = FirewallUtilities.currentFirewalldConfiguration()
+            except RuntimeError:
+                firewalld = None
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None",
+                                     'data': json_data, 'firewalld': firewalld})
             return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -105,10 +110,17 @@ class FirewallManager:
             rulePort = data['rulePort']
             ruleIP = data['ruleIP']
 
-            FirewallUtilities.addRule(ruleProtocol, rulePort, ruleIP)
-
             newFWRule = FirewallRules(name=ruleName, proto=ruleProtocol, port=rulePort, ipAddress=ruleIP)
-            newFWRule.save()
+            newFWRule.full_clean()
+            if not FirewallUtilities.addRule(ruleProtocol, rulePort, ruleIP, require_new=True):
+                raise ValueError('Rule was not added. Check the source, port, and existing firewalld rules.')
+
+            try:
+                newFWRule.save()
+            except Exception:
+                if not FirewallUtilities.deleteRule(ruleProtocol, rulePort, ruleIP):
+                    raise RuntimeError('Could not save the record or undo the firewall change. Review firewalld.')
+                raise
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -130,15 +142,17 @@ class FirewallManager:
                 return ACLManager.loadErrorJson('delete_status', 0)
 
 
-            ruleID = data['id']
-            ruleProtocol = data['proto']
-            rulePort = data['port']
-            ruleIP = data['ruleIP']
-
-            FirewallUtilities.deleteRule(ruleProtocol, rulePort, ruleIP)
-
-            delRule = FirewallRules.objects.get(id=ruleID)
-            delRule.delete()
+            rule = FirewallRules.objects.get(id=data['id'])
+            identity = FirewallUtilities.ruleIdentity(rule.proto, rule.port, rule.ipAddress)
+            if identity is None:
+                raise ValueError('This saved rule is invalid. Review it before deleting.')
+            peers = FirewallRules.objects.filter(proto=rule.proto).exclude(pk=rule.pk)
+            if any(FirewallUtilities.ruleIdentity(peer.proto, peer.port, peer.ipAddress) == identity
+                   for peer in peers):
+                raise ValueError('Multiple panel records share this rule. Review them before deleting.')
+            if not FirewallUtilities.deleteRule(rule.proto, rule.port, rule.ipAddress):
+                raise ValueError('Rule was not removed. Review runtime and permanent firewalld rules.')
+            rule.delete()
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -355,15 +369,15 @@ class FirewallManager:
                 else:
                     try:
                         updateFW = FirewallRules.objects.get(name="SSHCustom")
-                        FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                        FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0", dual_stack=True)
                         updateFW.port = sshPort
                         updateFW.save()
-                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0", dual_stack=True)
                     except:
                         try:
                             newFireWallRule = FirewallRules(name="SSHCustom", port=sshPort, proto="tcp")
                             newFireWallRule.save()
-                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0", dual_stack=True)
                             command = 'firewall-cmd --permanent --remove-service=ssh'
                             ProcessUtilities.executioner(command)
                         except BaseException as msg:

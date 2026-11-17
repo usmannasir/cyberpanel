@@ -61,6 +61,16 @@ class CloudUpgradePreservationTests(unittest.TestCase):
         self.assertIn('systemctl restart lscpd', messages[-1])
         self.assertIn('[404]', messages[-1])
         self.assertFalse(any('[200]' in message for message in messages))
+    def test_firewall_migration_failure_does_not_report_success(self):
+        self.upgrade.downloadAndUpgrade.return_value = (1, None)
+        self.upgrade.applyFirewallMigrations.return_value = False
+        self.assertEqual(0, self.cloud.UpgardeNow())
+        messages = [call.args[0] for call in self.cloud.PostStatus.call_args_list]
+        self.assertIn('firewall database migrations failed', messages[-1])
+        self.assertIn('[404]', messages[-1])
+        self.assertFalse(any('[200]' in message for message in messages))
+        self.upgrade.s3BackupMigrations.assert_not_called()
+
     def test_success_reports_completion_only_after_restart(self):
         self.upgrade.downloadAndUpgrade.return_value = (1, None)
         self.assertIsNone(self.cloud.UpgardeNow())

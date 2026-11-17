@@ -1249,15 +1249,15 @@ def submitPortChange(request):
         else:
             try:
                 updateFW = FirewallRules.objects.get(name="CPCustomPort")
-                FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0", dual_stack=True)
                 updateFW.port = port
                 updateFW.save()
-                FirewallUtilities.addRule('tcp', port, "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', port, "0.0.0.0/0", dual_stack=True)
             except:
                 try:
                     newFireWallRule = FirewallRules(name="SSHCustom", port=port, proto="tcp")
                     newFireWallRule.save()
-                    FirewallUtilities.addRule('tcp', port, "0.0.0.0/0")
+                    FirewallUtilities.addRule('tcp', port, "0.0.0.0/0", dual_stack=True)
                     command = 'firewall-cmd --permanent --remove-service=ssh'
                     ProcessUtilities.executioner(command)
                 except BaseException as msg:

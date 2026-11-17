@@ -36,7 +36,7 @@ def terminal(request):
         command = 'systemctl start cpssh'
         ProcessUtilities.executioner(command)
 
-        FirewallUtilities.addRule('tcp', '5678', '0.0.0.0/0')
+        FirewallUtilities.addRule('tcp', '5678', '0.0.0.0/0', dual_stack=True)
 
         newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
         newFWRule.save()

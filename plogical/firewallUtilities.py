@@ -15,30 +15,104 @@ import plogical.CyberCPLogFileWriter as logging
 import argparse
 import re
 import ipaddress
+import shlex
 from plogical.processUtilities import ProcessUtilities
 from plogical.sshKeyUtilities import delete_authorized_key
 from plogical.sshConfigUtilities import update_ssh_config, ssh_service_is_listening
 
-# firewalld rich-rule values are embedded inside a single-quoted shell argument,
-# so they cannot be passed through shlex.quote. Validate them against strict
-# allow-lists instead; legitimate values pass through unchanged.
 _FW_ALLOWED_PROTOCOLS = {'tcp', 'udp', 'sctp', 'dccp'}
-_FW_PORT_RE = re.compile(r'^[0-9]{1,5}(-[0-9]{1,5})?$')
+_FW_PORT_RE = re.compile(r'[0-9]{1,5}(?:-[0-9]{1,5})?')
+_PUBLIC_ZONE = 'firewall-cmd --zone=public'
 
 
-def _firewallInputsValid(proto, port, ipAddress):
-    if proto not in _FW_ALLOWED_PROTOCOLS:
-        return False
-    if not _FW_PORT_RE.match(str(port)):
-        return False
+def _richRules(proto, port, address, dual_stack=False):
+    port = str(port)
+    if proto not in _FW_ALLOWED_PROTOCOLS or not _FW_PORT_RE.fullmatch(port):
+        raise ValueError('Enter a valid protocol and port.')
+    ports = [int(item) for item in port.split('-')]
+    if not 1 <= ports[0] <= ports[-1] <= 65535:
+        raise ValueError('Enter a valid port or port range.')
+    if not isinstance(address, str) or '%' in address:
+        raise ValueError('Enter a valid IPv4 or IPv6 source.')
+    network = ipaddress.ip_network(address, strict=False)
+    source = str(network.network_address) if network.prefixlen == network.max_prefixlen else str(network)
+    spec = 'port port="%s" protocol="%s" accept' % ('-'.join(map(str, ports)), proto)
+    rules = ['rule family="ipv%d" source address="%s" %s' % (network.version, source, spec)]
+    if dual_stack:
+        if network.version != 4 or network.prefixlen != 0:
+            raise ValueError('Dual-stack service rules require an unrestricted IPv4 source.')
+        rules.append('rule family="ipv6" ' + spec)
+    return rules
+
+
+def _ruleKey(rule):
+    # firewalld can reorder port attributes and render a host with or without its mask.
+    words = shlex.split(rule)
+    for index, word in enumerate(words):
+        if word.startswith('address='):
+            try:
+                words[index] = 'address=' + str(ipaddress.ip_network(word[8:], strict=False))
+            except ValueError:
+                pass
+    return sorted(words)
+
+
+def _firewalld(command):
+    result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+    if not isinstance(result, (tuple, list)) or len(result) != 2 or result[0] != 1:
+        raise RuntimeError('firewalld could not complete the requested operation.')
+    output = result[1]
+    if not isinstance(output, (str, bytes)):
+        raise RuntimeError('firewalld returned an invalid response.')
+    return output.decode('utf-8', 'replace') if isinstance(output, bytes) else output
+
+
+def _changeRules(rules, *, remove=False, require_new=False):
+    planned = []
+    for scope in (_PUBLIC_ZONE + ' --permanent', _PUBLIC_ZONE):
+        existing = _firewalld(scope + ' --list-rich-rules').splitlines()
+        for rule in rules:
+            matches = [line for line in existing if _ruleKey(line) == _ruleKey(rule)]
+            if len(matches) > 1 or (require_new and matches):
+                raise ValueError('A matching firewalld rule already exists. Review it before changing it.')
+            if remove and matches:
+                planned.append((scope, matches[0]))
+            elif not remove and not matches:
+                planned.append((scope, rule))
+    verb, undo = ('remove', 'add') if remove else ('add', 'remove')
+    changed = []
     try:
-        ipaddress.ip_network(str(ipAddress), strict=False)
-    except ValueError:
-        return False
-    return True
+        for scope, rule in planned:
+            output = _firewalld(scope + ' --' + verb + '-rich-rule=' + shlex.quote(rule))
+            if 'ALREADY_ENABLED:' in output or 'NOT_ENABLED:' in output:
+                raise RuntimeError('The rule changed during the operation. Refresh the firewalld view.')
+            changed.append((scope, rule))
+        for scope in (_PUBLIC_ZONE + ' --permanent', _PUBLIC_ZONE):
+            observed = _firewalld(scope + ' --list-rich-rules').splitlines()
+            for rule in rules:
+                present = any(_ruleKey(line) == _ruleKey(rule) for line in observed)
+                if present == remove:
+                    raise RuntimeError('Firewall rule readback did not match the requested change.')
+    except RuntimeError:
+        rollback_failed = False
+        for scope, rule in reversed(changed):
+            try:
+                _firewalld(scope + ' --' + undo + '-rich-rule=' + shlex.quote(rule))
+            except RuntimeError:
+                rollback_failed = True
+        if rollback_failed:
+            raise RuntimeError('Firewall rollback incomplete. Review runtime and permanent rules.')
+        raise
 
 
 class FirewallUtilities:
+
+    @staticmethod
+    def ruleIdentity(proto, port, ipAddress):
+        try:
+            return _richRules(proto, port, ipAddress)[0]
+        except ValueError:
+            return None
 
     @staticmethod
     def resFailed(res):
@@ -66,38 +140,28 @@ class FirewallUtilities:
 
 
     @staticmethod
-    def addRule(proto,port,ipAddress):
-        if not _firewallInputsValid(proto, port, ipAddress):
-            logging.CyberCPLogFileWriter.writeToFile("Rejected firewall addRule with invalid input: %s %s %s" % (str(proto), str(port), str(ipAddress)))
+    def addRule(proto, port, ipAddress, *, dual_stack=False, require_new=False):
+        try:
+            _changeRules(_richRules(proto, port, ipAddress, dual_stack), require_new=require_new)
+        except (ValueError, RuntimeError) as error:
+            logging.CyberCPLogFileWriter.writeToFile(str(error))
             return 0
-        ruleFamily = 'rule family="ipv4"'
-        sourceAddress = 'source address="' + ipAddress + '"'
-        ruleProtocol = 'port protocol="' + proto + '"'
-        rulePort = 'port="' + port + '"'
-
-        command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-
-        ProcessUtilities.executioner(command)
-
-        ruleFamily = 'rule family="ipv6"'
-        sourceAddress = ''
-
-        command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-
-        ProcessUtilities.executioner(command)
-
-        command = 'firewall-cmd --reload'
-
-        ProcessUtilities.executioner(command)
-
         return 1
+
+    @staticmethod
+    def currentFirewalldConfiguration():
+        return {
+            'runtime': _firewalld('firewall-cmd --list-all-zones'),
+            'permanent': _firewalld('firewall-cmd --permanent --list-all-zones'),
+        }
 
     @staticmethod
     def addSieveFirewallRule():
         """Add Sieve port 4190 to firewall for all OS variants"""
         try:
             # Add Sieve port 4190 to firewall
-            FirewallUtilities.addRule('tcp', '4190', '0.0.0.0/0')
+            if not FirewallUtilities.addRule('tcp', '4190', '0.0.0.0/0', dual_stack=True):
+                return 0
             logging.CyberCPLogFileWriter.writeToFile("Sieve port 4190 added to firewall successfully")
             return 1
         except BaseException as msg:
@@ -105,30 +169,12 @@ class FirewallUtilities:
             return 0
 
     @staticmethod
-    def deleteRule(proto, port, ipAddress):
-        if not _firewallInputsValid(proto, port, ipAddress):
-            logging.CyberCPLogFileWriter.writeToFile("Rejected firewall deleteRule with invalid input: %s %s %s" % (str(proto), str(port), str(ipAddress)))
+    def deleteRule(proto, port, ipAddress, *, dual_stack=False):
+        try:
+            _changeRules(_richRules(proto, port, ipAddress, dual_stack), remove=True)
+        except (ValueError, RuntimeError) as error:
+            logging.CyberCPLogFileWriter.writeToFile(str(error))
             return 0
-        ruleFamily = 'rule family="ipv4"'
-        sourceAddress = 'source address="' + ipAddress + '"'
-        ruleProtocol = 'port protocol="' + proto + '"'
-        rulePort = 'port="' + port + '"'
-
-        command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-
-        ProcessUtilities.executioner(command)
-
-        ruleFamily = 'rule family="ipv6"'
-        sourceAddress = ''
-
-        command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-
-        ProcessUtilities.executioner(command)
-
-        command = 'firewall-cmd --reload'
-
-        ProcessUtilities.executioner(command)
-
         return 1
 
     @staticmethod
@@ -139,7 +185,7 @@ class FirewallUtilities:
 
             def prepare():
                 ProcessUtilities.normalExecutioner('semanage port -a -t ssh_port_t -p tcp ' + str(int(sshPort)))
-                FirewallUtilities.addRule('tcp', str(int(sshPort)), "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', str(int(sshPort)), "0.0.0.0/0", dual_stack=True)
 
             update_ssh_config(
                 '/etc/ssh/sshd_config', sshPort, 'yes' if rootLogin == '1' else 'no',

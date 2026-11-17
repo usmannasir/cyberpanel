@@ -2151,6 +2151,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 0
 
     @staticmethod
+    def applyFirewallMigrations():
+        # Firewall source addresses must work even when mail services are absent.
+        command = ('/usr/local/CyberPanel/bin/python /usr/local/CyberCP/manage.py '
+                   'migrate firewall --noinput')
+        return Upgrade.executioner(command, 'Firewall database migrations', 0)
+
+    @staticmethod
     def applyLoginSystemMigrations():
         try:
 
@@ -5614,6 +5621,8 @@ pm.max_spare_servers = 3
         ##
 
         Upgrade.applyLoginSystemMigrations()
+        if not Upgrade.applyFirewallMigrations():
+            raise RuntimeError('Required firewall database migrations failed')
         Upgrade.rotateInvalidAPITokens()
 
         ## Put function here to update custom ACLs
