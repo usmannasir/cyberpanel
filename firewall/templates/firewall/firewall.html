@@ -598,7 +598,7 @@
                 <div class="panel-icon">
                     <i class="fas fa-list-alt"></i>
                 </div>
-                {% trans "Firewall Rules" %}
+                {% trans "CyberPanel Rule Records" %}
             </div>
             <div ng-show="rulesLoading" class="loading-spinner"></div>
         </div>
@@ -624,11 +624,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">{% trans "IP Address" %}</label>
+                    <label class="form-label">{% trans "Source IPv4 or IPv6 address or CIDR" %}</label>
                     <input type="text" 
                            class="form-control"
                            ng-model="ruleIP" 
-                           placeholder="{% trans '0.0.0.0/0 for all IPs' %}"
+                           placeholder="{% trans '0.0.0.0/0 for all IPv4 sources' %}"
                            required>
                 </div>
                 
@@ -694,11 +694,23 @@
             <!-- Empty State -->
             <div ng-if="rules.length == 0" class="empty-state">
                 <i class="fas fa-shield-alt empty-icon"></i>
-                <h3 class="empty-title">{% trans "No Firewall Rules" %}</h3>
+                <h3 class="empty-title">{% trans "No CyberPanel Rule Records" %}</h3>
                 <p class="empty-text">{% trans "Add your first firewall rule to control network access to your server." %}</p>
             </div>
         </div>
         
+        <div class="rules-table-section">
+            <p>{% trans "CyberPanel records and firewalld rules are listed separately. Review existing rules before removing them, including unrestricted IPv6 rules that may be shared by other services." %}</p>
+            <details ng-if="firewalld">
+                <summary>{% trans "Inspect runtime and permanent firewalld zones" %}</summary>
+                <h4>{% trans "Runtime zones" %}</h4>
+                <pre ng-bind="firewalld.runtime"></pre>
+                <h4>{% trans "Permanent zones" %}</h4>
+                <pre ng-bind="firewalld.permanent"></pre>
+            </details>
+            <p ng-if="firewalldRead && !firewalld">{% trans "Firewalld zone configuration could not be read." %}</p>
+        </div>
+
         <!-- Messages -->
         <div style="padding: 0 2rem 2rem;">
             <div ng-hide="canNotAddRule" class="alert alert-danger">

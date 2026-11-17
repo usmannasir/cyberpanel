@@ -107,6 +107,8 @@ app.controller('firewallController', function ($scope, $http) {
 
     function populateCurrentRecords() {
 
+        $scope.firewalld = null;
+        $scope.firewalldRead = false;
         $scope.rulesLoading = false;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
@@ -127,8 +129,10 @@ app.controller('firewallController', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            $scope.firewalldRead = true;
             if (response.data.fetchStatus === 1) {
                 $scope.rules = JSON.parse(response.data.data);
+                $scope.firewalld = response.data.firewalld;
                 $scope.rulesLoading = true;
             }
             else {
@@ -138,6 +142,7 @@ app.controller('firewallController', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.firewalldRead = true;
             $scope.couldNotConnect = false;
 
         }

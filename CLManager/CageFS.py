@@ -96,7 +96,7 @@ class CageFS:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Adding LVEManager port ..\n", 1)
             try:
-                FirewallUtilities.addRule('tcp', '9000', '0.0.0.0/0')
+                FirewallUtilities.addRule('tcp', '9000', '0.0.0.0/0', dual_stack=True)
 
                 newFWRule = FirewallRules(name='lvemanager', proto='tcp', port='9000', ipAddress='0.0.0.0/0')
                 newFWRule.save()

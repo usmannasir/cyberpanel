@@ -126,31 +126,31 @@ class ClusterManager:
 
                 newFireWallRule = FirewallRules(name="mysqlpub", port='3306', proto="tcp")
                 newFireWallRule.save()
-                FirewallUtilities.addRule('tcp', '3306', "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', '3306', "0.0.0.0/0", dual_stack=True)
 
                 ### For Galera Cluster replication traffic.
 
                 newFireWallRule = FirewallRules(name="galery", port='4567', proto="tcp")
                 newFireWallRule.save()
-                FirewallUtilities.addRule('tcp', '4567', "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', '4567', "0.0.0.0/0", dual_stack=True)
 
                 ### For Galera Cluster IST
 
                 newFireWallRule = FirewallRules(name="galeryist", port='4568', proto="tcp")
                 newFireWallRule.save()
-                FirewallUtilities.addRule('tcp', '4568', "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', '4568', "0.0.0.0/0", dual_stack=True)
 
                 ### For Galera Cluster SST
 
                 newFireWallRule = FirewallRules(name="galerysst", port='4444', proto="tcp")
                 newFireWallRule.save()
-                FirewallUtilities.addRule('tcp', '4444', "0.0.0.0/0")
+                FirewallUtilities.addRule('tcp', '4444', "0.0.0.0/0", dual_stack=True)
 
                 ### For Galera Cluster replication traffic. (UDP)
 
                 newFireWallRule = FirewallRules(name="galeryudp", port='4567', proto="udp")
                 newFireWallRule.save()
-                FirewallUtilities.addRule('udp', '4567', "0.0.0.0/0")
+                FirewallUtilities.addRule('udp', '4567', "0.0.0.0/0", dual_stack=True)
 
             except:
                 self.PostStatus('Failed to add Firewall rules, manually open the required ports..')
