@@ -8,6 +8,167 @@ from unittest.mock import Mock, patch
 from plogical import olsServiceControl as control
 
 
+@unittest.skipUnless(os.geteuid() == 0, 'requires root-owned policy fixture')
+class RecoveredJammyControllerTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+        (self.root / 'bin').mkdir()
+        (self.root / 'modules').mkdir()
+        self.files = ('bin/openlitespeed', 'modules/cyberpanel_ols.so', 'modules/mod_security.so')
+        self.hashes = {b'reviewed-controller': control.REVIEWED_JAMMY_CONTROLLER,
+                       b'vendor-controller': next(iter(control.CONTROLLER_HASHES)),
+                       b'environment': control.ENV_HASH}
+        for name, checksum in zip(self.files, control.RECOVERED_JAMMY_BUNDLE):
+            content = name.encode()
+            self.hashes[content] = checksum
+            (self.root / name).write_bytes(content)
+        (self.root / 'bin/lswsctrl.open').write_bytes(b'reviewed-controller')
+        (self.root / 'bin/lswsctrl').symlink_to('lswsctrl.open')
+        (self.root / 'bin/lsws_env').write_bytes(b'environment')
+        policy = self.root / control.RECOVERY_POLICY_NAME
+        policy.write_bytes(control.RECOVERY_POLICY_BYTES)
+        policy.chmod(0o600)
+        for name, value in [('jammy_platform', lambda: True),
+                            ('digest', lambda path: self.hashes.get(Path(path).read_bytes(), 'unknown'))]:
+            patcher = patch.object(control, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_recovered_grant_is_explicit_and_needs_no_standalone_recovery_modules(self):
+        service = control.OLSService(self.root)
+        with self.assertRaisesRegex(RuntimeError, 'controller'):
+            service.controller()
+        with patch.dict('sys.modules', {'olsStockClassifier': None, 'installBundle': None}):
+            service.authorize_recovered_jammy_controller()
+            service.controller()
+        self.assertEqual(service.unit, 'lshttpd.service')
+        with self.assertRaises(RuntimeError):
+            control.OLSService(self.root).controller()
+
+    def test_reviewed_controller_grant_requires_the_recovery_policy(self):
+        (self.root / control.RECOVERY_POLICY_NAME).unlink()
+        with self.assertRaisesRegex(RuntimeError, 'policy'):
+            control.OLSService(self.root).authorize_recovered_jammy_controller()
+
+    def test_exact_bundle_os_and_manager_are_required(self):
+        for name in self.files:
+            path = self.root / name
+            original = path.read_bytes()
+            path.write_bytes(b'unknown')
+            with self.assertRaisesRegex(RuntimeError, 'exact recovered Jammy bundle'):
+                control.OLSService(self.root).authorize_recovered_jammy_controller()
+            path.write_bytes(original)
+        with patch.object(control, 'jammy_platform', return_value=False), self.assertRaises(RuntimeError):
+            control.OLSService(self.root).authorize_recovered_jammy_controller()
+        with self.assertRaisesRegex(RuntimeError, 'requires lshttpd.service'):
+            control.OLSService(self.root, unit='lsws.service').authorize_recovered_jammy_controller()
+
+    def test_grant_rechecks_bundle_environment_and_controller_identity(self):
+        for name in (*self.files, 'bin/lsws_env', 'bin/lswsctrl.open'):
+            service = control.OLSService(self.root)
+            service.authorize_recovered_jammy_controller()
+            path = self.root / name
+            original = path.read_bytes()
+            path.write_bytes(b'changed')
+            with self.assertRaises(RuntimeError):
+                service.controller()
+            path.write_bytes(original)
+            if name == 'bin/lswsctrl.open':
+                with self.assertRaises(RuntimeError):
+                    service.controller()
+            else:
+                service.controller()
+
+    def test_grant_binds_the_command_symlink_and_not_only_its_old_target(self):
+        service = control.OLSService(self.root)
+        service.authorize_recovered_jammy_controller()
+        replacement = self.root / 'bin/replacement'
+        replacement.write_bytes(b'reviewed-controller')
+        command = self.root / 'bin/lswsctrl'
+        command.unlink()
+        command.symlink_to('replacement')
+        with self.assertRaises(RuntimeError):
+            service.controller()
+        with self.assertRaisesRegex(RuntimeError, 'command path is not pinned'):
+            control.OLSService(self.root).authorize_recovered_jammy_controller()
+        command.unlink()
+        command.symlink_to('lswsctrl.open')
+        with self.assertRaises(RuntimeError):
+            service.controller()
+        control.OLSService(self.root).authorize_recovered_jammy_controller()
+
+    def test_standard_controller_does_not_need_recovered_bundle(self):
+        (self.root / control.RECOVERY_POLICY_NAME).unlink()
+        (self.root / 'bin/lswsctrl.open').write_bytes(b'vendor-controller')
+        (self.root / self.files[0]).write_bytes(b'other-core')
+        service = control.OLSService(self.root)
+        with patch.object(control, 'jammy_platform', side_effect=AssertionError('unneeded platform check')):
+            service.authorize_recovered_jammy_controller()
+            service.controller()
+        self.assertIsNone(service.unit)
+
+
+@unittest.skipUnless(os.geteuid() == 0, 'requires root-owned policy fixture')
+class StockRecoveryPolicyTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+        (self.root / 'bin').mkdir()
+        (self.root / 'bin/openlitespeed').write_bytes(b'policy-aware native core fixture')
+        self.policy = self.root / control.RECOVERY_POLICY_NAME
+        self.service = control.OLSService(self.root)
+        for name, value in [('jammy_platform', lambda: True),
+                            ('digest', lambda path: control.RECOVERED_JAMMY_BUNDLE[0])]:
+            patcher = patch.object(control, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def create_policy(self):
+        self.policy.write_bytes(control.RECOVERY_POLICY_BYTES)
+        self.policy.chmod(0o600)
+
+    def test_absent_policy_needs_no_core_hash_but_later_appearance_refuses(self):
+        with patch.object(control, 'digest', side_effect=AssertionError('must not read absent policy core')):
+            self.assertIsNone(self.service.verify_stock_recovery_policy())
+        self.create_policy()
+        with self.assertRaisesRegex(RuntimeError, 'appeared or disappeared'):
+            self.service.verify_stock_recovery_policy()
+
+    def test_exact_policy_binds_identity_and_requires_supported_selected_core(self):
+        self.create_policy()
+        identity = self.service.verify_stock_recovery_policy()
+        self.assertTrue(identity)
+        self.assertEqual(self.service.verify_stock_recovery_policy(control.RECOVERED_JAMMY_BUNDLE[0]), identity)
+        with self.assertRaisesRegex(RuntimeError, 'does not support'):
+            self.service.verify_stock_recovery_policy('0' * 64)
+        self.policy.unlink()
+        with self.assertRaisesRegex(RuntimeError, 'appeared or disappeared'):
+            self.service.verify_stock_recovery_policy()
+
+    def test_invalid_file_shapes_and_content_refuse(self):
+        for mutation in ('permissions', 'owner', 'content', 'hardlink', 'symlink', 'fifo'):
+            with self.subTest(mutation=mutation):
+                self.create_policy()
+                extra = self.root / 'extra'
+                if mutation == 'permissions': self.policy.chmod(0o644)
+                if mutation == 'owner': os.chown(self.policy, 1, 0)
+                if mutation == 'content': self.policy.write_bytes(b'AUTO_SSL=enabled\n')
+                if mutation == 'hardlink': os.link(self.policy, extra)
+                if mutation == 'symlink':
+                    self.policy.rename(extra)
+                    self.policy.symlink_to(extra)
+                if mutation == 'fifo':
+                    self.policy.unlink()
+                    os.mkfifo(self.policy, 0o600)
+                with self.assertRaises(RuntimeError):
+                    control.OLSService(self.root).verify_stock_recovery_policy()
+                self.policy.unlink()
+                if extra.exists(): extra.unlink()
+
+
 class NativeDrainingStateTests(unittest.TestCase):
     """Exercise the actual /proc classifier when the stopped master exits first."""
     def setUp(self):
@@ -108,6 +269,104 @@ class NativeDrainingStateTests(unittest.TestCase):
         self.worker(125, '33', executable=foreign)
         with self.assertRaisesRegex(RuntimeError, 'different or deleted'):
             self.service._native_state()
+
+
+class NativeExitRaceTests(unittest.TestCase):
+    setUp = NativeDrainingStateTests.setUp
+    worker = NativeDrainingStateTests.worker
+
+    def add_master(self):
+        self.worker(123, '11')
+        path=self.proc/'124/stat'
+        path.write_text(path.read_text().replace(') S 1 ', ') S 123 '))
+
+    def remove(self, pid):
+        for path in (self.proc/str(pid)).iterdir():path.unlink()
+        (self.proc/str(pid)).rmdir()
+
+    def test_master_cgroup_disappearance_requires_fresh_empty_snapshot(self):
+        self.add_master()
+        read=Path.read_text
+        fired=[]
+        def disappear(path,*args,**kwargs):
+            if path==self.proc/'123/cgroup' and not fired:
+                fired.append(True);self.remove(123)
+                raise FileNotFoundError('master exited between scan and cgroup read')
+            return read(path,*args,**kwargs)
+        with patch.object(Path,'read_text',disappear):
+            with self.assertRaises(control.OLSWorkersRemain):self.service._native_state()
+        self.service.systemd.assert_not_called()
+        with self.assertRaises(control.OLSWorkersRemain):self.service._native_state()
+        self.service.systemd.assert_not_called()
+        self.remove(124)
+        self.assertIsNone(self.service._native_state())
+        self.service.systemd.assert_called_once_with(None)
+
+    def test_real_stop_loop_retries_midscan_exit_before_returning_stopped(self):
+        self.add_master();self.service.draining=None;self.service._draining_processes={}
+        original=self.service._native_state()
+        armed=[];fired=[];read=Path.read_text
+        def stop(command,**kwargs):
+            self.assertEqual(command,['systemctl','stop','lshttpd.service'])
+            armed.append(True);return SimpleNamespace(returncode=0)
+        def disappear(path,*args,**kwargs):
+            if armed and not fired and path==self.proc/'123/cgroup':
+                fired.append(True);self.remove(123)
+                raise ProcessLookupError('master exited after scan')
+            return read(path,*args,**kwargs)
+        def drain(delay):
+            self.assertEqual(delay,.25)
+            self.assertEqual(self.service._draining_processes,{123:'11',124:'22'})
+            self.remove(124)
+        with patch.object(control.watchdog,'inspect_watchdog',return_value=[]), \
+             patch.object(self.service,'verify_mapped_bundle'), \
+             patch.object(control.subprocess,'run',side_effect=stop), \
+             patch.object(Path,'read_text',disappear), \
+             patch.object(control.time,'sleep',side_effect=drain) as sleep:
+            self.assertIsNone(self.service.change('stop',original))
+        sleep.assert_called_once();self.assertTrue(fired)
+
+    def test_disappearance_does_not_waive_unknown_or_reused_process_identity(self):
+        self.add_master();read=Path.read_text
+        def absent(path,*args,**kwargs):
+            if path==self.proc/'123/cgroup':raise FileNotFoundError('master disappeared')
+            return read(path,*args,**kwargs)
+        for case in ('not-stopping','other-master','reused-master','unknown-master','unknown-worker','reused-worker','foreign-worker'):
+            with self.subTest(case=case):
+                self.service.draining=(123,'11','lshttpd.service')
+                self.service._draining_processes={123:'11',124:'22'}
+                (self.proc/'124/cgroup').write_text('0::/system.slice/lshttpd.service\n')
+                if case=='not-stopping':self.service.draining=None
+                elif case=='other-master':self.service.draining=(999,'11','lshttpd.service')
+                elif case=='reused-master':self.service.draining=(123,'different','lshttpd.service')
+                elif case=='unknown-master':self.service._draining_processes.pop(123)
+                elif case=='unknown-worker':self.service._draining_processes.pop(124)
+                elif case=='reused-worker':self.service._draining_processes[124]='different'
+                elif case=='foreign-worker':(self.proc/'124/cgroup').write_text('0::/system.slice/other.service\n')
+                with patch.object(Path,'read_text',absent):
+                    with self.assertRaises((FileNotFoundError,RuntimeError)) as error:self.service._native_state()
+                self.assertNotIsInstance(error.exception,control.OLSWorkersRemain)
+
+    def test_permission_errors_and_unknown_master_owner_remain_fatal(self):
+        self.add_master();read=Path.read_text
+        def denied(path,*args,**kwargs):
+            if path==self.proc/'123/cgroup':raise PermissionError('access denied')
+            return read(path,*args,**kwargs)
+        with patch.object(Path,'read_text',denied):
+            with self.assertRaises(PermissionError):self.service._native_state()
+        (self.proc/'123/cgroup').write_text('0::/system.slice/other.service\n')
+        with self.assertRaisesRegex(RuntimeError,'unrecognized systemd'):self.service._native_state()
+
+    def test_repeated_pending_race_cannot_extend_stop_deadline(self):
+        self.service.draining=None;self.service._draining_processes={}
+        original=(123,'11',None)
+        with patch.object(self.service,'state',side_effect=[original,control.OLSWorkersRemain('exit race')]), \
+             patch.object(self.service,'verify_mapped_bundle'), \
+             patch.object(control.subprocess,'run',return_value=SimpleNamespace(returncode=0)), \
+             patch.object(control.time,'monotonic',side_effect=[0,0,26]), \
+             patch.object(control.time,'sleep') as sleep:
+            with self.assertRaisesRegex(RuntimeError,'did not stop'):self.service.change('stop',original)
+        sleep.assert_called_once_with(.25)
 
 
 class ServiceControlTests(unittest.TestCase):

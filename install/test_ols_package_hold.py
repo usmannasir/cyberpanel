@@ -25,6 +25,7 @@ class PackageHoldTests(unittest.TestCase):
         self.module.write_text('ELF cyberpanel_lsi_api_abi_v1')
         self.waf = self.root / 'waf'
         self.waf.write_text('paired custom WAF')
+        self.policy = self.root / '.cyberpanel-stock-recovery-policy'
         self.release = self.root / 'os-release'
         self.release.write_text('ID=ubuntu\nVERSION_ID="26.04"\n')
         self.holds = self.root / 'holds'
@@ -74,7 +75,7 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
             path.chmod(0o755)
         # Package sequencing uses executable fixture stubs. The native ledger
         # itself is exercised against actual OLS in the opt-in Docker suite.
-        self.guard = GUARD.replace('/usr/local/CyberCP/plogical', str(ROOT / 'plogical')).replace('/etc/os-release', str(self.release)).replace(
+        self.guard = GUARD.replace('/usr/local/CyberCP/plogical', str(ROOT / 'plogical')).replace('/etc/os-release', str(self.release)).replace('/usr/local/lsws/.cyberpanel-stock-recovery-policy', str(self.policy)).replace(
             '/usr/local/lsws/bin/openlitespeed', str(self.core)).replace(
             '/usr/local/lsws/modules/cyberpanel_ols.so', str(self.module)).replace(
             '/usr/local/lsws/modules/mod_security.so', str(self.waf))
@@ -87,11 +88,63 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
                            HOLDS=str(self.holds), EVENTS=str(self.events))
         environment.update(env)
         return subprocess.run(['bash', '-c', self.guard + '\nProtect_Custom_OLS_From_Packages || exit 1\n' +
-                               (command or UPGRADES[0])], env=environment, capture_output=True, text=True)
+                               (command or UPGRADES[0])], env=environment, capture_output=True, text=True, timeout=10)
 
     def assert_no_apt(self):
         events = self.events.read_text() if self.events.exists() else ''
         self.assertNotRegex(events, r'(?m)^apt(?:-get)? ')
+
+    def test_recovery_policy_rejects_unsupported_core_before_native_or_package_work(self):
+        self.release.write_text('ID=ubuntu\nVERSION_ID="22.04"\n')
+        self.core.write_text('#!/bin/bash\n# cyberpanel_lsi_api_abi_v1\necho native-validation >> "$EVENTS"\nexit 0\n')
+        for symlink in (False, True):
+            with self.subTest(symlink=symlink):
+                if symlink:
+                    self.policy.symlink_to(self.root / 'missing-policy')
+                else:
+                    self.policy.write_bytes(b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+                result = self.run_upgrade()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('cannot enforce the stock recovery policy', result.stdout)
+                self.assert_no_apt()
+                self.assertNotIn('native-validation', self.events.read_text() if self.events.exists() else '')
+                self.policy.unlink()
+
+    def test_recovery_policy_refuses_fifo_and_symlink_core_without_hashing(self):
+        self.release.write_text('ID=ubuntu\nVERSION_ID="22.04"\n')
+        self.policy.write_bytes(b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+        self.core.unlink()
+        for shape in ('symlink', 'fifo'):
+            with self.subTest(shape=shape):
+                if shape == 'symlink': self.core.symlink_to(self.module)
+                else: os.mkfifo(self.core, 0o600)
+                result = self.run_upgrade()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('requires a regular verified core', result.stdout)
+                self.assert_no_apt()
+                self.core.unlink()
+
+    def test_policy_aware_jammy_core_keeps_policy_and_package_holds(self):
+        from plogical.olsServiceControl import RECOVERED_JAMMY_BUNDLE
+        self.release.write_text('ID=ubuntu\nVERSION_ID="22.04"\n')
+        self.policy.write_bytes(b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+        self.policy.chmod(0o600)
+        before = self.policy.read_bytes(), self.policy.stat()
+        result = self.run_upgrade(LEGACY_CORE_HASH=RECOVERED_JAMMY_BUNDLE[0])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('openlitespeed\n', self.holds.read_text())
+        self.assertIn('ols-modsecurity\n', self.holds.read_text())
+        self.assertEqual(self.policy.read_bytes(), before[0])
+        self.assertEqual(self.policy.stat().st_ino, before[1].st_ino)
+        self.assertEqual(self.policy.stat().st_mode, before[1].st_mode)
+
+    def test_recovery_policy_core_is_restricted_to_jammy(self):
+        self.policy.write_bytes(b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+        self.release.write_text('ID=ubuntu\nVERSION_ID="24.04"\n')
+        result = self.run_upgrade()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('requires the verified Jammy core', result.stdout)
+        self.assert_no_apt()
 
     def test_every_real_apt_upgrade_path_preserves_custom_bytes(self):
         self.assertEqual(len(UPGRADES), 2)

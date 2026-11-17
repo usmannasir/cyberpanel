@@ -36,26 +36,27 @@ class modSec:
                 'core_sha256': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5'},
      'ubuntu26': {'url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu26.so',
                   'sha256': '3f6711cb51fe2fb896a54582d01d19f92f48fabc89b43a07667af54c42115153',
-                  'core_sha256': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5'}}
+                  'core_sha256': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5'},
+     'ubuntu22': {'url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
+                  'sha256': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe',
+                  'core_sha256': '863687f29a529d379224fe32115d9326028038dd2d38e5aac26ddb4bc5a3bf55'}}
 
     # Accept the previous official pair on installations awaiting upgrade.
-    MODSEC_PREVIOUS = {
-        'ubuntu': {
-            'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
-            'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
-            'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f',
-        },
-        'ubuntu26': {
-            'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
-            'sha256': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae',
-            'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f',
-        },
-        'rhel9': {
-            'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
-            'sha256': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9',
-            'core_sha256': '03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec',
-        },
-    }
+    MODSEC_PREVIOUS = {'ubuntu': ({'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
+                 'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
+                 'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'},),
+     'ubuntu26': ({'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu26.so',
+                   'sha256': '057dd4a47ec7baa189f71c26a3ca4b180eea168c17d3a83c69dd47e4bc3df9ae',
+                   'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'},),
+     'rhel9': ({'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-rhel9.so',
+                'sha256': '0e9ea48580bdb103131506ce2258ae910cfc2e49c6ca742ea8d1e0927909c9e9',
+                'core_sha256': '03e0b86b6ecd6605896c6e8049f1d4ff80cb88bfc667e74f5a48acf34dfa2aec'},),
+     'ubuntu22': ({'url': 'https://cyberpanel.net/mod_security-crs-scopes-x86_64-ubuntu.so',
+                   'sha256': '62e0feec6a3914e889750cef4e07942db21ba35c77ffa83c86f707e4d4463fbe',
+                   'core_sha256': 'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5'},
+                  {'url': 'https://cyberpanel.net/mod_security-2.5.6-x86_64-ubuntu.so',
+                   'sha256': '640966b5c93922809327db4df59c5955d32211a7faad0311863236d98a617536',
+                   'core_sha256': 'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f'})}
 
     @staticmethod
     def detectPlatform():
@@ -69,6 +70,8 @@ class modSec:
             if os_id == 'ubuntu':
                 if major == 26:
                     return 'ubuntu26'
+                if version == '22.04':
+                    return 'ubuntu22'
                 if major in (22, 24):
                     return 'ubuntu'
                 return None
@@ -94,8 +97,11 @@ class modSec:
             with open('/usr/local/lsws/bin/openlitespeed', 'rb') as core:
                 core_bytes = core.read()
                 core_digest = hashlib.sha256(core_bytes).hexdigest()
-                if core_digest != config.get('core_sha256'):
-                    config = modSec.MODSEC_PREVIOUS.get(platform, {})
+                # Match an exact published core/WAF pair, including retained
+                # earlier Jammy pairs while an installation awaits upgrade.
+                candidates = (config,) + modSec.MODSEC_PREVIOUS.get(platform, ())
+                config = next((entry for entry in candidates
+                               if core_digest == entry.get('core_sha256')), {})
                 if (b'cyberpanel_lsi_api_abi_v1' not in core_bytes or
                         core_digest != config.get('core_sha256') or
                         not re.fullmatch(r'[0-9a-f]{64}', config.get('sha256', ''))):

@@ -39,7 +39,7 @@ class ReleaseConsumerTests(unittest.TestCase):
         install = binary_configs(ROOT / 'install/installCyberPanel.py', 'InstallCyberPanel')
         upgrade = binary_configs(ROOT / 'plogical/upgrade.py', 'Upgrade')
         self.assertEqual(install, upgrade)
-        self.assertEqual(set(install), {'ubuntu', 'ubuntu26', 'rhel8', 'rhel9', 'rhel10'})
+        self.assertEqual(set(install), {'ubuntu', 'ubuntu22', 'ubuntu26', 'rhel8', 'rhel9', 'rhel10'})
         modsec = load_modsec().MODSEC_COMPATIBLE
         self.assertEqual(set(modsec), set(install))
         for platform, config in install.items():
@@ -48,9 +48,47 @@ class ReleaseConsumerTests(unittest.TestCase):
                 self.assertEqual(modsec[platform]['sha256'], config['sha256']['modsec'])
                 self.assertEqual(modsec[platform]['core_sha256'], config['sha256']['binary'])
 
+    def test_jammy_retains_both_exact_previous_modsecurity_pairs(self):
+        target = load_modsec()
+        self.assertEqual(target.MODSEC_PREVIOUS['ubuntu22'], (
+            target.MODSEC_COMPATIBLE['ubuntu'], target.MODSEC_PREVIOUS['ubuntu'][0]))
+        self.assertEqual(target.MODSEC_PREVIOUS['ubuntu22'][0]['core_sha256'],
+                         'b9cc7c65c56349f3a10ede68c59ae6188bb6eda6ace4d1f3f27b827d3caf83b5')
+        self.assertEqual(target.MODSEC_PREVIOUS['ubuntu22'][1]['core_sha256'],
+                         'a533f7158c2d40c354b6bdc71cd1742ad269ce051e57030a5a9b8c25cac76a1f')
+
+    def test_each_jammy_modsecurity_pair_is_selected_by_exact_core_hash(self):
+        for selected_index in range(3):
+            with self.subTest(selected_index=selected_index), tempfile.TemporaryDirectory() as directory:
+                target = load_modsec()
+                candidates = (target.MODSEC_COMPATIBLE['ubuntu22'],) + target.MODSEC_PREVIOUS['ubuntu22']
+                selected = candidates[selected_index]
+                core = b'fixture core cyberpanel_lsi_api_abi_v1'
+                selected['core_sha256'] = hashlib.sha256(core).hexdigest()
+                selected['sha256'] = hashlib.sha256(b'module').hexdigest()
+                actual_open, actual_temp = builtins.open, tempfile.TemporaryDirectory
+                def opening(path, *args, **kwargs):
+                    return io.BytesIO(core) if str(path) == '/usr/local/lsws/bin/openlitespeed' else actual_open(path, *args, **kwargs)
+                def download(args):
+                    self.assertIn(selected['url'], args)
+                    Path(args[-1]).write_bytes(b'module')
+                    return 0
+                with mock.patch.object(builtins, 'open', side_effect=opening), \
+                        mock.patch.object(tempfile, 'TemporaryDirectory', side_effect=lambda **kwargs: actual_temp(dir=directory)), \
+                        mock.patch.object(subprocess, 'call', side_effect=download), \
+                        mock.patch.object(subprocess, 'run', return_value=SimpleNamespace(returncode=0, stdout='libc => /lib/libc', stderr='')), \
+                        mock.patch.object(os.path, 'exists', return_value=False), \
+                        mock.patch.object(os, 'replace') as replace:
+                    self.assertTrue(target.downloadCompatibleModSec('ubuntu22'))
+                    replace.assert_called_once()
+                with mock.patch.object(builtins, 'open', return_value=io.BytesIO(b'unknown cyberpanel_lsi_api_abi_v1')), \
+                        mock.patch.object(subprocess, 'call') as download_call:
+                    self.assertFalse(target.downloadCompatibleModSec('ubuntu22'))
+                    download_call.assert_not_called()
+
     def test_modsecurity_detects_native_abis_and_refuses_unsupported_versions(self):
         detect = load_modsec().detectPlatform
-        cases = [('ubuntu', '22.04', 'ubuntu'), ('ubuntu', '24.04', 'ubuntu'),
+        cases = [('ubuntu', '22.04', 'ubuntu22'), ('ubuntu', '24.04', 'ubuntu'),
                  ('ubuntu', '26.04', 'ubuntu26'), ('ubuntu', '20.04', None),
                  ('almalinux', '10.1', 'rhel10'), ('rocky', '9', 'rhel9'),
                  ('rhel', '8.10', 'rhel8'), ('debian', '12', 'ubuntu'),
@@ -117,7 +155,8 @@ class ReleaseConsumerTests(unittest.TestCase):
             for mismatch, missing, accepted in [(False, False, True), (True, False, False), (False, True, False)]:
                 with self.subTest(legacy=legacy, mismatch=mismatch, missing=missing), tempfile.TemporaryDirectory() as directory:
                     target = load_modsec()
-                    selected = target.MODSEC_PREVIOUS if legacy else target.MODSEC_COMPATIBLE
+                    selected = ({key: values[0] for key, values in target.MODSEC_PREVIOUS.items()}
+                                if legacy else target.MODSEC_COMPATIBLE)
                     selected['ubuntu']['sha256'] = hashlib.sha256(b'module').hexdigest()
                     selected['ubuntu']['core_sha256'] = hashlib.sha256(b'core cyberpanel_lsi_api_abi_v1').hexdigest()
                     real_open = builtins.open
@@ -150,7 +189,7 @@ class BundleFixture:
     waf = '/usr/local/lsws/modules/mod_security.so'
     admin = '/usr/local/lsws/admin/fcgi-bin/admin_php'
 
-    def __init__(self, directory, source, class_name, failure=None, module=True, waf=True):
+    def __init__(self, directory, source, class_name, failure=None, module=True, waf=True, platform='ubuntu'):
         self.root = Path(directory)
         self.failure = failure
         self.active = True
@@ -170,7 +209,7 @@ class BundleFixture:
         self.draining = 0
         self.active_bytes = b'old-core'
         payloads = {'binary': b'new-core', 'module': b'new-module', 'modsec': b'new-waf', 'assets': b'verified-assets'}
-        config = binary_configs(source, class_name)['ubuntu']
+        config = binary_configs(source, class_name)[platform]
         self.by_url = {config[key]: kind for key, kind in
                        [('url', 'binary'), ('module_url', 'module'), ('modsec_url', 'modsec')]}
         fixture_digests = {config['sha256'][kind]: hashlib.sha256(data).hexdigest()
@@ -198,6 +237,21 @@ class BundleFixture:
         class FixtureService:
             def __init__(self, *args, **kwargs):
                 self.unit = None
+                self.authorized = False
+
+            def verify_stock_recovery_policy(self, candidate_core_sha256=None):
+                if fixture.failure == 'recovery-policy':
+                    raise RuntimeError('injected recovery policy refusal')
+                if candidate_core_sha256 is not None and candidate_core_sha256 != config['sha256']['binary']:
+                    raise AssertionError('Policy must validate the selected candidate core')
+                if fixture.failure == 'policy-backup' and candidate_core_sha256 is not None:
+                    raise RuntimeError('backup core lacks policy support')
+                return (1,) if fixture.path('/usr/local/lsws/.cyberpanel-stock-recovery-policy').exists() else None
+
+            def authorize_recovered_jammy_controller(self):
+                if fixture.failure == 'controller-authorization':
+                    raise RuntimeError('injected controller authorization failure')
+                self.authorized = True
 
             def prepare_state(self):
                 state = self.state()
@@ -205,6 +259,8 @@ class BundleFixture:
                 return state
 
             def state(self):
+                if class_name == 'Upgrade' and not self.authorized:
+                    raise AssertionError('Upgrade must authorize the recovered controller before inspection')
                 fixture.run(['lswsctrl', 'status'])
                 if fixture.active and not fixture.samefile('/proc/123/exe', fixture.core):
                     raise RuntimeError('Fixture master differs from the installed binary')
@@ -280,6 +336,7 @@ class BundleFixture:
                          OLSUpgradeFailure=RuntimeError,
                          load_ols_diagnostic_helper=lambda name: SimpleNamespace(
                              validate=lambda binary: self.run([binary, '-t']), OLSService=FixtureService,
+                             digest=lambda path: config['sha256']['binary'],
                              original_record=lambda path: None, bundle_records=lambda *args: ({}, {}),
                              verify_originals=lambda *args: None, verify_installed=lambda *args: None, recovery_hint=lambda *args: ''),
                          load_ols_security_assets=lambda: imports('plogical.olsSecurityAssets'),
@@ -292,7 +349,7 @@ class BundleFixture:
         target_class.stdOut = staticmethod(mock.Mock())
         target = target_class() if class_name == 'InstallCyberPanel' else target_class
         target.detectArchitecture = lambda: True
-        target.detectPlatform = lambda: 'ubuntu'
+        target.detectPlatform = lambda: platform
 
         def download(url, destination):
             kind = self.by_url[url]
@@ -564,6 +621,82 @@ class BundleTransactionTests(unittest.TestCase):
             self.assertFalse(f.rollback(str(backup), f.core, f.module))
             self.assertEqual(f.bundle(), installed)
             self.assertTrue(f.active)
+
+    def test_recovered_controller_refusal_precedes_bundle_download_and_service_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', 'controller-authorization')
+            self.assertFalse(f.call())
+            self.assertEqual(f.downloads, [])
+            self.assertEqual(f.bundle(), f.old)
+            self.assertTrue(f.active)
+            self.assertEqual(f.start_bundles, [])
+
+    def test_persisted_rollback_reauthorizes_before_service_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade')
+            self.assertTrue(f.call())
+            installed = f.bundle()
+            backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+            f.failure = 'controller-authorization'
+            self.assertFalse(f.rollback(str(backup), f.core, f.module))
+            self.assertEqual(f.bundle(), installed)
+            self.assertTrue(f.active)
+
+    def test_jammy_policy_refusal_precedes_download_and_service_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade',
+                              'recovery-policy', platform='ubuntu22')
+            self.assertFalse(f.call())
+            self.assertEqual(f.downloads, [])
+            self.assertEqual(f.bundle(), f.old)
+            self.assertTrue(f.active)
+            self.assertEqual(f.start_bundles, [])
+
+    def test_policy_incompatible_backup_refuses_before_stopping_service(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', platform='ubuntu22')
+            f.path('/usr/local/lsws/.cyberpanel-stock-recovery-policy').write_bytes(b'policy fixture')
+            self.assertTrue(f.call())
+            installed = f.bundle()
+            backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+            f.commands.clear()
+            f.failure = 'policy-backup'
+            self.assertFalse(f.rollback(str(backup), f.core, f.module))
+            self.assertEqual(f.bundle(), installed)
+            self.assertTrue(f.active)
+            self.assertNotIn(('lswsctrl', 'stop'), f.commands)
+
+    def test_policy_refuses_nonregular_core_backup_before_stop(self):
+        for shape in ('symlink', 'fifo'):
+            with self.subTest(shape=shape), tempfile.TemporaryDirectory() as directory:
+                f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', platform='ubuntu22')
+                f.path('/usr/local/lsws/.cyberpanel-stock-recovery-policy').write_bytes(b'policy fixture')
+                self.assertTrue(f.call())
+                installed = f.bundle()
+                backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+                core = backup / 'openlitespeed.backup'
+                core.unlink()
+                if shape == 'symlink': core.symlink_to(f.path(f.core))
+                else: os.mkfifo(core, 0o600)
+                f.commands.clear()
+                self.assertFalse(f.rollback(str(backup), f.core, f.module))
+                self.assertEqual(f.bundle(), installed)
+                self.assertTrue(f.active)
+                self.assertNotIn(('lswsctrl', 'stop'), f.commands)
+
+    def test_jammy_upgrade_and_rollback_preserve_policy_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', platform='ubuntu22')
+            policy = f.path('/usr/local/lsws/.cyberpanel-stock-recovery-policy')
+            policy.write_bytes(b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+            policy.chmod(0o600)
+            before = policy.read_bytes(), policy.stat()
+            self.assertTrue(f.call())
+            backup = next(f.path('/usr/local/lsws').glob('backup-*'))
+            self.assertTrue(f.rollback(str(backup), f.core, f.module))
+            self.assertEqual(policy.read_bytes(), before[0])
+            for attr in ('st_ino', 'st_mode', 'st_uid', 'st_gid', 'st_nlink'):
+                self.assertEqual(getattr(policy.stat(), attr), getattr(before[1], attr))
 
     def test_success_installs_the_complete_required_bundle(self):
         for source, cls in self.consumers:
