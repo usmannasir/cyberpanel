@@ -143,6 +143,8 @@ app.controller('firewallController', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.firewalldRead = true;
+            $scope.rulesLoading = true;
+            $scope.firewalldRead = true;
             $scope.couldNotConnect = false;
 
         }

@@ -285,7 +285,10 @@ class RuleSourceTests(unittest.TestCase):
         for path in ('firewall/static/firewall/firewall.js','static/firewall/firewall.js'):
             text = (ROOT/path).read_text()
             self.assertIn('$scope.firewalld = response.data.firewalld;', text)
-            self.assertIn('$scope.firewalldRead = true;', text)
+            fetch = text.split('    function populateCurrentRecords() {', 1)[1].split('    $scope.deleteRule', 1)[0]
+            failure = fetch.split('function cantLoadInitialDatas(response) {', 1)[1]
+            self.assertIn('$scope.firewalldRead = true;', failure)
+            self.assertIn('$scope.rulesLoading = true;', failure)
 
 
 if __name__ == '__main__':
