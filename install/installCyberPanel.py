@@ -283,9 +283,26 @@ class InstallCyberPanel:
         try:
             InstallCyberPanel.stdOut(f"Downloading {os.path.basename(destination)}...", 1)
 
-            # Use wget for better progress display
-            command = f'wget -q --show-progress {url} -O {destination}'
-            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Plain wget keeps a trickling transfer alive for hours, and its exit
+            # status was never read, so a partial file could pass the size check
+            # below. The guarded fetch replaces slow or stalled attempts and
+            # reports success only when wget exited cleanly.
+            try:
+                import guarded_download
+                downloaded = guarded_download.fetch(
+                    url, destination, lambda message: InstallCyberPanel.stdOut(message, 1))
+            except Exception as msg:
+                # A defect in the guard must not stop an installation that
+                # plain wget can complete.
+                InstallCyberPanel.stdOut(f"WARNING: Guarded download unavailable ({msg}); using plain wget", 1)
+                downloaded = subprocess.call(
+                    ['wget', '-q', '--show-progress', '-O', destination, '--', url]) == 0
+
+            if not downloaded:
+                logging.InstallLog.writeToFile(
+                    "Download failed for %s [downloadCustomBinary]" % os.path.basename(destination))
+                InstallCyberPanel.stdOut("ERROR: Download failed", 1)
+                return False
 
             # Check if file was downloaded successfully by verifying it exists and has reasonable size
             if os.path.exists(destination):
