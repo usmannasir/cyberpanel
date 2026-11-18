@@ -258,6 +258,35 @@ class CustomOLSPlatformTests(unittest.TestCase):
                     source.index('checkGlibcCompat'),
                 )
 
+    def test_el_cores_get_libaio_before_anything_is_downloaded(self):
+        # Every EL core links libaio.so.1. EL9 and EL10 receive it with
+        # MariaDB-server earlier in the installation; a clean EL8 system does
+        # not, and the ABI preflight then rejected a correct download.
+        install = load_method(
+            self.install_path, 'InstallCyberPanel', 'installCustomOLSBinaries'
+        )
+        cases = (
+            ('rhel8', True), ('rhel9', True), ('rhel10', True),
+            ('ubuntu', False), ('ubuntu22', False), ('ubuntu26', False),
+        )
+        for platform, expected in cases:
+            with self.subTest(platform=platform):
+                events = []
+                installer = mock.Mock()
+                installer.detectArchitecture.return_value = True
+                installer.detectPlatform.return_value = platform
+                installer.install_package.side_effect = events.append
+
+                def download(url, destination):
+                    events.append('download')
+                    return False
+
+                installer.downloadCustomBinary.side_effect = download
+                self.assertFalse(install(installer))
+                self.assertEqual(expected, 'libaio' in events)
+                self.assertEqual(['download'], events[-1:])
+                self.assertEqual(1, events.count('download'))
+
     def test_ubuntu_26_installs_modsecurity_dependencies(self):
         for path, class_name in (
             (self.install_path, 'InstallCyberPanel'),

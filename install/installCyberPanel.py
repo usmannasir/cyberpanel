@@ -442,6 +442,17 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut("Skipping custom binary installation", 1)
                 return True  # Not fatal
 
+            if platform in ('rhel8', 'rhel9', 'rhel10'):
+                # Every EL core links libaio.so.1. EL9 and EL10 receive it
+                # with MariaDB-server earlier in the installation; a clean EL8
+                # system does not, and the ABI preflight below then rejects
+                # a correct download.
+                InstallCyberPanel.stdOut(
+                    "Installing OpenLiteSpeed runtime dependency libaio...",
+                    1,
+                )
+                self.install_package('libaio')
+
             if platform == 'rhel10':
                 InstallCyberPanel.stdOut(
                     "Installing AlmaLinux 10 OpenLiteSpeed runtime dependency...",
