@@ -712,6 +712,21 @@ module cyberpanel_ols {
             # Configure the custom module
             self.configureCustomModule()
 
+            # The vendor package still owns the replaced files. Without a lasting
+            # hold the next operating-system update restores the stock core.
+            try:
+                from plogical.olsPackageProtection import protect
+                guard = protect()
+                if guard['state'] in ('refused', 'failed'):
+                    InstallCyberPanel.stdOut('WARNING: OpenLiteSpeed package protection was not applied (%s): %s '
+                                             'A system package update can replace the CyberPanel OpenLiteSpeed build.'
+                                             % (guard['state'], guard['reason']), 1)
+                else:
+                    InstallCyberPanel.stdOut('OpenLiteSpeed package protection: %s %s'
+                                             % (guard['state'], ' '.join(guard['packages'])), 1)
+            except Exception as error:
+                InstallCyberPanel.stdOut('WARNING: OpenLiteSpeed package protection was not applied: ' + str(error), 1)
+
             try:
                 from plogical.olsWebAdmin import patch_webadmin_release_notice
                 notice = patch_webadmin_release_notice()

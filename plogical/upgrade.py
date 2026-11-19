@@ -5675,6 +5675,23 @@ pm.max_spare_servers = 3
         except Exception as error:
             Upgrade.stdOut('WARNING: WebAdmin release notice was not updated: ' + str(error), 0)
 
+        # The new source provides this helper as well. The vendor package still
+        # owns the files of the CyberPanel OpenLiteSpeed bundle, so without a
+        # lasting hold the next operating-system update restores the stock core.
+        if has_ols:
+            try:
+                from plogical.olsPackageProtection import protect
+                guard = protect()
+                if guard['state'] in ('refused', 'failed'):
+                    Upgrade.stdOut('WARNING: OpenLiteSpeed package protection was not applied (%s): %s '
+                                   'A system package update can replace the CyberPanel OpenLiteSpeed build.'
+                                   % (guard['state'], guard['reason']), 0)
+                else:
+                    Upgrade.stdOut('OpenLiteSpeed package protection: %s %s'
+                                   % (guard['state'], ' '.join(guard['packages'])), 0)
+            except Exception as error:
+                Upgrade.stdOut('WARNING: OpenLiteSpeed package protection was not applied: ' + str(error), 0)
+
         if Upgrade.waitForDatabaseReady() != 1:
             raise RuntimeError(
                 'MariaDB is unavailable; refusing to run post-upgrade migrations.'
