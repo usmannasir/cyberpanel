@@ -368,10 +368,19 @@ class ServerStatusUtil(multi.Thread):
                     except:
                         pass
 
+            # A protected package cannot be removed: release what the installer
+            # or an upgrade set, and the APT hold of earlier upgrades.
+            try:
+                from plogical.olsPackageProtection import release
+                release()
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [switchTOLSWS.releasePackageProtection]')
+
             if os.path.exists('/etc/redhat-release'):
 
-                command = 'yum -y erase openlitespeed'
+                command = 'yum -y erase openlitespeed --disableexcludes=main'
             else:
+                ServerStatusUtil.executioner('apt-mark unhold openlitespeed ols-modsecurity', statusFile)
                 command = "apt-get -y remove openlitespeed"
 
             ServerStatusUtil.executioner(command, statusFile)

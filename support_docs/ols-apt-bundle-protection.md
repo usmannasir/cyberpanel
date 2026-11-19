@@ -1,39 +1,89 @@
-# Ubuntu custom OpenLiteSpeed package protection
+# Custom OpenLiteSpeed package protection
 
 The CyberPanel custom OpenLiteSpeed core and its CyberPanel/ModSecurity modules
-are a paired release. APT still owns the original package paths after the
-custom overlay replaces their contents. Upgrading either package can replace
-one member of the validated bundle with stock bytes.
+are a paired release. The package manager still owns the original package paths
+after the custom overlay replaces their contents, so a package update can
+replace one member of the validated bundle with stock bytes. The CyberPanel
+module then disables itself (`incompatible OpenLiteSpeed core ABI`).
 
-The upgrade bootstrap validates an existing custom bundle before package work
-and persistently holds `openlitespeed`. It also holds `ols-modsecurity` when
-that separate package is installed, because it owns
-`/usr/local/lsws/modules/mod_security.so`. An absent optional package is neither
-installed nor held. Existing holds are preserved. An indeterminate or partially
-installed ModSecurity package state, failed hold, or ineffective hold stops the
-upgrade before APT installations/upgrades. A failed second hold may leave the
-first protective hold in place; it is not removed on error.
+## What is protected, and when
 
-These holds remain after the upgrade and affect unattended package updates.
-Updates to the custom core and WAF must come from a verified, ABI-matched
-CyberPanel release. Do not simply remove the holds to apply a stock OLS/WAF
-update; that can split the bundle again. This guard is scoped to the upgrade
-bootstrap and existing custom installations, not every possible external
-package-management or fresh-install path.
+`plogical/olsPackageProtection.py` applies a lasting protection after a fresh
+installation and at every upgrade. It acts only when the installed core and the
+CyberPanel module both carry the CyberPanel ABI marker; stock installations,
+platforms without a custom bundle and LiteSpeed Enterprise are left alone.
 
-A stock core alongside a marker-bearing CyberPanel module is now validated
-before package work too. A timeout, configuration error, or incompatible-core
-ABI diagnostic stops the upgrade with a recovery message. A stock installation
-with a harmless unused module file and a valid configuration is not held.
+| Family | Protection | Packages |
+|---|---|---|
+| Ubuntu | `apt-mark hold` | `openlitespeed`, and `ols-modsecurity` when installed |
+| AlmaLinux, RHEL, Rocky, CloudLinux, CentOS, openEuler | names merged into the `exclude` key of `[main]` in `/etc/dnf/dnf.conf` (`/etc/yum.conf` where dnf.conf is absent), below the line `# cyberpanel-ols-package-protection` when the key is new | the RPM owners of the core and of `mod_security.so` |
 
-## Existing damage is a separate recovery operation
+It records what it added in `/etc/cyberpanel/ols-package-protection.json` and
+`python3 /usr/local/CyberCP/plogical/olsPackageProtection.py --status` reports
+the current state. A step that cannot complete is reported as a warning and
+retried at the next upgrade; it never fails an installation or upgrade.
+
+The upgrade bootstrap additionally validates an existing bundle before package
+work and holds the Ubuntu packages itself, because it runs before the new
+source is in place. On RPM systems it excludes the owners from its own
+`yum update`. An indeterminate or partially installed ModSecurity package
+state, failed hold, or ineffective hold stops the upgrade before package work.
+
+These protections remain after the upgrade and affect unattended package
+updates. Updates to the custom core and WAF come from a verified, ABI-matched
+CyberPanel release. Do not remove the protection to apply a stock OLS/WAF
+update; that splits the bundle again.
+
+What the protection does not stop: an administrator who names the package
+explicitly (`apt-get install --reinstall openlitespeed`, `dpkg -i`,
+`dnf --disableexcludes=main reinstall openlitespeed`). On RPM systems
+`dnf remove openlitespeed` reports "No packages marked for removal" while the
+package is excluded; use `--disableexcludes=main`, or release the protection
+first with `olsPackageProtection.py --release`. Switching to LiteSpeed
+Enterprise from the panel does this itself.
+
+## A vendor core beside the CyberPanel module is repaired by the upgrade
+
+When a package update has already replaced the core, the ordinary upgrade
+(terminal or panel) restores the bundle with its existing transaction: the
+complete core/module/WAF set is staged and checksum-verified, the exact
+previous files are kept, the configuration is validated with the CyberPanel
+core, and the previous files are restored and restarted when that fails. The
+vendor core, WAF and operating-system minor version are not fingerprinted: any
+of them is accepted on a platform with a bundle. The control script,
+environment file and systemd unit must be the ones the vendor packages ship,
+as for every bundle upgrade.
+
+The upgrade stops before any package work when
+
+- OpenLiteSpeed reports configuration errors the vendor core did not cause
+  (the complete lines are printed; correct them and run the upgrade again);
+- no bundle exists for the platform (Ubuntu before 22.04, non-x86_64);
+- a stock-recovery policy file exists on anything but Ubuntu 22.04.
+
+It stops later, before any OpenLiteSpeed file is changed and after the
+upgrade's ordinary operating-system package step, when the service cannot be
+identified: an edited control script or systemd unit, a control script left by
+an earlier recovery attempt, drop-ins, a master started outside its unit, or a
+stopped service with an active watchdog. Package holds set by that run are
+released again, and the reason is printed.
+
+Ubuntu 22.04 keeps native AutoSSL inactive after such a repair through
+`/usr/local/lsws/.cyberpanel-stock-recovery-policy`, as the published Jammy
+recovery does. A policy file that already exists beside a vendor core is kept
+and the policy-aware core is restored. Elsewhere AutoSSL follows the existing
+configuration.
+
+A stock installation with a harmless unused module file and a valid
+configuration is neither held nor converted.
+
+## Damage beyond the replaced core
 
 GitHub #1989 includes a stock OpenLiteSpeed 1.9.4 core, the CyberPanel 2.7.7
 module reporting an incompatible ABI, and CRS/configuration errors after APT
-replaced package contents. The early guard prevents a repeat upgrade from doing
-more package work in that failed state. It does not restore overwritten bytes,
-reconstruct missing CRS files, repair site configuration, or establish that the
-reporter's production websites are healthy.
+replaced package contents. The upgrade restores the bundle; it does not
+reconstruct missing CRS files or repair site configuration, and it stops before
+any change while such errors are reported.
 
 Preserve the failed-upgrade logs before retrying (the normal bootstrap clears
 old upgrade logs). Capture OS/architecture, installed source ref, package status,

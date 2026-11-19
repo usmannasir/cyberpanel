@@ -81,7 +81,7 @@ class unInstallCyberPanel:
     def removeLiteSpeed(self):
         try:
 
-            command = 'yum -y remove openlitespeed'
+            command = 'yum -y remove openlitespeed --disableexcludes=main'
 
             cmd = shlex.split(command)
 
