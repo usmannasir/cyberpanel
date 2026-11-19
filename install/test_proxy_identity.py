@@ -243,6 +243,22 @@ class ProxyIdentityTests(unittest.TestCase):
         self.assertEqual(original, {str(path.relative_to(self.current_pma)): path.read_bytes()
                                   for path in self.current_pma.rglob('*') if path.is_file()})
 
+    def test_retained_app_is_copied_by_the_python_36_interpreter_of_el8(self):
+        # Python 3.6 runs the upgrade on EL8 and rejects a descriptor here; 3.7 accepts it.
+        scan = os.scandir
+
+        def python36_scandir(path='.'):
+            if isinstance(path, int):
+                raise TypeError('scandir: path should be string, bytes, os.PathLike or None, not int')
+            return scan(path)
+
+        self.make_current()
+        with mock.patch('os.scandir', python36_scandir):
+            self.stage_current()
+        self.assertEqual('<?php // existing framework', (self.pma / 'index.php').read_text())
+        self.assertEqual('retained app library', (self.pma / 'libraries' / 'fixture.php').read_text())
+        self.assertNotIn('old untrusted', (self.pma / 'phpmyadminsignin.php').read_text())
+
     def test_retained_tree_symlink_is_refused_without_reading_external_file(self):
         self.make_current()
         target = self.root / 'outside'

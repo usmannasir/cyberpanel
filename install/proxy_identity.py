@@ -119,16 +119,16 @@ def _copy_pma_directory(source_fd, destination, top=True):
     os.makedirs(destination, mode=0o700, exist_ok=True)
     if not stat.S_ISDIR(os.lstat(destination).st_mode):
         raise RuntimeError('Unsafe retained phpMyAdmin destination')
-    with os.scandir(source_fd) as entries:
-        retained_entries = list(entries)
-    for entry in retained_entries:
-        if top and entry.name in ('phpmyadminsignin.php', 'phpmyadminsession.php'):
+    # os.listdir reads a descriptor on every supported interpreter. os.scandir
+    # does only from Python 3.7, and EL8 runs the upgrade with Python 3.6.
+    for name in os.listdir(source_fd):
+        if top and name in ('phpmyadminsignin.php', 'phpmyadminsession.php'):
             continue  # Always use the new release's auth code, never the old copy.
-        descriptor = os.open(entry.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
                              dir_fd=source_fd)
         try:
             info = os.fstat(descriptor)
-            target = os.path.join(destination, entry.name)
+            target = os.path.join(destination, name)
             if stat.S_ISDIR(info.st_mode):
                 _copy_pma_directory(descriptor, target, top=False)
             elif stat.S_ISREG(info.st_mode):
