@@ -106,7 +106,7 @@ class UpgradePreflightTests(unittest.TestCase):
         ns['Upgrade'].downloadAndUpgrade.assert_not_called()
 
     def test_bundle_failure_aborts_instead_of_later_stop(self):
-        self.run_later_failure(False,Mock(return_value=''))
+        self.run_later_failure(False,Mock(return_value=None))
 
     def test_success_and_skip_never_reconfigure_or_restart_ols_after_transaction(self):
         # Halt at the next non-OLS stage. Exercise the entry used by both CLI
@@ -118,16 +118,122 @@ class UpgradePreflightTests(unittest.TestCase):
             for result in (True, None):
                 with self.subTest(branch=branch, result=result):
                     ns = load()
-                    ns['validate_ols_configuration'] = Mock(return_value='')
+                    ns['validate_ols_configuration'] = Mock(return_value=None)
                     target = ns['Upgrade']
                     target.installCustomOLSBinaries.return_value = result
                     target.updateRepoURL.side_effect = NextStage()
                     with patch.object(os.path, 'exists', side_effect=lambda path: path == '/usr/local/lsws/bin/openlitespeed'), \
                             patch.object(subprocess, 'check_output', return_value=b''), self.assertRaises(NextStage):
                         ns['upgrade'](branch)
-                    target.installCustomOLSBinaries.assert_called_once_with()
+                    target.installCustomOLSBinaries.assert_called_once_with(None)
                     target.configureCustomModule.assert_not_called()
                     target.executioner.assert_not_called()
+
+    ABI = SimpleNamespace(returncode=1, stderr='', stdout='[cyberpanel_ols] Module v2.7.7 DISABLED: '
+                          'incompatible OpenLiteSpeed core ABI (expected CyberPanel OLS 2.5.2)')
+    BASELINE = {'returncode': 1, 'errors': ['[cyberpanel_ols] Module v2.7.7 DISABLED']}
+
+    def split_namespace(self, state=None, refusal=None, broken=None):
+        ns = load()
+
+        class Refused(RuntimeError):
+            pass
+
+        def split_state(binary, returncode, output, parser):
+            if broken:
+                raise broken
+            if refusal:
+                raise Refused(refusal)
+            return state
+
+        ns['load_ols_diagnostic_helper'] = lambda name: SimpleNamespace(
+            validate=lambda binary: subprocess.run([binary, '-t']), recovery_hint=lambda *args: '',
+            stock_recovery_hint=lambda *args: '', OLSService=Mock(), split_state=split_state,
+            SplitStateRefused=Refused)
+        return ns
+
+    def test_vendor_core_beside_our_module_is_accepted_only_where_the_transaction_asks(self):
+        ns = self.split_namespace(self.BASELINE)
+        validate = ns['validate_ols_configuration']
+        with patch.object(subprocess, 'run', return_value=self.ABI):
+            self.assertEqual(validate(split=True), self.BASELINE)
+            self.assertEqual(validate(split=dict(self.BASELINE)), self.BASELINE)
+            with self.assertRaisesRegex(RuntimeError, 'validation failed'):
+                validate()  # Every other caller keeps refusing this state.
+            with self.assertRaisesRegex(RuntimeError, 'no longer present'):
+                validate(split={'returncode': 2, 'errors': []})
+        with patch.object(subprocess, 'run', return_value=SimpleNamespace(returncode=0, stdout='', stderr='')):
+            self.assertIsNone(validate(split=True))
+            self.assertIsNone(validate())
+            with self.assertRaisesRegex(RuntimeError, 'no longer present'):
+                validate(split=self.BASELINE)  # A rollback target must be the recorded state.
+
+    def test_vendor_core_refusals_and_a_broken_classifier_never_waive_validation(self):
+        with patch.object(subprocess, 'run', return_value=self.ABI):
+            with self.assertRaisesRegex(RuntimeError, r'^errors the vendor core did not cause: \[ERROR\] x$'):
+                self.split_namespace(refusal='errors the vendor core did not cause: [ERROR] x')[
+                    'validate_ols_configuration'](split=True)
+            for broken in (SyntaxError('broken helper'), AttributeError('incomplete helper')):
+                with self.subTest(broken=broken), self.assertRaisesRegex(RuntimeError, 'validation failed.*core ABI'):
+                    self.split_namespace(self.BASELINE, broken=broken)['validate_ols_configuration'](split=True)
+            # A CyberPanel core that prints the diagnostic is not this state.
+            with self.assertRaisesRegex(RuntimeError, 'validation failed'):
+                self.split_namespace(None)['validate_ols_configuration'](split=True)
+
+    def run_transaction(self, baseline, installed):
+        class NextStage(Exception):
+            pass
+        ns = load()
+        ns['validate_ols_configuration'] = Mock(return_value=baseline)
+        target = ns['Upgrade']
+        target.installCustomOLSBinaries.return_value = installed
+        target.updateRepoURL.side_effect = NextStage()
+        with patch.object(os.path, 'exists', side_effect=lambda path: path == '/usr/local/lsws/bin/openlitespeed'), \
+                patch.object(subprocess, 'check_output', return_value=b''):
+            try:
+                ns['upgrade']('v3.0.8')
+            except NextStage:
+                pass
+        ns['validate_ols_configuration'].assert_called_once_with(split=True)
+        target.installCustomOLSBinaries.assert_called_once_with(baseline)
+        return target
+
+    def test_vendor_core_baseline_reaches_the_bundle_transaction(self):
+        self.run_transaction(self.BASELINE, True)
+
+    def test_vendor_core_without_a_bundle_stops_the_upgrade(self):
+        with self.assertRaisesRegex(RuntimeError, 'no CyberPanel OpenLiteSpeed bundle is available'):
+            self.run_transaction(self.BASELINE, None)
+        self.run_transaction(None, None)  # A platform that keeps vendor OLS by design continues.
+
+    def test_recovery_policy_beside_a_vendor_core_is_left_to_the_bundle_transaction(self):
+        for custom, split, refused in ((False, True, False), (False, self.BASELINE, False),
+                                       (False, None, True), (True, True, True)):
+            with self.subTest(custom_core=custom, split=split):
+                ns = self.split_namespace(self.BASELINE)
+                helper = ns['load_ols_diagnostic_helper']('any')
+                helper.OLSService.return_value.verify_stock_recovery_policy.side_effect = RuntimeError(
+                    'Installed or candidate core does not support the stock recovery policy')
+                helper.custom_core = lambda binary: custom
+                ns['load_ols_diagnostic_helper'] = lambda name: helper
+                with patch.object(subprocess, 'run', return_value=self.ABI):
+                    if refused:
+                        with self.assertRaisesRegex(RuntimeError, 'does not support the stock recovery policy'):
+                            ns['validate_ols_configuration'](split=split)
+                    else:
+                        self.assertEqual(ns['validate_ols_configuration'](split=split), self.BASELINE)
+
+    def test_vendor_core_rollback_restarts_only_the_recorded_state(self):
+        tree = ast.parse(Path(__file__).with_name('upgrade.py').read_text())
+        klass = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Upgrade')
+        method = next(n for n in klass.body if isinstance(n, ast.FunctionDef) and n.name == 'installCustomOLSBinaries')
+        calls = [ast.unparse(n) for n in ast.walk(method) if isinstance(n, ast.Call)
+                 and isinstance(n.func, ast.Name) and n.func.id == 'validate_ols_configuration']
+        # Before the stop and in the rollback the recorded state is required;
+        # the installed candidate is always validated strictly.
+        self.assertEqual(sorted(calls), ['validate_ols_configuration(OLS_BINARY_PATH)',
+                                         'validate_ols_configuration(OLS_BINARY_PATH, split)',
+                                         'validate_ols_configuration(OLS_BINARY_PATH, split)'])
 
     def test_new_bundle_validation_is_inside_rollback_before_start(self):
         tree=ast.parse(Path(__file__).with_name('upgrade.py').read_text())

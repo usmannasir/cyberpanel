@@ -1,7 +1,10 @@
 """Read-only classifier for the supported stock OpenLiteSpeed ABI mismatch."""
 import hashlib
+import mmap
+import os
 import platform
 import re
+import sys
 from pathlib import Path
 
 STOCK_CORE = '9ac9627a2678f366c97066c68f16b4a7ca07b692c7967da2f60a0993eade7377'
@@ -185,3 +188,126 @@ def reviewed_jammy_controller(root, selected):
         if path.is_symlink() or not path.is_file() or digest(path) != expected:
             return False
     return True
+
+
+# --- Vendor core beside a self-disabled CyberPanel module ("split" bundle) ---
+#
+# A package update can replace only bin/openlitespeed. The bundle transaction of
+# the ordinary upgrade repairs that state: it keeps the exact previous bytes,
+# validates the configuration with the CyberPanel core and restores the previous
+# files when that fails. The old state is therefore not fingerprinted here; it
+# may stop the upgrade only for faults the vendor core did not cause.
+MARKER = b'cyberpanel_lsi_api_abi_v1'
+SPLIT_DIAGNOSTIC = re.compile(
+    r'\[cyberpanel_ols\] Module v[0-9]+(?:\.[0-9]+)* DISABLED: incompatible OpenLiteSpeed core ABI\b')
+# Directives implemented only by the CyberPanel core. A vendor core reports
+# them as unsupported; they are not configuration faults.
+CUSTOM_ONLY_DIRECTIVES = frozenset(('autossl', 'acmeemail'))
+_UNSUPPORTED = re.compile(
+    r'(?:\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+ )?\[(?:WARN|ERROR)\] (?:\[\d+\] )?\[PlainConf\] '
+    r'\[[^\]]*\] Not support \[([^\s\]]+)[^\]]*\] in file (/[^:]+):([1-9][0-9]{0,7})')
+_STAMP = re.compile(r'^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+ (\[[A-Z]+\]) (?:\[\d+\] )?')
+
+
+class SplitStateRefused(RuntimeError):
+    """The vendor-core state must not be repaired; the message is for the administrator."""
+
+
+def has_marker(path):
+    path = Path(path)
+    if path.is_symlink() or not path.is_file() or not path.stat().st_size:
+        return False
+    with open(str(path), 'rb') as source:
+        with mmap.mmap(source.fileno(), 0, access=mmap.ACCESS_READ) as data:
+            return data.find(MARKER) >= 0
+
+
+def _custom_only(root, line, limits):
+    """True when the vendor core rejected one of our directives at the cited line."""
+    match = _UNSUPPORTED.fullmatch(line)
+    name = match.group(1).lower() if match else ''
+    if name not in CUSTOM_ONLY_DIRECTIVES and name not in limits:
+        return False
+    path = Path(match.group(2))
+    if path.is_symlink() or not path.is_file():
+        return False
+    resolved = str(path.resolve())
+    if not any(resolved.startswith(str((root / name).resolve()) + os.sep) for name in ('conf', 'admin/conf')):
+        return False
+    configured = path.read_text(encoding='utf-8', errors='replace').splitlines()
+    index = int(match.group(3)) - 1
+    words = configured[index].split() if index < len(configured) else []
+    if not words or words[0].lower() != name:
+        return False
+    if name not in limits:
+        return True
+    # A value the CyberPanel core would reject is a fault of the configuration.
+    low, high = limits[name]
+    return len(words) > 1 and words[1].isdigit() and low <= int(words[1]) <= high
+
+
+def split_state(binary, returncode, output, parser=None, os_release='/etc/os-release'):
+    """Classify `-t` output of a core that lacks the CyberPanel ABI marker.
+
+    Returns None when this is not a vendor core beside a self-disabled CyberPanel
+    module (the ordinary validation applies), a baseline dict when the bundle
+    transaction may repair it, and raises SplitStateRefused otherwise.
+    """
+    binary = Path(binary).absolute()
+    root = binary.parent.parent
+    if binary.is_symlink() or not binary.is_file() or has_marker(binary):
+        return None
+    if not has_marker(root / 'modules/cyberpanel_ols.so'):
+        return None
+    lines = [line for line in output.splitlines() if line.strip()]
+    disabled = [line for line in lines if SPLIT_DIAGNOSTIC.search(line)]
+    if len(disabled) != 1:
+        return None
+    if parser is None:
+        import olsParserRecovery as parser
+    try:
+        parser.host_platform(os_release)
+    except (OSError, RuntimeError):
+        raise SplitStateRefused(
+            'This server runs the vendor OpenLiteSpeed core beside a disabled CyberPanel module, '
+            'and no CyberPanel OpenLiteSpeed bundle exists for this operating system or '
+            'architecture. Nothing was changed.')
+    errors, vendor_errors = [], 0
+    for line in lines:
+        if line is disabled[0] or not ('[ERROR]' in line or '[FATAL]' in line):
+            continue
+        if _custom_only(root, line, parser.LIMITS):
+            vendor_errors += 1
+        else:
+            errors.append(line)
+    if errors:
+        raise SplitStateRefused(
+            'OpenLiteSpeed reports configuration errors that the vendor core did not cause. '
+            'Correct them and run the upgrade again; nothing was changed:\n' + '\n'.join(errors))
+    if returncode not in (0, 1, 2) or (returncode == 2 and not vendor_errors):
+        raise SplitStateRefused(
+            'The vendor OpenLiteSpeed core could not test the configuration (exit status %s); '
+            'nothing was changed:\n%s' % (returncode, '\n'.join(lines)))
+    # Timestamps, process IDs and informational lines vary between runs. The
+    # exit status and the error-level lines identify the state before and
+    # after a rollback.
+    return {'returncode': returncode,
+            'errors': sorted(_STAMP.sub(r'\1 ', line) for line in lines
+                             if line is disabled[0] or '[ERROR]' in line or '[FATAL]' in line)}
+
+
+if __name__ == '__main__':
+    # olsStockClassifier.py --split-state BINARY RETURNCODE OS_RELEASE < output-of-BINARY-t
+    # 0: repairable split bundle, 3: not that state, 4: refused (reason on stdout).
+    if len(sys.argv) != 5 or sys.argv[1] != '--split-state':
+        sys.exit(64)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        state = split_state(sys.argv[2], int(sys.argv[3]), sys.stdin.read(), os_release=sys.argv[4])
+    except SplitStateRefused as refusal:
+        print(refusal)
+        sys.exit(4)
+    except Exception as error:
+        print('Cannot classify the installed OpenLiteSpeed state: %s' % error)
+        sys.exit(78)
+    sys.exit(0 if state is not None else 3)

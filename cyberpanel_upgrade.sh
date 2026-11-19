@@ -67,6 +67,7 @@ Verify_CSF_Preservation() {
 CSF_Preservation_Exit() {
   local status=$?
   trap - EXIT
+  Release_Unused_OLS_Holds
   if ! Verify_CSF_Preservation; then
     echo "CSF preservation verification failed. Review $CYBERPANEL_CSF_STATE from a console; no automatic firewall reset was performed." >&2
     status=1
@@ -282,6 +283,45 @@ if hint:
 ' "$work/$file" "$core" "$status" "$method" "$wrapper" "$checksum" "$mode"
 )
 
+# A package update can replace only the core and leave the CyberPanel module,
+# which then disables itself. The bundle transaction of this upgrade restores
+# the core. Status 0: repairable; anything else: the reason is on stdout.
+OLS_Split_State() (
+  local core="$1" status="$2" output="$3" work
+  local pin=850341c7be13b1d4c211732ffc077063e59a4540918990e66622c32c05c59cbc
+  local blob=b6ef8c234ddb27e50af850f688dfef2e35204040
+  work=$(mktemp -d) || exit 78
+  trap 'rm -rf -- "$work"' EXIT
+  if ! OLS_Pinned_Helper "$work/olsParserRecovery.py" olsParserRecovery.py \
+       26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
+       https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py ||
+     { ! OLS_Pinned_Helper "$work/olsStockClassifier.py" olsStockClassifier.py "$pin" \
+         "https://api.github.com/repos/usmannasir/cyberpanel/git/blobs/$blob" &&
+       ! OLS_Pinned_Helper "$work/olsStockClassifier.py" olsStockClassifier.py "$pin" \
+         https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/olsStockClassifier.py; }; then
+    echo 'Cannot obtain the checksum-verified OpenLiteSpeed state classifier. Check access to github.com and cyberpanel.net, then run the upgrade again.'
+    exit 78
+  fi
+  printf '%s\n' "$output" | python3 -IB "$work/olsStockClassifier.py" --split-state "$core" "$status" /etc/os-release
+)
+
+# Holds set while a vendor core is installed are kept only when the CyberPanel
+# bundle was restored: a server left on vendor OpenLiteSpeed keeps its updates.
+Release_Unused_OLS_Holds() {
+  [[ "${#OLS_SPLIT_HOLDS[@]}" -gt 0 ]] || return 0
+  if ! grep -aFq 'cyberpanel_lsi_api_abi_v1' /usr/local/lsws/bin/openlitespeed 2>/dev/null; then
+    apt-mark unhold "${OLS_SPLIT_HOLDS[@]}" >/dev/null 2>&1
+  fi
+  OLS_SPLIT_HOLDS=()
+}
+
+OLS_Hold_Exit() {
+  local status=$?
+  trap - EXIT
+  Release_Unused_OLS_Holds
+  exit "$status"
+}
+
 Protect_Custom_OLS_RPM_Packages() {
   local target owner owners status package
   OLS_RPM_EXCLUDES=()
@@ -324,7 +364,9 @@ Protect_Custom_OLS_From_Packages() {
   # hold and exclude only verified RPM owners during this CyberPanel upgrade.
   local distro_id family core module validation validation_status held package package_status query_status
   local custom_core=0 legacy_core=0 core_digest module_digest
+  local split_core=0 split_reason split_status policy_vendor_core=0
   OLS_RPM_EXCLUDES=()
+  OLS_SPLIT_HOLDS=()
   local packages=(openlitespeed)
   distro_id=$(. /etc/os-release; printf '%s' "$ID")
   case "${distro_id,,}" in
@@ -347,8 +389,13 @@ Protect_Custom_OLS_From_Packages() {
     fi
     core_digest=$(sha256sum -- "$core") || return 1
     if [[ "${core_digest%% *}" != 863687f29a529d379224fe32115d9326028038dd2d38e5aac26ddb4bc5a3bf55 ]]; then
-      echo 'ERROR: The installed OLS core cannot enforce the stock recovery policy; no package changes attempted.'
-      return 1
+      # A vendor core that a package update put beside the policy is replaced
+      # by the policy-aware core below; any other core is refused here.
+      if grep -aFq 'cyberpanel_lsi_api_abi_v1' "$core"; then
+        echo 'ERROR: The installed OLS core cannot enforce the stock recovery policy; no package changes attempted.'
+        return 1
+      fi
+      policy_vendor_core=1
     fi
   fi
   [[ -f "$core" ]] || return 0
@@ -369,32 +416,54 @@ Protect_Custom_OLS_From_Packages() {
     fi
   fi
   # A module filename alone must never pin a stock/unsupported installation.
-  if [[ "$custom_core" == 0 ]]; then
-    if grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module" 2>/dev/null; then
-      validation=$(timeout 30 "$core" -t 2>&1)
-      validation_status=$?
-      if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]] ||
-         [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
-        echo 'ERROR: Stock OLS with an existing CyberPanel module failed validation; no package changes attempted. Preserve logs and recover the verified paired bundle before retrying; do not restart OLS or remove security configuration to bypass this check.'
-        printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
-        OLS_Recovery_Hint "$core" "$validation_status" "$validation"
-        return 1
-      fi
+  if [[ "$custom_core" == 0 ]] && ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module" 2>/dev/null; then
+    if [[ "$policy_vendor_core" == 1 ]]; then
+      echo 'ERROR: The installed OLS core cannot enforce the stock recovery policy; no package changes attempted.'
+      return 1
     fi
     return 0
   fi
-  if [[ ! -x "$core" ]] || { [[ "$legacy_core" == 0 ]] && ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module"; }; then
-    echo 'ERROR: Incomplete custom OLS bundle; no package changes attempted.'
-    return 1
+  if [[ "$custom_core" == 0 ]]; then
+    validation=$(timeout 30 "$core" -t 2>&1)
+    validation_status=$?
+    if [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+      # A package update replaced only the core. Stop here only for faults the
+      # vendor core did not cause; the bundle transaction restores the rest.
+      split_reason=$(OLS_Split_State "$core" "$validation_status" "$validation")
+      split_status=$?
+      if [[ "$split_status" -ne 0 ]]; then
+        echo 'ERROR: A vendor OpenLiteSpeed core is installed beside the CyberPanel module and this upgrade cannot restore the CyberPanel bundle; no package changes attempted. Do not restart OLS or remove security configuration to bypass this check.'
+        printf '%s\n' "${split_reason:-$validation}"
+        return 1
+      fi
+      echo 'A vendor OpenLiteSpeed core is installed beside the CyberPanel module. This upgrade restores the CyberPanel OpenLiteSpeed bundle.'
+      split_core=1
+    elif [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]]; then
+      echo 'ERROR: Stock OLS with an existing CyberPanel module failed validation; no package changes attempted. Preserve logs and recover the verified paired bundle before retrying; do not restart OLS or remove security configuration to bypass this check.'
+      printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
+      OLS_Recovery_Hint "$core" "$validation_status" "$validation"
+      return 1
+    elif [[ "$policy_vendor_core" == 1 ]]; then
+      echo 'ERROR: The installed OLS core cannot enforce the stock recovery policy; no package changes attempted.'
+      return 1
+    else
+      return 0
+    fi
   fi
-  validation=$(OLS_Custom_Config_Test "$core" 2>&1)
-  validation_status=$?
-  if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]] ||
-     [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
-    echo 'ERROR: Custom OLS configuration failed validation; no package changes attempted.'
-    printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
-    OLS_Recovery_Hint "$core" "$validation_status" "$validation"
-    return 1
+  if [[ "$split_core" == 0 ]]; then
+    if [[ ! -x "$core" ]] || { [[ "$legacy_core" == 0 ]] && ! grep -aFq 'cyberpanel_lsi_api_abi_v1' "$module"; }; then
+      echo 'ERROR: Incomplete custom OLS bundle; no package changes attempted.'
+      return 1
+    fi
+    validation=$(OLS_Custom_Config_Test "$core" 2>&1)
+    validation_status=$?
+    if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]] ||
+       [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+      echo 'ERROR: Custom OLS configuration failed validation; no package changes attempted.'
+      printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
+      OLS_Recovery_Hint "$core" "$validation_status" "$validation"
+      return 1
+    fi
   fi
   if [[ "$family" == rpm ]]; then
     Protect_Custom_OLS_RPM_Packages "$core" "$module" /usr/local/lsws/modules/mod_security.so
@@ -419,6 +488,10 @@ Protect_Custom_OLS_From_Packages() {
       if ! apt-mark hold "$package"; then
         echo "ERROR: Could not protect the custom OLS package $package; no package changes attempted."
         return 1
+      fi
+      if [[ "$split_core" == 1 ]]; then
+        OLS_SPLIT_HOLDS+=("$package")
+        [[ -n "$(trap -p EXIT)" ]] || trap OLS_Hold_Exit EXIT
       fi
     fi
   done
@@ -2125,5 +2198,6 @@ if ! Verify_CSF_Preservation; then
   UPGRADE_FAILED=1
 fi
 trap - EXIT
+Release_Unused_OLS_Holds
 
 Post_Install_Display_Final_Info
