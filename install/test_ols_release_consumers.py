@@ -1,6 +1,7 @@
 import ast
 import builtins
 import hashlib
+import json
 import io
 import os
 from pathlib import Path
@@ -188,10 +189,18 @@ class BundleFixture:
     module = '/usr/local/lsws/modules/cyberpanel_ols.so'
     waf = '/usr/local/lsws/modules/mod_security.so'
     admin = '/usr/local/lsws/admin/fcgi-bin/admin_php'
+    policy = '/usr/local/lsws/.cyberpanel-stock-recovery-policy'
+    ABI = ('[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed '
+           'core ABI (expected CyberPanel OLS 2.5.2)')
 
-    def __init__(self, directory, source, class_name, failure=None, module=True, waf=True, platform='ubuntu'):
+    def __init__(self, directory, source, class_name, failure=None, module=True, waf=True, platform='ubuntu',
+                 split=False):
         self.root = Path(directory)
         self.failure = failure
+        # split: a package update left a vendor core (old-core) beside our module.
+        self.split = split
+        self.drift = False
+        self.bound = None
         self.active = True
         self.commands = []
         self.downloads = []
@@ -234,10 +243,48 @@ class BundleFixture:
         assets_url = 'https://fixture.invalid/security-assets.tar.gz'
         self.by_url[assets_url] = 'assets'
 
+        class FixturePolicy:
+            def __init__(self, root):
+                self.created = None
+
+            def verify(self):
+                return self.created
+
+            def apply(self):
+                if fixture.active:
+                    raise AssertionError('The policy must be created only while OLS is stopped')
+                if not fixture.path(fixture.policy).exists():
+                    fixture.path(fixture.policy).write_bytes(b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+                    self.created = (1,)
+
+            def rollback(self):
+                if self.created is not None:
+                    if fixture.active:
+                        raise AssertionError('The policy must be removed only while OLS is stopped')
+                    fixture.path(fixture.policy).unlink()
+                    self.created = None
+
+        class SplitStateRefused(RuntimeError):
+            pass
+
+        def split_state(binary, returncode, output, parser):
+            if fixture.ABI not in output or fixture.path(fixture.core).read_bytes() != b'old-core':
+                return None
+            return {'returncode': returncode,
+                    'errors': sorted(line for line in output.splitlines() if line == fixture.ABI or '[ERROR]' in line)}
+
         class FixtureService:
+            root = Path('/usr/local/lsws')
+            binary = Path(fixture.core)
+
             def __init__(self, *args, **kwargs):
                 self.unit = None
                 self.authorized = False
+
+            def bind_recovery_policy(self, policy, original_core, candidate_core):
+                if platform != 'ubuntu22' or candidate_core != config['sha256']['binary']:
+                    raise RuntimeError('Stock recovery policy requires the pinned Jammy core')
+                fixture.bound = (policy, original_core, candidate_core)
 
             def verify_stock_recovery_policy(self, candidate_core_sha256=None):
                 if fixture.failure == 'recovery-policy':
@@ -336,6 +383,8 @@ class BundleFixture:
                          OLSUpgradeFailure=RuntimeError,
                          load_ols_diagnostic_helper=lambda name: SimpleNamespace(
                              validate=lambda binary: self.run([binary, '-t']), OLSService=FixtureService,
+                             split_state=split_state, SplitStateRefused=SplitStateRefused,
+                             jammy_platform=lambda: platform == 'ubuntu22', RecoveryPolicy=FixturePolicy,
                              digest=lambda path: config['sha256']['binary'],
                              original_record=lambda path: None, bundle_records=lambda *args: ({}, {}),
                              verify_originals=lambda *args: None, verify_installed=lambda *args: None, recovery_hint=lambda *args: ''),
@@ -422,6 +471,11 @@ class BundleFixture:
             self.active = not ((self.failure in ('startup', 'partial-restore') and data == b'new-core') or self.failure == 'rollback-start')
             self.active_bytes = data
             code = 0 if self.active else 1
+        elif args[-1] == '-t' and self.split and self.path(self.core).read_bytes() == b'old-core':
+            # The vendor core cannot load our module; a drifted state adds a fault.
+            code, stdout = 1, self.ABI
+            if self.drift and not self.active:
+                code, stdout = 2, self.ABI + '\n[ERROR] fault that was not there before the repair'
         elif args[-1] == '-t':
             code = 2 if self.failure == 'config' and self.path(self.core).read_bytes() == b'new-core' else 0
             stdout = '[ERROR] injected candidate configuration failure' if code else ''
@@ -697,6 +751,85 @@ class BundleTransactionTests(unittest.TestCase):
             self.assertEqual(policy.read_bytes(), before[0])
             for attr in ('st_ino', 'st_mode', 'st_uid', 'st_gid', 'st_nlink'):
                 self.assertEqual(getattr(policy.stat(), attr), getattr(before[1], attr))
+
+    def vendor_core(self, directory, failure=None, **options):
+        fixture = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', failure, split=True, **options)
+        return fixture, {'returncode': 1, 'errors': [BundleFixture.ABI]}
+
+    def test_vendor_core_beside_our_module_is_replaced_by_the_complete_bundle(self):
+        for waf in (True, False):
+            with self.subTest(previous_waf=waf), tempfile.TemporaryDirectory() as directory:
+                f, baseline = self.vendor_core(directory, waf=waf)
+                self.assertTrue(f.call(baseline))
+                self.assertEqual({f.core: b'new-core', f.module: b'new-module', f.waf: b'new-waf', f.admin: b'new-admin'},
+                                 f.bundle())
+                self.assertTrue(f.active)
+                self.assertEqual(f.active_bytes, b'new-core')
+                self.assertFalse(f.path(f.policy).exists())  # Only the Jammy core has the AutoSSL policy.
+                receipt = next(f.path('/usr/local/lsws').glob('backup-*/security_assets_backup.json'))
+                self.assertEqual(json.loads(receipt.read_text())['split'], baseline)
+
+    def test_vendor_core_is_restored_and_restarted_when_the_bundle_cannot_be_activated(self):
+        for failure in ('config', 'startup', 'module-write', 'asset-apply', 'version-timeout'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
+                f, baseline = self.vendor_core(directory, failure)
+                self.assertFalse(f.call(baseline))
+                self.assertEqual(f.bundle(), f.old)
+                self.assertTrue(f.active)  # No worse than before: the same vendor core is serving again.
+                self.assertEqual(f.active_bytes, b'old-core')
+                self.assertEqual(f.start_bundles[-1], f.old)
+
+    def test_vendor_core_that_differs_from_the_recorded_state_is_neither_replaced_nor_restarted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f, baseline = self.vendor_core(directory)
+            self.assertFalse(f.call({'returncode': 2, 'errors': [BundleFixture.ABI, '[ERROR] earlier fault']}))
+            self.assertEqual(f.bundle(), f.old)
+            self.assertTrue(f.active)
+            self.assertFalse(any(args[-1] in ('stop', 'start') for args in f.commands))
+        with tempfile.TemporaryDirectory() as directory:
+            f, baseline = self.vendor_core(directory, 'config')
+            f.drift = True
+            self.assertFalse(f.call(baseline))
+            self.assertEqual(f.bundle(), f.old)  # Restored byte for byte, but not the state we recorded.
+            self.assertFalse(f.active)
+            self.assertEqual(f.start_bundles, [])
+
+    def test_transaction_without_a_baseline_still_refuses_a_vendor_core_beside_our_module(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f, baseline = self.vendor_core(directory)
+            self.assertFalse(f.call())
+            self.assertEqual(f.bundle(), f.old)
+            self.assertTrue(f.active)
+            self.assertFalse(any(args[-1] in ('stop', 'start') for args in f.commands))
+
+    def test_jammy_repair_keeps_native_autossl_inactive_and_rollback_removes_only_its_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            f, baseline = self.vendor_core(directory, platform='ubuntu22')
+            self.assertTrue(f.call(baseline))
+            self.assertEqual(f.path(f.policy).read_bytes(), b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n')
+            self.assertEqual(f.bound[2], binary_configs(ROOT / 'plogical/upgrade.py', 'Upgrade')['ubuntu22']['sha256']['binary'])
+        for failure in ('config', 'asset-apply', 'startup'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
+                f, baseline = self.vendor_core(directory, failure, platform='ubuntu22')
+                self.assertFalse(f.call(baseline))
+                self.assertFalse(f.path(f.policy).exists())
+                self.assertEqual(f.bundle(), f.old)
+                self.assertTrue(f.active)
+        # A policy left by an earlier repair is kept, also when this repair fails.
+        policy = b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n'
+        for failure in (None, 'config'):
+            with self.subTest(existing_policy=True, failure=failure), tempfile.TemporaryDirectory() as directory:
+                f, baseline = self.vendor_core(directory, failure, platform='ubuntu22')
+                f.path(f.policy).write_bytes(policy)
+                self.assertEqual(bool(f.call(baseline)), failure is None)
+                self.assertEqual(f.path(f.policy).read_bytes(), policy)
+                self.assertTrue(f.active)
+                self.assertEqual(f.active_bytes, b'new-core' if failure is None else b'old-core')
+        with tempfile.TemporaryDirectory() as directory:
+            f = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade', platform='ubuntu22')
+            self.assertTrue(f.call())  # An ordinary Jammy upgrade never creates the policy.
+            self.assertFalse(f.path(f.policy).exists())
+            self.assertIsNone(f.bound)
 
     def test_success_installs_the_complete_required_bundle(self):
         for source, cls in self.consumers:

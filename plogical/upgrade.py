@@ -76,15 +76,44 @@ def load_ols_diagnostic_helper(filename):
     return module
 
 
-def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
+def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split=None):
+    """Validate the installed OpenLiteSpeed state or raise OLSUpgradeFailure.
+
+    A vendor core beside a self-disabled CyberPanel module (a package update
+    replaced only the core) is refused unless `split` allows it: True returns
+    the baseline of a state the bundle transaction may repair, and a baseline
+    accepts only that same state again, as the rollback target.
+    """
     try:
         lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
-        lifecycle.OLSService(os.path.dirname(os.path.dirname(binary))).verify_stock_recovery_policy()
         validator = load_ols_diagnostic_helper('olsNativeValidation.py')
+        try:
+            lifecycle.OLSService(os.path.dirname(os.path.dirname(binary))).verify_stock_recovery_policy()
+        except Exception:
+            # A vendor core cannot enforce an existing recovery policy. The bundle
+            # transaction requires its candidate to do so before changing anything.
+            if split is None or validator.custom_core(binary):
+                raise
         result = validator.validate(binary)
     except Exception as error:
         raise OLSUpgradeFailure('Cannot verify OpenLiteSpeed configuration: ' + str(error)) from error
     output = (result.stdout or '') + (result.stderr or '')
+    if split is not None:
+        baseline = stock = None
+        if 'incompatible OpenLiteSpeed core ABI' in output:
+            try:
+                stock = load_ols_diagnostic_helper('olsStockClassifier.py')
+                baseline = stock.split_state(binary, result.returncode, output,
+                                             load_ols_diagnostic_helper('olsParserRecovery.py'))
+            except Exception as error:
+                if stock is not None and isinstance(error, getattr(stock, 'SplitStateRefused', ())):
+                    raise OLSUpgradeFailure(str(error)) from error
+                baseline = None  # A broken helper never waives the refusal below.
+        if baseline is not None and split in (True, baseline):
+            return baseline
+        if split is not True:
+            raise OLSUpgradeFailure('The vendor OpenLiteSpeed state recorded before the repair is no longer '
+                                    'present; no further changes were made: ' + output)
     if result.returncode not in (0, 1) or any(level in output for level in ('[ERROR]', '[FATAL]', 'incompatible OpenLiteSpeed core ABI')):
         hint = ''
         try:
@@ -108,7 +137,7 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed'):
         except Exception:
             pass  # Diagnostic helpers must never waive the original failure.
         raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
-    return output
+    return None
 
 
 def apply_ols_config_changes(changes):
@@ -1196,11 +1225,18 @@ class Upgrade:
         os.chown(destination, info.st_uid, info.st_gid, follow_symlinks=False)
 
     @staticmethod
-    def installCustomOLSBinaries():
-        """Install custom OpenLiteSpeed binaries with PHP config support"""
+    def installCustomOLSBinaries(split=None):
+        """Install custom OpenLiteSpeed binaries with PHP config support
+
+        `split` is the baseline returned by validate_ols_configuration(split=True)
+        when a package update left a vendor core beside the CyberPanel module.
+        """
         try:
             Upgrade.stdOut("Installing Custom OpenLiteSpeed Binaries", 0)
             Upgrade.stdOut("=" * 50, 0)
+            if split is not None:
+                Upgrade.stdOut("A vendor OpenLiteSpeed core is installed beside the CyberPanel module; "
+                               "restoring the CyberPanel OpenLiteSpeed bundle", 0)
 
             # Check architecture
             if not Upgrade.detectArchitecture():
@@ -1306,6 +1342,13 @@ class Upgrade:
             lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
             service = lifecycle.OLSService()
             service.verify_stock_recovery_policy(config['sha256']['binary'])
+            policy = None
+            if split is not None and lifecycle.jammy_platform():
+                # The vendor core does not run native AutoSSL. Keep that behavior, as
+                # the published Jammy recovery does, instead of starting issuance.
+                policy = lifecycle.RecoveryPolicy(service.root)
+                service.bind_recovery_policy(policy, lifecycle.digest(service.binary),
+                                             config['sha256']['binary'])
             service.authorize_recovered_jammy_controller()
             initial_state = service.prepare_state()
             # Keep the core and both modules on the same verified release, including
@@ -1362,7 +1405,8 @@ class Upgrade:
                 originals, candidates = lifecycle.bundle_records(required, backup_dir, config['sha256'], security_assets)
                 with open(os.path.join(backup_dir, 'security_assets_backup.json'), 'w') as receipt:
                     json.dump({'backup_dir': security_assets.backup_dir,
-                               'was_running': bool(initial_state), 'unit': service.unit}, receipt)
+                               'was_running': bool(initial_state), 'unit': service.unit,
+                               'split': split}, receipt)
                     receipt.flush()
                     os.fsync(receipt.fileno())
 
@@ -1370,7 +1414,7 @@ class Upgrade:
                     raise RuntimeError('OpenLiteSpeed service changed during staging')
                 # Downloads and PHP verification can take minutes. Ensure the
                 # on-disk original remains a valid rollback before stopping it.
-                validate_ols_configuration(OLS_BINARY_PATH)
+                validate_ols_configuration(OLS_BINARY_PATH, split)
                 lifecycle.verify_originals(originals)
                 stopped = False
                 start_attempted = False
@@ -1381,6 +1425,8 @@ class Upgrade:
                         service.change('stop', initial_state)
                     if service.state():
                         raise RuntimeError('OLS started outside this transaction before replacement')
+                    if policy is not None:
+                        policy.apply()
                     security_assets.apply()
                     for kind, url, target, mode, backup_name in required:
                         os.makedirs(os.path.dirname(target), exist_ok=True)
@@ -1403,7 +1449,7 @@ class Upgrade:
                     Upgrade.stdOut('ERROR: %s; restoring the previous OLS bundle' % error, 0)
                     try:
                         current = service.settled_state()
-                        if touched or security_assets.touched:
+                        if touched or security_assets.touched or (policy is not None and policy.created is not None):
                             if current:
                                 if not start_attempted or current == initial_state:
                                     raise RuntimeError('Unrequested live process; no rollback writes attempted')
@@ -1425,11 +1471,18 @@ class Upgrade:
                                         os.remove(target)
                                 except Exception as file_error:
                                     errors.append(str(file_error))
+                            if policy is not None:
+                                try:
+                                    policy.rollback()
+                                except Exception as policy_error:
+                                    errors.append(str(policy_error))
                             if errors:
                                 raise RuntimeError('Incomplete restoration: ' + ', '.join(errors))
                         lifecycle.verify_originals(originals)
                         if initial_state and stopped and not service.state():
-                            validate_ols_configuration(OLS_BINARY_PATH)
+                            # A restored vendor core is restarted only in the exact
+                            # state recorded before the repair began.
+                            validate_ols_configuration(OLS_BINARY_PATH, split)
                             service.change('start', None)
                     except Exception as rollback_error:
                         Upgrade.stdOut('ERROR: OLS rollback requires attention: %s; backup: %s' %
@@ -1505,7 +1558,7 @@ class Upgrade:
 
                 lifecycle.verify_originals(originals)
                 if restore_running:
-                    validate_ols_configuration(binary_path)
+                    validate_ols_configuration(binary_path, receipt.get('split'))
                     service.change('start', None)
                 elif service.state():
                     raise RuntimeError('Previously stopped service started during rollback')
@@ -5503,11 +5556,16 @@ pm.max_spare_servers = 3
         has_ols = os.path.exists('/usr/local/lsws/bin/openlitespeed')
         if has_ols:
             with ols_upgrade_lock():
-                validate_ols_configuration()
+                # A vendor core left beside our module by a package update is
+                # repaired by the bundle transaction; any other invalid state stops here.
+                split = validate_ols_configuration(split=True)
                 # The transaction owns validation, rollback and service state.
                 # Preserve administrator-selected module and AutoSSL settings.
-                if Upgrade.installCustomOLSBinaries() is False:
+                installed = Upgrade.installCustomOLSBinaries(split)
+                if installed is False:
                     raise OLSUpgradeFailure("Custom OLS bundle installation failed; upgrade stopped before further service changes. Check the upgrade log and any rollback diagnostics.")
+                if split is not None and installed is None:
+                    raise OLSUpgradeFailure("A vendor OpenLiteSpeed core is installed beside a disabled CyberPanel module and no CyberPanel OpenLiteSpeed bundle is available for this platform; nothing was changed.")
 
         if branch.find('SoftUpgrade') > -1:
             Upgrade.SoftUpgrade = 1

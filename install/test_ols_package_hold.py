@@ -18,12 +18,17 @@ class PackageHoldTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.core = self.root / 'core'
+        # The installed layout: the classifier locates the module and the
+        # configuration from the core's own directory.
+        self.lsws = self.root / 'lsws'
+        for name in ('bin', 'modules', 'conf', 'admin/conf'):
+            (self.lsws / name).mkdir(parents=True)
+        self.core = self.lsws / 'bin/openlitespeed'
         self.core.write_text('#!/bin/bash\n# cyberpanel_lsi_api_abi_v1\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
         self.core.chmod(0o755)
-        self.module = self.root / 'module'
+        self.module = self.lsws / 'modules/cyberpanel_ols.so'
         self.module.write_text('ELF cyberpanel_lsi_api_abi_v1')
-        self.waf = self.root / 'waf'
+        self.waf = self.lsws / 'modules/mod_security.so'
         self.waf.write_text('paired custom WAF')
         self.policy = self.root / '.cyberpanel-stock-recovery-policy'
         self.release = self.root / 'os-release'
@@ -61,6 +66,7 @@ printf "%s" "${PACKAGE_STATUS:-install ok installed}"''',
 case "$1" in
 showhold) [ "${SHOWHOLD_FAIL:-0}" = 0 ] || exit 1; cat "$HOLDS";;
 hold) [ "${HOLD_FAIL:-0}" = 0 ] && [ "${HOLD_FAIL_PACKAGE:-}" != "$2" ] || exit 1; [ "${HOLD_NOOP:-0}" = 1 ] || [ "${HOLD_NOOP_PACKAGE:-}" = "$2" ] || echo "$2" >> "$HOLDS";;
+unhold) shift; for package in "$@"; do grep -Fxv "$package" "$HOLDS" > "$HOLDS.new"; mv "$HOLDS.new" "$HOLDS"; done;;
 *) exit 99;;
 esac''',
             'apt': '''echo "apt $*" >> "$EVENTS"
@@ -248,12 +254,11 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
         self.assertNotIn('apt-mark hold ols-modsecurity', self.events.read_text())
         self.assertIn('ols-modsecurity\n', self.holds.read_text())
 
-    def test_split_stock_core_custom_module_aborts_before_packages(self):
+    def test_stock_core_with_module_and_other_faults_aborts_before_packages(self):
         self.release.write_text('ID=ubuntu\nVERSION_ID="24.04"\n')
         self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
         original = self.core.read_bytes()
-        for env in ({'VALIDATION_OUTPUT': 'incompatible OpenLiteSpeed core ABI'},
-                    {'VALIDATION_OUTPUT': '[ERROR] missing CRS file'},
+        for env in ({'VALIDATION_OUTPUT': '[ERROR] missing CRS file'},
                     {'SIMULATE_TIMEOUT': '1'}):
             with self.subTest(env=env):
                 result = self.run_upgrade(**env)
@@ -262,6 +267,134 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
                 self.assertEqual(self.core.read_bytes(), original)
                 self.assertEqual(self.holds.read_text(), 'other-package\n')
                 self.assert_no_apt()
+
+    ABI = ('[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed '
+           'core ABI (expected CyberPanel OLS 2.5.2)')
+
+    def vendor_core(self, release='ID=ubuntu\nVERSION_ID="24.04"\n'):
+        """A package update replaced the core and left the CyberPanel module."""
+        self.release.write_text(release)
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-1}"\n')
+        self.httpd = self.lsws / 'conf/httpd_config.conf'
+        self.httpd.write_text('serverName x\nautoSSL                   1\nacmeEmail admin@cyberpanel.net\n')
+        self.admin = self.lsws / 'admin/conf/admin_config.conf'
+        self.admin.write_text('enableCoreDump 1\nthrottleEnabled 1\nthrottleMaxFailures 5\n')
+        stamp = '2026-11-19 14:41:43.122363 '
+        self.default = '\n'.join([
+            self.ABI,
+            stamp + '[WARN] [PlainConf] [httpServerConfig:] Not support [autossl 1] in file %s:2' % self.httpd,
+            stamp + '[WARN] [PlainConf] [httpServerConfig:] Not support [acmeemail admin@cyberpanel.net] in file %s:3' % self.httpd,
+            stamp + '[WARN] [1579] [config:server:vhosts:vhost:Example] Uid of /x/Example/html/ is 0, smaller than minimum requirement 11, use server uid!'])
+        self.webadmin = '\n'.join(
+            stamp + '[ERROR] [1579] [PlainConf] [adminConfig:] Not support [%s] in file %s:%d' % (text, self.admin, number)
+            for number, text in ((2, 'throttleenabled 1'), (3, 'throttlemaxfailures 5')))
+        return self.core.read_bytes()
+
+    def test_vendor_core_beside_our_module_is_protected_before_packages_and_left_to_the_transaction(self):
+        original = self.vendor_core()
+        for env in ({'VALIDATION_OUTPUT': None}, {'VALIDATION_OUTPUT': 'webadmin', 'VALIDATION_STATUS': '2'}):
+            with self.subTest(env=env):
+                self.core.write_bytes(original)
+                self.events.write_text('')
+                self.holds.write_text('other-package\n')
+                env['VALIDATION_OUTPUT'] = self.default + ('\n' + self.webadmin if env['VALIDATION_OUTPUT'] else '')
+                # The bundle transaction of the same run restores the CyberPanel core.
+                result = self.run_upgrade(UPGRADES[0] + '\nprintf "\\n# cyberpanel_lsi_api_abi_v1\\n" >> "$CORE"', **env)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('This upgrade restores the CyberPanel OpenLiteSpeed bundle', result.stdout)
+                self.assertNotIn('recover the verified paired bundle', result.stdout)
+                events = self.events.read_text()
+                self.assertLess(events.index('apt-mark hold ols-modsecurity'),
+                                re.search(r'(?m)^apt(?:-get)? ', events).start())
+                self.assertTrue(self.core.read_bytes().startswith(original))
+                self.assertEqual(self.holds.read_text(), 'other-package\nopenlitespeed\nols-modsecurity\n')
+                self.assertNotIn('apt-mark unhold', events)
+
+    def test_holds_set_for_a_vendor_core_are_released_when_the_run_ends_on_the_vendor_core(self):
+        original = self.vendor_core()
+        for ending, status in (('exit 78', 78), ('true', 0)):
+            with self.subTest(ending=ending):
+                self.events.write_text('')
+                self.holds.write_text('other-package\nols-modsecurity\n')
+                result = self.run_upgrade(UPGRADES[0] + '\n' + ending, VALIDATION_OUTPUT=self.default)
+                self.assertEqual(result.returncode, status, result.stdout + result.stderr)
+                self.assertEqual(self.core.read_bytes(), original)
+                # Only the hold this run added is released; the administrator's stays.
+                self.assertEqual(self.holds.read_text(), 'other-package\nols-modsecurity\n')
+                self.assertIn('apt-mark unhold openlitespeed\n', self.events.read_text())
+
+    def test_vendor_core_with_faults_of_its_own_aborts_before_packages_showing_the_whole_line(self):
+        original = self.vendor_core()
+        fault = '[ERROR] [config:server:vhosts:vhost:shop] ' + 'y' * 2500 + ' missing docRoot'
+        forged = '[ERROR] [PlainConf] [adminConfig:] Not support [throttleenabled 1] in file %s:1' % self.admin
+        for output in (self.default + '\n' + fault, self.default + '\n' + forged):
+            with self.subTest(output=output[-60:]):
+                result = self.run_upgrade(VALIDATION_OUTPUT=output, VALIDATION_STATUS='2')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('cannot restore the CyberPanel bundle', result.stdout)
+                self.assertIn(output.splitlines()[-1], result.stdout)
+                self.assertEqual(self.core.read_bytes(), original)
+                self.assertEqual(self.holds.read_text(), 'other-package\n')
+                self.assert_no_apt()
+        result = self.run_upgrade(VALIDATION_OUTPUT='incompatible OpenLiteSpeed core ABI')
+        self.assertNotEqual(result.returncode, 0)
+        self.assert_no_apt()
+
+    def test_vendor_core_is_accepted_on_every_bundle_platform_and_refused_elsewhere(self):
+        for release in ('ID="almalinux"\nVERSION_ID="9.9"\n', 'ID="almalinux"\nVERSION_ID="8.10"\n',
+                        'ID="almalinux"\nVERSION_ID="10.2"\n', 'ID="rocky"\nVERSION_ID="9.7"\n'):
+            with self.subTest(release=release):
+                original = self.vendor_core(release), self.waf.read_bytes()
+                self.events.write_text('')
+                result = self.run_upgrade(self.rpm_updates()[0], VALIDATION_OUTPUT=self.default)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('yum update -y --exclude=openlitespeed --exclude=ols-modsecurity', self.events.read_text())
+                self.assertEqual((self.core.read_bytes(), self.waf.read_bytes()), original)
+                self.assertEqual(self.holds.read_text(), 'other-package\n')
+        original = self.vendor_core('ID=ubuntu\nVERSION_ID="20.04"\n')
+        result = self.run_upgrade(VALIDATION_OUTPUT=self.default)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('no CyberPanel OpenLiteSpeed bundle exists', result.stdout)
+        self.assertEqual(self.holds.read_text(), 'other-package\n')
+        self.assert_no_apt()
+
+    def test_vendor_core_beside_an_existing_recovery_policy_is_repaired_on_jammy_only(self):
+        policy = b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n'
+        original = self.vendor_core('ID=ubuntu\nVERSION_ID="22.04"\n')
+        self.policy.write_bytes(policy)
+        # A package update replaced the policy-aware core after an earlier repair.
+        result = self.run_upgrade(UPGRADES[0] + '\nprintf "\\n# cyberpanel_lsi_api_abi_v1\\n" >> "$CORE"',
+                                  VALIDATION_OUTPUT=self.default)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('This upgrade restores the CyberPanel OpenLiteSpeed bundle', result.stdout)
+        self.assertEqual(self.policy.read_bytes(), policy)
+        self.assertIn('openlitespeed\n', self.holds.read_text())
+        # Without our module there is nothing to repair: the policy still refuses.
+        self.core.write_bytes(original)
+        self.holds.write_text('other-package\n')
+        self.events.write_text('')
+        self.module.write_text('ELF vendor module without the marker')
+        for output in ('', self.default):
+            with self.subTest(output=output[:20]):
+                result = self.run_upgrade(VALIDATION_OUTPUT=output)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('cannot enforce the stock recovery policy', result.stdout)
+                self.assert_no_apt()
+        # The policy belongs to the Jammy core alone.
+        self.vendor_core('ID=ubuntu\nVERSION_ID="24.04"\n')
+        self.module.write_text('ELF cyberpanel_lsi_api_abi_v1')
+        result = self.run_upgrade(VALIDATION_OUTPUT=self.default)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('requires the verified Jammy core', result.stdout)
+        self.assert_no_apt()
+
+    def test_classifier_pin_matches_the_published_helper(self):
+        import hashlib
+        helper = ROOT / 'plogical/olsStockClassifier.py'
+        pin = re.search(r'OLS_Split_State\(\) \(\n.*\n  local pin=(\S+)\n  local blob=(\S+)\n', SOURCE)
+        self.assertEqual(pin.group(1), hashlib.sha256(helper.read_bytes()).hexdigest())
+        data = helper.read_bytes()
+        self.assertEqual(pin.group(2), hashlib.sha1(b'blob %d\0' % len(data) + data).hexdigest())
 
     def test_custom_core_missing_paired_module_aborts(self):
         self.module.unlink()
