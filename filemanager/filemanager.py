@@ -1,4 +1,6 @@
 import os
+import re
+import secrets
 import shlex
 import sys
 
@@ -146,8 +148,16 @@ class FileManager:
             return ''
 
     @staticmethod
+    def editorTheme(theme):
+        # The name comes from the address and is written into the page as markup.
+        if isinstance(theme, str) and re.fullmatch(r'[a-z0-9-]{1,40}', theme):
+            return theme
+        return 'cobalt'
+
+    @staticmethod
     def findThemeFile(theme):
-        return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/%s.min.css" />' % (theme)
+        return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/%s.min.css" />' % (
+            FileManager.editorTheme(theme))
 
     @staticmethod
     def findAdditionalOptions(mode):
@@ -436,8 +446,10 @@ class FileManager:
 
                 RemoveOK = 1
 
-                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
-                result = ProcessUtilities.outputExecutioner(command)
+                # The probe file sits in the customer's own home, where its name
+                # can be a link: touch only the name itself, as the site's own user.
+                command = 'touch -h %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
+                result = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
                 if result.find('No such file or directory') > -1:
                     RemoveOK = 0
@@ -447,7 +459,7 @@ class FileManager:
 
                 else:
                     command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, website.externalApp)
 
 
                 for item in self.data['fileAndFolders']:
@@ -808,7 +820,7 @@ class FileManager:
                 self.data['home'] = '/home/%s' % (self.data['domainName'])
 
                 ACLManager.CreateSecureDir()
-                tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
+                tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', secrets.token_hex(16))
 
                 domainName = self.data['domainName']
                 website = Websites.objects.get(domain=domainName)
@@ -816,7 +828,8 @@ class FileManager:
                 if not self.pathInside(self.data['fileName'], self.data['home']):
                     return self.ajaxPre(0, 'Not allowed.')
 
-                writeToFile = open(tempPath, 'wb')
+                writeToFile = os.fdopen(os.open(
+                    tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb')
                 writeToFile.write(self.data['fileContent'].encode('utf-8'))
                 writeToFile.close()
 
@@ -838,8 +851,9 @@ class FileManager:
                     return self.ajaxPre(0, 'Not allowed.')
 
                 ACLManager.CreateSecureDir()
-                tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
-                writeToFile = open(tempPath, 'wb')
+                tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', secrets.token_hex(16))
+                writeToFile = os.fdopen(os.open(
+                    tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb')
                 writeToFile.write(self.data['fileContent'].encode('utf-8'))
                 writeToFile.close()
 
@@ -868,7 +882,9 @@ class FileManager:
 
             ## Random file name
 
-            RanddomFileName = str(randint(1000, 9999))
+            # An unguessable name in the shared temporary directory: another
+            # customer must not be able to name, read or receive this file.
+            RanddomFileName = secrets.token_hex(16)
 
             myfile = self.request.FILES['file']
             fs = FileSystemStorage()
@@ -878,6 +894,10 @@ class FileManager:
                 finalData['fileName'] = fs.url(filename)
             except BaseException as msg:
                 logging.writeToFile('%s. [375:upload]' % (str(msg)))
+                return self.ajaxPre(0, 'The uploaded file could not be stored.')
+
+            # Copy exactly the file that was stored, under the name it was given.
+            RanddomFileName = os.path.basename(filename)
 
 
 
@@ -937,11 +957,13 @@ class FileManager:
             return HttpResponse(json_data)
 
         except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+        finally:
+            # Whatever happened, the stored copy does not stay behind.
             try:
                 os.remove(UploadPath + RanddomFileName)
             except:
                 pass
-            return self.ajaxPre(0, str(msg))
 
     @root_entitlement_required
     def extract(self):

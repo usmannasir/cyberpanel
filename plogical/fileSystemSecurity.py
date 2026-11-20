@@ -75,16 +75,18 @@ def set_directory_owner(allowed_root, directory, user, group, mode=None):
 
 
 @contextlib.contextmanager
-def _open_regular_file_under(root, path):
+def _open_regular_file_under(root, path, single_link=False):
     parts = _path_parts_under(root, path)
     if not parts:
         raise ValueError("A regular file is required")
     parent = os.path.dirname(os.path.abspath(path))
     parent_fd = _open_directory_under(root, parent)
     try:
+        # O_NONBLOCK: a named pipe in place of the file is refused below
+        # instead of holding the caller until someone writes to it.
         descriptor = os.open(
             parts[-1],
-            os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
+            os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
             dir_fd=parent_fd,
         )
     finally:
@@ -93,6 +95,9 @@ def _open_regular_file_under(root, path):
         file_status = os.fstat(descriptor)
         if not stat.S_ISREG(file_status.st_mode):
             raise OSError("A regular file is required")
+        # A privileged reader refuses a second name for a file that lives elsewhere.
+        if single_link and file_status.st_nlink != 1:
+            raise OSError("A file with a single name is required")
         with os.fdopen(descriptor, "rb", closefd=False) as handle:
             yield handle
     finally:
@@ -137,7 +142,7 @@ def stage_file_for_download(
         owner_user=owner_user,
     )
     try:
-        with _open_regular_file_under(allowed_root, source_path) as source:
+        with _open_regular_file_under(allowed_root, source_path, single_link=True) as source:
             destination_fd = os.open(
                 staged_path,
                 os.O_WRONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
