@@ -334,7 +334,8 @@ class WebsiteManager:
         Data['test_domain_data'] = 1
 
         try:
-            DeleteID = request.GET.get('DeleteID', None)
+            from plogical.requestOrigin import confirmed_parameter
+            DeleteID = confirmed_parameter(request, 'DeleteID')
 
             if DeleteID != None:
                 wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
