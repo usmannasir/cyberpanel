@@ -3245,43 +3245,12 @@ class ApplicationInstaller(multi.Thread):
 
 
 
-                # 1. Generate SSH keys on the remote server with the name 'cyberpanelbackup'
-                ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
-                stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f"SSH key generated..")
-
-                # 2. Download the SSH keys from the remote server to the local server
-
-                ### put generated key in local server
-
-                remote_private_key = "~/.ssh/cyberpanelbackup"
-                remote_public_key = "~/.ssh/cyberpanelbackup.pub"
-
-                ssh_keygen_command = f"cat {remote_public_key}"
-                stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
-
-                # Read the output (stdout) into a variable
-                public_key_content = stdout.read().decode().strip()
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f'Key from remote server {public_key_content}')
-
-                command = f'echo "{public_key_content}" >> ~/.ssh/authorized_keys'
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f"awk '!seen[$0]++' ~/.ssh/authorized_keys > temp && mv temp ~/.ssh/authorized_keys"
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f'cat ~/.ssh/authorized_keys'
-                updatedAuth = ProcessUtilities.outputExecutioner(command, 'root', True)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f'Updated content of authorized key file {updatedAuth}')
-
-
-                ####
+                # The backup is fetched over the connection opened with the
+                # customer's own storage login. The storage host is never given
+                # a key for this server, and nothing it returns reaches a command.
+                from plogical.securityUtils import is_safe_file_name
+                if not is_safe_file_name(BackUpFileName):
+                    raise BaseException('Invalid backup file name.')
 
                 sftp = ssh.open_sftp()
 
@@ -3290,26 +3259,8 @@ class ApplicationInstaller(multi.Thread):
                 remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
                 logging.writeToFile("Downloading start")
 
-                from WebTerminal.CPWebSocket import SSHServer
-                SSHServer.findSSHPort()
-
-                command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
-
-                stdin, stdout, stderr = ssh.exec_command(command)
-
-                # Read the output (stdout) into a variable
-                successRet = stdout.read().decode().strip()
-                errorRet = stderr.read().decode().strip()
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f"Command used to retrieve backup {command}")
-                    if errorRet:
-                        logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
-                    else:
-                        logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
-
-                # sftp.get(str(remotepath), str(loaclpath),
-                #          callback=self.UpdateDownloadStatus)
+                sftp.get(str(remotepath), str(loaclpath),
+                         callback=self.UpdateDownloadStatus)
 
                 # Ensure both SFTP and SSH connections are closed
                 if sftp:
@@ -3317,7 +3268,7 @@ class ApplicationInstaller(multi.Thread):
                 if ssh:
                     ssh.close()  # Close the SSH connection
 
-                command = "mv %s /home/backup/" % loaclpath
+                command = "mv %s /home/backup/" % shlex.quote(loaclpath)
                 ProcessUtilities.executioner(command)
 
                 ##
@@ -6733,6 +6684,15 @@ class ApplicationInstaller(multi.Thread):
             userID = self.extraArgs['userID']
             self.tempStatusPath = tempStatusPath
 
+            # The selection from the browser is a folder name and a file name;
+            # both become part of paths on the backup host and on this server.
+            from plogical.securityUtils import is_safe_file_name
+            if not is_safe_file_name(folder) or not is_safe_file_name(backupfile):
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Invalid backup selection. [404]")
+                statusFile.close()
+                return 0
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Download started..,30")
             statusFile.close()
@@ -6763,58 +6723,8 @@ class ApplicationInstaller(multi.Thread):
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(f"SFTP Connected successfully..")
 
-            # 1. Generate SSH keys on the remote server with the name 'cyberpanelbackup'
-            ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
-            stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(f"SSH key generated..")
-
-            # 2. Download the SSH keys from the remote server to the local server
-
-            ### put generated key in local server
-
-            remote_private_key = "~/.ssh/cyberpanelbackup"
-            remote_public_key = "~/.ssh/cyberpanelbackup.pub"
-
-            ssh_keygen_command = f"cat {remote_public_key}"
-            stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
-
-            # Read the output (stdout) into a variable
-            public_key_content = stdout.read().decode().strip()
-
-            if len(public_key_content) < 10:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(f"Failed to get content of public key. [404]")
-                statusFile.close()
-                return 0
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(f'Key from remote server {public_key_content}')
-
-            command = f'echo "{public_key_content}" >> ~/.ssh/authorized_keys'
-            ProcessUtilities.executioner(command, 'root', True)
-
-            command = f"awk '!seen[$0]++' ~/.ssh/authorized_keys > temp && mv temp ~/.ssh/authorized_keys"
-            ProcessUtilities.executioner(command, 'root', True)
-
-            command = f'cat ~/.ssh/authorized_keys'
-            updatedAuth = ProcessUtilities.outputExecutioner(command, 'root', True)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(f'Updated content of authorized key file {updatedAuth}')
-
-            ####
-
-            # Ensure /home/cyberpanel directory exists with proper permissions
-            if not os.path.exists('/home/cyberpanel'):
-                command = 'mkdir -p /home/cyberpanel'
-                ProcessUtilities.executioner(command)
-
-            # Set proper permissions to allow application to write to the directory
-            command = 'chmod 755 /home/cyberpanel'
-            ProcessUtilities.executioner(command)
-
+            # The backup is fetched over this connection. The backup host is
+            # never given a key for this server.
             sftp = ssh.open_sftp()
 
             logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
@@ -6822,44 +6732,18 @@ class ApplicationInstaller(multi.Thread):
             remotepath = f'cpbackups/{folder}/{backupfile}'
             logging.writeToFile("Downloading start")
 
-            from WebTerminal.CPWebSocket import SSHServer
-            SSHServer.findSSHPort()
+            try:
+                sftp.get(remotepath, loaclpath, callback=self.UpdateDownloadStatus)
 
-            command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
-
-            stdin, stdout, stderr = ssh.exec_command(command)
-
-            # Read the output (stdout) into a variable
-            successRet = stdout.read().decode().strip()
-            errorRet = stderr.read().decode().strip()
-
-            # Check if SCP had errors and fallback to SFTP if needed
-            if errorRet:
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
-                    logging.writeToFile(f"Command used to retrieve backup {command}")
+                    logging.writeToFile(f"Successfully downloaded via SFTP")
 
+            except BaseException as msg:
+                logging.writeToFile(f"Failed to download file {str(msg)} [404]")
                 statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(f"SCP failed, falling back to SFTP...,20")
+                statusFile.writelines(f"Failed to download file {str(msg)} [404]")
                 statusFile.close()
-
-                try:
-                    sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}',
-                             callback=self.UpdateDownloadStatus)
-
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.writeToFile(f"Successfully downloaded via SFTP")
-
-                except BaseException as msg:
-                    logging.writeToFile(f"Failed to download file {str(msg)} [404]")
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(f"Failed to download file {str(msg)} [404]")
-                    statusFile.close()
-                    return 0
-            else:
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
-                    logging.writeToFile(f"Command used to retrieve backup {command}")
+                return 0
 
 
 
