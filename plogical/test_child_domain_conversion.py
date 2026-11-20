@@ -296,9 +296,12 @@ class ChildConversionTests(unittest.TestCase):
         poll = load_method('websiteFunctions/website.py', 'WebsiteManager',
                            'installWordpressStatus', dict(
             ACLManager=SimpleNamespace(CheckStatusFilleLoc=lambda path: True),
-            ProcessUtilities=SimpleNamespace(outputExecutioner=lambda command: self.status.read_text()),
             HttpResponse=lambda content: SimpleNamespace(content=content.encode()),
             json=json, shlex=shlex, subprocess=SimpleNamespace(call=lambda args: None)))
+        reader = patch('plogical.statusUtilities.read_status_file',
+                       side_effect=lambda path: self.status.read_text())
+        reader.start()
+        self.addCleanup(reader.stop)
         def command(command, **kwargs):
             if command.startswith('/bin/sh -c '):
                 progress = json.loads(poll(None, data={'statusFile': str(self.status)}).content)

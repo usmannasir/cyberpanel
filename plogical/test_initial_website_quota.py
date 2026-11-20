@@ -126,13 +126,16 @@ class InitialWebsiteQuotaTests(unittest.TestCase):
     def test_status_reader_reports_partial_error_and_does_not_cleanup(self):
         node = copy.deepcopy(method(ROOT / 'websiteFunctions/website.py', 'installWordpressStatus'))
         partial = 'Website was created, but its disk/inode quota could not be verified. [404]'
-        commands = Mock(return_value=partial)
+        commands = Mock()
         cleanup = Mock()
         namespace = {'ACLManager': NS(CheckStatusFilleLoc=Mock(return_value=True)),
                      'ProcessUtilities': NS(outputExecutioner=commands),
                      'subprocess': NS(call=cleanup), 'json': json, 'HttpResponse': lambda value: value}
         exec(compile(ast.Module(body=[node], type_ignores=[]), 'website.py', 'exec'), namespace)
-        result = json.loads(namespace['installWordpressStatus'](None, 1, {'statusFile': '/tmp/owned-status'}))
+        with patch('plogical.statusUtilities.read_status_file', return_value=partial) as reader:
+            result = json.loads(namespace['installWordpressStatus'](None, 1, {'statusFile': '/tmp/owned-status'}))
+        reader.assert_called_once_with('/tmp/owned-status')
+        commands.assert_not_called()
         self.assertEqual(1, result['abort'])
         self.assertEqual(0, result['installStatus'])
         self.assertIn(partial, result['error_message'])

@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from backup.backupManager import BackupManager
 from backup.pluginManager import pluginManager
 from loginSystem.views import loadLoginPage
+from plogical.acl import ACLManager
 import os
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.views.decorators.csrf import csrf_exempt
@@ -199,6 +200,12 @@ def submitRestore(request):
 
 def restoreStatus(request):
     try:
+        userID = request.session['userID']
+        # Only the users of the two restore pages may ask for restore progress.
+        currentACL = ACLManager.loadedACL(userID)
+        if not any(currentACL.get(permission) == 1
+                   for permission in ('admin', 'restoreBackup', 'scheduleBackups')):
+            return ACLManager.loadErrorJson('restoreStatus', 0)
         wm = BackupManager()
         return wm.restoreStatus(json.loads(request.body))
     except KeyError:

@@ -367,15 +367,20 @@ class CloudManager:
         try:
             statusFile = self.data['statusFile']
 
-            if ACLManager.CheckStatusFilleLoc(statusFile):
-                pass
-            else:
+            from plogical import statusUtilities
+            try:
+                if not ACLManager.CheckStatusFilleLoc(statusFile):
+                    raise ValueError('Invalid status file.')
+                statusText = statusUtilities.read_status_file(statusFile)
+                statusData = statusText.splitlines(True)
+            except ValueError:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
                             'currentStatus': 'Invalid status file.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-            statusData = open(statusFile, 'r').readlines()
+            if not statusText and not os.path.lexists(statusFile):
+                # Same reply as before for a status file that is not there yet.
+                raise FileNotFoundError(2, 'No such file or directory', statusFile)
             try:
                 lastLine = statusData[-1]
                 if lastLine.find('[200]') > -1:

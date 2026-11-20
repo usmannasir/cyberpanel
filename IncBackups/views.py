@@ -357,9 +357,14 @@ def get_backup_status(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        if ACLManager.CheckStatusFilleLoc(status):
-            pass
-        else:
+        # The path comes from the browser. It is read only when it is one of
+        # the panel's own status files and a plain file, never a link.
+        from plogical import statusUtilities
+        try:
+            if not ACLManager.CheckStatusFilleLoc(status):
+                raise ValueError('Invalid status file.')
+            result = statusUtilities.read_status_file(status)
+        except ValueError:
             data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
                         'currentStatus': 'Invalid status file.'}
             json_data = json.dumps(data_ret)
@@ -367,9 +372,7 @@ def get_backup_status(request):
 
         ## file name read ends
 
-        if os.path.exists(status):
-            command = "cat " + status
-            result = pu.outputExecutioner(command, 'cyberpanel')
+        if result:
 
             if result.find("Completed") > -1:
 
