@@ -36,6 +36,8 @@ for every server, especially servers with more than one panel user.
 - Backup V2 restores only the selected website's own files, mail and databases,
   sets up storage without placing credentials on a command line, and keeps only
   checked values in a schedule.
+- Restoring a database from a Backup V2 snapshot works from the panel again;
+  the dump is read as the website's own account and passed straight to MySQL.
 - Restoring a WordPress or one-click backup downloads the archive over SFTP
   instead of installing a key for the storage host on this server. Servers that
   restored such a backup with an earlier build should review
