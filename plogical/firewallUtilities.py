@@ -238,7 +238,12 @@ class FirewallUtilities:
                 writeToFile.close()
 
             if os.path.split(tempPath):
-                os.remove(tempPath)
+                try:
+                    os.remove(tempPath)
+                except OSError:
+                    # Run as a website's own user, which cannot remove the
+                    # panel's temporary file; the panel removes it itself.
+                    pass
 
             print("1,None")
 

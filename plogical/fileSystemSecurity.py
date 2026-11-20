@@ -74,6 +74,18 @@ def set_directory_owner(allowed_root, directory, user, group, mode=None):
         os.close(descriptor)
 
 
+def set_file_owner(allowed_root, path, user, group):
+    """Give one plain file under allowed_root an owner and a group.
+
+    The file is reached without following links and must have a single name, so
+    a link placed where the file is expected is refused instead of changed.
+    """
+    uid = pwd.getpwnam(user).pw_uid
+    gid = grp.getgrnam(group).gr_gid
+    with _open_regular_file_under(allowed_root, path, single_link=True) as handle:
+        os.fchown(handle.fileno(), uid, gid)
+
+
 @contextlib.contextmanager
 def _open_regular_file_under(root, path, single_link=False):
     parts = _path_parts_under(root, path)
