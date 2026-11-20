@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import json
+from plogical.requestOrigin import confirmed_parameter
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 
@@ -63,7 +64,7 @@ def WPCreate(request):
 def ListWPSites(request):
     try:
         userID = request.session['userID']
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.ListWPSites(request, userID, DeleteID)
     except KeyError:
@@ -75,7 +76,7 @@ def WPHome(request):
         userID = request.session['userID']
 
         WPid = request.GET.get('ID')
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.WPHome(request, userID, WPid, DeleteID)
     except KeyError:
@@ -97,7 +98,7 @@ def RemoteBackupConfig(request):
     try:
         userID = request.session['userID']
 
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.RemoteBackupConfig(request, userID, DeleteID)
     except KeyError:
@@ -109,7 +110,7 @@ def BackupfileConfig(request):
         userID = request.session['userID']
 
         ID = request.GET.get('ID')
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.BackupfileConfig(request, userID, ID, DeleteID)
     except KeyError:
@@ -121,7 +122,7 @@ def AddRemoteBackupsite(request):
         userID = request.session['userID']
 
         ID = request.GET.get('ID')
-        DeleteSiteID = request.GET.get('DeleteID')
+        DeleteSiteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.AddRemoteBackupsite(request, userID, ID, DeleteSiteID)
     except KeyError:
@@ -141,7 +142,7 @@ def RestoreBackups(request):
     try:
         userID = request.session['userID']
 
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.RestoreBackups(request, userID, DeleteID)
     except KeyError:
@@ -162,7 +163,7 @@ def ConfigurePlugins(request):
     try:
         userID = request.session['userID']
         userobj = Administrator.objects.get(pk=userID)
-        DeleteFileID = request.GET.get('delete', None)
+        DeleteFileID = confirmed_parameter(request, 'delete')
         if DeleteFileID != None:
             try:
                 jobobj = wpplugins.objects.get(pk=DeleteFileID, owner=userobj)
@@ -1980,7 +1981,7 @@ def CreateDockerPackage(request):
 def CreateDockerPackage(request):
     try:
         userID = request.session['userID']
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.CreateDockerPackage(request, userID, None, DeleteID)
     except KeyError:
@@ -1990,7 +1991,7 @@ def CreateDockerPackage(request):
 def AssignPackage(request):
     try:
         userID = request.session['userID']
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.AssignPackage(request, userID, None, DeleteID)
     except KeyError:
@@ -2059,7 +2060,7 @@ def submitDockerSiteCreation(request):
 def ListDockerSites(request):
     try:
         userID = request.session['userID']
-        DeleteID = request.GET.get('DeleteID')
+        DeleteID = confirmed_parameter(request, 'DeleteID')
         wm = WebsiteManager()
         return wm.ListDockerSites(request, userID, None, DeleteID)
     except KeyError:
