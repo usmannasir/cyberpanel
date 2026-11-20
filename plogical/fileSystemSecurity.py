@@ -1,7 +1,9 @@
 import contextlib
 import fcntl
+import grp
 import os
 import posixpath
+import pwd
 import stat
 import tarfile
 import zipfile
@@ -50,6 +52,26 @@ def _open_directory_under(root, path):
     except BaseException:
         os.close(descriptor)
         raise
+
+
+def set_directory_owner(allowed_root, directory, user, group, mode=None):
+    """Give one directory under allowed_root an owner, a group and optionally a mode.
+
+    The directory is reached one component at a time without following links and
+    is changed through its own descriptor, so a directory that was replaced by a
+    link, or by anything that is not a directory, is refused instead of changed.
+    """
+    uid = pwd.getpwnam(user).pw_uid
+    gid = grp.getgrnam(group).gr_gid
+    if mode is not None and (isinstance(mode, bool) or not isinstance(mode, int) or mode & ~0o777):
+        raise ValueError("Invalid directory mode")
+    descriptor = _open_directory_under(allowed_root, directory)
+    try:
+        os.fchown(descriptor, uid, gid)
+        if mode is not None:
+            os.fchmod(descriptor, mode)
+    finally:
+        os.close(descriptor)
 
 
 @contextlib.contextmanager

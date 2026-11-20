@@ -1109,16 +1109,49 @@ class FileManager:
             return self.ajaxPre(0, str(msg))
 
     def fixPermissions(self, domainName):
+        # Everything repaired here sits inside the website's own home, which its
+        # user can rename or replace with a link at any moment. So privileged
+        # commands only ever take ownership without following links, modes are set
+        # by the site user itself, and the top directories are changed through
+        # their own descriptors.
 
-        def repair(command):
+        website = Websites.objects.get(domain=domainName)
+        externalApp = website.externalApp
+
+        def repair(command, user=None):
             success, output = ProcessUtilities.outputExecutioner(
-                command, shell=False, retRequired=True)
+                command, user=user, shell=False, retRequired=True)
             if success != 1:
                 logging.writeToFile('Permission repair command failed: %s' % output)
                 raise RuntimeError('Permission repair failed. Check the panel log before retrying.')
 
-        website = Websites.objects.get(domain=domainName)
-        externalApp = website.externalApp
+        def setDirectoryOwner(allowedRoot, directory, group, mode=None):
+            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/secureDirectoryOwner.py' \
+                      ' --allowed-root %s --directory %s --user %s --group %s' % (
+                          self.returnPathEnclosed(allowedRoot), self.returnPathEnclosed(directory),
+                          self.returnPathEnclosed(externalApp), self.returnPathEnclosed(group))
+            if mode is not None:
+                command = '%s --mode %s' % (command, mode)
+            repair(command)
+
+        def repairTree(path):
+            argument = self.returnPathEnclosed(path)
+
+            # Ownership first, with privilege and without following links. After
+            # this the whole tree belongs to the site user. Recurse the directory
+            # itself instead of a "path/*" shell glob: commands that run as root go
+            # through subprocess with shell=False, so a glob was handed to chown
+            # literally and left restored files owned by root (#1735).
+            repair('chown -R -P %s:%s %s' % (externalApp, externalApp, argument))
+
+            # Modes are set by the site user: a path it swapped for a link can then
+            # reach nothing that user could not change already.
+            repair('chmod 750 %s' % argument, externalApp)
+            repair("find %s -mindepth 1 -type d -exec chmod 0755 {} +" % argument, externalApp)
+            repair("find %s -type f -exec chmod 0644 {} +" % argument, externalApp)
+
+            # Keep the document root restricted: owner, web server group, 750.
+            setDirectoryOwner(homePath, path, groupName, '750')
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
             groupName = 'nobody'
@@ -1140,8 +1173,7 @@ class FileManager:
             return HttpResponse(final_json)
 
         # Set home directory ownership
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.returnPathEnclosed(homePath))
-        repair(command)
+        setDirectoryOwner('/home', homePath, externalApp)
 
         ### Sym link checks
 
@@ -1154,32 +1186,13 @@ class FileManager:
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
 
-        # Keep the document-root boundary restricted throughout repair.
-        repair("chmod 750 %s" % self.returnPathEnclosed(publicHtmlPath))
+        repairTree(publicHtmlPath)
 
-        # Set file permissions first (before ownership to avoid conflicts)
-        command = "find %s -mindepth 1 -type d -exec chmod 0755 {} +" % self.returnPathEnclosed(publicHtmlPath)
-        repair(command)
-
-        command = "find %s -type f -exec chmod 0644 {} +" % self.returnPathEnclosed(publicHtmlPath)
-        repair(command)
-
-        # Set ownership for all files inside public_html to user:user.
-        # Recurse the directory itself instead of a "path/*" shell glob: commands that
-        # run as root go through subprocess with shell=False (shlex.split), so the glob
-        # was handed to chown literally, matched nothing, and left restored files owned
-        # by root/the source UID — the cause of WordPress asking for FTP credentials
-        # after a restore (#1735). -R also covers dotfiles, so the separate hidden-file
-        # pass is no longer needed; the directory's own group is reset to nogroup below.
-        command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, self.returnPathEnclosed(publicHtmlPath))
-        repair(command)
-
-        # Process child domains first
+        # Child domains, including document roots outside public_html
         for childs in website.childdomains_set.all():
             childPath = childs.path
-            childPathArg = self.returnPathEnclosed(childPath)
 
-            command = 'ls -la %s' % childPathArg
+            command = 'ls -la %s' % self.returnPathEnclosed(childPath)
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('->') > -1:
@@ -1188,32 +1201,4 @@ class FileManager:
                      'error_message': "Symlink attack."})
                 return HttpResponse(final_json)
 
-            repair("chmod 750 %s" % childPathArg)
-
-            # Set file permissions first
-            command = "find %s -mindepth 1 -type d -exec chmod 0755 {} +" % childPathArg
-            repair(command)
-
-            command = "find %s -type f -exec chmod 0644 {} +" % childPathArg
-            repair(command)
-
-            # Set ownership for all files inside the child domain to user:user.
-            # Recurse the directory itself (no "path/*" glob) — see #1735 above: the glob
-            # is passed literally under shell=False and never matches. The child domain
-            # directory's own group is reset to nogroup below.
-            command = 'chown -R -P %s:%s %s' % (externalApp, externalApp, childPathArg)
-            repair(command)
-
-            # Keep child document roots restricted, including those outside public_html
-            command = 'chmod 750 %s' % childPathArg
-            repair(command)
-
-            command = 'chown %s:%s %s' % (externalApp, groupName, childPathArg)
-            repair(command)
-
-        # Set public_html directory itself to user:nogroup with 750 permissions (done at the end)
-        command = 'chown %s:%s %s' % (externalApp, groupName, self.returnPathEnclosed(publicHtmlPath))
-        repair(command)
-
-        command = 'chmod 750 %s' % self.returnPathEnclosed(publicHtmlPath)
-        repair(command)
+            repairTree(childPath)
