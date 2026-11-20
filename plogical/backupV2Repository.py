@@ -104,6 +104,48 @@ def own_mailbox(email, domain):
     return _MAILBOX_NAME.fullmatch(name) is not None and mail_domain.lower() == domain.lower()
 
 
+SCHEDULE_FREQUENCIES = ('30 Minutes', '1 Hour', '6 Hours', '12 Hours', '1 Day', '3 Days', '1 Week')
+_RETENTION = re.compile(r'[0-9]{1,4}')
+_FORGET_SELECTION = re.compile(r'--keep-daily [0-9]{1,4}|[0-9a-f]{8,64}')
+
+
+def retention_days(value):
+    """How many daily snapshots a schedule keeps: a whole number from 1 to 3650."""
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise ValueError('Invalid backup retention.')
+    if isinstance(value, str) and _RETENTION.fullmatch(value) is None:
+        raise ValueError('Invalid backup retention.')
+    days = int(value)
+    if not 1 <= days <= 3650:
+        raise ValueError('Invalid backup retention.')
+    return days
+
+
+def forget_selection(value):
+    """What a forget run removes: one snapshot, or all but a number of daily ones.
+
+    The text goes on a command line that the scheduled job runs as root.
+    """
+    if not isinstance(value, str) or _FORGET_SELECTION.fullmatch(value) is None:
+        raise ValueError('Invalid snapshot selection.')
+    return value
+
+
+def schedule_entry(repo, frequency, retention, website_data, website_databases, website_emails):
+    """One entry of a website's backup schedule, built only from checked values.
+
+    The scheduled job reads the entry back as root, so nothing is stored that
+    it could not put on a command line.
+    """
+    if repo != 'local':
+        backend_name(repo)
+    if not isinstance(frequency, str) or frequency not in SCHEDULE_FREQUENCIES:
+        raise ValueError('Invalid backup frequency.')
+    return {"repo": repo, "retention": str(retention_days(retention)), "frequency": frequency,
+            "websiteData": website_data is True, "websiteEmails": website_emails is True,
+            "websiteDatabases": website_databases is True, "lastRun": ""}
+
+
 def backend_name(value):
     """The name of a storage backend as it appears in rclone.conf, or raise ValueError."""
     if not isinstance(value, str) or not _BACKEND_NAME.fullmatch(value):
