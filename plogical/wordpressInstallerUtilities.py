@@ -4,6 +4,7 @@ import shlex
 
 
 WORDPRESS_VERSION = re.compile(r'^\d+\.\d+(?:\.\d+)?$')
+WORDPRESS_ITEM_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,199}')
 PHP_SELECTION = re.compile(r'^PHP\s+(\d+)\.(\d+)$')
 
 
@@ -109,3 +110,18 @@ def build_wordpress_config_password_command(php_binary, destination, password):
                  'config', 'set', 'DB_PASSWORD', password, '--type=constant',
                  '--path=' + destination]
     return ' '.join(shlex.quote(str(argument)) for argument in arguments)
+
+
+def wordpress_item_names(*values):
+    """Whether every value is a plugin or theme name, or a list of such names.
+
+    The values come from the browser and are written onto a WP-CLI command
+    line, so only plain names ('akismet', 'twentytwentyfive', also the words
+    'all' and 'selected') are ever passed on.
+    """
+    for value in values:
+        names = value if isinstance(value, list) else [value]
+        for name in names:
+            if not isinstance(name, str) or WORDPRESS_ITEM_NAME.fullmatch(name) is None:
+                return False
+    return True
