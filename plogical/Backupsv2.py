@@ -17,7 +17,11 @@ import plogical.CyberCPLogFileWriter as logging
 import plogical.mysqlUtilities as mysqlUtilities
 from plogical.backupV2Repository import (
     database_name_from_snapshot_path,
+    own_mailbox,
+    restore_command,
+    restore_target,
     rustic_repository,
+    snapshot_id,
     website_exclude_arguments,
 )
 from plogical.gdriveRefresh import custom_client, legacy_access_token, update_legacy_remote_as_user
@@ -758,11 +762,15 @@ team_drive =
                               CPBackupsV2.RUNNING)
             ConfigPath = f'/home/backup/{self.website.domain}/config.json'
             RestoreConfigPath = f'/home/{self.website.domain}/'
+            snapshot = snapshot_id(self.data["snapshotid"])
 
-            command = f'rustic -r {self.repo} restore {self.data["snapshotid"]}:{ConfigPath} {RestoreConfigPath} --password ""  2>/dev/null'
+            command = f'rustic -r {self.repo} restore {snapshot}:{ConfigPath} {RestoreConfigPath} --password ""  2>/dev/null'
             result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
 
-            ConfigContent = json.loads(ProcessUtilities.outputExecutioner(f'cat {RestoreConfigPath}/config.json').rstrip('\n'))
+            # The file was just restored into the site's own home, a directory its
+            # user controls: read it as that user, never with privilege.
+            ConfigContent = json.loads(ProcessUtilities.outputExecutioner(
+                f'cat /home/{self.website.domain}/config.json', self.website.externalApp).rstrip('\n'))
 
             ### ACL Creation code
 
@@ -815,6 +823,10 @@ team_drive =
                 for emailAccount in ConfigContent['EmailAddresses']:
 
                     email = emailAccount['email']
+                    # The configuration comes out of the customer's own backup:
+                    # it may only name mailboxes of this website's domain.
+                    if not own_mailbox(email, self.website.domain):
+                        continue
                     username = email.split("@")[0]
                     password = emailAccount['password']
 
@@ -901,6 +913,15 @@ team_drive =
         from plogical.mysqlUtilities import mysqlUtilities
         self.website = Websites.objects.get(domain=self.data['domain'])
 
+        # The snapshot and the path come from the browser. Nothing runs unless
+        # they name a snapshot and this website's own files, mail or database.
+        try:
+            snapshot = snapshot_id(self.data['snapshotid'])
+            restoreKind, restoreValue = restore_target(self.data['path'], self.website.domain)
+        except (ValueError, KeyError) as error:
+            self.UpdateStatus(str(error), CPBackupsV2.FAILED)
+            return 0
+
         self.UpdateStatus('Started restoring,20', CPBackupsV2.RUNNING)
 
         ## Base path is basically the path set by user where all the backups will be housed
@@ -957,12 +978,19 @@ team_drive =
                                       CPBackupsV2.FAILED)
                     return 0
 
-                if self.data["path"].find('.sql') > -1:
+                if restoreKind == 'database':
+                    # The dump is imported with the panel's own database account,
+                    # so it goes only into a database registered to this website.
+                    from databases.models import Databases
+                    if not Databases.objects.filter(dbName=restoreValue, website=self.website).exists():
+                        self.UpdateStatus('This database does not belong to the selected website.',
+                                          CPBackupsV2.FAILED)
+                        return 0
                     restoreStatus = mysqlUtilities.restoreDatabaseBackup(
-                        database_name_from_snapshot_path(self.data["path"]),
+                        restoreValue,
                         None, None,
                         None, None, 1, self.repo,
-                        self.website.externalApp, self.data["snapshotid"])
+                        self.website.externalApp, snapshot)
                     if restoreStatus == 0:
                         self.UpdateStatus(
                             'Failed to restore the database.',
@@ -971,14 +999,14 @@ team_drive =
 
                 else:
 
-                    if self.data["path"].find('/home/vmail') > -1:
+                    if restoreKind == 'mail':
                         externalApp = None
                         InitialCommand = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && '
                     else:
                         externalApp = self.website.externalApp
                         InitialCommand = ''
 
-                    command = f'{InitialCommand}rustic -r {self.repo} restore {self.data["snapshotid"]}:{self.data["path"]} {self.data["path"]} --password ""  2>/dev/null'
+                    command = InitialCommand + restore_command(self.repo, snapshot, restoreValue)
                     restoreStatus, result = ProcessUtilities.outputExecutioner(
                         command, externalApp, True, None, True)
 
