@@ -108,6 +108,45 @@ def authorized_key_records(lines):
     return records
 
 
+def with_authorized_key(content, key):
+    """What must be appended so that an authorized_keys file holds this key.
+
+    Returns '' when the file already holds it and None when the value is not
+    one public key on a single line.
+    """
+    if not isinstance(key, str) or not isinstance(content, str):
+        return None
+    key = key.strip()
+    if not key or '\n' in key or '\r' in key:
+        return None
+    parsed = parse_authorized_key(key)
+    if parsed is None:
+        return None
+    for line in content.splitlines():
+        existing = parse_authorized_key(line)
+        if existing is not None and existing['keyId'] == parsed['keyId']:
+            return ''
+    separator = '' if content == '' or content.endswith('\n') else '\n'
+    header = '#Created by CyberPanel\n' if content.strip() == '' else ''
+    return '%s%s#Added by CyberPanel\n%s\n' % (separator, header, key)
+
+
+def without_authorized_key(content, key_id):
+    """The content of an authorized_keys file without one key, or None if it does not hold it."""
+    if not isinstance(key_id, str) or not _KEY_ID_RE.fullmatch(key_id) or not isinstance(content, str):
+        return None
+    lines = content.splitlines(True)
+    retained = []
+    for line in lines:
+        parsed = parse_authorized_key(line)
+        if parsed is not None and parsed['keyId'] == key_id:
+            continue
+        retained.append(line)
+    if len(retained) == len(lines):
+        return None
+    return ''.join(retained)
+
+
 def delete_authorized_key(path, key_id):
     """Atomically remove only the key identified by its full decoded blob."""
     if not isinstance(key_id, str) or not _KEY_ID_RE.fullmatch(key_id):
