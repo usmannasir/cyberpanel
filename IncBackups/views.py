@@ -974,8 +974,9 @@ def selectwebsiteRetorev2(request):
         #/home/cyberpanel.net/.config/rclone/rclone.conf
         path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
 
+        # The file lies in the site's own home: it is read as that user.
         command = 'cat %s'%(path)
-        result = pu.outputExecutioner(command)
+        result = pu.outputExecutioner(command, obj.externalApp)
         matches = repository_names(result)
         final_json = json.dumps({'status': 1, 'fetchStatus': 1,
                                  'error_message': "None", "data": matches})
@@ -1067,8 +1068,9 @@ def selectwebsiteCreatev2(request):
         #/home/cyberpanel.net/.config/rclone/rclone.conf
         path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
 
+        # The file lies in the site's own home: it is read as that user.
         command = 'cat %s'%(path)
-        CurrentContent = pu.outputExecutioner(command)
+        CurrentContent = pu.outputExecutioner(command, obj.externalApp)
 
         status, currentSchedules = CPBackupsV2.FetchCurrentSchedules(str(Selectedwebsite))
 

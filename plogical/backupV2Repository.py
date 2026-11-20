@@ -102,3 +102,33 @@ def own_mailbox(email, domain):
         return False
     name, _, mail_domain = email.partition('@')
     return _MAILBOX_NAME.fullmatch(name) is not None and mail_domain.lower() == domain.lower()
+
+
+def backend_name(value):
+    """The name of a storage backend as it appears in rclone.conf, or raise ValueError."""
+    if not isinstance(value, str) or not _BACKEND_NAME.fullmatch(value):
+        raise ValueError('Invalid backup repository name.')
+    return value
+
+
+def rclone_section(name, settings):
+    """The text of one rclone.conf section.
+
+    Names and values come from the browser. Each value stays on its own line,
+    so it can never start another section or add another setting.
+    """
+    lines = ['', '[%s]' % backend_name(name)]
+    for key, value in settings:
+        if isinstance(value, bool) or not isinstance(value, (str, int)):
+            raise ValueError('Invalid backup repository setting.')
+        value = str(value)
+        if any(ord(char) < 32 or ord(char) == 127 for char in value):
+            raise ValueError('Invalid backup repository setting.')
+        lines.append('%s = %s' % (key, value))
+    return '\n'.join(lines) + '\n'
+
+
+def remove_section_command(name, config_path):
+    """The sed command that removes one backend's section from an rclone.conf."""
+    pattern = backend_name(name).replace('.', '\\.')
+    return "sed -i '/\\[%s\\]/,/^$/d' %s" % (pattern, shlex.quote(config_path))
