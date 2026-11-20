@@ -4,6 +4,51 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.9 (build 9) — 2026-11-20
+
+Security and reliability release. It contains every fix published on the
+v3.0.8 line since 18 October and the hardening below. Upgrading is recommended
+for every server, especially servers with more than one panel user.
+
+### Panel requests and progress pages
+- Progress polling for website creation, application installs, backups,
+  restores, DNS and FTP resets reads only the panel's own progress files, and
+  restore progress now requires a signed-in user with backup permission.
+- List pages delete an item only when the request comes from the panel's own
+  page, so a link on another site can no longer trigger a deletion.
+- Backup progress is reported only to the website's owner, and cancelling a
+  remote transfer accepts a transfer number only.
+- A command run for a website's account is refused if a stored value would make
+  it run a second command.
+
+### Websites, files and keys
+- Permission repair, per-site SSH keys, git settings and File Manager saves act
+  as the website's own user and do not follow links placed in the home directory.
+- File Manager uploads, edits, rewrite rules and new cron entries pass through
+  private files with unguessable names instead of four-digit names in shared
+  directories.
+- Website and child-domain creation options, cron line numbers, WordPress plugin
+  and theme names are checked before they reach a command.
+- A DKIM key is shown or created only for the owner of every site under its
+  domain.
+
+### Backups and WordPress tools
+- Backup V2 restores only the selected website's own files, mail and databases,
+  sets up storage without placing credentials on a command line, and keeps only
+  checked values in a schedule.
+- Restoring a WordPress or one-click backup downloads the archive over SFTP
+  instead of installing a key for the storage host on this server. Servers that
+  restored such a backup with an earlier build should review
+  `/root/.ssh/authorized_keys` and remove keys they do not recognise.
+- Remote WordPress backup destinations, schedules and sites belong to the user
+  who created them.
+
+### Installation
+- Fresh Ubuntu 22.04 and 24.04 installs since 15 November left the panel's
+  interpreter configuration unreadable to website users, so a website's cron
+  page showed a start-up error. Installation and upgrade now set the mode that
+  website users need.
+
 ## v3.0.8 (build 8) — 2026-10-18
 
 Maintenance release collecting the fixes developed on the v3.0.7 line.
