@@ -142,6 +142,10 @@ if [[ ! -f /usr/local/CyberCP/bin/lswsgi ]]; then
     tar xf wsgi-lsapi-2.1.tgz
     cd wsgi-lsapi-2.1
     
+    # Let panel background jobs run between requests; build as before if the source differs.
+    /usr/local/CyberCP/bin/python -I /usr/local/CyberCP/install/lswsgi_idle_lock.py main.c \
+        || print_status "lswsgi is built without the idle lock change"
+    
     /usr/local/CyberCP/bin/python ./configure.py
     make
     

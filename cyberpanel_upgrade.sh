@@ -1051,6 +1051,11 @@ Build_Panel_LSWSGI() {
     Run_Upgrade_Command wget -q -O wsgi-lsapi-2.1.tgz https://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz || exit 1
     Run_Upgrade_Command tar xf wsgi-lsapi-2.1.tgz || exit 1
     cd wsgi-lsapi-2.1 || exit 1
+    # Let panel background jobs run between requests (install/lswsgi_idle_lock.py).
+    # A source that is not as expected is built as before.
+    if ! env -u PYTHONHOME -u PYTHONPATH "$runtime_python" -I /usr/local/CyberCP/install/lswsgi_idle_lock.py main.c; then
+      echo 'WARNING: lswsgi is built without the idle lock change.' | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
     Run_Upgrade_Command env -u PYTHONHOME -u PYTHONPATH "$runtime_python" ./configure.py || exit 1
     Run_Upgrade_Command make || exit 1
     [[ -s lswsgi && -x lswsgi ]] || exit 1

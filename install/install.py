@@ -2,6 +2,11 @@ import sys
 import subprocess
 import shutil
 import installLog as logging
+try:
+    # Imported while the installer's own directory is the working directory.
+    import lswsgi_idle_lock
+except ImportError:
+    lswsgi_idle_lock = None
 import argparse
 import os
 import re
@@ -2026,6 +2031,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir("wsgi-lsapi-2.1")
+
+            # Without this the worker keeps Python's interpreter lock while it
+            # waits for a request, and panel background jobs cannot run then.
+            try:
+                if lswsgi_idle_lock is None or not lswsgi_idle_lock.apply('main.c'):
+                    logging.InstallLog.writeToFile(
+                        '[WARNING] lswsgi is built without the idle lock change.')
+            except BaseException as msg:
+                logging.InstallLog.writeToFile('[WARNING] lswsgi idle lock change not applied: ' + str(msg))
 
             command = "/usr/local/CyberPanel/bin/python ./configure.py"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
