@@ -241,6 +241,14 @@ def is_safe_remote_host(value):
     return REMOTE_HOST_RE.fullmatch(value) is not None
 
 
+FILE_NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,254}")
+
+
+def is_safe_file_name(value):
+    """A single file or folder name: no path separator, no parent reference."""
+    return isinstance(value, str) and FILE_NAME_RE.fullmatch(value) is not None and '..' not in value
+
+
 def is_safe_system_user(value):
     return isinstance(value, str) and SYSTEM_USER_RE.fullmatch(value) is not None
 
