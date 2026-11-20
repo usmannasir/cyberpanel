@@ -4133,7 +4133,13 @@ Require valid-user
             admin = Administrator.objects.get(pk=userID)
 
             self.domain = data['domain']
+            # A cron entry is chosen by its line number; the value also
+            # reaches a command line, so it is only ever a whole number.
             line = data['line']
+            if isinstance(line, str) and line.isdigit() and len(line) < 10:
+                line = int(line)
+            if isinstance(line, bool) or not isinstance(line, int) or line < 1:
+                raise ValueError('Invalid cron line.')
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
@@ -4197,7 +4203,13 @@ Require valid-user
             admin = Administrator.objects.get(pk=userID)
 
             self.domain = data['domain']
+            # A cron entry is chosen by its line number; the value also
+            # reaches a command line, so it is only ever a whole number.
             line = data['line']
+            if isinstance(line, str) and line.isdigit() and len(line) < 10:
+                line = int(line)
+            if isinstance(line, bool) or not isinstance(line, int) or line < 1:
+                raise ValueError('Invalid cron line.')
 
             minute = data['minute']
             hour = data['hour']
@@ -4246,7 +4258,13 @@ Require valid-user
             admin = Administrator.objects.get(pk=userID)
 
             self.domain = data['domain']
+            # A cron entry is chosen by its line number; the value also
+            # reaches a command line, so it is only ever a whole number.
             line = data['line']
+            if isinstance(line, str) and line.isdigit() and len(line) < 10:
+                line = int(line)
+            if isinstance(line, bool) or not isinstance(line, int) or line < 1:
+                raise ValueError('Invalid cron line.')
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass

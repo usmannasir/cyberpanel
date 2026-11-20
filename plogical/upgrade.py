@@ -4565,6 +4565,13 @@ milter_default_action = accept
             command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            # Website users run the panel's helper scripts with this
+            # interpreter (their cron jobs, for example), so its configuration
+            # must be readable by everyone. It holds no secret.
+            if os.path.exists('/usr/local/CyberCP/pyvenv.cfg'):
+                command = "chmod 644 /usr/local/CyberCP/pyvenv.cfg"
+                Upgrade.executioner(command, 'chmod runtime configuration', 0)
+
             for path in ('/usr/local/CyberCP/.env', '/usr/local/CyberCP/secret_key'):
                 if os.path.exists(path):
                     command = "chown root:cyberpanel %s" % path

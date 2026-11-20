@@ -2486,10 +2486,12 @@ if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "26" ]] ; then
 elif [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
   # Ubuntu 24.04 ships with Python 3.12, but using 3.10 for compatibility with CyberPanel
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
-  # lswsgi reads this configuration as the cyberpanel user. Python creates it
-  # as root, so set its group and mode explicitly under a restrictive umask.
+  # lswsgi reads this configuration as the cyberpanel user, and website users
+  # run the panel's helper scripts (their cron jobs, for example) with the same
+  # interpreter. Python creates the file as root, so set its group and mode
+  # explicitly under a restrictive umask. It holds no secret.
   if ! chown root:cyberpanel /usr/local/CyberCP/pyvenv.cfg ||
-     ! chmod 0640 /usr/local/CyberCP/pyvenv.cfg; then
+     ! chmod 0644 /usr/local/CyberCP/pyvenv.cfg; then
     echo "ERROR: Cannot make the CyberCP virtual environment configuration readable by lswsgi." >&2
     exit 1
   fi
