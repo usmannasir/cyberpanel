@@ -6107,7 +6107,11 @@ class ApplicationInstaller(multi.Thread):
 
                         #### replace db user
 
-                        command = f'''sed -i "s/define( 'DB_USER', '.*' );/define( 'DB_USER', '{Finaldbuser}' );/" {WPpath}wp-config.php'''
+                        # These three values were read from the site's own
+                        # wp-config.php, a file its owner edits freely: each is
+                        # written back as one quoted argument, by the site's user.
+                        from plogical.wordpressInstallerUtilities import wordpress_config_set_command
+                        command = wordpress_config_set_command(FinalPHPPath, WPpath, 'DB_USER', Finaldbuser)
                         result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                         if result == 0:
@@ -6116,7 +6120,7 @@ class ApplicationInstaller(multi.Thread):
 
                         ### replace db name
 
-                        command = f'''sed -i "s/define( 'DB_NAME', '.*' );/define( 'DB_NAME', '{Finaldbname}' );/" {WPpath}wp-config.php'''
+                        command = wordpress_config_set_command(FinalPHPPath, WPpath, 'DB_NAME', Finaldbname)
                         result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                         if result == 0:
@@ -6124,8 +6128,8 @@ class ApplicationInstaller(multi.Thread):
 
                         ### replace db password
 
-                        command = f'''sed -i "s/define( 'DB_PASSWORD', '.*' );/define( 'DB_PASSWORD', '{Finaldbpasswd}' );/" {WPpath}wp-config.php'''
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        command = wordpress_config_set_command(FinalPHPPath, WPpath, 'DB_PASSWORD', Finaldbpasswd)
+                        result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                         if result == 0:
                             raise BaseException(stdout)
@@ -6569,26 +6573,28 @@ class ApplicationInstaller(multi.Thread):
                     if result == 0:
                         raise BaseException(stdout)
 
+                    # These three values were read from the site's own
+                    # wp-config.php, a file its owner edits freely: each is
+                    # written back as one quoted argument, by the site's user.
+                    from plogical.wordpressInstallerUtilities import wordpress_config_set_command
+
                     # set DBName
-                    command = "sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
-                        VHuser, FinalPHPPath, Finaldbname, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    command = wordpress_config_set_command(FinalPHPPath, newWPpath, 'DB_NAME', Finaldbname)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
                     ##set DBuser
-                    command = "sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
-                        VHuser, FinalPHPPath, Finaldbuser, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    command = wordpress_config_set_command(FinalPHPPath, newWPpath, 'DB_USER', Finaldbuser)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
                     # set DBpasswd
-                    command = "sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
-                        VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    command = wordpress_config_set_command(FinalPHPPath, newWPpath, 'DB_PASSWORD', Finaldbpasswd)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)

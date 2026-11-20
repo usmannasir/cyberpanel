@@ -125,3 +125,18 @@ def wordpress_item_names(*values):
             if not isinstance(name, str) or WORDPRESS_ITEM_NAME.fullmatch(name) is None:
                 return False
     return True
+
+
+def wordpress_config_set_command(php_binary, path, key, value):
+    """The WP-CLI command that sets one database constant in a site's wp-config.php.
+
+    Run it as the site's own user. The value is read from a file the customer
+    can edit, so it reaches the command only as one quoted argument.
+    """
+    if key not in ('DB_NAME', 'DB_USER', 'DB_PASSWORD'):
+        raise ValueError('Unsupported WordPress configuration constant.')
+    if not isinstance(value, str) or not isinstance(path, str) or not isinstance(php_binary, str):
+        raise ValueError('Invalid WordPress configuration value.')
+    return ('%s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp '
+            'config set %s %s --skip-plugins --skip-themes --path=%s') % (
+        shlex.quote(php_binary), key, shlex.quote(value), shlex.quote(path))
