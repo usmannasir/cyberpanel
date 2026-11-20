@@ -146,9 +146,19 @@ def submitBackupCreation(request):
 
 def backupStatus(request):
     try:
-        userID = 1
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        # Backup progress files belong to one website: only its owner reads them.
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            owned = ACLManager.checkOwnership(data.get('websiteToBeBacked'), admin, currentACL) == 1
+        except Exception:
+            owned = False
+        if not owned:
+            return ACLManager.loadErrorJson('backupStatus', 0)
         wm = BackupManager()
-        return wm.backupStatus(userID, json.loads(request.body))
+        return wm.backupStatus(userID, data)
     except KeyError:
         return redirect(loadLoginPage)
 
