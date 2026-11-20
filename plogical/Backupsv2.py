@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import shlex
 import sys
 import time
 
@@ -18,6 +19,8 @@ import plogical.mysqlUtilities as mysqlUtilities
 from plogical.backupV2Repository import (
     database_name_from_snapshot_path,
     own_mailbox,
+    rclone_section,
+    remove_section_command,
     restore_command,
     restore_target,
     rustic_repository,
@@ -172,24 +175,15 @@ class CPBackupsV2(multi.Thread):
 
 
 
-                command = f'rclone obscure {config["password"]}'
-                ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+                # The password comes from the browser: it is one quoted argument,
+                # and the tool runs as the site's own user.
+                command = 'rclone obscure %s' % shlex.quote(str(config["password"]))
+                ObsecurePassword = ProcessUtilities.outputExecutioner(
+                    command, self.website.externalApp).rstrip('\n')
 
-                content = f'''
-                
-[{config["Repo_Name"]}]
-type = sftp
-host = {config["host"]}
-user = {config["user"]}
-pass = {ObsecurePassword}
-port = {config["sshPort"]}
-'''
-
-                command = f"echo '{content}' >> {self.ConfigFilePath}"
-                ProcessUtilities.executioner(command, self.website.externalApp, True)
-
-                command = f"chmod 600 {self.ConfigFilePath}"
-                ProcessUtilities.executioner(command, self.website.externalApp)
+                self.AppendRcloneSection(rclone_section(config["Repo_Name"], [
+                    ('type', 'sftp'), ('host', config["host"]), ('user', config["user"]),
+                    ('pass', ObsecurePassword), ('port', config["sshPort"])]))
                 return 1, None
             elif type == CPBackupsV2.GDrive:
                 token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s", "expiry":"2024-04-08T21:53:00.123456789Z"}""" % (
@@ -199,24 +193,33 @@ port = {config["sshPort"]}
                     config["client_id"] = ''
                     config["client_secret"] = ''
 
-                content = f'''
-[{config["accountname"]}]
-type = drive
-scope = drive
-client_id={config["client_id"]}
-client_secret={config["client_secret"]}
-token = {token}
-team_drive =
-'''
-                command = f"echo '{content}' >> {self.ConfigFilePath}"
-                ProcessUtilities.executioner(command, self.website.externalApp, True)
-
-                command = f"chmod 600 {self.ConfigFilePath}"
-                ProcessUtilities.executioner(command, self.website.externalApp)
+                self.AppendRcloneSection(rclone_section(config["accountname"], [
+                    ('type', 'drive'), ('scope', 'drive'), ('client_id', config["client_id"]),
+                    ('client_secret', config["client_secret"]), ('token', token), ('team_drive', '')]))
                 return 1, None
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [Configure.run]')
             return 0, str(msg)
+
+    def AppendRcloneSection(self, content):
+        # The section holds storage credentials. It is handed to the site's own
+        # user in a private file and appended by that user, never through a
+        # command line that contains it.
+        from plogical.acl import ACLManager
+        from plogical.fileSystemSecurity import write_shared_temp_file
+        ACLManager.CreateSecureDir()
+        tempPath = write_shared_temp_file(content, 0o600)
+        try:
+            command = 'chown %s:%s %s' % (self.website.externalApp, self.website.externalApp, tempPath)
+            ProcessUtilities.executioner(command)
+            command = 'dd if=%s of=%s oflag=append conv=notrunc status=none' % (
+                shlex.quote(tempPath), shlex.quote(self.ConfigFilePath))
+            ProcessUtilities.executioner(command, self.website.externalApp)
+        finally:
+            ProcessUtilities.executioner('rm -f %s' % tempPath)
+
+        command = 'chmod 600 %s' % shlex.quote(self.ConfigFilePath)
+        ProcessUtilities.executioner(command, self.website.externalApp)
 
     @staticmethod
     def FetchCurrentTimeStamp():
@@ -1185,7 +1188,9 @@ team_drive =
             finalConfigPath = f'/home/{website}/.config/rclone/rclone.conf'
 
             if os.path.exists(finalConfigPath):
-                command = f"sed -i '/\[{repo}\]/,/^$/d' {finalConfigPath}"
+                # The name comes from the browser: only a backend name can
+                # select the section that is removed.
+                command = remove_section_command(repo, finalConfigPath)
                 ProcessUtilities.outputExecutioner(command, eu, True)
 
 
