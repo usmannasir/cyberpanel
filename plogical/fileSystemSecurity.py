@@ -77,7 +77,7 @@ def set_directory_owner(allowed_root, directory, user, group, mode=None):
 
 
 def write_shared_temp_file(content, mode=0o644):
-    """Write text to a new file in the panel's shared temporary directory.
+    """Write text or bytes to a new file in the panel's shared temporary directory.
 
     The file is handed to a command that runs as another account, so that
     account must be able to read it; its name cannot be guessed and the
@@ -86,7 +86,7 @@ def write_shared_temp_file(content, mode=0o644):
     """
     path = os.path.join(SHARED_TEMP_DIRECTORY, secrets.token_hex(16))
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, mode)
-    with os.fdopen(descriptor, "w") as handle:
+    with os.fdopen(descriptor, "wb" if isinstance(content, bytes) else "w") as handle:
         handle.write(content)
     os.chmod(path, mode)
     return path

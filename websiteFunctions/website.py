@@ -3894,16 +3894,6 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('rewriteStatus', 0)
 
-            ## writing data temporary to file
-
-            mailUtilities.checkHome()
-            tempPath = "/tmp/" + str(randint(1000, 9999))
-            vhost = open(tempPath, "wb")
-            vhost.write(rewriteRules)
-            vhost.close()
-
-            ## writing data temporary to file
-
             try:
                 childDomain = ChildDomains.objects.get(domain=self.domain)
                 filePath = childDomain.path + '/.htaccess'
@@ -3913,13 +3903,21 @@ Require valid-user
                 website = Websites.objects.get(domain=self.domain)
                 externalApp = website.externalApp
 
-            ## save configuration data
+            ## The rules pass to the site's user through a file whose name
+            ## no other account can guess or create first.
 
-            command = 'cp %s %s' % (tempPath, filePath)
-            ProcessUtilities.executioner(command, externalApp)
+            from plogical.fileSystemSecurity import write_shared_temp_file
 
-            command = 'rm -f %s' % (tempPath)
-            ProcessUtilities.executioner(command, 'cyberpanel')
+            ACLManager.CreateSecureDir()
+            tempPath = write_shared_temp_file(rewriteRules)
+            try:
+                command = 'cp %s %s' % (shlex.quote(tempPath), shlex.quote(filePath))
+                ProcessUtilities.executioner(command, externalApp)
+            finally:
+                try:
+                    os.remove(tempPath)
+                except OSError:
+                    pass
 
             installUtilities.reStartLiteSpeedSocket()
             status = {"rewriteStatus": 1, 'error_message': 'None'}
@@ -5798,7 +5796,7 @@ StrictHostKeyChecking no
             extraArgs['masterDomain'] = data['masterDomain']
             extraArgs['admin'] = admin
 
-            tempStatusPath = "/tmp/" + str(randint(1000, 9999))
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             writeToFile = open(tempStatusPath, 'a')
             message = 'Cloning process has started..,5'
             writeToFile.write(message)

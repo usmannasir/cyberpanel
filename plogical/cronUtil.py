@@ -3,12 +3,7 @@ import sys
 sys.path.append('/usr/local/CyberCP')
 import argparse
 from plogical.processUtilities import ProcessUtilities
-from random import randint, seed
-import time
-try:
-    seed(time.perf_counter())
-except:
-    pass
+import tempfile
 
 class CronUtil:
 
@@ -96,24 +91,27 @@ class CronUtil:
 
             print(cronPath)
 
-            TempFile = '/tmp/' + str(randint(1000, 9999))
+            # A new file that only this account can open: a name another
+            # account could create first would let it change the entry.
+            descriptor, TempFile = tempfile.mkstemp(prefix='cyberpanel-cron-')
 
-            print(TempFile)
+            try:
+                print(TempFile)
 
-            if os.path.exists(cronPath):
-                FullCrons = open(cronPath, 'r').read()
-                finalCron = '%s%s\n' % (FullCrons, finalCron)
-                with open(TempFile, "w") as file:
-                    file.write(finalCron)
-                print(finalCron)
-            else:
-                with open(TempFile, "w") as file:
-                    file.write(finalCron + '\n')
+                if os.path.exists(cronPath):
+                    FullCrons = open(cronPath, 'r').read()
+                    finalCron = '%s%s\n' % (FullCrons, finalCron)
+                    with os.fdopen(descriptor, "w") as file:
+                        file.write(finalCron)
+                    print(finalCron)
+                else:
+                    with os.fdopen(descriptor, "w") as file:
+                        file.write(finalCron + '\n')
 
-            command = 'cp %s %s' % (TempFile, cronPath)
-            ProcessUtilities.normalExecutioner(command)
-
-            os.remove(TempFile)
+                command = 'cp %s %s' % (TempFile, cronPath)
+                ProcessUtilities.normalExecutioner(command)
+            finally:
+                os.remove(TempFile)
 
             print("1,None")
         except BaseException as msg:
