@@ -228,17 +228,17 @@ def get_terminal_jwt_secret(create_if_missing=False):
 def is_safe_sql_identifier(value):
     if not isinstance(value, str):
         return False
-    return SQL_IDENTIFIER_RE.match(value) is not None
+    return SQL_IDENTIFIER_RE.fullmatch(value) is not None
 
 
 def is_safe_numeric_id(value):
-    return NUMERIC_ID_RE.match(str(value)) is not None
+    return NUMERIC_ID_RE.fullmatch(str(value)) is not None
 
 
 def is_safe_remote_host(value):
     if not isinstance(value, str):
         return False
-    return REMOTE_HOST_RE.match(value) is not None
+    return REMOTE_HOST_RE.fullmatch(value) is not None
 
 
 def is_safe_system_user(value):
@@ -255,7 +255,7 @@ def is_safe_hostname(value):
 
 
 def is_safe_port(value):
-    if not PORT_RE.match(str(value)):
+    if not PORT_RE.fullmatch(str(value)):
         return False
     port = int(value)
     return 1 <= port <= 65535

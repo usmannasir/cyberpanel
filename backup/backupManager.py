@@ -1523,6 +1523,17 @@ class BackupManager:
             dir = data['dir']
             username = "admin"
 
+            # The transfer is named by its number only; nothing else may select
+            # the directory a root command reads, signals and removes.
+            from plogical.securityUtils import (get_remote_transfer_dir_path,
+                                                get_remote_transfer_pid_path, is_safe_numeric_id)
+            if isinstance(dir, bool) or not isinstance(dir, (str, int)) or not is_safe_numeric_id(dir):
+                return ACLManager.loadErrorJson('cancelStatus', 0)
+            path = get_remote_transfer_dir_path(dir)
+            pathpid = get_remote_transfer_pid_path(dir)
+            if not path or not pathpid:
+                return ACLManager.loadErrorJson('cancelStatus', 0)
+
             finalData = json.dumps({'dir': dir, "username": username, "password": password})
             r = requests.post("https://" + ipAddress + ":8090/api/cancelRemoteTransfer", data=finalData,
                               verify=False)
@@ -1535,16 +1546,14 @@ class BackupManager:
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Some error cancelling at remote server, see the log file for remote server.")
 
-            path = "/home/backup/transfer-" + str(dir)
-            pathpid = path + "/pid"
+            command = "sudo cat " + shlex.quote(pathpid)
+            pid = str(ProcessUtilities.outputExecutioner(command)).strip()
 
-            command = "sudo cat " + pathpid
-            pid = ProcessUtilities.outputExecutioner(command)
+            if is_safe_numeric_id(pid):
+                command = "sudo kill -KILL " + pid
+                ProcessUtilities.executioner(command)
 
-            command = "sudo kill -KILL " + pid
-            ProcessUtilities.executioner(command)
-
-            command = "sudo rm -rf " + path
+            command = "sudo rm -rf " + shlex.quote(path)
             ProcessUtilities.executioner(command)
 
             data = {'cancelStatus': 1, 'error_message': "None"}
