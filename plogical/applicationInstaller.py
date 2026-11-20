@@ -38,6 +38,7 @@ from plogical.wordpressInstallerUtilities import (
     php_binary_for_selection,
 )
 from random import randint
+import secrets
 import hashlib
 import shlex
 from plogical.cyberedge import download_verified_plugin
@@ -2317,7 +2318,7 @@ class ApplicationInstaller(multi.Thread):
         
         # Create secure folder
         ACLManager.CreateSecureDir()
-        tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
+        tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', secrets.token_hex(16))
         
         command = f'mkdir -p {tempPath}'
         ProcessUtilities.executioner(command)
@@ -2580,7 +2581,7 @@ class ApplicationInstaller(multi.Thread):
 
             ### Create secure folder
             ACLManager.CreateSecureDir()
-            self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
+            self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', secrets.token_hex(16))
 
             command = f'mkdir -p {self.tempPath}'
             ProcessUtilities.executioner(command)
@@ -2727,7 +2728,7 @@ class ApplicationInstaller(multi.Thread):
                 ### Create secure folder
 
                 ACLManager.CreateSecureDir()
-                RandomPath = str(randint(1000, 9999))
+                RandomPath = secrets.token_hex(16)
                 self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
                 command = f'mkdir -p {self.tempPath}'
@@ -2884,7 +2885,7 @@ class ApplicationInstaller(multi.Thread):
                 ### Create secure folder
 
                 ACLManager.CreateSecureDir()
-                RandomPath = str(randint(1000, 9999))
+                RandomPath = secrets.token_hex(16)
                 self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
                 command = f'mkdir -p {self.tempPath}'
@@ -3043,7 +3044,7 @@ class ApplicationInstaller(multi.Thread):
                 ### Create secure folder
 
                 ACLManager.CreateSecureDir()
-                RandomPath = str(randint(1000, 9999))
+                RandomPath = secrets.token_hex(16)
                 self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
                 command = f'mkdir -p {self.tempPath}'
@@ -5535,7 +5536,7 @@ class ApplicationInstaller(multi.Thread):
             ### Create secure folder
 
             ACLManager.CreateSecureDir()
-            RandomPath = str(randint(1000, 9999))
+            RandomPath = secrets.token_hex(16)
             self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
             command = f'mkdir -p {self.tempPath}'
@@ -5915,7 +5916,7 @@ class ApplicationInstaller(multi.Thread):
                     ### Create secure folder
 
                     ACLManager.CreateSecureDir()
-                    RandomPath = str(randint(1000, 9999))
+                    RandomPath = secrets.token_hex(16)
                     self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
                     command = f'mkdir -p {self.tempPath}'

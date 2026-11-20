@@ -1055,7 +1055,8 @@ class vhost:
 
             ACLManager.CreateSecureDir()
 
-            RanddomFileName = str(randint(1000, 9999))
+            import secrets
+            RanddomFileName = secrets.token_hex(16)
 
             FullPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RanddomFileName)
 

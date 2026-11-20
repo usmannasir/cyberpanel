@@ -141,6 +141,18 @@ class UploadTests(unittest.TestCase):
         self.assertEqual(2, source.count('os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644'))
 
 
+class SharedTempNameTests(unittest.TestCase):
+    def test_no_work_path_in_the_shared_temp_directory_has_a_guessable_name(self):
+        pattern = re.compile(r"/usr/local/CyberCP/tmp'?,? *(?:RanddomFileName|RandomPath|str\(randint)")
+        for relative in ('plogical/applicationInstaller.py', 'plogical/vhost.py', 'filemanager/filemanager.py'):
+            lines = [line for line in (ROOT / relative).read_text().splitlines()
+                     if not line.lstrip().startswith('#')]
+            source = '\n'.join(lines)
+            self.assertNotIn("'/usr/local/CyberCP/tmp', str(randint(", source, relative)
+            self.assertNotIn('RandomPath = str(randint(', source, relative)
+            self.assertNotIn('RanddomFileName = str(randint(', source, relative)
+
+
 class PrivilegedReadTests(unittest.TestCase):
     def setUp(self):
         holder = tempfile.TemporaryDirectory()
