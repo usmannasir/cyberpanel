@@ -2377,8 +2377,10 @@ Require valid-user
 
             apacheBackend = str(normalize_apache_backend(data.get('apacheBackend', 0)))
 
+            # The worker reads these options as 0 or 1: nothing else from the
+            # request may reach its command line.
             try:
-                mailDomain = str(data['mailDomain'])
+                mailDomain = "1" if data['mailDomain'] in (1, '1', True) else "0"
             except:
                 mailDomain = "1"
 
@@ -2391,7 +2393,7 @@ Require valid-user
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion " + shlex.quote(phpSelection) + \
                        " --virtualHostUser " + externalApp + " --ssl " + str(1) + " --dkimCheck " \
-                       + str(1) + " --openBasedir " + str(data['openBasedir']) + \
+                       + str(1) + " --openBasedir " + ("1" if data['openBasedir'] in (1, '1', True) else "0") + \
                        ' --websiteOwner ' + shlex.quote(websiteOwner) + ' --package ' + shlex.quote(packageName) + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
                            mailDomain)
 
@@ -2422,6 +2424,9 @@ Require valid-user
                 alias = data['alias']
             except:
                 alias = 0
+            # An alias request is the number 1; the value also reaches the
+            # worker's command line, so nothing else is passed on.
+            alias = 1 if alias in (1, '1', True) else 0
 
             masterDomain = data['masterDomain']
             domain = data['domainName']
@@ -2497,7 +2502,7 @@ Require valid-user
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                        " --phpVersion " + shlex.quote(phpSelection) + " --ssl " + str(1) + " --dkimCheck " + str(1) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + shlex.quote(path) + ' --websiteOwner ' \
+                       + " --openBasedir " + ("1" if data['openBasedir'] in (1, '1', True) else "0") + ' --path ' + shlex.quote(path) + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
             ProcessUtilities.popenExecutioner(execPath)
