@@ -138,7 +138,7 @@ class UploadTests(unittest.TestCase):
         source = (ROOT / 'filemanager/filemanager.py').read_text()
         self.assertNotIn('randint(', source)
         self.assertEqual(3, source.count('secrets.token_hex(16)'))
-        self.assertEqual(2, source.count('os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600'))
+        self.assertEqual(2, source.count('os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644'))
 
 
 class PrivilegedReadTests(unittest.TestCase):

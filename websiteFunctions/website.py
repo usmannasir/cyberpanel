@@ -4816,14 +4816,9 @@ IdentityFile /home/%s/.ssh/%s
 StrictHostKeyChecking no
 """ % (self.domain, website.externalApp)
 
-            import secrets
+            from plogical.fileSystemSecurity import write_shared_temp_file
             ACLManager.CreateSecureDir()
-            path = '/usr/local/CyberCP/tmp/' + secrets.token_hex(16)
-            writeToFile = os.fdopen(os.open(
-                path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644), 'w')
-            writeToFile.writelines(configContent)
-            writeToFile.close()
-            os.chmod(path, 0o644)
+            path = write_shared_temp_file(configContent)
 
             try:
                 command = 'cp %s %s' % (shlex.quote(path), shlex.quote('/home/%s/.ssh/config' % self.domain))
@@ -7386,24 +7381,29 @@ StrictHostKeyChecking no
             pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
             website = Websites.objects.get(domain=domain)
 
-            # A key file written by an older panel belongs to root. Hand it to
-            # the site user only if it really is that plain file: the path lies
-            # in the customer's home and could be a link to anything.
-            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/secureDirectoryOwner.py' \
-                      ' --allowed-root %s --file %s --user %s --group %s' % (
-                          shlex.quote('/home/%s' % domain), shlex.quote(pathToKeyFile),
-                          shlex.quote(website.externalApp), shlex.quote(website.externalApp))
-            ProcessUtilities.outputExecutioner(command)
+            from plogical.fileSystemSecurity import write_shared_temp_file
+            from plogical.sshKeyUtilities import without_authorized_key
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-            execPath = execPath + " deleteSSHKey --key %s --path %s" % (
-                shlex.quote(key),
-                shlex.quote(pathToKeyFile),
-            )
+            # The key file lies in the customer's home and may be a link to
+            # anything: it is read and rewritten only as the site's own user.
+            self.handOverSiteKeyFile(domain, website.externalApp)
+            existing = self.readSiteKeyFile(pathToKeyFile, website.externalApp)
+            remaining = without_authorized_key(existing, key)
 
-            output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+            if remaining is not None:
+                ACLManager.CreateSecureDir()
+                tempPath = write_shared_temp_file(remaining)
+                try:
+                    command = 'cp %s %s' % (shlex.quote(tempPath), shlex.quote(pathToKeyFile))
+                    ProcessUtilities.executioner(command, website.externalApp)
+                finally:
+                    try:
+                        os.remove(tempPath)
+                    except OSError:
+                        pass
+                existing = self.readSiteKeyFile(pathToKeyFile, website.externalApp)
 
-            if output.find("1,None") > -1:
+            if remaining is not None and without_authorized_key(existing, key) is None:
                 final_dic = {'status': 1, 'delete_status': 1}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
@@ -7411,7 +7411,7 @@ StrictHostKeyChecking no
                 final_dic = {
                     'status': 0,
                     'delete_status': 0,
-                    'error_message': output,
+                    'error_message': 'SSH key not found.' if remaining is None else 'The key file could not be changed.',
                 }
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
@@ -7420,6 +7420,22 @@ StrictHostKeyChecking no
             final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def handOverSiteKeyFile(self, domain, externalApp):
+        # A key file written by an older panel belongs to root. It is handed to
+        # the site user only if it really is that plain file, reached without
+        # following links.
+        command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/secureDirectoryOwner.py' \
+                  ' --allowed-root %s --file %s --user %s --group %s' % (
+                      shlex.quote('/home/%s' % domain), shlex.quote('/home/%s/.ssh/authorized_keys' % domain),
+                      shlex.quote(externalApp), shlex.quote(externalApp))
+        ProcessUtilities.outputExecutioner(command)
+
+    def readSiteKeyFile(self, pathToKeyFile, externalApp):
+        content = ProcessUtilities.outputExecutioner('cat %s' % shlex.quote(pathToKeyFile), externalApp)
+        if not isinstance(content, str) or content.find('No such file or directory') > -1:
+            return ''
+        return content
 
     def addSSHKey(self, userID=None, data=None):
         try:
@@ -7437,40 +7453,41 @@ StrictHostKeyChecking no
             key = data['key']
             pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
 
+            from plogical.fileSystemSecurity import write_shared_temp_file
+            from plogical.sshKeyUtilities import with_authorized_key
+
             # The .ssh directory and the key file lie in the customer's home and
             # may be links to anything, so they are only ever touched as the
             # site's own user.
             command = 'mkdir -p %s' % shlex.quote('/home/%s/.ssh' % domain)
             ProcessUtilities.executioner(command, website.externalApp)
 
-            # The key is handed over in a file that user can read but not name
-            # in advance; the panel removes it afterwards.
-            import secrets
-            ACLManager.CreateSecureDir()
-            tempPath = '/usr/local/CyberCP/tmp/' + secrets.token_hex(16)
-            writeToFile = os.fdopen(os.open(
-                tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644), "w")
-            writeToFile.write(key)
-            writeToFile.close()
-            os.chmod(tempPath, 0o644)
+            self.handOverSiteKeyFile(domain, website.externalApp)
+            existing = self.readSiteKeyFile(pathToKeyFile, website.externalApp)
+            addition = with_authorized_key(existing, key)
 
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-                execPath = execPath + " addSSHKey --tempPath %s --path %s" % (
-                    shlex.quote(tempPath), shlex.quote(pathToKeyFile))
-
-                output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-            finally:
+            if addition:
+                # The new lines are handed over in a file that user can read but
+                # not name in advance, and appended by that user.
+                ACLManager.CreateSecureDir()
+                tempPath = write_shared_temp_file(addition)
                 try:
-                    os.remove(tempPath)
-                except OSError:
-                    pass
+                    command = 'dd if=%s of=%s oflag=append conv=notrunc status=none' % (
+                        shlex.quote(tempPath), shlex.quote(pathToKeyFile))
+                    ProcessUtilities.executioner(command, website.externalApp)
+                finally:
+                    try:
+                        os.remove(tempPath)
+                    except OSError:
+                        pass
+                existing = self.readSiteKeyFile(pathToKeyFile, website.externalApp)
 
-            if output.find("1,None") > -1:
+            if addition is not None and with_authorized_key(existing, key) == '':
                 final_dic = {'status': 1, 'add_status': 1}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
+                output = 'This is not a valid public key.' if addition is None else 'The key file could not be changed.'
                 final_dic = {'status': 0, 'add_status': 0, "error_mssage": output}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)

@@ -829,7 +829,7 @@ class FileManager:
                     return self.ajaxPre(0, 'Not allowed.')
 
                 writeToFile = os.fdopen(os.open(
-                    tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb')
+                    tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644), 'wb')
                 writeToFile.write(self.data['fileContent'].encode('utf-8'))
                 writeToFile.close()
 
@@ -853,7 +853,7 @@ class FileManager:
                 ACLManager.CreateSecureDir()
                 tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', secrets.token_hex(16))
                 writeToFile = os.fdopen(os.open(
-                    tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb')
+                    tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644), 'wb')
                 writeToFile.write(self.data['fileContent'].encode('utf-8'))
                 writeToFile.close()
 

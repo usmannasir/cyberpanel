@@ -1,19 +1,22 @@
 """A website's .ssh directory belongs to the customer: only its own user touches what is in it."""
 import ast
+import base64
 import grp
 import json
 import os
 from pathlib import Path
 import pwd
 import shlex
+import struct
 import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from plogical.fileSystemSecurity import set_file_owner
+from plogical.sshKeyUtilities import parse_authorized_key, with_authorized_key, without_authorized_key
 from plogical.test_child_domain_conversion import load_method
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,75 +77,133 @@ class FileOwnerTests(unittest.TestCase):
         self.assertNotEqual(0, run('--file', str(self.keys)))
 
 
-class Commands:
-    def __init__(self):
+def key_line(seed=1, comment='qa@probe'):
+    """A well-formed ed25519 public key line."""
+    blob = struct.pack('>I', 11) + b'ssh-ed25519' + struct.pack('>I', 32) + bytes([seed]) * 32
+    return 'ssh-ed25519 %s %s' % (base64.b64encode(blob).decode(), comment)
+
+
+class KeyContentTests(unittest.TestCase):
+    def test_new_key_is_appended_once(self):
+        addition = with_authorized_key('', key_line())
+        self.assertEqual('#Created by CyberPanel\n#Added by CyberPanel\n%s\n' % key_line(), addition)
+        self.assertEqual('', with_authorized_key(addition, key_line()))
+        self.assertEqual('', with_authorized_key(addition, key_line(comment='other@host')))
+        more = with_authorized_key(addition.rstrip('\n'), key_line(seed=2))
+        self.assertEqual('\n#Added by CyberPanel\n%s\n' % key_line(seed=2), more)
+
+    def test_only_one_well_formed_key_on_one_line_is_accepted(self):
+        for value in ('not a key', 'ssh-ed25519 AAAA me@host', key_line() + '\n' + key_line(seed=2),
+                      key_line() + '\rcommand="x" ' + key_line(seed=2), '', None, 7, ['ssh-ed25519']):
+            self.assertIsNone(with_authorized_key('', value), repr(value))
+
+    def test_one_key_is_removed_by_its_identifier_and_the_rest_kept(self):
+        first, second = key_line(), key_line(seed=2, comment='other@host')
+        content = '#Created by CyberPanel\n%s\n#note\n%s\n' % (first, second)
+        identifier = parse_authorized_key(first)['keyId']
+        self.assertEqual('#Created by CyberPanel\n#note\n%s\n' % second,
+                         without_authorized_key(content, identifier))
+        self.assertIsNone(without_authorized_key('#Created by CyberPanel\n%s\n' % second, identifier))
+        for value in ('', 'latest', identifier.upper(), identifier + 'a', None, 7):
+            self.assertIsNone(without_authorized_key(content, value), repr(value))
+
+
+class SiteAccount:
+    """Stands in for the command helper: a key file that only the site user changes."""
+
+    def __init__(self, content=None):
+        self.content = content
         self.calls = []
 
     def outputExecutioner(self, command, user=None, *arguments, **options):
         self.calls.append((command, user))
-        return '1,None'
+        words = shlex.split(command)
+        if words[0] == 'cat':
+            return self.content if self.content is not None else 'cat: %s: No such file or directory' % words[1]
+        return ''
 
     def executioner(self, command, user=None, *arguments, **options):
         self.calls.append((command, user))
+        words = shlex.split(command)
+        if user == 'examp1234' and words[0] == 'dd':
+            self.content = (self.content or '') + Path(words[1][len('if='):]).read_text()
+        if user == 'examp1234' and words[0] == 'cp':
+            self.content = Path(words[1]).read_text()
         return 1
 
 
 class KeyHandlerTests(unittest.TestCase):
-    def handler(self, name):
-        self.commands = Commands()
-        self.written = {}
-        self.removed = []
+    def setUp(self):
         holder = tempfile.TemporaryDirectory()
         self.addCleanup(holder.cleanup)
+        self.temporary = Path(holder.name)
+        shared = patch('plogical.fileSystemSecurity.SHARED_TEMP_DIRECTORY', holder.name)
+        shared.start()
+        self.addCleanup(shared.stop)
 
-        def fake_open(path, flags, mode=0o777):
-            self.written['path'], self.written['flags'], self.written['mode'] = path, flags, mode
-            return os.open(os.path.join(holder.name, 'key'), os.O_WRONLY | os.O_CREAT, 0o600)
-
-        fake_os = SimpleNamespace(open=fake_open, fdopen=os.fdopen, chmod=lambda path, mode: None,
-                                  remove=self.removed.append, O_WRONLY=os.O_WRONLY, O_CREAT=os.O_CREAT,
-                                  O_EXCL=os.O_EXCL, O_NOFOLLOW=os.O_NOFOLLOW, path=os.path)
+    def manager(self, account):
         website = SimpleNamespace(externalApp='examp1234')
         acl = Mock()
         acl.checkOwnership.return_value = 1
-        return load_method('websiteFunctions/website.py', 'WebsiteManager', name, dict(
-            ACLManager=acl, Administrator=Mock(), ProcessUtilities=self.commands, json=json, shlex=shlex,
-            os=fake_os, Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kwargs: website)),
-            virtualHostUtilities=SimpleNamespace(cyberPanel='/usr/local/CyberCP'),
-            HttpResponse=lambda content: SimpleNamespace(content=content.encode())))
+        namespace = dict(
+            ACLManager=acl, Administrator=Mock(), ProcessUtilities=account, json=json, shlex=shlex, os=os,
+            Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kwargs: website)),
+            HttpResponse=lambda content: SimpleNamespace(content=content.encode()))
+        methods = {name: load_method('websiteFunctions/website.py', 'WebsiteManager', name, namespace)
+                   for name in ('addSSHKey', 'deleteSSHKey', 'handOverSiteKeyFile', 'readSiteKeyFile')}
+        manager = SimpleNamespace()
+        manager.handOverSiteKeyFile = lambda domain, user: methods['handOverSiteKeyFile'](manager, domain, user)
+        manager.readSiteKeyFile = lambda path, user: methods['readSiteKeyFile'](manager, path, user)
+        manager.add = lambda key: json.loads(methods['addSSHKey'](
+            manager, userID=7, data={'domain': 'example.com', 'key': key}).content)
+        manager.delete = lambda key: json.loads(methods['deleteSSHKey'](
+            manager, userID=7, data={'domain': 'example.com', 'key': key}).content)
+        return manager
 
-    def test_key_is_added_by_the_site_user_through_a_private_temporary_file(self):
-        add = self.handler('addSSHKey')
-        result = json.loads(add(None, userID=7, data={'domain': 'example.com',
-                                                      'key': 'ssh-ed25519 AAAA me@host'}).content)
-        self.assertEqual(1, result['add_status'])
-        self.assertEqual([('mkdir -p /home/example.com/.ssh', 'examp1234')], self.commands.calls[:1])
-        self.assertRegex(self.written['path'], r'\A/usr/local/CyberCP/tmp/[0-9a-f]{32}\Z')
-        self.assertTrue(self.written['flags'] & os.O_EXCL and self.written['flags'] & os.O_NOFOLLOW)
-        command, user = self.commands.calls[1]
-        self.assertEqual('examp1234', user)
-        self.assertEqual(['/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/plogical/firewallUtilities.py',
-                          'addSSHKey', '--tempPath', self.written['path'], '--path',
-                          '/home/example.com/.ssh/authorized_keys'], shlex.split(command))
-        self.assertEqual([self.written['path']], self.removed)
-        self.assertEqual(2, len(self.commands.calls))
+    def test_key_is_added_by_the_site_user_and_listed_once(self):
+        account = SiteAccount()
+        manager = self.manager(account)
+        self.assertEqual(1, manager.add(key_line())['add_status'])
+        self.assertEqual('#Created by CyberPanel\n#Added by CyberPanel\n%s\n' % key_line(), account.content)
+        self.assertEqual(1, manager.add(key_line())['add_status'])
+        self.assertEqual(1, account.content.count(key_line()))
+        self.assertEqual([], list(self.temporary.iterdir()))
 
-    def test_no_command_under_the_sites_home_runs_with_privilege(self):
-        add = self.handler('addSSHKey')
-        add(None, userID=7, data={'domain': 'example.com', 'key': 'ssh-ed25519 AAAA me@host'})
-        for command, user in self.commands.calls:
-            self.assertEqual('examp1234', user, command)
+    def test_value_that_is_not_a_public_key_is_refused_and_writes_nothing(self):
+        account = SiteAccount(content='existing\n')
+        result = self.manager(account).add('command="x" not a key')
+        self.assertEqual(0, result['add_status'])
+        self.assertEqual('existing\n', account.content)
+        self.assertFalse(any(command.startswith(('dd ', 'cp ')) for command, user in account.calls))
 
-    def test_old_root_owned_key_file_is_handed_over_only_as_a_plain_file(self):
-        delete = self.handler('deleteSSHKey')
-        delete(None, userID=7, data={'domain': 'example.com', 'key': 'ssh-ed25519 AAAA me@host'})
-        privileged = [shlex.split(command) for command, user in self.commands.calls if user is None]
-        self.assertEqual(1, len(privileged))
-        self.assertEqual(['/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/plogical/secureDirectoryOwner.py',
-                          '--allowed-root', '/home/example.com', '--file',
-                          '/home/example.com/.ssh/authorized_keys', '--user', 'examp1234', '--group',
-                          'examp1234'], privileged[0])
-        self.assertFalse(any(command.startswith('chown') for command, user in self.commands.calls))
+    def test_key_is_deleted_by_the_site_user_and_other_keys_stay(self):
+        other = key_line(seed=2, comment='other@host')
+        account = SiteAccount(content='%s\n%s\n' % (key_line(), other))
+        manager = self.manager(account)
+        identifier = parse_authorized_key(key_line())['keyId']
+        self.assertEqual(1, manager.delete(identifier)['delete_status'])
+        self.assertEqual(other + '\n', account.content)
+        self.assertEqual(0, manager.delete(identifier)['delete_status'])
+        self.assertEqual([], list(self.temporary.iterdir()))
+
+    def test_change_that_did_not_reach_the_file_is_not_reported_as_done(self):
+        account = SiteAccount()
+        account.executioner = lambda command, user=None, *a, **k: account.calls.append((command, user)) or 0
+        self.assertEqual(0, self.manager(account).add(key_line())['add_status'])
+
+    def test_only_the_checked_handover_runs_with_privilege(self):
+        account = SiteAccount(content=key_line() + '\n')
+        manager = self.manager(account)
+        manager.add(key_line(seed=3))
+        manager.delete(parse_authorized_key(key_line())['keyId'])
+        privileged = {command for command, user in account.calls if user is None}
+        self.assertEqual({'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/secureDirectoryOwner.py'
+                          ' --allowed-root /home/example.com --file /home/example.com/.ssh/authorized_keys'
+                          ' --user examp1234 --group examp1234'}, privileged)
+        for command, user in account.calls:
+            if user is not None:
+                self.assertEqual('examp1234', user)
+            self.assertNotIn('firewallUtilities.py', command)
 
 
 class GitSetupSourceTests(unittest.TestCase):

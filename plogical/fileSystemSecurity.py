@@ -4,6 +4,7 @@ import grp
 import os
 import posixpath
 import pwd
+import secrets
 import stat
 import tarfile
 import zipfile
@@ -15,6 +16,7 @@ from plogical.securityUtils import (
 )
 
 
+SHARED_TEMP_DIRECTORY = '/usr/local/CyberCP/tmp'
 MAX_ARCHIVE_MEMBERS = 200000
 MAX_ARCHIVE_BYTES = 50 * 1024 * 1024 * 1024
 FICLONE = 0x40049409
@@ -72,6 +74,21 @@ def set_directory_owner(allowed_root, directory, user, group, mode=None):
             os.fchmod(descriptor, mode)
     finally:
         os.close(descriptor)
+
+
+def write_shared_temp_file(content):
+    """Write text to a new file in the panel's shared temporary directory.
+
+    The file is handed to a command that runs as another account, so that
+    account must be able to read it; its name cannot be guessed and the
+    directory cannot be listed. The caller removes the file.
+    """
+    path = os.path.join(SHARED_TEMP_DIRECTORY, secrets.token_hex(16))
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+    with os.fdopen(descriptor, "w") as handle:
+        handle.write(content)
+    os.chmod(path, 0o644)
+    return path
 
 
 def set_file_owner(allowed_root, path, user, group):
