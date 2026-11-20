@@ -13,6 +13,7 @@ except:
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
+import getpass
 try:
     from websiteFunctions.models import Websites
     from databases.models import Databases
@@ -435,6 +436,33 @@ password=%s
                 '-u', mysqluser, '--host=%s' % mysqlhost,
                 '--port', str(mysqlport), databaseName,
             ]
+
+            if getpass.getuser() != 'root':
+                # The panel's own account may not switch to the website's
+                # account. The helper runs the dump as that account and its
+                # output goes to mysql as it arrives.
+                importProcess = subprocess.Popen(
+                    mysqlCommand, stdin=subprocess.PIPE,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+                try:
+                    dumped = ProcessUtilities.streamCommand(
+                        'rustic -r %s dump %s --password "" 2>/dev/null' % (
+                            shlex.quote(repository[0]),
+                            shlex.quote('%s:%s.sql' % (snapshotid, databaseName))),
+                        externalApp, importProcess.stdin)
+                finally:
+                    try:
+                        importProcess.stdin.close()
+                    except OSError:
+                        pass
+                importProcess.wait()
+
+                if dumped and importProcess.returncode == 0:
+                    return 1
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Rustic database restore failed for %s.' % databaseName)
+                return 0
 
             dumpProcess = subprocess.Popen(
                 dumpCommand, stdout=subprocess.PIPE,

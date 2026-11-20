@@ -388,6 +388,42 @@ class ProcessUtilities(multi.Thread):
             return "0" + str(msg)
 
     @staticmethod
+    def streamCommand(command, user, sink):
+        """Run a command as another account and write its output to sink unchanged.
+
+        The output is passed on as bytes while it arrives, so it may be binary
+        and of any size. Returns 1 when the command exits with status 0.
+        """
+        try:
+            ret = ProcessUtilities.setupUDSConnection()
+            if ret[0] == -1:
+                return 0
+            sock = ret[0]
+
+            if ProcessUtilities.token == "unset":
+                ProcessUtilities.token = os.environ.get('TOKEN')
+                del os.environ['TOKEN']
+
+            sock.sendall(('%s-u %s %s' % (ProcessUtilities.token, user, command)).encode('utf-8'))
+
+            # The helper ends its reply with one byte holding the exit status.
+            held = b''
+            while 1:
+                data = sock.recv(65536)
+                if not data:
+                    break
+                data = held + data
+                held = data[-1:]
+                if len(data) > 1:
+                    sink.write(data[:-1])
+            sock.close()
+
+            return 1 if held == b'\x00' else 0
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + " [streamCommand]")
+            return 0
+
+    @staticmethod
     def executioner(command, user=None, shell=False):
         try:
             if os.path.exists(ProcessUtilities.debugPath):

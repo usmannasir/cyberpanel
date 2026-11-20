@@ -918,6 +918,10 @@ class CPBackupsV2(multi.Thread):
         from plogical.mysqlUtilities import mysqlUtilities
         self.website = Websites.objects.get(domain=self.data['domain'])
 
+        # A refusal below is reported like any other failure, which clears
+        # this working directory.
+        self.FinalPathRuctic = f"{self.data['BasePath']}/{self.website.domain}"
+
         # The snapshot and the path come from the browser. Nothing runs unless
         # they name a snapshot and this website's own files, mail or database.
         try:
