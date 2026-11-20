@@ -257,7 +257,18 @@ def getresetstatus(request):
 
         data = json.loads(request.body)
         statusfile = data['statusfile']
-        installStatus = ProcessUtilities.outputExecutioner("sudo cat " + statusfile)
+        # The path comes from the browser: read (and later remove) only one
+        # of the panel's own status files, and only a plain file.
+        from plogical import statusUtilities
+        try:
+            installStatus = statusUtilities.read_status_file(statusfile)
+        except ValueError:
+            return HttpResponse(json.dumps({
+                'abort': 1,
+                'installed': 0,
+                'error_message': 'Invalid status file.',
+                'requestStatus': 'Invalid status file.',
+            }))
 
         if installStatus.find("[200]") > -1:
 

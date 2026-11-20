@@ -4570,17 +4570,20 @@ Require valid-user
         try:
             statusFile = data['statusFile']
 
-            if ACLManager.CheckStatusFilleLoc(statusFile):
-                pass
-            else:
+            # The path comes from the browser. It is read only when it is one
+            # of the panel's own status files and a plain file, never a link.
+            from plogical import statusUtilities
+            try:
+                if not ACLManager.CheckStatusFilleLoc(statusFile):
+                    raise ValueError('Invalid status file.')
+                statusData = statusUtilities.read_status_file(statusFile).splitlines()
+            except ValueError:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
                             'currentStatus': 'Invalid status file.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            statusData = ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()
-
-            lastLine = statusData[-1]
+            lastLine = statusData[-1] if statusData else ''
 
             if lastLine.find('[200]') > -1:
                 command = 'rm -f ' + statusFile
@@ -4593,7 +4596,7 @@ Require valid-user
                 return HttpResponse(json_data)
             elif lastLine.find('[404]') > -1:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0",
-                            'error_message': ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()}
+                            'error_message': statusData}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:

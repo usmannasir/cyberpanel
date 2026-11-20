@@ -997,29 +997,10 @@ class ACLManager:
 
     @staticmethod
     def CheckStatusFilleLoc(statusFile, domain=None):
-        if statusFile.find('panel/') > -1:
-            TemFilePath = statusFile.split('panel/')[1]
-        else:
-            TemFilePath = statusFile.split('tmp/')[1]
-
-        try:
-            value = int(TemFilePath)
-            print(value)
-        except:
-            if domain != None:
-                value = statusFile.split('cyberpanel/')[1]
-                #logging.writeToFile(f'value of log file {value}')
-                if value == f'{domain}_rustic_backup_log':
-                    return 1
-            return 0
-
-        if (statusFile[:18] != "/home/cyberpanel/." or statusFile[:16] == "/home/cyberpanel" or statusFile[:4] == '/tmp' or statusFile[
-                                                                                                                 :18] == '/usr/local/CyberCP') \
-                and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find(
-            '..') == -1 and statusFile != '/home/cyberpanel/.my.cnf' and statusFile != '/home/cyberpanel/.bashrc' and statusFile != '/home/cyberpanel/.bash_logout' and statusFile != '/home/cyberpanel/.profile':
-            return 1
-        else:
-            return 0
+        # The value comes from the browser: accept only the exact status files
+        # the panel creates (see plogical/statusUtilities.py).
+        from plogical.statusUtilities import valid_status_path
+        return 1 if valid_status_path(statusFile, domain) else 0
 
     @staticmethod
     def FetchExternalApp(domain):

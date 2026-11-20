@@ -702,54 +702,49 @@ class BackupManager:
 
     def restoreStatus(self, data=None):
         try:
-            if '..' in str(data['backupFile']) or '..' in str(data.get('dir', '')):
+            # The archive name comes from the browser. It may only select a
+            # restore's own working directory under /home/backup, and progress
+            # is read there from a plain status file, never through a link.
+            from plogical import statusUtilities
+
+            path = statusUtilities.restore_work_directory(data['backupFile'], data.get('dir'))
+            if not path:
                 return ACLManager.loadErrorJson()
-
-            backupFile = data['backupFile'].strip(".tar.gz")
-
-            path = os.path.join("/home", "backup", data['backupFile'])
-
-            if os.path.exists(path):
-                path = os.path.join("/home", "backup", backupFile)
-            elif os.path.exists(data['backupFile']):
-                path = data['backupFile'].strip(".tar.gz")
-            else:
-                dir = data['dir']
-                path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
 
             if os.path.exists(path):
                 try:
-                    execPath = "sudo cat " + shlex.quote(path + "/status")
-                    status = ProcessUtilities.outputExecutioner(execPath)
+                    status = statusUtilities.read_restore_status(path)
+                except ValueError:
+                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
+                                             "status": 'Invalid status file.', 'abort': 1, 'alreadyRunning': 0,
+                                             'running': 'Error'})
+                    return HttpResponse(final_json)
 
-                    if status.find("Done") > -1:
+                if status.find("Done") > -1:
 
-                        command = "sudo rm -rf " + shlex.quote(path)
-                        ProcessUtilities.executioner(command)
+                    command = "sudo rm -rf " + shlex.quote(path)
+                    ProcessUtilities.executioner(command)
 
-                        final_json = json.dumps(
-                            {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 1,
-                             'running': 'Completed'})
-                        return HttpResponse(final_json)
-                    elif status.find("[5009]") > -1:
-                        ## removing temporarily generated files while restoring
-                        command = "sudo rm -rf " + shlex.quote(path)
-                        ProcessUtilities.executioner(command)
-                        final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
-                                                 "status": status, 'abort': 1, 'alreadyRunning': 0,
-                                                 'running': 'Error'})
-                        return HttpResponse(final_json)
-                    else:
-                        final_json = json.dumps(
-                            {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 0,
-                             'running': 'Running..'})
-                        return HttpResponse(final_json)
-
-                except BaseException as msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                    status = "Just Started"
+                    final_json = json.dumps(
+                        {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 1,
+                         'running': 'Completed'})
+                    return HttpResponse(final_json)
+                elif status.find("[5009]") > -1:
+                    ## removing temporarily generated files while restoring
+                    command = "sudo rm -rf " + shlex.quote(path)
+                    ProcessUtilities.executioner(command)
+                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
+                                             "status": status, 'abort': 1, 'alreadyRunning': 0,
+                                             'running': 'Error'})
+                    return HttpResponse(final_json)
+                elif status:
                     final_json = json.dumps(
                         {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 0,
+                         'running': 'Running..'})
+                    return HttpResponse(final_json)
+                else:
+                    final_json = json.dumps(
+                        {'restoreStatus': 1, 'error_message': "None", "status": "Just Started", 'abort': 0,
                          'running': 'Running..'})
                     return HttpResponse(final_json)
             else:
@@ -2016,19 +2011,19 @@ class BackupManager:
 
             statusFile = f'/home/cyberpanel/{domain}_rustic_backup_log'
 
-            if ACLManager.CheckStatusFilleLoc(statusFile, domain):
-                pass
-            else:
+            # Read only this domain's own backup log, and only as a plain file.
+            from plogical import statusUtilities
+            try:
+                if not ACLManager.CheckStatusFilleLoc(statusFile, domain):
+                    raise ValueError('Invalid status file.')
+                statusData = statusUtilities.read_status_file(statusFile, domain).splitlines()
+            except ValueError:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
                             'currentStatus': 'Invalid status file.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            #currentStatus:"cat: /home/cyberpanel/9219: No such file or directory"
-
-            statusData = ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()
-
-            lastLine = statusData[-1]
+            lastLine = statusData[-1] if statusData else ''
 
             if lastLine.find('[200]') > -1:
                 command = 'rm -f ' + statusFile
@@ -2039,7 +2034,7 @@ class BackupManager:
                 return HttpResponse(json_data)
             elif lastLine.find('[404]') > -1:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0",
-                            'error_message': ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()}
+                            'error_message': statusData}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
