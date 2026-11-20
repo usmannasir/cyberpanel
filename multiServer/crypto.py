@@ -1,0 +1,175 @@
+"""Signing for Multi-Server Manager links.
+
+A controller signs every request to a node, and a node signs every reply, with
+Ed25519 keys exchanged when the two servers were paired. Each signed message
+begins with a line naming its type, has a fixed number of lines, and holds no
+field that could contain a line break, so one kind of message can never be read
+as another and no field can be read two ways.
+"""
+import hashlib
+import re
+
+REQUEST = 'CPMS1-REQ'
+RESPONSE = 'CPMS1-RSP'
+HELLO = 'CPMS1-HELLO'
+
+METHODS = ('GET', 'POST')
+MODES = ('json', 'page', 'static', 'inventory', 'ticket', 'confirm', 'rotate')
+MAX_PATH = 2048
+MAX_QUERY = 4096
+
+_HEX32 = re.compile(r'[0-9a-f]{32}')
+_HEX64 = re.compile(r'[0-9a-f]{64}')
+_PATH = re.compile(r'/(?:[A-Za-z0-9._~@+-]+/)*(?:[A-Za-z0-9._~@+-]+)?')
+_QUERY = re.compile(r'[A-Za-z0-9._~%=&+-]*')
+_HOST = re.compile(r'(?:[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?|\[[0-9A-Fa-f:.]{2,45}\]):([0-9]{1,5})')
+_MEDIA_TYPE = re.compile(r'[a-z0-9][a-z0-9!#$&^_.+-]{0,62}/[a-z0-9][a-z0-9!#$&^_.+-]{0,62}')
+_ACTOR = re.compile(r'[A-Za-z0-9_.@-]{1,50}')
+
+
+def _ed25519():
+    # Imported on use: a panel without a usable library keeps working with the
+    # feature switched off instead of failing to start.
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+    return ed25519, serialization, InvalidSignature
+
+
+def generate_private_key():
+    ed25519, serialization, _ = _ed25519()
+    return ed25519.Ed25519PrivateKey.generate().private_bytes(
+        encoding=serialization.Encoding.Raw, format=serialization.PrivateFormat.Raw,
+        encryption_algorithm=serialization.NoEncryption())
+
+
+def public_key(private):
+    ed25519, serialization, _ = _ed25519()
+    return ed25519.Ed25519PrivateKey.from_private_bytes(_raw_key(private)).public_key().public_bytes(
+        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
+
+
+def sign(private, message):
+    if not isinstance(message, bytes):
+        raise ValueError('Only bytes are signed.')
+    ed25519 = _ed25519()[0]
+    return ed25519.Ed25519PrivateKey.from_private_bytes(_raw_key(private)).sign(message)
+
+
+def verify(public, signature, message):
+    """True only for a valid signature; never raises."""
+    try:
+        if not (isinstance(signature, bytes) and len(signature) == 64 and isinstance(message, bytes)):
+            return False
+        ed25519 = _ed25519()[0]
+        ed25519.Ed25519PublicKey.from_public_bytes(_raw_key(public)).verify(signature, message)
+        return True
+    except Exception:
+        return False
+
+
+def node_id(public):
+    """A node is named by the fingerprint of its identity key."""
+    return hashlib.sha256(_raw_key(public)).hexdigest()
+
+
+def self_test():
+    """Whether Ed25519 works here (it is disabled, for example, in FIPS mode)."""
+    try:
+        private = bytes.fromhex('9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60')
+        expected = bytes.fromhex('d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a')
+        if public_key(private) != expected:
+            return False
+        fresh = generate_private_key()
+        signature = sign(fresh, b'self-test')
+        return verify(public_key(fresh), signature, b'self-test') \
+            and not verify(public_key(fresh), signature, b'self-tesT')
+    except Exception:
+        return False
+
+
+def request_message(link_id, node_id, method, host, path, query, content_type, body, timestamp,
+                    nonce, actor, mode):
+    """The bytes a controller signs for one request to a node."""
+    body = _body(body)
+    if method not in METHODS or (method == 'GET' and body):
+        raise ValueError('Unsupported request method.')
+    if mode not in MODES:
+        raise ValueError('Unsupported request mode.')
+    return _lines(REQUEST, _match(_HEX32, link_id, 'link'), _match(_HEX64, node_id, 'node'), method,
+                  _host(host), _path(path), _query(query), _content_type(content_type), len(body),
+                  hashlib.sha256(body).hexdigest(), _timestamp(timestamp), _match(_HEX32, nonce, 'nonce'),
+                  _match(_ACTOR, actor, 'actor'), mode)
+
+
+def response_message(link_id, node_id, nonce, request, status, content_type, body):
+    """The bytes a node signs for its reply to one signed request."""
+    if not isinstance(request, bytes) or not request.startswith(REQUEST.encode() + b'\n'):
+        raise ValueError('A reply is bound to the signed request.')
+    if isinstance(status, bool) or not isinstance(status, int) or not 100 <= status <= 599:
+        raise ValueError('Invalid status.')
+    return _lines(RESPONSE, _match(_HEX32, link_id, 'link'), _match(_HEX64, node_id, 'node'),
+                  _match(_HEX32, nonce, 'nonce'), hashlib.sha256(request).hexdigest(), status,
+                  _content_type(content_type), hashlib.sha256(_body(body)).hexdigest())
+
+
+def hello_message(node_id, nonce, tls_fingerprint, timestamp):
+    """The bytes a node signs to name the certificate it currently serves."""
+    return _lines(HELLO, _match(_HEX64, node_id, 'node'), _match(_HEX32, nonce, 'nonce'),
+                  _match(_HEX64, tls_fingerprint, 'certificate fingerprint'), _timestamp(timestamp))
+
+
+def _lines(*fields):
+    return '\n'.join(str(field) for field in fields).encode('ascii')
+
+
+def _raw_key(value):
+    if not isinstance(value, bytes) or len(value) != 32:
+        raise ValueError('An Ed25519 key is 32 bytes.')
+    return value
+
+
+def _body(value):
+    if not isinstance(value, bytes):
+        raise ValueError('A body is bytes.')
+    return value
+
+
+def _match(pattern, value, name):
+    if not isinstance(value, str) or pattern.fullmatch(value) is None:
+        raise ValueError('Invalid %s.' % name)
+    return value
+
+
+def _timestamp(value):
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < 10 ** 11:
+        raise ValueError('Invalid time.')
+    return value
+
+
+def _host(value):
+    matched = _HOST.fullmatch(value) if isinstance(value, str) else None
+    if matched is None or not 1 <= int(matched.group(1)) <= 65535:
+        raise ValueError('Invalid host.')
+    return value
+
+
+def _path(value):
+    _match(_PATH, value, 'path')
+    if len(value) > MAX_PATH or any(part in ('.', '..') for part in value.split('/')):
+        raise ValueError('Invalid path.')
+    return value
+
+
+def _query(value):
+    _match(_QUERY, value, 'query')
+    names = [pair.partition('=')[0] for pair in value.split('&')] if value else []
+    if len(value) > MAX_QUERY or len(names) != len(set(names)):
+        raise ValueError('Invalid query.')
+    return value
+
+
+def _content_type(value):
+    if value == '-':
+        return value
+    return _match(_MEDIA_TYPE, value, 'content type')
