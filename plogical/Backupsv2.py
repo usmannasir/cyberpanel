@@ -18,6 +18,8 @@ import plogical.CyberCPLogFileWriter as logging
 import plogical.mysqlUtilities as mysqlUtilities
 from plogical.backupV2Repository import (
     database_name_from_snapshot_path,
+    forget_selection,
+    schedule_entry,
     own_mailbox,
     rclone_section,
     remove_section_command,
@@ -1046,7 +1048,7 @@ class CPBackupsV2(multi.Thread):
         from websiteFunctions.models import Websites
         self.website = Websites.objects.get(domain=self.data['domain'])
 
-        command = f'rustic -r {self.repo} forget {deleteString} --prune --password ""  2>/dev/null'
+        command = f'rustic -r {self.repo} forget {forget_selection(deleteString)} --prune --password ""  2>/dev/null'
         result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
 
         if os.path.exists(ProcessUtilities.debugPath):
@@ -1129,6 +1131,9 @@ class CPBackupsV2(multi.Thread):
     def CreateScheduleV2(website, repo, frequency, websiteData, websiteDatabases, websiteEmails, retention):
         try:
 
+            # The scheduled job runs as root and reads this entry back.
+            entry = schedule_entry(repo, frequency, retention, websiteData, websiteDatabases, websiteEmails)
+
             finalConfigPath = f'/home/cyberpanel/v2backups/{website}'
 
             if not os.path.exists('/home/cyberpanel/v2backups/'):
@@ -1145,13 +1150,9 @@ class CPBackupsV2(multi.Thread):
                 BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
 
                 try:
-                    BackupConfig['schedules'].append({"repo": repo, "retention": retention, "frequency": frequency, "websiteData": websiteData,
-                                      "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
-                                      "lastRun": ""})
+                    BackupConfig['schedules'].append(entry)
                 except:
-                    BackupConfig['schedules'] = [{"repo": repo, "retention": retention, "frequency": frequency, "websiteData": websiteData,
-                                      "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
-                                      "lastRun": ""}]
+                    BackupConfig['schedules'] = [entry]
 
                 # BackupConfig['schedules'] = {"retention": "7", "frequency": frequency, "websiteData": websiteData,
                 #                       "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
@@ -1163,12 +1164,7 @@ class CPBackupsV2(multi.Thread):
                 WriteToFile.close()
                 return 1, BackupConfig
             else:
-                BackupConfig = {'site': website,
-                                'schedules':
-                                    [{"repo": repo, "retention": retention, "frequency": frequency,
-                                      "websiteData": websiteData,
-                                      "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
-                                      "lastRun": ""}]}
+                BackupConfig = {'site': website, 'schedules': [entry]}
 
                 FinalContent = json.dumps(BackupConfig)
                 WriteToFile = open(finalConfigPath, 'w')
