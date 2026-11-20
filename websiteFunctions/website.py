@@ -4760,6 +4760,11 @@ Require valid-user
             return proc.render()
         else:
 
+            # Everything under the website's home is done as its own user: the
+            # .ssh directory there may be a link the customer placed.
+            command = 'mkdir -p %s' % shlex.quote('/home/%s/.ssh' % self.domain)
+            ProcessUtilities.executioner(command, website.externalApp)
+
             command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
             ProcessUtilities.executioner(command, website.externalApp)
 
@@ -4770,16 +4775,23 @@ IdentityFile /home/%s/.ssh/%s
 StrictHostKeyChecking no
 """ % (self.domain, website.externalApp)
 
-            path = "/home/cyberpanel/config"
-            writeToFile = open(path, 'w')
+            import secrets
+            ACLManager.CreateSecureDir()
+            path = '/usr/local/CyberCP/tmp/' + secrets.token_hex(16)
+            writeToFile = os.fdopen(os.open(
+                path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644), 'w')
             writeToFile.writelines(configContent)
             writeToFile.close()
+            os.chmod(path, 0o644)
 
-            command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
-            ProcessUtilities.executioner(command)
-
-            command = 'chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
-            ProcessUtilities.executioner(command)
+            try:
+                command = 'cp %s %s' % (shlex.quote(path), shlex.quote('/home/%s/.ssh/config' % self.domain))
+                ProcessUtilities.executioner(command, website.externalApp)
+            finally:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
             command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
             deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
@@ -7333,7 +7345,13 @@ StrictHostKeyChecking no
             pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
             website = Websites.objects.get(domain=domain)
 
-            command = f'chown {website.externalApp}:{website.externalApp} {pathToKeyFile}'
+            # A key file written by an older panel belongs to root. Hand it to
+            # the site user only if it really is that plain file: the path lies
+            # in the customer's home and could be a link to anything.
+            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/secureDirectoryOwner.py' \
+                      ' --allowed-root %s --file %s --user %s --group %s' % (
+                          shlex.quote('/home/%s' % domain), shlex.quote(pathToKeyFile),
+                          shlex.quote(website.externalApp), shlex.quote(website.externalApp))
             ProcessUtilities.outputExecutioner(command)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
@@ -7378,22 +7396,34 @@ StrictHostKeyChecking no
             key = data['key']
             pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
 
-            command = 'mkdir -p /home/%s/.ssh/' % (domain)
-            ProcessUtilities.executioner(command)
+            # The .ssh directory and the key file lie in the customer's home and
+            # may be links to anything, so they are only ever touched as the
+            # site's own user.
+            command = 'mkdir -p %s' % shlex.quote('/home/%s/.ssh' % domain)
+            ProcessUtilities.executioner(command, website.externalApp)
 
-            command = 'chown %s:%s /home/%s/.ssh/' % (website.externalApp, website.externalApp, domain)
-            ProcessUtilities.executioner(command)
-
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
-            writeToFile = open(tempPath, "w")
+            # The key is handed over in a file that user can read but not name
+            # in advance; the panel removes it afterwards.
+            import secrets
+            ACLManager.CreateSecureDir()
+            tempPath = '/usr/local/CyberCP/tmp/' + secrets.token_hex(16)
+            writeToFile = os.fdopen(os.open(
+                tempPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644), "w")
             writeToFile.write(key)
             writeToFile.close()
+            os.chmod(tempPath, 0o644)
 
-            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-            execPath = execPath + " addSSHKey --tempPath %s --path %s" % (tempPath, pathToKeyFile)
+            try:
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+                execPath = execPath + " addSSHKey --tempPath %s --path %s" % (
+                    shlex.quote(tempPath), shlex.quote(pathToKeyFile))
 
-            output = ProcessUtilities.outputExecutioner(execPath)
+                output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+            finally:
+                try:
+                    os.remove(tempPath)
+                except OSError:
+                    pass
 
             if output.find("1,None") > -1:
                 final_dic = {'status': 1, 'add_status': 1}
