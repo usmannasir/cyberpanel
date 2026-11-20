@@ -996,6 +996,30 @@ class ACLManager:
         return 1
 
     @staticmethod
+    def ownsEverySiteUnder(domain, admin, currentACL):
+        """Whether every website and child domain at or under this domain is the caller's.
+
+        A DKIM key pair is stored once for a registrable domain and signs the mail
+        of every site under it, so it belongs to one customer only when all of
+        those sites do.
+        """
+        try:
+            if currentACL['admin'] == 1:
+                return 1
+        except (KeyError, TypeError):
+            pass
+        names = set()
+        for model in (Websites, ChildDomains):
+            names.update(model.objects.filter(domain=domain).values_list('domain', flat=True))
+            names.update(model.objects.filter(domain__endswith='.' + domain).values_list('domain', flat=True))
+        if not names:
+            return 0
+        for name in names:
+            if ACLManager.checkOwnership(name, admin, currentACL) != 1:
+                return 0
+        return 1
+
+    @staticmethod
     def CheckStatusFilleLoc(statusFile, domain=None):
         # The value comes from the browser: accept only the exact status files
         # the panel creates (see plogical/statusUtilities.py).

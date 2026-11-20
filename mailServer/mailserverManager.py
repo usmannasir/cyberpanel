@@ -701,6 +701,11 @@ class MailServerManager(multi.Thread):
                 extractDomain = no_cache_extract(domainName)
                 keyDomain = extractDomain.domain + '.' + extractDomain.suffix
 
+                # One key pair signs for every site under its domain: it is
+                # shown only to the customer who owns all of those sites.
+                if not ACLManager.ownsEverySiteUnder(keyDomain, admin, currentACL):
+                    return ACLManager.loadErrorJson('fetchStatus', 0)
+
                 path = "/etc/opendkim/keys/" + keyDomain + "/default.txt"
                 command = "sudo cat " + path
                 output = ProcessUtilities.outputExecutioner(command, 'opendkim')
@@ -745,6 +750,14 @@ class MailServerManager(multi.Thread):
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            # The key pair is stored for the registrable domain and signs for
+            # every site under it: only the owner of all of those sites creates it.
+            import tldextract
+            keyDomainParts = tldextract.TLDExtract(cache_dir=None)(domainName)
+            if not ACLManager.ownsEverySiteUnder(keyDomainParts.domain + '.' + keyDomainParts.suffix,
+                                                 admin, currentACL):
+                return ACLManager.loadErrorJson('generateStatus', 0)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " generateKeys --domain " + domainName
