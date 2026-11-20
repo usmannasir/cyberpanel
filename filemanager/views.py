@@ -322,12 +322,7 @@ def editFile(request):
         domainName = request.GET.get('domainName')
         fileName = request.GET.get('fileName')
 
-        try:
-            theme = request.GET.get('theme')
-            if theme == None:
-                theme = 'cobalt'
-        except:
-            theme = 'cobalt'
+        theme = FM.editorTheme(request.GET.get('theme'))
 
         currentACL = ACLManager.loadedACL(userID)
 
