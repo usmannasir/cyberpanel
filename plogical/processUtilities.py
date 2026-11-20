@@ -1,4 +1,5 @@
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.commandShape import runs_one_command
 import subprocess
 import shlex
 import os
@@ -302,6 +303,14 @@ class ProcessUtilities(multi.Thread):
                 del os.environ['TOKEN']
 
             if user == None:
+                # A command for a website's account must stay one command:
+                # anything after it would run with this helper's privilege.
+                if command.lstrip().startswith('sudo -u ') and not runs_one_command(command):
+                    sock.close()
+                    logging.writeToFile(
+                        'Refused a command for another account that would run more than one command. [sendCommand]')
+                    return 'Command refused: it would run more than one command.' + chr(1)
+
                 if command.find('export') > -1:
                     pass
                 elif command.find('sudo') == -1:
