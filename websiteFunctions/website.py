@@ -57,6 +57,7 @@ from plogical.wordpressInstallerUtilities import (
     change_php_succeeded,
     php_binary_for_selection,
     select_wordpress_version,
+    wordpress_item_names,
 )
 from plogical.cyberedge import (
     download_verified_plugin,
@@ -397,6 +398,17 @@ class WebsiteManager:
                         Data, 'createDatabase')
         return proc.render()
 
+    @staticmethod
+    def ownedRemoteBackupConfigs(admin, currentACL):
+        # A remote backup destination holds storage credentials and decides
+        # where a site's backups are sent: it belongs to the user who made it.
+        try:
+            if currentACL['admin'] == 1:
+                return RemoteBackupConfig.objects.all()
+        except BaseException:
+            pass
+        return RemoteBackupConfig.objects.filter(owner=admin)
+
     @wordpress_entitlement_required(page=True)
     def RemoteBackupConfig(self, request=None, userID=None, DeleteID=None):
         Data = {}
@@ -404,13 +416,13 @@ class WebsiteManager:
         admin = Administrator.objects.get(pk=userID)
         try:
             if DeleteID != None:
-                BackupconfigDelete = RemoteBackupConfig.objects.get(pk=DeleteID)
+                BackupconfigDelete = WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL).get(pk=DeleteID)
                 BackupconfigDelete.delete()
         except:
             pass
 
         Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
-        allcon = RemoteBackupConfig.objects.all()
+        allcon = WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL)
         Data['backupconfigs'] = []
         for i in allcon:
             configr = json.loads(i.config)
@@ -449,10 +461,11 @@ class WebsiteManager:
         admin = Administrator.objects.get(pk=userID)
 
         Data['RemoteConfigID'] = RemoteConfigID
-        RemoteConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+        RemoteConfigobj = WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL).get(pk=RemoteConfigID)
         try:
             if DeleteID != None:
-                RemoteBackupConfigDelete = RemoteBackupSchedule.objects.get(pk=DeleteID)
+                RemoteBackupConfigDelete = RemoteBackupSchedule.objects.get(
+                    pk=DeleteID, RemoteBackupConfig__in=WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL))
                 RemoteBackupConfigDelete.delete()
         except:
             pass
@@ -482,11 +495,13 @@ class WebsiteManager:
         admin = Administrator.objects.get(pk=userID)
 
         Data['RemoteScheduleID'] = RemoteScheduleID
-        RemoteBackupScheduleobj = RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
+        RemoteBackupScheduleobj = RemoteBackupSchedule.objects.get(
+            pk=RemoteScheduleID, RemoteBackupConfig__in=WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL))
 
         try:
             if DeleteSiteID != None:
-                RemoteBackupsitesDelete = RemoteBackupsites.objects.get(pk=DeleteSiteID)
+                RemoteBackupsitesDelete = RemoteBackupsites.objects.get(
+                    pk=DeleteSiteID, owner=RemoteBackupScheduleobj)
                 RemoteBackupsitesDelete.delete()
         except:
             pass
@@ -1469,7 +1484,7 @@ class WebsiteManager:
             RemoteConfigID = data['RemoteConfigID']
             BackupType = data['BackupType']
 
-            RemoteBackupConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+            RemoteBackupConfigobj = WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL).get(pk=RemoteConfigID)
             Rconfig = json.loads(RemoteBackupConfigobj.config)
 
             try:
@@ -1539,6 +1554,12 @@ class WebsiteManager:
             RemoteScheduleID = data['RemoteScheduleID']
 
             wpsiteobj = WPSites.objects.get(pk=WPid)
+            # Only one's own site may be added, and only to one's own schedule:
+            # the schedule decides where the site and its database are sent.
+            if ACLManager.checkOwnership(wpsiteobj.owner.domain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+            RemoteScheduleIDobj = RemoteBackupSchedule.objects.get(
+                pk=RemoteScheduleID, RemoteBackupConfig__in=WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL))
             WPpath = wpsiteobj.path
             VHuser = wpsiteobj.owner.externalApp
             PhpVersion = wpsiteobj.owner.phpSelection
@@ -1561,7 +1582,6 @@ class WebsiteManager:
                 DBobj = Databases.objects.get(dbName=Finaldbname)
             except:
                 raise BaseException(str("DataBase Not Found"))
-            RemoteScheduleIDobj = RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
 
             svobj = RemoteBackupsites(owner=RemoteScheduleIDobj, WPsites=WPid, database=DBobj.pk)
             svobj.save()
@@ -1585,7 +1605,8 @@ class WebsiteManager:
             Frequency = data['Frequency']
             FileRetention = data['FileRetention']
 
-            scheduleobj = RemoteBackupSchedule.objects.get(pk=ScheduleID)
+            scheduleobj = RemoteBackupSchedule.objects.get(
+                pk=ScheduleID, RemoteBackupConfig__in=WebsiteManager.ownedRemoteBackupConfigs(admin, currentACL))
             scheduleobj.timeintervel = Frequency
             scheduleobj.fileretention = FileRetention
             scheduleobj.save()
@@ -1751,6 +1772,9 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             plugin = data['plugin']
             pluginarray = data['pluginarray']
+            # These names are written onto a WP-CLI command line.
+            if not wordpress_item_names(plugin, pluginarray):
+                raise ValueError('Invalid plugin or theme name.')
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
@@ -1800,6 +1824,9 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             Theme = data['Theme']
             Themearray = data['Themearray']
+            # These names are written onto a WP-CLI command line.
+            if not wordpress_item_names(Theme, Themearray):
+                raise ValueError('Invalid plugin or theme name.')
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
@@ -1849,6 +1876,9 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             plugin = data['plugin']
             pluginarray = data['pluginarray']
+            # These names are written onto a WP-CLI command line.
+            if not wordpress_item_names(plugin, pluginarray):
+                raise ValueError('Invalid plugin or theme name.')
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
@@ -1898,6 +1928,9 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             Theme = data['Theme']
             Themearray = data['Themearray']
+            # These names are written onto a WP-CLI command line.
+            if not wordpress_item_names(Theme, Themearray):
+                raise ValueError('Invalid plugin or theme name.')
             wpsite = WPSites.objects.get(pk=WPManagerID)
             path = wpsite.path
 
@@ -1943,6 +1976,9 @@ class WebsiteManager:
 
             WPManagerID = data['WPid']
             plugin = data['plugin']
+            # These names are written onto a WP-CLI command line.
+            if not wordpress_item_names(plugin):
+                raise ValueError('Invalid plugin or theme name.')
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
@@ -1995,6 +2031,9 @@ class WebsiteManager:
 
             WPManagerID = data['WPid']
             Theme = data['theme']
+            # These names are written onto a WP-CLI command line.
+            if not wordpress_item_names(Theme):
+                raise ValueError('Invalid plugin or theme name.')
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
@@ -2116,6 +2155,8 @@ class WebsiteManager:
 
             # Update the appropriate setting based on the setting type
             if setting == 'search-indexing':
+                # The flag is written onto the command line: only 0 or 1.
+                value = 1 if value in (1, '1', True) else 0
                 command = f'sudo -u {Vhuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp option update blog_public {value} --skip-plugins --skip-themes --path={wpsite.path}'
             elif setting == 'debugging':
                 if value:
