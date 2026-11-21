@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 import tempfile
 import threading
+import time
 import types
 import unittest
 from unittest.mock import patch
@@ -46,13 +47,14 @@ class Stored:
             raise RuntimeError('table is missing')
         self.row = entitlement.State(address, granted, now, now)
 
-    def save_attempt(self, address, now):
+    def claim(self, address, now):
         if self.broken:
             raise RuntimeError('table is missing')
-        if self.row is not None and self.row.server_ip == address:
-            self.row = self.row._replace(checked_at=now)
-        else:
-            self.row = entitlement.State(address, False, 0, now)
+        same = self.row is not None and self.row.server_ip == address
+        if same and now - entitlement.RETRY_SECONDS < self.row.checked_at <= now:
+            return False
+        self.row = self.row._replace(checked_at=now) if same else entitlement.State(address, False, 0, now)
+        return True
 
 
 class Platform(unittest.TestCase):
@@ -67,7 +69,7 @@ class Platform(unittest.TestCase):
         for patcher in (
                 patch.object(entitlement, '_load', side_effect=lambda: self.stored.load()),
                 patch.object(entitlement, '_save_answer', side_effect=lambda *a: self.stored.save_answer(*a)),
-                patch.object(entitlement, '_save_attempt', side_effect=lambda *a: self.stored.save_attempt(*a)),
+                patch.object(entitlement, '_claim', side_effect=lambda *a: self.stored.claim(*a)),
                 patch.object(entitlement, 'ask', side_effect=self.ask),
                 patch.object(entitlement, 'server_address', side_effect=lambda: self.address),
                 patch.object(entitlement.time, 'time', side_effect=lambda: self.now + 0.5)):
@@ -177,16 +179,23 @@ class FailureTests(Platform):
         self.stored.broken = False
         with patch.object(entitlement, '_save_answer', side_effect=RuntimeError('read-only')):
             self.assertIs(False, self.at(1, True))
-        self.assertIs(True, self.at(2))
+        self.assertIs(False, self.at(2), 'the attempt was noted before asking, so nobody asks again at once')
+        self.assertIs(True, self.at(1 + entitlement.RETRY_SECONDS))
+        self.assertEqual([1, 1 + entitlement.RETRY_SECONDS], self.times_asked())
 
     def test_never_raises_and_answers_only_true_or_false(self):
-        for broken in ('_load', '_save_answer', '_save_attempt', 'ask', 'server_address'):
+        for broken in ('_load', '_save_answer', '_claim', 'ask', 'server_address'):
             for answer in (True, False, DOWN):
                 self.stored.row = None
                 with patch.object(entitlement, broken, side_effect=RuntimeError('unexpected')):
                     result = self.at(1000, answer)
-                # Only a yes from the platform that was also recorded is a yes.
-                self.assertIs(answer is True and broken == '_save_attempt', result, (broken, answer))
+                # Only a yes from the platform that was also recorded is a yes, and nobody asks
+                # who could not first note that he is asking.
+                self.assertIs(False, result, (broken, answer))
+        with patch.object(entitlement, '_claim', side_effect=RuntimeError('read-only')):
+            self.stored.row = None
+            self.at(2000, True)
+        self.assertNotIn(2000, self.times_asked())
         for strange in (1, 'yes', [True], 0, ''):
             self.stored.row = None
             self.assertIs(False, self.at(5000, strange), repr(strange))
@@ -194,6 +203,99 @@ class FailureTests(Platform):
     def test_a_stored_value_that_is_not_exactly_true_is_not_a_yes(self):
         self.stored.row = entitlement.State(ADDRESS, 1, START, START)
         self.assertIs(False, self.at(5, DOWN))
+
+
+class SingleFlightTests(Platform):
+    """One worker asks; the time of the attempt is in the row before it does; nobody else waits."""
+
+    def test_the_attempt_is_noted_before_the_platform_is_asked(self):
+        noted = []
+
+        def ask(address):
+            noted.append(self.stored.row)
+            return True
+
+        with patch.object(entitlement, 'ask', side_effect=ask):
+            self.assertIs(True, self.at(0))
+            self.assertIs(True, self.at(60))
+        self.assertEqual([entitlement.State(ADDRESS, False, 0, START),
+                          entitlement.State(ADDRESS, True, START, START + 60)], noted)
+
+    def test_requests_arriving_while_one_is_asking_are_answered_at_once_from_what_is_stored(self):
+        self.assertIs(True, self.at(0, True))
+        during = []
+
+        def stalled(address):
+            # What every other worker gets while this one waits for the platform.
+            for _ in range(5):
+                during.append(entitlement.allowed())
+            self.asked.append((self.now - START, address))
+            return DOWN
+
+        with patch.object(entitlement, 'ask', side_effect=stalled):
+            self.assertIs(True, self.at(60))
+            for seconds in (61, 64, 69):
+                self.assertIs(True, self.at(seconds))
+        self.assertEqual([True] * 5, during, 'the last yes still counts, and nobody waited for it')
+        self.assertEqual([0, 60], self.times_asked())
+
+    def test_without_a_yes_to_fall_back_on_they_are_told_no_at_once(self):
+        during = []
+
+        def stalled(address):
+            during.append(entitlement.allowed())
+            self.asked.append((self.now - START, address))
+            return True
+
+        with patch.object(entitlement, 'ask', side_effect=stalled):
+            self.assertIs(True, self.at(0))
+        self.assertEqual([False], during, 'a yes that has not arrived is not a yes')
+        self.assertEqual([0], self.times_asked())
+
+    def test_a_worker_that_loses_the_claim_uses_the_answer_the_winner_just_stored(self):
+        self.assertIs(True, self.at(0, True))
+        def lost(address, now):
+            # Between this worker's reading of the row and its claim, another asked and was told no.
+            self.stored.save_answer(address, False, now)
+            return False
+
+        with patch.object(entitlement, '_claim', side_effect=lost):
+            self.assertIs(False, self.at(60, True))
+        self.assertEqual([0], self.times_asked())
+
+    def test_a_stalled_platform_costs_one_request_in_ten_seconds_the_deadline_and_no_more(self):
+        self.assertIs(True, self.at(0, True))
+        waited = []
+        with patch.object(entitlement, 'ask', side_effect=lambda address: waited.append(self.now - START)):
+            for seconds in range(60, 121):
+                self.assertIs(True, self.at(seconds))
+        self.assertEqual([60, 70, 80, 90, 100, 110, 120], waited)
+
+
+class DeadlineTests(unittest.TestCase):
+    def test_the_caller_waits_no_longer_than_the_deadline_whatever_the_request_does(self):
+        release = threading.Event()
+        self.addCleanup(release.set)
+        started = time.monotonic()
+        with patch.object(entitlement, '_ask', side_effect=lambda address: release.wait(30) and True), \
+                patch.object(entitlement, 'DEADLINE', 0.2):
+            self.assertIsNone(entitlement.ask(ADDRESS))
+        self.assertLess(time.monotonic() - started, 5)
+
+    def test_an_answer_within_the_deadline_is_the_answer(self):
+        for answer in (True, False, None):
+            with patch.object(entitlement, '_ask', return_value=answer) as asked:
+                self.assertIs(answer, entitlement.ask(ADDRESS))
+            asked.assert_called_once_with(ADDRESS)
+
+    def test_a_request_that_fails_is_no_answer(self):
+        with patch.object(entitlement.threading, 'Thread', side_effect=RuntimeError('no more threads')):
+            self.assertIsNone(entitlement.ask(ADDRESS))
+
+    def test_the_parts_of_one_request_fit_inside_the_deadline(self):
+        self.assertEqual(4, entitlement.DEADLINE)
+        self.assertLessEqual(entitlement.CONNECT_SECONDS + entitlement.READ_SECONDS, entitlement.DEADLINE)
+        self.assertLess(entitlement.DEADLINE, entitlement.RETRY_SECONDS)
 
 
 class Reply:
@@ -235,7 +337,7 @@ class AskTests(unittest.TestCase):
         (args, kwargs), = self.calls
         self.assertEqual(('https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission',), args)
         self.assertEqual({'name': 'multi-server', 'IP': ADDRESS}, json.loads(kwargs.pop('data')))
-        self.assertEqual({'headers': {'Accept-Encoding': 'identity'}, 'timeout': (3.05, 10),
+        self.assertEqual({'headers': {'Accept-Encoding': 'identity'}, 'timeout': (2, 2),
                           'allow_redirects': False, 'stream': True}, kwargs)
         self.assertEqual((entitlement.MAX_REPLY + 1, True), self.reply.read_with)
         self.assertTrue(self.reply.closed)
