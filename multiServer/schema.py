@@ -83,6 +83,7 @@ TABLES = (
         ('activated_at', LATER),
         ('expires_at', TIME),
         ('last_request_at', 'bigint NOT NULL DEFAULT 0'),
+        ('failures', 'smallint NOT NULL DEFAULT 0'),
     ), ('link_id',), (('ms_links_pairing', ('pairing_key',)),), (('ms_links_status', ('status',)),), ()),
     # Managed server: pairing codes that are still open. The code itself is
     # never stored, only the public key derived from its seed.

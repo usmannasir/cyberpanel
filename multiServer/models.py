@@ -97,7 +97,8 @@ class Link(models.Model):
     `generation` equals the counter in the root-owned key directory, which is
     raised on every revocation: restoring an old database revives nothing.
     `last_request_at` is the newest signed time accepted, so a clock set back
-    does not reopen the window for an old request.
+    does not reopen the window for an old request. `failures` counts the wrong
+    numbers typed while the link waited for approval.
     """
     link_id = models.CharField(max_length=32, primary_key=True)
     controller_key = models.CharField(max_length=64)
@@ -111,6 +112,7 @@ class Link(models.Model):
     activated_at = models.BigIntegerField(null=True, default=None)
     expires_at = models.BigIntegerField()
     last_request_at = models.BigIntegerField(default=0)
+    failures = models.SmallIntegerField(default=0)
 
     class Meta:
         db_table = 'ms_links'

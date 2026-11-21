@@ -13,9 +13,13 @@
    records the link as pending, in one step, and answers with its identity key
    and its signature over the request.
 4. The controller checks that key against the fingerprint in the code and
-   keeps the link. Both servers now show the same eight digits
-   (confirmation_number); when the administrator of the managed server has
-   compared them, approve() makes the link active. Until then it can do nothing.
+   keeps the link. It now shows eight digits (confirmation_number), which both
+   servers can work out from what they keep of the pairing. The managed server
+   never shows them: its administrator reads them on the controller and types
+   them into approve(), which makes the link active only for the right number.
+   Until then the link can do nothing, and MAX_WRONG_NUMBERS wrong numbers
+   close it. So nobody approves a link without having seen the controller it
+   belongs to.
 
 The code is 'CPMS1-PAIR-' followed by base32 (A-Z and 2-7, no padding) in
 groups of eight joined by dashes, so it is letters, digits and dashes only:
@@ -66,6 +70,7 @@ CODE_LIFETIME = 10 * 60  # seconds a pairing code can be used
 MAX_FAILURES = 5  # refused attempts after which a code is burned
 TIME_WINDOW = 90  # seconds the controller's clock may differ from this server's
 PENDING_LIFETIME = 10 * 60  # seconds a link waits for approval
+MAX_WRONG_NUMBERS = 5  # wrong numbers typed after which a waiting link is closed
 LINK_LIFETIME = 90 * 24 * 60 * 60  # seconds an approved link lasts
 MAX_BODY = 256
 MAX_CODE = 1024
@@ -81,6 +86,7 @@ _CODE = re.compile(r'CPMS1-PAIR(?:-[A-Z2-7]{1,8})+')
 _BODY = re.compile(rb'([0-9a-f]{32})\n([0-9a-f]{64})\n([0-9a-f]{64})\n(0|[1-9][0-9]{0,10})\n([0-9a-f]{32})')
 _KEY = re.compile(rb'[0-9a-f]{64}')
 _LINK = re.compile(r'[0-9a-f]{32}')
+_NUMBER = re.compile(r'[0-9]{8}')
 _ACTOR = re.compile(r'[A-Za-z0-9_.@-]{1,50}')
 _PEM = re.compile(rb'-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----', re.S)
 _SIGNATURE_HEADER = 'HTTP_' + transport.HEADERS['signature'].upper().replace('-', '_')
@@ -91,11 +97,13 @@ _DECISIONS = {
     'not_allowed': 'This link is not waiting for a decision.',
     'expired': 'This link was not approved in time. Pair the two servers again.',
     'generation': 'A link was revoked on this server after this one was made. Pair the two servers again.',
+    'burned': 'A wrong number was typed %d times. This link is closed; pair the two servers again.'
+              % MAX_WRONG_NUMBERS,
 }
 
 Target = collections.namedtuple('Target', 'host port node_id tls_pin')
 Paired = collections.namedtuple('Paired', 'link_id node_id host port confirmation')
-Pending = collections.namedtuple('Pending', 'link_id controller_ip admin_id created_at expires_at confirmation')
+Pending = collections.namedtuple('Pending', 'link_id controller_ip admin_id created_at expires_at')
 
 
 class PairingError(Exception):
@@ -108,7 +116,7 @@ class PairingError(Exception):
 
 
 def confirmation_number(transcript):
-    """The eight digits both administrators compare, from crypto.pair_confirmation_message."""
+    """The eight digits a controller shows and a managed server asks for, from crypto.pair_confirmation_message."""
     if not isinstance(transcript, bytes) or not transcript.startswith(crypto.PAIR_CONFIRMATION.encode() + b'\n'):
         raise ValueError('The number is taken from what both servers keep of a pairing.')
     return '%08d' % (int.from_bytes(hashlib.sha256(transcript).digest()[:8], 'big') % 10 ** 8)
@@ -422,28 +430,28 @@ def _unusable(code, now):
 
 
 def pending():
-    """The links waiting for a decision on this managed server, each with its number to compare."""
+    """The links waiting for a decision on this managed server. Their numbers are not part of it."""
     if switch.active_role() != keys.NODE:
         raise PairingError('role', 'This server is not a managed server.')
-    identity = keys.identity_key()
-    if identity is None:
-        raise PairingError('internal', 'The identity key of this server could not be read.')
     from multiServer.models import PENDING, REVOKED, Link
-    now, node_key = _now(), crypto.public_key(identity).hex()
+    now = _now()
     waiting = Link.objects.filter(status=PENDING)
     for link_id in list(waiting.filter(expires_at__lte=now).values_list('link_id', flat=True)):
         # Nobody approved it in time. One statement, so a link approved at this very moment is left alone.
         if waiting.filter(link_id=link_id, expires_at__lte=now).update(status=REVOKED, updated_at=now) == 1:
             audit.record('link_expire', link_id=link_id)
-    return [Pending(link.link_id, link.allowed_ips, link.admin_id, link.created_at, link.expires_at,
-                    confirmation_number(crypto.pair_confirmation_message(
-                        link.link_id, link.pairing_key, link.controller_key, node_key)))
+    return [Pending(link.link_id, link.allowed_ips, link.admin_id, link.created_at, link.expires_at)
             for link in waiting.filter(generation=keys.generation()).order_by('created_at', 'link_id')]
 
 
-def approve(link_id, admin_id):
-    """Make a pending link active: from now on its controller manages this server."""
-    _decide('link_approve', link_id, admin_id)
+def approve(link_id, admin_id, number):
+    """Make a pending link active: from now on its controller manages this server.
+
+    `number` is the eight digits the controller shows for this link, typed by
+    the administrator of this server. A wrong number is counted on the link,
+    and the one that makes MAX_WRONG_NUMBERS closes the link for good.
+    """
+    _decide('link_approve', link_id, admin_id, number)
 
 
 def reject(link_id, admin_id):
@@ -451,32 +459,86 @@ def reject(link_id, admin_id):
     _decide('link_revoke', link_id, admin_id)
 
 
-def _decide(event, link_id, admin_id):
+def _decide(event, link_id, admin_id, number=None):
     from django.db import transaction
     from multiServer.models import ACTIVE, PENDING, REVOKED, Link
     actor = _administrator(event, admin_id).userName
     if not isinstance(link_id, str) or _LINK.fullmatch(link_id) is None:
         _refuse(event, 'format', 'This is not a link.', actor=actor)
+    approving = event == 'link_approve'
+    if approving and (not isinstance(number, str) or _NUMBER.fullmatch(number) is None):
+        # Not counted against the link: nothing of this form is ever the number.
+        _refuse(event, 'format', 'The number is the eight digits the controller shows for this link.',
+                link_id=link_id, actor=actor)
     now = _now()
     waiting = Link.objects.filter(link_id=link_id, status=PENDING)
+    # What a link must be to be approved; asked again by the statement that approves it.
+    approvable = waiting.filter(expires_at__gt=now, generation=keys.generation(), failures__lt=MAX_WRONG_NUMBERS)
+    if approving:
+        link = approvable.first()
+        if link is not None:
+            identity = keys.identity_key()
+            if identity is None:
+                _refuse(event, 'internal', 'The identity key of this server could not be read.', link_id=link_id,
+                        actor=actor)
+            if not _is_its_number(link, crypto.public_key(identity).hex(), number):
+                _wrong_number(waiting, link_id, actor, now)
     with transaction.atomic():
         # One statement each: of two decisions made at the same moment only one finds the link pending.
-        if event == 'link_approve':
-            decided = waiting.filter(expires_at__gt=now, generation=keys.generation()).update(
-                status=ACTIVE, activated_at=now, updated_at=now, expires_at=now + LINK_LIFETIME)
+        if approving:
+            decided = approvable.update(status=ACTIVE, activated_at=now, updated_at=now,
+                                        expires_at=now + LINK_LIFETIME)
         else:
             decided = waiting.update(status=REVOKED, updated_at=now)
         if decided == 1 and audit.record(event, link_id=link_id, actor=actor) is not True:
             raise PairingError('internal', 'The decision could not be recorded.')
     if decided != 1:
-        link = Link.objects.filter(link_id=link_id).first()
-        if link is None:
-            reason = 'link'
-        elif link.status != PENDING:
-            reason = 'not_allowed'
-        else:
-            reason = 'expired' if link.expires_at <= now else 'generation'
-        _refuse(event, reason, _DECISIONS[reason], link_id=link_id, actor=actor)
+        _undecided(event, link_id, actor, now)
+
+
+def _undecided(event, link_id, actor, now):
+    """Refuse a decision that found no link to decide, for the reason the link now shows; always raises."""
+    from multiServer.models import PENDING, Link
+    link = Link.objects.filter(link_id=link_id).first()
+    if link is None:
+        reason = 'link'
+    elif link.status != PENDING:
+        reason = 'not_allowed'
+    elif link.expires_at <= now:
+        reason = 'expired'
+    else:
+        reason = 'burned' if link.failures >= MAX_WRONG_NUMBERS else 'generation'
+    _refuse(event, reason, _DECISIONS[reason], link_id=link_id, actor=actor)
+
+
+def _is_its_number(link, node_key, number):
+    """Whether `number` is the one the controller of this pending link shows; the time taken says nothing."""
+    expected = confirmation_number(crypto.pair_confirmation_message(link.link_id, link.pairing_key,
+                                                                    link.controller_key, node_key))
+    return hmac.compare_digest(expected.encode('ascii'), number.encode('ascii'))
+
+
+def _wrong_number(waiting, link_id, actor, now):
+    """Count one wrong number on a waiting link and close the link at the last one allowed; always raises.
+
+    The count is one statement, so numbers typed at the same moment are each
+    counted, and it does not wait for the audit trail: a server that cannot
+    write its audit row still gives nobody a sixth try.
+    """
+    from django.db import transaction
+    from django.db.models import F
+    from multiServer.models import REVOKED
+    with transaction.atomic():
+        counted = waiting.filter(failures__lt=MAX_WRONG_NUMBERS).update(failures=F('failures') + 1) == 1
+        closed = waiting.filter(failures__gte=MAX_WRONG_NUMBERS).update(status=REVOKED, updated_at=now) == 1
+    if closed:
+        audit.record('link_revoke', link_id=link_id, actor=actor, reason='burned')
+        _refuse('link_approve', 'burned', _DECISIONS['burned'], link_id=link_id, actor=actor)
+    if not counted:
+        # Decided by somebody else in the meantime. A wrong number never goes on to the approval below.
+        _undecided('link_approve', link_id, actor, now)
+    _refuse('link_approve', 'number', 'This is not the number the controller shows for this link.',
+            link_id=link_id, actor=actor)
 
 
 def _administrator(event, admin_id):
