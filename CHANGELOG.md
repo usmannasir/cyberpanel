@@ -4,6 +4,38 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.10 (build 10) — 2026-11-21
+
+Automatic updates. A server can now keep its own CyberPanel up to date, and
+only with a release that CyberPanel signed. The feature is off until an
+administrator turns it on.
+
+### Automatic updates
+- Version Management has an Automatic Updates card: do nothing, tell me by
+  e-mail, or install new releases automatically during an hour you choose.
+- A release is installed only when its signature verifies against keys built
+  into the panel, and the server installs exactly the signed commit, whatever
+  the release branch holds at that moment.
+- A new release is installed after a waiting period, and servers take their
+  turn over a spread of hours instead of all at once. CyberPanel can pause the
+  automatic installation of a release.
+- One attempt is made per release. If it fails, the previous version is put
+  back, the result is sent by e-mail and the release can be installed from the
+  page. Low disk space or an installed CSF stops the installation with a
+  message instead of an attempt.
+- Nothing is scheduled on a server that has not turned the feature on, and
+  operating-system packages are not touched.
+
+### Mail on AlmaLinux, Rocky and CloudLinux 8
+- A fresh install on these systems ended up with Dovecot but without its MySQL
+  driver, so no mailbox could sign in and Postfix refused every connection.
+  Installation now completes the mail server, and an upgrade installs the
+  missing driver on servers that were set up that way.
+
+### Upgrade page
+- Carries the upgrade page changes published on the v3.0.9 line on 21 November
+  (listed under v3.0.9 below).
+
 ## v3.0.9 (build 9) — 2026-11-20
 
 Security and reliability release. It contains every fix published on the

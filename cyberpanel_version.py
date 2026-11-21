@@ -1,5 +1,5 @@
 VERSION = '3.0'
-BUILD = 9
+BUILD = 10
 FULL_VERSION = '%s.%s' % (VERSION, BUILD)
 
 
