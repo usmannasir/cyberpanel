@@ -1,4 +1,5 @@
 {% extends "baseTemplate/index.html" %}
+{% block create_server_selector %}{% endblock %}
 {% load static %}
 {% block module_scripts %}<script defer src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}-db-ui-20261016"></script>{% endblock %}
 {% load i18n %}
@@ -410,6 +411,7 @@
                 <span ng-hide="createDatabaseLoading" class="loading-spinner"></span>
             </h2>
             
+            {% include "multiServer/selector.html" with placement="create" %}
             <form name="createDatabaseForm">
                 <div class="website-selector-card">
                     <div class="form-group">

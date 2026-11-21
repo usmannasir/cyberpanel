@@ -1,0 +1,4 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Completing server login</title></head>
+<body><a id="finish" href="{% url 'msFinish' %}">Complete server login</a>
+<script nonce="{{ nonce }}">location.replace(document.getElementById('finish').href);</script></body></html>

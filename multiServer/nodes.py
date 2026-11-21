@@ -24,13 +24,26 @@ def administrator(request):
     except (ValueError, TypeError):
         return None
     session_key = getattr(request.session, 'session_key', None)
-    if not session_key or any(key.startswith('HTTP_X_CPMS_') for key in request.META):
+    if not session_key or request.session.get('ms_managed') or any(key.startswith('HTTP_X_CPMS_') for key in request.META):
         return None
     try:
         return None if models.LinkSession.objects.filter(pk=session_key).exists() else admin
     except DatabaseError:
         # The navigation processor also runs on unrelated panel pages.
         return None
+
+
+def switch_choices():
+    choices = []
+    rows = models.Node.objects.filter(status=models.ACTIVE).values_list('pk', 'label', 'advertised').order_by('label', 'pk')
+    for link_id, label, advertised in rows:
+        if links._is_link_id(link_id) and 'ticket' in advertised.split(','):
+            try:
+                label = links.check_label(label)
+            except links.InvalidLabel:
+                label = 'Unnamed node'
+            choices.append({'id': link_id, 'label': label})
+    return choices
 
 
 def _date(timestamp):
@@ -53,6 +66,7 @@ def summary(row):
         'status': row.status if row.status in models.STATUSES else 'unknown',
         'version': row.panel_version if re.fullmatch(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,4}', row.panel_version or '') else '',
         'capabilities': ', '.join(caps) if valid else '',
+        'can_login': valid and row.status == models.ACTIVE and 'ticket' in caps,
         'seen': _date(row.last_seen_at),
         'error': row.last_error if row.last_error in links.STORED_ERRORS else ('Unknown error' if row.last_error else ''),
         'error_at': _date(row.last_error_at),
@@ -96,8 +110,15 @@ def control(request):
         return HttpResponseNotAllowed(['POST'])
     action = request.POST.get('action', '')
     link_id = request.POST.get('link_id', '')
-    if not links._is_link_id(link_id) or action not in ('pause', 'resume', 'revoke', 'forget'):
+    if not links._is_link_id(link_id) or action not in ('refresh', 'pause', 'resume', 'revoke', 'forget'):
         raise Http404()
+    if action == 'refresh':
+        result = links.hello(link_id, admin.userName)
+        if result.ok:
+            messages.success(request, 'Node capabilities refreshed.')
+        else:
+            messages.error(request, result.error)
+        return redirect('multiServerNodes')
     event = 'node_remove' if action == 'forget' else 'link_' + action
     if action in ('revoke', 'forget'):
         reason = (_step_up(admin, request.POST) if request.POST.get('confirm') == action else 'not_allowed')
@@ -111,6 +132,14 @@ def control(request):
     except Exception:
         audit.record(event, outcome='error', reason='internal', actor=admin.userName, link_id=link_id)
         changed = False
+    if action == 'pause' and (changed or models.Node.objects.filter(pk=link_id, status=models.PAUSED).exists()):
+        from multiServer.sso import end_paused
+        if end_paused(link_id, admin.userName):
+            messages.success(request, 'Paused on this controller. The node confirmed that its managed sessions ended.')
+        else:
+            messages.warning(request, 'Paused on this controller. The node has not confirmed session invalidation. '
+                             'Retry while paused. Existing managed sessions expire within five minutes of login.')
+        return redirect('multiServerNodes')
     if changed:
         messages.success(request, {'pause': 'Paused on this controller.', 'resume': 'Node resumed.',
                                    'revoke': 'The node confirmed revocation. Its controller record was removed.',

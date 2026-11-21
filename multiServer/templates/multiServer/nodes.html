@@ -5,8 +5,9 @@
 <div class="container-fluid">
   <h1>{% trans "Nodes" %}</h1>
   <p>Multi-Server Manager licence · {% if licensed %}Active{% else %}Unavailable. You can still pause, revoke or forget a node.{% endif %}</p>
+  {% if licensed and not ms_server %}<p>Sign in to this controller again with your password and verification code to open a node.</p>{% endif %}
   {% if licensed %}{% include "multiServer/inventory_nav.html" %}{% endif %}
-  {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
+  {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
   {% if nodes %}
   <div class="table-responsive"><table class="table table-striped">
     <thead><tr><th scope="col">Node</th><th scope="col">Status</th><th scope="col">Version</th><th scope="col">Capabilities</th><th scope="col">Last seen</th><th scope="col">Last error</th><th scope="col">Actions</th></tr></thead>
@@ -15,11 +16,21 @@
       <td>{{ node.capabilities|default:"—" }}</td><td>{{ node.seen|date:"Y-m-d H:i T"|default:"—" }}</td>
       <td>{{ node.error|default:"—" }}{% if node.error and node.error_at %}<br>{{ node.error_at|date:"Y-m-d H:i T" }}{% endif %}</td>
       <td>{% if node.id %}
+        {% if ms_server and node.can_login %}<form method="post" action="{% url 'msSelect' %}" target="_blank" rel="noopener">{% csrf_token %}
+          <input type="hidden" name="server" value="{{ node.id }}"><input type="hidden" name="page" value="index">
+          <button class="btn btn-default" type="submit">Open panel</button>
+        </form>{% endif %}
         {% if node.status == 'active' or node.status == 'paused' and licensed %}
         <form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
           <input type="hidden" name="link_id" value="{{ node.id }}">
           {% if node.status == 'active' %}<button class="btn btn-default" name="action" value="pause">Pause on controller</button>
           {% else %}<button class="btn btn-default" name="action" value="resume">Resume</button>{% endif %}
+        </form>{% endif %}
+        {% if node.status == 'active' and licensed %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+          <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-default" name="action" value="refresh">Refresh capabilities</button>
+        </form>{% endif %}
+        {% if node.status == 'paused' %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+          <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-default" name="action" value="pause">End remote sessions</button>
         </form>{% endif %}
         {% if node.status == 'active' or node.status == 'paused' or node.status == 'pending' or node.status == 'revoking' %}
           {% include 'multiServer/confirm.html' with action='revoke' title='Revoke link' notice='Stop controller requests and ask this node to permanently revoke the link. You can retry until the node confirms.' %}

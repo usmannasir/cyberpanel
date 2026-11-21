@@ -1,4 +1,5 @@
 {% extends "baseTemplate/index.html" %}
+{% block create_server_selector %}{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Create Package - CyberPanel" %}{% endblock %}
 
@@ -353,6 +354,7 @@
         <div class="content-card">
             <h2 class="card-title">{% trans "Package Information" %}</h2>
             
+            {% include "multiServer/selector.html" with placement="create" %}
             <form name="createPackageFrm">
                 <div class="form-group">
                     <label class="form-label">{% trans "Package Name" %}</label>

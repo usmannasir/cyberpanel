@@ -1,4 +1,5 @@
 {% extends "baseTemplate/index.html" %}
+{% block create_server_selector %}{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Create Incremental Backup" %}{% endblock %}
 
@@ -436,6 +437,8 @@
         <div class="content-section">
             <h2 class="section-title">{% trans "Backup Configuration" %}</h2>
 
+
+            {% include "multiServer/selector.html" with placement="create" %}
 
             <form>
                 <div class="form-group">

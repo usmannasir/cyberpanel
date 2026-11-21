@@ -267,11 +267,12 @@ class TableTests(unittest.TestCase):
 
     def test_only_named_routes_and_no_handler_for_any_other_mode(self):
         self.assertEqual({('json', HELLO), ('inventory', '/multiserver/gateway/inventory'),
-                          ('json', '/multiserver/gateway/revoke')}, set(nodeGateway.ROUTES))
+                          ('json', '/multiserver/gateway/revoke'), ('ticket', '/multiserver/gateway/ticket'),
+                          ('ticket', '/multiserver/gateway/end-sessions')}, set(nodeGateway.ROUTES))
         route = nodeGateway.ROUTES[('json', HELLO)]
         self.assertEqual(('hello', 'GET', False), route[:3])
         self.assertEqual({}, nodeGateway.MODE_HANDLERS)
-        self.assertEqual(['hello', 'inventory', 'revoke'], nodeGateway.capabilities())
+        self.assertEqual(['hello', 'inventory', 'revoke', 'ticket'], nodeGateway.capabilities())
         for mode, _ in nodeGateway.ROUTES:
             self.assertIn(mode, crypto.MODES)
 
@@ -477,7 +478,7 @@ class Panel(unittest.TestCase):
     def assert_hello(self, response, message, named):
         import cyberpanel_version
         self.assert_signed(response, message, named, 200, json.dumps(
-            {'build': cyberpanel_version.BUILD, 'capabilities': ['hello', 'inventory', 'revoke'], 'role': 'node',
+            {'build': cyberpanel_version.BUILD, 'capabilities': ['hello', 'inventory', 'revoke', 'ticket'], 'role': 'node',
              'version': cyberpanel_version.VERSION}, separators=(',', ':')).encode())
 
     def each_refused(self, reason, cases, with_body=False, **audited):
@@ -1967,7 +1968,7 @@ class OverTheWireTests(Panel):
         status, media_type, body = self.send()
         self.assertEqual((200, 'application/json'), (status, media_type))
         import cyberpanel_version
-        self.assertEqual({'build': cyberpanel_version.BUILD, 'capabilities': ['hello', 'inventory', 'revoke'], 'role': 'node',
+        self.assertEqual({'build': cyberpanel_version.BUILD, 'capabilities': ['hello', 'inventory', 'revoke', 'ticket'], 'role': 'node',
                           'version': cyberpanel_version.VERSION}, json.loads(body.decode()))
         self.assertEqual(('request', 'ok', '', LINK, 'admin', '127.0.0.1', 'GET', HELLO, 200, 0, 0),
                          self.last_audit())
