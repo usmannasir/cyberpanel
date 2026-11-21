@@ -12,6 +12,9 @@ import re
 REQUEST = 'CPMS1-REQ'
 RESPONSE = 'CPMS1-RSP'
 HELLO = 'CPMS1-HELLO'
+PAIR_REQUEST = 'CPMS1-PAIR-REQ'
+PAIR_RESPONSE = 'CPMS1-PAIR-RSP'
+PAIR_CONFIRMATION = 'CPMS1-PAIR-SAS'
 
 METHODS = ('GET', 'POST')
 MODES = ('json', 'page', 'static', 'inventory', 'ticket', 'confirm', 'rotate')
@@ -117,6 +120,36 @@ def hello_message(node_id, nonce, tls_fingerprint, timestamp):
     """The bytes a node signs to name the certificate it currently serves."""
     return _lines(HELLO, _match(_HEX64, node_id, 'node'), _match(_HEX32, nonce, 'nonce'),
                   _match(_HEX64, tls_fingerprint, 'certificate fingerprint'), _timestamp(timestamp))
+
+
+# Pairing, before the two servers share a key. Every key in these messages is a
+# public key, written as 64 hexadecimal digits.
+
+def pair_request_message(link_id, pairing_key, controller_key, node_id, tls_fingerprint, host, timestamp,
+                         nonce):
+    """The bytes a controller signs, with the one-time key of a pairing code, to ask a node for a link.
+
+    pairing_key is the public half of that one-time key. The node fills in its
+    own id and its own certificate, so a request made for another node, or for
+    a connection that ends somewhere else, does not verify.
+    """
+    return _lines(PAIR_REQUEST, _match(_HEX32, link_id, 'link'), _match(_HEX64, pairing_key, 'pairing key'),
+                  _match(_HEX64, controller_key, 'controller key'), _match(_HEX64, node_id, 'node'),
+                  _match(_HEX64, tls_fingerprint, 'certificate fingerprint'), _host(host),
+                  _timestamp(timestamp), _match(_HEX32, nonce, 'nonce'))
+
+
+def pair_response_message(request, node_key):
+    """The bytes a node signs, with its identity key, to accept exactly one pairing request."""
+    if not isinstance(request, bytes) or not request.startswith(PAIR_REQUEST.encode() + b'\n'):
+        raise ValueError('A pairing reply is bound to the pairing request.')
+    return _lines(PAIR_RESPONSE, hashlib.sha256(request).hexdigest(), _match(_HEX64, node_key, 'node key'))
+
+
+def pair_confirmation_message(link_id, pairing_key, controller_key, node_key):
+    """What both servers keep of a pairing; the number their administrators compare is taken from it."""
+    return _lines(PAIR_CONFIRMATION, _match(_HEX32, link_id, 'link'), _match(_HEX64, pairing_key, 'pairing key'),
+                  _match(_HEX64, controller_key, 'controller key'), _match(_HEX64, node_key, 'node key'))
 
 
 def _lines(*fields):
