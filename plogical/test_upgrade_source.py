@@ -378,6 +378,12 @@ class UpgradeEntryPointTests(unittest.TestCase):
         # Everything else is the production method, including source staging.
         root = str(self.root)
         class TestPaths(ast.NodeTransformer):
+            def visit_Str(self, node):
+                # Python 3.6 represents string literals as Str, not Constant.
+                if node.s.startswith('/usr/local'):
+                    return ast.copy_location(ast.Str(s=root + node.s[len('/usr/local'):]), node)
+                return node
+
             def visit_Constant(self, node):
                 if isinstance(node.value, str) and node.value.startswith('/usr/local'):
                     return ast.copy_location(ast.Constant(root + node.value[len('/usr/local'):]), node)
@@ -389,6 +395,9 @@ class UpgradeEntryPointTests(unittest.TestCase):
                               and node.name in ('downloadAndUpgrade', 'backupCriticalFiles')]
         tree = ast.fix_missing_locations(TestPaths().visit(
             ast.Module(body=[upgrade_class], type_ignores=[])))
+        # Never execute a relocated installer test while a live installation path remains.
+        self.assertFalse(any(isinstance(node, ast.Str) and node.s.startswith('/usr/local')
+                             for node in ast.walk(tree)))
         self.globals = dict(module.__dict__, re=re, shlex=shlex,
                             preserve_installed_plugins=lambda current, staged:
                                 module.preserve_installed_plugins(current, staged, str(self.root / 'plugins')),
