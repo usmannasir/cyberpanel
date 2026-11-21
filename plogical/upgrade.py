@@ -4316,6 +4316,22 @@ passdb {
                 if not Upgrade.executioner(command, 'Checkout requested CyberPanel branch', 0):
                     return 0, 'Failed to checkout CyberPanel branch %s' % branch
 
+                # A server that updates itself installs the one commit CyberPanel
+                # signed, not whatever the branch holds by now. git names objects
+                # by their content, so this checkout cannot be anything else.
+                pinned = os.environ.get('CYBERPANEL_UPGRADE_COMMIT')
+                if pinned:
+                    if not re.fullmatch(r'[0-9a-f]{40}', pinned):
+                        return 0, 'Invalid signed release commit'
+                    revision = ['git', '-C', staged, 'rev-parse', 'HEAD']
+                    if subprocess.check_output(revision).decode().strip() != pinned:
+                        command = 'git -C %s checkout --detach %s --' % (shlex.quote(staged), pinned)
+                        if not Upgrade.executioner(command, 'Checkout the signed release commit', 0):
+                            return 0, 'The signed release commit is not in the release branch'
+                    if subprocess.check_output(revision).decode().strip() != pinned:
+                        return 0, 'The staged source is not the signed release commit'
+                    Upgrade.stdOut('Installing the signed release commit ' + pinned, 0)
+
                 preserve_installation_state(installation, staged, backed_up_files)
                 preserved_plugins = preserve_installed_plugins(installation, staged)
                 if preserved_plugins:
@@ -5816,6 +5832,16 @@ pm.max_spare_servers = 3
             except Exception as error:
                 Upgrade.stdOut('WARNING: The panel web worker was not rebuilt; the installed one stays in use: '
                                + str(error), 0)
+
+        # Automatic updates stay off until an administrator turns them on. Where
+        # they are on, keep the timer's unit files in step with this release.
+        try:
+            from plogical.autoUpdate import Updater as AutomaticUpdate
+            automatic = AutomaticUpdate()
+            if automatic.settings()['mode'] != 'off':
+                automatic.schedule()
+        except Exception as error:
+            Upgrade.stdOut('WARNING: The automatic update timer was not refreshed: ' + str(error), 0)
 
         if Upgrade.SoftUpgrade == 0:
             try:
