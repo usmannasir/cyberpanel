@@ -1266,6 +1266,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 version = int(clAPVersion.split('-')[1])
                 if type == 'al' and version >= 90:
                     command = 'dnf install -y dovecot dovecot-mysql'
+                elif subprocess.call(['rpm', '-q', 'dovecot'], stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL) == 0:
+                    # The mail filter step has already installed the distribution's
+                    # Dovecot (through dovecot-pigeonhole). The dovecot23 packages
+                    # cannot be installed beside it, and without a MySQL driver no
+                    # mailbox can sign in and Postfix refuses every connection.
+                    command = 'dnf install -y dovecot dovecot-mysql'
                 else:
                     command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             elif self.distro == openeuler:

@@ -5774,6 +5774,13 @@ pm.max_spare_servers = 3
         Upgrade.repairDovecot24SNIPaths()
         Upgrade.fixMailTLS()
         Upgrade.setupWebmail()
+        # An RPM server whose Dovecot came from the distribution without its
+        # MySQL driver cannot check any mailbox password (see the helper).
+        try:
+            from plogical.dovecotSqlDriver import repair as repair_dovecot_sql_driver
+            repair_dovecot_sql_driver(log=Upgrade.stdOut)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: The Dovecot MySQL driver check did not run: ' + str(error), 0)
         Upgrade.setupSieve()
         Upgrade.enableServices()
 
