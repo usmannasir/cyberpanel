@@ -5,7 +5,7 @@ ListWPSites ConfigurePlugins Addnewplugin CreateDockerPackage CreateDockersite A
 loadDatabaseHome createDatabase listDBs remoteAccess loadEmailHome createEmailAccount listEmails
 emailForwarding patternForwarding catchAllEmail dnsHome createNameserver createDNSZone
 addDeleteDNSRecords addDeleteDNSRecordsCloudFlare loadFTPHome createFTPAccount listFTPAccounts
-packagesHome createPackage listPackages loadUsersHome createUser listUsers createNewACL
+packagesHome createPackage listPackages loadUsersHome listUsers
 CreatePackageCL listPackagesCL loadBackupHome backupSite backupDestinations scheduleBackup gDrive
 OneClickBackups createBackupInc backupDestinationsInc scheduleBackupsInc
 ConfigureV2Backup CreateV2Backup schedulev2Backups dockerHome containerImage manageImages listContainers
@@ -55,13 +55,63 @@ CREATE_PAGES = frozenset('''
 createWebsite CreateNewDomain createWordpress CreateDockerPackage CreateDockersite AssignPackage
 createDatabase remoteAccess createEmailAccount emailForwarding patternForwarding catchAllEmail
 createNameserver createDNSZone addDeleteDNSRecords addDeleteDNSRecordsCloudFlare createFTPAccount
-createPackage createUser createNewACL CreatePackageCL backupSite backupDestinations scheduleBackup
+createPackage CreatePackageCL backupSite backupDestinations scheduleBackup
 gDrive OneClickBackups ManageOCBackups createBackupInc backupDestinationsInc scheduleBackupsInc ConfigureV2Backup
 CreateV2Backup schedulev2Backups createEmailList manageSMTP manageLists composeEmailMessage
 emailDeliveryHome aiScannerHome emailMarketing sendEmails dkimManager Dockersitehome viewContainer RemoteBackupConfig AddRemoteBackupsite Addnewplugin WPHome ConfigurePlugins BackupfileConfig
 runContainer manageImages containerImage siteWorkspace launchChild domain domainAlias listCron
 wordpressInstall joomlaInstall installPrestaShop installMagento installMautic setupGit manageGIT setupStaging
 '''.split())
+
+
+# What a managed session may open or call in the three largest applications, by route name. A route
+# is refused until it is listed, so one that is added later starts out refused. Never listed: a second
+# login (phpMyAdmin and its helpers, which hand out the MariaDB root password; WordPress auto-login),
+# SSH keys, the terminal, and a command inside a container. multiServer/test_landings.py compares
+# these lists with the URL tables and with the names that must never be allowed.
+NATIVE = {
+    'websiteFunctions': frozenset('''
+loadWebsitesHome createWebsite listWebsites listChildDomains modifyWebsite deleteWebsite siteState
+CreateNewDomain createWordpress ListWPSites WPHome RestoreBackups RestoreHome RemoteBackupConfig
+BackupfileConfig AddRemoteBackupsite pricing submitWorpressCreation FetchWPdata GetCurrentPlugins
+GetCurrentThemes UpdateWPSettings UpdatePlugins DeletePlugins ChangeStatus UpdateThemes DeleteThemes
+StatusThemes CreateStagingNow fetchstaging fetchDatabase SaveUpdateConfig DeploytoProduction WPCreateBackup
+RestoreWPbackupNow dataintegrity installwpcore SaveBackupConfig SaveBackupSchedule AddWPsiteforRemoteBackup
+UpdateRemoteschedules ScanWordpressSite fetchWPDetails fetchWPBackups ConfigurePlugins Addnewplugin EidtPlugin
+SearchOnkeyupPlugin AddNewpluginAjax deletesPlgin Addplugineidt submitWebsiteCreation submitWebsiteDeletion
+submitWebsiteListing fetchWebsitesList fetchChildDomainsMain convertDomainToSite searchWebsites
+submitWebsiteModification submitWebsiteStatus fetchWebsiteStatus getWebsiteDetails saveWebsiteChanges
+getDataFromLogFile fetchErrorLogs getDataFromConfigFile saveConfigsToFile getRewriteRules saveRewriteRules
+saveSSL submitDomainCreation fetchDomains changePHP submitDomainDeletion searchChilds listCron getWebsiteCron
+getCronbyLine remCronbyLine saveCronChanges addNewCron domainAlias submitAliasCreation issueAliasSSL
+delateAlias changeOpenBasedir wordpressInstall installWordpressStatus installWordpress installJoomla
+joomlaInstall prestaShopInstall installPrestaShop installMagento magentoInstall installMautic mauticInstall
+setupGit setupGitRepo setupStaging startCloning syncToMaster startSync detachRepo changeBranch manageGIT
+fetchFolderDetails initRepo setupRemote changeGitBranch createNewBranch commitChanges gitPull gitPush
+attachRepoGIT removeTracking fetchGitignore saveGitIgnore fetchCommits fetchFiles fetchChangesInFile
+saveGitConfigurations fetchGitLogs CreateDockerPackage AssignPackage CreateDockersite AddDockerpackage
+Getpackage Updatepackage AddAssignment submitDockerSiteCreation ListDockerSites fetchDockersite startContainer
+stopContainer restartContainer ApacheManager getSwitchStatus switchServer statusFunc tuneSettings
+saveApacheConfigsToFile siteWorkspace launchChild domain get_website_resources Dockersitehome
+'''.split()),
+    'databases': frozenset('''
+loadDatabaseHome createDatabase submitDBCreation deleteDatabase fetchDatabases MysqlManager OptimizeMySQL
+upgrademysqlnow UpgradeMySQL upgrademysqlstatus getMysqlstatus restartMySQL generateRecommendations
+applyMySQLChanges submitDatabaseDeletion listDBs changePassword remoteAccess allowRemoteIP
+'''.split()),
+    'dockerManager': frozenset('''
+dockerHome getTags runContainer submitContainerCreation listContainers getContainerList getContainerLogs
+installImage delContainer doContainerAction getContainerStatus exportContainer saveContainerSettings
+getContainerTop assignContainer loadContainersForImport getContainerEnv searchImage manageImages
+getImageHistory removeImage pullImage recreateContainer installDocker containerImage viewContainer
+getDockersiteList getContainerAppinfo getContainerApplog recreateappcontainer RestartContainerAPP
+StopContainerAPP
+'''.split()),
+}
+
+# Users are shown, never made or changed. A user, an ACL, a reseller setting or API access created
+# through a link would be a login on this server that outlives the link's pause and revocation.
+USERS = frozenset(('loadUsersHome', 'listUsers', 'fetchTableUsers'))
 
 
 def native_allowed(match):
@@ -71,16 +121,13 @@ def native_allowed(match):
     if app == 'aiScanner':
         return match.func.__module__ == 'aiScanner.scheduled_views' or name in ('aiScannerHome', 'aiScannerStartScan')
     if app == 'userManagment':
-        return name in ('loadUsersHome', 'listUsers', 'fetchTableUsers', 'createUser', 'submitUserCreation',
-                        'createNewACL', 'createACLFunc')
+        return name in USERS
     if app == 'loginSystem':
         return name == 'logout'
     if app == 'baseTemplate':
         return name in ('index', 'cpHub', 'getDashboardStats', 'getTrafficStats', 'getDiskIOStats',
                         'getCPULoadGraph', 'getSystemInformation', 'getLoadAverage', 'getthemedata')
-    if app in ('websiteFunctions', 'databases', 'dockerManager'):
-        return name not in ('AutoLogin', 'phpMyAdmin', 'generateAccess', 'consumePHPMYAdminHandoff',
-                            'validatePHPMYAdminSession', 'sshAccess', 'saveSSHAccessChanges', 'getSSHConfigs',
-                            'deleteSSHKey', 'addSSHKey', 'get_terminal_jwt', 'executeContainerCommand')
+    if app in NATIVE:
+        return name in NATIVE[app]
     return app in ('mailServer', 'ftp', 'dns', 'backup', 'IncBackups', 'packages', 'CLManager',
                    'emailMarketing', 'emailPremium', 'emailDelivery', 'manageSSL')

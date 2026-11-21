@@ -1,5 +1,4 @@
 {% extends "baseTemplate/index.html" %}
-{% block create_server_selector %}{% endblock %}
 {% load static %}
 {% block module_scripts %}<script defer src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
 {% load i18n %}
@@ -248,7 +247,6 @@
       <div class="page-container">
         <div class="content-card">
           <h3 class="section-title">{% trans "Create New User" %}</h3>
-          {% include "multiServer/selector.html" with placement="create" %}
           <form name="createUser" action="/">
             <div class="form-row">
                 <div class="form-col-6">
