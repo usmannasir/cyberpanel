@@ -650,6 +650,21 @@ class RefusalTests(Controller):
                      node=node)
         self.assertIs(True, script.requests[0]['verifies'], 'the request itself was in order')
 
+    def test_a_server_whose_identity_key_anybody_can_sign_for_is_refused(self):
+        # The neutral point as identity key: this made-up signature verifies under it for every message.
+        neutral = bytes.fromhex('01' + '00' * 31)
+        made_up = (neutral + bytes(32)).hex()
+        for key in (neutral, bytes.fromhex('01' + '00' * 30 + '80'), bytes(32), bytes.fromhex('ec' + 'ff' * 30 + '7f')):
+            script = Scripted(key=key, signature=made_up)
+            node = self.node(script)
+            self.refused('format', self.code(node, node_id=crypto.node_id(key)),
+                         'The server did not answer as a managed server does.', node=node)
+            # The answer itself would pass: that key is the one the code names, and the signature verifies.
+            signed = crypto.pair_response_message(crypto.pair_request_message(
+                LINK, PAIRING_KEY, 'c1' * 32, NODE_ID, TLS, '93.184.216.34:8090', NOW, NONCE), key.hex())
+            if key == neutral:
+                self.assertTrue(crypto.verify(key, bytes.fromhex(made_up), signed))
+
     def test_an_answer_not_signed_by_the_named_server_for_this_request_is_refused(self):
         other = crypto.generate_private_key()
         earlier = crypto.pair_request_message(LINK, PAIRING_KEY, 'c1' * 32, NODE_ID, TLS, '93.184.216.34:8090', NOW,
@@ -838,6 +853,16 @@ class RequestShapeTests(unittest.TestCase):
                 dict(body=b'CPMS1-PAIR-REQ\n' + self.BODY), dict(body=b'{"link": "%s"}' % link.encode())):
             self.refused('format', **changes)
 
+    def test_a_controller_key_that_anybody_can_sign_for_is_refused_as_malformed(self):
+        link, pairing_key, controller_key, timestamp, nonce = self.FIELDS
+        self.assertIs(True, crypto.usable_public_key(bytes.fromhex(controller_key)))
+        for written in ('01' + '00' * 31, '01' + '00' * 30 + '80', '00' * 32, '00' * 31 + '80',
+                        'ec' + 'ff' * 30 + '7f', 'ee' + 'ff' * 30 + '7f', 'ed' + 'ff' * 30 + '7f',
+                        '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05',
+                        'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa',
+                        '02' + '00' * 31):
+            self.refused('format', body='\n'.join((link, pairing_key, written, timestamp, nonce)).encode())
+
     def test_a_request_that_is_or_says_it_is_too_large_is_refused_before_its_body_is_read(self):
         class Unread(object):
             method, path = 'POST', pairing.PATH
@@ -921,6 +946,17 @@ class CompatibilityTests(unittest.TestCase):
                 imported.add(node.module)
         self.assertEqual({'base64', 'collections', 'hashlib', 'hmac', 'ipaddress', 'os', 're', 'ssl', 'time', 'types',
                           'multiServer'}, imported)
+
+    def test_no_part_of_the_app_loads_a_row_and_saves_it_back(self):
+        # A link row is changed by conditional updates that name their columns: a whole row saved back would
+        # undo what the gateway recorded on it in the meantime.
+        for path in sorted(self.DIRECTORY.glob('*.py')):
+            if path.name.startswith('test_') or path.name == 'testing.py':
+                continue
+            called = set(node.func.attr for node in ast.walk(ast.parse(path.read_text()))
+                         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute))
+            self.assertFalse(called & {'save', 'save_base', 'bulk_update', 'refresh_from_db', 'update_or_create',
+                                       'get_or_create'}, path.name)
 
     def test_pairing_writes_to_no_log_and_asks_for_no_allowance(self):
         source = self.DIRECTORY.joinpath('pairing.py').read_text()

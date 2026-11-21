@@ -42,6 +42,11 @@ signature, whatever the reason; the reason is in the audit trail.
 
 Nothing here writes a code, a seed, a private key or a signature to a log, an
 audit row or an error.
+
+A link row is only ever changed by one conditional UPDATE that names the
+columns it sets. Nothing here loads a row and saves it back: that would write
+the row's whole earlier state over what the gateway has recorded since, the
+newest accepted time of the link included.
 """
 import base64
 import collections
@@ -173,6 +178,9 @@ def _start(code_text, label, actor, store):
     node_key = bytes.fromhex(reply.decode('ascii'))
     if not hmac.compare_digest(crypto.node_id(node_key), node_id):
         raise PairingError('signature', 'The server that answered is not the one this pairing code names.')
+    if not crypto.usable_public_key(node_key):
+        # A key anybody can sign for: its signature would prove nothing, now or on any later reply.
+        raise PairingError('format', 'The server did not answer as a managed server does.')
     if not crypto.verify(node_key, signature, crypto.pair_response_message(request, node_key.hex())):
         raise PairingError('signature', 'The answer is not signed by the server this pairing code names.')
     stored = False
@@ -357,10 +365,13 @@ def _accept(request, source):
         with transaction.atomic():
             consumed = codes.filter(consumed=False, failures__lt=MAX_FAILURES).update(consumed=True)
             if consumed == 1:
+                # The row as the gateway reads it (nodeGateway.py): the id and the key in lower-case
+                # hexadecimal, the address in the form of addresses.py, this server's current
+                # generation, and no request accepted yet.
                 Link.objects.create(link_id=link_id, controller_key=controller_key, pairing_key=pairing_key,
                                     allowed_ips=addresses.joined((source,)), admin_id=code.admin_id, status=PENDING,
                                     generation=generation, created_at=now, updated_at=now,
-                                    expires_at=now + PENDING_LIFETIME)
+                                    expires_at=now + PENDING_LIFETIME, last_request_at=0)
                 if audit.record('pairing', link_id=link_id, source_ip=source, status=200) is not True:
                     raise _no('internal', link_id)
     except IntegrityError:
@@ -385,6 +396,9 @@ def _parse(request):
             or not isinstance(signature, str) or transport._SIGNATURE.fullmatch(signature) is None):
         raise _no('format')
     link_id, pairing_key, controller_key, timestamp, nonce = (field.decode('ascii') for field in fields.groups())
+    if not crypto.usable_public_key(bytes.fromhex(controller_key)):
+        # Under such a key anybody could sign the link's requests; no link is ever made for one.
+        raise _no('format')
     try:
         # Checks the host too. The node id and the certificate are this server's own, filled in later.
         crypto.pair_request_message(link_id, pairing_key, controller_key, '0' * 64, '0' * 64, host,

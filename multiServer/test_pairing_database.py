@@ -535,6 +535,43 @@ class AddressTests(Servers):
         entry.assert_called_once_with('127.0.0.1')
 
 
+class LinkRowTests(Servers):
+    """What pairing writes is the row the gateway reads (multiServer/nodeGateway.py)."""
+
+    def test_an_approved_link_is_one_the_gateway_carries_requests_on_and_a_pending_one_is_not(self):
+        from multiServer import models, nodeGateway
+        default = models.Link._meta.get_field('last_request_at')
+        # Whatever the column would hold by itself, pairing says that no request was accepted yet.
+        with mock.patch.object(default, 'default', NOW - 5):
+            paired = self.pair(self.issue())
+        link = models.Link.objects.get(pk=paired.link_id)
+        self.assertEqual((0, GENERATION, 'pending'), (link.last_request_at, link.generation, link.status))
+        self.assertRegex(link.link_id, r'\A[0-9a-f]{32}\Z')
+        self.assertRegex(link.controller_key, r'\A[0-9a-f]{64}\Z')
+        self.assertEqual(crypto.public_key(self.stored[0][5]).hex(), link.controller_key)
+        self.assertEqual(('127.0.0.1',), addresses.listed(link.allowed_ips))
+        self.assertEqual('link', nodeGateway._unusable(link, GENERATION, NOW))
+        with on_the_node():
+            pairing.approve(paired.link_id, ADMIN)
+        link = models.Link.objects.get(pk=paired.link_id)
+        self.assertIsNone(nodeGateway._unusable(link, GENERATION, NOW))
+        self.assertEqual('expired', nodeGateway._unusable(link, GENERATION, NOW + pairing.LINK_LIFETIME))
+        self.assertEqual('generation', nodeGateway._unusable(link, GENERATION + 1, NOW))
+        self.assertTrue(addresses.allows(link.allowed_ips, '127.0.0.1'))
+        self.assertEqual(0, link.last_request_at)
+
+    def test_no_link_is_made_for_a_controller_key_that_anybody_can_sign_for(self):
+        code = self.issue()
+        for written in ('01' + '00' * 31, '01' + '00' * 30 + '80', '00' * 32, 'ec' + 'ff' * 30 + '7f',
+                        '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05',
+                        'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a', '02' + '00' * 31):
+            # Signed with the code's own key, from the right address, at the right time: only the key is wrong.
+            self.refused(self.send(self.attempt(code, controller_key=written)), 'format')
+        # The code is untouched and still makes a link for a real key.
+        self.assertTrue(self.send(self.attempt(code)).startswith(b'HTTP/1.1 200 OK\r\n'))
+        self.assertEqual(((0, 1),), self.codes())
+
+
 class AttackTests(Servers):
     def test_a_machine_in_the_middle_with_another_certificate_is_sent_no_request_byte(self):
         code = self.issue()
