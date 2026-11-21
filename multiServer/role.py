@@ -26,7 +26,7 @@ CHANGED = 'This server is now: %s.'
 NOT_CHANGED = ('The role was not changed. Run "msctl.py status" as root on this server to see why '
                '(multiServer/msctl.py).')
 # What msctl.py says when it refuses; shown as it is, anything else it says is not shown.
-REFUSALS = (msctl.HAS_SERVERS, msctl.HAS_CONTROLLERS, msctl.CANNOT_CHECK)
+REFUSALS = (msctl.HAS_SERVERS, msctl.HAS_CONTROLLERS, msctl.CANNOT_CHECK, msctl.BUSY)
 
 
 def administrator(request):

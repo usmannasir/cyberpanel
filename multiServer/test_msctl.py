@@ -296,6 +296,26 @@ class EndTests(Base):
             with self.assertRaises(ValueError):
                 self.end(not_a_link)
 
+    def test_an_ending_that_stopped_after_the_counter_was_raised_is_finished_by_the_next_one(self):
+        # The counter in the key directory moved on and the rows did not (the database went away at
+        # that moment). Until the link is ended again, every controller of this server is refused.
+        self.generation.return_value = 2
+        keys.mark_revoked(LINK)
+        self.assertNotEqual(200, self.asks(OTHER_LINK))
+        self.assertTrue(self.end())
+        self.assertEqual({LINK: ('revoked', 1), OTHER_LINK: ('active', 3)}, self.rows())
+        self.assertEqual([3], self.raised)
+        self.assertEqual(200, self.asks(OTHER_LINK))
+        self.assertNotEqual(200, self.asks())
+
+    def test_catching_up_never_brings_back_a_link_that_was_ended(self):
+        # Both links one behind the counter, the other one ended by its marker alone: it stays behind.
+        self.generation.return_value = 2
+        keys.mark_revoked(OTHER_LINK)
+        self.assertTrue(self.end())
+        self.assertEqual({LINK: ('revoked', 2), OTHER_LINK: ('active', 1)}, self.rows())
+        self.assertNotEqual(200, self.asks(OTHER_LINK))
+
     def test_when_the_counter_cannot_be_raised_no_row_changes_and_the_link_is_stopped_all_the_same(self):
         def fails():
             raise OSError('read-only file system')
@@ -333,7 +353,12 @@ class EndTests(Base):
             self.assertIsNone(msctl._in_the_way('node'))
             models.Link.objects.update(status=models.REVOKED)
             self.assertIsNone(msctl._in_the_way('controller'))
-            models.Link.objects.filter(pk=LINK).update(status=models.PENDING)
+            # A request that waits for approval is in the way; one that nobody approved in time is not
+            # (the Controllers page does not show it either).
+            import time
+            models.Link.objects.filter(pk=LINK).update(status=models.PENDING, expires_at=int(time.time()) - 1)
+            self.assertIsNone(msctl._in_the_way('controller'))
+            models.Link.objects.filter(pk=LINK).update(expires_at=int(time.time()) + 600)
             self.assertEqual(msctl.HAS_CONTROLLERS, msctl._in_the_way('controller'))
             models.Node.objects.create(link_id=LINK, label='Frankfurt 1', sealed='x', created_at=NOW, updated_at=NOW)
             self.assertEqual(msctl.HAS_SERVERS, msctl._in_the_way('node'))

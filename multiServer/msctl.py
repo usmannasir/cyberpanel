@@ -46,11 +46,14 @@ HAS_CONTROLLERS = ('This server is still managed by a controller. End each link 
                    'first, then change the role.')
 CANNOT_CHECK = ('The role was not changed: the Multi-Server tables could not be read to see whether links '
                 'exist. "role off" works without them.')
+BUSY = 'A server is being paired at this moment. Try again in a minute.'
+TURN_SECONDS = 35  # longer than one pairing exchange may take
 NOT_A_NODE = 'Only a managed server ends a link here. On a controller, remove the server on the Nodes page.'
 ENDED = 'The link is ended. Its controller can no longer manage this server.'
 ALREADY_ENDED = 'This link was ended before.'
 NO_SUCH_LINK = 'There is no such link on this server.'
-FAILED = 'The link could not be ended. Nothing was changed for other links.'
+FAILED = ('The link could not be ended. Run this command again: until it succeeds, this server may refuse '
+          'its other controllers too.')
 
 _LINK = re.compile(r'[0-9a-f]{32}')
 _ADMIN = re.compile(r'[1-9][0-9]{0,8}')
@@ -91,12 +94,29 @@ def set_role(role, say=print):
     if keys.role() == role:
         say(ROLE_KEPT % role)
         return 0
-    if role != keys.OFF:
+    if role == keys.OFF:
+        # Always possible, and waits for nothing: this is how the feature is stopped when something is wrong.
+        multiserver_identity.set_role(role)
+        say(ROLE_SET % role)
+        return 0
+    turn = None
+    try:
+        # The turn a pairing takes while it stores a link, so that none lands between the check and the change.
+        try:
+            turn = keys.take_turn(TURN_SECONDS)
+        except keys.Occupied:
+            say(BUSY)
+            return 1
+        except OSError:
+            turn = None  # no key directory yet: this server never had a role, and nothing can be storing a link
         refusal = _in_the_way(role)
         if refusal is not None:
             say(refusal)
             return 1
-    multiserver_identity.set_role(role)
+        multiserver_identity.set_role(role)
+    finally:
+        if turn is not None:
+            keys.end_turn(turn)
     say(ROLE_SET % role)
     return 0
 
@@ -109,8 +129,11 @@ def _in_the_way(role):
         from multiServer import models
         if role == keys.NODE:
             return HAS_SERVERS if models.Node.objects.exists() else None
-        live = (models.PENDING, models.ACTIVE, models.PAUSED)
-        return HAS_CONTROLLERS if models.Link.objects.filter(status__in=live).exists() else None
+        # A request that nobody approved in time is no link: the Controllers page does not show it either.
+        import time
+        from django.db.models import Q
+        live = Q(status__in=(models.ACTIVE, models.PAUSED)) | Q(status=models.PENDING, expires_at__gt=int(time.time()))
+        return HAS_CONTROLLERS if models.Link.objects.filter(live).exists() else None
     except Exception:
         return CANNOT_CHECK
 
@@ -167,7 +190,7 @@ def _plain(*values):
 
 def _start_django():
     import django
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CyberCP.settings')
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'CyberCP.settings'  # the panel's own, whatever the caller's environment says
     django.setup()
 
 

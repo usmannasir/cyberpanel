@@ -16,6 +16,7 @@
     <li><strong>Managed server</strong>: a controller that you allow manages this server. No licence is needed here.</li>
   </ul>
   <p>A server cannot be both. To change between controller and managed server, first remove its servers or end its controllers.</p>
+  <p>Off stops Multi-Server Manager on this server but keeps its links: with the same role again they work as before. To end a link for good, end it on the Controllers page (managed server) or remove the server on the Nodes page (controller) first.</p>
   {% if enrolled %}
   <form method="post" action="{% url 'multiServerRole' %}">
     {% csrf_token %}

@@ -168,8 +168,19 @@ class ConfirmTests(Base):
 
     def test_one_code_passes_once_when_every_worker_is_given_it_at_the_same_moment(self):
         outcomes = self.at_once([self.confirm] * 8)
-        # The first to be looked at passes; the same code again is a wrong code, and those are counted.
-        self.assertEqual((1, 5, 2), tuple(outcomes.count(outcome) for outcome in (None, 'two_factor', 'not_allowed')))
+        # The first to be looked at passes. The same code again is refused, but it is the right code
+        # (a form sent twice), so it is not counted as an attempt to guess one.
+        self.assertEqual((1, 7, 0), tuple(outcomes.count(outcome) for outcome in (None, 'two_factor', 'not_allowed')))
+        self.assertEqual([0, 0, self.step], self.kept()[stepup.KEPT_AS])
+
+    def test_a_code_used_before_is_refused_without_counting_and_a_wrong_code_still_counts(self):
+        self.assertIsNone(self.confirm())
+        for unused in range(8):
+            self.assertEqual('two_factor', self.confirm())
+        self.assertEqual([0, 0, self.step], self.kept()[stepup.KEPT_AS])
+        for unused in range(5):
+            self.assertEqual('two_factor', self.confirm(code='000000' if code(self.step) != '000000' else '111111'))
+        self.assertEqual('not_allowed', self.confirm(offset=1))
 
     def test_only_an_active_full_administrator_with_a_second_factor_is_checked_at_all(self):
         with patch('plogical.hashPassword.check_password') as checked:

@@ -28,7 +28,8 @@ KEPT_AS = 'multiServerStepUp'
 MAX_PASSWORD = 4096
 
 LOCKED = ('Too many wrong passwords or codes. Wait %d minutes, then try again.' % (WINDOW // 60))
-WRONG = 'Enter your current password and a new code from your authenticator app.'
+WRONG = ('Enter your current password and a new code from your authenticator app. A code works once: if you '
+         'have just used it, wait for the next one.')
 
 _CODE = re.compile(r'[0-9]{6}')
 
@@ -82,6 +83,10 @@ def _confirm(admin_id, password, code, now):
         step = _step(administrator.secretKey, code, now, last)
         if step is None:
             reason = 'two_factor'
+            if _step(administrator.secretKey, code, now, -1) is not None:
+                # The right code, used for an earlier check: a form sent twice, or a second action in
+                # the same half minute. Refused, but nobody guessed anything, so it is not counted.
+                return reason
     if reason is None:
         config[KEPT_AS] = [0, 0, step]
     else:
