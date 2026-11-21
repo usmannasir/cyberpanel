@@ -141,7 +141,7 @@ def control(request):
             messages.success(request, 'Paused on this controller. The node confirmed that its managed sessions ended.')
         else:
             messages.warning(request, 'Paused on this controller. The node has not confirmed session invalidation. '
-                             'Retry while paused. Existing managed sessions expire within five minutes of login.')
+                             'Retry while paused. Existing managed sessions expire within 30 minutes of login.')
         return redirect('multiServerNodes')
     if changed:
         messages.success(request, {'pause': 'Paused on this controller.', 'resume': 'Node resumed.',

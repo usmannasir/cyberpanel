@@ -1,7 +1,7 @@
 """What a managed session may open or call on a managed server, checked against the panel's URL tables.
 
 A link ends when it is paused, revoked or expired, and a login made through it
-lasts five minutes. So nothing reachable through such a login may leave another
+lasts half an hour. So nothing reachable through such a login may leave another
 way in behind: a panel user, an ACL, a reseller setting, API access, an SSH
 key, or a second login that hands out a password of the server itself.
 """
