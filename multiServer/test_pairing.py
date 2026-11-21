@@ -18,7 +18,7 @@ import types
 import unittest
 from unittest import mock
 
-from multiServer import audit, crypto, entitlement, keys, pairing, switch, test_transport, transport
+from multiServer import audit, crypto, entitlement, keys, links, pairing, switch, test_transport, transport
 from multiServer.test_transport import CERTIFICATES, Node, pin, wire
 
 SEED = b'one-time-pairing-seed-material!!'
@@ -476,10 +476,14 @@ class Controller(unittest.TestCase):
     """A licensed controller and a scripted managed server on this machine."""
 
     def setUp(self):
-        self.audited, self.stored = [], []
+        self.audited, self.stored, self.prepared, self.kept_for = [], [], [], []
+        self.unkept = self.unstored = None  # what the controller's records raise, when a test says so
         self.role = mock.patch.object(switch, 'active_role', return_value=keys.CONTROLLER).start()
         self.licensed = mock.patch.object(entitlement, 'allowed', return_value=True).start()
         mock.patch.object(audit, 'record', side_effect=self.record).start()
+        # The controller's records are multiServer/links.py, tested by itself; here they are stood in for.
+        mock.patch.object(links, 'prepare', side_effect=self.prepare).start()
+        mock.patch.object(links, 'store', side_effect=self.store).start()
         mock.patch.object(transport, 'Endpoint', Loopback).start()
         mock.patch.object(pairing, '_now', return_value=NOW).start()
         self.addCleanup(mock.patch.stopall)
@@ -488,8 +492,16 @@ class Controller(unittest.TestCase):
         self.audited.append((event, fields))
         return True
 
-    def store(self, *arguments):
-        self.stored.append(arguments)
+    def prepare(self, *arguments):
+        self.prepared.append(arguments)
+        if self.unkept is not None:
+            raise self.unkept
+
+    def store(self, label, link_id, host, port, node_key, private_key, tls_pin, actor):
+        if self.unstored is not None:
+            raise self.unstored(private_key, tls_pin)
+        self.stored.append((label, link_id, host, port, node_key, private_key, tls_pin))
+        self.kept_for.append(actor)
 
     def node(self, *arguments, **options):
         node = Server(*arguments, **options)
@@ -501,12 +513,12 @@ class Controller(unittest.TestCase):
         fields.update(changes)
         return code(**fields)
 
-    def refused(self, reason, text, because=None, outcome='refused', node=None, store=None, link=False, **options):
+    def refused(self, reason, text, because=None, outcome='refused', node=None, recorded=False, link=False,
+                **options):
         """Pairing ends in exactly this refusal: nothing is kept, one audit row, nothing secret said."""
         self.audited[:] = []
         with self.assertRaises(pairing.PairingError) as caught:
-            pairing.start(text, options.get('label', 'Frankfurt 1'), options.get('actor', 'admin'),
-                          store or self.store)
+            pairing.start(text, options.get('label', 'Frankfurt 1'), options.get('actor', 'admin'))
         error = caught.exception
         self.assertEqual(reason, error.reason, str(error))
         if because is not None:
@@ -517,7 +529,9 @@ class Controller(unittest.TestCase):
             expected['actor'] = options.get('actor', 'admin')
         if link:
             expected['link_id'] = error.link_id
-        self.assertEqual([('pairing', expected)], self.audited)
+        # A link that could not be stored is put on record by the store itself, and not a second time.
+        self.assertEqual([] if recorded else [('pairing', expected)], self.audited)
+        self.assertIs(recorded, error.recorded)
         for secret in secrets_of(*([node] if node else []), code=text if isinstance(text, str) else None):
             self.assertNotIn(secret, texts_of(error))
             self.assertNotIn(secret, repr(self.audited))
@@ -528,7 +542,7 @@ class PairingTests(Controller):
     def test_a_correct_pairing_keeps_one_link_and_shows_the_number_both_servers_hold(self):
         script = Scripted()
         node = self.node(script)
-        paired = pairing.start(self.code(node), 'Frankfurt 1', 'admin', self.store)
+        paired = pairing.start(self.code(node), 'Frankfurt 1', 'admin')
         (seen,) = script.requests
         self.assertIs(True, seen['verifies'])
         self.assertEqual(PAIRING_KEY, seen['pairing_key'])
@@ -542,12 +556,23 @@ class PairingTests(Controller):
             link_id, PAIRING_KEY, seen['controller_key'], node.public.hex()))
         self.assertEqual(pairing.Paired(link_id, node.id, '127.0.0.1', node.port, number), paired)
         self.assertRegex(paired.confirmation, '^[0-9]{8}$')
-        self.assertEqual([('pairing', dict(link_id=link_id, actor='admin'))], self.audited)
+        # Kept for the administrator who paired; the record of it is the store's own (multiServer/links.py).
+        self.assertEqual((['admin'], []), (self.kept_for, self.audited))
+        # And what was checked before the code was used is what was kept, but for the key not yet known.
+        self.assertEqual([(label, link_id, node.id, host, port, private_key, tls_pin)], self.prepared)
+
+    def test_whether_the_link_can_be_kept_is_settled_before_the_server_hears_anything(self):
+        node = self.node(Scripted())
+        asked = []
+        with mock.patch.object(links, 'prepare', side_effect=lambda *given: asked.append(node.connections.empty())):
+            pairing.start(self.code(node), 'Frankfurt 1', 'admin')
+        self.assertEqual([True], asked)
+        self.assertEqual(1, len(self.stored))
 
     def test_the_server_is_sent_exactly_the_signed_request_and_nothing_else(self):
         script = Scripted()
         node = self.node(script)
-        pairing.start(self.code(node), 'Frankfurt 1', 'admin', self.store)
+        pairing.start(self.code(node), 'Frankfurt 1', 'admin')
         record = node.finished()
         seen, sent = record['seen'], script.requests[0]
         self.assertEqual(('POST', '/multiserver/pair', 'HTTP/1.1'), (seen.method, seen.target, seen.version))
@@ -571,7 +596,7 @@ class PairingTests(Controller):
         script = Scripted()
         node = self.node(script)
         for unused in range(3):
-            pairing.start(self.code(node), 'Frankfurt 1', 'admin', self.store)
+            pairing.start(self.code(node), 'Frankfurt 1', 'admin')
         for field in ('link_id', 'nonce', 'controller_key'):
             self.assertEqual(3, len(set(sent[field] for sent in script.requests)), field)
         self.assertEqual(3, len(set(stored[5] for stored in self.stored)))
@@ -581,7 +606,7 @@ class PairingTests(Controller):
         node = self.node(script)
         here = [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('127.0.0.1', node.port))]
         with mock.patch.object(socket, 'getaddrinfo', return_value=here):
-            paired = pairing.start(self.code(node, host='node-1.example.com'), 'Frankfurt 1', 'admin', self.store)
+            paired = pairing.start(self.code(node, host='node-1.example.com'), 'Frankfurt 1', 'admin')
         self.assertEqual(('node-1.example.com', ['node-1.example.com']), (paired.host, node.names))
         self.assertIn(b'\nnode-1.example.com:%d\n' % node.port, script.requests[0]['signed'])
         inside = [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('10.0.0.5', node.port))]
@@ -612,9 +637,15 @@ class RefusalTests(Controller):
         node = self.node(Scripted())
         with mock.patch.object(socket, 'socket') as made:
             for options in (dict(label=''), dict(label='x' * 65), dict(label='two\nlines'), dict(label=None),
-                            dict(label=b'Frankfurt 1'), dict(actor=''), dict(actor='a b'), dict(actor=None),
-                            dict(actor='x' * 51), dict(store='not callable')):
+                            dict(label=b'Frankfurt 1'), dict(label=' Frankfurt'), dict(label='Frankfurt '),
+                            dict(label='<b>Frankfurt</b>'), dict(label='{$ 7 * 7 $}'), dict(label='Frankfurt\x00'),
+                            dict(actor=''), dict(actor='a b'), dict(actor=None), dict(actor='x' * 51)):
                 self.refused('format', self.code(node), **options)
+            # The label is held to the rule of the records it will be kept in, and to no second one.
+            with mock.patch.object(links, 'check_label', side_effect=links.InvalidLabel('Not a label.')) as checked:
+                self.refused('format', self.code(node), 'Not a label.')
+            checked.assert_called_once_with('Frankfurt 1')
+            self.assertEqual([], self.prepared)
             text = self.code(node)
             for changed in (text[:-1], text[:20] + ('A' if text[20] != 'A' else 'B') + text[21:], text.lower(), '',
                             None):
@@ -626,6 +657,40 @@ class RefusalTests(Controller):
                              'A link may not connect to this address (%s).' % kind)
             made.assert_not_called()
         self.assertTrue(node.connections.empty())
+
+    def test_a_link_this_controller_could_not_keep_is_refused_while_the_code_is_still_unused(self):
+        node = self.node(Scripted())
+        with mock.patch.object(socket, 'socket') as made:
+            for raised, reason, outcome, because in (
+                    (links.DuplicateNode('This server is already connected.'), 'link', 'refused',
+                     'This server is already connected.'),
+                    (links.NoMasterKey('The master key of this controller is missing or cannot be used.'),
+                     'internal', 'error', 'The master key of this controller is missing or cannot be used.'),
+                    (links.UnreadableRow('A server stored earlier has connection details that cannot be read. '
+                                         'Remove that server before connecting another.'), 'internal', 'error',
+                     'A server stored earlier has connection details that cannot be read. Remove that server '
+                     'before connecting another.'),
+                    (links.Busy('Another server is being stored at this moment.'), 'internal', 'error',
+                     'Another server is being stored at this moment.'),
+                    (links.NotController(links.NOT_CONTROLLER), 'role', 'refused', links.NOT_CONTROLLER),
+                    (links.InvalidLabel('Not a label.'), 'format', 'refused', 'Not a label.'),
+                    (transport.RefusedAddress('A link may not connect to this address (private).'), 'not_allowed',
+                     'refused', 'A link may not connect to this address (private).'),
+                    # Anything else is said in general, and not in its own words.
+                    (links.InvalidRecord('holds %s' % SEED.hex()), 'internal', 'error',
+                     'Pairing failed on this server.'),
+                    (RuntimeError('cannot seal %s' % SEED.hex()), 'internal', 'error',
+                     'Pairing failed on this server.')):
+                self.unkept = raised
+                error = self.refused(reason, self.code(node), because, outcome=outcome)
+                self.assertIsNone(error.__cause__ or error.__context__)
+            made.assert_not_called()
+        self.assertTrue(node.connections.empty())
+        self.assertEqual(9, len(self.prepared))
+        # With nothing in the way, the same code still pairs: it was never sent.
+        self.unkept = None
+        pairing.start(self.code(node), 'Frankfurt 1', 'admin')
+        self.assertEqual(1, len(self.stored))
 
     def test_without_the_allowance_for_tests_this_machine_is_refused_too(self):
         node = self.node(Scripted())
@@ -754,12 +819,13 @@ class RefusalTests(Controller):
     def test_a_link_that_cannot_be_kept_is_reported_without_what_it_holds(self):
         kept = []
 
-        def failing(label, link_id, host, port, node_key, private_key, tls_pin):
+        def failing(private_key, tls_pin):
             kept.append(private_key)
-            raise RuntimeError('cannot seal %s for %s' % (private_key.hex(), tls_pin))
+            return RuntimeError('cannot seal %s for %s' % (private_key.hex(), tls_pin))
+        self.unstored = failing
         node = self.node(Scripted())
         error = self.refused('internal', self.code(node), 'The link could not be kept on this server. Reject it on '
-                             'the other server and pair again.', outcome='error', node=node, store=failing, link=True)
+                             'the other server and pair again.', outcome='error', node=node, recorded=True, link=True)
         self.assertRegex(error.link_id, '^[0-9a-f]{32}$')
         self.assertIsNone(error.__cause__ or error.__context__)
         self.assertNotIn(kept[0].hex(), texts_of(error))

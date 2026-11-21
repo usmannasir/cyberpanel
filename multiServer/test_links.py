@@ -527,7 +527,7 @@ class FixedTextTests(unittest.TestCase):
 
     def test_every_text_is_plain_fits_its_column_and_has_no_varying_part(self):
         shown = links.STORED_ERRORS + (links.NOT_CONTROLLER, links.NO_LICENCE, links.NO_SUCH_SERVER,
-                                       links.NOT_ACTIVE)
+                                       links.NOT_ACTIVE, links.NOT_PENDING)
         self.assertEqual(len(shown), len(set(shown)))
         self.assertEqual(13, len(links.STORED_ERRORS))
         for text in shown:
@@ -575,20 +575,22 @@ class RefusalWithoutSendingTests(unittest.TestCase):
         return True
 
     def test_a_server_that_is_not_a_controller_asks_nobody(self):
-        for role in (keys.OFF, keys.NODE):
-            with mock.patch.object(links.switch, 'active_role', return_value=role), \
-                    mock.patch.object(entitlement, 'allowed', return_value=True):
-                self.assertEqual(links.Hello(False, links.NOT_CONTROLLER, '', ()), links.hello(LINK, 'admin'))
+        for ask in (links.hello, links.confirm):
+            for role in (keys.OFF, keys.NODE):
+                with mock.patch.object(links.switch, 'active_role', return_value=role), \
+                        mock.patch.object(entitlement, 'allowed', return_value=True):
+                    self.assertEqual(links.Hello(False, links.NOT_CONTROLLER, '', ()), ask(LINK, 'admin'))
         self.assertEqual([('request', dict(outcome='refused', reason='role', link_id=LINK, actor='admin',
-                                           method='GET', path='/multiserver/gateway/hello'))] * 2, self.audited)
+                                           method='GET', path='/multiserver/gateway/hello'))] * 4, self.audited)
 
     def test_a_controller_without_the_licence_asks_nobody(self):
-        for answer in (False, None, 0, 1, 'yes'):
-            with mock.patch.object(links.switch, 'active_role', return_value=keys.CONTROLLER), \
-                    mock.patch.object(entitlement, 'allowed', return_value=answer):
-                self.assertEqual(links.Hello(False, links.NO_LICENCE, '', ()), links.hello(LINK, 'admin'))
+        for ask in (links.hello, links.confirm):
+            for answer in (False, None, 0, 1, 'yes'):
+                with mock.patch.object(links.switch, 'active_role', return_value=keys.CONTROLLER), \
+                        mock.patch.object(entitlement, 'allowed', return_value=answer):
+                    self.assertEqual(links.Hello(False, links.NO_LICENCE, '', ()), ask(LINK, 'admin'))
         self.assertEqual([('request', dict(outcome='refused', reason='licence', link_id=LINK, actor='admin',
-                                           method='GET', path='/multiserver/gateway/hello'))] * 5, self.audited)
+                                           method='GET', path='/multiserver/gateway/hello'))] * 10, self.audited)
 
 
 class CompatibilityTests(unittest.TestCase):

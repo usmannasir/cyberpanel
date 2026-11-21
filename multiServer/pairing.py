@@ -6,9 +6,11 @@
    random seed, which is a one-time Ed25519 private key. The server keeps the
    public half only, with the controller's address and the time the code ends.
 2. On the controller an administrator pastes the code and is shown what it
-   says (read_code). start() then connects to that address, pinned to that
-   certificate, and sends a request signed with the one-time key: a new link
-   id and the controller's new public key for the link.
+   says (read_code). start() first makes sure that it will be able to keep the
+   link (links.prepare), because the next step uses the code up. It then
+   connects to that address, pinned to that certificate, and sends a request
+   signed with the one-time key: a new link id and the controller's new public
+   key for the link.
 3. The managed server (node_receive) checks the request, uses the code up and
    records the link as pending, in one step, and answers with its identity key
    and its signature over the request.
@@ -20,6 +22,9 @@
    Until then the link can do nothing, and MAX_WRONG_NUMBERS wrong numbers
    close it. So nobody approves a link without having seen the controller it
    belongs to.
+5. The controller learns of the approval by asking: links.confirm() sends the
+   first signed request on the link, and the answer the managed server now
+   gives makes the controller's record active too. There is no other message.
 
 The code is 'CPMS1-PAIR-' followed by base32 (A-Z and 2-7, no padding) in
 groups of eight joined by dashes, so it is letters, digits and dashes only:
@@ -63,7 +68,7 @@ import ssl
 import time
 import types
 
-from multiServer import addresses, audit, crypto, keys, switch, transport
+from multiServer import addresses, audit, crypto, keys, links, switch, transport
 
 PATH = '/multiserver/pair'
 CODE_LIFETIME = 10 * 60  # seconds a pairing code can be used
@@ -74,7 +79,6 @@ MAX_WRONG_NUMBERS = 5  # wrong numbers typed after which a waiting link is close
 LINK_LIFETIME = 90 * 24 * 60 * 60  # seconds an approved link lasts
 MAX_BODY = 256
 MAX_CODE = 1024
-MAX_LABEL = 64
 MAX_CERTIFICATE = 64 * 1024
 
 PREFIX = 'CPMS1-PAIR-'
@@ -108,6 +112,7 @@ Pending = collections.namedtuple('Pending', 'link_id controller_ip admin_id crea
 
 class PairingError(Exception):
     """A refusal. `reason` is its audit reason; the text may be shown and holds nothing secret."""
+    recorded = False  # True when the audit trail already has this refusal
 
     def __init__(self, reason, message, link_id=None):
         Exception.__init__(self, message)
@@ -130,41 +135,55 @@ def read_code(text):
     return Target(endpoint.host, endpoint.port, node_id, endpoint.tls_pin)
 
 
-def start(code_text, label, actor, store):
+def start(code_text, label, actor):
     """Pair this controller with the managed server a code names; PairingError when that is refused.
 
-    Once that server's answer has been verified, the new link is handed over as
-    store(label, link_id, host, port, node_key, private_key, tls_pin), with both
-    keys as 32 bytes. Returns Paired, whose confirmation is the number to show.
-    The link works only after the other server's administrator has approved it.
+    Whatever would stop the link from being kept here (the label, the address,
+    the master key, a server that is connected already) is refused before
+    anything is sent, while the code is still unused. Once the server's answer
+    has been verified, the link is kept as a PENDING record (links.store).
+    Returns Paired, whose confirmation is the number to show: the link works
+    when the other server's administrator has typed it there and
+    links.confirm() has then asked that server.
     """
     refusal = None
     try:
-        paired = _start(code_text, label, actor, store)
+        paired = _start(code_text, label, actor)
     except PairingError as error:
         refusal = error
     except Exception:
         refusal = PairingError('internal', 'Pairing failed on this server.')
     if refusal is not None:
-        _record('pairing', refusal.reason, link_id=refusal.link_id, actor=actor)
+        if not refusal.recorded:
+            _record('pairing', refusal.reason, link_id=refusal.link_id, actor=actor)
         # Raised here, outside the handler, so that nothing of a failed store() travels with it.
         raise refusal
-    audit.record('pairing', link_id=paired.link_id, actor=actor)
     return paired
 
 
-def _start(code_text, label, actor, store):
+def _start(code_text, label, actor):
     if switch.active_role() != keys.CONTROLLER:
         raise PairingError('role', 'This server is not a Multi-Server Manager controller.')
     from multiServer import entitlement
     if entitlement.allowed() is not True:
         raise PairingError('licence', 'This server has no Multi-Server Manager licence.')
-    if (not isinstance(label, str) or not 1 <= len(label) <= MAX_LABEL or not label.isprintable()
-            or not isinstance(actor, str) or _ACTOR.fullmatch(actor) is None or not callable(store)):
-        raise PairingError('format', 'A name for the server is required.')
+    try:
+        links.check_label(label)
+    except links.InvalidLabel as error:
+        raise PairingError('format', str(error)) from None
+    if not isinstance(actor, str) or _ACTOR.fullmatch(actor) is None:
+        raise PairingError('format', 'The administrator cannot be named on a link.')
     endpoint, node_id, seed = _decode(code_text)
     private_key = crypto.generate_private_key()
     link_id, nonce, timestamp = os.urandom(16).hex(), os.urandom(16).hex(), _now()
+    refusal = None
+    try:
+        # Everything about keeping the link that can be known now. What follows uses the code up.
+        links.prepare(label, link_id, node_id, endpoint.host, endpoint.port, private_key, endpoint.tls_pin)
+    except Exception as error:
+        refusal = _unkept(error)
+    if refusal is not None:
+        raise refusal
     pairing_key, controller_key = crypto.public_key(seed).hex(), crypto.public_key(private_key).hex()
     request = crypto.pair_request_message(link_id, pairing_key, controller_key, node_id, endpoint.tls_pin,
                                           endpoint.authority, timestamp, nonce)
@@ -193,16 +212,30 @@ def _start(code_text, label, actor, store):
         raise PairingError('signature', 'The answer is not signed by the server this pairing code names.')
     stored = False
     try:
-        store(label, link_id, endpoint.host, endpoint.port, node_key, private_key, endpoint.tls_pin)
+        links.store(label, link_id, endpoint.host, endpoint.port, node_key, private_key, endpoint.tls_pin, actor)
         stored = True
     except Exception:
         pass
     if not stored:
-        raise PairingError('internal', 'The link could not be kept on this server. Reject it on the other '
-                           'server and pair again.', link_id)
+        unkept = PairingError('internal', 'The link could not be kept on this server. Reject it on the other '
+                              'server and pair again.', link_id)
+        unkept.recorded = True  # by links.store
+        raise unkept
     number = confirmation_number(crypto.pair_confirmation_message(link_id, pairing_key, controller_key,
                                                                   node_key.hex()))
     return Paired(link_id, node_id, endpoint.host, endpoint.port, number)
+
+
+def _unkept(error):
+    """The refusal for a link this controller could not keep; said before the code is used. Never raises."""
+    # Each of these messages is a fixed text of links.py or transport.py and names no key.
+    for kind, reason in ((links.NotController, 'role'), (links.InvalidLabel, 'format'),
+                         (links.DuplicateNode, 'link'), (transport.RefusedAddress, 'not_allowed'),
+                         (links.NoMasterKey, 'internal'), (links.UnreadableRow, 'internal'),
+                         (links.Busy, 'internal')):
+        if type(error) is kind:
+            return PairingError(reason, str(error))
+    return PairingError('internal', 'Pairing failed on this server.')
 
 
 def _transport_reason(error):
