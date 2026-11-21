@@ -53,7 +53,7 @@ import json
 import re
 import time
 
-from multiServer import addresses, crypto, keys, pairing, switch, transport
+from multiServer import addresses, crypto, keys, links, pairing, switch, transport
 
 WINDOW = 90  # seconds a signed time may differ from this server's clock, either way
 PRUNE_EVERY = 60  # a link's dead nonces are removed when its newest accepted time enters a new minute
@@ -76,6 +76,16 @@ Verified = collections.namedtuple(
 Route = collections.namedtuple('Route', 'capability method query handler')
 
 
+def _revoke(verified):
+    from multiServer import audit, models
+    if verified.body or verified.content_type != '-':
+        raise _Refused('format')
+    keys.mark_revoked(verified.link_id)
+    models.Link.objects.filter(pk=verified.link_id).update(status=models.REVOKED, updated_at=int(time.time()))
+    audit.record('link_revoke', outcome='ok', actor=verified.actor, link_id=verified.link_id)
+    return 200, JSON, b'{"revoked":true}'
+
+
 def _hello(verified):
     import cyberpanel_version
     return 200, JSON, _json({'version': cyberpanel_version.VERSION, 'build': cyberpanel_version.BUILD,
@@ -86,6 +96,7 @@ def _hello(verified):
 # request that passed every check above, with its exact method, and without a query unless the route
 # takes one. It returns (status, media type, body). Nothing here leads to the panel's URL table.
 ROUTES = {
+    ('json', links.REVOKE_PATH): Route('revoke', 'POST', False, _revoke),
     ('json', HELLO): Route('hello', 'GET', False, _hello),
 }
 
@@ -209,7 +220,8 @@ def _serve(request, exchange, get_response):
     link = models.Link.objects.filter(pk=named['link']).first()
     if link is not None:
         exchange.link_id = link.link_id  # the audit trail names a link only when there is one of that name
-    unusable = _unusable(link, generation, now)
+    revoking = (method, named['mode'], path, query) == ('POST', 'json', links.REVOKE_PATH, '')
+    unusable = _unusable(link, generation, now, revoking)
     if unusable:
         raise _Refused(unusable)
 
@@ -239,7 +251,7 @@ def _serve(request, exchange, get_response):
     exchange.signed = message  # from here on every reply is signed
 
     # replay
-    _accept(link, generation, timestamp, named['nonce'], now)
+    _accept(link, generation, timestamp, named['nonce'], now, revoking)
 
     # admin
     from multiServer import views
@@ -317,10 +329,13 @@ def _language(request):
         return None
 
 
-def _unusable(link, generation, now):
+def _unusable(link, generation, now, revoking=False):
     """Why a link row cannot carry a request now, or None."""
     from multiServer import models
-    if link is None or link.status != models.ACTIVE or not _matches(_KEY, link.controller_key):
+    statuses = (models.ACTIVE, models.PENDING, models.PAUSED, models.REVOKED) if revoking else (models.ACTIVE,)
+    if link is None or link.status not in statuses or not _matches(_KEY, link.controller_key):
+        return 'link'
+    if not revoking and keys.revoked(link.link_id):
         return 'link'
     if link.expires_at <= now:
         return 'expired'
@@ -334,7 +349,7 @@ def _checked(link):
     return link.controller_key, link.allowed_ips, link.admin_id
 
 
-def _accept(link, generation, timestamp, nonce, now):
+def _accept(link, generation, timestamp, nonce, now, revoking=False):
     """Accept a fresh nonce without moving the link's newest timestamp backwards.
 
     The link row is updated first. That serialises the requests of one link, and it confirms at the
@@ -352,13 +367,13 @@ def _accept(link, generation, timestamp, nonce, now):
     try:
         with transaction.atomic():
             advanced = models.Link.objects.filter(
-                pk=link.link_id, status=models.ACTIVE, generation=generation, expires_at__gt=now,
+                pk=link.link_id, status=link.status if revoking else models.ACTIVE, generation=generation, expires_at__gt=now,
                 controller_key=link.controller_key, allowed_ips=link.allowed_ips, admin_id=link.admin_id,
                 last_request_at__lte=timestamp + WINDOW
             ).update(last_request_at=Greatest('last_request_at', Value(timestamp)))
             if advanced != 1:
                 current = models.Link.objects.filter(pk=link.link_id).first()
-                reason = _unusable(current, generation, now)
+                reason = _unusable(current, generation, now, revoking)
                 if reason is None and _checked(current) != _checked(link):
                     reason = 'link'
                 raise _Refused(reason or 'time')

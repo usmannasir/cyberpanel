@@ -50,6 +50,7 @@ MAX_SEALED = 844
 LOCK_SECONDS = 10  # how long store() waits for another worker that is storing
 
 HELLO_PATH = '/multiserver/gateway/hello'
+REVOKE_PATH = '/multiserver/gateway/revoke'
 MAX_HELLO = 1024  # bytes of a node's whole answer to hello
 MAX_BUILD = 9999
 MAX_CAPABILITIES = 16
@@ -313,12 +314,48 @@ def remove(link_id, actor=None):
     True when there was such a row. It asks neither the licence nor the master
     key, so a row that cannot be read can still be removed.
     """
+    if switch.active_role() != keys.CONTROLLER:
+        _audit('node_remove', link_id, actor, 'refused', 'role')
+        return False
     removed = False
     if _is_link_id(link_id):
         from multiServer import models
         removed = models.Node.objects.filter(pk=link_id).delete()[1].get(models.Node._meta.label, 0) == 1
     _audit('node_remove', link_id, actor, *(() if removed else ('refused', 'link')))
     return removed
+
+
+def revoke(link_id, actor):
+    """Stop controller traffic before sending. Retain the key for retries until signed proof arrives."""
+    from multiServer import models
+    if switch.active_role() != keys.CONTROLLER or not _is_link_id(link_id):
+        _audit('link_revoke', link_id, actor, 'refused', 'role')
+        return False
+    rows = models.Node.objects.filter(pk=link_id)
+    rows.filter(status__in=(models.ACTIVE, models.PAUSED, models.PENDING)).update(
+        status=models.REVOKING, updated_at=int(time.time()))
+    row = rows.filter(status=models.REVOKING).first()
+    if row is None:
+        _audit('link_revoke', link_id, actor, 'refused', 'link')
+        return False
+    try:
+        link = link_of(row)
+        reply = transport.send(link, 'POST', REVOKE_PATH, '', '-', b'', actor, 'json')
+        if reply == (200, 'application/json', b'{"revoked":true}'):
+            # Another retry can already have removed this row after receiving the same proof.
+            rows.filter(status=models.REVOKING, sealed=row.sealed).delete()
+            _audit('link_revoke', link_id, actor)
+            return True
+        reason, message = 'not_allowed', REFUSED
+    except transport.TransportError as error:
+        reason, message = _failure(error)
+    except LinkError:
+        reason, message = 'internal', UNREADABLE
+    except Exception:
+        reason, message = 'internal', FAILED
+    _note(link_id, models.REVOKING, last_error=message, last_error_at=int(time.time()))
+    _audit('link_revoke', link_id, actor, 'error', reason)
+    return False
 
 
 def hello(link_id, actor):
@@ -466,6 +503,12 @@ _STORE_REFUSALS = {
 
 
 def _move(link_id, before, after, event, actor):
+    if switch.active_role() != keys.CONTROLLER:
+        _audit(event, link_id, actor, 'refused', 'role')
+        return False
+    if event == 'link_resume' and entitlement.allowed() is not True:
+        _audit(event, link_id, actor, 'refused', 'licence')
+        return False
     moved = False
     if _is_link_id(link_id):
         from multiServer import models
@@ -503,7 +546,7 @@ def _ask(link_id, actor, use):
     if answer is None:
         return _failed(link_id, actor, use, 'error', 'format', NOT_A_NODE, **seen)
     now = int(time.time())
-    changes = dict(panel_version=answer[0], last_seen_at=now, last_error='', last_error_at=None)
+    changes = dict(panel_version=answer[0], advertised=','.join(answer[1]), last_seen_at=now, last_error='', last_error_at=None)
     if use.activates:
         # The proof and the change in one statement: of two workers, one finds the row still pending.
         changes.update(status=models.ACTIVE, updated_at=now)

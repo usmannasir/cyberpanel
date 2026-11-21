@@ -34,6 +34,7 @@ TABLES = (
         ('status', "varchar(16) NOT NULL DEFAULT 'pending'"),
         ('sealed', 'varchar(2048) NOT NULL'),
         ('panel_version', "varchar(32) NOT NULL DEFAULT ''"),
+        ('advertised', "varchar(400) NOT NULL DEFAULT ''"),
         ('created_at', TIME),
         ('updated_at', TIME),
         ('last_seen_at', LATER),
@@ -202,6 +203,15 @@ def ensure_tables(connection, cursor):
                                % (table.name, error)) from error
     connection.commit()
     found = problems(cursor)
+    if 'ms_nodes: column advertised is missing' in found:
+        # MariaDB and MySQL, including concurrent retries upgrading an earlier table.
+        try:
+            cursor.execute("ALTER TABLE ms_nodes ADD COLUMN advertised varchar(400) NOT NULL DEFAULT ''")
+        except Exception as error:
+            if error.args[:1] != (1060,):
+                raise
+        connection.commit()
+        found = problems(cursor)
     if found:
         raise RuntimeError('Multi-Server Manager tables are not usable: ' + '; '.join(found))
 

@@ -87,6 +87,21 @@ def ensure_key_directory(group='cyberpanel'):
         os.fchmod(descriptor, 0o750)
     finally:
         os.close(descriptor)
+    # Only this child directory is writable by the panel. A per-link marker
+    # survives database rollback without invalidating other controllers.
+    revoked = os.path.join(KEY_DIRECTORY, 'revoked')
+    try:
+        os.mkdir(revoked, 0o700)
+    except FileExistsError:
+        pass
+    descriptor = os.open(revoked, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        if os.fstat(descriptor).st_uid != OWNER:
+            raise RuntimeError('Unsafe Multi-Server revocation directory')
+        os.fchown(descriptor, OWNER, gid)
+        os.fchmod(descriptor, 0o770)
+    finally:
+        os.close(descriptor)
     _ensure_file('role', 'off\n', gid)
 
 

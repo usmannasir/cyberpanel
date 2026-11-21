@@ -146,7 +146,6 @@ class secMiddleware:
                     response = self.get_response(request)
                     return response
 
-                # logging.writeToFile(request.body)
                 try:
                     data = json.loads(request.body)
                 except:
@@ -164,7 +163,10 @@ class secMiddleware:
                 # CSP, Referrer-Policy) are applied.
                 webmailRequest = pathActual.startswith('/webmail/')
 
+                node_control = pathActual == '/multiserver/nodes/control'
                 for key, value in ({} if webmailRequest else data).items():
+                    if node_control and key == 'password':
+                        continue  # Opaque credential consumed only by the password verifier.
                     valueAlreadyChecked = 0
 
                     # Key/value scanning logging removed
@@ -246,7 +248,7 @@ class secMiddleware:
                                 "]") > -1 or items.find("{") > -1 or items.find("}") > -1 \
                                     or items.find(":") > -1 or items.find("<") > -1 or items.find(
                                 ">") > -1 or items.find("&") > -1):
-                                logging.writeToFile(request.body)
+                                logging.writeToFile('Rejected node control input' if node_control else request.body)
                                 final_dic = {
                                     'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
                                     "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
@@ -258,7 +260,7 @@ class secMiddleware:
                     if key == 'backupDestinations':
                         if re.match('^[a-z|0-9]+:[a-z|0-9|\.]+\/?[A-Z|a-z|0-9|\.]*$',
                                     value) == None and value != 'local':
-                            logging.writeToFile(request.body)
+                            logging.writeToFile('Rejected node control input' if node_control else request.body)
                             final_dic = {'error_message': "Data supplied is not accepted.",
                                          "errorMessage": "Data supplied is not accepted."}
                             final_json = json.dumps(final_dic)
@@ -288,7 +290,7 @@ class secMiddleware:
                             value.find('&&') > -1 or value.find('||') > -1 or value.find('|') > -1 or
                             value.find('...') > -1 or value.find("`") > -1 or value.find("$") > -1 or
                             value.find('../') > -1 or value.find('../../') > -1):
-                            logging.writeToFile(request.body)
+                            logging.writeToFile('Rejected node control input' if node_control else request.body)
                             final_dic = {
                                 'error_message': "API request contains potentially dangerous characters: `;`, `&&`, `||`, `|`, `` ` ``, `$`, `../` are not allowed.",
                                 "errorMessage": "API request contains potentially dangerous characters."
@@ -318,7 +320,7 @@ class secMiddleware:
                             "{") > -1 or value.find("}") > -1 \
                                 or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1 or value.find(
                             "&") > -1):
-                            logging.writeToFile(request.body)
+                            logging.writeToFile('Rejected node control input' if node_control else request.body)
                             final_dic = {
                                 'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
                                 "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
@@ -330,7 +332,7 @@ class secMiddleware:
                             or key.find("'") > -1 or key.find("[") > -1 or key.find("]") > -1 or key.find(
                         "{") > -1 or key.find("}") > -1 \
                             or key.find(":") > -1 or key.find("<") > -1 or key.find(">") > -1 or key.find("&") > -1):
-                        logging.writeToFile(request.body)
+                        logging.writeToFile('Rejected node control input' if node_control else request.body)
                         final_dic = {'error_message': "Data supplied is not accepted.",
                                      "errorMessage": "Data supplied is not accepted following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
                         final_json = json.dumps(final_dic)

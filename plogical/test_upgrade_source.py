@@ -442,6 +442,29 @@ class UpgradeEntryPointTests(unittest.TestCase):
         backups = list(self.root.glob('cyberpanel_backup_*/**/CyberCP/settings.py'))
         self.assertEqual([old], [path.read_text() for path in backups])
 
+    def test_multiserver_hook_uses_candidate_then_rolls_back_on_failure(self):
+        execute = self.upgrade.executioner
+
+        def clone_candidate(command, *args):
+            result = execute(command, *args)
+            argv = shlex.split(command)
+            if argv[1] == 'clone':
+                (Path(argv[-1]) / 'multiServer').mkdir()
+            return result
+
+        self.upgrade.executioner = clone_candidate
+        def fail_hook(argv, cwd):
+            self.assertTrue((Path(cwd) / 'new_source.py').is_file())
+            self.assertEqual(['manage.py', 'shell', '-c'], argv[1:4])
+            self.assertIn('from plogical.schemaMigration import provision_multiserver', argv[-1])
+            raise RuntimeError('candidate provisioning failed')
+
+        with patch.dict(self.globals, subprocess=types.SimpleNamespace(check_call=fail_hook)):
+            status, reason = self.upgrade.downloadAndUpgrade(None, 'v3.0.8')
+        self.assertEqual((0, 'candidate provisioning failed'), (status, reason))
+        self.assertFalse((self.current / 'new_source.py').exists())
+        self.assertTrue((self.current / '.env').exists())
+
     def test_ambiguous_hardening_stops_before_source_activation(self):
         old = 'SESSION_COOKIE_SECURE = get_security_flag()\n'
         self.write(self.current / 'CyberCP/settings.py', old)

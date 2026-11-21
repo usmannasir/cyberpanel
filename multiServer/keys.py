@@ -58,6 +58,35 @@ def master_key():
     return text.encode('ascii') if text is not None and _FERNET_KEY.fullmatch(text) else None
 
 
+def revoked(link_id):
+    """A marker survives restoring an older database. Errors other than absence stop the gateway."""
+    if not re.fullmatch(r'[0-9a-f]{32}', link_id):
+        raise ValueError('Invalid link id')
+    try:
+        os.lstat(os.path.join(KEY_DIRECTORY, 'revoked', link_id))
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def mark_revoked(link_id):
+    """Persist before acknowledging, including a retry after the first reply was lost."""
+    if not re.fullmatch(r'[0-9a-f]{32}', link_id):
+        raise ValueError('Invalid link id')
+    directory = os.open(os.path.join(KEY_DIRECTORY, 'revoked'), os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        try:
+            fd = os.open(link_id, os.O_WRONLY | os.O_NOFOLLOW | os.O_CREAT | os.O_EXCL, 0o600,
+                         dir_fd=directory)
+        except FileExistsError:
+            pass
+        else:
+            os.close(fd)
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+
+
 def generation():
     """Counter raised on every revocation; 0 when it cannot be read."""
     text = _read('generation', 18)

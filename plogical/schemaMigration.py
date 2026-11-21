@@ -1,6 +1,17 @@
 import re
 
 
+def provision_multiserver():
+    """Run as root from the selected panel tree, with its configured database."""
+    from django.db import connection
+    from install.multiserver_identity import ensure_key_directory
+    from multiServer.schema import ensure_tables
+
+    ensure_key_directory()
+    with connection.cursor() as cursor:
+        ensure_tables(connection, cursor)
+
+
 def ensure_child_domain_state(connection, cursor):
     """Upgrade existing installations without altering inherited suspension."""
     query = "SHOW COLUMNS FROM websiteFunctions_childdomains LIKE 'state'"

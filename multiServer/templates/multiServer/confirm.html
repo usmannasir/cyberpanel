@@ -1,0 +1,13 @@
+<details>
+  <summary>{{ title }}</summary>
+  <form method="post" action="{% url 'multiServerNodeControl' %}">
+    {% csrf_token %}
+    <input type="hidden" name="link_id" value="{{ node.id }}">
+    <input type="hidden" name="action" value="{{ action }}">
+    <p>{{ notice }}</p>
+    <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
+    <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+    <label><input type="checkbox" name="confirm" value="{{ action }}" required> Confirm for {{ node.label }}</label>
+    <button class="btn btn-danger" type="submit">{{ title }}</button>
+  </form>
+</details>
