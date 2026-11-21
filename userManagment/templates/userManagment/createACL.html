@@ -1,5 +1,4 @@
 {% extends "baseTemplate/index.html" %}
-{% block create_server_selector %}{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Create new ACL - CyberPanel" %}{% endblock %}
 {% block content %}
@@ -151,7 +150,6 @@
       <div class="page-container">
         <div class="content-card" ng-controller="createACLCTRL">
             <h3 class="section-title">{% trans "Create New ACL" %}</h3>
-            {% include "multiServer/selector.html" with placement="create" %}
             <form name="createACLForm" action="/">
                 <div class="form-group">
                     <label class="form-label">{% trans "ACL Name" %}</label>
