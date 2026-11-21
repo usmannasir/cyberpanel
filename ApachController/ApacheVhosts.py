@@ -10,7 +10,7 @@ import os
 from websiteFunctions.models import Websites, ChildDomains
 from plogical.vhostConfs import vhostConfs
 from managePHP.phpManager import PHPManager
-from managePHP.phpConfig import fpm_service_for_selection
+from managePHP.phpConfig import fpm_pool_name, fpm_service_for_selection
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 import re
@@ -225,7 +225,7 @@ class ApacheVhost:
 
             confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
-            currentConf = currentConf.replace('{www}', virtualHostUser)
+            currentConf = currentConf.replace('{www}', fpm_pool_name(externalApp, virtualHostName))
             currentConf = currentConf.replace('{Sock}', virtualHostName)
             currentConf = currentConf.replace('{externalApp}', externalApp)
             currentConf = currentConf.replace('{sockPath}', sockPath)
@@ -349,7 +349,7 @@ class ApacheVhost:
 
             confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
-            currentConf = currentConf.replace('{www}', "".join(re.findall("[a-zA-Z]+", virtualHostName))[:7])
+            currentConf = currentConf.replace('{www}', fpm_pool_name(externalApp, virtualHostName))
             currentConf = currentConf.replace('{Sock}', virtualHostName)
             currentConf = currentConf.replace('{externalApp}', externalApp)
             currentConf = currentConf.replace('{sockPath}', sockPath)
@@ -614,7 +614,7 @@ class ApacheVhost:
 
             confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
-            currentConf = currentConf.replace('{www}', externalApp)
+            currentConf = currentConf.replace('{www}', fpm_pool_name(externalApp, virtualHostName))
             currentConf = currentConf.replace('{Sock}', virtualHostName)
             currentConf = currentConf.replace('{externalApp}', externalApp)
             currentConf = currentConf.replace('{sockPath}', sockPath)

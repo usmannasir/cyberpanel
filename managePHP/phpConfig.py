@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 
@@ -30,6 +31,44 @@ def fpm_service_for_selection(selection, rpm_family):
     if rpm_family:
         return 'php%s%s-php-fpm' % (major, minor)
     return 'php%s.%s-fpm' % (major, minor)
+
+
+FPM_POOL_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,63}')
+
+
+def fpm_pool_name(external_app, domain):
+    """Return the section name for the PHP-FPM pool of one website or child domain.
+
+    php-fpm merges every section of the same name in the pool files of a PHP
+    version into one pool, and the last file read decides its socket and
+    user. The name therefore has to differ from every other pool: it is the
+    website's system user followed by a digest of the domain.
+    """
+    digest = hashlib.sha256(domain.encode('utf-8')).hexdigest()[:12]
+    name = '%s-%s' % (external_app, digest)
+    if FPM_POOL_NAME.fullmatch(name) is None:
+        raise ValueError('Invalid PHP-FPM pool name.')
+    return name
+
+
+def existing_fpm_pool_name(pool_file_text):
+    """Return the section name of an existing pool file, or None if it has no usable one.
+
+    Tuning a pool rewrites its file and keeps this name, so a pool created
+    by an earlier version is not renamed. 'global' and 'www' are never kept:
+    the first is php-fpm's own section, the second the distribution's pool.
+    """
+    for line in str(pool_file_text or '').splitlines():
+        line = line.strip()
+        if not line or line[0] in ';#':
+            continue
+        match = re.fullmatch(r'\[([^\]]*)\]', line)
+        if match is None or FPM_POOL_NAME.fullmatch(match.group(1)) is None:
+            return None
+        if match.group(1).lower() in ('global', 'www'):
+            return None
+        return match.group(1)
+    return None
 
 
 def matches_directive(line, directive):

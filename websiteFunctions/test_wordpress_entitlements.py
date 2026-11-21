@@ -1,6 +1,7 @@
 """Execute actual manager bodies with inert services, without panel bootstrap."""
 import ast
 from functools import wraps
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -51,7 +52,7 @@ def load_wordpress_manager():
         **services, 'wraps': wraps, 'json': json, 'HttpResponse': Response,
         'JsonResponse': lambda data: Response(json.dumps(data)),
         'redirect': lambda target: Response(status=302, location=target),
-        'randint': lambda lower, upper: lower, 're': re, 'shlex': shlex,
+        'randint': lambda lower, upper: lower, 're': re, 'shlex': shlex, 'hashlib': hashlib,
     }
     premium = ast.parse((ROOT / 'plogical/premiumEntitlements.py').read_text())
     premium.body = [node for node in premium.body if isinstance(node, ast.FunctionDef)]
@@ -62,6 +63,9 @@ def load_wordpress_manager():
     apache = ast.parse((ROOT / 'websiteFunctions/apacheEntitlements.py').read_text())
     apache.body = [node for node in apache.body if isinstance(node, ast.FunctionDef)]
     exec(compile(apache, 'apacheEntitlements.py', 'exec'), namespace)
+    php = ast.parse((ROOT / 'managePHP/phpConfig.py').read_text())
+    php.body = [node for node in php.body if isinstance(node, (ast.FunctionDef, ast.Assign))]
+    exec(compile(php, 'phpConfig.py', 'exec'), namespace)
     version = ast.parse((ROOT / 'plogical/wordpressInstallerUtilities.py').read_text())
     version.body = [node for node in version.body
                     if isinstance(node, (ast.FunctionDef, ast.Assign))]

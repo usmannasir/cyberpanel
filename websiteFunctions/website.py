@@ -45,6 +45,7 @@ from plogical.systemPassword import (
 )
 from plogical.securityUtils import generate_api_token
 from managePHP.phpManager import PHPManager
+from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.vhostConfs import vhostConfs
 from plogical.cronUtil import CronUtil
@@ -5572,13 +5573,21 @@ StrictHostKeyChecking no
                 sockPath = '/var/run/php/'
                 group = 'nogroup'
 
+            # Tuning rewrites the pool file. The pool keeps the name it has, so
+            # one made by an earlier version is not renamed; a file without a
+            # usable name gets the unique name new pools are given.
+            poolName = existing_fpm_pool_name(
+                ProcessUtilities.outputExecutioner('sudo cat ' + shlex.quote(phpPath)))
+            if poolName is None:
+                poolName = fpm_pool_name(externalApp, website.domain)
+
             phpFPMConf = vhostConfs.phpFpmPoolReplace
             phpFPMConf = phpFPMConf.replace('{externalApp}', externalApp)
             phpFPMConf = phpFPMConf.replace('{pmMaxChildren}', pmMaxChildren)
             phpFPMConf = phpFPMConf.replace('{pmStartServers}', pmStartServers)
             phpFPMConf = phpFPMConf.replace('{pmMinSpareServers}', pmMinSpareServers)
             phpFPMConf = phpFPMConf.replace('{pmMaxSpareServers}', pmMaxSpareServers)
-            phpFPMConf = phpFPMConf.replace('{www}', "".join(re.findall("[a-zA-Z]+", domainName))[:7])
+            phpFPMConf = phpFPMConf.replace('{www}', poolName)
             phpFPMConf = phpFPMConf.replace('{Sock}', domainName)
             phpFPMConf = phpFPMConf.replace('{sockPath}', sockPath)
             phpFPMConf = phpFPMConf.replace('{group}', group)
