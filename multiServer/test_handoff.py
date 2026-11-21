@@ -1,10 +1,13 @@
-"""The server login addresses in the panel's own chain.
+"""The server login addresses in the panel's own chain, and the two legs a controller answers.
 
 What the panel's last middleware does with these addresses is tested through the
 whole chain, on the database of multiServer/test_gateway.py: which path counts
 as one, and that a session is bound to its address there as everywhere else.
+The checks of `returned` and `finish` are tested on the views themselves.
 """
+import secrets
 import time
+import types
 import unittest
 from unittest.mock import patch
 from urllib.parse import urlencode
@@ -17,9 +20,9 @@ if SKIP is None:
     from django.contrib.sessions.backends.db import SessionStore
     from django.contrib.sessions.models import Session
     from django.http import HttpResponse
-    from django.test import Client
+    from django.test import Client, RequestFactory
     from loginSystem.models import Administrator
-    from multiServer import browser
+    from multiServer import browser, crypto, sso
 
 HOST = panel.HOST
 ELSEWHERE = '203.0.113.9'
@@ -167,6 +170,122 @@ class RealViewTests(panel.Panel):
                 self.assertEqual(403, response.status_code)
                 self.assertIn(FAILED, response.content)
                 self.assertFalse(Session.objects.filter(pk=key).exists())
+
+
+@unittest.skipIf(SKIP, SKIP)
+class ReturnTests(panel.Panel):
+    """`returned` on a controller: a cross-site POST, taken only from the server that is being opened."""
+    CONTROLLER = 'controller.example.com:8090'
+
+    def setUp(self):
+        panel.Panel.setUp(self)
+        self.flow, self.challenge = secrets.token_hex(32), secrets.token_hex(32)
+        self.link = types.SimpleNamespace(authority='node.example.com:8090')
+        self.asked = []
+
+        def peer_row(link_id):
+            self.asked.append(link_id)
+            return self.link
+
+        self.start(patch.object(sso, 'peer_row', side_effect=peer_row))
+
+    def post(self, origin='null', pending=None, flow=None):
+        extra = {} if origin is None else {'HTTP_ORIGIN': origin}
+        request = RequestFactory().post(
+            '/multiserver/login/return', urlencode({'flow': flow or self.flow, 'challenge': self.challenge}),
+            secure=True, content_type='application/x-www-form-urlencoded', HTTP_HOST=self.CONTROLLER, **extra)
+        request.session = {} if pending is None else {'ms_open': pending}
+        return browser.dispatch(request, browser.returned)
+
+    def accepted(self, response):
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(self.flow + '.' + self.challenge, response.cookies[browser.RETURN].value)
+
+    def refused(self, response):
+        self.assertEqual(403, response.status_code)
+        self.assertIn(FAILED, response.content)
+        self.assertNotIn(browser.RETURN, response.cookies)
+
+    def pending(self, flow=None):
+        return [flow or self.flow, panel.LINK, int(time.time()) + 30]
+
+    def test_the_null_origin_of_the_bridge_page_is_accepted_without_the_controller_session(self):
+        self.accepted(self.post('null'))
+        self.assertEqual([], self.asked)
+
+    def test_a_named_origin_must_be_the_origin_of_the_server_being_opened(self):
+        self.accepted(self.post('https://node.example.com:8090', self.pending()))
+        self.assertEqual([panel.LINK], self.asked)
+        for origin in ('https://other.example.com:8090', 'https://node.example.com', 'http://node.example.com:8090',
+                       'https://node.example.com:8091', 'https://node.example.com:8090/', 'NULL', '',
+                       'https://' + self.CONTROLLER):
+            with self.subTest(origin):
+                self.refused(self.post(origin, self.pending()))
+
+    def test_a_server_on_the_default_port_is_named_as_browsers_name_it(self):
+        self.link.authority = 'node.example.com:443'
+        self.accepted(self.post('https://node.example.com', self.pending()))
+        self.refused(self.post('https://node.example.com:443', self.pending()))
+
+    def test_a_named_origin_cannot_be_checked_without_the_session_and_is_refused(self):
+        self.refused(self.post('https://node.example.com:8090'))
+        self.refused(self.post(None))
+        self.assertEqual([], self.asked)
+
+    def test_a_server_that_is_no_longer_connected_is_no_origin(self):
+        with patch.object(sso, 'peer_row', side_effect=LookupError('no such row')):
+            self.refused(self.post('https://node.example.com:8090', self.pending()))
+
+    def test_while_a_server_is_being_opened_only_that_login_may_return(self):
+        self.refused(self.post('null', self.pending('e2' * 32)))
+        self.refused(self.post('https://node.example.com:8090', self.pending('e2' * 32)))
+        self.accepted(self.post('null', self.pending()))
+
+
+@unittest.skipIf(SKIP, SKIP)
+class FinishTests(panel.Panel):
+    """`finish` spends the pending login, so it answers only this panel's own page."""
+    CONTROLLER = 'controller.example.com:8090'
+
+    def setUp(self):
+        panel.Panel.setUp(self)
+        self.flow, self.challenge = secrets.token_hex(32), secrets.token_hex(32)
+        self.key = crypto.generate_private_key()
+        self.link = types.SimpleNamespace(authority='node.example.com:8090', private_key=self.key)
+        for target, name, result in ((sso, 'peer_row', self.link), (browser, 'allowed_controller', object())):
+            setattr(self, name, self.start(patch.object(target, name, return_value=result)))
+
+    def ask(self, site, method='get'):
+        extra = {} if site is None else {'HTTP_SEC_FETCH_SITE': site}
+        request = getattr(RequestFactory(), method)('/multiserver/login/finish', secure=True,
+                                                    HTTP_HOST=self.CONTROLLER, **extra)
+        request.session = {'ms_open': [self.flow, panel.LINK, int(time.time()) + 30]}
+        request.COOKIES[browser.RETURN] = self.flow + '.' + self.challenge
+        return request, browser.dispatch(request, browser.finish)
+
+    def test_the_panels_own_page_completes_the_login(self):
+        request, response = self.ask('same-origin')
+        self.assertEqual(200, response.status_code)
+        self.assertNotIn('ms_open', request.session)
+        proof = crypto.sign(self.key, sso.proof_message(self.flow, self.challenge)).hex()
+        self.assertIn(proof.encode(), response.content)
+        self.assertIn(b'action="https://node.example.com:8090/multiserver/login/redeem"', response.content)
+
+    def test_a_request_that_another_site_started_changes_nothing(self):
+        for site in ('cross-site', 'same-site', 'none', '', 'Same-Origin', 'same-origin, cross-site', None):
+            with self.subTest(site):
+                request, response = self.ask(site)
+                self.assertEqual(403, response.status_code)
+                self.assertIn(FAILED, response.content)
+                self.assertEqual(self.flow, request.session['ms_open'][0])
+                self.assertNotIn(browser.RETURN, response.cookies)
+        self.allowed_controller.assert_not_called()
+        self.peer_row.assert_not_called()
+
+    def test_only_get_is_answered(self):
+        request, response = self.ask('same-origin', 'post')
+        self.assertEqual(403, response.status_code)
+        self.assertIn('ms_open', request.session)
 
 
 if __name__ == '__main__':
