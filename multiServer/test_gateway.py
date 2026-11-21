@@ -1741,10 +1741,13 @@ class PairingThroughTheGatewayTests(Panel):
 
     def assert_accepted(self, response, fields):
         self.assert_gateway_alone(response)
-        self.assertEqual((200, NODE_KEY.hex().encode()), (response.status_code, response.content))
+        value = crypto.pair_value(IDENTITY, fields['pairing_key'])
+        self.assertEqual((200, '\n'.join((NODE_KEY.hex(), value, '127.0.0.1')).encode()),
+                         (response.status_code, response.content))
         self.assertEqual(['Content-Type', 'X-CPMS-Signature', 'Content-Length', 'Cache-Control'],
                          [name for name, _ in response.items()])
-        signed = crypto.pair_response_message(crypto.pair_request_message(**fields), NODE_KEY.hex())
+        signed = crypto.pair_response_message(crypto.pair_request_message(**fields), NODE_KEY.hex(), value,
+                                              '127.0.0.1')
         self.assertTrue(crypto.verify(NODE_KEY, bytes.fromhex(response['X-CPMS-Signature']), signed))
         link = models.Link.objects.get(pk=fields['link_id'])
         self.assertEqual((models.PENDING, '127.0.0.1', self.administrator.pk, fields['controller_key'], 0),

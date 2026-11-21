@@ -24,6 +24,8 @@ from multiServer.test_transport import CERTIFICATES, Node, pin, wire
 SEED = b'one-time-pairing-seed-material!!'
 PAIRING_KEY = crypto.public_key(SEED).hex()
 NODE_ID, TLS = 'b2' * 32, 'd4' * 32
+VALUE, COMMITMENT = 'a9' * 32, 'e7' * 32
+HERE = '127.0.0.1'  # the controller address a scripted server allows, and the one this suite calls from
 PUBLIC_ADDRESS = '93.184.216.34'
 NOW = 1795000000
 LINK, NONCE = 'a1' * 16, 'c3' * 16
@@ -52,8 +54,8 @@ class Loopback(Endpoint):
         Endpoint.__init__(self, host, port, tls_pin, allow_loopback_for_tests=True)
 
 
-def code(host=PUBLIC_ADDRESS, port=8090, node_id=NODE_ID, tls_pin=TLS, seed=SEED):
-    return pairing._encode(host, port, node_id, tls_pin, seed)
+def code(host=PUBLIC_ADDRESS, port=8090, node_id=NODE_ID, tls_pin=TLS, seed=SEED, commitment=COMMITMENT):
+    return pairing._encode(host, port, node_id, tls_pin, seed, commitment)
 
 
 def packed(payload, check=None):
@@ -63,7 +65,8 @@ def packed(payload, check=None):
 
 
 def payload(host=b'\x04' + bytes([93, 184, 216, 34]), version=1, port=8090):
-    return bytes([version]) + port.to_bytes(2, 'big') + bytes.fromhex(NODE_ID + TLS) + SEED + host
+    return (bytes([version]) + port.to_bytes(2, 'big') + bytes.fromhex(NODE_ID + TLS) + SEED
+            + bytes.fromhex(COMMITMENT) + host)
 
 
 class Server(Node):
@@ -78,8 +81,9 @@ class Scripted(object):
     """What a managed server answers to a pairing request, with any part of it changed."""
 
     def __init__(self, key=None, sign_with=None, request=None, signature=None, status=200,
-                 content_type='text/plain', body=None, extra=(), hold=False):
+                 content_type='text/plain', body=None, extra=(), hold=False, value=None, allowed=HERE):
         self.key, self.sign_with, self.request, self.signature = key, sign_with, request, signature
+        self.value, self.allowed = value, allowed
         self.status, self.content_type, self.body, self.extra, self.hold = status, content_type, body, extra, hold
         self.requests = []
 
@@ -91,12 +95,13 @@ class Scripted(object):
         self.requests.append(dict(link_id=link_id, pairing_key=pairing_key, controller_key=controller_key,
                                   timestamp=timestamp, nonce=nonce, signed=signed, verifies=verifies))
         public = self.key or node.public
+        told = self.value or crypto.pair_value(node.private, pairing_key)
         value = self.signature(node, seen) if callable(self.signature) else self.signature
         if value is None:
-            value = crypto.sign(self.sign_with or node.private,
-                                crypto.pair_response_message(self.request or signed, public.hex())).hex()
+            value = crypto.sign(self.sign_with or node.private, crypto.pair_response_message(
+                self.request or signed, public.hex(), told, self.allowed)).hex()
             node.signatures.append(value)
-        content = public.hex().encode('ascii') if self.body is None else self.body
+        content = '\n'.join((public.hex(), told, self.allowed)).encode('ascii') if self.body is None else self.body
         headers = [('Content-Type', self.content_type), ('Content-Length', str(len(content)))]
         if value is not False:
             headers.append((transport.HEADERS['signature'], value))
@@ -127,19 +132,19 @@ def texts_of(error):
 
 class CodeTests(unittest.TestCase):
     def test_a_code_is_letters_digits_and_dashes_and_says_what_it_was_made_from(self):
-        for host, length in ((PUBLIC_ADDRESS, 205), ('2a01:4f8::1', 226), ('node-1.example.com', 231),
-                             ('a.' * 120 + 'example.com', 649)):
+        for host, length in ((PUBLIC_ADDRESS, 262), ('2a01:4f8::1', 285), ('node-1.example.com', 288),
+                             ('a.' * 120 + 'example.com', 708)):
             text = code(host=host)
             self.assertEqual(length, len(text), host)
             self.assertRegex(text, r'^CPMS1-PAIR(-[A-Z2-7]{8})+(-[A-Z2-7]{1,7})?$')
             self.assertLessEqual(len(text), pairing.MAX_CODE)
-            endpoint, node_id, seed = pairing._decode(text)
-            self.assertEqual((host, 8090, TLS, NODE_ID, SEED),
-                             (endpoint.host, endpoint.port, endpoint.tls_pin, node_id, seed))
+            endpoint, node_id, seed, commitment = pairing._decode(text)
+            self.assertEqual((host, 8090, TLS, NODE_ID, SEED, COMMITMENT),
+                             (endpoint.host, endpoint.port, endpoint.tls_pin, node_id, seed, commitment))
             self.assertIs(Endpoint, type(endpoint))
             self.assertIs(False, endpoint.allow_loopback_for_tests)
         longest = '.'.join(['a' * 63] * 3 + ['b' * 61])
-        self.assertEqual((253, 654, longest),
+        self.assertEqual((253, 711, longest),
                          (len(longest), len(code(host=longest)), pairing.read_code(code(host=longest)).host))
         self.assertEqual(1024, pairing.MAX_CODE)
 
@@ -179,7 +184,7 @@ class CodeTests(unittest.TestCase):
                         self.assertEqual('format', caught.exception.reason)
 
     def test_only_the_one_whole_spelling_of_a_code_is_read(self):
-        text = code()
+        text = code(host='node-1.example.com')  # a length whose last character has bits to spare
         last = ALPHABET[ALPHABET.index(text[-1]) ^ 1]
         bare = text[len(pairing.PREFIX):].replace('-', '')
         self.assertEqual(base64.b32decode(bare + '=' * (-len(bare) % 8)),
@@ -277,26 +282,62 @@ class MessageTests(unittest.TestCase):
 
     def test_the_reply_is_bound_to_exactly_one_pairing_request(self):
         request = self.request()
-        message = crypto.pair_response_message(request, 'f6' * 32)
-        self.assertEqual([b'CPMS1-PAIR-RSP', hashlib.sha256(request).hexdigest().encode(), b'f6' * 32],
-                         message.split(b'\n'))
-        self.assertNotEqual(message, crypto.pair_response_message(self.request(nonce='c4' * 16), 'f6' * 32))
-        self.assertNotEqual(message, crypto.pair_response_message(request, 'f7' * 32))
+        answer = ('f6' * 32, VALUE, '203.0.113.9')
+        message = crypto.pair_response_message(request, *answer)
+        self.assertEqual([b'CPMS1-PAIR-RSP', hashlib.sha256(request).hexdigest().encode(), b'f6' * 32,
+                          VALUE.encode(), b'203.0.113.9'], message.split(b'\n'))
+        self.assertNotEqual(message, crypto.pair_response_message(self.request(nonce='c4' * 16), *answer))
+        for other in (('f7' * 32, VALUE, '203.0.113.9'), ('f6' * 32, 'aa' * 32, '203.0.113.9'),
+                      ('f6' * 32, VALUE, '203.0.113.10'), ('f6' * 32, VALUE, '2a01:4f8::9')):
+            self.assertNotEqual(message, crypto.pair_response_message(request, *other))
+        for bad in ((VALUE.upper(), '203.0.113.9'), (VALUE[:-2], '203.0.113.9'), (None, '203.0.113.9'),
+                    (VALUE, '203.0.113.9\n'), (VALUE, 'controller.example.com'), (VALUE, '2A01:4F8::9'),
+                    (VALUE, ''), (VALUE, None)):
+            with self.assertRaises(ValueError, msg=bad):
+                crypto.pair_response_message(request, 'f6' * 32, *bad)
         link_request = crypto.request_message(LINK, NODE_ID, 'GET', '93.184.216.34:8090', '/', '', '-', b'', NOW,
                                               NONCE, 'admin', 'json')
         for bad in ((link_request, 'f6' * 32), (request.decode(), 'f6' * 32), (b'', 'f6' * 32), (None, 'f6' * 32),
                     (b'CPMS1-PAIR-REQ', 'f6' * 32), (b'CPMS1-PAIR-REQUEST\n', 'f6' * 32), (message, 'f6' * 32),
                     (request, 'F6' * 32), (request, 'f6' * 31), (request, bytes(32)), (request, 'f6' * 32 + '\n')):
             with self.assertRaises(ValueError, msg=bad):
-                crypto.pair_response_message(*bad)
+                crypto.pair_response_message(*bad + (VALUE, '203.0.113.9'))
+
+    def test_the_value_of_a_pairing_is_the_servers_own_and_a_code_holds_it_to_it(self):
+        identity, other = b'i' * 32, b'j' * 32
+        value = crypto.pair_value(identity, PAIRING_KEY)
+        self.assertRegex(value, '^[0-9a-f]{64}$')
+        self.assertEqual(value, crypto.pair_value(identity, PAIRING_KEY), 'worked out again, never stored')
+        self.assertNotEqual(value, crypto.pair_value(other, PAIRING_KEY))
+        self.assertNotEqual(value, crypto.pair_value(identity, 'e5' * 32))
+        for bad in ((identity[:31], PAIRING_KEY), (identity.hex(), PAIRING_KEY), (identity, PAIRING_KEY.upper()),
+                    (identity, PAIRING_KEY[:-2]), (identity, None)):
+            with self.assertRaises(ValueError, msg=bad):
+                crypto.pair_value(*bad)
+        fields = dict(value=value, host='93.184.216.34:8090', tls_fingerprint=TLS, controller_ip='203.0.113.9')
+        commitment = crypto.pair_commitment(**fields)
+        self.assertRegex(commitment, '^[0-9a-f]{64}$')
+        self.assertNotIn(value, commitment)
+        # Every part is fixed by it: with any one changed, the value in an answer no longer matches the code.
+        for field, changed in (('value', crypto.pair_value(other, PAIRING_KEY)), ('host', '93.184.216.35:8090'),
+                               ('host', '93.184.216.34:8091'), ('host', 'node-1.example.com:8090'),
+                               ('tls_fingerprint', 'd5' * 32), ('controller_ip', '203.0.113.10'),
+                               ('controller_ip', '2a01:4f8::9')):
+            self.assertNotEqual(commitment, crypto.pair_commitment(**dict(fields, **{field: changed})), field)
+        for field, bad in (('value', value.upper()), ('value', value[:-2]), ('host', '93.184.216.34'),
+                           ('host', None), ('tls_fingerprint', TLS + '\n'), ('controller_ip', '203.0.113.9\n'),
+                           ('controller_ip', 'Controller'), ('controller_ip', None)):
+            with self.assertRaises(ValueError, msg=(field, bad)):
+                crypto.pair_commitment(**dict(fields, **{field: bad}))
 
     def test_the_confirmation_is_made_of_what_both_servers_keep(self):
-        fields = dict(link_id=LINK, pairing_key=PAIRING_KEY, controller_key='c1' * 32, node_key='f6' * 32)
+        fields = dict(link_id=LINK, pairing_key=PAIRING_KEY, controller_key='c1' * 32, node_key='f6' * 32,
+                      value=VALUE)
         message = crypto.pair_confirmation_message(**fields)
-        self.assertEqual([b'CPMS1-PAIR-SAS', LINK.encode(), PAIRING_KEY.encode(), b'c1' * 32, b'f6' * 32],
-                         message.split(b'\n'))
+        self.assertEqual([b'CPMS1-PAIR-SAS', LINK.encode(), PAIRING_KEY.encode(), b'c1' * 32, b'f6' * 32,
+                          VALUE.encode()], message.split(b'\n'))
         for field, other in (('link_id', 'a2' * 16), ('pairing_key', 'e5' * 32), ('controller_key', 'c2' * 32),
-                             ('node_key', 'f7' * 32)):
+                             ('node_key', 'f7' * 32), ('value', 'aa' * 32)):
             self.assertNotEqual(message, crypto.pair_confirmation_message(**dict(fields, **{field: other})))
             for bad in (other.upper(), other[:-2], other + '\n', None):
                 with self.assertRaises(ValueError):
@@ -310,25 +351,27 @@ class MessageTests(unittest.TestCase):
         messages = [
             link_request, crypto.response_message(LINK, NODE_ID, NONCE, link_request, 200, '-', b''),
             crypto.hello_message(NODE_ID, NONCE, TLS, NOW), self.request(),
-            crypto.pair_response_message(self.request(), 'f6' * 32),
-            crypto.pair_confirmation_message(LINK, PAIRING_KEY, 'c1' * 32, 'f6' * 32)]
-        self.assertEqual(6, len(set(message.split(b'\n', 1)[0] for message in messages)))
+            crypto.pair_response_message(self.request(), 'f6' * 32, VALUE, '203.0.113.9'),
+            crypto.pair_confirmation_message(LINK, PAIRING_KEY, 'c1' * 32, 'f6' * 32, VALUE),
+            b'CPMS1-PAIR-VALUE\n' + PAIRING_KEY.encode(),
+            b'CPMS1-PAIR-COMMIT\n' + VALUE.encode() + b'\n93.184.216.34:8090\n' + TLS.encode() + b'\n203.0.113.9']
+        self.assertEqual(8, len(set(message.split(b'\n', 1)[0] for message in messages)))
         for number, message in enumerate(messages):
             signature = crypto.sign(private, message)
-            self.assertEqual([number == other for other in range(6)],
+            self.assertEqual([number == other for other in range(8)],
                              [crypto.verify(public, signature, different) for different in messages])
 
 
 class ConfirmationTests(unittest.TestCase):
     def transcript(self, link_id=LINK):
-        return crypto.pair_confirmation_message(link_id, PAIRING_KEY, 'c1' * 32, 'f6' * 32)
+        return crypto.pair_confirmation_message(link_id, PAIRING_KEY, 'c1' * 32, 'f6' * 32, VALUE)
 
     def test_the_number_is_eight_digits_taken_from_the_transcript(self):
         transcript = self.transcript()
         expected = '%08d' % (int.from_bytes(hashlib.sha256(transcript).digest()[:8], 'big') % 10 ** 8)
         self.assertEqual(expected, pairing.confirmation_number(transcript))
-        self.assertEqual('91936994', pairing.confirmation_number(
-            crypto.pair_confirmation_message('a1' * 16, 'b2' * 32, 'c3' * 32, 'd4' * 32)))
+        self.assertEqual('93649461', pairing.confirmation_number(
+            crypto.pair_confirmation_message('a1' * 16, 'b2' * 32, 'c3' * 32, 'd4' * 32, 'e5' * 32)))
         numbers = set()
         for number in range(400):
             value = pairing.confirmation_number(self.transcript('%032x' % number))
@@ -337,9 +380,19 @@ class ConfirmationTests(unittest.TestCase):
         self.assertEqual(400, len(numbers))
         self.assertTrue(any(value.startswith('0') for value in numbers), 'a leading zero is kept')
 
+    def test_the_number_changes_with_each_thing_it_is_taken_from(self):
+        fields = dict(link_id=LINK, pairing_key=PAIRING_KEY, controller_key='c1' * 32, node_key='f6' * 32,
+                      value=VALUE)
+        number = pairing.confirmation_number(crypto.pair_confirmation_message(**fields))
+        for field, other in (('link_id', 'a2' * 16), ('pairing_key', 'e5' * 32), ('controller_key', 'c2' * 32),
+                             ('node_key', 'f7' * 32), ('value', 'aa' * 32)):
+            self.assertNotEqual(number, pairing.confirmation_number(
+                crypto.pair_confirmation_message(**dict(fields, **{field: other}))), field)
+
     def test_the_number_is_taken_from_nothing_else(self):
         request = MessageTests().request()
-        for other in (request, crypto.pair_response_message(request, 'f6' * 32), self.transcript().decode(),
+        for other in (request, crypto.pair_response_message(request, 'f6' * 32, VALUE, '203.0.113.9'),
+                      self.transcript().decode(),
                       b'CPMS1-PAIR-SAS', b'', None, self.transcript()[1:]):
             with self.assertRaises(ValueError):
                 pairing.confirmation_number(other)
@@ -498,11 +551,12 @@ class Controller(unittest.TestCase):
         if self.unkept is not None:
             raise self.unkept
 
-    def store(self, label, link_id, host, port, node_key, private_key, tls_pin, actor):
+    def store(self, label, link_id, host, port, node_key, private_key, tls_pin, actor, of_pairing):
         if self.unstored is not None:
             raise self.unstored(private_key, tls_pin)
         self.stored.append((label, link_id, host, port, node_key, private_key, tls_pin))
         self.kept_for.append(actor)
+        self.kept_of_pairing = of_pairing
 
     def node(self, *arguments, **options):
         node = Server(*arguments, **options)
@@ -512,6 +566,12 @@ class Controller(unittest.TestCase):
     def code(self, node, **changes):
         fields = dict(host='127.0.0.1', port=node.port, node_id=node.id, tls_pin=node.pin)
         fields.update(changes)
+        if 'commitment' not in fields:
+            # What an honest server with this identity key writes into a code for a controller at HERE.
+            fields['commitment'] = crypto.pair_commitment(
+                crypto.pair_value(node.private, crypto.public_key(fields.get('seed', SEED)).hex()),
+                ('[%s]:%d' if ':' in fields['host'] else '%s:%d') % (fields['host'], fields['port']),
+                fields['tls_pin'], HERE)
         return code(**fields)
 
     def refused(self, reason, text, because=None, outcome='refused', node=None, recorded=False, link=False,
@@ -553,9 +613,12 @@ class PairingTests(Controller):
         self.assertEqual(seen['controller_key'], crypto.public_key(private_key).hex())
         # What was kept is exactly a link the signed channel accepts.
         transport.Link(link_id, node.id, host, port, node_key, private_key, tls_pin, allow_loopback_for_tests=True)
+        value = crypto.pair_value(node.private, PAIRING_KEY)
         number = pairing.confirmation_number(crypto.pair_confirmation_message(
-            link_id, PAIRING_KEY, seen['controller_key'], node.public.hex()))
+            link_id, PAIRING_KEY, seen['controller_key'], node.public.hex(), value))
         self.assertEqual(pairing.Paired(link_id, node.id, '127.0.0.1', node.port, number), paired)
+        # Kept with the link, so that the number can be shown again while the link waits.
+        self.assertEqual((PAIRING_KEY, value), self.kept_of_pairing)
         self.assertRegex(paired.confirmation, '^[0-9]{8}$')
         # Kept for the administrator who paired; the record of it is the store's own (multiServer/links.py).
         self.assertEqual((['admin'], []), (self.kept_for, self.audited))
@@ -727,7 +790,7 @@ class RefusalTests(Controller):
                          'The server did not answer as a managed server does.', node=node)
             # The answer itself would pass: that key is the one the code names, and the signature verifies.
             signed = crypto.pair_response_message(crypto.pair_request_message(
-                LINK, PAIRING_KEY, 'c1' * 32, NODE_ID, TLS, '93.184.216.34:8090', NOW, NONCE), key.hex())
+                LINK, PAIRING_KEY, 'c1' * 32, NODE_ID, TLS, '93.184.216.34:8090', NOW, NONCE), key.hex(), VALUE, HERE)
             if key == neutral:
                 self.assertTrue(crypto.verify(key, bytes.fromhex(made_up), signed))
 
@@ -783,11 +846,44 @@ class RefusalTests(Controller):
                              ('a key and a line feed', Scripted(body=crypto.public_key(key).hex().encode() + b'\n')),
                              ('a short key', Scripted(body=b'ab' * 31)),
                              ('raw bytes', Scripted(body=crypto.public_key(key))),
-                             ('two keys', Scripted(body=b'ab' * 64))):
+                             ('two keys', Scripted(body=b'ab' * 64)),
+                             ('a key and nothing else', Scripted(body=crypto.public_key(key).hex().encode())),
+                             ('no address', Scripted(body=b'ab' * 32 + b'\n' + b'cd' * 32)),
+                             ('a fourth line', Scripted(body=b'\n'.join((b'ab' * 32, b'cd' * 32, b'127.0.0.1', b'')))),
+                             ('a value in upper case', Scripted(body=b'ab' * 32 + b'\n' + b'CD' * 32 + b'\n127.0.0.1')),
+                             ('an address spelt another way',
+                              Scripted(body=b'ab' * 32 + b'\n' + b'cd' * 32 + b'\n127.000.0.1')),
+                             ('IPv4 written as IPv6',
+                              Scripted(body=b'ab' * 32 + b'\n' + b'cd' * 32 + b'\n::ffff:127.0.0.1')),
+                             ('a name for an address',
+                              Scripted(body=b'ab' * 32 + b'\n' + b'cd' * 32 + b'\ncontroller.example.com'))):
             with self.subTest(name):
                 node = self.node(script)
                 self.refused('format', self.code(node), 'The server did not answer as a managed server does.',
                              node=node)
+
+    def test_an_answer_the_code_does_not_hold_the_server_to_is_refused_and_no_number_is_shown(self):
+        because = ('The answer of the server does not match the pairing code. Reject the waiting link on that '
+                   'server and pair again with a new code.')
+        # A server that picks its value when it has seen the request, or allows another controller address
+        # than the code was made for. Its answer is signed and in order; the code is what refuses it.
+        for script in (Scripted(value='aa' * 32), Scripted(allowed='203.0.113.9'), Scripted(allowed='2a01:4f8::9')):
+            node = self.node(script)
+            self.refused('signature', self.code(node), because, node=node, link=True)
+        # A code whose commitment was made for another address, port, certificate or controller address.
+        node = self.node(Scripted())
+        value = crypto.pair_value(node.private, PAIRING_KEY)
+        made_for = dict(host='127.0.0.1:%d' % node.port, tls_fingerprint=node.pin, controller_ip=HERE)
+        for field, other in (('host', '127.0.0.2:%d' % node.port), ('host', '127.0.0.1:%d' % (node.port ^ 1)),
+                             ('host', 'node-1.example.com:%d' % node.port), ('tls_fingerprint', pin('impostor')),
+                             ('controller_ip', '127.0.0.2'), ('controller_ip', '::1')):
+            commitment = crypto.pair_commitment(value, **dict(made_for, **{field: other}))
+            self.refused('signature', self.code(node, commitment=commitment), because, node=node, link=True)
+        # The value itself is held to: a code that commits to another one is refused as well.
+        other_value = crypto.pair_commitment(crypto.pair_value(SEED, PAIRING_KEY), **made_for)
+        self.refused('signature', self.code(node, commitment=other_value), because, node=node, link=True)
+        pairing.start(self.code(node), 'Frankfurt 1', 'admin')
+        self.assertEqual(1, len(self.stored))
 
     def test_a_redirect_a_second_reply_or_an_oversized_reply_is_refused_and_nothing_is_followed(self):
         elsewhere = self.node(Scripted())

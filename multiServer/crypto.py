@@ -7,6 +7,7 @@ field that could contain a line break, so one kind of message can never be read
 as another and no field can be read two ways.
 """
 import hashlib
+import hmac
 import re
 
 REQUEST = 'CPMS1-REQ'
@@ -15,6 +16,8 @@ HELLO = 'CPMS1-HELLO'
 PAIR_REQUEST = 'CPMS1-PAIR-REQ'
 PAIR_RESPONSE = 'CPMS1-PAIR-RSP'
 PAIR_CONFIRMATION = 'CPMS1-PAIR-SAS'
+PAIR_VALUE = 'CPMS1-PAIR-VALUE'
+PAIR_COMMITMENT = 'CPMS1-PAIR-COMMIT'
 
 METHODS = ('GET', 'POST')
 MODES = ('json', 'page', 'static', 'inventory', 'ticket', 'confirm', 'rotate')
@@ -28,6 +31,7 @@ _QUERY = re.compile(r'[A-Za-z0-9._~%=&+-]*')
 _HOST = re.compile(r'(?:[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?|\[[0-9A-Fa-f:.]{2,45}\]):([0-9]{1,5})')
 _MEDIA_TYPE = re.compile(r'[a-z0-9][a-z0-9!#$&^_.+-]{0,62}/[a-z0-9][a-z0-9!#$&^_.+-]{0,62}')
 _ACTOR = re.compile(r'[A-Za-z0-9_.@-]{1,50}')
+_ADDRESS = re.compile(r'[0-9a-f:.]{2,45}')  # one IPv4 or IPv6 address as multiServer/addresses.py spells it
 
 
 def _ed25519():
@@ -178,17 +182,51 @@ def pair_request_message(link_id, pairing_key, controller_key, node_id, tls_fing
                   _timestamp(timestamp), _match(_HEX32, nonce, 'nonce'))
 
 
-def pair_response_message(request, node_key):
-    """The bytes a node signs, with its identity key, to accept exactly one pairing request."""
+def pair_value(identity, pairing_key):
+    """The value a node adds to one pairing, as 64 hexadecimal digits.
+
+    Only the node can work it out (it is keyed with the node's identity key),
+    it is different for every pairing code, and the node tells it to nobody
+    before it has accepted the one request that uses the code up. So whoever
+    asks for a link cannot know the confirmation number while it can still
+    choose what the number is made from.
+    """
+    message = _lines(PAIR_VALUE, _match(_HEX64, pairing_key, 'pairing key'))
+    return hmac.new(_raw_key(identity), message, hashlib.sha256).hexdigest()
+
+
+def pair_commitment(value, host, tls_fingerprint, controller_ip):
+    """What a pairing code says about the value before anybody has seen it, and about where the code was made.
+
+    A code carries this and not the value. The node is thereby held to the
+    value it had when it made the code, so a server that answers a pairing
+    request cannot pick a value afterwards to arrive at a number of its
+    choosing. It also fixes the address and certificate the code names and the
+    one controller address the code was made for: with any of them changed,
+    the value in the answer no longer matches the code.
+    """
+    return hashlib.sha256(_lines(PAIR_COMMITMENT, _match(_HEX64, value, 'pairing value'), _host(host),
+                                 _match(_HEX64, tls_fingerprint, 'certificate fingerprint'),
+                                 _match(_ADDRESS, controller_ip, 'controller address'))).hexdigest()
+
+
+def pair_response_message(request, node_key, value, controller_ip):
+    """The bytes a node signs, with its identity key, to accept exactly one pairing request.
+
+    value is the node's pair_value for the code, controller_ip the address the
+    node will take this controller's requests from.
+    """
     if not isinstance(request, bytes) or not request.startswith(PAIR_REQUEST.encode() + b'\n'):
         raise ValueError('A pairing reply is bound to the pairing request.')
-    return _lines(PAIR_RESPONSE, hashlib.sha256(request).hexdigest(), _match(_HEX64, node_key, 'node key'))
+    return _lines(PAIR_RESPONSE, hashlib.sha256(request).hexdigest(), _match(_HEX64, node_key, 'node key'),
+                  _match(_HEX64, value, 'pairing value'), _match(_ADDRESS, controller_ip, 'controller address'))
 
 
-def pair_confirmation_message(link_id, pairing_key, controller_key, node_key):
+def pair_confirmation_message(link_id, pairing_key, controller_key, node_key, value):
     """What both servers keep of a pairing; the number their administrators compare is taken from it."""
     return _lines(PAIR_CONFIRMATION, _match(_HEX32, link_id, 'link'), _match(_HEX64, pairing_key, 'pairing key'),
-                  _match(_HEX64, controller_key, 'controller key'), _match(_HEX64, node_key, 'node key'))
+                  _match(_HEX64, controller_key, 'controller key'), _match(_HEX64, node_key, 'node key'),
+                  _match(_HEX64, value, 'pairing value'))
 
 
 def _lines(*fields):
