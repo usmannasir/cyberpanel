@@ -22,7 +22,7 @@ class PhpMyAdminFailureTests(unittest.TestCase):
         factory = Mock(return_value=self.checks)
         factory.debug = False
         self.logs = Mock()
-        self.scope = dict(argparse=argparse, os=Mock(), open=Mock(return_value=io.StringIO()),
+        self.scope = dict(argparse=argparse, os=Mock(), subprocess=Mock(), open=Mock(return_value=io.StringIO()),
                           logging=SimpleNamespace(InstallLog=self.logs), preFlightsChecks=factory,
                           get_distro=lambda: 'ubuntu', ubuntu='ubuntu', configure_jwt_secret=Mock())
         exec(compile(ast.fix_missing_locations(ast.Module(body=[main], type_ignores=[])), str(path), 'exec'), self.scope)
@@ -97,6 +97,19 @@ class PhpMyAdminFailureTests(unittest.TestCase):
         self.checks.startDeferredServices.assert_not_called()
         messages = [call.args[0] for call in self.logs.writeToFile.call_args_list]
         self.assertFalse(any('successfully completed' in value for value in messages))
+
+    def test_multiserver_provisioning_failure_stops_fresh_install(self):
+        def failed(argv, cwd):
+            self.checks.download_install_CyberPanel.assert_called_once()
+            self.assertEqual('/usr/local/CyberCP', cwd)
+            self.assertEqual(['/usr/local/CyberPanel/bin/python', 'manage.py', 'shell', '-c'], argv[:4])
+            self.assertIn('from plogical.schemaMigration import provision_multiserver', argv[-1])
+            raise RuntimeError('provisioning failed')
+        self.scope['subprocess'].check_call.side_effect = failed
+        with self.assertRaisesRegex(RuntimeError, 'provisioning failed'):
+            self.scope['main']()
+        self.checks.download_install_phpmyadmin.assert_not_called()
+        self.assert_not_completed()
 
     def test_main_rejects_failure_and_missing_success_result(self):
         for result in (0, False, None):
