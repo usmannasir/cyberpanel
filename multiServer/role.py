@@ -23,6 +23,8 @@ from multiServer import audit, keys, msctl, stepup, switch, views
 
 NAMES = {keys.OFF: 'Off', keys.CONTROLLER: 'Controller', keys.NODE: 'Managed server'}
 CHANGED = 'This server is now: %s.'
+# A controller opens its servers only from a sign-in that was made as a controller.
+SIGN_IN_AGAIN = ' Sign out and sign in again before you add or open your servers.'
 NOT_CHANGED = ('The role was not changed. Run "msctl.py status" as root on this server to see why '
                '(multiServer/msctl.py).')
 # What msctl.py says when it refuses; shown as it is, anything else it says is not shown.
@@ -84,7 +86,7 @@ def _change(request, admin):
     answer = ProcessUtilities.outputExecutioner(msctl.ROLE_COMMANDS[wanted], retRequired=True)
     if keys.role() == wanted:
         audit.record('role', actor=admin.userName)
-        messages.success(request, CHANGED % NAMES[wanted])
+        messages.success(request, CHANGED % NAMES[wanted] + (SIGN_IN_AGAIN if wanted == keys.CONTROLLER else ''))
     else:
         said = answer[1].strip() if type(answer) is tuple and type(answer[1]) is str else ''
         refused = said in REFUSALS
