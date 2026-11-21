@@ -33,10 +33,9 @@ def serves(*roles):
     return wrap
 
 
-def full_administrator(request):
-    """The signed-in administrator if it is an active full administrator, else None. Never raises."""
+def active_full_administrator(user_id):
+    """The administrator with this id if it is an active full administrator, else None. Never raises."""
     try:
-        user_id = request.session.get('userID')
         if type(user_id) is not int:
             return None
         from loginSystem.models import Administrator
@@ -46,6 +45,14 @@ def full_administrator(request):
         if administrator.state != 'ACTIVE' or type(full) is not int or full != 1:
             return None
         return administrator
+    except Exception:
+        return None
+
+
+def full_administrator(request):
+    """The signed-in administrator if it is an active full administrator, else None. Never raises."""
+    try:
+        return active_full_administrator(request.session.get('userID'))
     except Exception:
         return None
 
