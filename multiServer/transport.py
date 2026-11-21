@@ -19,6 +19,10 @@ How the signed fields of crypto.request_message travel:
 
 A field that HTTP already carries is not repeated in a header: the node has to
 rebuild the signed bytes from what its own application is about to act on.
+
+exchange() carries the one request made before a node is a link, the pairing
+request. The certificate is pinned and the reply is framed in the same way, but
+no key of the node is known yet, so the caller verifies the reply.
 """
 import hashlib
 import hmac
@@ -201,6 +205,68 @@ class Link(object):
     def __reduce__(self):
         # The private key is stored in the sealed link record and nowhere else.
         raise TypeError('A link description is not serialised.')
+
+
+class Endpoint(object):
+    """A node that is not a link yet: where it is and the one certificate it must present.
+
+    Pairing reaches a node through this before the two share a key. host, port
+    and pin follow the rules of Link, and so does the connection.
+    """
+    __slots__ = ('host', 'port', 'authority', 'tls_pin', 'allow_loopback_for_tests')
+
+    def __init__(self, host, port, tls_pin, allow_loopback_for_tests=False):
+        if not isinstance(allow_loopback_for_tests, bool):
+            raise InvalidLink('Invalid loopback allowance.')
+        if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
+            raise InvalidLink('Invalid port.')
+        _check_host(host, allow_loopback_for_tests)
+        if not isinstance(tls_pin, str) or _HEX64.fullmatch(tls_pin) is None:
+            raise InvalidLink('Invalid certificate pin.')
+        authority = ('[%s]:%d' if ':' in host else '%s:%d') % (host, port)
+        for name, value in (('host', host), ('port', port), ('authority', authority), ('tls_pin', tls_pin),
+                            ('allow_loopback_for_tests', allow_loopback_for_tests)):
+            object.__setattr__(self, name, value)
+
+    def __setattr__(self, name, value):
+        raise AttributeError('An endpoint cannot be changed.')
+
+    def __delattr__(self, name):
+        raise AttributeError('An endpoint cannot be changed.')
+
+    def __repr__(self):
+        return 'Endpoint(%s)' % self.authority
+
+
+def exchange(endpoint, path, body, signature):
+    """POST one text message, signed by a key the node already knows, to a node that is not a link yet.
+
+    Returns (status, content type, body, signature) of its one whole reply. No
+    key of the node is known here, so nothing has been verified but the
+    certificate: the caller decides whose signature the reply must carry.
+    """
+    if type(endpoint) is not Endpoint:
+        raise InvalidLink('An endpoint is required.')
+    deadline = time.monotonic() + DEADLINE
+    try:
+        # The field rules of a request on a link, so that no line of the head can break.
+        crypto.request_message('0' * 32, '0' * 64, 'POST', endpoint.authority, path, '', 'text/plain', body, 0,
+                               '0' * 32, 'check', 'json')
+        if not isinstance(signature, bytes) or len(signature) != 64:
+            raise ValueError('Invalid signature.')
+    except ValueError as error:
+        raise InvalidRequest(str(error)) from None
+    if len(body) > MAX_REQUEST_BODY:
+        raise InvalidRequest('The request body is too large.')
+    head = '\r\n'.join(('POST %s HTTP/1.1' % path, 'Host: ' + endpoint.authority, 'Connection: close',
+                        'Accept-Encoding: identity', 'Content-Type: text/plain',
+                        'Content-Length: %d' % len(body), '%s: %s' % (HEADERS['signature'], signature.hex())))
+    connection = _connect(endpoint, deadline)
+    try:
+        _write(connection, (head + '\r\n\r\n').encode('ascii') + body, deadline)
+        return _read_reply(connection, deadline)
+    finally:
+        connection.close()
 
 
 def send(link, method, path, query, content_type, body, actor, mode, now=None, nonce=None):
