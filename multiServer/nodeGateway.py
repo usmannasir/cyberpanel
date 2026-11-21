@@ -37,11 +37,13 @@ Until the signature has verified, a refusal is unsigned and is the answer this
 panel gives a visitor who is not signed in at an address that does not exist,
 so it says nothing about which check failed. From then on every reply, a
 refusal included, is signed with this server's identity key and bound to the
-request (crypto.response_message). Refusals before a link row is found share an audit budget with
-pairing. Of a request, only its link, actor, address, method, path and
-length are ever written down: no reply, audit row or log line repeats a key, a
-request's signature, its body or its nonce. Nothing raised in here reaches the
-panel's error pages.
+request (crypto.response_message). Until the signature has verified, a refusal is
+written to the audit trail only while the allowance lasts that it shares with
+pairing (audit.record_unverified), whatever link the request names: the name of
+a link is no secret, and naming one proves nothing. Of a request, only its
+link, actor, address, method, path and length are ever written down: no reply,
+audit row or log line repeats a key, a request's signature, its body or its
+nonce. Nothing raised in here reaches the panel's error pages.
 
 Whatever the answer, the request body is read to its declared end first. The
 panel's web server passes a body to the application as a stream and takes its
@@ -82,9 +84,13 @@ def _revoke(verified):
         raise _Refused('format')
     from django.db import transaction
     from multiServer import sso
-    keys.mark_revoked(verified.link_id)
+    if not keys.revoked(verified.link_id):
+        keys.mark_revoked(verified.link_id)
     with transaction.atomic():
         link = models.Link.objects.select_for_update().get(pk=verified.link_id)
+        if link.status == models.REVOKED:
+            # Asked again, because the first answer did not arrive: the same proof, and nothing to write.
+            return 200, JSON, b'{"revoked":true}'
         sso.clear(link)
         models.Link.objects.filter(pk=link.pk).update(status=models.REVOKED, updated_at=int(time.time()))
     audit.record('link_revoke', outcome='ok', actor=verified.actor, link_id=verified.link_id)
@@ -211,7 +217,7 @@ class _Refused(Exception):
 class _Exchange(object):
     """What is known of one request so far: it decides how a refusal is answered and what is audited."""
     __slots__ = ('source', 'link_id', 'actor', 'method', 'path', 'size', 'has_body', 'language', 'read',
-                 'node', 'identity', 'nonce', 'signed')
+                 'node', 'identity', 'nonce', 'signed', 'capped')
 
     def __init__(self):
         for name in self.__slots__:
@@ -272,6 +278,12 @@ def _serve(request, exchange, get_response):
     if link is not None:
         exchange.link_id = link.link_id  # the audit trail names a link only when there is one of that name
     revoking = (method, named['mode'], path, query) == ('POST', 'json', links.REVOKE_PATH, '')
+    # A revoked link has one request left, the one that revoked it, repeated by a controller that did
+    # not get the answer. It is answered again, but it stores nothing: no nonce, and of the audit trail
+    # only what the capped allowance takes. Whoever still holds the key of a link that was ended
+    # cannot make this server's tables grow.
+    repeated = revoking and link is not None and link.status == models.REVOKED
+    exchange.capped = repeated
     unusable = _unusable(link, generation, now, revoking)
     if unusable:
         raise _Refused(unusable)
@@ -302,7 +314,8 @@ def _serve(request, exchange, get_response):
     exchange.signed = message  # from here on every reply is signed
 
     # replay
-    _accept(link, generation, timestamp, named['nonce'], now, revoking)
+    if not repeated:
+        _accept(link, generation, timestamp, named['nonce'], now, revoking)
 
     # admin
     from multiServer import views
@@ -514,7 +527,10 @@ def _audit(exchange, outcome, reason, status):
                         ('method', exchange.method), ('path', exchange.path), ('size', exchange.size)):
         if value is not None:
             fields[name] = value
-    record = audit.record if exchange.link_id is not None else audit.record_unverified
+    # The link a request names is written down when there is one of that name, but only a verified
+    # signature shows that the request came over it. Before that, anybody can send it, any number of times.
+    verified = exchange.signed is not None and not exchange.capped
+    record = audit.record if verified else audit.record_unverified
     record('request', **fields)
 
 
