@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import stat
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -180,6 +181,66 @@ class KeyReadingTests(Directory):
         self.provision()
         self.write('generation', 'many')
         self.assertEqual(0, keys.generation())
+
+
+class TurnTests(Directory):
+    """The lock on the key directory that lets one process at a time change this server's links."""
+
+    def test_one_process_at_a_time_has_the_turn_and_the_next_waits_no_longer_than_it_said(self):
+        self.provision()
+        turn = keys.take_turn(0)
+        with self.assertRaises(keys.Occupied):
+            keys.take_turn(0)
+        with self.assertRaises(keys.Occupied):
+            keys.take_turn(0.2)
+        keys.end_turn(turn)
+        keys.end_turn(keys.take_turn(0))
+
+    def test_a_waiting_thread_gets_the_turn_when_it_is_given_back(self):
+        self.provision()
+        turn, got = keys.take_turn(0), []
+        waiting = threading.Thread(target=lambda: got.append(keys.take_turn(10)))
+        waiting.start()
+        waiting.join(0.3)
+        self.assertEqual((True, []), (waiting.is_alive(), got))
+        keys.end_turn(turn)
+        waiting.join(10)
+        self.assertEqual(1, len(got))
+        keys.end_turn(got[0])
+
+    def test_the_turn_is_given_back_with_the_descriptor_and_leaves_none_open(self):
+        self.provision()
+        before = len(os.listdir('/proc/self/fd'))
+        for unused in range(3):
+            keys.end_turn(keys.take_turn(0))
+            with self.assertRaises(keys.Occupied):
+                held = keys.take_turn(0)
+                try:
+                    keys.take_turn(0)
+                finally:
+                    keys.end_turn(held)
+        self.assertEqual(before, len(os.listdir('/proc/self/fd')))
+
+    def test_only_the_private_root_owned_directory_gives_a_turn(self):
+        with self.assertRaises(OSError):
+            keys.take_turn(0)  # no directory
+        self.provision()
+        self.directory.chmod(0o770)
+        with self.assertRaises(OSError):
+            keys.take_turn(0)
+        self.directory.chmod(0o750)
+        with patch.object(keys, 'OWNER', ME + 1):
+            with self.assertRaises(OSError):
+                keys.take_turn(0)
+        elsewhere = self.directory.parent / 'elsewhere'
+        self.directory.rename(elsewhere)
+        os.symlink(str(elsewhere), str(self.directory))
+        with self.assertRaises(OSError):
+            keys.take_turn(0)
+        self.directory.unlink()
+        self.directory.write_text('not a directory')
+        with self.assertRaises(OSError):
+            keys.take_turn(0)
 
 
 class CompatibilityTests(unittest.TestCase):

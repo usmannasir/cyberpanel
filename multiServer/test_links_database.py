@@ -11,7 +11,10 @@ under test has no parameter, stored field or attribute for it.
 """
 import ipaddress
 import json
+import os
+import shutil
 import socket
+import tempfile
 import threading
 import time
 import unittest
@@ -134,7 +137,12 @@ class Controller(test_database.DjangoDatabase):
         super().setUp()
         self.role, self.master, self.licensed, self.now = keys.CONTROLLER, MASTER, True, NOW
         self.licence_asked = 0
-        for patcher in (mock.patch.object(keys, 'role', side_effect=lambda: self.role),
+        # The key directory, whose lock is the turn to store a server. Private and owned by whoever runs this.
+        self.key_directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.key_directory)
+        for patcher in (mock.patch.object(keys, 'KEY_DIRECTORY', self.key_directory),
+                        mock.patch.object(keys, 'OWNER', os.getuid()),
+                        mock.patch.object(keys, 'role', side_effect=lambda: self.role),
                         mock.patch.object(keys, 'master_key', side_effect=lambda: self.master),
                         mock.patch.object(entitlement, 'allowed', side_effect=self.licence),
                         mock.patch.object(time, 'time', side_effect=lambda: self.now + 0.4)):
@@ -370,14 +378,49 @@ class StoreTests(Controller):
         finally:
             release.set()
             holder.join(20)
-        free = "SELECT IS_FREE_LOCK(CONCAT(DATABASE(), '.ms_nodes'))"
-        self.assertEqual(((1,),), self.database.run(free))
+        keys.end_turn(keys.take_turn(0))
         self.store()
         self.assertEqual([LINK], [row['link_id'] for row in self.rows()])
-        # The turn is given back when storing fails, too: asked on another connection, the lock is free.
+        # The turn is given back when storing fails, too.
         with self.assertRaises(links.DuplicateNode):
             self.store(OTHER_LINK)
-        self.assertEqual(((1,),), self.database.run(free))
+        keys.end_turn(keys.take_turn(0))
+
+    def test_no_lock_a_database_user_can_hold_keeps_a_controller_from_pairing_or_storing(self):
+        # Any database user of the machine can hold a named lock of the database server, under any name.
+        names = ["CONCAT('%s', '.ms_nodes')" % self.database.name,
+                 "SHA2(CONCAT('%s', '.ms_pair.', '%s'), 256)" % (self.database.name, crypto.node_id(NODE_KEY))]
+        holder = self.database.connect()
+        try:
+            cursor = holder.cursor()
+            for name in names:
+                cursor.execute('SELECT GET_LOCK(%s, 0)' % name)
+                self.assertEqual(1, cursor.fetchone()[0])
+            started = time.monotonic()
+            with links.pairing_slot():
+                self.store()
+            self.store(OTHER_LINK, node_key=OTHER_NODE_KEY)
+            self.assertLess(time.monotonic() - started, 2)
+        finally:
+            holder.close()
+        self.assertEqual([LINK, OTHER_LINK], [row['link_id'] for row in self.rows()])
+
+    def test_a_pairing_has_the_turn_from_before_the_code_is_used_until_the_server_is_stored(self):
+        with links.pairing_slot():
+            with mock.patch.object(links, 'LOCK_SECONDS', 0):
+                # Another worker is refused at once, for pairing and for storing ...
+                refused = self.workers([lambda: links.pairing_slot().__enter__(), lambda: self.store(OTHER_LINK)])
+                self.assertEqual([links.Busy, links.Busy], [type(outcome) for outcome in refused])
+                # ... and this one stores inside its own turn without waiting for itself.
+                self.store()
+        self.assertEqual([LINK], [row['link_id'] for row in self.rows()])
+        keys.end_turn(keys.take_turn(0))
+
+    def test_without_the_key_directory_nothing_is_stored(self):
+        with mock.patch.object(keys, 'KEY_DIRECTORY', self.key_directory + '-away'):
+            with self.assertRaises(links.NoMasterKey):
+                self.store()
+        self.assertEqual([], self.rows())
 
     def test_a_node_stored_but_not_yet_committed_makes_the_next_worker_wait_for_how_it_ends(self):
         class Undo(Exception):
@@ -561,16 +604,13 @@ class PrepareTests(Controller):
 
     def test_it_waits_for_nobody_and_keeps_nobody_waiting(self):
         # It only reads: a worker that is storing at this moment does not hold it up, nor the other way round.
-        holder = self.database.connect()
+        turn = keys.take_turn(0)
         try:
-            cursor = holder.cursor()
-            cursor.execute("SELECT GET_LOCK(CONCAT(DATABASE(), '.ms_nodes'), 0)")
-            self.assertEqual(1, cursor.fetchone()[0])
             started = time.monotonic()
             self.assertIsNone(self.prepare())
             self.assertLess(time.monotonic() - started, 2)
         finally:
-            holder.close()
+            keys.end_turn(turn)
 
     def test_no_text_of_a_refusal_holds_a_key(self):
         self.store()

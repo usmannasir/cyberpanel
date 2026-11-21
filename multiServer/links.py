@@ -35,6 +35,7 @@ import collections
 import contextlib
 import json
 import re
+import threading
 import time
 
 from multiServer import audit, crypto, entitlement, keys, switch, transport
@@ -50,7 +51,7 @@ RECORD = 'CPMS1-NODE'
 # 253, padded to 704, in a Fernet token of 57 + 704 bytes, in base64. The
 # column ms_nodes.sealed takes 2048.
 MAX_SEALED = 1016
-LOCK_SECONDS = 10  # how long store() waits for another worker that is storing
+LOCK_SECONDS = 10  # how long store() or a pairing waits for another worker that is storing or pairing
 
 HELLO_PATH = '/multiserver/gateway/hello'
 REVOKE_PATH = '/multiserver/gateway/revoke'
@@ -438,36 +439,44 @@ def _audit(event, link_id, actor, outcome='ok', reason=None, **fields):
     audit.record(event, outcome=outcome, link_id=link_id, **fields)
 
 
-def _one_at_a_time():
-    """One worker at a time looks for a node among the rows and then adds it.
-
-    A named lock of the database server, because the node's identity is inside
-    the sealed texts and no unique index can refuse a second row for it.
-    """
-    return _named_lock("CONCAT(DATABASE(), '.ms_nodes')", ())
-
-
-def pairing_slot(node_id):
-    """Serialize preflight, code exchange and storage for this one node across controller workers."""
-    return _named_lock("SHA2(CONCAT(DATABASE(), '.ms_pair.', %s), 256)", (node_id,))
+_TURN = threading.local()  # .held is True while this thread has the controller's turn
 
 
 @contextlib.contextmanager
-def _named_lock(name, args):
-    from django.db import connection
-    with connection.cursor() as cursor:
-        cursor.execute('SELECT GET_LOCK(%s, %%s)' % name, args + (LOCK_SECONDS,))
-        held = cursor.fetchone()[0]
-    if held != 1:
-        raise Busy('Another server is being stored at this moment.')
+def _one_at_a_time():
+    """One worker at a time looks for a node among the rows and then adds it.
+
+    The node's identity is inside the sealed texts, so no unique index can
+    refuse a second row for it. The turn is the lock on the key directory
+    (keys.take_turn) and not a named lock of the database server: any database
+    user of this machine can hold a lock of any name there, and could so have
+    kept a controller from storing a server whose pairing code was already
+    used up.
+    """
+    if getattr(_TURN, 'held', False):
+        yield  # inside pairing_slot(): the turn is this thread's already
+        return
+    try:
+        turn = keys.take_turn(LOCK_SECONDS)
+    except keys.Occupied:
+        raise Busy('Another server is being stored at this moment.') from None
+    except Exception:
+        raise NoMasterKey('The master key of this controller is missing or cannot be used.') from None
+    _TURN.held = True
     try:
         yield
     finally:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute('SELECT RELEASE_LOCK(%s)' % name, args)
-        except Exception:
-            pass  # a connection that broke has let go of the lock already
+        _TURN.held = False
+        keys.end_turn(turn)
+
+
+def pairing_slot():
+    """Serialize preflight, code exchange and storage across the workers of this controller.
+
+    The same turn as storing, taken before the pairing code is used: whoever
+    cannot have it is refused while the code is still good.
+    """
+    return _one_at_a_time()
 
 
 def _not_stored_yet(rows, link_id, node_id, master_key):
