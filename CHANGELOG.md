@@ -51,6 +51,19 @@ for every server, especially servers with more than one panel user.
   page showed a start-up error. Installation and upgrade now set the mode that
   website users need.
 
+### Upgrade page (added 21 November)
+- An upgrade started from Version Management rebuilds the panel's web worker,
+  as the command-line upgrade does, so background jobs keep running between
+  requests on those servers too.
+- The newest release is selected by default, an older release is neither
+  offered nor accepted, and the page asks before it starts.
+- Each run has its own log, kept to its end. A failure shows its reason and the
+  last lines of the log, and a second tab or click joins the running upgrade.
+- If an upgrade fails after the new files are in place, or the panel does not
+  start on them, the previous version is put back and the panel restarted.
+- A server on the stable branch is no longer told that its commit does not
+  match, and only an administrator can rewrite the stored version number.
+
 ## v3.0.8 (build 8) — 2026-10-18
 
 Maintenance release collecting the fixes developed on the v3.0.7 line.
