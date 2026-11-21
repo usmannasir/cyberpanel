@@ -53,6 +53,80 @@ def said(**changes):
     return json.dumps(fields, sort_keys=True, separators=(',', ':')).encode('ascii')
 
 
+def hostile_replies():
+    """What a node can say instead of the one true answer: (name, answer, fixed text, outcome, reason, status, size)."""
+    reply = test_transport.reply
+    page = ('<html><script>alert("%s")</script>{{7*7}}</html>' % MARK).encode()
+    location = [('Location', 'https://%s.example.com/' % MARK)]
+    not_valid = 'The server sent a reply that is not valid.'
+    not_signed = 'The reply was not signed by the server. It may no longer accept this controller.'
+    redirect = 'The server answered with a redirect instead of a signed reply.'
+
+    def verified(name, text, outcome, reason, body, status=200, **options):
+        """A reply the transport hands on: signed by the node for this request."""
+        return name, reply(status=status, body=body, **options), text, outcome, reason, status, len(body)
+
+    def unverified(name, text, reason, answer):
+        return name, answer, text, 'error', reason, None, None
+    return (
+        verified('a value missing', links.NOT_A_NODE, 'error', 'format',
+                 b'{"build":10,"capabilities":[],"role":"node"}'),
+        verified('one name more', links.NOT_A_NODE, 'error', 'format', said(hostname=MARK)),
+        verified('markup as the version', links.NOT_A_NODE, 'error', 'format',
+                 said(version='3.0<script>%s</script>' % MARK)),
+        verified('a template as the version', links.NOT_A_NODE, 'error', 'format', said(version='{{%s}}' % MARK)),
+        verified('the build inside the version', links.NOT_A_NODE, 'error', 'format', said(version='3.0.10')),
+        verified('text as the build', links.NOT_A_NODE, 'error', 'format', said(build=MARK)),
+        verified('markup as a capability', links.NOT_A_NODE, 'error', 'format',
+                 said(capabilities=['<b>%s</b>' % MARK])),
+        verified('the role of a controller', links.NOT_A_NODE, 'error', 'format', said(role='controller')),
+        verified('text that is not JSON', links.NOT_A_NODE, 'error', 'format',
+                 ('This request need session. %s' % MARK).encode()),
+        verified('a page called JSON', links.NOT_A_NODE, 'error', 'format', page),
+        verified('a page called a page', links.NOT_A_NODE, 'error', 'format', page, content_type='text/html'),
+        verified('the right answer called a page', links.NOT_A_NODE, 'error', 'format', ANSWER,
+                 content_type='text/html'),
+        verified('the right answer without a type', links.NOT_A_NODE, 'error', 'format', ANSWER,
+                 content_type=None),
+        verified('an empty body', links.NOT_A_NODE, 'error', 'format', b''),
+        verified('one byte more than an answer may have', links.TOO_LARGE, 'error', 'size',
+                 ANSWER + b' ' * (links.MAX_HELLO + 1 - len(ANSWER))),
+        verified('a megabyte', links.TOO_LARGE, 'error', 'size',
+                 b'{"role":"node","pad":"' + MARK.encode() * 60000 + b'"}'),
+        verified('an error, signed', links.REFUSED, 'refused', 'not_allowed',
+                 ('{"error":"%s"}' % MARK).encode(), status=500),
+        verified('a refusal, signed', links.REFUSED, 'refused', 'not_allowed', b'{"error":"link"}', status=403),
+        verified('not found, signed', links.REFUSED, 'refused', 'not_allowed', page, status=404,
+                 content_type='text/html'),
+        verified('the right answer under another status', links.REFUSED, 'refused', 'not_allowed', ANSWER,
+                 status=201),
+        unverified('more than any reply may be', links.TOO_LARGE, 'size',
+                   reply(body=ANSWER, length=str(transport.MAX_RESPONSE), hold=True)),
+        unverified('the right answer, unsigned', not_signed, 'signature', reply(body=ANSWER, signature=False)),
+        unverified('an unsigned page', not_signed, 'signature',
+                   reply(body=page, content_type='text/html', signature=False)),
+        unverified('the right answer signed with another key', not_signed, 'signature',
+                   reply(body=ANSWER, signed=dict(key=crypto.generate_private_key()))),
+        unverified('the right answer signed for another link', not_signed, 'signature',
+                   reply(body=ANSWER, signed=dict(link_id=OTHER_LINK))),
+        unverified('a signature over another body', not_signed, 'signature',
+                   reply(body=said(version='9.9'), signed=dict(body=ANSWER))),
+        unverified('a redirect', redirect, 'format', reply(status=302, body=b'', extra=location,
+                                                            signature=False)),
+        unverified('a signed redirect', redirect, 'format', reply(status=307, body=ANSWER, extra=location)),
+        unverified('a chunked answer', not_valid, 'format', reply(
+            body=b'%x\r\n%s\r\n0\r\n\r\n' % (len(ANSWER), ANSWER), signed=dict(body=ANSWER), length=False,
+            extra=[('Transfer-Encoding', 'chunked')])),
+        unverified('an answer shorter than it says', not_valid, 'format',
+                   reply(body=ANSWER, length=str(len(ANSWER) + 1))),
+        unverified('two answers', not_valid, 'format', reply(body=ANSWER, mangle=lambda data: data + data)),
+        unverified('a header that is not one', not_valid, 'format',
+                   reply(body=ANSWER, extra=[('X-%s\r\nbroken' % MARK, 'x')])),
+        unverified('no answer at all', 'The server could not be reached.', 'unreachable',
+                   lambda node, connection, seen: None),
+    )
+
+
 class Controller(test_database.DjangoDatabase):
     """A licensed controller with its master key, a clock the test sets, and the real tables."""
 
@@ -332,7 +406,7 @@ class StoreTests(Controller):
             self.store()
             with self.assertRaises(links.DuplicateNode):
                 self.store(OTHER_LINK)
-            self.assertIs(True, links.activate(LINK, 'admin'))
+            self.alter(status='active')
             self.assertIs(True, links.pause(LINK, 'admin'))
             self.assertIs(True, links.resume(LINK, 'admin'))
             self.assertIs(True, links.remove(LINK, 'admin'))
@@ -342,9 +416,143 @@ class StoreTests(Controller):
         self.assertEqual(([], []), (self.rows(), self.audited()))
 
 
+class PrepareTests(Controller):
+    """What pairing asks before it uses a pairing code up: could the link be kept?"""
+    NODE_ID = crypto.node_id(NODE_KEY)
+
+    def prepare(self, link_id=LINK, label='Frankfurt 1', **changes):
+        fields = dict(node_id=self.NODE_ID, host=HOST, port=8090, private_key=PRIVATE, tls_pin=PIN)
+        fields.update(changes)
+        return links.prepare(label, link_id, **fields)
+
+    def refused(self, error, **changes):
+        with self.assertRaises(error) as caught:
+            self.prepare(**changes)
+        self.assertIs(error, type(caught.exception))
+        return str(caught.exception)
+
+    def test_what_can_be_kept_passes_and_nothing_is_stored_or_recorded(self):
+        self.assertIsNone(self.prepare())
+        self.assertIsNone(self.prepare(host='2a01:4f8::1', port=1))
+        self.assertIsNone(self.prepare(host='a.' * 120 + 'example.com', port=65535, label='A' * 64))
+        self.assertEqual(([], []), (self.rows(), self.audited()))
+        # And then it is kept: the same values, and the key of the server that had not been known.
+        self.store()
+        self.assertEqual(1, len(self.rows()))
+
+    def test_whatever_store_would_refuse_is_refused_by_the_same_name_before(self):
+        cases = (
+            (links.InvalidLabel, dict(label='')), (links.InvalidLabel, dict(label='<b>x</b>')),
+            (links.InvalidLabel, dict(label='x' * 65)), (links.InvalidLabel, dict(label=None)),
+            (links.InvalidRecord, dict(link_id=LINK.upper())), (links.InvalidRecord, dict(link_id=LINK[:-1])),
+            (links.InvalidRecord, dict(link_id=None)),
+            (links.InvalidRecord, dict(host='node 1.example.com')), (links.InvalidRecord, dict(host='127.1')),
+            (links.InvalidRecord, dict(host='')), (links.InvalidRecord, dict(host=None)),
+            (links.InvalidRecord, dict(port=0)), (links.InvalidRecord, dict(port=65536)),
+            (links.InvalidRecord, dict(port='8090')), (links.InvalidRecord, dict(port=True)),
+            (links.InvalidRecord, dict(private_key=PRIVATE[:-1])), (links.InvalidRecord, dict(private_key=None)),
+            (links.InvalidRecord, dict(private_key=PRIVATE.hex())),
+            (links.InvalidRecord, dict(tls_pin=PIN.upper())), (links.InvalidRecord, dict(tls_pin=PIN[:-1])),
+            (links.InvalidRecord, dict(tls_pin=None)),
+        )
+        for error, changes in cases:
+            with self.subTest(changes=changes):
+                self.refused(error, **changes)
+                with self.assertRaises(error):
+                    self.store(**dict((name, value) for name, value in changes.items()))
+        self.assertEqual([], self.rows())
+
+    def test_the_name_of_the_server_must_be_one_too(self):
+        # The server's key is not known yet; what names it has to be the fingerprint of some key.
+        for node_id in ('', self.NODE_ID.upper(), self.NODE_ID[:-1], self.NODE_ID + 'a', None, NODE_KEY,
+                        bytes.fromhex(self.NODE_ID)):
+            self.refused(links.InvalidRecord, node_id=node_id)
+
+    def test_an_address_a_link_may_not_connect_to_is_refused_by_its_kind(self):
+        for address, kind in test_transport.AddressRuleTests.REFUSED:
+            if ':' in address and transport._IPV6.fullmatch(address) is None:
+                continue
+            try:
+                text = self.refused(transport.RefusedAddress, host=address)
+            except AssertionError:
+                # Spellings the transport does not take for a host at all are no record either.
+                self.refused(links.InvalidRecord, host=address)
+                continue
+            self.assertEqual('A link may not connect to this address (%s).' % kind, text)
+        self.assertEqual([], self.rows())
+
+    def test_only_a_controller_that_has_its_master_key_is_told_yes(self):
+        for role in (keys.OFF, keys.NODE):
+            self.role = role
+            self.assertEqual(links.NOT_CONTROLLER, self.refused(links.NotController))
+        self.role = keys.CONTROLLER
+        for master in (None, b'', MASTER[:-1], MASTER.decode(), b'not a key'):
+            self.master = master
+            self.refused(links.NoMasterKey)
+        self.master = MASTER
+        self.assertIsNone(self.prepare())
+
+    def test_a_server_that_is_connected_already_is_refused_before_its_code_is_used(self):
+        self.store()
+        self.assertEqual('This server is already connected.', self.refused(links.DuplicateNode, link_id=OTHER_LINK))
+        self.assertEqual('This server is already connected.',
+                         self.refused(links.DuplicateNode, node_id=crypto.node_id(OTHER_NODE_KEY)))
+        self.assertIsNone(self.prepare(OTHER_LINK, node_id=crypto.node_id(OTHER_NODE_KEY)))
+        # Whatever its status: a server is connected until it is removed.
+        for status in models.STATUSES:
+            self.alter(status=status)
+            self.refused(links.DuplicateNode, link_id=OTHER_LINK)
+        self.assertIs(True, links.remove(LINK))
+        self.assertIsNone(self.prepare(OTHER_LINK))
+
+    def test_a_row_that_cannot_be_read_stops_it_as_it_stops_store(self):
+        self.store()
+        self.alter(sealed='not-a-sealed-text')
+        text = self.refused(links.UnreadableRow, link_id=OTHER_LINK, node_id=crypto.node_id(OTHER_NODE_KEY))
+        self.assertIn('Remove that server', text)
+        self.assertIs(True, links.remove(LINK))
+        self.assertIsNone(self.prepare(OTHER_LINK, node_id=crypto.node_id(OTHER_NODE_KEY)))
+
+    def test_it_waits_for_nobody_and_keeps_nobody_waiting(self):
+        # It only reads: a worker that is storing at this moment does not hold it up, nor the other way round.
+        holder = self.database.connect()
+        try:
+            cursor = holder.cursor()
+            cursor.execute("SELECT GET_LOCK(CONCAT(DATABASE(), '.ms_nodes'), 0)")
+            self.assertEqual(1, cursor.fetchone()[0])
+            started = time.monotonic()
+            self.assertIsNone(self.prepare())
+            self.assertLess(time.monotonic() - started, 2)
+        finally:
+            holder.close()
+
+    def test_no_text_of_a_refusal_holds_a_key(self):
+        self.store()
+        for changes in (dict(link_id=OTHER_LINK), dict(host='10.0.0.5'), dict(tls_pin='x'), dict(label='')):
+            try:
+                self.prepare(**changes)
+            except (links.LinkError, transport.TransportError) as error:
+                shown = repr(error) + str(error) + repr(error.args)
+                for secret in (PRIVATE.hex(), MASTER.decode(), PIN, NODE_KEY.hex()):
+                    self.assertNotIn(secret, shown)
+                self.assertIsNone(error.__cause__)
+
+
 class StateTests(Controller):
-    CHANGES = (('activate', 'pending', 'active', 'link_approve'), ('pause', 'active', 'paused', 'link_pause'),
-               ('resume', 'paused', 'active', 'link_resume'))
+    CHANGES = (('pause', 'active', 'paused', 'link_pause'), ('resume', 'paused', 'active', 'link_resume'))
+
+    def test_a_server_becomes_active_by_proof_alone(self):
+        # confirm() is the one way from pending to active (ConfirmTests); no function just says so.
+        self.assertFalse(hasattr(links, 'activate'))
+        self.store()
+        for name, _, _, _ in self.CHANGES:
+            self.assertIs(False, getattr(links, name)(LINK, 'admin'))
+        self.assertEqual('pending', self.row()['status'])
+        public = sorted(name for name, value in vars(links).items()
+                        if callable(value) and not name.startswith('_') and getattr(value, '__module__', '') ==
+                        links.__name__ and not isinstance(value, type))
+        self.assertEqual(['check_label', 'confirm', 'hello', 'link_of', 'pause', 'prepare', 'remove', 'resume', 'seal',
+                          'store', 'unseal'], public)
 
     def test_a_link_changes_state_only_from_the_state_that_change_starts_in(self):
         self.store()
@@ -361,10 +569,11 @@ class StateTests(Controller):
                                      (row['status'], row['updated_at']))
                     self.assertEqual((event,) + (('ok', '') if moved else ('refused', 'link'))
                                      + (LINK, 'admin', '', '', None, None, 0), self.audited()[-1])
-        self.assertEqual(12, len(self.audited()))
+        self.assertEqual(8, len(self.audited()))
 
     def test_a_change_touches_nothing_but_the_status_and_its_time(self):
         self.store()
+        self.alter(status='active')
         before = self.row()
         self.now += 60
         for name, _, after, _ in self.CHANGES:
@@ -381,7 +590,7 @@ class StateTests(Controller):
 
     def test_pausing_and_removing_ask_neither_the_licence_nor_the_role_nor_the_master_key(self):
         self.store()
-        self.assertIs(True, links.activate(LINK))
+        self.alter(status='active')
         node = models.Node.objects.get(pk=LINK)
         models.InventoryCache.objects.create(node=node, snapshot='{}')
         models.Capability.objects.create(token_hash='e1' * 32, node=node, admin_id=1, session_hash='e2' * 32,
@@ -414,14 +623,15 @@ class StateTests(Controller):
             before = self.rows()
             for not_an_id in (None, 0, 1, True, '', '%', '_' * 32, LINK.upper(), LINK[:-1], LINK + ' ', ' ' + LINK,
                               LINK + '\n', LINK.encode(), [LINK], (LINK,), {LINK: 1}, THIRD_LINK):
-                for change in (links.activate, links.pause, links.resume, links.remove):
+                for change in (links.pause, links.resume, links.remove):
                     self.assertIs(False, change(not_an_id, 'admin'), repr(not_an_id))
-                self.assertEqual(links.Hello(False, links.NO_SUCH_SERVER, '', ()), links.hello(not_an_id, 'admin'))
+                for ask in (links.hello, links.confirm):
+                    self.assertEqual(links.Hello(False, links.NO_SUCH_SERVER, '', ()), ask(not_an_id, 'admin'))
             self.assertEqual(before, self.rows())
 
 
 class Asking(Controller):
-    """A controller and a stand-in node that it has stored and activated."""
+    """A controller and a stand-in node that it has stored; active, unless a test wants it as it was stored."""
 
     def setUp(self):
         super().setUp()
@@ -438,11 +648,13 @@ class Asking(Controller):
         self.led.append((link.host, link.allow_loopback_for_tests))
         return [ipaddress.ip_address('127.0.0.1')]
 
-    def paired(self, answer=None, link_id=LINK, label='Frankfurt 1', pinned=None, **options):
+    def paired(self, answer=None, link_id=LINK, label='Frankfurt 1', pinned=None, status='active', **options):
         node = test_transport.Node(answer or test_transport.reply(body=ANSWER), **options)
         self.addCleanup(node.close)
         links.store(label, link_id, HOST, node.port, node.public, PRIVATE, pinned or node.pin)
-        self.assertIs(True, links.activate(link_id))
+        self.assertEqual('pending', self.row(link_id)['status'])
+        if status != 'pending':
+            self.alter(link_id, status=status)
         self.forget_audit()
         return node
 
@@ -453,12 +665,12 @@ class Asking(Controller):
         for node in nodes:
             self.assertTrue(node.connections.empty())
 
-    def assert_failed(self, text, outcome, reason, status=None, size=None, link_id=LINK, actor='admin'):
+    def assert_failed(self, text, outcome, reason, status=None, size=None, link_id=LINK, actor='admin', ask=None):
         """hello() says exactly this fixed text, writes it on the row and changes nothing else there."""
         before = self.row(link_id)
         self.forget_audit()
         self.now += 1
-        self.assertEqual(links.Hello(False, text, '', ()), links.hello(link_id, actor))
+        self.assertEqual(links.Hello(False, text, '', ()), (ask or links.hello)(link_id, actor))
         self.assertIn(text, links.STORED_ERRORS)
         self.assertEqual(dict(before, last_error=text, last_error_at=self.now), self.row(link_id))
         self.assertEqual([('request', outcome, reason, link_id, actor, 'GET', PATH, status, size, 0)], self.audited())
@@ -498,76 +710,7 @@ class HelloTests(Asking):
         self.assertEqual(links.Hello(True, '', '3.0.10', ('hello', 'inventory')), links.hello(LINK, 'admin'))
 
     def test_whatever_else_a_node_says_leaves_a_fixed_text_and_not_a_word_of_its_own(self):
-        reply = test_transport.reply
-        page = ('<html><script>alert("%s")</script>{{7*7}}</html>' % MARK).encode()
-        location = [('Location', 'https://%s.example.com/' % MARK)]
-        not_valid = 'The server sent a reply that is not valid.'
-        not_signed = 'The reply was not signed by the server. It may no longer accept this controller.'
-        redirect = 'The server answered with a redirect instead of a signed reply.'
-
-        def verified(name, text, outcome, reason, body, status=200, **options):
-            """A reply the transport hands on: signed by the node for this request."""
-            return name, reply(status=status, body=body, **options), text, outcome, reason, status, len(body)
-
-        def unverified(name, text, reason, answer):
-            return name, answer, text, 'error', reason, None, None
-        cases = (
-            verified('a value missing', links.NOT_A_NODE, 'error', 'format',
-                     b'{"build":10,"capabilities":[],"role":"node"}'),
-            verified('one name more', links.NOT_A_NODE, 'error', 'format', said(hostname=MARK)),
-            verified('markup as the version', links.NOT_A_NODE, 'error', 'format',
-                     said(version='3.0<script>%s</script>' % MARK)),
-            verified('a template as the version', links.NOT_A_NODE, 'error', 'format', said(version='{{%s}}' % MARK)),
-            verified('the build inside the version', links.NOT_A_NODE, 'error', 'format', said(version='3.0.10')),
-            verified('text as the build', links.NOT_A_NODE, 'error', 'format', said(build=MARK)),
-            verified('markup as a capability', links.NOT_A_NODE, 'error', 'format',
-                     said(capabilities=['<b>%s</b>' % MARK])),
-            verified('the role of a controller', links.NOT_A_NODE, 'error', 'format', said(role='controller')),
-            verified('text that is not JSON', links.NOT_A_NODE, 'error', 'format',
-                     ('This request need session. %s' % MARK).encode()),
-            verified('a page called JSON', links.NOT_A_NODE, 'error', 'format', page),
-            verified('a page called a page', links.NOT_A_NODE, 'error', 'format', page, content_type='text/html'),
-            verified('the right answer called a page', links.NOT_A_NODE, 'error', 'format', ANSWER,
-                     content_type='text/html'),
-            verified('the right answer without a type', links.NOT_A_NODE, 'error', 'format', ANSWER,
-                     content_type=None),
-            verified('an empty body', links.NOT_A_NODE, 'error', 'format', b''),
-            verified('one byte more than an answer may have', links.TOO_LARGE, 'error', 'size',
-                     ANSWER + b' ' * (links.MAX_HELLO + 1 - len(ANSWER))),
-            verified('a megabyte', links.TOO_LARGE, 'error', 'size',
-                     b'{"role":"node","pad":"' + MARK.encode() * 60000 + b'"}'),
-            verified('an error, signed', links.REFUSED, 'refused', 'not_allowed',
-                     ('{"error":"%s"}' % MARK).encode(), status=500),
-            verified('a refusal, signed', links.REFUSED, 'refused', 'not_allowed', b'{"error":"link"}', status=403),
-            verified('not found, signed', links.REFUSED, 'refused', 'not_allowed', page, status=404,
-                     content_type='text/html'),
-            verified('the right answer under another status', links.REFUSED, 'refused', 'not_allowed', ANSWER,
-                     status=201),
-            unverified('more than any reply may be', links.TOO_LARGE, 'size',
-                       reply(body=ANSWER, length=str(transport.MAX_RESPONSE), hold=True)),
-            unverified('the right answer, unsigned', not_signed, 'signature', reply(body=ANSWER, signature=False)),
-            unverified('an unsigned page', not_signed, 'signature',
-                       reply(body=page, content_type='text/html', signature=False)),
-            unverified('the right answer signed with another key', not_signed, 'signature',
-                       reply(body=ANSWER, signed=dict(key=crypto.generate_private_key()))),
-            unverified('the right answer signed for another link', not_signed, 'signature',
-                       reply(body=ANSWER, signed=dict(link_id=OTHER_LINK))),
-            unverified('a signature over another body', not_signed, 'signature',
-                       reply(body=said(version='9.9'), signed=dict(body=ANSWER))),
-            unverified('a redirect', redirect, 'format', reply(status=302, body=b'', extra=location,
-                                                                signature=False)),
-            unverified('a signed redirect', redirect, 'format', reply(status=307, body=ANSWER, extra=location)),
-            unverified('a chunked answer', not_valid, 'format', reply(
-                body=b'%x\r\n%s\r\n0\r\n\r\n' % (len(ANSWER), ANSWER), signed=dict(body=ANSWER), length=False,
-                extra=[('Transfer-Encoding', 'chunked')])),
-            unverified('an answer shorter than it says', not_valid, 'format',
-                       reply(body=ANSWER, length=str(len(ANSWER) + 1))),
-            unverified('two answers', not_valid, 'format', reply(body=ANSWER, mangle=lambda data: data + data)),
-            unverified('a header that is not one', not_valid, 'format',
-                       reply(body=ANSWER, extra=[('X-%s\r\nbroken' % MARK, 'x')])),
-            unverified('no answer at all', 'The server could not be reached.', 'unreachable',
-                       lambda node, connection, seen: None),
-        )
+        reply, cases = test_transport.reply, hostile_replies()
         node = self.paired()
         self.assertEqual('3.0.10', links.hello(LINK, 'admin').panel_version)
         with mock.patch.object(transport, 'DEADLINE', 5):
@@ -637,6 +780,165 @@ class HelloTests(Asking):
         time.sleep(0.1)
         self.assertTrue(node.connections.empty())
         self.assertEqual([], self.led)
+
+
+class ConfirmTests(Asking):
+    """From stored to active: only on the server's own verified answer to the first request of the link."""
+
+    def assert_pending(self, text, outcome, reason, status=None, size=None):
+        self.assert_failed(text, outcome, reason, status, size, ask=links.confirm)
+        self.assertEqual('pending', self.row()['status'])
+
+    def test_a_pending_server_that_answers_becomes_active_with_its_version(self):
+        node = self.paired(status='pending')
+        self.alter(last_error='The server answered with a redirect instead of a signed reply.', last_error_at=NOW - 9)
+        before = self.row()
+        self.now += 5
+        self.assertEqual(links.Hello(True, '', '3.0.10', ('hello', 'inventory')), links.confirm(LINK, 'admin'))
+        self.assertEqual(dict(before, status='active', updated_at=NOW + 5, panel_version='3.0.10',
+                              last_seen_at=NOW + 5, last_error='', last_error_at=None), self.row())
+        self.assertEqual([('request', 'ok', '', LINK, 'admin', 'GET', PATH, 200, len(ANSWER), 0),
+                          ('link_approve', 'ok', '', LINK, 'admin', '', '', None, None, 0)], self.audited())
+        # What was sent is exactly what hello() sends: there is no second kind of request.
+        seen = node.finished()['seen']
+        self.assertEqual(('GET', PATH, b'', 'json'), (seen.method, seen.target, seen.body,
+                                                      dict(seen.headers)['X-CPMS-Mode']))
+        self.assertEqual((links._HELLO.status, links._CONFIRM.status), (models.ACTIVE, models.PENDING))
+        # From now on it is asked with hello(), and confirm() has nothing more to do.
+        self.assertIs(True, links.hello(LINK, 'admin').ok)
+        self.assertEqual(links.Hello(False, links.NOT_PENDING, '', ()), links.confirm(LINK, 'admin'))
+
+    def test_a_server_that_has_not_accepted_the_link_stays_pending_with_a_fixed_text(self):
+        # What a managed server answers before its administrator approved: its unsigned refusals.
+        reply = test_transport.reply
+        node = self.paired(reply(status=302, body=b'', extra=[('Location', '/')], signature=False), status='pending')
+        self.assert_pending('The server answered with a redirect instead of a signed reply.', 'error', 'format')
+        node.answer = reply(body=b'{"error_message": "This request need session."}', signature=False)
+        self.assert_pending('The reply was not signed by the server. It may no longer accept this controller.',
+                            'error', 'signature')
+        # Approved there, it answers, and the same call now makes it active and clears the text.
+        node.answer = reply(body=ANSWER)
+        self.assertIs(True, links.confirm(LINK, 'admin').ok)
+        self.assertEqual(('active', '', None), tuple(self.row()[name] for name in ('status', 'last_error',
+                                                                                   'last_error_at')))
+
+    def test_whatever_else_a_server_says_leaves_it_pending_with_a_fixed_text_and_not_a_word_of_its_own(self):
+        cases = hostile_replies()
+        node = self.paired(status='pending')
+        with mock.patch.object(transport, 'DEADLINE', 5):
+            for name, answer, text, outcome, reason, status, size in cases:
+                with self.subTest(name):
+                    node.answer = answer
+                    self.assert_pending(text, outcome, reason, status, size)
+                    self.assertEqual(('', None), (self.row()['panel_version'], self.row()['last_seen_at']))
+        self.assertEqual(len(cases), self.sent.call_count)
+        self.assertEqual(0, len([row for row in self.database.run('SELECT event FROM ms_audit')
+                                 if row[0] == 'link_approve']))
+
+    def test_a_failure_of_any_kind_leaves_it_pending(self):
+        self.paired(status='pending')
+        for error in (RuntimeError(MARK), OSError(MARK), MemoryError(MARK), transport.TransportError(MARK)):
+            with mock.patch.object(transport, 'send', side_effect=error):
+                self.assert_pending(links.FAILED, 'error', 'internal')
+        for kind, reason, text in links._FAILURES:
+            with mock.patch.object(transport, 'send', side_effect=kind('%s <script>' % MARK)):
+                self.assert_pending(text, 'error', reason)
+        with mock.patch.object(links, '_answer', side_effect=RuntimeError(MARK)):
+            self.assert_pending(links.FAILED, 'error', 'internal')
+
+    def test_only_a_pending_server_is_confirmed_and_no_other_is_even_asked(self):
+        node = self.paired(status='pending')
+        others = ('active', 'paused', 'revoked', '', 'PENDING', 'pending ', 'pending2')
+        for status in others:
+            self.alter(status=status)
+            before = self.rows()
+            self.assertEqual(links.Hello(False, links.NOT_PENDING, '', ()), links.confirm(LINK, 'admin'), status)
+            self.assertEqual(before, self.rows())
+        self.assertEqual(links.Hello(False, links.NO_SUCH_SERVER, '', ()), links.confirm(OTHER_LINK, 'admin'))
+        self.assert_not_asked(node)
+        self.assertEqual([('request', 'refused', 'link', LINK, 'admin', 'GET', PATH, None, None, 0)] * len(others)
+                         + [('request', 'refused', 'link', OTHER_LINK, 'admin', 'GET', PATH, None, None, 0)],
+                         self.audited())
+        # And hello() does not stand in for it: a pending server is not asked that way.
+        self.alter(status='pending')
+        self.assertEqual(links.Hello(False, links.NOT_ACTIVE, '', ()), links.hello(LINK, 'admin'))
+        self.assert_not_asked(node)
+        self.assertEqual('pending', self.row()['status'])
+
+    def test_without_the_licence_or_the_role_nobody_is_asked_and_nothing_changes(self):
+        node = self.paired(status='pending')
+        before = self.rows()
+        self.licensed = False
+        self.assertEqual(links.Hello(False, links.NO_LICENCE, '', ()), links.confirm(LINK, 'admin'))
+        self.licensed = True
+        for role in (keys.OFF, keys.NODE):
+            self.role = role
+            self.assertEqual(links.Hello(False, links.NOT_CONTROLLER, '', ()), links.confirm(LINK, 'admin'))
+        self.assert_not_asked(node)
+        self.assertEqual(before, self.rows())
+        self.assertEqual(['licence', 'role', 'role'], [row[2] for row in self.audited()])
+
+    def test_a_row_whose_sealed_text_does_not_open_is_not_asked_and_stays_pending(self):
+        node = self.paired(status='pending')
+        self.alter(sealed=self.row()['sealed'][:-4])
+        self.assert_pending(links.UNREADABLE, 'error', 'internal')
+        self.assert_not_asked(node)
+
+    def test_of_eight_workers_confirming_at_once_one_makes_it_active(self):
+        self.paired(status='pending')
+        outcomes = self.workers([lambda: links.confirm(LINK, 'admin')] * 8)
+        self.assertEqual([links.Hello(False, links.NOT_PENDING, '', ())] * 7
+                         + [links.Hello(True, '', '3.0.10', ('hello', 'inventory'))], sorted(outcomes))
+        self.assertEqual('active', self.row()['status'])
+        events = [row[0:3] for row in self.audited()]
+        self.assertEqual(1, events.count(('link_approve', 'ok', '')))
+        self.assertEqual(1, events.count(('request', 'ok', '')))
+        self.assertEqual(7, events.count(('request', 'refused', 'link')))
+
+    def test_an_answer_that_arrives_after_the_server_was_removed_or_changed_makes_nothing_active(self):
+        def remove_first(node, connection, seen):
+            self.database.run('DELETE FROM ms_nodes')
+            test_transport.reply(body=ANSWER)(node, connection, seen)
+
+        def revoke_first(node, connection, seen):
+            self.alter(status='revoked')
+            test_transport.reply(body=ANSWER)(node, connection, seen)
+        self.paired(revoke_first, status='pending')
+        before = self.row()
+        self.assertEqual(links.Hello(False, links.NOT_PENDING, '', ()), links.confirm(LINK, 'admin'))
+        self.assertEqual(dict(before, status='revoked'), self.row())
+        self.assertEqual([('request', 'refused', 'link', LINK, 'admin', 'GET', PATH, None, None, 0)], self.audited())
+        self.paired(remove_first, link_id=OTHER_LINK, label='Second', status='pending')
+        self.assertEqual(links.Hello(False, links.NOT_PENDING, '', ()), links.confirm(OTHER_LINK, 'admin'))
+        self.assertEqual([], self.rows())
+
+    def test_an_actor_that_cannot_be_signed_for_confirms_nothing(self):
+        node = self.paired(status='pending')
+        for actor in ('', 'two words', 'admin\r\nX-CPMS-Mode: page', 'a' * 51, None, 7):
+            self.assertEqual(links.Hello(False, 'The request could not be signed.', '', ()),
+                             links.confirm(LINK, actor))
+            self.assertEqual('pending', self.row()['status'])
+        time.sleep(0.1)
+        self.assertTrue(node.connections.empty())
+
+    def test_without_its_tables_it_still_answers_and_does_not_raise(self):
+        self.paired(status='pending')
+        self.database.run('RENAME TABLE ms_nodes TO ms_nodes_away')
+        try:
+            with transaction.atomic():
+                result = links.confirm(LINK, 'admin')
+                self.assertEqual(0, models.Link.objects.count())
+        finally:
+            self.database.run('RENAME TABLE ms_nodes_away TO ms_nodes')
+        self.assertEqual(links.Hello(False, links.FAILED, '', ()), result)
+        self.assertEqual('pending', self.row()['status'])
+        # Without the audit trail the proof still counts: an audit failure never changes an outcome.
+        self.database.run('RENAME TABLE ms_audit TO ms_audit_away')
+        try:
+            self.assertIs(True, links.confirm(LINK, 'admin').ok)
+        finally:
+            self.database.run('RENAME TABLE ms_audit_away TO ms_audit')
+        self.assertEqual('active', self.row()['status'])
 
 
 class NothingSentTests(Asking):
@@ -740,7 +1042,7 @@ class NoWayHereTests(Controller):
         node = test_transport.Node(test_transport.reply(body=ANSWER))
         self.addCleanup(node.close)
         links.store('Frankfurt 1', LINK, 'node-1.example.com', node.port, node.public, PRIVATE, node.pin)
-        self.assertIs(True, links.activate(LINK))
+        self.alter(status='active')
         self.assertIs(False, links.link_of(models.Node.objects.get(pk=LINK)).allow_loopback_for_tests)
         text = 'The name of the server now leads to an address that a link may not connect to.'
         for address in ('127.0.0.1', '10.0.0.5', '169.254.169.254', '::1'):

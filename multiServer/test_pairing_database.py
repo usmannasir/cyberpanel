@@ -23,8 +23,8 @@ import threading
 import unittest
 from unittest import mock
 
-from multiServer import (addresses, crypto, entitlement, keys, pairing, schema, test_pairing, test_transport, testing,
-                         transport)
+from multiServer import (addresses, audit, crypto, entitlement, keys, links, pairing, schema, test_pairing,
+                         test_transport, testing, transport)
 from multiServer.test_pairing import GENERIC, Loopback, Server, texts_of
 from multiServer.test_transport import CERTIFICATES, pin, read_request, wire
 
@@ -215,6 +215,10 @@ class Servers(Base):
         self.patch(softUpgrade, 'PANEL_CONF', self.panel)
         self.patch(transport, 'Endpoint', Loopback)
         self.licensed = self.patch(entitlement, 'allowed', return_value=True)
+        # The controller's records are multiServer/links.py, tested by itself and, joined to this, in
+        # multiServer/test_joined_database.py. Here they are stood in for.
+        self.prepared = self.patch(links, 'prepare')
+        self.patch(links, 'store', side_effect=self.store)
         self.find = self.start(mock.patch('loginSystem.models.Administrator.objects.get',
                                           return_value=self.administrator))
         self.acl = self.start(mock.patch('plogical.acl.ACLManager.loadedACL', return_value={'admin': 1}))
@@ -253,9 +257,10 @@ class Servers(Base):
         self.nodes.append(node)
         return node
 
-    def store(self, *arguments):
-        self.secrets.append(arguments[5].hex())
-        self.stored.append(arguments)
+    def store(self, label, link_id, host, port, node_key, private_key, tls_pin, actor):
+        self.secrets.append(private_key.hex())
+        self.stored.append((label, link_id, host, port, node_key, private_key, tls_pin))
+        audit.record('pairing', link_id=link_id, actor=actor)  # as the real one does
 
     def issue(self, controller_ip='127.0.0.1', admin_id=ADMIN, **options):
         with on_the_node():
@@ -276,7 +281,7 @@ class Servers(Base):
                     attempt.signature if signature is None else signature, **options)
 
     def pair(self, code):
-        return pairing.start(code, 'Frankfurt 1', 'admin', self.store)
+        return pairing.start(code, 'Frankfurt 1', 'admin')
 
     def not_paired(self, code, reason='signature', because=REFUSED):
         with self.assertRaises(pairing.PairingError) as caught:

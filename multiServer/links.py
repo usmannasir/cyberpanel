@@ -1,5 +1,12 @@
 """How a controller keeps each managed server, and the first thing it asks one.
 
+A server is stored when it has been paired (prepare() before the pairing
+request is sent, store() when it has been answered) and its row is PENDING.
+confirm() makes it ACTIVE, and only on proof: the server's own signed answer
+to the first request on the new link, which it gives only after its
+administrator has approved the link there. hello() asks an ACTIVE server the
+same thing later on.
+
 A row of ms_nodes has a label and a status for listing and one sealed text.
 Everything needed to reach the server is inside that text and nowhere else: its
 address, its identity key, the certificate it serves, and the private key this
@@ -53,6 +60,7 @@ NOT_CONTROLLER = 'This server is not a Multi-Server Manager controller.'
 NO_LICENCE = 'This controller has no Multi-Server Manager licence.'
 NO_SUCH_SERVER = 'There is no such server.'
 NOT_ACTIVE = 'This server is not active.'
+NOT_PENDING = 'This server is not waiting to be confirmed.'
 UNREADABLE = 'The stored connection details of this server cannot be read.'
 REFUSED = 'The server refused the request.'
 TOO_LARGE = 'The server sent a reply that is too large.'
@@ -79,6 +87,7 @@ STORED_ERRORS = tuple(sorted(set((UNREADABLE, REFUSED, TOO_LARGE, NOT_A_NODE, FA
                                  + tuple(text for _, _, text in _FAILURES))))
 
 _LINK_ID = re.compile(r'[0-9a-f]{32}')
+_NODE_ID = re.compile(r'[0-9a-f]{64}')
 _MASTER_KEY = re.compile(rb'[A-Za-z0-9_-]{43}=')  # the form keys.master_key() returns
 _SEALED = re.compile(r'[A-Za-z0-9_-]+={0,2}')
 _PLAIN = re.compile(re.escape(RECORD) + r'\n([0-9a-f]{32})\n([0-9a-f]{64})\n([0-9a-z.:-]{1,253})\n([1-9][0-9]{0,4})'
@@ -225,8 +234,35 @@ def check_label(label):
     return label
 
 
+def prepare(label, link_id, node_id, host, port, private_key, tls_pin):
+    """Refuse now what store() would refuse later, while the pairing code of the server is still unused.
+
+    Pairing calls this before it sends the pairing request, because the request
+    uses the code up and leaves a waiting link on the other server. Everything
+    store() checks is checked here on the same values, with one exception: the
+    server's identity key is not known until it answers. A record is therefore
+    built and sealed with a stand-in for that key, and pairing has only to see
+    that the key in the answer is the one node_id names. Raises what store()
+    raises, stores nothing, writes no audit row.
+    """
+    if switch.active_role() != keys.CONTROLLER:
+        raise NotController(NOT_CONTROLLER)
+    check_label(label)
+    if type(node_id) is not str or _NODE_ID.fullmatch(node_id) is None:
+        raise InvalidRecord('A link record holds exactly what pairing produces.')
+    try:
+        stand_in = crypto.public_key(private_key)
+    except Exception:
+        raise InvalidRecord('A link record holds exactly what pairing produces.') from None
+    master_key = keys.master_key()
+    seal(link_id, Record(crypto.node_id(stand_in), host, port, stand_in, private_key, tls_pin), master_key)
+    from multiServer import models
+    _not_stored_yet(models.Node.objects.order_by('link_id').values_list('link_id', 'sealed'), link_id, node_id,
+                    master_key)
+
+
 def store(label, link_id, host, port, node_key, private_key, tls_pin, actor=None):
-    """Keep a newly paired server as one row of ms_nodes, PENDING until activate().
+    """Keep a newly paired server as one row of ms_nodes, PENDING until confirm().
 
     Refused with NotController, InvalidLabel, InvalidRecord,
     transport.RefusedAddress (an address a link may not connect to),
@@ -242,10 +278,18 @@ def store(label, link_id, host, port, node_key, private_key, tls_pin, actor=None
     _audit('pairing', link_id, actor)
 
 
-def activate(link_id, actor=None):
-    """PENDING to ACTIVE, once pairing has seen the node accept the link. True when the row was pending."""
-    from multiServer import models
-    return _move(link_id, models.PENDING, models.ACTIVE, 'link_approve', actor)
+def confirm(link_id, actor):
+    """Ask a server that was paired and is still PENDING who it is, and make it ACTIVE if it answers. Never raises.
+
+    The request is the one hello() sends. A managed server answers it, signed,
+    only when its administrator has approved the link, so a verified answer of
+    exactly the expected shape is the proof that it has, and nothing else makes
+    a row ACTIVE. Any other outcome leaves the row PENDING with one of
+    STORED_ERRORS on it. As for hello(), nothing is sent unless this server is
+    a licensed controller, and nothing at all happens to a row that is not
+    PENDING.
+    """
+    return _asked(link_id, actor, _CONFIRM)
 
 
 def pause(link_id, actor=None):
@@ -285,12 +329,23 @@ def hello(link_id, actor):
     shape sets panel_version and last_seen_at and clears the error. Anything
     else sets last_error to one of STORED_ERRORS and keeps the rest.
     """
+    return _asked(link_id, actor, _HELLO)
+
+
+# How the one request is used: the status a row must have, the fixed text when it has another, and
+# whether a good answer moves the row on to ACTIVE.
+_Use = collections.namedtuple('_Use', 'status otherwise activates')
+_HELLO = _Use('active', NOT_ACTIVE, False)
+_CONFIRM = _Use('pending', NOT_PENDING, True)
+
+
+def _asked(link_id, actor, use):
     try:
-        return _hello(link_id, actor)
+        return _ask(link_id, actor, use)
     except Exception:
         pass  # not even its message is kept: it may quote what the node sent
     try:
-        return _failed(link_id, actor, 'error', 'internal', FAILED)
+        return _failed(link_id, actor, use, 'error', 'internal', FAILED)
     except Exception:
         return Hello(False, FAILED, '', ())
 
@@ -359,6 +414,18 @@ def _one_at_a_time():
             pass  # a connection that broke has let go of the lock already
 
 
+def _not_stored_yet(rows, link_id, node_id, master_key):
+    """Pass when no row of (link id, sealed text) is this link or this node; every row has to be readable for that."""
+    for other_id, other_sealed in rows:
+        try:
+            other = unseal(other_id, other_sealed, master_key)
+        except LinkError:
+            raise UnreadableRow('A server stored earlier has connection details that cannot be read. '
+                                'Remove that server before connecting another.') from None
+        if other_id == link_id or other.node_id == node_id:
+            raise DuplicateNode('This server is already connected.')
+
+
 def _store(label, link_id, host, port, node_key, private_key, tls_pin):
     if switch.active_role() != keys.CONTROLLER:
         raise NotController(NOT_CONTROLLER)
@@ -374,15 +441,8 @@ def _store(label, link_id, host, port, node_key, private_key, tls_pin):
     with _one_at_a_time(), transaction.atomic():
         # A locking read: it sees every committed row and waits for a row that a worker who had its turn has
         # not committed yet (a caller that stores inside a transaction of its own).
-        for other_id, other_sealed in models.Node.objects.select_for_update().order_by('link_id').values_list(
-                'link_id', 'sealed'):
-            try:
-                other = unseal(other_id, other_sealed, master_key)
-            except LinkError:
-                raise UnreadableRow('A server stored earlier has connection details that cannot be read. '
-                                    'Remove that server before connecting another.') from None
-            if other_id == link_id or other.node_id == node_id:
-                raise DuplicateNode('This server is already connected.')
+        _not_stored_yet(models.Node.objects.select_for_update().order_by('link_id').values_list('link_id', 'sealed'),
+                        link_id, node_id, master_key)
         now = int(time.time())
         models.Node.objects.create(link_id=link_id, label=label, status=models.PENDING, sealed=sealed,
                                    created_at=now, updated_at=now)
@@ -408,34 +468,44 @@ def _move(link_id, before, after, event, actor):
     return moved
 
 
-def _hello(link_id, actor):
+def _ask(link_id, actor, use):
     if switch.active_role() != keys.CONTROLLER:
         return _refused(link_id, actor, 'role', NOT_CONTROLLER)
     if entitlement.allowed() is not True:
         return _refused(link_id, actor, 'licence', NO_LICENCE)
     from multiServer import models
     row = models.Node.objects.filter(pk=link_id).first() if _is_link_id(link_id) else None
-    if row is None or row.status != models.ACTIVE:
-        return _refused(link_id, actor, 'link', NO_SUCH_SERVER if row is None else NOT_ACTIVE)
+    if row is None or row.status != use.status:
+        return _refused(link_id, actor, 'link', NO_SUCH_SERVER if row is None else use.otherwise)
     try:
         link = link_of(row)
     except LinkError:
-        return _failed(link_id, actor, 'error', 'internal', UNREADABLE)
+        return _failed(link_id, actor, use, 'error', 'internal', UNREADABLE)
     try:
         status, content_type, body = transport.send(link, 'GET', HELLO_PATH, '', '-', b'', actor, 'json')
     except transport.TransportError as error:
         reason, text = _failure(error)
-        return _failed(link_id, actor, 'error', reason, text)
+        return _failed(link_id, actor, use, 'error', reason, text)
     seen = dict(status=status, size=len(body))
     if status != 200:
-        return _failed(link_id, actor, 'refused', 'not_allowed', REFUSED, **seen)
+        return _failed(link_id, actor, use, 'refused', 'not_allowed', REFUSED, **seen)
     if len(body) > MAX_HELLO:
-        return _failed(link_id, actor, 'error', 'size', TOO_LARGE, **seen)
+        return _failed(link_id, actor, use, 'error', 'size', TOO_LARGE, **seen)
     answer = _answer(content_type, body)
     if answer is None:
-        return _failed(link_id, actor, 'error', 'format', NOT_A_NODE, **seen)
-    _note(link_id, panel_version=answer[0], last_seen_at=int(time.time()), last_error='', last_error_at=None)
+        return _failed(link_id, actor, use, 'error', 'format', NOT_A_NODE, **seen)
+    now = int(time.time())
+    changes = dict(panel_version=answer[0], last_seen_at=now, last_error='', last_error_at=None)
+    if use.activates:
+        # The proof and the change in one statement: of two workers, one finds the row still pending.
+        changes.update(status=models.ACTIVE, updated_at=now)
+    noted = _note(link_id, use.status, **changes)
+    if use.activates and not noted:
+        # Removed, or confirmed by another worker, while the server was being asked.
+        return _refused(link_id, actor, 'link', use.otherwise)
     _audit('request', link_id, actor, method='GET', path=HELLO_PATH, **seen)
+    if use.activates:
+        _audit('link_approve', link_id, actor)
     return Hello(True, '', answer[0], answer[1])
 
 
@@ -484,18 +554,18 @@ def _refused(link_id, actor, reason, text):
     return Hello(False, text, '', ())
 
 
-def _failed(link_id, actor, outcome, reason, text, **seen):
-    _note(link_id, last_error=text, last_error_at=int(time.time()))
+def _failed(link_id, actor, use, outcome, reason, text, **seen):
+    _note(link_id, use.status, last_error=text, last_error_at=int(time.time()))
     _audit('request', link_id, actor, outcome, reason, method='GET', path=HELLO_PATH, **seen)
     return Hello(False, text, '', ())
 
 
-def _note(link_id, **changes):
-    """Write the outcome on the row, unless the server was paused or removed in the meantime."""
+def _note(link_id, asked_as, **changes):
+    """Write the outcome on the row while it still has the status it was asked in; True when it was written."""
     if not _is_link_id(link_id):
-        return
+        return False
     from django.db import transaction
     from multiServer import models
     # Its own savepoint: a failed write must not spoil the caller's transaction.
     with transaction.atomic():
-        models.Node.objects.filter(pk=link_id, status=models.ACTIVE).update(**changes)
+        return models.Node.objects.filter(pk=link_id, status=asked_as).update(**changes) == 1
