@@ -280,8 +280,11 @@ def _literal_cookie_hardening(source, label):
             if not isinstance(target, ast.Name) or target.id not in names:
                 continue
             value = statement.value
+            # Before Python 3.8 (the panel's Python on AlmaLinux 8 is 3.6) True and
+            # False are parsed as NameConstant, not Constant.
             if (len(targets) != 1 or target.id in values or
-                    not isinstance(value, ast.Constant) or type(value.value) is not bool):
+                    not isinstance(value, (ast.Constant, getattr(ast, 'NameConstant', ast.Constant))) or
+                    type(value.value) is not bool):
                 raise RuntimeError('Cannot safely preserve ' + target.id + ' in ' + label +
                                    ': use one top-level literal True or False assignment')
             values[target.id] = value
@@ -320,7 +323,9 @@ def merge_cookie_hardening(previous_source, new_source):
         elif current[name].value is False:
             node = current[name]
             start = sum(map(len, lines[:node.lineno - 1])) + node.col_offset
-            end = sum(map(len, lines[:node.end_lineno - 1])) + node.end_col_offset
+            # The node is the literal False; its end is not recorded before Python 3.8.
+            end = start + len(b'False')
+            assert encoded[start:end] == b'False', name
             edits.append((start, end))
     for start, end in sorted(set(edits), reverse=True):
         encoded = encoded[:start] + b'True' + encoded[end:]
