@@ -70,6 +70,7 @@ def end(link_id, actor, raise_counter):
         counter = keys.generation()
         if counter < 1:
             raise RuntimeError('The revocation counter cannot be read.')
+        _catch_up(found.values(), counter, live)
         keys.mark_revoked(link_id)
         sso.clear(link)
         models.Link.objects.filter(pk=link_id).update(status=models.REVOKED, updated_at=int(time.time()))
@@ -79,6 +80,29 @@ def end(link_id, actor, raise_counter):
         models.Link.objects.exclude(pk=link_id).filter(generation=counter, status__in=live).update(generation=raised)
     audit.record('link_revoke', link_id=link_id, **(dict(actor=actor) if actor else {}))
     return True
+
+
+def _catch_up(rows, counter, live):
+    """Move on the links that an interrupted end() left one behind the counter.
+
+    end() raises the counter in the key directory and then moves every other
+    link on to it. If it stopped between the two (the database went away, the
+    process was killed), the rows went back to the old value while the file
+    kept the new one, and every link of this server is refused from then on.
+    That state is recognised here, at the start of the next end(): no link
+    counts at the counter, and links that are not ended sit exactly one behind
+    it. Those are moved on. A link whose revocation marker is written stays
+    behind, so nothing that was ended comes back.
+    """
+    if any(row.generation == counter for row in rows):
+        return
+    behind = [row.link_id for row in rows
+              if row.status in live and row.generation == counter - 1 and not keys.revoked(row.link_id)]
+    if behind:
+        models.Link.objects.filter(pk__in=behind, generation=counter - 1, status__in=live).update(generation=counter)
+        for row in rows:
+            if row.link_id in behind:
+                row.generation = counter
 
 
 def _date(timestamp):
@@ -108,7 +132,8 @@ def summary(link, now, counter, names):
         'short': link.link_id[:8] if known else '',
         'addresses': ', '.join(addresses.listed(link.allowed_ips)),
         'state': _STATES.get(state, 'Unknown'),
-        'can_end': known and state in (models.ACTIVE, models.PAUSED, 'expired'),
+        # Also for a link whose ending did not finish: its marker is written, its row is not yet closed.
+        'can_end': known and link.status in (models.ACTIVE, models.PAUSED),
         'since': _date(link.activated_at),
         'until': _date(link.expires_at) if state in (models.ACTIVE, models.PAUSED) else None,
         'by': names.get(link.admin_id, ''),
