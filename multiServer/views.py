@@ -59,6 +59,17 @@ def full_administrator(request):
         return None
 
 
+def two_factor_enrolled(administrator):
+    """Whether this account signs in with a second factor that can be checked. Never raises."""
+    try:
+        if administrator.twoFA != 1 or administrator.secretKey in ('', 'None', None):
+            return False
+        import pyotp
+        return bool(pyotp.TOTP(administrator.secretKey).byte_secret())
+    except Exception:
+        return False
+
+
 @serves(keys.CONTROLLER, keys.NODE)
 def status(request, role):
     """This server's role and, on a controller, whether its licence is in order."""

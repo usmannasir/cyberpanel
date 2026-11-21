@@ -1716,6 +1716,9 @@ class PairingThroughTheGatewayTests(Panel):
         Panel.setUp(self)
         self.start(patch.object(pairing, '_now', side_effect=lambda: self.clock.now))
         self.start(patch.object(pairing, '_certificate_fingerprint', return_value=self.PIN))
+        # A pairing code is given only to an administrator who signs in with a second factor.
+        Administrator.objects.filter(pk=self.administrator.pk).update(
+            twoFA=1, secretKey='JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP')
         self.code = pairing.issue_code(self.administrator.pk, '127.0.0.1', host='node.example.com', port=8090)
         self.one_time = pairing._decode(self.code)[2]
 

@@ -41,6 +41,7 @@ else:
 NOW = 1795000000
 ADMIN = 1
 GENERATION = 7
+SECOND_FACTOR = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'  # the secret of an administrator's authenticator app
 SIDE = threading.local()  # which of the two servers the running thread is
 THE_LINK, THE_NUMBER = object(), object()
 REFUSED = ('The server did not accept the pairing code. A code can be used once, for ten minutes, from the '
@@ -208,7 +209,8 @@ class Servers(Base):
         self.addCleanup(shutil.rmtree, str(self.panel))
         self.panel.joinpath('cert.pem').write_bytes(Path(CERTIFICATES['node'][0]).read_bytes())
         self.panel.joinpath('bind.conf').write_text('')
-        self.administrator = mock.MagicMock(state='ACTIVE', userName='admin', securityLevel=1)
+        self.administrator = mock.MagicMock(state='ACTIVE', userName='admin', securityLevel=1, twoFA=1,
+                                            secretKey=SECOND_FACTOR)
         self.patch(keys, 'role', side_effect=lambda: getattr(SIDE, 'role', keys.CONTROLLER))
         self.patch(keys, 'identity_key', side_effect=lambda: self.identity[0])
         self.patch(keys, 'generation', side_effect=lambda: self.generation[0])
@@ -915,6 +917,14 @@ class CodeIssuingTests(Servers):
         self.find.side_effect = RuntimeError('Administrator matching query does not exist.')
         self.refused('admin', nobody, 99, '127.0.0.1')
         self.find.side_effect = None
+        # A full administrator who signs in with a password alone is refused, by name.
+        for two_factor, secret in ((0, SECOND_FACTOR), (1, 'None'), (1, ''), (1, None), (1, 'not base32 !'),
+                                   (2, SECOND_FACTOR), ('1', SECOND_FACTOR)):
+            self.administrator.twoFA, self.administrator.secretKey = two_factor, secret
+            row = self.refused('two_factor', 'Turn on two-factor authentication for your account first.', ADMIN,
+                               '127.0.0.1')
+            self.assertEqual('admin', row[4])
+        self.administrator.twoFA, self.administrator.secretKey = 1, SECOND_FACTOR
         with self.assertRaises(pairing.PairingError) as caught:
             pairing.issue_code(ADMIN, '127.0.0.1', host='127.0.0.1', port=self.node.port)
         self.assertEqual(('role', 'This server is not a managed server.'),
@@ -1038,6 +1048,12 @@ class DecisionTests(Servers):
             self.find.side_effect = RuntimeError('Administrator matching query does not exist.')
             self.refused('admin', nobody, decide, admin_id=99, actor='')
             self.find.side_effect = None
+            # Nor does an administrator who signs in with a password alone.
+            self.administrator.twoFA = 0
+            self.refused('two_factor', 'Turn on two-factor authentication for your account first.', decide)
+            self.administrator.twoFA, self.administrator.secretKey = 1, 'None'
+            self.refused('two_factor', 'Turn on two-factor authentication for your account first.', decide)
+            self.administrator.secretKey = SECOND_FACTOR
             with self.assertRaises(pairing.PairingError) as caught:
                 # On the controller.
                 decide(*((self.link_id, ADMIN, self.number) if decide is pairing.approve else (self.link_id, ADMIN)))
