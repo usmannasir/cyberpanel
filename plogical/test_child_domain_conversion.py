@@ -11,6 +11,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
+from managePHP.phpConfig import php_selection_digits
+
 
 def load_method(relative_path, class_name, method_name, namespace):
     path = Path(__file__).resolve().parents[1] / relative_path
@@ -356,6 +358,7 @@ class ConversionPreflightTests(unittest.TestCase):
             Websites=self.websites, ChildDomains=self.children, ProcessUtilities=self.process,
             PHPManager=SimpleNamespace(getPHPString=lambda version: '83'),
             apache_backend_entitlement_error=lambda data: None,
+            php_selection_digits=php_selection_digits,
             HttpResponse=lambda content: SimpleNamespace(content=content.encode())))
 
     def run_preflight(self):

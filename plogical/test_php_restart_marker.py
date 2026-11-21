@@ -4,11 +4,14 @@ import builtins
 import contextlib
 import io
 from pathlib import Path
+import re
 import shlex
 import tempfile
 from types import SimpleNamespace as NS
 import unittest
 from unittest import mock
+
+from managePHP.phpConfig import php_selection_digits
 
 ROOT = Path(__file__).resolve().parents[1]
 OLS, ENTERPRISE = 'ols', 'lsws'
@@ -58,7 +61,8 @@ class PHPChange:
             ChildDomains=NS(objects=NS(get=lambda domain: self.lookup(self.children, domain))),
             PHPManager=NS(getPHPString=lambda text: text.split()[1].replace('.', '')),
             ProcessUtilities=self.process, ApacheVhost=self.apache, installUtilities=self.install,
-            logging=mock.Mock(), os=self.os, shlex=shlex, open=self.open, print=print)
+            logging=mock.Mock(), os=self.os, shlex=shlex, open=self.open, print=print, re=re,
+            php_selection_digits=php_selection_digits)
         self.namespace['vhost'] = NS(redisConf='/usr/local/lsws/conf/dvhost_redis.conf',
                                      Server_root='/usr/local/lsws')
         self.method, self.namespace['vhost'].phpRestartMarker = load_methods(

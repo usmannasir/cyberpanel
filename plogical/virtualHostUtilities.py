@@ -667,6 +667,15 @@ class virtualHostUtilities:
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
                           tempStatusPath='/home/cyberpanel/fakePath', mailDomain=None, LimitsCheck=1,
                           configureMail=True):
+        # Checked before the block below: its error handler removes the
+        # configuration of the named website, which may be an existing one.
+        from managePHP.phpConfig import php_selection_digits
+        try:
+            php_selection_digits(phpVersion)
+        except ValueError as error:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(error) + ' [404]')
+            return 0, str(error)
+
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1615,9 +1624,11 @@ class virtualHostUtilities:
         # suspension can miss a child that is not in the database yet.
         from plogical.websiteSuspension import suspension_lock, validate_domain
         from plogical.childDomainState import normalize_child_state
+        from managePHP.phpConfig import php_selection_digits
         try:
             validate_domain(masterDomain)
             validate_domain(virtualHostName)
+            php_selection_digits(phpVersion)
             if independentState is not None:
                 independentState = normalize_child_state(independentState)
             with suspension_lock(virtualHostUtilities.Server_root):
@@ -1889,8 +1900,10 @@ class virtualHostUtilities:
     @staticmethod
     def switchServer(virtualHostName, phpVersion, server, tempStatusPath):
         from plogical.websiteSuspension import suspension_lock, validate_domain
+        from managePHP.phpConfig import php_selection_digits
         try:
             validate_domain(virtualHostName)
+            php_selection_digits(phpVersion)
             with suspension_lock(virtualHostUtilities.Server_root):
                 return virtualHostUtilities._switchServer(virtualHostName, phpVersion, server, tempStatusPath)
         except Exception as error:

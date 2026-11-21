@@ -2,10 +2,11 @@ import os
 import re
 import shlex
 
+from managePHP.phpConfig import php_selection_digits
+
 
 WORDPRESS_VERSION = re.compile(r'^\d+\.\d+(?:\.\d+)?$')
 WORDPRESS_ITEM_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,199}')
-PHP_SELECTION = re.compile(r'^PHP\s+(\d+)\.(\d+)$')
 
 
 def select_wordpress_version(offers):
@@ -27,11 +28,12 @@ def wordpress_php_change_required(current_binary, required_binary):
 
 
 def php_binary_for_selection(selection):
-    """Map a panel PHP selection to its exact LiteSpeed PHP CLI binary."""
-    match = PHP_SELECTION.fullmatch(str(selection or '').strip())
-    if match is None:
-        raise ValueError('Invalid PHP version selected.')
-    return '/usr/local/lsws/lsphp%s%s/bin/php' % match.groups()
+    """Map a panel PHP selection to its exact LiteSpeed PHP CLI binary.
+
+    The selection must be exactly 'PHP x.y' (managePHP.phpConfig holds the
+    one check); the path is built from its digits.
+    """
+    return '/usr/local/lsws/lsphp%s%s/bin/php' % php_selection_digits(selection)
 
 
 def change_php_succeeded(output):

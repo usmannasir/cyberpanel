@@ -45,7 +45,7 @@ from plogical.systemPassword import (
 )
 from plogical.securityUtils import generate_api_token
 from managePHP.phpManager import PHPManager
-from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name
+from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name, php_selection_digits
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.vhostConfs import vhostConfs
 from plogical.cronUtil import CronUtil
@@ -2326,6 +2326,9 @@ Require valid-user
             domain = data['domainName']
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
+            # Exactly 'PHP x.y': the selection is stored with the website and
+            # becomes part of its configuration, paths and command lines.
+            php_selection_digits(phpSelection)
             packageName = data['package']
             websiteOwner = data['websiteOwner'].lower()
 
@@ -2491,6 +2494,8 @@ Require valid-user
                     data['apacheBackend'] = 1
 
                 phpSelection = Websites.objects.get(domain=masterDomain).phpSelection
+
+            php_selection_digits(phpSelection)
 
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
@@ -3294,6 +3299,14 @@ Require valid-user
                 pass
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
+
+            # Refused before anything is changed: the selection is stored with
+            # the website below and handed to the PHP worker.
+            try:
+                php_selection_digits(phpVersion)
+            except ValueError as error:
+                return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                    'error_message': 'No website settings were changed. ' + str(error)}))
 
             modifyWeb = Websites.objects.get(domain=domain)
             webpack = Package.objects.get(packageName=package)
@@ -5490,6 +5503,11 @@ StrictHostKeyChecking no
             pass
         else:
             return ACLManager.loadErrorJson()
+
+        try:
+            php_selection_digits(phpVersion)
+        except ValueError as error:
+            return HttpResponse(json.dumps({'status': 0, 'error_message': str(error)}))
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
