@@ -498,18 +498,59 @@ class Panel(unittest.TestCase):
 
 
 class RevocationTests(Panel):
+    def revoke(self):
+        return self.call(method='POST', path=nodeGateway.links.REVOKE_PATH)
+
+    def rows(self, event):
+        return models.AuditEntry.objects.filter(event=event).count()
+
     def test_revoke_receipt_survives_retry_and_a_database_restore(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(keys, 'KEY_DIRECTORY', directory):
             os.mkdir(os.path.join(directory, 'revoked'))
             self.assertFalse(keys.revoked(LINK))
             for _ in range(2):
-                reply, _, _ = self.call(method='POST', path=nodeGateway.links.REVOKE_PATH)
+                reply, _, _ = self.revoke()
                 self.assertEqual((200, b'{"revoked":true}'), (reply.status_code, reply.content))
                 self.assertEqual(models.REVOKED, models.Link.objects.get(pk=LINK).status)
             self.assertTrue(keys.revoked(LINK))
             self.assertFalse(keys.revoked('fe' * 16))
             models.Link.objects.filter(pk=LINK).update(status=models.ACTIVE)
             self.assertNotEqual(200, self.call()[0].status_code)
+
+    def test_a_revoke_repeated_on_a_revoked_link_gets_the_same_proof_and_stores_nothing(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(keys, 'KEY_DIRECTORY', directory):
+            os.mkdir(os.path.join(directory, 'revoked'))
+            first = self.revoke()
+            self.assert_signed(first[0], first[1], first[2], 200, b'{"revoked":true}')
+            self.assertEqual((1, 1, 1), (models.Nonce.objects.count(), self.rows('link_revoke'), self.rows('request')))
+            revoked = self.state()
+            marked = os.stat(os.path.join(directory, 'revoked', LINK)).st_mtime_ns
+            # Whoever holds the key of the link that was ended may ask as often as it likes.
+            with patch.object(audit, '_unverified', audit._MinuteBudget(2)):
+                for _ in range(7):
+                    self.clock.now += 1
+                    reply, message, named = self.revoke()
+                    self.assert_signed(reply, message, named, 200, b'{"revoked":true}')
+                # The request that was answered the first time, sent again as it was, changes nothing either.
+                again = self.deliver(first[2], method='POST', path=nodeGateway.links.REVOKE_PATH)
+                self.assert_signed(again, first[1], first[2], 200, b'{"revoked":true}')
+            # No nonce, no newer time on the link, and of the audit trail only what the capped allowance took.
+            self.assertEqual(revoked[:3] + (revoked[3] + 2,), self.state())
+            self.assertEqual((1, 3), (self.rows('link_revoke'), self.rows('request')))
+            self.assertEqual(marked, os.stat(os.path.join(directory, 'revoked', LINK)).st_mtime_ns)
+
+    def test_a_refusal_on_a_revoked_link_is_capped_even_after_its_signature_verified(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(keys, 'KEY_DIRECTORY', directory):
+            os.mkdir(os.path.join(directory, 'revoked'))
+            self.assertEqual(200, self.revoke()[0].status_code)
+            Administrator.objects.filter(pk=self.administrator.pk).update(state='SUSPENDED')
+            revoked = self.state()
+            with patch.object(audit, '_unverified', audit._MinuteBudget(1)):
+                for _ in range(4):
+                    self.clock.now += 1
+                    reply, message, named = self.revoke()
+                    self.assert_signed(reply, message, named, 403, b'{"error":"admin"}')
+            self.assertEqual(revoked[:3] + (revoked[3] + 1,), self.state())
 
 
 class HelloTests(Panel):
@@ -778,15 +819,31 @@ class LinkTests(Panel):
         before = self.state()
         self.refused_unsigned(self.call(link_id='a1' * 15 + 'a2')[0], 'link', before, link_id='')
 
-    def test_a_paused_link_is_audited_even_after_the_pre_link_budget_is_used(self):
-        with patch.object(audit, '_unverified', audit._MinuteBudget(1)):
-            self.refused('link', link_id=OTHER_LINK, audited={'link_id': ''})
-            before = self.state()
-            self.assertEqual(self.absent(), snapshot(self.call(link_id=OTHER_LINK)[0]))
-            self.assertEqual(before, self.state())
+    def test_naming_a_known_link_does_not_lift_the_cap_before_the_signature_has_verified(self):
+        unsigned = (('paused', dict()), ('another address', dict(environ={'REMOTE_ADDR': '203.0.113.9'})),
+                    ('a stale time', dict(timestamp=NOW - 3600)), ('another key', dict(key=STRANGER)),
+                    ('a changed body', dict(method='POST', body=BODY, content_type='application/json',
+                                            sent={'body': BODY[:-1] + b' '})))
+        with patch.object(audit, '_unverified', audit._MinuteBudget(2)):
             models.Link.objects.filter(pk=LINK).update(status=models.PAUSED)
             self.refused('link')
             self.refused('link')
+            models.Link.objects.filter(pk=LINK).update(status=models.ACTIVE)
+            for name, options in unsigned * 3:
+                with self.subTest(name):
+                    models.Link.objects.filter(pk=LINK).update(
+                        status=models.PAUSED if name == 'paused' else models.ACTIVE)
+                    before = self.state()
+                    with_body = options.get('method') == 'POST'
+                    self.assertEqual(self.absent(with_body), snapshot(self.call(**options)[0]))
+                    self.assertEqual(before, self.state())
+            # What the controller itself sends is written down whatever the allowance: accepted or refused.
+            models.Link.objects.filter(pk=LINK).update(status=models.ACTIVE)
+            before = self.state()
+            response, message, named = self.call()
+            self.assert_hello(response, message, named)
+            self.refused_signed(self.deliver(named), message, named, 'replay')
+            self.assertEqual(before[3] + 2, self.state()[3])
 
     def test_only_an_active_link_carries_a_request(self):
         for status in (models.PENDING, models.PAUSED, models.REVOKED, '', 'ACTIVE', 'active '):
