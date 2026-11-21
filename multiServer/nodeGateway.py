@@ -53,7 +53,7 @@ import json
 import re
 import time
 
-from multiServer import addresses, crypto, keys, links, pairing, switch, transport
+from multiServer import addresses, crypto, inventory, keys, links, pairing, switch, transport
 
 WINDOW = 90  # seconds a signed time may differ from this server's clock, either way
 PRUNE_EVERY = 60  # a link's dead nonces are removed when its newest accepted time enters a new minute
@@ -86,6 +86,16 @@ def _revoke(verified):
     return 200, JSON, b'{"revoked":true}'
 
 
+def _inventory(verified):
+    if verified.body or verified.content_type != '-':
+        raise _Refused('format')
+    try:
+        snapshot = inventory.read(verified.admin_id)
+    except PermissionError:
+        raise _Refused('admin')
+    return 200, JSON, inventory.encode(snapshot)
+
+
 def _hello(verified):
     import cyberpanel_version
     return 200, JSON, _json({'version': cyberpanel_version.VERSION, 'build': cyberpanel_version.BUILD,
@@ -97,6 +107,7 @@ def _hello(verified):
 # takes one. It returns (status, media type, body). Nothing here leads to the panel's URL table.
 ROUTES = {
     ('json', links.REVOKE_PATH): Route('revoke', 'POST', False, _revoke),
+    ('inventory', inventory.PATH): Route('inventory', 'GET', False, _inventory),
     ('json', HELLO): Route('hello', 'GET', False, _hello),
 }
 

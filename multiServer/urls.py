@@ -6,5 +6,6 @@ from multiServer import views
 urlpatterns = [
     path('nodes', views.nodes_page, name='multiServerNodes'),
     path('nodes/control', views.node_control, name='multiServerNodeControl'),
+    path('inventory/<slug:category>', views.inventory_page, name='multiServerInventory'),
     path('status', views.status, name='multiServerStatus'),
 ]

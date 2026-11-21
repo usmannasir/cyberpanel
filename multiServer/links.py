@@ -513,8 +513,12 @@ def _move(link_id, before, after, event, actor):
     if _is_link_id(link_id):
         from multiServer import models
         # One statement: of two workers, exactly one finds the row in the state it starts from.
-        moved = models.Node.objects.filter(pk=link_id, status=before).update(
-            status=after, updated_at=int(time.time())) == 1
+        from django.db import transaction
+        with transaction.atomic():
+            moved = models.Node.objects.filter(pk=link_id, status=before).update(
+                status=after, updated_at=int(time.time())) == 1
+            if moved:
+                models.InventoryCache.objects.filter(node_id=link_id).delete()
     _audit(event, link_id, actor, *(() if moved else ('refused', 'link')))
     return moved
 

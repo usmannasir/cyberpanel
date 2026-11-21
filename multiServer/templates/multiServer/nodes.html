@@ -5,6 +5,7 @@
 <div class="container-fluid">
   <h1>{% trans "Nodes" %}</h1>
   <p>Multi-Server Manager licence · {% if licensed %}Active{% else %}Unavailable. You can still pause, revoke or forget a node.{% endif %}</p>
+  {% if licensed %}{% include "multiServer/inventory_nav.html" %}{% endif %}
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
   {% if nodes %}
   <div class="table-responsive"><table class="table table-striped">
