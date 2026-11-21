@@ -1,5 +1,6 @@
 """Link signing: every message is typed, fixed in shape and strict about each field."""
 import ast
+import sys
 import hashlib
 from pathlib import Path
 import unittest
@@ -171,7 +172,8 @@ class CompatibilityTests(unittest.TestCase):
     SOURCE = Path(__file__).with_name('crypto.py')
 
     def test_source_parses_as_python_3_6(self):
-        ast.parse(self.SOURCE.read_text(), feature_version=(3, 6))
+        options = {'feature_version': (3, 6)} if sys.version_info >= (3, 8) else {}
+        ast.parse(self.SOURCE.read_text(), **options)
 
     def test_only_calls_available_in_cryptography_3_2_are_used(self):
         names = {node.attr for node in ast.walk(ast.parse(self.SOURCE.read_text()))
