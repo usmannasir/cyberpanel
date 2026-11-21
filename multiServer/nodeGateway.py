@@ -164,7 +164,7 @@ class NodeGateway(object):
                 match = getattr(request, 'resolver_match', None)
                 # Record the named operation only. Its arguments, body and query stay private.
                 audit.record('request', outcome='ok' if response.status_code < 400 else 'refused',
-                             link_id=managed['link'], actor=managed['actor'], source_ip=request.META.get('REMOTE_ADDR'),
+                             link_id=managed['link'], actor=managed['actor'], source_ip=_source(request.META),
                              method='POST', path='/native/' + (getattr(match, 'url_name', None) or 'unknown'),
                              status=response.status_code)
             if getattr(request, 'ms_private_cookies', False):
@@ -224,6 +224,11 @@ class _Exchange(object):
             setattr(self, name, None)
 
 
+def _source(meta):
+    """Where a connection came from, in the one spelling the allow-list and the audit trail use."""
+    return addresses.peer(meta.get('REMOTE_ADDR'))
+
+
 def _addressed(meta):
     return any(type(name) is str and name.startswith(_PREFIX) for name in meta)
 
@@ -231,7 +236,7 @@ def _addressed(meta):
 def _serve(request, exchange, get_response):
     meta = request.META
     now = int(time.time())
-    exchange.source = addresses.peer(meta.get('REMOTE_ADDR'))
+    exchange.source = _source(meta)
     exchange.has_body = _declares_body(meta)
     coded = 'HTTP_TRANSFER_ENCODING' in meta or meta.get('HTTP_CONTENT_ENCODING', 'identity') != 'identity'
     named = _strip(request, exchange)
