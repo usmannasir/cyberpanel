@@ -23,7 +23,8 @@ import threading
 import unittest
 from unittest import mock
 
-from multiServer import crypto, entitlement, keys, pairing, schema, test_pairing, test_transport, testing, transport
+from multiServer import (addresses, crypto, entitlement, keys, pairing, schema, test_pairing, test_transport, testing,
+                         transport)
 from multiServer.test_pairing import GENERIC, Loopback, Server, texts_of
 from multiServer.test_transport import CERTIFICATES, pin, read_request, wire
 
@@ -83,7 +84,9 @@ def hand_over(node, connection_, seen):
     """The managed server: whatever arrives goes to pairing.node_receive and its answer goes back as it is."""
     SIDE.role = node.role
     try:
-        response = pairing.node_receive(request_of(seen, connection_.getpeername()[0], node.port))
+        # `reports` is how this web server writes the address of a connection; as it is, unless a test says otherwise.
+        peer = getattr(node, 'reports', str)(connection_.getpeername()[0])
+        response = pairing.node_receive(request_of(seen, peer, node.port))
         node.replies.append(response)
         headers = list(response.items()) + [('Set-Cookie', cookie.output(header='').strip())
                                             for cookie in response.cookies.values()]
@@ -474,6 +477,62 @@ class PairingTests(Servers):
         self.assertTrue(self.send(attempt, headers=elsewhere).startswith(b'HTTP/1.1 200 OK\r\n'))
         self.assertEqual([attempt.link_id], [link[0] for link in self.links()])
         self.assertEqual(('pairing', 'ok', '', attempt.link_id, '', '127.0.0.1', 200), self.audited()[-1])
+
+
+class AddressTests(Servers):
+    """The controller is named and recognised by the one rule of multiServer/addresses.py."""
+
+    def test_a_server_that_reports_ipv4_as_ipv6_recognises_the_controller_it_wrote_down(self):
+        # A web server listening on both families reports the caller 127.0.0.1 as ::ffff:127.0.0.1.
+        self.node.reports = lambda address: '::ffff:' + address
+        code = self.issue('127.0.0.1')
+        paired = self.pair(code)
+        self.assertEqual([(paired.link_id, '127.0.0.1')], [(link[0], link[3]) for link in self.links()])
+        self.assertEqual(('pairing', 'ok', '', paired.link_id, '', '127.0.0.1', 200), self.audited()[-2])
+        # And refuses everybody else, whatever the spelling, each counted against the code.
+        other = self.issue('127.0.0.1')
+        self.node.reports = lambda address: '::FFFF:7f00:2'
+        self.assertEqual(GENERIC, self.send(self.attempt(other)))
+        self.assertEqual(('pairing', 'refused', 'source_ip', '', '', '127.0.0.2', 403), self.audited()[-1])
+        self.node.reports = lambda address: '127.0.0.01'
+        self.assertEqual(GENERIC, self.send(self.attempt(other)))
+        self.assertEqual(('pairing', 'refused', 'source_ip', '', '', '', 403), self.audited()[-1])
+        self.assertEqual([(0, 1), (2, 0)], sorted(self.codes()))
+
+    def test_the_link_allows_the_one_address_of_the_code_in_the_form_the_gateway_reads(self):
+        for written, kept in (('127.0.0.1', '127.0.0.1'), ('0:0:0:0:0:0:0:1', '::1')):
+            self.again()
+            try:
+                node = self.server(address=kept)
+            except OSError:
+                self.skipTest('no IPv6 loopback on this machine')
+            paired = self.pair(self.issue(written, host=kept, port=node.port))
+            (link_id, allowed), = [(link[0], link[3]) for link in self.links()]
+            self.assertEqual((paired.link_id, kept), (link_id, allowed))
+            self.assertEqual((kept,), addresses.listed(allowed))
+            self.assertTrue(addresses.allows(allowed, kept))
+
+    def test_a_code_whose_address_is_not_one_address_in_its_one_spelling_admits_nobody(self):
+        # Nothing but issue_code writes that column; if something else did, the request is refused, not guessed at.
+        for kept in ('127.0.0.1,127.0.0.2', '127.0.0.1,127.0.0.1', '::ffff:127.0.0.1', '127.0.0.01', '127.0.0.0/8',
+                     ' 127.0.0.1', '127.0.0.1 ', '*', ''):
+            self.again()
+            code = self.issue('127.0.0.1')
+            self.database.run("UPDATE ms_pairing_codes SET controller_ip = '%s'" % kept)
+            self.refused(self.send(self.attempt(code)), 'source_ip', failures=1)
+
+    def test_both_sides_of_the_comparison_go_through_the_one_rule(self):
+        code = self.issue('127.0.0.1')
+        with mock.patch.object(addresses, 'peer', return_value='203.0.113.9') as peer:
+            self.refused(self.send(self.attempt(code)), 'source_ip', source='203.0.113.9', failures=1)
+        peer.assert_called_once_with('127.0.0.1')
+        with mock.patch.object(addresses, 'listed', return_value=('203.0.113.9',)) as listed:
+            self.refused(self.send(self.attempt(code)), 'source_ip', failures=2)
+        listed.assert_called_once_with('127.0.0.1')
+        with mock.patch.object(addresses, 'entry', return_value=None) as entry, on_the_node(), \
+                self.assertRaises(pairing.PairingError):
+            pairing.issue_code(ADMIN, '127.0.0.1', host='127.0.0.1', port=self.node.port)
+        entry.assert_called_once_with('127.0.0.1')
 
 
 class AttackTests(Servers):

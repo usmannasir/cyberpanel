@@ -858,17 +858,6 @@ class RequestShapeTests(unittest.TestCase):
 
 
 class NodeHelperTests(unittest.TestCase):
-    def test_an_address_has_one_spelling(self):
-        for text, expected in (('203.0.113.9', '203.0.113.9'), ('127.0.0.1', '127.0.0.1'),
-                               ('2a01:4f8::1', '2a01:4f8::1'), ('2A01:04F8:0:0:0:0:0:1', '2a01:4f8::1'),
-                               ('::1', '::1')):
-            self.assertEqual(expected, pairing._address(text))
-        for text in ('010.0.0.1', '203.0.113.09', '203.0.113', '203.0.113.9 ', ' 203.0.113.9', '203.0.113.9/32',
-                     '203.0.113.9:8090', '::ffff:203.0.113.9', '::ffff:cb00:7109', 'fe80::1%eth0', '2a01:4f8::1%1',
-                     'node-1.example.com', 'localhost', '', '3405803785', None, 3405803785, b'203.0.113.9',
-                     b'\xcb\x00\x71\x09', ['203.0.113.9']):
-            self.assertIsNone(pairing._address(text), repr(text))
-
     def test_the_fingerprint_of_the_panel_certificate_is_what_a_controller_pins(self):
         from plogical import softUpgrade
         directory = Path(tempfile.mkdtemp())
