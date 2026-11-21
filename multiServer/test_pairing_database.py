@@ -122,19 +122,6 @@ def post(port, body, signature, source='127.0.0.1', host=None, headers=(), metho
         secured.close()
 
 
-class EarlyGateway(object):
-    """Stands where the gateway will stand: first in the panel's chain, before a session exists."""
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        if request.path != pairing.PATH:
-            return self.get_response(request)
-        with on_the_node():
-            return pairing.node_receive(request)
-
-
 class Attempt(object):
     """One pairing request as a controller makes it, open to being changed before or after it is signed."""
 
@@ -409,20 +396,23 @@ class PairingTests(Servers):
         self.not_paired(other)
         self.assertEqual(('pairing', 'refused', 'source_ip', '', '', '127.0.0.1', 403), self.audited()[-2])
 
-    def test_called_first_in_the_panels_chain_it_needs_no_session_and_its_answer_leaves_as_it_is(self):
+    def test_through_the_panels_own_chain_it_needs_no_session_and_its_answer_leaves_as_it_is(self):
         from django.conf import settings
         from django.test import Client, override_settings
+        # The gateway is the panel's first middleware and hands this one request to pairing (test_gateway.py).
+        self.assertEqual('multiServer.nodeGateway.NodeGateway', settings.MIDDLEWARE[0])
         attempt = self.attempt(self.issue())
         sent = dict(content_type='text/plain', HTTP_HOST=attempt.fields['host'],
                     HTTP_X_CPMS_SIGNATURE=attempt.signature, HTTP_X_FORWARDED_FOR='203.0.113.9')
-        chain = ['multiServer.test_pairing_database.EarlyGateway'] + list(settings.MIDDLEWARE)
         # As in test_wiring: sessions in a signed cookie, so the panel behind the gateway needs no table here.
-        with override_settings(MIDDLEWARE=chain, SESSION_ENGINE='django.contrib.sessions.backends.signed_cookies'):
+        with override_settings(SESSION_ENGINE='django.contrib.sessions.backends.signed_cookies'):
             client = Client()
             client.cookies['sessionid'] = 'abc'
-            refused = client.post(pairing.PATH, data=attempt.body(nonce='c4' * 16), **sent)
-            accepted = client.post(pairing.PATH, data=attempt.body(), **sent)
-            elsewhere = client.post('/multiserver/pairs', data=attempt.body(), **sent)
+            with on_the_node():
+                refused = client.post(pairing.PATH, data=attempt.body(nonce='c4' * 16), **sent)
+                accepted = client.post(pairing.PATH, data=attempt.body(), **sent)
+            # On the controller the same request goes on into the panel, which asks for a session as it always does.
+            elsewhere = client.post(pairing.PATH, data=attempt.body(), **sent)
         self.assertEqual((403, b'', [('Content-Type', 'text/plain'), ('Content-Length', '0'),
                                      ('Cache-Control', 'no-store')]),
                          (refused.status_code, refused.content, list(refused.items())))
@@ -432,8 +422,8 @@ class PairingTests(Servers):
         for response in (refused, accepted):
             self.assertEqual({}, dict(response.cookies))
             self.assertFalse(hasattr(response.wsgi_request, 'session'), 'no session was ever opened')
-        # Any other address goes on into the panel, which asks for a session as it always does.
         self.assertIn(b'This request need session', elsewhere.content)
+        self.assertTrue(hasattr(elsewhere.wsgi_request, 'session'))
         self.assertEqual([attempt.link_id], [link[0] for link in self.links()])
         self.assertEqual([('pairing', 'refused', 'signature', '', '', '127.0.0.1', 403),
                           ('pairing', 'ok', '', attempt.link_id, '', '127.0.0.1', 200)], self.audited()[-2:])
