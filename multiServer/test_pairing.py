@@ -482,6 +482,7 @@ class Controller(unittest.TestCase):
         self.licensed = mock.patch.object(entitlement, 'allowed', return_value=True).start()
         mock.patch.object(audit, 'record', side_effect=self.record).start()
         # The controller's records are multiServer/links.py, tested by itself; here they are stood in for.
+        mock.patch.object(links, 'pairing_slot').start()
         mock.patch.object(links, 'prepare', side_effect=self.prepare).start()
         mock.patch.object(links, 'store', side_effect=self.store).start()
         mock.patch.object(transport, 'Endpoint', Loopback).start()

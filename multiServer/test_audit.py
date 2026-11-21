@@ -79,6 +79,21 @@ class RecordTests(Recorder):
         self.assertEqual(1, self.rows[-1]['dropped'])
 
 
+class BudgetTests(Recorder):
+    def test_unverified_endpoints_share_a_rolling_budget_but_decisions_and_verified_calls_do_not(self):
+        with patch.object(audit, '_unverified', audit._MinuteBudget(2)), patch.object(
+                audit.time, 'monotonic', side_effect=[0, 5, 59, 60, 61, 65]):
+            self.assertTrue(audit.record_unverified('request', reason='link', outcome='refused'))
+            self.assertTrue(audit.record_unverified('pairing', reason='format', outcome='refused'))
+            self.assertFalse(audit.record_unverified('request', reason='signature', outcome='refused'))
+            self.assertTrue(audit.record('link_approve'))
+            self.assertTrue(audit.record('request', actor='admin'))
+            self.assertTrue(audit.record_unverified('pairing', reason='size', outcome='refused'))
+            self.assertFalse(audit.record_unverified('request', reason='link', outcome='refused'))
+            self.assertTrue(audit.record_unverified('request', reason='link', outcome='refused'))
+        self.assertEqual(6, len(self.rows))
+
+
 class RefusalTests(Recorder):
     def row(self, **fields):
         self.assertIs(True, audit.record('request', **fields))

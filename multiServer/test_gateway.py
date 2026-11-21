@@ -19,12 +19,13 @@ import socket
 import ssl
 import subprocess
 import sys
+import tempfile
 import threading
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 from wsgiref import simple_server
 
-from multiServer import addresses, crypto, keys, nodeGateway, pairing, schema, switch, testing, transport
+from multiServer import addresses, audit, crypto, keys, nodeGateway, pairing, schema, switch, testing, transport
 from multiServer import test_transport as wire
 
 SKIP = testing.unavailable()
@@ -148,7 +149,8 @@ class InertTests(unittest.TestCase):
 
     def test_loading_the_gateway_and_passing_requests_on_needs_nothing_but_the_standard_library(self):
         code = ('import sys\n'
-                'from multiServer import nodeGateway, switch\n'
+                'from multiServer import keys, nodeGateway, switch\n'
+                'keys.KEY_DIRECTORY = sys.argv[1]\n'
                 'class R(object):\n'
                 '    META = {"REQUEST_METHOD": "GET", "HTTP_COOKIE": "a=b"}\n'
                 'assert nodeGateway.NodeGateway(lambda request: 7)(R()) == 7\n'
@@ -158,8 +160,8 @@ class InertTests(unittest.TestCase):
                 'loaded = [name for name in sys.modules if name.split(".")[0] in ("django", "cryptography", '
                 '"MySQLdb", "plogical", "loginSystem")]\n'
                 'assert not loaded, loaded\n')
-        with patch.dict(os.environ, {'PYTHONPATH': str(ROOT)}):
-            subprocess.check_call([sys.executable, '-c', code], cwd=str(ROOT))
+        with tempfile.TemporaryDirectory() as empty_keys, patch.dict(os.environ, {'PYTHONPATH': str(ROOT)}):
+            subprocess.check_call([sys.executable, '-c', code, empty_keys], cwd=str(ROOT))
 
 
 class PairingRequest(FakeRequest):
@@ -345,6 +347,7 @@ class Panel(unittest.TestCase):
             link_id=LINK, controller_key=crypto.public_key(CONTROLLER).hex(), pairing_key='d1' * 32,
             allowed_ips='127.0.0.1', admin_id=self.administrator.pk, status=models.ACTIVE, generation=1,
             created_at=NOW - 5000, updated_at=NOW - 5000, activated_at=NOW - 4000, expires_at=NOW + 86400)
+        self.start(patch.object(audit, '_unverified', audit._MinuteBudget(audit.UNVERIFIED_PER_MINUTE)))
         self.clock = Clock(NOW)
         self.log = []
         nodeGateway._NOTED.clear()
@@ -575,7 +578,9 @@ class FormatTests(Panel):
             cases.append(('mode %r' % changed, dict(sent={'named': {'mode': changed}})))
         for changed in ('a' * 51, 'ad min', 'admin;', 'admïn', '<admin>'):
             cases.append(('actor %r' % changed, dict(sent={'named': {'actor': changed}})))
-        self.malformed(cases)
+        # Each format case needs its own audit assertion; budget exhaustion is tested separately.
+        with patch.object(audit, '_unverified', audit._MinuteBudget(len(cases))):
+            self.malformed(cases)
 
     def malformed(self, cases, **audited):
         # Nothing of a malformed request is taken for a link or a length.
@@ -873,23 +878,22 @@ class TimeTests(Panel):
             with self.subTest(timestamp):
                 self.refused(timestamp=timestamp)
 
-    def test_a_request_older_than_the_newest_accepted_one_is_refused(self):
+    def test_distinct_requests_within_the_ordering_window_keep_the_newest_time(self):
         self.assert_hello(*self.call(timestamp=NOW + 5))
-        for timestamp in (NOW + 4, NOW, NOW - 60):
-            self.refused(timestamp=timestamp)
-        self.assert_hello(*self.call(timestamp=NOW + 5))
-        self.assert_hello(*self.call(timestamp=NOW + 6))
-        self.refused(timestamp=NOW + 5)
+        for timestamp in (NOW + 4, NOW, NOW + 5 - nodeGateway.WINDOW):
+            self.assert_hello(*self.call(timestamp=timestamp))
+            self.assertEqual(NOW + 5, self.state()[1])
+        self.refused(timestamp=NOW + 4 - nodeGateway.WINDOW)
 
-    def test_setting_this_servers_clock_back_reopens_nothing(self):
+    def test_a_clock_adjustment_keeps_spent_nonces_and_the_high_water_mark(self):
         first = self.call(timestamp=NOW)
         self.assert_hello(*first)
         self.assert_hello(*self.call(timestamp=NOW + 60))
-        self.clock.now = NOW - 30  # both requests are inside the window again
-        self.refused(timestamp=NOW)
-        before = self.state()
-        again = self.deliver(first[2])
-        self.refused_unsigned(again, 'time', before)
+        self.clock.now = NOW - 30
+        self.assert_hello(*self.call(timestamp=NOW))
+        self.refused_signed(self.deliver(first[2]), first[1], first[2], 'replay')
+        self.refused(timestamp=NOW - 31)
+        self.assertEqual((3, NOW + 60), self.state()[:2])
 
     def test_a_request_that_is_refused_does_not_move_the_links_time(self):
         # Otherwise anyone could shut the controller out by naming a time ahead of its clock.
@@ -1043,8 +1047,7 @@ class ReplayTests(Panel):
         self.assertEqual(NOW + 3, models.Link.objects.get(pk=LINK).last_request_at)
         accepted = models.AuditEntry.objects.filter(outcome='ok').count()
         self.assertEqual(accepted, models.Nonce.objects.count())
-        self.assertEqual(16, accepted + models.AuditEntry.objects.filter(reason='time').count())
-        self.assertGreaterEqual(accepted, 4)
+        self.assertEqual(16, accepted)
 
     def test_a_link_changed_while_a_request_was_being_checked_does_not_carry_it(self):
         # What the row said when it was read no longer holds at the moment of acceptance.
@@ -1055,7 +1058,7 @@ class ReplayTests(Panel):
                     admin_id=self.administrator.pk)
         for change, reason in ((dict(status=models.REVOKED), 'link'), (dict(status=models.PAUSED), 'link'),
                                (dict(generation=2), 'generation'), (dict(expires_at=NOW), 'expired'),
-                               (dict(last_request_at=NOW + 1), 'time'),
+                               (dict(last_request_at=NOW + nodeGateway.WINDOW + 1), 'time'),
                                (dict(controller_key=crypto.public_key(STRANGER).hex()), 'link'),
                                (dict(allowed_ips='203.0.113.9'), 'link'),
                                (dict(allowed_ips='127.0.0.1,203.0.113.9'), 'link'),
@@ -1981,11 +1984,11 @@ class OverTheWireTests(Panel):
         self.signed_refusal('replay', nonce=nonce, now=NOW + 1)
         self.assertEqual(before[:3], self.state()[:3])
 
-    def test_a_request_signed_outside_the_window_or_behind_the_newest_is_refused(self):
+    def test_a_request_signed_outside_the_clock_or_ordering_window_is_refused(self):
         self.refused('time', now=NOW - 91)
         self.refused('time', now=NOW + 91)
         self.assertEqual(200, self.send(now=NOW + 5)[0])
-        self.refused('time', now=NOW + 4)
+        self.refused('time', now=NOW + 4 - nodeGateway.WINDOW)
         self.assertEqual(200, self.send(now=NOW + 5)[0])
 
     def test_a_request_changed_after_it_was_signed_is_refused(self):

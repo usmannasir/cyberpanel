@@ -198,6 +198,7 @@ class Servers(Base):
     def setUp(self):
         super().setUp()
         from plogical import softUpgrade
+        self.start(mock.patch.object(audit, '_unverified', audit._MinuteBudget(audit.UNVERIFIED_PER_MINUTE)))
         self.clock, self.secrets, self.stored, self.nodes = [NOW], [], [], []
         self.identity = [crypto.generate_private_key()]
         self.generation = [GENERATION]
@@ -215,8 +216,8 @@ class Servers(Base):
         self.patch(softUpgrade, 'PANEL_CONF', self.panel)
         self.patch(transport, 'Endpoint', Loopback)
         self.licensed = self.patch(entitlement, 'allowed', return_value=True)
-        # The controller's records are multiServer/links.py, tested by itself and, joined to this, in
-        # multiServer/test_joined_database.py. Here they are stood in for.
+        # This suite isolates the node and pairing protocol from controller persistence.
+        self.patch(links, 'pairing_slot')
         self.prepared = self.patch(links, 'prepare')
         self.patch(links, 'store', side_effect=self.store)
         self.find = self.start(mock.patch('loginSystem.models.Administrator.objects.get',

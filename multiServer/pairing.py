@@ -174,6 +174,14 @@ def _start(code_text, label, actor):
     if not isinstance(actor, str) or _ACTOR.fullmatch(actor) is None:
         raise PairingError('format', 'The administrator cannot be named on a link.')
     endpoint, node_id, seed = _decode(code_text)
+    try:
+        with links.pairing_slot(node_id):
+            return _pair_one(endpoint, node_id, seed, label, actor)
+    except links.Busy:
+        raise PairingError('internal', 'Another pairing is in progress. Try again.') from None
+
+
+def _pair_one(endpoint, node_id, seed, label, actor):
     private_key = crypto.generate_private_key()
     link_id, nonce, timestamp = os.urandom(16).hex(), os.urandom(16).hex(), _now()
     refusal = None
@@ -358,7 +366,11 @@ def node_receive(request):
         node_key, signature = _accept(request, source)
     except Exception as error:
         refusal = error if isinstance(error, PairingError) else PairingError('internal', '')
-        _record('pairing', refusal.reason, link_id=refusal.link_id, source_ip=source, status=403)
+        fields = dict(source_ip=source) if source is not None else {}
+        if refusal.link_id is not None:
+            fields['link_id'] = refusal.link_id
+        audit.record_unverified('pairing', outcome='error' if refusal.reason in _FAULTS else 'refused',
+                                reason=refusal.reason, status=403, **fields)
         return refused()
     return _answer(200, node_key, signature.hex())
 
@@ -520,13 +532,15 @@ def _decide(event, link_id, admin_id, number=None):
     approvable = waiting.filter(expires_at__gt=now, generation=keys.generation(), failures__lt=MAX_WRONG_NUMBERS)
     if approving:
         link = approvable.first()
-        if link is not None:
-            identity = keys.identity_key()
-            if identity is None:
-                _refuse(event, 'internal', 'The identity key of this server could not be read.', link_id=link_id,
-                        actor=actor)
-            if not _is_its_number(link, crypto.public_key(identity).hex(), number):
-                _wrong_number(waiting, link_id, actor, now)
+        if link is None:
+            _undecided(event, link_id, actor, now)
+        identity = keys.identity_key()
+        if identity is None:
+            _refuse(event, 'internal', 'The identity key of this server could not be read.', link_id=link_id,
+                    actor=actor)
+        if not _is_its_number(link, crypto.public_key(identity).hex(), number):
+            _wrong_number(waiting, link_id, actor, now)
+        approvable = approvable.filter(pairing_key=link.pairing_key, controller_key=link.controller_key)
     with transaction.atomic():
         # One statement each: of two decisions made at the same moment only one finds the link pending.
         if approving:

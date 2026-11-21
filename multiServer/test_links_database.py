@@ -17,7 +17,7 @@ import time
 import unittest
 from unittest import mock
 
-from multiServer import crypto, entitlement, keys, links, test_database, test_links, test_transport, transport
+from multiServer import crypto, entitlement, keys, links, pairing, test_database, test_links, test_transport, transport
 
 SKIP = test_database.SKIP
 if SKIP is None:
@@ -431,6 +431,22 @@ class PrepareTests(Controller):
         self.assertIs(error, type(caught.exception))
         return str(caught.exception)
 
+    def test_two_concurrent_codes_for_one_node_only_consume_one(self):
+        def reply(endpoint, path, body, signature):
+            link, pair_key, controller, timestamp, nonce = body.decode('ascii').splitlines()
+            request = crypto.pair_request_message(link, pair_key, controller, self.NODE_ID, PIN,
+                                                  endpoint.authority, int(timestamp), nonce)
+            signed = crypto.sign(b'n' * 32, crypto.pair_response_message(request, NODE_KEY.hex()))
+            return 200, 'text/plain', NODE_KEY.hex().encode('ascii'), signed
+
+        codes = [pairing._encode(HOST, 8090, self.NODE_ID, PIN, crypto.generate_private_key()) for _ in range(2)]
+        with mock.patch.object(transport, 'exchange', side_effect=reply) as exchange:
+            outcomes = self.workers([lambda code=code: pairing.start(code, 'Frankfurt', 'admin') for code in codes])
+        self.assertEqual(1, exchange.call_count)
+        self.assertEqual(['link'], [result.reason for result in outcomes if isinstance(result, pairing.PairingError)])
+        self.assertEqual([row['link_id'] for row in self.rows()],
+                         [result.link_id for result in outcomes if isinstance(result, pairing.Paired)])
+
     def test_what_can_be_kept_passes_and_nothing_is_stored_or_recorded(self):
         self.assertIsNone(self.prepare())
         self.assertIsNone(self.prepare(host='2a01:4f8::1', port=1))
@@ -551,8 +567,8 @@ class StateTests(Controller):
         public = sorted(name for name, value in vars(links).items()
                         if callable(value) and not name.startswith('_') and getattr(value, '__module__', '') ==
                         links.__name__ and not isinstance(value, type))
-        self.assertEqual(['check_label', 'confirm', 'hello', 'link_of', 'pause', 'prepare', 'remove', 'resume', 'seal',
-                          'store', 'unseal'], public)
+        self.assertEqual(['check_label', 'confirm', 'hello', 'link_of', 'pairing_slot', 'pause', 'prepare', 'remove',
+                          'resume', 'seal', 'store', 'unseal'], public)
 
     def test_a_link_changes_state_only_from_the_state_that_change_starts_in(self):
         self.store()
