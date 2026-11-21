@@ -209,6 +209,69 @@ _UNSUPPORTED = re.compile(
 _STAMP = re.compile(r'^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+ (\[[A-Z]+\]) (?:\[\d+\] )?')
 
 
+# OpenLiteSpeed keeps running, and keeps serving every other website, when one
+# website's own configuration is wrong: a PHP version that is no longer
+# installed, a certificate that is gone, a syntax error in that website's
+# file. Such an error was there before the upgrade and cannot be caused by it.
+ABI_DIAGNOSTIC = 'incompatible OpenLiteSpeed core ABI'
+_SITE = re.compile(r'\[config:server:vhosts:vhost:([^\]:\s]+)')
+_SITE_FILE = re.compile(r'\[PlainConf\] \[virtualHostConfig:\] .* in (?:file )?(/[^\s:]+):[0-9]+\s*$'
+                        r'|Path for vhost config is invalid: (/\S+)\s*$')
+
+
+def site_scope(line):
+    """Name the one website an error line is confined to, or None."""
+    if '[ERROR]' not in line or '[FATAL]' in line or ABI_DIAGNOSTIC in line:
+        return None
+    match = _SITE.search(line)
+    if match:
+        return 'website ' + match.group(1)
+    match = _SITE_FILE.search(line)
+    if not match:
+        return None
+    # A website's own file names the website, however the core words the error.
+    path = match.group(1) or match.group(2)
+    owner = re.search(r'/conf/vhosts/([^/]+)/[^/]+$', path)
+    return 'website ' + owner.group(1) if owner else 'file ' + path
+
+
+def site_errors(output):
+    """The websites that have errors of their own, each with its error lines."""
+    found = {}
+    for line in output.splitlines():
+        scope = site_scope(line)
+        if scope:
+            found.setdefault(scope, []).append(line.strip())
+    return found
+
+
+def blocking_errors(output, known=None):
+    """The error lines that must stop an upgrade.
+
+    An error confined to one website does not. `known` names the websites that
+    had errors before anything was changed; given it, an error in any other
+    website appeared during the upgrade and stops it too.
+    """
+    blocking = []
+    for line in output.splitlines():
+        if not ('[ERROR]' in line or '[FATAL]' in line or ABI_DIAGNOSTIC in line):
+            continue
+        scope = site_scope(line)
+        if scope is None or (known is not None and scope not in known):
+            blocking.append(line.strip())
+    return blocking
+
+
+def status_refused(returncode, output):
+    """Whether the exit status of `-t` alone must stop an upgrade.
+
+    OpenLiteSpeed ends with 1 after warnings and with 2 after any error, a
+    website's included. Status 2 is accepted only with a website error to
+    account for it; `blocking_errors` judges the lines themselves.
+    """
+    return returncode not in (0, 1) and not (returncode == 2 and site_errors(output))
+
+
 class SplitStateRefused(RuntimeError):
     """The vendor-core state must not be repaired; the message is for the administrator."""
 
@@ -276,8 +339,8 @@ def split_state(binary, returncode, output, parser=None, os_release='/etc/os-rel
     for line in lines:
         if line is disabled[0] or not ('[ERROR]' in line or '[FATAL]' in line):
             continue
-        if _custom_only(root, line, parser.LIMITS):
-            vendor_errors += 1
+        if _custom_only(root, line, parser.LIMITS) or site_scope(line):
+            vendor_errors += 1  # Neither is a reason to leave the vendor core in place.
         else:
             errors.append(line)
     if errors:

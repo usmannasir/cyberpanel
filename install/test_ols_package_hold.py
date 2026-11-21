@@ -196,6 +196,73 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
         self.assertEqual(self.holds.read_text(), 'other-package\n')
         self.assertEqual(self.core.read_text(), 'stock replacement')
 
+    SITE_ERRORS = ("2026-11-21 19:54:31.349049 [ERROR] [191712] [config:server:vhosts:vhost:mail.example.com:epsr:mail.655340] "
+                   "invalid path - /usr/local/lsws/lsphp73/bin/lsphp, it cannot be started by Web server!\n"
+                   "2026-11-21 19:54:31.351614 [ERROR] [191712] [PlainConf] [virtualHostConfig:] parseline found more '}' "
+                   "in /usr/local/lsws/conf/vhosts/shop.example.com/vhost.conf:110")
+
+    def stock_core(self):
+        self.module.unlink()
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
+
+    def test_errors_in_single_websites_do_not_stop_a_stock_upgrade(self):
+        self.stock_core()
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=self.SITE_ERRORS)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('upgrade -y', self.events.read_text())
+        self.assertEqual(self.holds.read_text(), 'other-package\n')
+
+    def test_errors_in_single_websites_do_not_stop_a_custom_upgrade(self):
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=self.SITE_ERRORS)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('openlitespeed', self.holds.read_text())
+        self.assertIn('upgrade -y', self.events.read_text())
+
+    def test_errors_in_single_websites_do_not_stop_a_stock_core_beside_our_module(self):
+        self.release.write_text('ID=ubuntu\nVERSION_ID="20.04"\n')
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=self.SITE_ERRORS)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('upgrade -y', self.events.read_text())
+
+    def test_invalid_stock_configuration_stops_before_package_changes(self):
+        listener = '[ERROR] [config:server:listener:SSL] failed to load the certificate'
+        for env in ({'VALIDATION_STATUS': '2'}, {'VALIDATION_OUTPUT': '[FATAL] invalid core'},
+                    {'VALIDATION_STATUS': '2', 'VALIDATION_OUTPUT': self.SITE_ERRORS + '\n' + listener},
+                    {'VALIDATION_STATUS': '3', 'VALIDATION_OUTPUT': self.SITE_ERRORS},
+                    {'VALIDATION_STATUS': '2', 'VALIDATION_OUTPUT': '[WARN] harmless'},
+                    {'SIMULATE_TIMEOUT': '1'}):
+            with self.subTest(env=env):
+                self.stock_core()
+                original = self.core.read_bytes()
+                result = self.run_upgrade(**env)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('no package changes attempted', result.stdout)
+                self.assert_no_apt()
+                self.assertEqual(self.core.read_bytes(), original)
+                self.module.write_text('restored for the next case')
+        self.stock_core()
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=self.SITE_ERRORS + '\n' + listener)
+        self.assertIn(listener, result.stdout)
+        self.assertNotIn('lsphp73', result.stdout)
+
+    def test_a_refusal_shows_the_error_to_correct_and_not_the_website_errors(self):
+        wide = '[ERROR] [config:server:epsr:shared] invalid path - /nonexistent/bin/lsphp, it cannot be started by Web server!'
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=self.SITE_ERRORS + '\n' + wide)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Custom OLS configuration failed validation; no package changes attempted', result.stdout)
+        self.assertIn(wide, result.stdout)
+        self.assertNotIn('lsphp73', result.stdout)
+        self.assert_no_apt()
+
+    def test_valid_stock_configuration_keeps_the_normal_package_upgrade(self):
+        self.stock_core()
+        result = self.run_upgrade(VALIDATION_STATUS='1', VALIDATION_OUTPUT='[WARN] harmless')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('upgrade -y', self.events.read_text())
+        self.assertEqual(self.holds.read_text(), 'other-package\n')
+        self.assertEqual(self.core.read_text(), 'stock replacement')
+
     def test_unmarked_legacy_ubuntu_pair_requires_both_verified_files(self):
         self.release.write_text('ID=ubuntu\nVERSION_ID="24.04"\n')
         self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
@@ -325,7 +392,7 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
 
     def test_vendor_core_with_faults_of_its_own_aborts_before_packages_showing_the_whole_line(self):
         original = self.vendor_core()
-        fault = '[ERROR] [config:server:vhosts:vhost:shop] ' + 'y' * 2500 + ' missing docRoot'
+        fault = '[ERROR] [config:server:listener:SSL] ' + 'y' * 2500 + ' missing certificate'
         forged = '[ERROR] [PlainConf] [adminConfig:] Not support [throttleenabled 1] in file %s:1' % self.admin
         for output in (self.default + '\n' + fault, self.default + '\n' + forged):
             with self.subTest(output=output[-60:]):

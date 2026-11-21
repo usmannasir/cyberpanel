@@ -87,7 +87,7 @@ class SplitStateTests(unittest.TestCase):
         self.assertNotEqual(first, self.state(1, self.default_output()))
 
     def test_real_configuration_errors_refuse_and_are_shown_in_full(self):
-        fault = '2026-11-19 14:41:43.2 [ERROR] [77] [config:server:vhosts:vhost:shop] ' + 'x' * 2500 + ' missing docRoot'
+        fault = '2026-11-19 14:41:43.2 [ERROR] [77] [config:server:listener:SSL] ' + 'x' * 2500 + ' missing certificate'
         with self.assertRaises(classifier.SplitStateRefused) as refusal:
             self.state(2, self.default_output() + fault + '\n' + '\n'.join(self.admin_errors()))
         message = str(refusal.exception)
@@ -96,6 +96,22 @@ class SplitStateTests(unittest.TestCase):
         self.assertNotIn('throttleenabled', message)
         with self.assertRaises(classifier.SplitStateRefused):
             self.state(1, self.default_output() + '[FATAL] listener conflict\n')
+
+    def test_an_error_in_one_website_does_not_refuse_the_repair(self):
+        site = ('2026-11-21 19:54:31.349049 [ERROR] [191712] [config:server:vhosts:vhost:mail.example.com:epsr:mail.655340] '
+                'invalid path - /usr/local/lsws/lsphp73/bin/lsphp, it cannot be started by Web server!')
+        brace = ("2026-11-21 19:54:31.351614 [ERROR] [191712] [PlainConf] [virtualHostConfig:] parseline found more '}' "
+                 "in /usr/local/lsws/conf/vhosts/shop.example.com/vhost.conf:110")
+        # OpenLiteSpeed ends with status 2 after any error, a website's included.
+        baseline = self.state(2, self.default_output() + site + '\n' + brace + '\n')
+        # The rollback target is this exact state, website errors included.
+        self.assertEqual(len(baseline['errors']), 3)
+        self.assertEqual(baseline, self.state(2, self.default_output('2026-11-22 00:00:00.000001 ') + brace + '\n' + site + '\n'))
+        self.assertNotEqual(baseline, self.state(1, self.default_output()))
+        with self.assertRaises(classifier.SplitStateRefused):
+            self.state(2, self.default_output())
+        with self.assertRaises(classifier.SplitStateRefused):
+            self.state(3, self.default_output() + site + '\n')
 
     def test_unsupported_line_must_match_the_cited_configuration_line(self):
         for line in (self.unsupported('ERROR', 'throttleenabled 1', self.admin, 1),      # another directive there

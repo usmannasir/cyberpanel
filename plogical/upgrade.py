@@ -83,6 +83,11 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
     replaced only the core) is refused unless `split` allows it: True returns
     the baseline of a state the bundle transaction may repair, and a baseline
     accepts only that same state again, as the rollback target.
+
+    Errors that OpenLiteSpeed confines to one website do not refuse an
+    upgrade: the server runs with them and they were there before it. The
+    first validation of a run records which websites have them; after that an
+    error in any other website was caused by the run and is refused.
     """
     try:
         lifecycle = load_ols_diagnostic_helper('olsServiceControl.py')
@@ -98,6 +103,24 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
     except Exception as error:
         raise OLSUpgradeFailure('Cannot verify OpenLiteSpeed configuration: ' + str(error)) from error
     output = (result.stdout or '') + (result.stderr or '')
+    known = getattr(validate_ols_configuration, 'site_errors', None)
+    try:
+        classifier = load_ols_diagnostic_helper('olsStockClassifier.py')
+        blocking = classifier.blocking_errors(output, known)
+        refused = bool(blocking) or classifier.status_refused(result.returncode, output)
+        found = classifier.site_errors(output)
+    except Exception:
+        # Without the classifier every error stops the upgrade.
+        blocking = [line for line in output.splitlines() if any(
+            level in line for level in ('[ERROR]', '[FATAL]', 'incompatible OpenLiteSpeed core ABI'))]
+        refused = bool(blocking) or result.returncode not in (0, 1)
+        found = {}
+
+    def accepted(value):
+        if known is None:
+            validate_ols_configuration.site_errors = found
+        return value
+
     if split is not None:
         baseline = stock = None
         if 'incompatible OpenLiteSpeed core ABI' in output:
@@ -110,11 +133,11 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
                     raise OLSUpgradeFailure(str(error)) from error
                 baseline = None  # A broken helper never waives the refusal below.
         if baseline is not None and split in (True, baseline):
-            return baseline
+            return accepted(baseline)
         if split is not True:
             raise OLSUpgradeFailure('The vendor OpenLiteSpeed state recorded before the repair is no longer '
                                     'present; no further changes were made: ' + output)
-    if result.returncode not in (0, 1) or any(level in output for level in ('[ERROR]', '[FATAL]', 'incompatible OpenLiteSpeed core ABI')):
+    if refused:
         hint = ''
         try:
             parser = load_ols_diagnostic_helper('olsParserRecovery.py')
@@ -136,8 +159,27 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
                         'Then run bash %s %s and retry the upgrade.') % (wrapper, checksum, wrapper, mode)
         except Exception:
             pass  # Diagnostic helpers must never waive the original failure.
-        raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: ' + output[-2000:] + hint)
-    return None
+        raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: '
+                                + ('\n'.join(blocking) or output)[-2000:] + hint)
+    return accepted(None)
+
+
+def ols_site_error_notice():
+    """Tell the administrator which websites had errors before the upgrade began."""
+    known = getattr(validate_ols_configuration, 'site_errors', None)
+    if not known or not isinstance(known, dict):
+        return ''
+    lines = [line for scope in sorted(known) for line in known[scope]]
+    text = ['OpenLiteSpeed reports errors in the configuration of %d website(s). They were there before '
+            'this upgrade and affect only those websites, so the upgrade continues:' % len(known)]
+    text += ['  ' + line for line in lines[:40]]
+    if len(lines) > 40:
+        text.append('  ... and %d more; /usr/local/lsws/bin/openlitespeed -t lists all of them.' % (len(lines) - 40))
+    if any('invalid path' in line and '/bin/lsphp' in line for line in lines):
+        text.append('An invalid lsphp path means the PHP version chosen for that website is not installed. '
+                    'Choose an installed version for it under Websites > List Websites > Manage.')
+    text.append('Correct these when convenient.')
+    return '\n'.join(text)
 
 
 def apply_ols_config_changes(changes):
@@ -5599,6 +5641,9 @@ pm.max_spare_servers = 3
                 # A vendor core left beside our module by a package update is
                 # repaired by the bundle transaction; any other invalid state stops here.
                 split = validate_ols_configuration(split=True)
+                notice = ols_site_error_notice()
+                if notice:
+                    Upgrade.stdOut(notice)
                 # The transaction owns validation, rollback and service state.
                 # Preserve administrator-selected module and AutoSSL settings.
                 installed = Upgrade.installCustomOLSBinaries(split)
