@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import shlex
 import subprocess
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -92,9 +93,9 @@ class StagingSetup(multi.Thread):
             phpSelection = website.phpSelection
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl 1 --dkimCheck 0 --openBasedir 0 --path " + path + ' --websiteOwner ' \
-                       + admin.userName + ' --tempStatusPath  %s' % (tempStatusPath + '1') + " --apache 0"
+            execPath = execPath + " createDomain --masterDomain " + shlex.quote(masterDomain) + " --virtualHostName " + shlex.quote(domain) + \
+                       " --phpVersion " + shlex.quote(phpSelection) + " --ssl 1 --dkimCheck 0 --openBasedir 0 --path " + shlex.quote(path) + ' --websiteOwner ' \
+                       + shlex.quote(admin.userName) + ' --tempStatusPath  %s' % shlex.quote(tempStatusPath + '1') + " --apache 0"
 
             ProcessUtilities.executioner(execPath)
 

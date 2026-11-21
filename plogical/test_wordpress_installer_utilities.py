@@ -85,6 +85,18 @@ class WordPressInstallerUtilitiesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
             php_binary_for_selection('PHP latest')
 
+    def test_php_binary_is_built_from_the_digits_of_an_exact_selection(self):
+        from managePHP.test_php_selection import NOT_A_SELECTION, OFFERED
+        for selection in OFFERED:
+            digits = selection[4:].replace('.', '')
+            self.assertEqual('/usr/local/lsws/lsphp%s/bin/php' % digits, php_binary_for_selection(selection))
+        # Surrounding or repeated white space used to be accepted here while
+        # the unchanged text went on to the worker and into the database.
+        for value in NOT_A_SELECTION:
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
+                    php_binary_for_selection(value)
+
     def test_change_php_requires_the_explicit_success_record(self):
         self.assertTrue(change_php_succeeded('example.com\n1,None\n'))
         self.assertFalse(change_php_succeeded('example.com\n0,missing runtime\n'))

@@ -22,6 +22,7 @@ from plogical.dnsUtilities import DNS
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
+from managePHP.phpConfig import php_selection_digits
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.domainAliasUtilities import add_https_alias_mapping
@@ -296,7 +297,7 @@ class vhost:
                     currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 
@@ -311,7 +312,7 @@ class vhost:
                     currentConf = currentConf.replace('{master}', virtualHostName)
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 
@@ -799,6 +800,14 @@ class vhost:
     @staticmethod
     def changePHP(vhFile, phpVersion):
 
+        # Checked again here: this worker also runs from the command line and
+        # from other workers, and everything below is built from the digits.
+        try:
+            phpMajor, phpMinor = php_selection_digits(phpVersion)
+        except ValueError as msg:
+            print(0, str(msg))
+            return [0, '%s [changePHP]' % str(msg)]
+
         from pathlib import Path
         domain = vhFile.split('/')[6]
         print(domain)
@@ -908,7 +917,7 @@ class vhost:
                     configData = ProcessUtilities.outputExecutioner(command)
 
                     import re
-                    configData = re.sub(r'"phpVersion": .*,', '"phpVersion": %s,' % (phpVersion.lstrip('PHP ')), configData)
+                    configData = re.sub(r'"phpVersion": .*,', '"phpVersion": %s.%s,' % (phpMajor, phpMinor), configData)
 
                     command = "redis-cli set vhost:%s '%s'" % (vhFile.split('/')[-2], configData)
                     ProcessUtilities.executioner(command)
@@ -1221,7 +1230,7 @@ class vhost:
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{path}', path)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 
@@ -1237,7 +1246,7 @@ class vhost:
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{path}', path)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 

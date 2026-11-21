@@ -42,7 +42,11 @@ class PHPManager:
 
             finalPHPVersions = []
             for php in php_versions:
-                phpString = PHPManager.getPHPString(php)
+                try:
+                    phpString = PHPManager.getPHPString(php)
+                except ValueError:
+                    # Not an lsphp<digits> directory (a copy such as lsphp74.bak).
+                    continue
 
                 if os.path.exists("/usr/local/lsws/lsphp" + str(phpString) + "/bin/lsphp"):
                     finalPHPVersions.append(php)
@@ -133,8 +137,12 @@ class PHPManager:
     @staticmethod
     def getPHPString(phpVersion):
         # Ex: "PHP 5.3" type string, return Ex: "53" type string
+        # The result becomes part of paths and command lines, also for
+        # selections read back from the database, so it is digits or nothing.
         phpVersion = phpVersion.split()
         php = phpVersion[1].replace(".", "")
+        if re.fullmatch(r'[0-9]{2,3}', php) is None:
+            raise ValueError('Invalid PHP version selected.')
 
         return php
 

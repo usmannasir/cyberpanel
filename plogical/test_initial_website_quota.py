@@ -41,7 +41,9 @@ class InitialWebsiteQuotaTests(unittest.TestCase):
         # Run the actual creation tail and its unchanged outer rollback handler,
         # without unrelated website, DNS, SSL or service provisioning.
         node = copy.deepcopy(method(ROOT / 'plogical/virtualHostUtilities.py', 'createVirtualHost'))
-        outer = node.body[0]
+        # The creation block is the last statement; the checks of the
+        # request's values come before it.
+        outer = node.body[-1]
         start = next(i for i, statement in enumerate(outer.body)
                      if isinstance(statement, ast.If)
                      and isinstance(statement.test, ast.Attribute)

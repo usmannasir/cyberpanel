@@ -6508,7 +6508,8 @@ class ApplicationInstaller(multi.Thread):
                     from plogical.vhost import vhost
                     vhFile = f'/usr/local/lsws/conf/vhosts/{NewWPsite.owner.domain}/vhost.conf'
                     execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
-                    execPath = execPath + f" changePHP --phpVersion '{config['WebphpSelection']}'  --path " + vhFile
+                    # The selection comes from the backup's own description.
+                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(str(config['WebphpSelection'])) + "  --path " + shlex.quote(vhFile)
                     ProcessUtilities.popenExecutioner(execPath)
 
                     ###### Same code already used in Existing site
