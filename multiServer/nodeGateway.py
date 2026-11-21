@@ -37,7 +37,8 @@ Until the signature has verified, a refusal is unsigned and is the answer this
 panel gives a visitor who is not signed in at an address that does not exist,
 so it says nothing about which check failed. From then on every reply, a
 refusal included, is signed with this server's identity key and bound to the
-request (crypto.response_message). Refusals before verification share a bounded audit budget with pairing. Of a request, only its link, actor, address, method, path and
+request (crypto.response_message). Refusals before a link row is found share an audit budget with
+pairing. Of a request, only its link, actor, address, method, path and
 length are ever written down: no reply, audit row or log line repeats a key, a
 request's signature, its body or its nonce. Nothing raised in here reaches the
 panel's error pages.
@@ -447,7 +448,7 @@ def _audit(exchange, outcome, reason, status):
                         ('method', exchange.method), ('path', exchange.path), ('size', exchange.size)):
         if value is not None:
             fields[name] = value
-    record = audit.record if exchange.signed is not None else audit.record_unverified
+    record = audit.record if exchange.link_id is not None else audit.record_unverified
     record('request', **fields)
 
 

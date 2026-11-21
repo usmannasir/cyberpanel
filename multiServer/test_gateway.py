@@ -761,6 +761,16 @@ class LinkTests(Panel):
         before = self.state()
         self.refused_unsigned(self.call(link_id='a1' * 15 + 'a2')[0], 'link', before, link_id='')
 
+    def test_a_paused_link_is_audited_even_after_the_pre_link_budget_is_used(self):
+        with patch.object(audit, '_unverified', audit._MinuteBudget(1)):
+            self.refused('link', link_id=OTHER_LINK, audited={'link_id': ''})
+            before = self.state()
+            self.assertEqual(self.absent(), snapshot(self.call(link_id=OTHER_LINK)[0]))
+            self.assertEqual(before, self.state())
+            models.Link.objects.filter(pk=LINK).update(status=models.PAUSED)
+            self.refused('link')
+            self.refused('link')
+
     def test_only_an_active_link_carries_a_request(self):
         for status in (models.PENDING, models.PAUSED, models.REVOKED, '', 'ACTIVE', 'active '):
             with self.subTest(status):
@@ -1683,6 +1693,15 @@ class PairingThroughTheGatewayTests(Panel):
         self.assertEqual([], self.log)
         # The link that was there before is as it was, and nothing was stored as for a request on a link.
         self.assertEqual((models.ACTIVE, 0), (models.Link.objects.get(pk=LINK).status, models.Nonce.objects.count()))
+
+    def test_a_proposed_pairing_id_uses_the_same_budget_as_a_missing_gateway_link(self):
+        with patch.object(audit, '_unverified', audit._MinuteBudget(1)):
+            before = self.state()
+            self.refused_unsigned(self.call(link_id=OTHER_LINK)[0], 'link', before, link_id='')
+            fields, body, signature = self.asking(timestamp=self.clock.now - pairing.TIME_WINDOW - 1)
+            self.assertEqual(403, self.post(body, signature).status_code)
+            self.assertFalse(models.Link.objects.filter(pk=fields['link_id']).exists())
+            self.assertEqual([], self.pairing_rows())
 
     def test_a_refused_pairing_request_gets_pairings_one_answer(self):
         fields, body, signature = self.asking(sign_with=STRANGER)

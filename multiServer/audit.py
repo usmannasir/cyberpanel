@@ -14,6 +14,10 @@ travel in, and a value shaped like one (a long run of hexadecimal digits, a
 numeric code, an oversized word) is refused even in a field that takes text.
 Every secret this feature issues is hexadecimal or longer than MAX_SEGMENT.
 
+For a pre-link overflow summary, event=request, outcome=refused, reason=internal
+and status is NULL. The size column holds the exact number of excess refusals in
+one worker's completed minute. All request metadata is absent.
+
 record() never raises: the action being audited decides what a False means.
 """
 import collections
@@ -53,36 +57,63 @@ _PATH = re.compile(r'/(?:[A-Za-z0-9._~@+-]+/)*(?:[A-Za-z0-9._~@+-]+)?')
 _SECRET = re.compile(r'[0-9A-Fa-f]{16}|[0-9]{6}')
 
 
-# One allowance per worker, shared by both public endpoints regardless of the
-# supplied address or link. Authenticated requests and local decisions bypass it.
-UNVERIFIED_PER_MINUTE = 60
-RETENTION_SECONDS = 30 * 86400
+# Both public endpoints share one refusal allowance until a real link is found.
+UNVERIFIED_PER_MINUTE = 30
+RETENTION_SECONDS = 180 * 86400
+PRUNE_INTERVAL = 3600
 PRUNE_BATCH = 1000
 
 
 class _MinuteBudget:
     def __init__(self, limit):
         self.limit = limit
-        self.used = collections.deque()
+        self.ends_at = 0
+        self.count = 0
+        self.pending = collections.deque()  # one count per completed window with excess refusals
         self.lock = threading.Lock()
+        self.writer = threading.Lock()
 
-    def take(self):
+    def observe(self, pre_link):
         with self.lock:
             now = time.monotonic()
-            while self.used and self.used[0] <= now - 60:
-                self.used.popleft()
-            if len(self.used) >= self.limit:
-                return False
-            self.used.append(now)
+            if now >= self.ends_at:
+                if self.count > self.limit:
+                    self.pending.append(self.count - self.limit)
+                self.ends_at = now + 60
+                self.count = 0
+            if pre_link:
+                self.count += 1
+                return self.count <= self.limit
             return True
+
+    def report(self):
+        # Called after commit. A rollback or a failed summary insert leaves the count for
+        # the next committed event. Only one writer claims a count; DB I/O never holds lock.
+        with self.lock:
+            if not self.pending or not self.writer.acquire(False):
+                return
+            count = self.pending[0]
+        try:
+            # A request/refused/internal row with NULL status: size is the exact number
+            # suppressed in that minute. No part of a caller's request enters this row.
+            row = entry('request', dict(outcome='refused', reason='internal', size=count))
+            row['at'] = int(time.time())
+            _insert(row)
+            with self.lock:
+                self.pending.popleft()
+        except Exception:
+            pass
+        finally:
+            self.writer.release()
 
 
 _unverified = _MinuteBudget(UNVERIFIED_PER_MINUTE)
-_prunes = _MinuteBudget(1)
+_prune_lock = threading.Lock()
+_next_prune = 0
 
 
 def record_unverified(event, **fields):
-    return _unverified.take() and record(event, **fields)
+    return _record((event,), fields, pre_link=True)
 
 
 def record(*event, **fields):
@@ -91,7 +122,13 @@ def record(*event, **fields):
     The event is taken by position only, so that no field name a caller passes,
     not even "event", can make the call itself fail.
     """
+    return _record(event, fields, pre_link=False)
+
+
+def _record(event, fields, pre_link):
     try:
+        if not _unverified.observe(pre_link):
+            return False
         row = entry(event[0], fields) if len(event) == 1 else None
         if row is None:
             return False
@@ -120,22 +157,31 @@ def entry(event, fields):
     return row
 
 
+def _insert(row):
+    from multiServer.models import AuditEntry
+    AuditEntry.objects.create(**row)
+
+
 def _write(row):
     from django.db import transaction
-    from multiServer.models import AuditEntry
     # Its own savepoint: a failed insert must not spoil the caller's transaction.
     with transaction.atomic():
-        AuditEntry.objects.create(**row)
+        _insert(row)
+        transaction.on_commit(_unverified.report)
         transaction.on_commit(_prune_if_due)
 
 
 def _prune_if_due():
     # Keep the retention query outside the audited operation's transaction.
     # Bounded indexed deletes also let an old installation catch up gradually.
-    if not _prunes.take():
-        return
-    from django.db import connection
+    global _next_prune
     try:
+        with _prune_lock:
+            now = time.monotonic()
+            if now < _next_prune:
+                return
+            _next_prune = now + PRUNE_INTERVAL
+        from django.db import connection
         with connection.cursor() as cursor:
             cursor.execute('DELETE FROM ms_audit WHERE at < %s ORDER BY at, id LIMIT %s',
                            [int(time.time()) - RETENTION_SECONDS, PRUNE_BATCH])

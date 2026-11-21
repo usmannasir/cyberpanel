@@ -236,19 +236,71 @@ class ModelTests(DjangoDatabase):
 
 
 class AuditTests(DjangoDatabase):
-    def test_retention_deletes_one_old_batch_after_commit_and_keeps_the_cutoff(self):
+    def test_retention_deletes_one_batch_per_hour_after_commit_and_keeps_the_180_day_cutoff(self):
         now = 1900000000
-        cutoff = now - audit.RETENTION_SECONDS
+        cutoff = now - 180 * 86400
         for at in (cutoff - 2, cutoff - 1, cutoff, now):
             models.AuditEntry.objects.create(at=at, event='request', outcome='ok')
-        with patch.object(audit, '_prunes', audit._MinuteBudget(1)), patch.object(audit, 'PRUNE_BATCH', 1), \
-                patch.object(audit.time, 'time', return_value=now):
+        with patch.object(audit, '_next_prune', 0), patch.object(audit, 'PRUNE_BATCH', 1), \
+                patch.object(audit.time, 'time', return_value=now), \
+                patch.object(audit.time, 'monotonic', return_value=10) as clock:
             with transaction.atomic():
                 self.assertTrue(audit.record('link_approve'))
                 self.assertTrue(models.AuditEntry.objects.filter(at=cutoff - 2).exists())
+            self.assertFalse(models.AuditEntry.objects.filter(at=cutoff - 2).exists())
+            clock.return_value += 3599
             self.assertTrue(audit.record('link_pause'))
-        self.assertEqual([cutoff - 1, cutoff, now, now, now],
+            self.assertTrue(models.AuditEntry.objects.filter(at=cutoff - 1).exists())
+            clock.return_value += 1
+            self.assertTrue(audit.record('link_resume'))
+        self.assertEqual([cutoff, now, now, now, now],
                          list(models.AuditEntry.objects.order_by('at').values_list('at', flat=True)))
+
+    def test_failed_prune_preserves_the_event_and_waits_an_hour_before_retrying(self):
+        attempts = []
+
+        def unavailable(execute, sql, params, many, context):
+            if sql.startswith('DELETE FROM ms_audit'):
+                attempts.append(params)
+                raise RuntimeError('retention unavailable')
+            return execute(sql, params, many, context)
+
+        with patch.object(audit, '_next_prune', 0), patch.object(audit.time, 'monotonic', return_value=0) as clock, \
+                connection.execute_wrapper(unavailable):
+            self.assertTrue(audit.record('link_approve'))
+            clock.return_value = 3599
+            self.assertTrue(audit.record('link_pause'))
+            self.assertEqual(1, len(attempts))
+            clock.return_value = 3600
+            self.assertTrue(audit.record('link_resume'))
+        self.assertEqual(2, len(attempts))
+        self.assertEqual(3, models.AuditEntry.objects.count())
+
+    def test_summary_survives_a_rollback_and_a_write_failure_then_is_committed_once(self):
+        insert = audit._insert
+
+        def fail_summary(row):
+            if row.get('reason') == 'internal':
+                raise RuntimeError('summary unavailable')
+            insert(row)
+
+        with patch.object(audit, '_unverified', audit._MinuteBudget(1)), \
+                patch.object(audit.time, 'monotonic', return_value=100) as clock:
+            for n in range(5):
+                self.assertEqual(n == 0, audit.record_unverified('pairing', outcome='refused', reason='link'))
+            clock.return_value += 60
+            with transaction.atomic():
+                self.assertTrue(audit.record('link_approve'))
+                transaction.set_rollback(True)
+            with patch.object(audit, '_insert', side_effect=fail_summary):
+                self.assertTrue(audit.record('link_pause'))
+            self.assertEqual(2, models.AuditEntry.objects.count())
+            self.assertTrue(audit.record('link_resume'))
+            self.assertTrue(audit.record('link_pause'))
+        summary = models.AuditEntry.objects.get(reason='internal')
+        self.assertEqual(('request', 'refused', 4, None, '', '', ''), (
+            summary.event, summary.outcome, summary.size, summary.status, summary.link_id, summary.path, summary.actor))
+        self.assertEqual(5, models.AuditEntry.objects.count())
 
     def test_a_recorded_event_is_one_row_with_exactly_the_accepted_fields(self):
         with patch.object(audit.time, 'time', return_value=1795000000.2):
