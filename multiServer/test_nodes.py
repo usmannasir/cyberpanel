@@ -5,6 +5,8 @@ from unittest.mock import patch
 from multiServer import testing
 
 SKIP = testing.unavailable()
+if SKIP is None:
+    testing.start_django()
 
 
 @unittest.skipIf(SKIP, SKIP)
@@ -33,3 +35,5 @@ class NodePresentationTests(unittest.TestCase):
                 self.assertIsNone(nodes.administrator(request))
                 sessions.return_value.exists.return_value = False
                 self.assertIs(admin, nodes.administrator(request))
+                sessions.return_value.exists.side_effect = nodes.DatabaseError()
+                self.assertIsNone(nodes.administrator(request))

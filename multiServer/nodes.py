@@ -3,6 +3,7 @@ import datetime
 import re
 
 from django.contrib import messages
+from django.db import DatabaseError
 from django.http import Http404, HttpResponseNotAllowed
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_protect
@@ -22,11 +23,14 @@ def administrator(request):
             return None
     except (ValueError, TypeError):
         return None
-    session_key = request.session.session_key
-    if (not session_key or any(key.startswith('HTTP_X_CPMS_') for key in request.META)
-            or models.LinkSession.objects.filter(pk=session_key).exists()):
+    session_key = getattr(request.session, 'session_key', None)
+    if not session_key or any(key.startswith('HTTP_X_CPMS_') for key in request.META):
         return None
-    return admin
+    try:
+        return None if models.LinkSession.objects.filter(pk=session_key).exists() else admin
+    except DatabaseError:
+        # The navigation processor also runs on unrelated panel pages.
+        return None
 
 
 def _date(timestamp):
