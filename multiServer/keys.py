@@ -4,9 +4,12 @@ The files are written by root (install/multiserver_identity.py) and read here by
 the panel. Anything unexpected about them — missing, a link, wrong owner, readable
 by others, wrong content — means the feature is off or the key is absent.
 """
+import errno
+import fcntl
 import os
 import re
 import stat
+import time
 
 KEY_DIRECTORY = '/etc/cyberpanel/multiserver'
 OWNER = 0
@@ -42,6 +45,44 @@ def _read(name, limit=128, versioned=False):
         return text
     except Exception:
         return None
+
+
+class Occupied(Exception):
+    """Another process had its turn for longer than the caller was willing to wait."""
+
+
+def take_turn(seconds):
+    """Wait up to `seconds` to be the one process that changes this server's links; return what end_turn() takes.
+
+    The turn is a lock on the key directory itself. Only root and the panel
+    can open that directory, so no website user and no database user can take
+    a turn or keep the panel from having one, and a process that ends, however
+    it ends, has given its turn back. Occupied when the wait was in vain,
+    OSError when the directory is not the root-owned one.
+    """
+    descriptor = os.open(KEY_DIRECTORY, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        details = os.fstat(descriptor)
+        if details.st_uid != OWNER or details.st_mode & 0o022:
+            raise OSError(errno.EPERM, 'The key directory is not private.')
+        deadline = time.monotonic() + seconds
+        while True:
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return descriptor
+            except OSError as error:
+                if error.errno not in (errno.EAGAIN, errno.EACCES):
+                    raise
+            if time.monotonic() >= deadline:
+                raise Occupied('Another process is changing the links of this server.')
+            time.sleep(0.05)
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def end_turn(descriptor):
+    os.close(descriptor)
 
 
 def role_revision(expected):

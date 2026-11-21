@@ -197,10 +197,12 @@ def _start(code_text, label, actor):
         raise PairingError('format', 'The administrator cannot be named on a link.')
     endpoint, node_id, seed, commitment = _decode(code_text)
     try:
-        with links.pairing_slot(node_id):
+        with links.pairing_slot():
             return _pair_one(endpoint, node_id, seed, commitment, label, actor)
     except links.Busy:
         raise PairingError('internal', 'Another pairing is in progress. Try again.') from None
+    except links.NoMasterKey as error:
+        raise _unkept(error) from None
 
 
 def _pair_one(endpoint, node_id, seed, commitment, label, actor):

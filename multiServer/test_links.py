@@ -622,7 +622,8 @@ class CompatibilityTests(unittest.TestCase):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 names = [node.module] if isinstance(node, ast.ImportFrom) else [alias.name for alias in node.names]
                 (at_load if node in tree.body else on_use).update(names)
-        self.assertEqual({'base64', 'collections', 'contextlib', 'json', 're', 'time', 'multiServer'}, at_load)
+        self.assertEqual({'base64', 'collections', 'contextlib', 'json', 're', 'threading', 'time', 'multiServer'},
+                         at_load)
         self.assertEqual({'cryptography.fernet', 'django.db', 'multiServer'}, on_use)
 
     def test_nothing_newer_than_python_3_6_is_used(self):
