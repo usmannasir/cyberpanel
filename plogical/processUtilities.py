@@ -114,7 +114,10 @@ class ProcessUtilities(multi.Thread):
             f = open(os.devnull, 'w')
 
             if User == None:
-                if shell == False:
+                if isinstance(command, (list, tuple)):
+                    # An argument list is run as it is: no shell, no splitting.
+                    res = subprocess.call(list(command), stdout=f, stderr=f)
+                elif shell == False:
                     res = subprocess.call(shlex.split(command), stdout=f, stderr=f)
                 else:
                     res = subprocess.call(command, shell=shell, stdout=f, stderr=f)

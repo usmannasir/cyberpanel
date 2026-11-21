@@ -864,10 +864,7 @@ class vhost:
 
                     php = PHPManager.getPHPString(phpVersion)
 
-                    phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
-
-                    command = f"systemctl restart {phpService}"
-                    ProcessUtilities.normalExecutioner(command)
+                    ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
 
                 print("1,None")
                 return 1,'None'

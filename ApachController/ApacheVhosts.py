@@ -10,6 +10,7 @@ import os
 from websiteFunctions.models import Websites, ChildDomains
 from plogical.vhostConfs import vhostConfs
 from managePHP.phpManager import PHPManager
+from managePHP.phpConfig import fpm_service_for_selection
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 import re
@@ -629,13 +630,9 @@ class ApacheVhost:
                 command = f"sed -i 's/www-data/apache/g' {defaultConfPath}"
                 ProcessUtilities.executioner(command)
 
-            phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
+            ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('stop', phpVersion))
 
-            command = f"systemctl stop {phpService}"
-            ProcessUtilities.normalExecutioner(command)
-
-            command = f"systemctl restart {phpService}"
-            ProcessUtilities.normalExecutioner(command)
+            ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
 
             command = f"systemctl restart {ApacheVhost.serviceName}"
             ProcessUtilities.normalExecutioner(command)
@@ -672,8 +669,18 @@ class ApacheVhost:
 
     @staticmethod
     def DecideFPMServiceName(phpVersion):
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            php = PHPManager.getPHPString(phpVersion)
-            return f'php{php}-php-fpm'
-        else:
-            return f"{phpVersion.replace(' ', '').lower()}-fpm"
+        # The name is built from the digits of a checked selection; a selection
+        # of any other shape raises ValueError.
+        rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+        return fpm_service_for_selection(phpVersion, rpmFamily)
+
+    @staticmethod
+    def fpmServiceCommand(action, phpVersion):
+        """The systemctl argument list that acts on the PHP-FPM service of a PHP selection.
+
+        Run it as a list (ProcessUtilities.normalExecutioner accepts one). The
+        unit is one argument after `--`, so it is never read as an option.
+        """
+        if action not in ('stop', 'start', 'restart', 'reload'):
+            raise ValueError('Unsupported service action.')
+        return ['systemctl', action, '--', ApacheVhost.DecideFPMServiceName(phpVersion)]
