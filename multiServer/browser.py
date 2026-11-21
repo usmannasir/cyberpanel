@@ -5,6 +5,11 @@ cannot log anyone in. The node sets a host-only random cookie and posts its dige
 the controller. Only the original local session can sign that digest. The last POST
 needs both the signature and the same browser's node cookie, within the ticket's 30s.
 The cookie is set during a top-level visit, with no iframe or opener.
+
+Two legs run on the controller for a browser that another site could have sent.
+`returned` is a cross-site POST by design, so it only notes what it is given, and
+only from the server being opened. `finish` is the one that spends the pending
+login, so it answers nothing but this panel's own page.
 """
 import hmac
 import json
@@ -124,6 +129,27 @@ def arrive(request):
     return response
 
 
+def check_return_origin(request, flow):
+    """Only the server being opened sends a browser back to the controller.
+
+    Its bridge page is served with "no-referrer", which makes a browser name the
+    origin "null". A browser that names a real origin must name that server's,
+    and that can be told only where the controller session came along.
+    """
+    pending = request.session.get('ms_open')
+    if pending is not None and not hmac.compare_digest(flow, pending[0]):
+        raise ValueError  # this browser is opening a server, and this is not that login
+    origin = request.META.get('HTTP_ORIGIN')
+    if origin == 'null':
+        return
+    if pending is None:
+        raise ValueError
+    with transaction.atomic():
+        link = sso.peer_row(pending[1])
+    if origin != sso.panel_origin('https://' + link.authority):
+        raise ValueError
+
+
 def returned(request):
     # The native controller cookie can be SameSite=Lax or Strict and absent on this
     # cross-site POST. Re-enter the controller in a first-party document before finish.
@@ -131,6 +157,7 @@ def returned(request):
     if not all(sso.HEX.fullmatch(x) for x in (flow, challenge)):
         raise ValueError
     sso.local_origin(request)
+    check_return_origin(request, flow)
     nonce = secrets.token_hex(16)
     html = render_to_string('multiServer/return.html', {'nonce': nonce})
     response = private(HttpResponse(html), "default-src 'none'; script-src 'nonce-%s'" % nonce)
@@ -140,6 +167,12 @@ def returned(request):
 
 def finish(request):
     if request.method != 'GET' or request.META.get('QUERY_STRING'):
+        raise ValueError
+    # This request spends the pending login, so only the page `returned` answered with may make
+    # it. The browser states who started a navigation: that page is "same-origin"; a link, a
+    # redirect or an image on another site is "cross-site", an address typed in is "none".
+    # A browser that does not say (before 2023) is refused like the rest.
+    if request.META.get('HTTP_SEC_FETCH_SITE') != 'same-origin':
         raise ValueError
     allowed_controller(request)
     flow, challenge = request.COOKIES.get(RETURN, '').split('.')
