@@ -360,7 +360,8 @@ def _decode(text):
 def issue_code(admin_id, controller_ip, host=None, port=None):
     """A new pairing code for the controller at controller_ip; PairingError when it cannot be given.
 
-    The caller has already demanded the administrator's password and second
+    The caller has already demanded the administrator's password and a fresh
+    code of the second factor; here the account only has to have a second
     factor. host and port are where the controller reaches this panel; left
     out, they are the address the panel reports as its own and the port it
     listens on. The code is returned once and is not kept here.
@@ -654,7 +655,12 @@ def _wrong_number(waiting, link_id, actor, now):
 
 
 def _administrator(event, admin_id):
-    """The acting administrator of a managed server; anyone else, or any other server, is refused."""
+    """The acting administrator of a managed server; anyone else, or any other server, is refused.
+
+    A full administrator who signs in without a second factor is refused too:
+    whoever takes over such an account could otherwise hand this server to a
+    controller of their own.
+    """
     if switch.active_role() != keys.NODE:
         _refuse(event, 'role', 'This server is not a managed server.')
     from multiServer import views
@@ -662,6 +668,9 @@ def _administrator(event, admin_id):
     administrator = views.full_administrator(types.SimpleNamespace(session={'userID': admin_id}))
     if administrator is None:
         _refuse(event, 'admin', 'Only a full administrator of this server may do this.')
+    if not views.two_factor_enrolled(administrator):
+        _refuse(event, 'two_factor', 'Turn on two-factor authentication for your account first.',
+                actor=administrator.userName)
     return administrator
 
 

@@ -15,13 +15,7 @@ from multiServer import audit, entitlement, links, models, views
 
 def administrator(request):
     admin = views.full_administrator(request)
-    if not admin or admin.twoFA != 1 or admin.secretKey in ('', 'None', None):
-        return None
-    try:
-        import pyotp
-        if not pyotp.TOTP(admin.secretKey).byte_secret():
-            return None
-    except (ValueError, TypeError):
+    if not admin or not views.two_factor_enrolled(admin):
         return None
     session_key = getattr(request.session, 'session_key', None)
     if not session_key or request.session.get('ms_managed') or any(key.startswith('HTTP_X_CPMS_') for key in request.META):
