@@ -114,6 +114,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'multiServer.nodeGateway.NodeGateway',  # must stay first: it answers a controller's signed requests itself
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
