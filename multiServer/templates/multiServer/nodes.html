@@ -8,17 +8,30 @@
   {% if licensed and not ms_server %}<p>Sign in to this controller again with your password and verification code to open a node.</p>{% endif %}
   {% if licensed %}{% include "multiServer/inventory_nav.html" %}{% endif %}
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
+  {% if licensed %}<details ng-non-bindable>
+    <summary>Add a server</summary>
+    <p>On the server you want to manage, open Multi-Server, Controllers, and choose "Allow a controller". Paste the pairing code it gives you here. You will see what the code says before anything is connected.</p>
+    <form method="post" action="{% url 'multiServerNodeAdd' %}">{% csrf_token %}
+      <input type="hidden" name="step" value="read">
+      <label>Name for the server <input type="text" name="label" maxlength="64" pattern="[A-Za-z0-9]([A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?" autocomplete="off" required></label>
+      <label>Pairing code <input type="text" name="pairing_code" maxlength="1024" autocomplete="off" spellcheck="false" required></label>
+      <button class="btn btn-primary" type="submit">Read the code</button>
+    </form>
+  </details>{% endif %}
   {% if nodes %}
   <div class="table-responsive"><table class="table table-striped">
     <thead><tr><th scope="col">Node</th><th scope="col">Status</th><th scope="col">Version</th><th scope="col">Capabilities</th><th scope="col">Last seen</th><th scope="col">Last error</th><th scope="col">Actions</th></tr></thead>
     <tbody>{% for node in nodes %}<tr>
-      <th scope="row">{{ node.label }}</th><td>{{ node.status|capfirst }}</td><td>{{ node.version|default:"—" }}</td>
+      <th scope="row">{{ node.label }}</th><td>{% if node.status == 'pending' %}Waiting for approval on that server{% if node.number %}<br>Number to type there: <strong>{{ node.number }}</strong>{% endif %}{% else %}{{ node.status|capfirst }}{% endif %}</td><td>{{ node.version|default:"—" }}</td>
       <td>{{ node.capabilities|default:"—" }}</td><td>{{ node.seen|date:"Y-m-d H:i T"|default:"—" }}</td>
       <td>{{ node.error|default:"—" }}{% if node.error and node.error_at %}<br>{{ node.error_at|date:"Y-m-d H:i T" }}{% endif %}</td>
       <td>{% if node.id %}
         {% if ms_server and node.can_login %}<form method="post" action="{% url 'msSelect' %}" target="_blank" rel="noopener">{% csrf_token %}
           <input type="hidden" name="server" value="{{ node.id }}"><input type="hidden" name="page" value="index">
           <button class="btn btn-default" type="submit">Open panel</button>
+        </form>{% endif %}
+        {% if node.status == 'pending' and licensed %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+          <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-primary" name="action" value="confirm">Check approval</button>
         </form>{% endif %}
         {% if node.status == 'active' or node.status == 'paused' and licensed %}
         <form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
@@ -40,5 +53,6 @@
     </tr>{% endfor %}</tbody>
   </table></div>
   {% else %}<p>No nodes are paired with this controller.</p>{% endif %}
+  <p><a href="{% url 'multiServerRole' %}">Role of this server</a></p>
 </div>
 {% endblock %}

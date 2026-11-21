@@ -1,0 +1,35 @@
+{% extends "baseTemplate/index.html" %}
+{% block title %}Multi-Server Manager – CyberPanel{% endblock %}
+{% block content %}
+<div class="container-fluid" ng-non-bindable>
+  <h1>Multi-Server Manager</h1>
+  <p>One CyberPanel server, the controller, manages your other servers from its own panel. Every server has one role.</p>
+  {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
+  <p>This server is: <strong>{{ role_name }}</strong></p>
+  {% if role != 'off' and not running %}<p class="alert alert-warning">Multi-Server Manager is not running on this server yet: its database tables are missing, or this system cannot sign requests. Upgrade CyberPanel, then open this page again.</p>{% endif %}
+  {% if role == 'controller' and running %}<p><a class="btn btn-default" href="{% url 'multiServerNodes' %}">Servers this controller manages</a></p>{% endif %}
+  {% if role == 'node' and running %}<p><a class="btn btn-default" href="{% url 'multiServerControllers' %}">Controllers that manage this server</a></p>{% endif %}
+  <h2>Change the role</h2>
+  <ul>
+    <li><strong>Off</strong>: Multi-Server Manager is not used on this server.</li>
+    <li><strong>Controller</strong>: this server manages other servers. It needs a Multi-Server Manager licence.</li>
+    <li><strong>Managed server</strong>: a controller that you allow manages this server. No licence is needed here.</li>
+  </ul>
+  <p>A server cannot be both. To change between controller and managed server, first remove its servers or end its controllers.</p>
+  {% if enrolled %}
+  <form method="post" action="{% url 'multiServerRole' %}">
+    {% csrf_token %}
+    <fieldset>
+      <legend>Role of this server</legend>
+      {% for value, name in choices %}<label><input type="radio" name="role" value="{{ value }}" required{% if value == role %} checked{% endif %}> {{ name }}</label> {% endfor %}
+    </fieldset>
+    <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
+    <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+    <button class="btn btn-primary" type="submit">Change role</button>
+  </form>
+  {% else %}
+  <p class="alert alert-info">To change the role, first turn on two-factor authentication for your own account (Users, Modify User), then sign in again.</p>
+  {% endif %}
+  <p>If the panel cannot be used, root can do the same on the command line: <code>/usr/local/CyberCP/bin/python /usr/local/CyberCP/multiServer/msctl.py status</code></p>
+</div>
+{% endblock %}

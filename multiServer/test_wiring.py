@@ -67,10 +67,16 @@ class RegistrationTests(Base):
     def test_every_route_is_behind_the_switch(self):
         self.assertTrue(urls.urlpatterns)
         for pattern in urls.urlpatterns:
-            roles = getattr(pattern.callback, 'serves', None)
-            self.assertTrue(roles and set(roles) <= {keys.CONTROLLER, keys.NODE}, pattern)
             # No route may differ from a missing one by a redirect to a longer address.
             self.assertFalse(str(pattern.pattern).endswith('/'), pattern)
+            if pattern.name == 'multiServerRole':
+                # The one page that is there with the feature off: where a full administrator switches it on.
+                self.assertIs(views.role_page, pattern.callback)
+                self.assertFalse(hasattr(pattern.callback, 'serves'))
+                continue
+            roles = getattr(pattern.callback, 'serves', None)
+            self.assertTrue(roles and set(roles) <= {keys.CONTROLLER, keys.NODE}, pattern)
+        self.assertEqual(1, [pattern.name for pattern in urls.urlpatterns].count('multiServerRole'))
 
     def test_a_view_cannot_be_declared_for_no_role_or_for_off(self):
         for roles in ((), ('off',), ('controller', 'off'), ('both',), (None,)):
@@ -271,6 +277,17 @@ class ThroughThePanelTests(Switched):
         there = self.client.get('/multiserver/status')
         never = self.client.get('/multiserver/statu')
         self.assertEqual((404, never.content), (there.status_code, there.content))
+
+    def test_the_role_page_does_not_exist_for_anyone_but_a_full_administrator_whatever_the_role(self):
+        self.sign_in()
+        self.acl.return_value = {'admin': 0}
+        for role in (keys.OFF, keys.CONTROLLER, keys.NODE):
+            self.role.return_value = role
+            never = self.client.get('/multiserver/rol')
+            for there in (self.client.get('/multiserver/role'),
+                          self.client.post('/multiserver/role', data={'role': 'node'})):
+                self.assertEqual((404, never.content, sorted(never.items())),
+                                 (there.status_code, there.content, sorted(there.items())), role)
 
     def test_without_a_session_the_panel_sends_the_visitor_to_sign_in_as_for_any_address(self):
         for role in (keys.OFF, keys.NODE):

@@ -1,0 +1,28 @@
+{% extends "baseTemplate/index.html" %}
+{% block title %}Add a server – CyberPanel{% endblock %}
+{% block content %}
+<div class="container-fluid" ng-non-bindable>
+  <h1>Add a server</h1>
+  <p>Nothing has been sent yet. This is what the pairing code says. Check that it is your server before you connect.</p>
+  <table class="table">
+    <tbody>
+      <tr><th scope="row">Name on this controller</th><td>{{ label }}</td></tr>
+      <tr><th scope="row">Address</th><td>{{ host }}</td></tr>
+      <tr><th scope="row">Panel port</th><td>{{ port }}</td></tr>
+      <tr><th scope="row">Fingerprint of the server's identity key</th><td><code>{{ identity }}</code></td></tr>
+      <tr><th scope="row">Fingerprint of the server's certificate</th><td><code>{{ certificate }}</code></td></tr>
+    </tbody>
+  </table>
+  <p>This controller will connect only to that address and only if the server presents that certificate.</p>
+  <form method="post" action="{% url 'multiServerNodeAdd' %}">
+    {% csrf_token %}
+    <input type="hidden" name="step" value="connect">
+    <input type="hidden" name="label" value="{{ label }}">
+    <input type="hidden" name="pairing_code" value="{{ pairing_code }}">
+    <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
+    <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+    <button class="btn btn-primary" type="submit">Connect to this server</button>
+    <a class="btn btn-default" href="{% url 'multiServerNodes' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}
