@@ -76,6 +76,45 @@ def node_id(public):
     return hashlib.sha256(_raw_key(public)).hexdigest()
 
 
+# The curve of Ed25519: -x^2 + y^2 = 1 + d x^2 y^2 over the integers modulo p.
+_P = 2 ** 255 - 19
+_D = -121665 * pow(121666, _P - 2, _P) % _P
+_ROOT_OF_MINUS_ONE = pow(2, (_P - 1) // 4, _P)
+
+
+def usable_public_key(public):
+    """Whether 32 bytes are a public key that only the holder of its private key can sign for. Never raises.
+
+    Eight points of the curve have small order. Under such a key a signature
+    can be made up by anybody, for any message, without a private key, and the
+    signing library does not refuse them. A key another server sends is
+    therefore kept only when it names a point of the curve and eight times
+    that point is not the neutral point. The bytes are read as leniently as
+    any library reads them (a number above p is taken modulo p, and so is the
+    sign of zero), so that no second spelling of a small point gets through.
+    """
+    try:
+        number = int.from_bytes(_raw_key(public), 'little')
+        y, odd = (number & (2 ** 255 - 1)) % _P, number >> 255
+        # x^2 = (y^2 - 1) / (d y^2 + 1); the divisor is never zero because d is not a square.
+        square = (y * y - 1) * pow(_D * y * y + 1, _P - 2, _P) % _P
+        x = pow(square, (_P + 3) // 8, _P)
+        if (x * x - square) % _P:
+            x = x * _ROOT_OF_MINUS_ONE % _P
+        if (x * x - square) % _P:
+            return False  # not a point of the curve
+        if x & 1 != odd:
+            x = (_P - x) % _P
+        for _ in range(3):
+            # Doubling; the addition law of this curve is complete, so no divisor is zero.
+            product = _D * x * x * y * y % _P
+            x, y = (2 * x * y * pow(1 + product, _P - 2, _P) % _P,
+                    (y * y + x * x) * pow(1 - product, _P - 2, _P) % _P)
+        return (x, y) != (0, 1)
+    except Exception:
+        return False
+
+
 def self_test():
     """Whether Ed25519 works here (it is disabled, for example, in FIPS mode)."""
     try:

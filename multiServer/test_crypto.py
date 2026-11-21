@@ -1,8 +1,8 @@
 """Link signing: every message is typed, fixed in shape and strict about each field."""
 import ast
-import sys
 import hashlib
 from pathlib import Path
+import sys
 import unittest
 
 from multiServer import crypto
@@ -60,6 +60,55 @@ class KeyTests(unittest.TestCase):
         for bad in (public[:31], public + b'x', 'text', None):
             with self.assertRaises(ValueError):
                 crypto.node_id(bad)
+
+    # The eight points of small order, and every other way 32 bytes can spell one of them.
+    SMALL_ORDER = (
+        '0100000000000000000000000000000000000000000000000000000000000000',
+        'ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+        '0000000000000000000000000000000000000000000000000000000000000000',
+        '0000000000000000000000000000000000000000000000000000000000000080',
+        '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05',
+        '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85',
+        'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a',
+        'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa',
+        # The sign of zero set, and a number above p for 0 and for 1.
+        '0100000000000000000000000000000000000000000000000000000000000080',
+        'ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        'eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+        'eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        'edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+        'edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    )
+    # A "signature" nobody made: the neutral point and the number zero.
+    MADE_UP = bytes.fromhex('01' + '00' * 31) + bytes(32)
+
+    def test_a_key_made_here_and_the_base_point_are_usable(self):
+        for _ in range(64):
+            self.assertIs(True, crypto.usable_public_key(crypto.public_key(crypto.generate_private_key())))
+        self.assertIs(True, crypto.usable_public_key(bytes.fromhex('58' + '66' * 31)))
+        self.assertIs(True, crypto.usable_public_key(bytes.fromhex(
+            'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a')))
+
+    def test_a_key_anybody_can_sign_for_is_not_usable(self):
+        for written in self.SMALL_ORDER:
+            self.assertIs(False, crypto.usable_public_key(bytes.fromhex(written)), written)
+        # Why it matters: under the neutral point this library accepts the made-up signature for any message,
+        # and whatever key it accepts a made-up signature under is a key that is refused here.
+        accepted = [written for written in self.SMALL_ORDER for message in (b'a', b'b', b'c', b'd', b'e', b'f')
+                    if crypto.verify(bytes.fromhex(written), self.MADE_UP, message)]
+        for _ in range(64):
+            key = crypto.public_key(crypto.generate_private_key())
+            self.assertFalse(crypto.verify(key, self.MADE_UP, b'a'))
+        if self.SMALL_ORDER[0] not in accepted:
+            self.skipTest('this signing library refuses the neutral point by itself')
+
+    def test_what_is_not_a_point_of_the_curve_or_not_32_bytes_is_not_usable(self):
+        # 2 is not the y of any point; half of all numbers are not.
+        self.assertIs(False, crypto.usable_public_key(bytes.fromhex('02' + '00' * 31)))
+        usable = sum(crypto.usable_public_key(hashlib.sha256(b'%d' % number).digest()) for number in range(400))
+        self.assertTrue(120 < usable < 280, usable)
+        for value in (None, '', b'', b'\x01' * 31, b'\x01' * 33, '58' + '66' * 31, bytearray(32), 7, [1] * 32):
+            self.assertIs(False, crypto.usable_public_key(value), repr(value))
 
     def test_self_test_reports_working_signatures(self):
         self.assertIs(True, crypto.self_test())
