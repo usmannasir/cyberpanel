@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from install import multiserver_identity as provision
 from multiServer import crypto, keys, msctl, test_gateway, testing
-from multiServer.test_keys import ME, MY_GROUP, Directory
+from multiServer.test_keys import MY_GROUP, Directory
 
 SKIP = testing.unavailable()
 if SKIP is None:
@@ -314,8 +314,10 @@ class EndTests(Base):
     def test_run_by_root_the_command_ends_the_link_and_names_the_administrator_who_asked(self):
         said = []
         with patch.object(provision, 'bump_generation', side_effect=self.raise_counter), \
+                patch.object(provision, 'ensure_key_directory') as ensured, \
                 patch.object(msctl, '_start_django'), patch.object(os, 'geteuid', return_value=0):
             self.assertEqual(0, msctl.main(['revoke', LINK, str(self.administrator.pk)], said.append))
+            ensured.assert_called_once_with()
             self.assertEqual(1, msctl.main(['revoke', LINK], said.append))
             self.assertEqual(1, msctl.main(['revoke', THIRD_LINK], said.append))
             self.assertEqual(0, msctl.main(['revoke', OTHER_LINK], said.append))

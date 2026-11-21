@@ -122,6 +122,8 @@ def revoke(link_id, admin_id=None, say=print):
         say(NOT_A_NODE)
         return 1
     try:
+        # The place of the revocation markers, should a setup of an earlier build lack it.
+        multiserver_identity.ensure_key_directory()
         _start_django()
         from multiServer import controllers, views
         administrator = views.active_full_administrator(admin_id) if admin_id is not None else None
