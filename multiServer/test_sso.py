@@ -59,7 +59,7 @@ class TicketTests(unittest.TestCase):
         self.link = models.Link.objects.create(pk=secrets.token_hex(16), pairing_key=secrets.token_hex(32),
             controller_key=crypto.public_key(self.key).hex(), status=models.ACTIVE, allowed_ips='192.0.2.1',
             admin_id=7, generation=2, created_at=now, updated_at=now, expires_at=now+3600)
-        for obj, name, result in ((keys, 'generation', 2), (keys, 'revoked', False),
+        for obj, name, result in ((keys, 'generation', 2), (keys, 'revoked', False), (keys, 'role_revision', (1,2,3)),
                                   (switch, 'active_role', keys.NODE), (views, 'active_full_administrator', self.actor)):
             patcher = patch.object(obj, name, return_value=result)
             patcher.start()
@@ -101,6 +101,9 @@ class TicketTests(unittest.TestCase):
         flow = sso.digest(self.ticket())
         with transaction.atomic(), self.assertRaises(ValueError):
             sso.ticket_state(flow, self.origin, 'https://other.example:8090')
+        from unittest.mock import patch
+        with transaction.atomic(), patch('multiServer.keys.role_revision', return_value=(1,2,4)), self.assertRaises(ValueError):
+            sso.ticket_state(flow, self.origin, 'https://' + self.target)
         self.actor.acl_id = 2
         with transaction.atomic(), self.assertRaises(ValueError):
             sso.ticket_state(flow, self.origin, 'https://' + self.target)
