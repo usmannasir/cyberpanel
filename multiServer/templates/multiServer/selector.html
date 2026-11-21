@@ -5,13 +5,15 @@
   <a href="{{ ms_managed.origin }}/multiserver/nodes" rel="noreferrer noopener">{% trans "Return to controller" %}</a>
 </div>
 {% else %}
-<form class="ms-server-selector" method="post" action="{% url 'msSelect' %}" target="_blank" rel="noopener" onsubmit="return this.elements.server.value !== 'local'" ng-non-bindable>
+{# This control never changes where a form on this page is sent. Choosing a server leaves this page for the same page on that server; the choice is put back first, so this page is never left showing another server. #}
+<form class="ms-server-selector" method="post" action="{% url 'msSelect' %}" ng-non-bindable>
   {% csrf_token %}<input type="hidden" name="page" value="{{ ms_page }}">
-  <label for="ms-server-{{ placement }}">{% trans "Server" %}</label>
-  <select id="ms-server-{{ placement }}" name="server">
+  <label for="ms-server-{{ placement }}">{% if placement == "create" %}{% trans "Open this page on another server" %}{% else %}{% trans "Server" %}{% endif %}</label>
+  <select id="ms-server-{{ placement }}" name="server" autocomplete="off" title="{% trans "Open this page on another server" %}" onchange="if (this.value !== 'local') { this.form.submit(); this.value = 'local'; }">
     <option value="local" selected>{% trans "This server" %} · {{ ms_current }}</option>
     {% for node in ms_nodes %}<option value="{{ node.id }}">{{ node.label }}</option>{% endfor %}
   </select>
-  <button type="submit" class="btn btn-default">{% trans "Open" %}</button>
+  <noscript><button type="submit" class="btn btn-default">{% trans "Open" %}</button></noscript>
+  {% if placement == "create" %}<small>{% trans "The form on this page always applies to this server." %} ({{ ms_current }})</small>{% endif %}
 </form>
 {% endif %}{% endif %}
