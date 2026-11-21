@@ -187,10 +187,25 @@ class secMiddleware:
                 # CSP, Referrer-Policy) are applied.
                 webmailRequest = pathActual.startswith('/webmail/')
 
-                node_control = routedPath == '/multiserver/nodes/control'
+                # The Multi-Server forms that take a password, a pairing code or a
+                # confirmation number: a refused one is never written to the log.
+                node_control = routedPath in (
+                    '/multiserver/nodes/control', '/multiserver/nodes/add',
+                    '/multiserver/controllers/control', '/multiserver/role',
+                )
                 for key, value in ({} if webmailRequest else data).items():
                     if node_control and key == 'password':
                         continue  # Opaque credential consumed only by the password verifier.
+                    if key == 'controller_ip' and routedPath == '/multiserver/controllers/control':
+                        # An IPv6 address has colons. One whole address goes on unscanned
+                        # (the view reads it again by its own rule); anything else in this
+                        # field is scanned like every other value.
+                        try:
+                            if isinstance(value, str) and '%' not in value:
+                                ipaddress.ip_address(value.strip())
+                                continue
+                        except ValueError:
+                            pass
                     valueAlreadyChecked = 0
 
                     # Key/value scanning logging removed

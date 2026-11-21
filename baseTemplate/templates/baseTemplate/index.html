@@ -270,6 +270,12 @@
             <div class="icon-wrapper"><i class="fas fa-server"></i></div>
             <span>{% trans "Server" %}</span>
         </a>
+        {% if ms_menu %}
+        <a href="{{ ms_menu }}" class="menu-item {% if request.resolver_match.url_name == 'multiServerRole' or request.resolver_match.url_name == 'multiServerControllers' %}active{% endif %}">
+            <div class="icon-wrapper"><i class="fas fa-sitemap"></i></div>
+            <span>{% trans "Multi-Server" %}</span>
+        </a>
+        {% endif %}
         {% if showManagedNodes %}
         <a href="{% url 'multiServerNodes' %}" class="menu-item {% if request.resolver_match.url_name == 'multiServerNodes' %}active{% endif %}">
             <div class="icon-wrapper"><i class="fas fa-network-wired"></i></div>

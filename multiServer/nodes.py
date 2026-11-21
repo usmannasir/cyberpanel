@@ -47,6 +47,13 @@ def _date(timestamp):
         return None
 
 
+def _number(row):
+    """The number to read out for a server that waits for approval, as two groups of four digits; '' if none."""
+    from multiServer import pairing
+    number = pairing.shown_number(row) if row.status == models.PENDING else None
+    return '%s %s' % (number[:4], number[4:]) if number else ''
+
+
 def summary(row):
     try:
         label = links.check_label(row.label)
@@ -55,6 +62,7 @@ def summary(row):
     caps = row.advertised.split(',') if row.advertised else []
     valid = len(caps) <= links.MAX_CAPABILITIES and all(links._CAPABILITY.fullmatch(cap) for cap in caps)
     return {
+        'number': _number(row),
         'id': row.link_id if links._is_link_id(row.link_id) else '',
         'label': label,
         'status': row.status if row.status in models.STATUSES else 'unknown',
@@ -74,6 +82,7 @@ def index(request):
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
     from plogical.httpProc import httpProc
+    # The sealed text is read only for a server that waits for approval, to show its number.
     rows = models.Node.objects.defer('sealed').order_by('label', 'link_id')
     return httpProc(request, 'multiServer/nodes.html',
                     {'nodes': [summary(row) for row in rows], 'licensed': entitlement.allowed()}).render()
@@ -90,8 +99,18 @@ def control(request):
         return HttpResponseNotAllowed(['POST'])
     action = request.POST.get('action', '')
     link_id = request.POST.get('link_id', '')
-    if not links._is_link_id(link_id) or action not in ('refresh', 'pause', 'resume', 'revoke', 'forget'):
+    if not links._is_link_id(link_id) or action not in ('refresh', 'confirm', 'pause', 'resume', 'revoke',
+                                                         'forget'):
         raise Http404()
+    if action == 'confirm':
+        # Asks the server; it answers only when its administrator has approved the link there.
+        result = links.confirm(link_id, admin.userName)
+        if result.ok:
+            messages.success(request, 'That server approved the link. It is connected.')
+        else:
+            messages.error(request, 'Not connected yet. Approve the link on that server with the number shown '
+                           'here, then check again. ' + result.error)
+        return redirect('multiServerNodes')
     if action == 'refresh':
         result = links.hello(link_id, admin.userName)
         if result.ok:
@@ -133,3 +152,59 @@ def control(request):
     else:
         messages.error(request, 'Action unavailable. Check the current node status and licence.')
     return redirect('multiServerNodes')
+
+
+PAIRED = ('Paired. Now, on that server, open Multi-Server > Controllers and approve this controller with the '
+          'number shown below. Then press "Check approval" here.')
+
+
+@never_cache
+@csrf_protect
+@sensitive_post_parameters('password', 'code', 'pairing_code')
+def add(request):
+    """Add a server from its pairing code, in two steps.
+
+    The first shows what the code says and connects to nothing. The second,
+    with the password and a fresh verification code, pairs. The pairing code
+    goes from the first form to the second in the page itself and is kept
+    nowhere on this server.
+    """
+    from multiServer import pairing, stepup
+    admin = administrator(request)
+    if not admin:
+        raise Http404()
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    step = request.POST.get('step', '')
+    if step not in ('read', 'connect'):
+        raise Http404()
+    code = ''.join(request.POST.get('pairing_code', '').split())
+    label = request.POST.get('label', '').strip()
+    try:
+        links.check_label(label)
+        target = pairing.read_code(code)
+    except (links.InvalidLabel, pairing.PairingError) as error:
+        messages.error(request, str(error))  # a fixed text of links.py, pairing.py or transport.py
+        return redirect('multiServerNodes')
+    if step == 'read':
+        from plogical.httpProc import httpProc
+        return httpProc(request, 'multiServer/add.html', {
+            'pairing_code': code, 'label': label, 'host': target.host, 'port': target.port,
+            'identity': _groups(target.node_id), 'certificate': _groups(target.tls_pin)}).render()
+    reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
+    if reason:
+        audit.record('pairing', outcome='refused', reason=reason, actor=admin.userName)
+        messages.error(request, stepup.message(reason))
+        return redirect('multiServerNodes')
+    try:
+        pairing.start(code, label, admin.userName)
+    except pairing.PairingError as error:
+        messages.error(request, str(error))
+        return redirect('multiServerNodes')
+    messages.success(request, PAIRED)
+    return redirect('multiServerNodes')
+
+
+def _groups(fingerprint):
+    """A fingerprint in groups of four, as it is easier to compare by eye."""
+    return ' '.join(fingerprint[start:start + 4] for start in range(0, len(fingerprint), 4))

@@ -127,6 +127,8 @@ _DECISIONS = {
               % MAX_WRONG_NUMBERS,
 }
 
+NOT_AN_ADDRESS = "The controller's address must be one IPv4 or IPv6 address."
+
 Target = collections.namedtuple('Target', 'host port node_id tls_pin')
 Paired = collections.namedtuple('Paired', 'link_id node_id host port confirmation')
 Pending = collections.namedtuple('Pending', 'link_id controller_ip admin_id created_at expires_at')
@@ -372,7 +374,7 @@ def issue_code(admin_id, controller_ip, host=None, port=None):
     actor = administrator.userName
     source = addresses.entry(controller_ip)
     if source is None:
-        _refuse('pairing_code', 'format', "The controller's address must be one IPv4 or IPv6 address.", actor=actor)
+        _refuse('pairing_code', 'format', NOT_AN_ADDRESS, actor=actor)
     try:
         identity = keys.identity_key()
         node_id = crypto.node_id(crypto.public_key(identity))
@@ -541,19 +543,25 @@ def _unusable(code, now):
     return None
 
 
-def pending():
-    """The links waiting for a decision on this managed server. Their numbers are not part of it."""
+def pending(close=True):
+    """The links waiting for a decision on this managed server. Their numbers are not part of it.
+
+    The requests that nobody approved in time are closed on the way, unless
+    `close` is False: then nothing is written and they are only left out, as
+    for a page that is merely looked at.
+    """
     if switch.active_role() != keys.NODE:
         raise PairingError('role', 'This server is not a managed server.')
     from multiServer.models import PENDING, REVOKED, Link
     now = _now()
     waiting = Link.objects.filter(status=PENDING)
-    for link_id in list(waiting.filter(expires_at__lte=now).values_list('link_id', flat=True)):
+    for link_id in list(waiting.filter(expires_at__lte=now).values_list('link_id', flat=True)) if close else ():
         # Nobody approved it in time. One statement, so a link approved at this very moment is left alone.
         if waiting.filter(link_id=link_id, expires_at__lte=now).update(status=REVOKED, updated_at=now) == 1:
             audit.record('link_expire', link_id=link_id)
     return [Pending(link.link_id, link.allowed_ips, link.admin_id, link.created_at, link.expires_at)
-            for link in waiting.filter(generation=keys.generation()).order_by('created_at', 'link_id')]
+            for link in waiting.filter(generation=keys.generation(), expires_at__gt=now)
+            .order_by('created_at', 'link_id')]
 
 
 def approve(link_id, admin_id, number):

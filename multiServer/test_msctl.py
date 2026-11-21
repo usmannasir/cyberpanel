@@ -169,7 +169,7 @@ class CompatibilityTests(unittest.TestCase):
 
     @unittest.skipUnless(sys.version_info >= (3, 8), 'ast cannot check an older grammar before Python 3.8')
     def test_sources_parse_as_python_3_6(self):
-        for name in ('msctl.py', 'controllers.py', 'test_msctl.py'):
+        for name in ('msctl.py', 'controllers.py', 'role.py', 'nodes.py', 'test_msctl.py', 'test_pages.py'):
             ast.parse((self.DIRECTORY / name).read_text(), feature_version=(3, 6))
 
     def test_the_program_takes_nothing_from_the_environment_or_standard_input_and_runs_no_shell(self):

@@ -1,7 +1,9 @@
 """Multi-Server Manager pages and calls.
 
-Every view is wrapped by serves(), so with the feature off each address under
-/multiserver/ answers exactly like an address that does not exist. Nothing but
+Every view but one is wrapped by serves(), so with the feature off each address
+under /multiserver/ answers exactly like an address that does not exist. The
+one is the role page, where a full administrator switches the feature on; to
+anybody else it does not exist either. Nothing but
 Django and the role switch is imported when this module loads: it is part of the
 panel's URL table and must never be the reason the panel cannot start.
 """
@@ -92,11 +94,13 @@ def nodes_navigation(request):
     if managed:
         return {'ms_server': True, 'ms_managed': managed, 'ms_current': request.get_host(),
                 'ms_create': name in landings.CREATE_PAGES}
+    # Where the sidebar's Multi-Server entry leads. The base template shows it to full administrators.
+    context = {'ms_menu': '/multiserver/role'}
     if switch.active_role() != keys.CONTROLLER:
-        return {}
+        return context
     from multiServer.nodes import administrator
     admin = administrator(request)
-    context = {'showManagedNodes': admin is not None}
+    context['showManagedNodes'] = admin is not None
     if not admin:
         return context
     from multiServer import entitlement, nodes, sso
@@ -126,6 +130,30 @@ def nodes_page(request, role):
 def node_control(request, role):
     from multiServer.nodes import control
     return control(request)
+
+
+@serves(keys.CONTROLLER)
+def node_add(request, role):
+    from multiServer.nodes import add
+    return add(request)
+
+
+@serves(keys.NODE)
+def controllers_page(request, role):
+    from multiServer.controllers import index
+    return index(request)
+
+
+@serves(keys.NODE)
+def controller_control(request, role):
+    from multiServer.controllers import control
+    return control(request)
+
+
+def role_page(request):
+    """Not behind the switch: this is where a server is given its role. See role.py for who may."""
+    from multiServer.role import page
+    return page(request)
 
 
 @serves(keys.CONTROLLER)

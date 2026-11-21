@@ -1,0 +1,70 @@
+{% extends "baseTemplate/index.html" %}
+{% block title %}Controllers – CyberPanel{% endblock %}
+{% block content %}
+<div class="container-fluid" ng-non-bindable>
+  <h1>Controllers</h1>
+  <p>A controller that you approve here can do on this server everything a full administrator can do. Approve only a controller you run yourself.</p>
+  {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
+
+  <h2>Allow a controller</h2>
+  <p>Enter the IP address your controller connects from. You get a pairing code to paste on the controller (Nodes, Add a server). The code works once, for ten minutes, and only from that address.</p>
+  <form method="post" action="{% url 'multiServerControllerControl' %}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="allow">
+    <label>IP address of the controller <input type="text" name="controller_ip" maxlength="45" autocomplete="off" required></label>
+    <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
+    <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+    <button class="btn btn-primary" type="submit">Get a pairing code</button>
+  </form>
+
+  <h2>Waiting for your approval</h2>
+  {% if waiting %}
+  <p>The controller shows an eight-digit number for its request. Read it on the controller's Nodes page and type it here. After {{ wrong_numbers }} wrong numbers the request is closed.</p>
+  <div class="table-responsive"><table class="table table-striped">
+    <thead><tr><th scope="col">Controller address</th><th scope="col">Request</th><th scope="col">Code made by</th><th scope="col">Asked</th><th scope="col">Open until</th><th scope="col">Decide</th></tr></thead>
+    <tbody>{% for asking in waiting %}<tr>
+      <th scope="row">{{ asking.addresses|default:"—" }}</th><td>{{ asking.short }}</td><td>{{ asking.by|default:"—" }}</td>
+      <td>{{ asking.at|date:"Y-m-d H:i T"|default:"—" }}</td><td>{{ asking.until|date:"Y-m-d H:i T"|default:"—" }}</td>
+      <td>
+        <form method="post" action="{% url 'multiServerControllerControl' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="approve"><input type="hidden" name="link_id" value="{{ asking.id }}">
+          <label>Number shown on the controller <input type="text" name="number" inputmode="numeric" pattern="[0-9]{4} ?[0-9]{4}" maxlength="9" autocomplete="off" required></label>
+          <button class="btn btn-primary" type="submit">Approve</button>
+        </form>
+        <form method="post" action="{% url 'multiServerControllerControl' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="reject"><input type="hidden" name="link_id" value="{{ asking.id }}">
+          <button class="btn btn-default" type="submit">Reject</button>
+        </form>
+      </td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p>No controller is waiting.</p>{% endif %}
+
+  <h2>Links</h2>
+  {% if links %}
+  <div class="table-responsive"><table class="table table-striped">
+    <thead><tr><th scope="col">Controller address</th><th scope="col">Link</th><th scope="col">Status</th><th scope="col">Approved</th><th scope="col">Valid until</th><th scope="col">Code made by</th><th scope="col">Actions</th></tr></thead>
+    <tbody>{% for link in links %}<tr>
+      <th scope="row">{{ link.addresses|default:"—" }}</th><td>{{ link.short|default:"—" }}</td><td>{{ link.state }}</td>
+      <td>{{ link.since|date:"Y-m-d H:i T"|default:"—" }}</td><td>{{ link.until|date:"Y-m-d H:i T"|default:"—" }}</td>
+      <td>{{ link.by|default:"—" }}</td>
+      <td>{% if link.can_end %}<details>
+        <summary>End this link</summary>
+        <form method="post" action="{% url 'multiServerControllerControl' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="end"><input type="hidden" name="link_id" value="{{ link.id }}">
+          <p>The controller at {{ link.addresses|default:"this address" }} can no longer manage this server, and people it signed in here are signed out. This cannot be undone: to connect it again, pair the two servers again.</p>
+          <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
+          <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+          <label><input type="checkbox" name="confirm" value="end" required> End the link {{ link.short }}</label>
+          <button class="btn btn-danger" type="submit">End this link</button>
+        </form>
+      </details>{% else %}—{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p>No controller manages this server.</p>{% endif %}
+  <p><a href="{% url 'multiServerRole' %}">Role of this server</a></p>
+</div>
+{% endblock %}
