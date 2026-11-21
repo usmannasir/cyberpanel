@@ -489,11 +489,15 @@ class SwitchTests(DjangoDatabase):
                  'ALTER TABLE ms_links ADD UNIQUE KEY ms_links_pairing (pairing_key)')):
             self.database.run(damage)
             try:
-                with patch.object(keys, 'role', return_value='node'), patch.object(schema, '_READY', False):
+                with patch.object(keys, 'role', return_value='node'), patch.object(schema, '_READY', False), \
+                        patch.object(schema, '_RECHECK_AT', 0), \
+                        patch.object(schema.time, 'monotonic', return_value=500.0) as clock:
                     self.assertIs(False, schema.ready())
                     self.assertEqual('off', switch.active_role())
                     self.database.run(repair)
                     repair = None
+                    self.assertEqual('off', switch.active_role(), 'a failed check is remembered for a while')
+                    clock.return_value += schema.RECHECK_SECONDS
                     self.assertEqual('node', switch.active_role(), 'repaired tables are noticed without a restart')
             finally:
                 if repair:

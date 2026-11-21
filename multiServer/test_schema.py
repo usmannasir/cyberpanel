@@ -231,28 +231,48 @@ class ReadyTests(unittest.TestCase):
         django.db.connection = MagicMock()
         django.db.connection.cursor.return_value.__enter__.return_value = self.database
         self.connection = django.db.connection
+        self.clock = MagicMock(return_value=1000.0)
         for patcher in (patch.dict(sys.modules, {'django': django, 'django.db': django.db}),
-                        patch.object(schema, '_READY', False)):
+                        patch.object(schema, '_READY', False), patch.object(schema, '_RECHECK_AT', 0),
+                        patch.object(schema.time, 'monotonic', self.clock)):
             patcher.start()
             self.addCleanup(patcher.stop)
 
     def test_true_for_usable_tables_and_then_not_asked_again(self):
         self.assertIs(True, schema.ready())
+        self.clock.return_value += 86400
         self.assertIs(True, schema.ready())
         self.assertEqual(1, self.connection.cursor.call_count)
 
-    def test_false_is_never_remembered(self):
-        del self.database.indexes[('ms_nonces', 'ms_nonces_link_nonce')]
+    def test_false_is_remembered_for_thirty_seconds_and_no_longer(self):
+        index = self.database.indexes.pop(('ms_nonces', 'ms_nonces_link_nonce'))
         self.assertIs(False, schema.ready())
+        for _ in range(50):
+            self.assertIs(False, schema.ready())
+        self.assertEqual(1, self.connection.cursor.call_count, 'a failed check is not repeated for every request')
+        self.database.indexes[('ms_nonces', 'ms_nonces_link_nonce')] = index
+        self.clock.return_value += schema.RECHECK_SECONDS - 0.5
         self.assertIs(False, schema.ready())
+        self.assertEqual(1, self.connection.cursor.call_count)
+        self.clock.return_value += 0.5
+        self.assertIs(True, schema.ready(), 'tables repaired or created meanwhile are noticed without a restart')
         self.assertEqual(2, self.connection.cursor.call_count)
-        self.database.indexes[('ms_nonces', 'ms_nonces_link_nonce')] = (True, [('link_id', None), ('nonce', None)])
-        self.assertIs(True, schema.ready())
+        self.assertEqual(30, schema.RECHECK_SECONDS)
+
+    def test_tables_that_stay_unusable_are_looked_at_once_in_each_period(self):
+        del self.database.indexes[('ms_nonces', 'ms_nonces_link_nonce')]
+        for second in range(95):
+            self.assertIs(False, schema.ready())
+            self.clock.return_value += 1
+        self.assertEqual(4, self.connection.cursor.call_count)
 
     def test_never_raises_and_creates_nothing(self):
         self.connection.cursor.side_effect = RuntimeError('database is down')
         self.assertIs(False, schema.ready())
+        self.assertIs(False, schema.ready())
+        self.assertEqual(1, self.connection.cursor.call_count, 'a database that is down is not asked again at once')
         self.connection.cursor.side_effect = None
+        self.clock.return_value += schema.RECHECK_SECONDS
         self.assertIs(True, schema.ready())
         self.assertFalse([statement for statement in self.database.executed if not statement.startswith('SELECT')])
 
