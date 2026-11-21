@@ -17,7 +17,10 @@ from multiServer import addresses, audit, keys, landings, links, models, switch,
 ISSUE = '/multiserver/gateway/ticket'
 CLEAR = '/multiserver/gateway/end-sessions'
 TTL = 30
-SESSION_TTL = 300
+# How long a session lasts that a controller opened here, from its sign-in and whatever is done in it.
+# Pausing or revoking the link, or ending it on this server, closes such sessions at once; this is the
+# limit for the one case in which the controller cannot tell this server (it cannot reach it).
+SESSION_TTL = 30 * 60
 HEX = re.compile('[0-9a-f]{64}')
 PROOF = re.compile('[0-9a-f]{128}')
 
