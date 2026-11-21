@@ -12,6 +12,7 @@ from unittest.mock import Mock, mock_open, patch
 def load():
     tree = ast.parse(Path(__file__).with_name('upgrade.py').read_text())
     helper = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'validate_ols_configuration')
+    notice = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'ols_site_error_notice')
     klass = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Upgrade')
     method = next(n for n in klass.body if isinstance(n, ast.FunctionDef) and n.name == 'upgrade')
     method.decorator_list = []
@@ -20,7 +21,7 @@ def load():
     ns['load_ols_diagnostic_helper'] = lambda name: SimpleNamespace(
         validate=lambda binary: subprocess.run([binary, '-t']), recovery_hint=lambda *args: '',
         stock_recovery_hint=lambda *args: '', OLSService=Mock())
-    exec(compile(ast.fix_missing_locations(ast.Module(body=[helper,method],type_ignores=[])), 'upgrade.py','exec'),ns)
+    exec(compile(ast.fix_missing_locations(ast.Module(body=[helper,notice,method],type_ignores=[])), 'upgrade.py','exec'),ns)
     return ns
 
 

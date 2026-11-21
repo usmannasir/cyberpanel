@@ -231,6 +231,34 @@ OLS_Pinned_Helper() {
     printf '%s  %s\n' "$pin" "$target" | sha256sum --check --status
 }
 
+# An error that OpenLiteSpeed confines to one website (a PHP version that is no
+# longer installed, a syntax error in that website's own file) was there before
+# the upgrade and leaves the server running. Prints the errors that are not of
+# that kind; plogical/olsStockClassifier.py holds the same rule for the upgrader.
+OLS_Blocking_Errors() {
+  local line
+  local site='\[config:server:vhosts:vhost:[^]:[:space:]]+'
+  local file='\[PlainConf\] \[virtualHostConfig:\] .* in (file )?/[^[:space:]:]+:[0-9]+[[:space:]]*$'
+  local missing='Path for vhost config is invalid: /[^[:space:]]+[[:space:]]*$'
+  while IFS= read -r line; do
+    if [[ "$line" == *'[FATAL]'* || "$line" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+      printf '%s\n' "$line"
+    elif [[ "$line" == *'[ERROR]'* ]] && ! [[ "$line" =~ $site || "$line" =~ $file || "$line" =~ $missing ]]; then
+      printf '%s\n' "$line"
+    fi
+  done <<< "$1"
+}
+
+# Whether a native configuration test (status, output) must stop the upgrade.
+# OpenLiteSpeed ends with 1 after warnings and with 2 after any error, a
+# website's included: status 2 is accepted only with a website error behind it.
+OLS_Validation_Refused() {
+  [[ -n "$(OLS_Blocking_Errors "$2")" ]] && return 0
+  [[ "$1" -le 1 ]] && return 1
+  [[ "$1" -eq 2 && "$2" == *'[ERROR]'* ]] && return 1
+  return 0
+}
+
 OLS_Custom_Config_Test() (
   local work pin blob
   pin=1ffa5803288bba5296d1b57ac1264670ca260bc5e6e2b3f436105cd689b85d9d
@@ -288,8 +316,8 @@ if hint:
 # the core. Status 0: repairable; anything else: the reason is on stdout.
 OLS_Split_State() (
   local core="$1" status="$2" output="$3" work
-  local pin=850341c7be13b1d4c211732ffc077063e59a4540918990e66622c32c05c59cbc
-  local blob=b6ef8c234ddb27e50af850f688dfef2e35204040
+  local pin=a6be2dd8d431bcda6edc10bc01582eab8c456ab3c9f972f1a8aab45269fe85cf
+  local blob=fd537e414451ce0a23a71ccdbeee7342d4b81169
   work=$(mktemp -d) || exit 78
   trap 'rm -rf -- "$work"' EXIT
   if ! OLS_Pinned_Helper "$work/olsParserRecovery.py" olsParserRecovery.py \
@@ -364,7 +392,7 @@ Protect_Custom_OLS_From_Packages() {
   # hold and exclude only verified RPM owners during this CyberPanel upgrade.
   local distro_id family core module validation validation_status held package package_status query_status
   local custom_core=0 legacy_core=0 core_digest module_digest
-  local split_core=0 split_reason split_status policy_vendor_core=0
+  local split_core=0 split_reason split_status policy_vendor_core=0 blocking
   OLS_RPM_EXCLUDES=()
   OLS_SPLIT_HOLDS=()
   local packages=(openlitespeed)
@@ -421,6 +449,18 @@ Protect_Custom_OLS_From_Packages() {
       echo 'ERROR: The installed OLS core cannot enforce the stock recovery policy; no package changes attempted.'
       return 1
     fi
+    # The upgrader makes this same check after the package and Python work.
+    # A configuration it will refuse is refused here, before anything changes.
+    validation=$(LSWS_HOME="${core%/bin/*}/" timeout 30 "$core" -t 2>&1)
+    validation_status=$?
+    if OLS_Validation_Refused "$validation_status" "$validation"; then
+      blocking=$(OLS_Blocking_Errors "$validation")
+      echo 'ERROR: OpenLiteSpeed configuration failed validation; no package changes attempted. Correct the errors below and run the upgrade again.'
+      blocking=${blocking:-$validation}
+      printf '%s\n' "${blocking: ${#blocking} > 2000 ? -2000 : 0}"
+      OLS_Recovery_Hint "$core" "$validation_status" "$validation"
+      return 1
+    fi
     return 0
   fi
   if [[ "$custom_core" == 0 ]]; then
@@ -438,9 +478,11 @@ Protect_Custom_OLS_From_Packages() {
       fi
       echo 'A vendor OpenLiteSpeed core is installed beside the CyberPanel module. This upgrade restores the CyberPanel OpenLiteSpeed bundle.'
       split_core=1
-    elif [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]]; then
+    elif OLS_Validation_Refused "$validation_status" "$validation"; then
       echo 'ERROR: Stock OLS with an existing CyberPanel module failed validation; no package changes attempted. Preserve logs and recover the verified paired bundle before retrying; do not restart OLS or remove security configuration to bypass this check.'
-      printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
+      blocking=$(OLS_Blocking_Errors "$validation")
+      blocking=${blocking:-$validation}
+      printf '%s\n' "${blocking: ${#blocking} > 2000 ? -2000 : 0}"
       OLS_Recovery_Hint "$core" "$validation_status" "$validation"
       return 1
     elif [[ "$policy_vendor_core" == 1 ]]; then
@@ -457,10 +499,11 @@ Protect_Custom_OLS_From_Packages() {
     fi
     validation=$(OLS_Custom_Config_Test "$core" 2>&1)
     validation_status=$?
-    if [[ "$validation_status" -gt 1 ]] || [[ "$validation" == *'[ERROR]'* || "$validation" == *'[FATAL]'* ]] ||
-       [[ "$validation" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
+    if OLS_Validation_Refused "$validation_status" "$validation"; then
       echo 'ERROR: Custom OLS configuration failed validation; no package changes attempted.'
-      printf '%s\n' "${validation: ${#validation} > 2000 ? -2000 : 0}"
+      blocking=$(OLS_Blocking_Errors "$validation")
+      blocking=${blocking:-$validation}
+      printf '%s\n' "${blocking: ${#blocking} > 2000 ? -2000 : 0}"
       OLS_Recovery_Hint "$core" "$validation_status" "$validation"
       return 1
     fi
