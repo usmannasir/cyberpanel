@@ -875,12 +875,7 @@ class Upgrade:
 
         if do_exit:
 
-            ### remove log file path incase its there
-
-            if Upgrade.SoftUpgrade:
-                time.sleep(10)
-                if os.path.exists(Upgrade.LogPathNew):
-                    os.remove(Upgrade.LogPathNew)
+            # The log is kept: after a failure it is what the upgrade page shows.
 
             if Upgrade.FromCloud == 0:
                 os._exit(1)
@@ -5558,8 +5553,30 @@ pm.max_spare_servers = 3
         raise RuntimeError('No usable LSAPI PHP executable is available for the panel')
 
     @staticmethod
+    def startPanelUpgradeLog():
+        """Begin the log the upgrade page shows.
+
+        Lines of an earlier run would be shown as if they belonged to this
+        one. The log can hold details of this server, so only the panel's own
+        account may read it.
+        """
+        try:
+            descriptor = os.open(Upgrade.LogPathNew,
+                                 os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+            try:
+                panel_user = pwd.getpwnam('cyberpanel')
+                os.fchown(descriptor, panel_user.pw_uid, panel_user.pw_gid)
+                os.fchmod(descriptor, 0o600)
+            finally:
+                os.close(descriptor)
+        except (OSError, KeyError):
+            pass
+
+    @staticmethod
     def upgrade(branch):
         requireCSFMigration()
+        if branch.find('SoftUpgrade') > -1:
+            Upgrade.startPanelUpgradeLog()
         has_ols = os.path.exists('/usr/local/lsws/bin/openlitespeed')
         if has_ols:
             with ols_upgrade_lock():
@@ -6094,14 +6111,9 @@ pm.max_spare_servers = 3
             )
 
 
+        # The log stays for the upgrade page to show its end; a run started
+        # from the panel begins with a fresh one (startPanelUpgradeLog).
         Upgrade.stdOut("Upgrade Completed.")
-
-        ### remove log file path incase its there
-
-        if Upgrade.SoftUpgrade:
-            time.sleep(30)
-            if os.path.exists(Upgrade.LogPathNew):
-                os.remove(Upgrade.LogPathNew)
 
     @staticmethod
     def installQuota():

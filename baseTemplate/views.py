@@ -261,7 +261,7 @@ def getLoadAverage(request):
 def _latest_release_metadata():
     """Optional remote display data must not prevent upgrade status resumption."""
     import re
-    result = {'latestVersion': None, 'latestBuild': None, 'latestcomit': None,
+    result = {'latestVersion': None, 'latestBuild': None, 'latestcomit': None, 'latestTree': None,
               'releaseMetadataUnavailable': False}
     try:
         response = requests.get('https://cyberpanel.net/version.txt', timeout=(3, 5))
@@ -287,6 +287,12 @@ def _latest_release_metadata():
         if not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}', commit):
             raise ValueError('Invalid release commit')
         result['latestcomit'] = commit
+        try:
+            tree = commits[0]['commit']['tree']['sha']
+        except (KeyError, TypeError):
+            tree = None
+        if isinstance(tree, str) and re.fullmatch(r'[0-9a-f]{40}', tree):
+            result['latestTree'] = tree
     except (requests.RequestException, ValueError, TypeError):
         result['releaseMetadataUnavailable'] = True
     return result
@@ -301,10 +307,28 @@ def versionManagment(request):
         currentRelease = None
     currentCommit = ProcessUtilities.outputExecutioner(
         'git -C /usr/local/CyberCP/ rev-parse HEAD').rstrip("\n")
+    # The stable branch carries the same files as the release branch under
+    # another commit. Compare the files, so a server on either is up to date.
+    outdated = bool(latest['latestcomit'] and currentCommit != latest['latestcomit'])
+    if outdated and latest['latestTree']:
+        currentTree = ProcessUtilities.outputExecutioner(
+            'git -C /usr/local/CyberCP/ rev-parse HEAD^{tree}').rstrip("\n")
+        outdated = currentTree != latest['latestTree']
+    # Offer the newest release first; choosing nothing must not reinstall the current one.
+    latestRelease = None
+    if latest['latestVersion'] and latest['latestBuild']:
+        latestRelease = 'v%s.%s' % (latest['latestVersion'], latest['latestBuild'])
+    from plogical.softUpgrade import refuse_older_release
+    try:
+        installed = tuple(int(part) for part in str(VERSION).split('.')) + (int(BUILD),)
+        refuse_older_release(latestRelease, installed)
+    except (ValueError, TypeError, AttributeError):
+        latestRelease = None
     finalData = {'build': str(BUILD), 'currentVersion': VERSION,
                  'Currentcomt': currentCommit, 'currentRelease': currentRelease,
-                 'Notecheck': bool(latest['latestcomit'] and
-                                   currentCommit != latest['latestcomit']),
+                 'latestRelease': latestRelease if latestRelease != currentRelease else None,
+                 'defaultRelease': latestRelease or currentRelease or 'stable',
+                 'Notecheck': outdated,
                  'resumeUpgrade': bool(request.session.get('softUpgradeRun'))}
     finalData.update(latest)
     proc = httpProc(request, 'baseTemplate/versionManagment.html',
@@ -317,12 +341,23 @@ def upgrade(request):
         admin = request.session['userID']
         currentACL = ACLManager.loadedACL(admin)
 
-        data = json.loads(request.body)
-
         if currentACL['admin'] == 1:
             pass
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
+
+        import time
+        from plogical.softUpgrade import installed_order, refuse_older_release, status_path
+        try:
+            branch = json.loads(request.body)['branchSelect']
+            if not isinstance(branch, str):
+                raise TypeError
+        except (ValueError, KeyError, TypeError):
+            return HttpResponse(json.dumps({'upgrade': 0, 'error_message': 'Select a CyberPanel release.'}))
+        try:
+            refuse_older_release(branch, installed_order())
+        except ValueError as error:
+            return HttpResponse(json.dumps({'upgrade': 0, 'error_message': str(error)}))
 
         if os.path.lexists('/etc/csf'):
             from cyberpanel_firewall_migration import CSF_UPGRADE_MESSAGE
@@ -330,14 +365,29 @@ def upgrade(request):
                 'upgrade': 0, 'error_message': CSF_UPGRADE_MESSAGE,
             }))
 
+        # A second tab or a second click joins the upgrade this session already
+        # started. A new run would be refused by the lock and its failure would
+        # replace the running one on the page.
+        running = request.session.get('softUpgradeRun')
+        if running:
+            try:
+                status_path(running)
+                command = '/usr/local/CyberPanel/bin/python -I /usr/local/CyberCP/plogical/softUpgrade.py --status ' + running
+                result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+                state = json.loads(result[1])['state'] if result and result[0] else 'unknown'
+            except (ValueError, KeyError, TypeError, IndexError):
+                state = 'invalid'
+            recent = time.time() - request.session.get('softUpgradeStarted', 0) <= 120
+            if state in ('starting', 'running', 'unknown') or (state == 'missing' and recent):
+                return HttpResponse(json.dumps({'upgrade': 1, 'resumed': 1}))
+
         from plogical.applicationInstaller import ApplicationInstaller
 
-        import time
         import uuid
         job = uuid.uuid4().hex
         request.session['softUpgradeRun'] = job
         request.session['softUpgradeStarted'] = time.time()
-        extraArgs = {'branchSelect': data["branchSelect"], 'upgradeRun': job}
+        extraArgs = {'branchSelect': branch, 'upgradeRun': job}
         background = ApplicationInstaller('UpgradeCP', extraArgs)
         background.start()
 
@@ -361,6 +411,9 @@ def upgradeStatus(request):
             return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
         try:
+            if request.method != 'POST':
+                return HttpResponse(json.dumps({'upgradeStatus': 0,
+                                    'error_message': 'Use the Version Management page.'}), status=405)
             if request.method == 'POST':
                 job = request.session.get('softUpgradeRun')
                 if job:
@@ -377,9 +430,6 @@ def upgradeStatus(request):
                             status = {'state': 'failed', 'message': 'The upgrade launcher has no status record. Check the panel service log before retrying.'}
                         else:
                             status = {'state': 'starting'}
-                    if status['state'] == 'failed':
-                        return HttpResponse(json.dumps({'finished': 1, 'upgradeStatus': 0,
-                                            'error_message': status['message']}))
                     # Read the existing log directly; importing the upgrade program
                     # in a polling request can invoke its settings recovery path.
                     try:
@@ -390,6 +440,13 @@ def upgradeStatus(request):
                             log = upgrade_log.read(64 * 1024).decode('utf-8', errors='replace')
                     except OSError:
                         log = ''
+                    if status['state'] in ('failed', 'complete'):
+                        # Reported once: a later visit must not show this run as the current one.
+                        request.session.pop('softUpgradeRun', None)
+                        request.session.pop('softUpgradeStarted', None)
+                    if status['state'] == 'failed':
+                        return HttpResponse(json.dumps({'finished': 1, 'upgradeStatus': 0,
+                                            'error_message': status['message'], 'upgradeLog': log}))
                     return HttpResponse(json.dumps({'finished': int(status['state'] == 'complete'),
                                         'upgradeStatus': 1, 'upgradeLog': log, 'error_message': 'None'}))
                 path = '/home/cyberpanel/upgrade_logs'
@@ -428,9 +485,11 @@ def upgradeStatus(request):
 
 def upgradeVersion(request):
     try:
+        if ACLManager.loadedACL(request.session['userID'])['admin'] != 1:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
         vers = version.objects.get(pk=1)
-        getVersion = requests.get('https://cyberpanel.net/version.txt')
+        getVersion = requests.get('https://cyberpanel.net/version.txt', timeout=(3, 5))
         latest = getVersion.json()
         vers.currentVersion = latest['version']
         vers.build = latest['build']

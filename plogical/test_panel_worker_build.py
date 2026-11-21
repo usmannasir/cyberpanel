@@ -209,7 +209,8 @@ class UpgraderTests(unittest.TestCase):
 
     def test_helper_runs_on_the_oldest_supported_python(self):
         import ast
-        ast.parse((ROOT / 'plogical' / 'panelWorkerBuild.py').read_text(), feature_version=(3, 6))
+        options = {'feature_version': (3, 6)} if sys.version_info >= (3, 8) else {}
+        ast.parse((ROOT / 'plogical' / 'panelWorkerBuild.py').read_text(), **options)
 
 
 if __name__ == '__main__':

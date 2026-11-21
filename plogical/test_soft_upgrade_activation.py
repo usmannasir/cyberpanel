@@ -26,6 +26,10 @@ class ActivationTests(unittest.TestCase):
         patcher = patch.object(app, 'STATUS_ROOT', self.root / 'status')
         patcher.start()
         self.addCleanup(patcher.stop)
+        # Whatever is installed on the machine running these tests is not their subject.
+        patcher = patch.object(app, 'INSTALLATION', self.root / 'installation')
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.job = 'a' * 32
 
     def test_launcher_returns_after_live_worker_ack_without_waiting_for_upgrade(self):

@@ -5,6 +5,7 @@ import json
 import os
 import re
 import hashlib
+import shutil
 import http.client
 import socket
 import ssl
@@ -32,6 +33,7 @@ HELPERS = (
 
 
 STATUS_ROOT = Path('/run/cyberpanel-soft-upgrades')
+INSTALLATION = Path('/usr/local/CyberCP')
 
 
 def status_path(job):
@@ -85,6 +87,32 @@ def validate_branch(branch):
     return branch
 
 
+def installed_order(installation=None):
+    """The installed release as (major, minor, ..., build); None when it cannot be read."""
+    try:
+        text = ((installation or INSTALLATION) / 'cyberpanel_version.py').read_text()
+        version = re.search(r"^VERSION = '([0-9]{1,4}(?:\.[0-9]{1,4}){1,3})'$", text, re.M).group(1)
+        build = re.search(r'^BUILD = ([0-9]{1,5})$', text, re.M).group(1)
+    except (OSError, AttributeError):
+        return None
+    return tuple(int(part) for part in version.split('.')) + (int(build),)
+
+
+def refuse_older_release(branch, installed):
+    """The upgrade page must not go back to an older release.
+
+    Old upgraders know nothing of what newer ones set up, and those before
+    3.0.7 remove the running installation before fetching their own.
+    """
+    validate_branch(branch)
+    if branch == 'stable' or installed is None:
+        return
+    release = tuple(int(part) for part in re.match(r'v([0-9]+(?:\.[0-9]+)+)', branch).group(1).split('.'))
+    if release < installed:
+        raise ValueError('That release is older than the installed one. '
+                         'Choose the installed release or a newer one.')
+
+
 def resolve_release(branch):
     validate_branch(branch)
     ref = 'refs/heads/' + branch
@@ -124,6 +152,25 @@ def stage_release(stage, revision):
                 fetch('CPScripts/watchdog.sh')
 
 
+def readable_failure(text):
+    """The upgrader's last words for the upgrade page.
+
+    A Python traceback is reduced to its final line, which names the error, and
+    an endless command line is cut in the middle so both of its ends stay.
+    """
+    marker = 'Traceback (most recent call last):'
+    text = text.strip()
+    if marker in text:
+        before, _, trace = text.rpartition(marker)
+        final = [line.strip() for line in trace.splitlines() if line.strip()]
+        text = ' '.join(part for part in (before.strip()[-600:], final[-1] if final else '') if part)
+    else:
+        text = text[-2000:]
+    if len(text) > 900:
+        text = text[:500] + ' ... ' + text[-300:]
+    return text
+
+
 def run(branch, lock_fd=None):
     revision = resolve_release(branch)
     with tempfile.TemporaryDirectory(prefix='cyberpanel-soft-upgrade-') as directory:
@@ -137,8 +184,8 @@ def run(branch, lock_fd=None):
                                      'SoftUpgrade,' + branch], cwd=stage, stderr=errors,
                                     pass_fds=inherited)
             if result.returncode:
-                errors.seek(max(0, errors.tell() - 2000))
-                diagnostic = errors.read().decode('utf-8', errors='replace').strip()
+                errors.seek(max(0, errors.tell() - 16384))
+                diagnostic = readable_failure(errors.read().decode('utf-8', errors='replace'))
                 raise RuntimeError('Upgrade exited with code %s. %s' % (result.returncode, diagnostic))
         return 0
 
@@ -377,6 +424,11 @@ def launch_panel_job(branch, job, timeout=20):
     status_path(job)
     if admission_path(job).exists():
         raise RuntimeError('This upgrade run was already admitted.')
+    try:
+        refuse_older_release(branch, installed_order())
+    except ValueError as error:
+        record_status(job, 'failed', str(error))
+        return 1
     record_status(job, 'starting')
     caller = os.getpid()
     try:
@@ -411,6 +463,82 @@ def launch_panel_job(branch, job, timeout=20):
         return 1
 
 
+def kept_installations(parent=None):
+    """Names of the .cyberpanel-previous-* directories beside the installation."""
+    return {directory.name for directory in (parent or INSTALLATION.parent).glob('.cyberpanel-previous-*')}
+
+
+def replaced_installation(known, parent=None):
+    """The installation the current upgrade set aside, if it got that far.
+
+    The upgrader keeps the tree it replaces in a new .cyberpanel-previous-*
+    directory beside the installation. `known` names the directories that were
+    there before this upgrade began; a tree of an earlier upgrade is never taken.
+    """
+    found = None
+    for directory in (parent or INSTALLATION.parent).glob('.cyberpanel-previous-*'):
+        try:
+            info = directory.lstat()
+            tree = directory / 'CyberCP'
+            if (directory.name in known or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid()
+                    or tree.is_symlink() or not tree.is_dir()):
+                continue
+        except OSError:
+            continue
+        if found is not None:
+            raise RuntimeError('More than one replaced installation was found.')
+        found = tree
+    return found
+
+
+def restore_replaced_installation(known, installation=None):
+    """Put back the installation a failed upgrade replaced. True when it was put back.
+
+    The failed tree is kept beside it for inspection; the one of an earlier
+    failure is removed first so they cannot pile up.
+    """
+    installation = installation or INSTALLATION
+    previous = replaced_installation(known, installation.parent)
+    if previous is None:
+        return False
+    for old in installation.parent.glob('.cyberpanel-failed-*'):
+        if not old.is_symlink() and old.is_dir():
+            shutil.rmtree(str(old), ignore_errors=True)
+    failed = Path(tempfile.mkdtemp(prefix='.cyberpanel-failed-', dir=str(installation.parent))) / 'CyberCP'
+    os.rename(str(installation), str(failed))
+    try:
+        os.rename(str(previous), str(installation))
+    except OSError:
+        os.rename(str(failed), str(installation))
+        raise
+    try:
+        previous.parent.rmdir()
+    except OSError:
+        pass
+    return True
+
+
+def recover_from_failure(known, lock_fd, error):
+    """After a failed upgrade, return to the replaced installation. Gives the message to report.
+
+    A failure before the new source went live changed nothing here and the
+    panel is left alone. After that point the server would otherwise keep new
+    files under old running code, or a panel that does not start.
+    """
+    message = str(error)
+    try:
+        if not restore_replaced_installation(known):
+            return message
+    except Exception as failure:
+        return '%s The previous version could not be put back: %s' % (message, failure)
+    try:
+        activate_panel_runtime(lock_fd)
+    except Exception as failure:
+        return ('%s The previous version was put back, but the panel did not restart cleanly: %s'
+                % (message, failure))
+    return message + ' The previous version was put back and the panel restarted.'
+
+
 def run_panel_job(branch, job, require_admission=False):
     STATUS_ROOT.mkdir(exist_ok=True, mode=0o755)
     try:
@@ -422,8 +550,12 @@ def run_panel_job(branch, job, require_admission=False):
             if require_admission:
                 await_worker_admission(job)
             record_status(job, 'running')
-            run(branch, lock_fd=lock.fileno())
-            activation = activate_panel_runtime(lock.fileno())
+            known = kept_installations()
+            try:
+                run(branch, lock_fd=lock.fileno())
+                activation = activate_panel_runtime(lock.fileno())
+            except Exception as error:
+                raise RuntimeError(recover_from_failure(known, lock.fileno(), error))
             record_status(job, 'complete', activation=activation)
             return 0
     except Exception as error:
