@@ -4061,6 +4061,18 @@ passdb {
             Upgrade.stdOut('pdnsSchemaMigrations error: ' + str(msg), 0)
 
     @staticmethod
+    def multiServerMigrations():
+        """Create the Multi-Server Manager tables. The upgrade never depends on the outcome."""
+        try:
+            from plogical.schemaMigration import ensure_multiserver_tables
+            return ensure_multiserver_tables(lambda: Upgrade.setupConnection('cyberpanel'),
+                                             lambda message: Upgrade.stdOut(message, 0))
+        except Exception as error:
+            Upgrade.stdOut('WARNING: The Multi-Server Manager tables were not created: %s. The upgrade '
+                           'continues without them and the feature stays off on this server.' % error, 0)
+            return False
+
+    @staticmethod
     def IncBackupMigrations():
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
@@ -4409,12 +4421,19 @@ passdb {
                 os.chdir('/usr/local')
                 with activate_source(installation, staged) as previous:
                     os.chdir(installation)
-                    # The launcher can be a standalone upgrader running against an older panel.
-                    # Load schema, settings and identity code together from the selected checkout.
-                    if os.path.isdir(os.path.join(installation, 'multiServer')):
-                        subprocess.check_call(['/usr/local/CyberPanel/bin/python', 'manage.py', 'shell', '-c',
-                                               'from plogical.schemaMigration import provision_multiserver; provision_multiserver()'],
-                                              cwd=installation)
+                    # The launcher can be a standalone upgrader running against an older panel,
+                    # so the identity code is run from the selected checkout. Only the key
+                    # directory is prepared here. It needs no database, and the upgrade does
+                    # not depend on it: without it the feature stays off. The tables are
+                    # created with the other schema work, once the database has answered.
+                    multiserver_identity = os.path.join(installation, 'install', 'multiserver_identity.py')
+                    if os.path.isfile(multiserver_identity):
+                        try:
+                            subprocess.check_call([sys.executable, multiserver_identity], cwd=installation)
+                        except Exception as error:
+                            Upgrade.stdOut('WARNING: The Multi-Server Manager key directory was not prepared: %s. '
+                                           'The upgrade continues without it and the feature stays off on '
+                                           'this server.' % error, 0)
                     Upgrade.staticContent()
                 Upgrade.stdOut('Previous installation retained at: ' + previous)
 
@@ -5801,6 +5820,7 @@ pm.max_spare_servers = 3
         Upgrade.dockerMigrations()
         Upgrade.CLMigrations()
         Upgrade.IncBackupMigrations()
+        Upgrade.multiServerMigrations()
         Upgrade.installRestic()
 
         ##
