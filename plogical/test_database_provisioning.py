@@ -150,6 +150,7 @@ class SQLCreationStageTests(unittest.TestCase):
     def test_sql_account_grant_and_loopback_failure_keep_connection_closed_and_fail(self):
         for fails in ('CREATE DATABASE', 'CREATE USER', 'GRANT ALL'):
             connection, cursor = mock.Mock(), mock.Mock()
+            cursor.fetchall.return_value = []
             def execute(query, args=None):
                 if query.startswith(fails):
                     raise RuntimeError('fixture failure')
@@ -163,6 +164,7 @@ class SQLCreationStageTests(unittest.TestCase):
 
     def test_loopback_failure_is_required_for_tracked_creation(self):
         connection, cursor = mock.Mock(), mock.Mock()
+        cursor.fetchall.return_value = []
         def execute(query, args=None):
             if query.startswith('GRANT') and args[1] == '127.0.0.1':
                 raise RuntimeError('fixture loopback grant failure')
