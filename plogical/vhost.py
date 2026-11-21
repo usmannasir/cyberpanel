@@ -785,17 +785,33 @@ class vhost:
         return 0
 
     @staticmethod
+    def phpRestartMarker(action, virtualHostUser, markerPath):
+        """Create ('touch') or remove ('rm') a website's PHP restart marker as the website's own user.
+
+        The marker lives in the website's home. That directory belongs to the
+        website's user, who can put a link there, so this process never opens
+        or removes the path itself.
+        """
+        program = {'touch': 'touch', 'rm': 'rm -f'}[action]
+        command = 'sudo -u %s %s -- %s' % (shlex.quote(virtualHostUser), program, shlex.quote(markerPath))
+        return ProcessUtilities.normalExecutioner(command)
+
+    @staticmethod
     def changePHP(vhFile, phpVersion):
 
         from pathlib import Path
         domain = vhFile.split('/')[6]
         print(domain)
+        # A child domain is served from its master's home (its vhRoot); the
+        # child has no directory of its own under /home.
         try:
             website = Websites.objects.get(domain=domain)
             externalApp = website.externalApp
+            homeDomain = website.domain
         except:
             child = ChildDomains.objects.get(domain=domain)
             externalApp = child.master.externalApp
+            homeDomain = child.master.domain
         #HomePath = website.externalApp
         virtualHostUser = externalApp
 
@@ -810,7 +826,7 @@ class vhost:
             print(0, message)
             return [0, '[%s [changePHP]' % message]
 
-        phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
+        phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (homeDomain)
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 if ApacheVhost.changePHP(phpVersion, vhFile) == 0:
@@ -836,13 +852,11 @@ class vhost:
 
                     writeDataToFile.close()
 
-                    command = 'sudo -u %s touch %s' % (virtualHostUser, phpDetachUpdatePath)
-                    ProcessUtilities.normalExecutioner(command)
+                    vhost.phpRestartMarker('touch', virtualHostUser, phpDetachUpdatePath)
 
                     installUtilities.installUtilities.reStartLiteSpeed()
                     try:
-                        command = 'sudo -u %s rm -f %s' % (virtualHostUser, phpDetachUpdatePath)
-                        ProcessUtilities.normalExecutioner(command)
+                        vhost.phpRestartMarker('rm', virtualHostUser, phpDetachUpdatePath)
                     except:
                         pass
                 else:
@@ -885,12 +899,11 @@ class vhost:
 
                     writeDataToFile.close()
 
-                    writeToFile = open(phpDetachUpdatePath, 'w')
-                    writeToFile.close()
+                    vhost.phpRestartMarker('touch', virtualHostUser, phpDetachUpdatePath)
 
                     installUtilities.installUtilities.reStartLiteSpeed()
                     try:
-                        os.remove(phpDetachUpdatePath)
+                        vhost.phpRestartMarker('rm', virtualHostUser, phpDetachUpdatePath)
                     except:
                         pass
                 else:
