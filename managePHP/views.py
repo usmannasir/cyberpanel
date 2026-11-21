@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect
 from loginSystem.views import loadLoginPage
 from .models import PHP, installedPackages, ApachePHP, installedPackagesApache
 from django.http import HttpResponse
+from django.views.decorators.http import require_POST
 import json
 from plogical.phpUtilities import phpUtilities
 import os
@@ -1392,6 +1393,7 @@ def getExtensionsInformation(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@require_POST
 def submitExtensionRequest(request):
     try:
         userID = request.session['userID']
@@ -1431,6 +1433,7 @@ def submitExtensionRequest(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@require_POST
 def getRequestStatus(request):
     try:
         userID = request.session['userID']
@@ -1556,6 +1559,7 @@ def getRequestStatus(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+@require_POST
 def getRequestStatusApache(request):
     try:
         userID = request.session['userID']
@@ -1783,6 +1787,7 @@ def getCurrentPHPConfig(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@require_POST
 def savePHPConfigBasic(request):
     try:
         userID = request.session['userID']
@@ -1901,6 +1906,7 @@ def getCurrentAdvancedPHPConfig(request):
         return redirect(loadLoginPage)
 
 
+@require_POST
 def savePHPConfigAdvance(request):
     try:
         userID = request.session['userID']
@@ -1951,6 +1957,7 @@ def savePHPConfigAdvance(request):
 
 ## Restart PHP
 
+@require_POST
 def restartPHP(request):
     try:
         userID = request.session['userID']
