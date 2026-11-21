@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 
-from multiServer import audit, entitlement, links, models, views
+from multiServer import audit, entitlement, links, models, stepup, views
 
 
 def administrator(request):
@@ -79,20 +79,6 @@ def index(request):
                     {'nodes': [summary(row) for row in rows], 'licensed': entitlement.allowed()}).render()
 
 
-def _step_up(admin, data):
-    import pyotp
-    from plogical import hashPassword
-    password, code = data.get('password', ''), data.get('code', '')
-    if not password or len(password) > 4096 or not hashPassword.check_password(admin.password, password):
-        return 'password'
-    try:
-        if re.fullmatch('[0-9]{6}', code) and pyotp.TOTP(admin.secretKey).verify(code, valid_window=1):
-            return None
-    except (ValueError, TypeError):
-        pass
-    return 'two_factor'
-
-
 @never_cache
 @csrf_protect
 @sensitive_post_parameters('password', 'code')
@@ -115,10 +101,14 @@ def control(request):
         return redirect('multiServerNodes')
     event = 'node_remove' if action == 'forget' else 'link_' + action
     if action in ('revoke', 'forget'):
-        reason = (_step_up(admin, request.POST) if request.POST.get('confirm') == action else 'not_allowed')
+        if request.POST.get('confirm') != action:
+            audit.record(event, outcome='refused', link_id=link_id, actor=admin.userName, reason='not_allowed')
+            messages.error(request, 'Confirm the action and enter your current password and verification code.')
+            return redirect('multiServerNodes')
+        reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
         if reason:
             audit.record(event, outcome='refused', link_id=link_id, actor=admin.userName, reason=reason)
-            messages.error(request, 'Confirm the action and enter your current password and verification code.')
+            messages.error(request, stepup.message(reason))
             return redirect('multiServerNodes')
     actions = {'pause': links.pause, 'resume': links.resume, 'revoke': links.revoke, 'forget': links.remove}
     try:
