@@ -48,5 +48,6 @@ urlpatterns = [
     path('webmail/', include('webmail.urls')),
     path('roundcube/', include('webmail.roundcube_urls')),
     path('emailDelivery/', include('emailDelivery.urls')),
+    path('multiserver/', include('multiServer.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
 ]
