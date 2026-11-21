@@ -1,10 +1,12 @@
 # CyberPanel v3.0.10 (build 10) — Automatic Updates
 
-_Release candidate prepared 2026-11-21._
+_Released 2026-11-21._
 
 This release adds automatic updates. A server on which an administrator turns
 the feature on installs a new release by itself, and only a release named in a
-file signed by CyberPanel. The changes are listed in CHANGELOG.md.
+file signed by CyberPanel. It also completes the mail server on AlmaLinux,
+Rocky and CloudLinux 8, where a fresh install lacked Dovecot's MySQL driver.
+The changes are listed in CHANGELOG.md.
 
 ## Release gates
 
@@ -17,8 +19,10 @@ file signed by CyberPanel. The changes are listed in CHANGELOG.md.
   at the chosen hour, also when the branch holds a later commit; a file signed
   by another key, an older file and a paused release install nothing; a failed
   installation puts the previous version back and is not repeated.
+- On AlmaLinux 8: a fresh install delivers a message to a new mailbox, and an
+  upgrade of a server installed without the driver installs it.
 - Apply the [OpenLiteSpeed upgrade release gate](../CONTRIBUTING.md#openlitespeed-upgrade-release-gate):
-  this release changes the upgrader.
+  this release changes the installer and the upgrader.
 
 ## Publish checklist
 
