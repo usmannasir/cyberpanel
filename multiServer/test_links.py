@@ -31,6 +31,7 @@ NODE_ID = crypto.node_id(NODE_KEY)
 OTHER_NODE_KEY = crypto.public_key(b'o' * 32)
 PIN = 'd4' * 32
 HOST = '93.184.216.34'
+OF_PAIRING = ('e5' * 32, 'a9' * 32)  # the one-time public key of a pairing code and the node's value for it
 LONGEST_HOST = 'a' * 63 + '.' + 'b' * 63 + '.' + 'c' * 63 + '.' + 'd' * 61
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 
@@ -81,8 +82,9 @@ class Sealing(unittest.TestCase):
 class RecordTests(Sealing):
     def test_a_record_holds_exactly_what_it_was_built_from(self):
         built = record()
-        self.assertEqual((NODE_ID, HOST, 8090, NODE_KEY, PRIVATE, PIN),
+        self.assertEqual((NODE_ID, HOST, 8090, NODE_KEY, PRIVATE, PIN, None),
                          tuple(getattr(built, name) for name in links.Record.__slots__))
+        self.assertEqual(OF_PAIRING, record(pairing=OF_PAIRING).pairing)
         for host in ('node-1.example.com', 'xn--80ak6aa92e.com', '1.1.1.1', '2a01:4f8::1', LONGEST_HOST):
             self.assertEqual(host, record(host=host).host)
         for port in (1, 65535):
@@ -105,6 +107,10 @@ class RecordTests(Sealing):
             dict(host=None), dict(host='127.1'), dict(host='2130706433'), dict(host='0x7f000001'),
             dict(host='010.0.0.1'), dict(host='1.1.1.1 '), dict(host='[2a01:4f8::1]'), dict(host='2A01:4F8::1'),
             dict(host='2a01:4f8:0:0:0:0:0:1'), dict(host='2a01:4f8::1%eth0'),
+            dict(pairing=OF_PAIRING[:1]), dict(pairing=list(OF_PAIRING)), dict(pairing=OF_PAIRING + ('a9' * 32,)),
+            dict(pairing=('E5' * 32, 'a9' * 32)), dict(pairing=('e5' * 32, 'a9' * 31)),
+            dict(pairing=('e5' * 32, 'a9' * 32 + '\n')), dict(pairing=(b'e5' * 32, 'a9' * 32)),
+            dict(pairing=('e5' * 32, None)), dict(pairing=''), dict(pairing=()),
         )
         with mock.patch.object(socket, 'getaddrinfo') as lookup, mock.patch.object(socket, 'socket') as made:
             for change in refused:
@@ -142,17 +148,19 @@ class SealTests(Sealing):
 
     def test_a_sealed_record_opens_in_its_own_row_with_the_same_key(self):
         for host, port in ((HOST, 8090), ('2a01:4f8::1', 1), ('node-1.example.com', 65535), (LONGEST_HOST, 443)):
-            original = record(host=host, port=port)
-            text = links.seal(LINK, original, MASTER)
-            self.assertIs(str, type(text))
-            self.assert_same(original, links.unseal(LINK, text, MASTER))
+            for of_pairing in (None, OF_PAIRING):
+                original = record(host=host, port=port, pairing=of_pairing)
+                text = links.seal(LINK, original, MASTER)
+                self.assertIs(str, type(text))
+                self.assert_same(original, links.unseal(LINK, text, MASTER))
 
     def test_the_longest_record_fits_the_column_with_room_to_spare(self):
         column = dict(dict((table.name, table) for table in schema.TABLES)['ms_nodes'].columns)['sealed']
         self.assertEqual('varchar(2048) NOT NULL', column)
-        longest = links.seal(LINK, record(host=LONGEST_HOST, port=65535), MASTER)
+        longest = links.seal(LINK, record(host=LONGEST_HOST, port=65535, pairing=OF_PAIRING), MASTER)
         self.assertEqual(253, len(LONGEST_HOST))
-        self.assertEqual((844, 844), (len(longest), links.MAX_SEALED))
+        self.assertEqual((1016, 1016), (len(longest), links.MAX_SEALED))
+        self.assertEqual(844, len(links.seal(LINK, record(host=LONGEST_HOST, port=65535), MASTER)))
         with self.assertRaises(links.InvalidRecord):
             record(host='a' + LONGEST_HOST)
         # No host makes it longer: a name of every length a name can have, and the longest address.
@@ -163,10 +171,11 @@ class SealTests(Sealing):
                 name += 'a' * (62 if length - len(name) - 2 == 64 else 63) + '.'
             name += 'a' * (length - len(name) - 2) + '.a'
             self.assertEqual(length, len(name))
-            lengths.append(len(links.seal(LINK, record(host=name, port=65535), MASTER)))
+            lengths.append(len(links.seal(LINK, record(host=name, port=65535, pairing=OF_PAIRING), MASTER)))
         self.assertEqual(sorted(lengths), lengths)
-        self.assertEqual((504, 844), (lengths[0], lengths[-1]))
-        self.assertLess(len(links.seal(LINK, record(host='2a01:4f8:ffff:ffff:ffff:ffff:ffff:ffff'), MASTER)), 844)
+        self.assertEqual((676, 1016), (lengths[0], lengths[-1]))
+        self.assertLess(len(links.seal(LINK, record(host='2a01:4f8:ffff:ffff:ffff:ffff:ffff:ffff',
+                                                    pairing=OF_PAIRING), MASTER)), 1016)
 
     def test_the_sealed_text_shows_nothing_of_the_record_and_is_new_each_time(self):
         original = record(host='node-1.example.com')
@@ -284,7 +293,10 @@ class SealTests(Sealing):
         for change in out_of_pattern:
             with self.subTest(**change):
                 self.refused(links.InvalidRecord, links.unseal, LINK, sealed_as_is(plain(**change)), MASTER)
+        self.assertEqual(OF_PAIRING, links.unseal(LINK, sealed_as_is(plain(*OF_PAIRING)), MASTER).pairing)
         other_shapes = (
+            plain(OF_PAIRING[0]), plain(*OF_PAIRING + ('a9' * 32,)), plain(OF_PAIRING[0], 'A9' * 32),
+            plain(OF_PAIRING[0], 'a9' * 31), plain(*OF_PAIRING) + '\n', plain('', *OF_PAIRING),
             plain() + '\n', '\n' + plain(), plain().replace('\n', '\r\n'), plain('true'), plain(''),
             plain('loopback'), '\n'.join(plain().split('\n')[:-1]), '\n'.join(plain().split('\n')[1:]),
             plain().replace('\n', ' '), plain().upper(), plain() + '\x00', '\ufeff' + plain(), '',

@@ -41,12 +41,15 @@ from multiServer import audit, crypto, entitlement, keys, switch, transport
 
 # The first line of what is sealed; the lines after it are, in this order, the
 # link id of the row, the node id, host, port, node key, private key and
-# certificate pin, keys in hexadecimal. No field can hold a line break.
+# certificate pin, keys in hexadecimal. A record made by pairing has two lines
+# more, the one-time public key of the pairing code and the node's value for
+# the pairing, from which the number shown for a waiting link is worked out
+# (pairing.py). No field can hold a line break.
 RECORD = 'CPMS1-NODE'
-# The longest sealed text there can be: 563 characters of record for a host of
-# 253, padded to 576, in a Fernet token of 57 + 576 bytes, in base64. The
+# The longest sealed text there can be: 693 characters of record for a host of
+# 253, padded to 704, in a Fernet token of 57 + 704 bytes, in base64. The
 # column ms_nodes.sealed takes 2048.
-MAX_SEALED = 844
+MAX_SEALED = 1016
 LOCK_SECONDS = 10  # how long store() waits for another worker that is storing
 
 HELLO_PATH = '/multiserver/gateway/hello'
@@ -92,7 +95,7 @@ _NODE_ID = re.compile(r'[0-9a-f]{64}')
 _MASTER_KEY = re.compile(rb'[A-Za-z0-9_-]{43}=')  # the form keys.master_key() returns
 _SEALED = re.compile(r'[A-Za-z0-9_-]+={0,2}')
 _PLAIN = re.compile(re.escape(RECORD) + r'\n([0-9a-f]{32})\n([0-9a-f]{64})\n([0-9a-z.:-]{1,253})\n([1-9][0-9]{0,4})'
-                    r'\n([0-9a-f]{64})\n([0-9a-f]{64})\n([0-9a-f]{64})')
+                    r'\n([0-9a-f]{64})\n([0-9a-f]{64})\n([0-9a-f]{64})(?:\n([0-9a-f]{64})\n([0-9a-f]{64}))?')
 # A label is shown in the controller's pages: nothing in it can be markup.
 _LABEL = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?')
 _VERSION = re.compile(r'(?:0|[1-9][0-9]{0,2})\.(?:0|[1-9][0-9]{0,2})')
@@ -148,14 +151,18 @@ class Record(object):
 
     Checked when built, by the transport's own rules, and never changed. Only
     transport.RefusedAddress is passed on as it is, because it names the kind
-    of address; every other failure is an InvalidRecord.
+    of address; every other failure is an InvalidRecord. `pairing` is None or
+    (one-time public key, node's value) of the pairing the link was made by.
     """
-    __slots__ = ('node_id', 'host', 'port', 'node_key', 'private_key', 'tls_pin')
+    __slots__ = ('node_id', 'host', 'port', 'node_key', 'private_key', 'tls_pin', 'pairing')
 
-    def __init__(self, node_id, host, port, node_key, private_key, tls_pin):
+    def __init__(self, node_id, host, port, node_key, private_key, tls_pin, pairing=None):
         # Any link id: the row is named only when the record is sealed.
         _described('0' * 32, node_id, host, port, node_key, private_key, tls_pin)
-        for name, value in zip(Record.__slots__, (node_id, host, port, node_key, private_key, tls_pin)):
+        if pairing is not None and not (type(pairing) is tuple and len(pairing) == 2 and all(
+                type(value) is str and _NODE_ID.fullmatch(value) is not None for value in pairing)):
+            raise InvalidRecord('A link record holds exactly what pairing produces.')
+        for name, value in zip(Record.__slots__, (node_id, host, port, node_key, private_key, tls_pin, pairing)):
             object.__setattr__(self, name, value)
 
     def __setattr__(self, name, value):
@@ -179,7 +186,7 @@ def seal(link_id, record, master_key):
         raise InvalidRecord('Only a link record is sealed.')
     _link(link_id, record)  # the link id is checked here, and with it the record once more
     plain = '\n'.join((RECORD, link_id, record.node_id, record.host, str(record.port), record.node_key.hex(),
-                       record.private_key.hex(), record.tls_pin))
+                       record.private_key.hex(), record.tls_pin) + (record.pairing or ()))
     return _fernet(master_key).encrypt(plain.encode('ascii')).decode('ascii')
 
 
@@ -211,7 +218,8 @@ def unseal(link_id, text, master_key):
         raise MovedRecord('The record was sealed for another row.')
     try:
         return Record(fields.group(2), fields.group(3), int(fields.group(4)), bytes.fromhex(fields.group(5)),
-                      bytes.fromhex(fields.group(6)), fields.group(7))
+                      bytes.fromhex(fields.group(6)), fields.group(7),
+                      None if fields.group(8) is None else (fields.group(8), fields.group(9)))
     except transport.RefusedAddress:
         raise InvalidRecord('The sealed record names an address a link may not connect to.') from None
 
@@ -262,8 +270,11 @@ def prepare(label, link_id, node_id, host, port, private_key, tls_pin):
                     master_key)
 
 
-def store(label, link_id, host, port, node_key, private_key, tls_pin, actor=None):
+def store(label, link_id, host, port, node_key, private_key, tls_pin, actor=None, pairing=None):
     """Keep a newly paired server as one row of ms_nodes, PENDING until confirm().
+
+    `pairing` is (one-time public key, node's value) of the pairing, kept in
+    the sealed record so that the number can be shown while the row waits.
 
     Refused with NotController, InvalidLabel, InvalidRecord,
     transport.RefusedAddress (an address a link may not connect to),
@@ -272,7 +283,7 @@ def store(label, link_id, host, port, node_key, private_key, tls_pin, actor=None
     Nothing is stored when it raises.
     """
     try:
-        _store(label, link_id, host, port, node_key, private_key, tls_pin)
+        _store(label, link_id, host, port, node_key, private_key, tls_pin, pairing)
     except Exception as error:
         _audit('pairing', link_id, actor, *_STORE_REFUSALS.get(type(error), ('error', 'internal')))
         raise
@@ -471,7 +482,7 @@ def _not_stored_yet(rows, link_id, node_id, master_key):
             raise DuplicateNode('This server is already connected.')
 
 
-def _store(label, link_id, host, port, node_key, private_key, tls_pin):
+def _store(label, link_id, host, port, node_key, private_key, tls_pin, pairing=None):
     if switch.active_role() != keys.CONTROLLER:
         raise NotController(NOT_CONTROLLER)
     check_label(label)
@@ -480,7 +491,7 @@ def _store(label, link_id, host, port, node_key, private_key, tls_pin):
     except ValueError:
         raise InvalidRecord('A link record holds exactly what pairing produces.') from None
     master_key = keys.master_key()
-    sealed = seal(link_id, Record(node_id, host, port, node_key, private_key, tls_pin), master_key)
+    sealed = seal(link_id, Record(node_id, host, port, node_key, private_key, tls_pin, pairing), master_key)
     from django.db import transaction
     from multiServer import models
     with _one_at_a_time(), transaction.atomic():

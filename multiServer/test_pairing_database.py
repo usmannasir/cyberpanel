@@ -126,7 +126,7 @@ class Attempt(object):
     """One pairing request as a controller makes it, open to being changed before or after it is signed."""
 
     def __init__(self, code, sign_with=None, **changes):
-        endpoint, node_id, seed = pairing._decode(code)
+        endpoint, node_id, seed, _ = pairing._decode(code)
         self.private_key = crypto.generate_private_key()
         self.fields = dict(link_id=os.urandom(16).hex(), pairing_key=crypto.public_key(seed).hex(),
                            controller_key=crypto.public_key(self.private_key).hex(), node_id=node_id,
@@ -258,9 +258,10 @@ class Servers(Base):
         self.nodes.append(node)
         return node
 
-    def store(self, label, link_id, host, port, node_key, private_key, tls_pin, actor):
+    def store(self, label, link_id, host, port, node_key, private_key, tls_pin, actor, of_pairing):
         self.secrets.append(private_key.hex())
         self.stored.append((label, link_id, host, port, node_key, private_key, tls_pin))
+        self.of_pairing = of_pairing
         audit.record('pairing', link_id=link_id, actor=actor)  # as the real one does
 
     def issue(self, controller_ip='127.0.0.1', admin_id=ADMIN, **options):
@@ -319,7 +320,7 @@ class Servers(Base):
 class PairingTests(Servers):
     def test_a_correct_pairing_makes_one_pending_link_and_approval_makes_it_active(self):
         code = self.issue()
-        self.assertEqual(205, len(code))
+        self.assertEqual(262, len(code))
         self.assertEqual(('127.0.0.1', self.node.port, crypto.node_id(self.node_key), pin('node')),
                          tuple(pairing.read_code(code)))
         self.assertEqual(((0, 0),), self.codes())
@@ -341,6 +342,12 @@ class PairingTests(Servers):
         with on_the_node():
             self.assertEqual([pairing.Pending(link_id, '127.0.0.1', ADMIN, NOW, NOW + 600)], pairing.pending())
         self.assertRegex(paired.confirmation, '^[0-9]{8}$')
+        # The number is made of what both keep and of the server's own value, which only its answer told.
+        value = crypto.pair_value(self.identity[0], pairing_key)
+        self.assertEqual((pairing_key, value), self.of_pairing)
+        self.assertEqual(paired.confirmation, pairing.confirmation_number(crypto.pair_confirmation_message(
+            link_id, pairing_key, controller_key, self.node_key.hex(), value)))
+        self.assertNotIn(value, repr(self.links()) + repr(self.database.run('SELECT * FROM ms_pairing_codes')))
         self.clock[0] = NOW + 599
         with on_the_node():
             self.assertIsNone(pairing.approve(link_id, ADMIN, paired.confirmation))
@@ -369,11 +376,17 @@ class PairingTests(Servers):
                                                ('Authorization', 'Basic YWRtaW46cGFzc3dvcmQ=')])
         head, _, body = accepted.partition(b'\r\n\r\n')
         lines = head.decode('ascii').split('\r\n')
-        self.assertEqual(self.node_key.hex().encode(), body)
-        self.assertEqual(['HTTP/1.1 200 OK', 'Content-Type: text/plain', 'Content-Length: 64',
+        value = crypto.pair_value(self.identity[0], attempt.fields['pairing_key'])
+        self.assertEqual('\n'.join((self.node_key.hex(), value, '127.0.0.1')).encode(), body)
+        self.assertEqual(['HTTP/1.1 200 OK', 'Content-Type: text/plain', 'Content-Length: 139',
                           'Cache-Control: no-store'], lines[:2] + lines[3:])
         self.assertRegex(lines[2], '^X-CPMS-Signature: [0-9a-f]{128}$')
-        signed = crypto.pair_response_message(crypto.pair_request_message(**attempt.fields), self.node_key.hex())
+        signed = crypto.pair_response_message(crypto.pair_request_message(**attempt.fields), self.node_key.hex(),
+                                              value, '127.0.0.1')
+        # The value opens the commitment of the code, for the address, certificate and controller it was made for.
+        endpoint = pairing._decode(code)[0]
+        self.assertEqual(pairing._decode(code)[3],
+                         crypto.pair_commitment(value, endpoint.authority, endpoint.tls_pin, '127.0.0.1'))
         self.assertTrue(crypto.verify(self.node_key, bytes.fromhex(lines[2].split(': ')[1]), signed))
         refused = self.send(self.attempt(code))
         self.assertEqual(GENERIC, refused)
@@ -422,8 +435,9 @@ class PairingTests(Servers):
         self.assertEqual((403, b'', [('Content-Type', 'text/plain'), ('Content-Length', '0'),
                                      ('Cache-Control', 'no-store')]),
                          (refused.status_code, refused.content, list(refused.items())))
-        self.assertEqual((200, self.node_key.hex().encode(), ['Content-Type', 'X-CPMS-Signature', 'Content-Length',
-                                                              'Cache-Control']),
+        answer = '\n'.join((self.node_key.hex(), crypto.pair_value(self.identity[0], attempt.fields['pairing_key']),
+                            '127.0.0.1')).encode()
+        self.assertEqual((200, answer, ['Content-Type', 'X-CPMS-Signature', 'Content-Length', 'Cache-Control']),
                          (accepted.status_code, accepted.content, [name for name, value in accepted.items()]))
         for response in (refused, accepted):
             self.assertEqual({}, dict(response.cookies))
@@ -453,7 +467,7 @@ class PairingTests(Servers):
             self.assertEqual(b'reached',
                              through('code=%s&label=Frankfurt' % code, 'application/x-www-form-urlencoded'))
             self.assertEqual([code, code], [seen['code'] for seen in reached[-2:]])
-        self.assertEqual([205, 226, 231], [len(seen['code']) for seen in reached[::2]])
+        self.assertEqual([262, 285, 288], [len(seen['code']) for seen in reached[::2]])
         # The scanner is at work on this address: what it refuses does not arrive.
         for refused in test_pairing.SCANNER_REFUSES:
             self.assertIn(b'not accepted', through(json.dumps({'code': 'CPMS1-PAIR-A' + refused + 'B'})), refused)
@@ -784,7 +798,8 @@ class AttackTests(Servers):
         unknown = crypto.public_key(crypto.generate_private_key()).hex()
         self.refused(self.send(attempt, body=attempt.body(pairing_key=unknown)), 'link')
         seed = crypto.generate_private_key()
-        never_issued = pairing._encode('127.0.0.1', self.node.port, crypto.node_id(self.node_key), pin('node'), seed)
+        never_issued = pairing._encode('127.0.0.1', self.node.port, crypto.node_id(self.node_key), pin('node'), seed,
+                                       'e7' * 32)
         self.secrets += [never_issued, seed.hex()]
         self.not_paired(never_issued)
         self.assertEqual(('pairing', 'refused', 'link', '', '', '127.0.0.1', 403), self.audited()[-2])

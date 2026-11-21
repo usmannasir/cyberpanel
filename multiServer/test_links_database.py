@@ -207,8 +207,9 @@ class StoreTests(Controller):
         self.assertEqual(dict(link_id=LINK, label='Frankfurt 1', status='pending', panel_version='', created_at=NOW,
                               updated_at=NOW, last_seen_at=None, last_error='', last_error_at=None), row)
         self.assertRegex(sealed, r'\AgAAAAA[A-Za-z0-9_-]{400,838}={0,2}\Z')
-        self.assertEqual((crypto.node_id(NODE_KEY), HOST, 8090, NODE_KEY, PRIVATE, PIN),
+        self.assertEqual((crypto.node_id(NODE_KEY), HOST, 8090, NODE_KEY, PRIVATE, PIN, None),
                          self.unsealed(dict(row, sealed=sealed)))
+        self.assertIsNone(pairing.shown_number(models.Node.objects.get(pk=LINK)))
         link = links.link_of(models.Node.objects.get(pk=LINK))
         self.assertIs(transport.Link, type(link))
         self.assertEqual((LINK, crypto.node_id(NODE_KEY), HOST, 8090, HOST + ':8090', NODE_KEY, PRIVATE, PIN, False),
@@ -217,10 +218,31 @@ class StoreTests(Controller):
         self.assertEqual([('pairing', 'ok', '', LINK, '', '', '', None, None, 0)], self.audited())
 
     def test_the_longest_record_is_stored_whole(self):
-        self.store(host=test_links.LONGEST_HOST, port=65535, label='A' * 64)
+        self.store(host=test_links.LONGEST_HOST, port=65535, label='A' * 64, pairing=test_links.OF_PAIRING)
         row = self.row()
-        self.assertEqual((844, 'A' * 64), (len(row['sealed']), row['label']))
+        self.assertEqual((1016, 'A' * 64), (len(row['sealed']), row['label']))
         self.assertEqual(test_links.LONGEST_HOST, links.link_of(models.Node.objects.get(pk=LINK)).host)
+
+    def test_what_a_pairing_leaves_is_kept_sealed_and_gives_the_number_for_as_long_as_the_row_is_there(self):
+        pairing_key, value = test_links.OF_PAIRING
+        self.store(pairing=test_links.OF_PAIRING)
+        row = self.row()
+        self.assertEqual(test_links.OF_PAIRING, self.unsealed(row)[-1])
+        for told in test_links.OF_PAIRING:
+            self.assertNotIn(told, repr(row))
+        number = pairing.confirmation_number(crypto.pair_confirmation_message(
+            LINK, pairing_key, crypto.public_key(PRIVATE).hex(), NODE_KEY.hex(), value))
+        self.assertEqual(number, pairing.shown_number(models.Node.objects.get(pk=LINK)))
+        self.assertRegex(number, '^[0-9]{8}$')
+        # Not for a row whose text was moved, altered or sealed elsewhere, and never an error.
+        self.store(OTHER_LINK, node_key=OTHER_NODE_KEY, pairing=test_links.OF_PAIRING)
+        self.assertNotEqual(number, pairing.shown_number(models.Node.objects.get(pk=OTHER_LINK)))
+        self.alter(OTHER_LINK, sealed=row['sealed'])
+        self.assertIsNone(pairing.shown_number(models.Node.objects.get(pk=OTHER_LINK)))
+        self.master = test_links.OTHER_MASTER
+        self.assertIsNone(pairing.shown_number(models.Node.objects.get(pk=LINK)))
+        self.master = None
+        self.assertIsNone(pairing.shown_number(models.Node.objects.get(pk=LINK)))
 
     def test_a_second_row_for_the_same_node_is_refused(self):
         self.store()
@@ -436,10 +458,18 @@ class PrepareTests(Controller):
             link, pair_key, controller, timestamp, nonce = body.decode('ascii').splitlines()
             request = crypto.pair_request_message(link, pair_key, controller, self.NODE_ID, PIN,
                                                   endpoint.authority, int(timestamp), nonce)
-            signed = crypto.sign(b'n' * 32, crypto.pair_response_message(request, NODE_KEY.hex()))
-            return 200, 'text/plain', NODE_KEY.hex().encode('ascii'), signed
+            value = crypto.pair_value(b'n' * 32, pair_key)
+            signed = crypto.sign(b'n' * 32, crypto.pair_response_message(request, NODE_KEY.hex(), value, CALLER))
+            return 200, 'text/plain', '\n'.join((NODE_KEY.hex(), value, CALLER)).encode('ascii'), signed
 
-        codes = [pairing._encode(HOST, 8090, self.NODE_ID, PIN, crypto.generate_private_key()) for _ in range(2)]
+        def code():
+            seed = crypto.generate_private_key()
+            value = crypto.pair_value(b'n' * 32, crypto.public_key(seed).hex())
+            return pairing._encode(HOST, 8090, self.NODE_ID, PIN, seed,
+                                   crypto.pair_commitment(value, '%s:8090' % HOST, PIN, CALLER))
+
+        CALLER = '203.0.113.9'  # the controller address the node allows
+        codes = [code() for _ in range(2)]
         with mock.patch.object(transport, 'exchange', side_effect=reply) as exchange:
             outcomes = self.workers([lambda code=code: pairing.start(code, 'Frankfurt', 'admin') for code in codes])
         self.assertEqual(1, exchange.call_count)

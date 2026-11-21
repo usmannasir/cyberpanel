@@ -2,9 +2,10 @@
 
 1. On the managed server a full administrator names the controller's address
    and is given a pairing code (issue_code). The code holds where this server
-   is, the fingerprints of its identity key and of its certificate, and a
-   random seed, which is a one-time Ed25519 private key. The server keeps the
-   public half only, with the controller's address and the time the code ends.
+   is, the fingerprints of its identity key and of its certificate, a random
+   seed, which is a one-time Ed25519 private key, and a commitment (below).
+   The server keeps the public half of the seed only, with the controller's
+   address and the time the code ends.
 2. On the controller an administrator pastes the code and is shown what it
    says (read_code). start() first makes sure that it will be able to keep the
    link (links.prepare), because the next step uses the code up. It then
@@ -12,19 +13,39 @@
    signed with the one-time key: a new link id and the controller's new public
    key for the link.
 3. The managed server (node_receive) checks the request, uses the code up and
-   records the link as pending, in one step, and answers with its identity key
-   and its signature over the request.
-4. The controller checks that key against the fingerprint in the code and
-   keeps the link. It now shows eight digits (confirmation_number), which both
-   servers can work out from what they keep of the pairing. The managed server
-   never shows them: its administrator reads them on the controller and types
-   them into approve(), which makes the link active only for the right number.
-   Until then the link can do nothing, and MAX_WRONG_NUMBERS wrong numbers
-   close it. So nobody approves a link without having seen the controller it
-   belongs to.
+   records the link as pending, in one step, and answers with its identity
+   key, its value for this pairing and the address it will take the
+   controller's requests from, all three under its signature over the request.
+4. The controller checks that key against the fingerprint in the code, and the
+   value against the commitment in the code, and keeps the link. It now shows
+   eight digits (confirmation_number), which both servers can work out from
+   what they keep of the pairing. The managed server never shows them: its
+   administrator reads them on the controller and types them into approve(),
+   which makes the link active only for the right number. Until then the link
+   can do nothing, and MAX_WRONG_NUMBERS wrong numbers close it. So nobody
+   approves a link without having seen the controller it belongs to.
 5. The controller learns of the approval by asking: links.confirm() sends the
    first signed request on the link, and the answer the managed server now
    gives makes the controller's record active too. There is no other message.
+
+The number is taken from the link id, the one-time public key, the controller's
+key, the identity key and the managed server's value for the pairing
+(crypto.pair_value). Nobody can look for a second pairing that shows the same
+number, because each side has to fix its part before it learns the other's:
+
+  * whoever asks for a link chooses the link id and the controller's key, and
+    learns the value only from the answer to the one request that uses the
+    code up;
+  * whoever answers is held to the value by the commitment in the code
+    (crypto.pair_commitment), which was made before the request existed. The
+    commitment also covers the address and port the code names, the
+    certificate, and the controller address the code was made for, so the
+    value opens it only for a controller that used exactly those.
+
+The managed server does not store its value. It works it out again, from its
+identity key and the link's one-time public key, when the number is typed. The
+controller keeps the one-time public key and the value inside the sealed
+record of the link (links.py) for as long as it has to show the number.
 
 The code is 'CPMS1-PAIR-' followed by base32 (A-Z and 2-7, no padding) in
 groups of eight joined by dashes, so it is letters, digits and dashes only:
@@ -34,6 +55,7 @@ groups of eight joined by dashes, so it is letters, digits and dashes only:
     32 bytes  fingerprint of the identity key (the node id)
     32 bytes  fingerprint of the certificate the panel serves
     32 bytes  the seed
+    32 bytes  the commitment
     1 byte    kind of host: 4, 6, or 0 for a name
     4, 16 or more bytes  the host
     4 bytes   check: the start of SHA-256 over 'CPMS1-PAIR-CODE', a line feed and all of the above
@@ -44,9 +66,9 @@ X-CPMS-Signature is the signature by the one-time key over
 crypto.pair_request_message, which the managed server rebuilds from those five
 lines, the Host header, its own node id and its own certificate.
 
-The answer is 200 text/plain with the identity public key as its body and, in
-X-CPMS-Signature, the signature by the identity key over
-crypto.pair_response_message. Every refusal is 403 with no body and no
+The answer is 200 text/plain. Its body is three lines: the identity public key,
+the value, and the controller address the link allows. X-CPMS-Signature is the
+signature by the identity key over crypto.pair_response_message. Every refusal is 403 with no body and no
 signature, whatever the reason; the reason is in the audit trail.
 
 Nothing here writes a code, a seed, a private key or a signature to a log, an
@@ -84,11 +106,11 @@ MAX_CERTIFICATE = 64 * 1024
 PREFIX = 'CPMS1-PAIR-'
 VERSION = 1
 _CHECKED = b'CPMS1-PAIR-CODE\n'
-_FIXED = 100  # bytes of a code before its host
+_FIXED = 132  # bytes of a code before its host
 
 _CODE = re.compile(r'CPMS1-PAIR(?:-[A-Z2-7]{1,8})+')
 _BODY = re.compile(rb'([0-9a-f]{32})\n([0-9a-f]{64})\n([0-9a-f]{64})\n(0|[1-9][0-9]{0,10})\n([0-9a-f]{32})')
-_KEY = re.compile(rb'[0-9a-f]{64}')
+_REPLY = re.compile(rb'([0-9a-f]{64})\n([0-9a-f]{64})\n([0-9a-f:.]{2,45})')
 _LINK = re.compile(r'[0-9a-f]{32}')
 _NUMBER = re.compile(r'[0-9]{8}')
 _ACTOR = re.compile(r'[A-Za-z0-9_.@-]{1,50}')
@@ -131,7 +153,7 @@ def confirmation_number(transcript):
 
 def read_code(text):
     """What a pairing code says, to be shown before anything is connected. The seed is not part of it."""
-    endpoint, node_id, _ = _decode(text)
+    endpoint, node_id, _, _ = _decode(text)
     return Target(endpoint.host, endpoint.port, node_id, endpoint.tls_pin)
 
 
@@ -173,15 +195,15 @@ def _start(code_text, label, actor):
         raise PairingError('format', str(error)) from None
     if not isinstance(actor, str) or _ACTOR.fullmatch(actor) is None:
         raise PairingError('format', 'The administrator cannot be named on a link.')
-    endpoint, node_id, seed = _decode(code_text)
+    endpoint, node_id, seed, commitment = _decode(code_text)
     try:
         with links.pairing_slot(node_id):
-            return _pair_one(endpoint, node_id, seed, label, actor)
+            return _pair_one(endpoint, node_id, seed, commitment, label, actor)
     except links.Busy:
         raise PairingError('internal', 'Another pairing is in progress. Try again.') from None
 
 
-def _pair_one(endpoint, node_id, seed, label, actor):
+def _pair_one(endpoint, node_id, seed, commitment, label, actor):
     private_key = crypto.generate_private_key()
     link_id, nonce, timestamp = os.urandom(16).hex(), os.urandom(16).hex(), _now()
     refusal = None
@@ -208,19 +230,30 @@ def _pair_one(endpoint, node_id, seed, label, actor):
                            'pairing code names. Nothing was sent to it.') from None
     except transport.TransportError as error:
         raise PairingError(_transport_reason(error), str(error)) from None
-    if status != 200 or content_type != 'text/plain' or _KEY.fullmatch(reply) is None:
+    answer = _REPLY.fullmatch(reply) if status == 200 and content_type == 'text/plain' else None
+    if answer is None:
         raise PairingError('format', 'The server did not answer as a managed server does.')
-    node_key = bytes.fromhex(reply.decode('ascii'))
+    node_key, value, allowed = (field.decode('ascii') for field in answer.groups())
+    if addresses.entry(allowed) != allowed:
+        raise PairingError('format', 'The server did not answer as a managed server does.')
+    node_key = bytes.fromhex(node_key)
     if not hmac.compare_digest(crypto.node_id(node_key), node_id):
         raise PairingError('signature', 'The server that answered is not the one this pairing code names.')
     if not crypto.usable_public_key(node_key):
         # A key anybody can sign for: its signature would prove nothing, now or on any later reply.
         raise PairingError('format', 'The server did not answer as a managed server does.')
-    if not crypto.verify(node_key, signature, crypto.pair_response_message(request, node_key.hex())):
+    if not crypto.verify(node_key, signature,
+                         crypto.pair_response_message(request, node_key.hex(), value, allowed)):
         raise PairingError('signature', 'The answer is not signed by the server this pairing code names.')
+    if not hmac.compare_digest(crypto.pair_commitment(value, endpoint.authority, endpoint.tls_pin, allowed),
+                               commitment):
+        # The server is not held to this value by the code: a number made from it would prove nothing.
+        raise PairingError('signature', 'The answer of the server does not match the pairing code. Reject the '
+                           'waiting link on that server and pair again with a new code.', link_id)
     stored = False
     try:
-        links.store(label, link_id, endpoint.host, endpoint.port, node_key, private_key, endpoint.tls_pin, actor)
+        links.store(label, link_id, endpoint.host, endpoint.port, node_key, private_key, endpoint.tls_pin, actor,
+                    (pairing_key, value))
         stored = True
     except Exception:
         pass
@@ -230,8 +263,23 @@ def _pair_one(endpoint, node_id, seed, label, actor):
         unkept.recorded = True  # by links.store
         raise unkept
     number = confirmation_number(crypto.pair_confirmation_message(link_id, pairing_key, controller_key,
-                                                                  node_key.hex()))
+                                                                  node_key.hex(), value))
     return Paired(link_id, node_id, endpoint.host, endpoint.port, number)
+
+
+def shown_number(row):
+    """The number to show for a row of ms_nodes that waits for approval, or None. Never raises.
+
+    Worked out again from the sealed record each time it is shown; it is not
+    kept anywhere as a number.
+    """
+    try:
+        record = links.unseal(row.link_id, row.sealed, keys.master_key())
+        pairing_key, value = record.pairing
+        return confirmation_number(crypto.pair_confirmation_message(
+            row.link_id, pairing_key, crypto.public_key(record.private_key).hex(), record.node_key.hex(), value))
+    except Exception:
+        return None
 
 
 def _unkept(error):
@@ -260,7 +308,7 @@ def _check(payload):
     return hashlib.sha256(_CHECKED + payload).digest()[:4]
 
 
-def _encode(host, port, node_id, tls_pin, seed):
+def _encode(host, port, node_id, tls_pin, seed, commitment):
     """The one pairing code for these values."""
     try:
         address = ipaddress.ip_address(host)
@@ -268,13 +316,13 @@ def _encode(host, port, node_id, tls_pin, seed):
     except ValueError:
         where = b'\x00' + host.encode('ascii')
     payload = (bytes([VERSION]) + port.to_bytes(2, 'big') + bytes.fromhex(node_id) + bytes.fromhex(tls_pin)
-               + seed + where)
+               + seed + bytes.fromhex(commitment) + where)
     text = base64.b32encode(payload + _check(payload)).decode('ascii').rstrip('=')
     return PREFIX + '-'.join(text[start:start + 8] for start in range(0, len(text), 8))
 
 
 def _decode(text):
-    """(endpoint, node id, seed) of a pairing code; PairingError for anything but one whole code."""
+    """(endpoint, node id, seed, commitment) of a pairing code; PairingError for anything but one whole code."""
     refusal = PairingError('format', 'This is not a pairing code, or not all of one.')
     if not isinstance(text, str) or len(text) > MAX_CODE or _CODE.fullmatch(text) is None:
         raise refusal
@@ -286,7 +334,7 @@ def _decode(text):
             raise ValueError
         port = int.from_bytes(payload[1:3], 'big')
         node_id, tls_pin, seed = payload[3:35].hex(), payload[35:67].hex(), payload[67:99]
-        kind, where = payload[99], payload[_FIXED:]
+        commitment, kind, where = payload[99:131].hex(), payload[131], payload[_FIXED:]
         if kind == 4:
             host = str(ipaddress.IPv4Address(where))
         elif kind == 6:
@@ -298,9 +346,9 @@ def _decode(text):
         # One text per code, the one written for these values. It begins with the version and ends in
         # the check, so another version and any changed character are refused here, and so are other
         # groupings, spare bits and second spellings of a host.
-        if not hmac.compare_digest(_encode(host, port, node_id, tls_pin, seed), text):
+        if not hmac.compare_digest(_encode(host, port, node_id, tls_pin, seed, commitment), text):
             raise ValueError
-        return transport.Endpoint(host, port, tls_pin), node_id, seed
+        return transport.Endpoint(host, port, tls_pin), node_id, seed, commitment
     except transport.RefusedAddress as error:
         raise PairingError('not_allowed', str(error)) from None
     except (ValueError, transport.InvalidLink):
@@ -323,7 +371,8 @@ def issue_code(admin_id, controller_ip, host=None, port=None):
     if source is None:
         _refuse('pairing_code', 'format', "The controller's address must be one IPv4 or IPv6 address.", actor=actor)
     try:
-        node_id = crypto.node_id(crypto.public_key(keys.identity_key()))
+        identity = keys.identity_key()
+        node_id = crypto.node_id(crypto.public_key(identity))
         fingerprint = _certificate_fingerprint()
         if host is None:
             from multiServer import entitlement
@@ -344,12 +393,15 @@ def issue_code(admin_id, controller_ip, host=None, port=None):
     from django.db import transaction
     from multiServer.models import PairingCode
     seed, now = crypto.generate_private_key(), _now()
+    pairing_key = crypto.public_key(seed).hex()
+    commitment = crypto.pair_commitment(crypto.pair_value(identity, pairing_key), endpoint.authority,
+                                        endpoint.tls_pin, source)
     with transaction.atomic():
-        PairingCode.objects.create(public_key=crypto.public_key(seed).hex(), controller_ip=source,
+        PairingCode.objects.create(public_key=pairing_key, controller_ip=source,
                                    admin_id=admin_id, created_at=now, expires_at=now + CODE_LIFETIME)
         if audit.record('pairing_code', actor=actor, source_ip=source) is not True:
             raise PairingError('internal', 'The pairing code could not be recorded.')
-    return _encode(endpoint.host, endpoint.port, node_id, endpoint.tls_pin, seed)
+    return _encode(endpoint.host, endpoint.port, node_id, endpoint.tls_pin, seed, commitment)
 
 
 def node_receive(request):
@@ -363,7 +415,7 @@ def node_receive(request):
     # The address in its one spelling (addresses.py), as it is compared and as it is written down.
     source = addresses.peer(request.META.get('REMOTE_ADDR'))
     try:
-        node_key, signature = _accept(request, source)
+        answer, signature = _accept(request, source)
     except Exception as error:
         refusal = error if isinstance(error, PairingError) else PairingError('internal', '')
         fields = dict(source_ip=source) if source is not None else {}
@@ -372,7 +424,7 @@ def node_receive(request):
         audit.record_unverified('pairing', outcome='error' if refusal.reason in _FAULTS else 'refused',
                                 reason=refusal.reason, status=403, **fields)
         return refused()
-    return _answer(200, node_key, signature.hex())
+    return _answer(200, answer, signature.hex())
 
 
 def refused():
@@ -391,7 +443,7 @@ def _answer(status, body, signature):
 
 
 def _accept(request, source):
-    """Check one pairing request, in this order, and make its link; (identity public key, signature)."""
+    """Check one pairing request, in this order, and make its link; (the body of the answer, signature)."""
     if switch.active_role() != keys.NODE:
         raise _no('role')
     (link_id, pairing_key, controller_key, timestamp, nonce), signature, host = _parse(request)
@@ -421,7 +473,8 @@ def _accept(request, source):
         raise _no('signature')
     if abs(now - timestamp) > TIME_WINDOW:
         raise _no('time', link_id)
-    reply = crypto.sign(identity, crypto.pair_response_message(message, node_key.hex()))
+    value = crypto.pair_value(identity, pairing_key)
+    reply = crypto.sign(identity, crypto.pair_response_message(message, node_key.hex(), value, source))
     try:
         # The code is used up and the link is made together or not at all. The update finds the
         # code only while it is unused and not burned, so of any number of requests one gets past
@@ -442,7 +495,7 @@ def _accept(request, source):
         raise _no('replay', link_id) from None
     if consumed != 1:
         raise _no(_unusable(codes.first(), now) or 'internal', link_id)
-    return node_key.hex(), reply
+    return '\n'.join((node_key.hex(), value, source)), reply
 
 
 def _parse(request):
@@ -538,7 +591,7 @@ def _decide(event, link_id, admin_id, number=None):
         if identity is None:
             _refuse(event, 'internal', 'The identity key of this server could not be read.', link_id=link_id,
                     actor=actor)
-        if not _is_its_number(link, crypto.public_key(identity).hex(), number):
+        if not _is_its_number(link, identity, number):
             _wrong_number(waiting, link_id, actor, now)
         approvable = approvable.filter(pairing_key=link.pairing_key, controller_key=link.controller_key)
     with transaction.atomic():
@@ -569,10 +622,11 @@ def _undecided(event, link_id, actor, now):
     _refuse(event, reason, _DECISIONS[reason], link_id=link_id, actor=actor)
 
 
-def _is_its_number(link, node_key, number):
+def _is_its_number(link, identity, number):
     """Whether `number` is the one the controller of this pending link shows; the time taken says nothing."""
-    expected = confirmation_number(crypto.pair_confirmation_message(link.link_id, link.pairing_key,
-                                                                    link.controller_key, node_key))
+    expected = confirmation_number(crypto.pair_confirmation_message(
+        link.link_id, link.pairing_key, link.controller_key, crypto.public_key(identity).hex(),
+        crypto.pair_value(identity, link.pairing_key)))
     return hmac.compare_digest(expected.encode('ascii'), number.encode('ascii'))
 
 
