@@ -314,21 +314,32 @@ def issue_code(admin_id, controller_ip, host=None, port=None):
 def node_receive(request):
     """Answer one POST /multiserver/pair on a managed server.
 
-    The gateway calls this before any session exists, and nothing here reads a
+    The gateway (nodeGateway.py) hands the request over as it arrived, before
+    any session exists, and sends the answer as it is. Nothing here reads a
     cookie, a session or a forwarding header. Whatever is wrong, the caller gets
     the same unsigned answer; only the audit trail has the reason.
     """
-    from django.http import HttpResponse
     # The address in its one spelling (addresses.py), as it is compared and as it is written down.
     source = addresses.peer(request.META.get('REMOTE_ADDR'))
     try:
         node_key, signature = _accept(request, source)
-        response = HttpResponse(node_key, content_type='text/plain')
-        response[transport.HEADERS['signature']] = signature.hex()
     except Exception as error:
         refusal = error if isinstance(error, PairingError) else PairingError('internal', '')
         _record('pairing', refusal.reason, link_id=refusal.link_id, source_ip=source, status=403)
-        response = HttpResponse(status=403, content_type='text/plain')
+        return refused()
+    return _answer(200, node_key, signature.hex())
+
+
+def refused():
+    """The one answer to a pairing request that is not accepted, whatever the reason."""
+    return _answer(403, '', None)
+
+
+def _answer(status, body, signature):
+    from django.http import HttpResponse
+    response = HttpResponse(body, status=status, content_type='text/plain')
+    if signature is not None:
+        response[transport.HEADERS['signature']] = signature
     response['Content-Length'] = str(len(response.content))
     response['Cache-Control'] = 'no-store'
     return response

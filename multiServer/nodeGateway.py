@@ -6,6 +6,11 @@ X-CPMS-. Such a request is the gateway's alone: it is never passed on to the
 panel's sessions, cookies or views, whatever else it carries. It is verified
 and answered here, or it is refused here.
 
+One such request does not come over a link, because it is the one that asks
+for a link: POST /multiserver/pair. It is handed to pairing.node_receive as it
+arrived, before any of the checks below, and that module's answer is sent as
+it is (pairing.py describes the request, its own checks and its one refusal).
+
 Before anything is checked, every header a client can set is taken off the
 request except Host, so that what remains is exactly what the controller signed
 (transport.py lists how each signed field travels). The checks then run in this
@@ -48,7 +53,7 @@ import json
 import re
 import time
 
-from multiServer import addresses, crypto, keys, switch, transport
+from multiServer import addresses, crypto, keys, pairing, switch, transport
 
 WINDOW = 90  # seconds a signed time may differ from this server's clock, either way
 PRUNE_EVERY = 60  # a link's dead nonces are removed when its newest accepted time enters a new minute
@@ -106,6 +111,8 @@ class NodeGateway(object):
     def __call__(self, request):
         if not _addressed(request.META) or switch.active_role() != keys.NODE:
             return self.get_response(request)
+        if request.META.get('REQUEST_METHOD') == 'POST' and request.path_info == pairing.PATH:
+            return _pair(request)
         exchange = _Exchange()
         try:
             try:
@@ -120,6 +127,17 @@ class NodeGateway(object):
         if not exchange.read:
             _drain(request)
         return response
+
+
+def _pair(request):
+    """Hand a pairing request to pairing.node_receive and send its answer as it is."""
+    try:
+        response = pairing.node_receive(request)
+    except Exception as error:  # it says it never raises; nothing raised here may reach the panel's error pages
+        _note(error)
+        response = pairing.refused()
+    _drain(request)
+    return response
 
 
 class _Refused(Exception):

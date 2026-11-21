@@ -24,7 +24,7 @@ import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 from wsgiref import simple_server
 
-from multiServer import addresses, crypto, keys, nodeGateway, schema, switch, testing, transport
+from multiServer import addresses, crypto, keys, nodeGateway, pairing, schema, switch, testing, transport
 from multiServer import test_transport as wire
 
 SKIP = testing.unavailable()
@@ -160,6 +160,102 @@ class InertTests(unittest.TestCase):
                 'assert not loaded, loaded\n')
         with patch.dict(os.environ, {'PYTHONPATH': str(ROOT)}):
             subprocess.check_call([sys.executable, '-c', code], cwd=str(ROOT))
+
+
+class PairingRequest(FakeRequest):
+    """POST /multiserver/pair as a web server hands it over, with a body still on its stream."""
+
+    def __init__(self, method='POST', path=pairing.PATH, **meta):
+        FakeRequest.__init__(self, **dict(dict(REQUEST_METHOD=method, PATH_INFO=path, CONTENT_TYPE='text/plain',
+                                               CONTENT_LENGTH='9', HTTP_X_CPMS_SIGNATURE='ab' * 64), **meta))
+        self.path_info = path
+        self.unread = [b'12345', b'6789']
+
+    def read(self, size):
+        return self.unread.pop(0) if self.unread else b''
+
+
+class PairingAddressTests(unittest.TestCase):
+    """POST /multiserver/pair is pairing's on a managed server, and nowhere else is anything different."""
+
+    def setUp(self):
+        self.role = self.start(patch.object(switch, 'active_role', return_value=keys.NODE))
+        self.answer, self.panels, self.links = object(), object(), object()
+        self.pairing = self.start(patch.object(pairing, 'node_receive', return_value=self.answer))
+        self.serve = self.start(patch.object(nodeGateway, '_serve', return_value=self.links))
+        self.next = MagicMock(return_value=self.panels)
+        self.gateway = nodeGateway.NodeGateway(self.next)
+
+    def start(self, patcher):
+        self.addCleanup(patcher.stop)
+        return patcher.start()
+
+    def test_it_is_handed_to_pairing_as_it_arrived_and_the_answer_is_sent_as_it_is(self):
+        request = PairingRequest()
+        meta = dict(request.META)
+        self.assertIs(self.answer, self.gateway(request))
+        self.pairing.assert_called_once_with(request)
+        # Nothing was taken off it or added to it: pairing reads the request the web server handed over.
+        self.assertEqual(meta, request.META)
+        self.assertFalse(hasattr(request, 'COOKIES'))
+        self.next.assert_not_called()
+        self.serve.assert_not_called()
+        # And what pairing left of the body is taken from the server.
+        self.assertEqual([], request.unread)
+
+    def test_no_other_header_of_a_link_changes_that(self):
+        named = dict((SIGNED_HEADERS[field], value) for field, value in sign()[0].items())
+        for extra in (named, {'HTTP_X_CPMS_ANYTHING_ELSE': 'x'}, {'HTTP_X_CPMS_LINK': LINK, 'HTTP_X_CPMS_NODE': NODE}):
+            self.assertIs(self.answer, self.gateway(PairingRequest(**extra)))
+        self.assertEqual(3, self.pairing.call_count)
+        self.serve.assert_not_called()
+        self.next.assert_not_called()
+
+    def test_only_a_post_to_exactly_that_address_is_pairings(self):
+        for method, path in (('GET', pairing.PATH), ('PUT', pairing.PATH), ('HEAD', pairing.PATH),
+                             ('post', pairing.PATH), ('OPTIONS', pairing.PATH), ('POST', pairing.PATH + '/'),
+                             ('POST', '/multiserver/pairing'), ('POST', '/multiserver/pai'),
+                             ('POST', '/Multiserver/pair'), ('POST', '/multiserver//pair'), ('POST', '/'),
+                             ('POST', nodeGateway.HELLO)):
+            # Any of these is a link's request like every other with such a header, and is checked as one.
+            self.assertIs(self.links, self.gateway(PairingRequest(method, path)), (method, path))
+        self.pairing.assert_not_called()
+        self.next.assert_not_called()
+
+    def test_on_a_server_that_is_not_a_managed_server_it_is_the_panels_as_before(self):
+        for role in (keys.OFF, keys.CONTROLLER, 'anything else', None):
+            self.role.return_value = role
+            request = PairingRequest()
+            meta, attributes = dict(request.META), dict(vars(request))
+            self.assertIs(self.panels, self.gateway(request))
+            self.next.assert_called_once_with(request)
+            self.next.reset_mock()
+            self.assertEqual((meta, attributes, [b'12345', b'6789']), (request.META, vars(request), request.unread))
+        self.pairing.assert_not_called()
+        self.serve.assert_not_called()
+
+    def test_without_a_header_under_the_prefix_it_is_the_panels_and_the_role_is_not_even_read(self):
+        request = PairingRequest()
+        del request.META['HTTP_X_CPMS_SIGNATURE']
+        self.assertIs(self.panels, self.gateway(request))
+        self.role.assert_not_called()
+        self.pairing.assert_not_called()
+
+    def test_a_failure_inside_pairing_gets_pairings_refusal_and_reaches_no_error_page(self):
+        refusal, noted = object(), []
+        self.pairing.side_effect = RuntimeError('failure-secret')
+        request = PairingRequest()
+        with patch.object(pairing, 'refused', return_value=refusal), \
+                patch.object(nodeGateway, '_note', side_effect=noted.append):
+            self.assertIs(refusal, self.gateway(request))
+        self.assertEqual(['failure-secret'], [str(error) for error in noted])
+        self.assertEqual([], request.unread)
+
+    def test_a_body_that_cannot_be_taken_does_not_stop_the_answer(self):
+        request = PairingRequest()
+        request.read = MagicMock(side_effect=RuntimeError('the stream failed'))
+        self.assertIs(self.answer, self.gateway(request))
+        request.read.assert_called_once_with(65536)
 
 
 class TableTests(unittest.TestCase):
@@ -1419,12 +1515,16 @@ def sample():
          {'data': '{"domainName": "example.com"}', 'content_type': 'application/json'}),
         ('nothing there, without a session', False, 'get', '/no-such-address', {}),
         ('the gateway address, without a session', False, 'get', HELLO, {}),
+        ('the pairing address, without a session', False, 'post', pairing.PATH,
+         {'data': 'not a pairing request', 'content_type': 'text/plain'}),
+        ('the pairing address, read', False, 'get', pairing.PATH, {}),
         ('the status, without a session', False, 'get', '/multiserver/status', {}),
         ('an address of the API', False, 'get', '/api/no-such-call', {}),
         ('a HEAD request', False, 'head', '/base/', {}),
         ('the status', True, 'get', '/multiserver/status', {}),
         ('nothing there', True, 'get', '/no-such-address', {}),
         ('the gateway address', True, 'get', HELLO, {}),
+        ('the pairing address', True, 'post', pairing.PATH, {'data': 'x', 'content_type': 'text/plain'}),
         ('a HEAD request, signed in', True, 'head', '/no-such-address', {}),
     )
 
@@ -1509,11 +1609,154 @@ class InertThroughThePanelTests(Panel):
     def test_the_same_requests_with_a_link_header_are_the_gateways_on_a_managed_server(self):
         # The control for the tests above: here the header does change every answer.
         found = self.answers({'HTTP_X_CPMS_LINK': LINK})
-        self.assertEqual({302, 200}, set(answer[0] for answer in found.values()))
+        posted = set(name for name, _, method, address, _ in sample() if (method, address) == ('post', pairing.PATH))
+        self.assertEqual(2, len(posted))
         for name, answer in found.items():
             self.assertFalse(answer[3], name)
             self.assertNotIn(b'role', answer[2])
+            # A POST to the pairing address is pairing's, with pairing's one refusal; the rest are a link's.
+            self.assertIn(answer[0], (403,) if name in posted else (302, 200), name)
         self.assertEqual(len(found), models.AuditEntry.objects.filter(reason='format').count())
+        self.assertEqual(len(posted), models.AuditEntry.objects.filter(event='pairing', status=403).count())
+
+
+@unittest.skipIf(SKIP, SKIP)
+class PairingThroughTheGatewayTests(Panel):
+    """A pairing request through the panel's own chain: answered by pairing, and by nothing behind the gateway."""
+    PIN = 'd4' * 32
+
+    def setUp(self):
+        Panel.setUp(self)
+        self.start(patch.object(pairing, '_now', side_effect=lambda: self.clock.now))
+        self.start(patch.object(pairing, '_certificate_fingerprint', return_value=self.PIN))
+        self.code = pairing.issue_code(self.administrator.pk, '127.0.0.1', host='node.example.com', port=8090)
+        self.one_time = pairing._decode(self.code)[2]
+
+    def asking(self, sign_with=None, **changes):
+        """(link id, body, signature) of a pairing request as the controller holding the code makes it."""
+        fields = dict(link_id=secrets.token_hex(16), pairing_key=crypto.public_key(self.one_time).hex(),
+                      controller_key=crypto.public_key(crypto.generate_private_key()).hex(), node_id=NODE,
+                      tls_fingerprint=self.PIN, host=HOST, timestamp=self.clock.now, nonce=secrets.token_hex(16))
+        fields.update(changes)
+        signature = crypto.sign(sign_with or self.one_time, crypto.pair_request_message(**fields)).hex()
+        body = '\n'.join((fields['link_id'], fields['pairing_key'], fields['controller_key'],
+                          str(fields['timestamp']), fields['nonce'])).encode('ascii')
+        return fields, body, signature
+
+    def post(self, body, signature, path=pairing.PATH, method='POST', **environ):
+        environ.setdefault('HTTP_HOST', HOST)
+        return self.client.generic(method, path, data=body, content_type='text/plain',
+                                   HTTP_X_CPMS_SIGNATURE=signature, **environ)
+
+    def pairing_rows(self):
+        return [(entry.event, entry.outcome, entry.reason, entry.link_id, entry.source_ip, entry.status)
+                for entry in models.AuditEntry.objects.filter(event='pairing').order_by('id')]
+
+    def assert_accepted(self, response, fields):
+        self.assert_gateway_alone(response)
+        self.assertEqual((200, NODE_KEY.hex().encode()), (response.status_code, response.content))
+        self.assertEqual(['Content-Type', 'X-CPMS-Signature', 'Content-Length', 'Cache-Control'],
+                         [name for name, _ in response.items()])
+        signed = crypto.pair_response_message(crypto.pair_request_message(**fields), NODE_KEY.hex())
+        self.assertTrue(crypto.verify(NODE_KEY, bytes.fromhex(response['X-CPMS-Signature']), signed))
+        link = models.Link.objects.get(pk=fields['link_id'])
+        self.assertEqual((models.PENDING, '127.0.0.1', self.administrator.pk, fields['controller_key'], 0),
+                         (link.status, link.allowed_ips, link.admin_id, link.controller_key, link.last_request_at))
+
+    def assert_refused(self, response, reason, link_id=''):
+        self.assert_gateway_alone(response)
+        self.assertEqual((403, b'', [('Content-Type', 'text/plain'), ('Content-Length', '0'),
+                                     ('Cache-Control', 'no-store')]),
+                         (response.status_code, response.content, list(response.items())))
+        self.assertEqual(('pairing', 'refused', reason, link_id, '127.0.0.1', 403), self.pairing_rows()[-1])
+
+    def test_a_pairing_request_is_answered_by_pairing_and_makes_the_pending_link(self):
+        fields, body, signature = self.asking()
+        key = self.sign_in()
+        response = self.post(body, signature, HTTP_COOKIE='%s=%s' % (settings.SESSION_COOKIE_NAME, key),
+                             HTTP_X_FORWARDED_FOR='203.0.113.9', HTTP_AUTHORIZATION='Basic YWRtaW46eA==')
+        self.assert_accepted(response, fields)
+        self.assertEqual([('pairing', 'ok', '', fields['link_id'], '127.0.0.1', 200)], self.pairing_rows())
+        self.assertEqual([], self.log)
+        # The link that was there before is as it was, and nothing was stored as for a request on a link.
+        self.assertEqual((models.ACTIVE, 0), (models.Link.objects.get(pk=LINK).status, models.Nonce.objects.count()))
+
+    def test_a_refused_pairing_request_gets_pairings_one_answer(self):
+        fields, body, signature = self.asking(sign_with=STRANGER)
+        self.assert_refused(self.post(body, signature), 'signature')
+        self.assertNotEqual(self.absent(with_body=True)[2], pairing.refused().serialize())
+        other = self.post(body, signature, REMOTE_ADDR='198.51.100.7')
+        self.assertEqual(403, other.status_code)
+        self.assertEqual(('pairing', 'refused', 'source_ip', '', '198.51.100.7', 403), self.pairing_rows()[-1])
+        self.assertEqual(1, models.Link.objects.count())
+
+    def test_it_is_pairings_before_any_header_of_a_link_is_looked_at(self):
+        # The seven headers of a correctly signed request on the existing link change nothing ...
+        named = dict((SIGNED_HEADERS[field], value) for field, value in self.signed(
+            method='POST', path=pairing.PATH, content_type='text/plain')[0].items() if field != 'signature')
+        fields, body, signature = self.asking()
+        self.assert_accepted(self.post(body, signature, **named), fields)
+        # ... and neither does one the gateway would refuse a link's request for.
+        self.code = pairing.issue_code(self.administrator.pk, '127.0.0.1', host='node.example.com', port=8090)
+        self.one_time = pairing._decode(self.code)[2]
+        fields, body, signature = self.asking()
+        self.assert_accepted(self.post(body, signature, HTTP_X_CPMS_ANYTHING_ELSE='x', HTTP_X_CPMS_LINK='nonsense'),
+                             fields)
+        self.assertEqual(0, models.AuditEntry.objects.filter(event='request').count())
+        self.assertEqual((0, 0), self.state()[:2])
+
+    def test_only_a_post_to_exactly_that_address_is_pairings(self):
+        fields, body, signature = self.asking()
+        for options, with_body in ((dict(method='GET'), True), (dict(method='PUT'), True),
+                                   (dict(path=pairing.PATH + '/'), True), (dict(path='/multiserver/pairs'), True)):
+            before = self.state()
+            response = self.post(body, signature, **options)
+            self.assert_gateway_alone(response)
+            # The gateway's own answer for a request that is not a link's request: the address is not there.
+            self.assertEqual(self.absent(with_body), snapshot(response), options)
+            entry = models.AuditEntry.objects.order_by('-id').first()
+            self.assertEqual(('request', 'refused', 'format'), (entry.event, entry.outcome, entry.reason))
+            self.assertEqual(before[:3], self.state()[:3])
+        self.assertEqual([], self.pairing_rows())
+        self.assert_accepted(self.post(body, signature), fields)
+
+    def test_where_the_role_is_not_node_the_address_is_answered_as_it_is_without_the_gateway(self):
+        fields, body, signature = self.asking()
+        for role in (keys.OFF, keys.CONTROLLER):
+            self.role.return_value = role
+            with_gateway = snapshot(self.post(body, signature))
+            with override_settings(MIDDLEWARE=[name for name in settings.MIDDLEWARE if name != GATEWAY]):
+                without = snapshot(self.post(body, signature))
+            self.assertEqual(without, with_gateway)
+            self.assertIn(b'This request need session.', with_gateway[2])
+        self.assertEqual([], self.pairing_rows())
+        self.assertEqual(1, models.Link.objects.count())
+        self.assertEqual([(0, False)], list(models.PairingCode.objects.values_list('failures', 'consumed')))
+        # The request was not used up by having been sent there: on the managed server it still pairs.
+        self.role.return_value = keys.NODE
+        self.sessions.reset_mock()
+        self.assert_accepted(self.post(body, signature), fields)
+
+    def test_the_request_is_taken_whole_from_the_server_whatever_pairing_answers(self):
+        fields, body, signature = self.asking()
+        for sent, declared, reason in ((body, len(body), None), (body[:-1] + b'x', len(body), 'format'),
+                                       (b'x' * 5000, 5000, 'size'), (b'x' * 300000, 300000, 'size')):
+            stream = io.BytesIO(sent + b'the next request')
+            response = self.post(body, signature, **{'wsgi.input': stream, 'CONTENT_LENGTH': str(declared)})
+            if reason is None:
+                self.assert_accepted(response, fields)
+            else:
+                self.assert_refused(response, reason)
+            self.assertEqual(b'the next request', stream.read(), reason)
+
+    def test_a_failure_inside_pairing_gets_pairings_refusal_and_reaches_no_error_page(self):
+        fields, body, signature = self.asking()
+        with patch.object(pairing, 'node_receive', side_effect=RuntimeError('failure-secret')):
+            response = self.post(body, signature)
+        self.assert_gateway_alone(response)
+        self.assertEqual((403, b''), (response.status_code, response.content))
+        self.assertEqual(['Multi-Server Manager gateway failed: RuntimeError'], self.log)
+        self.assertEqual(1, models.Link.objects.count())
 
 
 class Handler(simple_server.WSGIRequestHandler):
