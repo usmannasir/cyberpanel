@@ -249,25 +249,57 @@ class ModelTests(DjangoDatabase):
 
 
 class AuditTests(DjangoDatabase):
-    def test_retention_deletes_one_batch_per_hour_after_commit_and_keeps_the_180_day_cutoff(self):
+    def old(self, cutoff):
+        return models.AuditEntry.objects.filter(at__lt=cutoff).count()
+
+    def test_retention_deletes_batch_after_batch_after_commit_and_keeps_the_180_day_cutoff(self):
         now = 1900000000
         cutoff = now - 180 * 86400
-        for at in (cutoff - 2, cutoff - 1, cutoff, now):
+        for at in (cutoff - 3, cutoff - 2, cutoff - 1, cutoff, now):
             models.AuditEntry.objects.create(at=at, event='request', outcome='ok')
-        with patch.object(audit, '_next_prune', 0), patch.object(audit, 'PRUNE_BATCH', 1), \
+        with patch.object(audit, '_next_prune', 0), patch.object(audit, 'PRUNE_BATCH', 2), \
                 patch.object(audit.time, 'time', return_value=now), \
                 patch.object(audit.time, 'monotonic', return_value=10) as clock:
             with transaction.atomic():
                 self.assertTrue(audit.record('link_approve'))
-                self.assertTrue(models.AuditEntry.objects.filter(at=cutoff - 2).exists())
-            self.assertFalse(models.AuditEntry.objects.filter(at=cutoff - 2).exists())
+                self.assertEqual(3, self.old(cutoff), 'nothing is deleted inside the audited transaction')
+            self.assertEqual(0, self.old(cutoff), 'a full batch is followed by another until one comes back short')
+            models.AuditEntry.objects.create(at=cutoff - 9, event='request', outcome='ok')
             clock.return_value += 3599
             self.assertTrue(audit.record('link_pause'))
-            self.assertTrue(models.AuditEntry.objects.filter(at=cutoff - 1).exists())
+            self.assertEqual(1, self.old(cutoff))
             clock.return_value += 1
             self.assertTrue(audit.record('link_resume'))
         self.assertEqual([cutoff, now, now, now, now],
                          list(models.AuditEntry.objects.order_by('at').values_list('at', flat=True)))
+
+    def test_one_call_deletes_a_bounded_number_of_batches_and_the_next_comes_within_a_minute(self):
+        now = 1900000000
+        cutoff = now - 180 * 86400
+        for n in range(5):
+            models.AuditEntry.objects.create(at=cutoff - 1 - n, event='request', outcome='ok')
+        with patch.object(audit, '_next_prune', 0), patch.object(audit, 'PRUNE_BATCH', 1), \
+                patch.object(audit, 'PRUNE_ROUNDS', 2), patch.object(audit.time, 'time', return_value=now), \
+                patch.object(audit.time, 'monotonic', return_value=10) as clock:
+            self.assertTrue(audit.record('link_approve'))
+            self.assertEqual(3, self.old(cutoff))
+            clock.return_value += audit.PRUNE_RETRY - 1
+            self.assertTrue(audit.record('link_pause'))
+            self.assertEqual(3, self.old(cutoff))
+            clock.return_value += 1
+            self.assertTrue(audit.record('link_resume'))
+            self.assertEqual(1, self.old(cutoff))
+            clock.return_value += audit.PRUNE_RETRY
+            self.assertTrue(audit.record('link_pause'))
+            self.assertEqual(0, self.old(cutoff))
+            # That call came back short of its bound, so the next one is an hour away again.
+            models.AuditEntry.objects.create(at=cutoff - 9, event='request', outcome='ok')
+            clock.return_value += audit.PRUNE_INTERVAL - 1
+            self.assertTrue(audit.record('link_resume'))
+            self.assertEqual(1, self.old(cutoff))
+            clock.return_value += 1
+            self.assertTrue(audit.record('link_pause'))
+            self.assertEqual(0, self.old(cutoff))
 
     def test_failed_prune_preserves_the_event_and_waits_an_hour_before_retrying(self):
         attempts = []

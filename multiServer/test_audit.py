@@ -87,8 +87,10 @@ class BudgetTests(Recorder):
         def commit(row):
             self.rows.append(row)
             audit._unverified.report()
+            audit._live_code.report()
 
         for patcher in (patch.object(audit, '_unverified', audit._MinuteBudget(audit.UNVERIFIED_PER_MINUTE)),
+                        patch.object(audit, '_live_code', audit._MinuteBudget(audit.LIVE_CODE_PER_MINUTE, 'pairing')),
                         patch.object(audit, '_write', side_effect=commit),
                         patch.object(audit, '_insert', side_effect=self.rows.append)):
             patcher.start()
@@ -136,6 +138,30 @@ class BudgetTests(Recorder):
         self.now.return_value = 70
         self.assertTrue(audit.record_unverified('pairing', outcome='refused', reason='format'))
         self.assertEqual(4, self.rows[-1]['size'])
+
+
+    def test_junk_cannot_use_up_the_allowance_for_a_request_that_names_a_live_pairing_code(self):
+        for _ in range(200):
+            audit.record_unverified('pairing', outcome='refused', reason='link')
+            audit.record_unverified('request', outcome='refused', reason='format')
+        self.assertEqual(30, len(self.rows))
+        for n in range(13):
+            self.assertEqual(n < 10, audit.record_live_code('pairing', outcome='refused', reason='signature',
+                                                            source_ip='203.0.113.9'))
+        self.assertEqual(10, len([row for row in self.rows if row.get('reason') == 'signature']))
+        # Each allowance leaves its own count behind, under its own event.
+        self.now.return_value = 70
+        self.assertTrue(audit.record('link_pause'))
+        self.assertEqual([('request', 370), ('pairing', 3)],
+                         [(row['event'], row['size']) for row in self.rows if row.get('reason') == 'internal'])
+
+    def test_attempts_on_live_codes_cannot_use_up_the_shared_allowance_either(self):
+        for n in range(25):
+            self.assertEqual(n < 10, audit.record_live_code('pairing', outcome='refused', reason='source_ip'))
+        for n in range(33):
+            self.assertEqual(n < 30, audit.record_unverified('request', outcome='refused', reason='link'))
+        self.assertTrue(audit.record('link_pause'), 'an event that needs no allowance is always written')
+        self.assertEqual(41, len(self.rows))
 
 
 class RefusalTests(Recorder):
