@@ -14,9 +14,19 @@ travel in, and a value shaped like one (a long run of hexadecimal digits, a
 numeric code, an oversized word) is refused even in a field that takes text.
 Every secret this feature issues is hexadecimal or longer than MAX_SEGMENT.
 
-For a pre-link overflow summary, event=request, outcome=refused, reason=internal
-and status is NULL. The size column holds the exact number of excess refusals in
-one worker's completed minute. All request metadata is absent.
+Refusals that nothing has verified are written from two allowances a minute for
+each worker, so that nobody without a key can fill the table:
+
+  * record_unverified: every refusal of a request whose signature has not
+    verified, on either public endpoint, whatever link or code it names;
+  * record_live_code: the refusal of a pairing request that names a code this
+    server issued and still honours. Junk cannot name such a code, so junk
+    cannot use up the allowance that records an attempt on a real one.
+
+For an overflow summary, outcome=refused, reason=internal and status is NULL;
+the event is request for the first allowance and pairing for the second. The
+size column holds the exact number of excess refusals in one worker's completed
+minute. All request metadata is absent.
 
 record() never raises: the action being audited decides what a False means.
 """
@@ -57,23 +67,31 @@ _PATH = re.compile(r'/(?:[A-Za-z0-9._~@+-]+/)*(?:[A-Za-z0-9._~@+-]+)?')
 _SECRET = re.compile(r'[0-9A-Fa-f]{16}|[0-9]{6}')
 
 
-# Both public endpoints share one refusal allowance until a real link is found.
+# Both public endpoints share one refusal allowance until a signature has verified.
 UNVERIFIED_PER_MINUTE = 30
+# Far above what the codes themselves permit: a code is burned by its fifth refused attempt.
+LIVE_CODE_PER_MINUTE = 10
 RETENTION_SECONDS = 180 * 86400
 PRUNE_INTERVAL = 3600
 PRUNE_BATCH = 1000
+# One call deletes at most PRUNE_ROUNDS batches, so no request waits long for retention. A call
+# that stops there with more to delete is followed PRUNE_RETRY seconds later, not an hour later:
+# each worker can then remove 20000 rows a minute, where both allowances let it write 42.
+PRUNE_ROUNDS = 20
+PRUNE_RETRY = 60
 
 
 class _MinuteBudget:
-    def __init__(self, limit):
+    def __init__(self, limit, event='request'):
         self.limit = limit
+        self.event = event  # of the row that sums up what a full minute left out
         self.ends_at = 0
         self.count = 0
         self.pending = collections.deque()  # one count per completed window with excess refusals
         self.lock = threading.Lock()
         self.writer = threading.Lock()
 
-    def observe(self, pre_link):
+    def observe(self, charged):
         with self.lock:
             now = time.monotonic()
             if now >= self.ends_at:
@@ -81,7 +99,7 @@ class _MinuteBudget:
                     self.pending.append(self.count - self.limit)
                 self.ends_at = now + 60
                 self.count = 0
-            if pre_link:
+            if charged:
                 self.count += 1
                 return self.count <= self.limit
             return True
@@ -94,9 +112,9 @@ class _MinuteBudget:
                 return
             count = self.pending[0]
         try:
-            # A request/refused/internal row with NULL status: size is the exact number
+            # A refused/internal row with NULL status: size is the exact number
             # suppressed in that minute. No part of a caller's request enters this row.
-            row = entry('request', dict(outcome='refused', reason='internal', size=count))
+            row = entry(self.event, dict(outcome='refused', reason='internal', size=count))
             row['at'] = int(time.time())
             _insert(row)
             with self.lock:
@@ -108,12 +126,24 @@ class _MinuteBudget:
 
 
 _unverified = _MinuteBudget(UNVERIFIED_PER_MINUTE)
+_live_code = _MinuteBudget(LIVE_CODE_PER_MINUTE, 'pairing')
 _prune_lock = threading.Lock()
 _next_prune = 0
 
 
 def record_unverified(event, **fields):
-    return _record((event,), fields, pre_link=True)
+    """As record(), for a refusal before any signature verified: written while the shared allowance lasts."""
+    return _record((event,), fields, _unverified)
+
+
+def record_live_code(event, **fields):
+    """As record(), for the refusal of a pairing request that names a code which is still in force.
+
+    Only for a request whose code was found unexpired, unused and not burned. Such refusals are few
+    (the code itself allows five), and they are the ones an administrator must be able to find, so
+    they do not compete with the refusals anybody can cause.
+    """
+    return _record((event,), fields, _live_code)
 
 
 def record(*event, **fields):
@@ -122,12 +152,14 @@ def record(*event, **fields):
     The event is taken by position only, so that no field name a caller passes,
     not even "event", can make the call itself fail.
     """
-    return _record(event, fields, pre_link=False)
+    return _record(event, fields, None)
 
 
-def _record(event, fields, pre_link):
+def _record(event, fields, charged):
     try:
-        if not _unverified.observe(pre_link):
+        # Every event moves both minutes on, so a summary is due even when its own allowance is idle.
+        within = [budget.observe(budget is charged) for budget in (_unverified, _live_code)]
+        if not all(within):
             return False
         row = entry(event[0], fields) if len(event) == 1 else None
         if row is None:
@@ -168,12 +200,13 @@ def _write(row):
     with transaction.atomic():
         _insert(row)
         transaction.on_commit(_unverified.report)
+        transaction.on_commit(_live_code.report)
         transaction.on_commit(_prune_if_due)
 
 
 def _prune_if_due():
     # Keep the retention query outside the audited operation's transaction.
-    # Bounded indexed deletes also let an old installation catch up gradually.
+    # Bounded indexed deletes, repeated until one removes less than a batch.
     global _next_prune
     try:
         with _prune_lock:
@@ -182,9 +215,14 @@ def _prune_if_due():
                 return
             _next_prune = now + PRUNE_INTERVAL
         from django.db import connection
-        with connection.cursor() as cursor:
-            cursor.execute('DELETE FROM ms_audit WHERE at < %s ORDER BY at, id LIMIT %s',
-                           [int(time.time()) - RETENTION_SECONDS, PRUNE_BATCH])
+        cutoff = int(time.time()) - RETENTION_SECONDS
+        for _ in range(PRUNE_ROUNDS):
+            with connection.cursor() as cursor:
+                cursor.execute('DELETE FROM ms_audit WHERE at < %s ORDER BY at, id LIMIT %s', [cutoff, PRUNE_BATCH])
+                if cursor.rowcount < PRUNE_BATCH:
+                    return
+        with _prune_lock:
+            _next_prune = min(_next_prune, time.monotonic() + PRUNE_RETRY)
     except Exception:
         pass  # retention is retried on later activity, the event already committed
 
