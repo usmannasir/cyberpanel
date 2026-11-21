@@ -23,8 +23,8 @@ order, and the first that fails ends the request:
                 unexpired and of the current generation
     source_ip   the address the connection came from is one the link allows
                 (addresses.py is the one rule for both)
-    time        signed within WINDOW seconds of now and not before the newest
-                signed time already accepted on the link
+    time        signed within WINDOW seconds of now and at most WINDOW seconds
+                behind the newest signed time accepted on the link
     size        the body is as long as declared (it is kept only now: nobody who
                 failed a check above makes this server hold one in memory)
     signature   the controller's signature over the request as it arrived
@@ -37,8 +37,7 @@ Until the signature has verified, a refusal is unsigned and is the answer this
 panel gives a visitor who is not signed in at an address that does not exist,
 so it says nothing about which check failed. From then on every reply, a
 refusal included, is signed with this server's identity key and bound to the
-request (crypto.response_message). Every refusal is written to the audit trail
-with its reason. Of a request, only its link, actor, address, method, path and
+request (crypto.response_message). Refusals before verification share a bounded audit budget with pairing. Of a request, only its link, actor, address, method, path and
 length are ever written down: no reply, audit row or log line repeats a key, a
 request's signature, its body or its nonce. Nothing raised in here reaches the
 panel's error pages.
@@ -218,7 +217,7 @@ def _serve(request, exchange, get_response):
         raise _Refused('source_ip')
 
     # time
-    if abs(timestamp - now) > WINDOW or timestamp < link.last_request_at:
+    if abs(timestamp - now) > WINDOW or timestamp < link.last_request_at - WINDOW:
         raise _Refused('time')
 
     # size, of the body itself
@@ -335,26 +334,27 @@ def _checked(link):
 
 
 def _accept(link, generation, timestamp, nonce, now):
-    """Make this request the link's newest: once only, and never behind one already accepted.
+    """Accept a fresh nonce without moving the link's newest timestamp backwards.
 
     The link row is updated first. That serialises the requests of one link, and it confirms at the
     moment of acceptance what was read from the row earlier: still active, unexpired, of this
-    generation, with the same controller key, addresses and administrator, and no newer signed time
-    accepted meanwhile. The nonce is then inserted, and the unique index on (link, nonce) is what
+    generation, with the same controller key, addresses and administrator, and still inside the ordering window. The nonce is then inserted, and the unique index on (link, nonce) is what
     refuses a second use; a refusal undoes the update.
 
     seen_at holds the signed time. A nonce more than WINDOW below the link's newest accepted time can
-    be removed whatever this server's clock does, because its request can never again be at or after
-    that time.
+    be removed whatever this server's clock does, because that signed timestamp can never again be accepted.
     """
     from django.db import IntegrityError, transaction
+    from django.db.models import Value
+    from django.db.models.functions import Greatest
     from multiServer import models
     try:
         with transaction.atomic():
             advanced = models.Link.objects.filter(
                 pk=link.link_id, status=models.ACTIVE, generation=generation, expires_at__gt=now,
                 controller_key=link.controller_key, allowed_ips=link.allowed_ips, admin_id=link.admin_id,
-                last_request_at__lte=timestamp).update(last_request_at=timestamp)
+                last_request_at__lte=timestamp + WINDOW
+            ).update(last_request_at=Greatest('last_request_at', Value(timestamp)))
             if advanced != 1:
                 current = models.Link.objects.filter(pk=link.link_id).first()
                 reason = _unusable(current, generation, now)
@@ -447,7 +447,8 @@ def _audit(exchange, outcome, reason, status):
                         ('method', exchange.method), ('path', exchange.path), ('size', exchange.size)):
         if value is not None:
             fields[name] = value
-    audit.record('request', **fields)
+    record = audit.record if exchange.signed is not None else audit.record_unverified
+    record('request', **fields)
 
 
 _NOTED = {}  # kind of failure -> when this process last wrote it down

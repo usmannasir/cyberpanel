@@ -16,8 +16,10 @@ Every secret this feature issues is hexadecimal or longer than MAX_SEGMENT.
 
 record() never raises: the action being audited decides what a False means.
 """
+import collections
 import ipaddress
 import re
+import threading
 import time
 
 EVENTS = (
@@ -49,6 +51,38 @@ _LINK = re.compile(r'[0-9a-f]{32}')
 _ACTOR = re.compile(r'[A-Za-z0-9_.@-]{1,50}')
 _PATH = re.compile(r'/(?:[A-Za-z0-9._~@+-]+/)*(?:[A-Za-z0-9._~@+-]+)?')
 _SECRET = re.compile(r'[0-9A-Fa-f]{16}|[0-9]{6}')
+
+
+# One allowance per worker, shared by both public endpoints regardless of the
+# supplied address or link. Authenticated requests and local decisions bypass it.
+UNVERIFIED_PER_MINUTE = 60
+RETENTION_SECONDS = 30 * 86400
+PRUNE_BATCH = 1000
+
+
+class _MinuteBudget:
+    def __init__(self, limit):
+        self.limit = limit
+        self.used = collections.deque()
+        self.lock = threading.Lock()
+
+    def take(self):
+        with self.lock:
+            now = time.monotonic()
+            while self.used and self.used[0] <= now - 60:
+                self.used.popleft()
+            if len(self.used) >= self.limit:
+                return False
+            self.used.append(now)
+            return True
+
+
+_unverified = _MinuteBudget(UNVERIFIED_PER_MINUTE)
+_prunes = _MinuteBudget(1)
+
+
+def record_unverified(event, **fields):
+    return _unverified.take() and record(event, **fields)
 
 
 def record(*event, **fields):
@@ -92,6 +126,21 @@ def _write(row):
     # Its own savepoint: a failed insert must not spoil the caller's transaction.
     with transaction.atomic():
         AuditEntry.objects.create(**row)
+        transaction.on_commit(_prune_if_due)
+
+
+def _prune_if_due():
+    # Keep the retention query outside the audited operation's transaction.
+    # Bounded indexed deletes also let an old installation catch up gradually.
+    if not _prunes.take():
+        return
+    from django.db import connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('DELETE FROM ms_audit WHERE at < %s ORDER BY at, id LIMIT %s',
+                           [int(time.time()) - RETENTION_SECONDS, PRUNE_BATCH])
+    except Exception:
+        pass  # retention is retried on later activity, the event already committed
 
 
 def _one_of(allowed):

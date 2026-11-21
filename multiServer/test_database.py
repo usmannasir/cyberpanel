@@ -236,6 +236,20 @@ class ModelTests(DjangoDatabase):
 
 
 class AuditTests(DjangoDatabase):
+    def test_retention_deletes_one_old_batch_after_commit_and_keeps_the_cutoff(self):
+        now = 1900000000
+        cutoff = now - audit.RETENTION_SECONDS
+        for at in (cutoff - 2, cutoff - 1, cutoff, now):
+            models.AuditEntry.objects.create(at=at, event='request', outcome='ok')
+        with patch.object(audit, '_prunes', audit._MinuteBudget(1)), patch.object(audit, 'PRUNE_BATCH', 1), \
+                patch.object(audit.time, 'time', return_value=now):
+            with transaction.atomic():
+                self.assertTrue(audit.record('link_approve'))
+                self.assertTrue(models.AuditEntry.objects.filter(at=cutoff - 2).exists())
+            self.assertTrue(audit.record('link_pause'))
+        self.assertEqual([cutoff - 1, cutoff, now, now, now],
+                         list(models.AuditEntry.objects.order_by('at').values_list('at', flat=True)))
+
     def test_a_recorded_event_is_one_row_with_exactly_the_accepted_fields(self):
         with patch.object(audit.time, 'time', return_value=1795000000.2):
             self.assertIs(True, audit.record(

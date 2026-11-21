@@ -390,17 +390,25 @@ def _audit(event, link_id, actor, outcome='ok', reason=None, **fields):
     audit.record(event, outcome=outcome, link_id=link_id, **fields)
 
 
-@contextlib.contextmanager
 def _one_at_a_time():
     """One worker at a time looks for a node among the rows and then adds it.
 
     A named lock of the database server, because the node's identity is inside
     the sealed texts and no unique index can refuse a second row for it.
     """
+    return _named_lock("CONCAT(DATABASE(), '.ms_nodes')", ())
+
+
+def pairing_slot(node_id):
+    """Serialize preflight, code exchange and storage for this one node across controller workers."""
+    return _named_lock("SHA2(CONCAT(DATABASE(), '.ms_pair.', %s), 256)", (node_id,))
+
+
+@contextlib.contextmanager
+def _named_lock(name, args):
     from django.db import connection
-    name = "CONCAT(DATABASE(), '.ms_nodes')"
     with connection.cursor() as cursor:
-        cursor.execute('SELECT GET_LOCK(%s, %%s)' % name, [LOCK_SECONDS])
+        cursor.execute('SELECT GET_LOCK(%s, %%s)' % name, args + (LOCK_SECONDS,))
         held = cursor.fetchone()[0]
     if held != 1:
         raise Busy('Another server is being stored at this moment.')
@@ -409,7 +417,7 @@ def _one_at_a_time():
     finally:
         try:
             with connection.cursor() as cursor:
-                cursor.execute('SELECT RELEASE_LOCK(%s)' % name)
+                cursor.execute('SELECT RELEASE_LOCK(%s)' % name, args)
         except Exception:
             pass  # a connection that broke has let go of the lock already
 
