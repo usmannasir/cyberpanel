@@ -333,6 +333,70 @@
                 </div>
             </div>
 
+            <div class="content-card" id="autoUpdateCard" ng-controller="autoUpdateSettings" ng-cloak>
+                <h2 class="card-title">{% trans "Automatic Updates" %}</h2>
+                <p class="page-subtitle">{% trans "CyberPanel can keep itself up to date. Only a release signed by CyberPanel is installed, at the hour you choose. This is off until you turn it on." %}</p>
+
+                <div class="form-group">
+                    <label for="autoUpdateMode" class="form-label">{% trans "When a new release is published" %}</label>
+                    <select id="autoUpdateMode" ng-model="autoUpdate.mode" class="form-select">
+                        <option value="off">{% trans "Do nothing" %}</option>
+                        <option value="notify">{% trans "Tell me by e-mail" %}</option>
+                        <option value="install">{% trans "Install it automatically" %}</option>
+                    </select>
+                </div>
+                <div class="form-group" ng-show="autoUpdate.mode === 'install'">
+                    <label for="autoUpdateHour" class="form-label">{% trans "Install during this hour (server time)" %}</label>
+                    <select id="autoUpdateHour" ng-model="autoUpdate.hour" class="form-select"
+                            ng-options="hour.value as hour.label for hour in autoUpdateHours"></select>
+                </div>
+                <div class="form-group" ng-show="autoUpdate.mode !== 'off'">
+                    <label for="autoUpdateEmail" class="form-label">{% trans "Send results to this e-mail address" %}</label>
+                    <input id="autoUpdateEmail" type="email" maxlength="254" ng-model="autoUpdate.email" class="form-control" autocomplete="off">
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" ng-click="saveAutoUpdate()" ng-disabled="autoUpdateBusy" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        {% trans "Save" %}
+                    </button>
+                    <button type="button" ng-click="checkAutoUpdate()" ng-disabled="autoUpdateBusy" class="btn btn-secondary">
+                        <i class="fas fa-search"></i>
+                        {% trans "Check for a release now" %}
+                    </button>
+                    <span ng-show="autoUpdateBusy" class="loading-spinner"></span>
+                </div>
+
+                <div class="alert alert-warning" role="alert" ng-show="autoUpdateError" style="margin-top: 1rem;">
+                    <span ng-bind="autoUpdateError"></span>
+                </div>
+                <div class="alert alert-success" role="status" ng-show="autoUpdateSaved" style="margin-top: 1rem;">
+                    {% trans "Automatic update settings saved." %}
+                </div>
+
+                <div class="info-item" role="status" ng-show="autoUpdateLoaded" style="margin-top: 1rem;">
+                    <span class="info-label">{% trans "Status" %}</span>
+                    <span id="autoUpdateSummary" style="line-height: 1.5;" ng-bind="autoUpdateState.summary"></span>
+                </div>
+                <div class="info-grid" ng-show="autoUpdateLoaded" style="margin-top: 1rem;">
+                    <div class="info-item">
+                        <span class="info-label">{% trans "Signed release" %}</span>
+                        <span class="info-value" ng-bind="autoUpdateState.releaseLabel"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{% trans "Last checked" %}</span>
+                        <span class="info-value" ng-bind="autoUpdateState.checkedLabel"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{% trans "Server time" %}</span>
+                        <span class="info-value" ng-bind="autoUpdateState.serverTime"></span>
+                    </div>
+                </div>
+                <div class="alert alert-warning" role="status" ng-show="autoUpdateState.error" style="margin-top: 1rem;">
+                    <span ng-bind="autoUpdateState.error"></span>
+                </div>
+            </div>
+
             <div class="alert alert-warning" role="alert" ng-hide="updateError" ng-cloak>
                 <span ng-bind="errorMessage"></span>
             </div>

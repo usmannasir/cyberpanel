@@ -483,6 +483,44 @@ def upgradeStatus(request):
         return HttpResponse(final_json)
 
 
+def autoUpdate(request):
+    """Automatic update settings and state for the Version Management page."""
+    try:
+        currentACL = ACLManager.loadedACL(request.session['userID'])
+        if currentACL['admin'] != 1:
+            return ACLManager.loadErrorJson('status', 0)
+        if request.method != 'POST':
+            return HttpResponse(json.dumps({'status': 0, 'error_message': 'Use the Version Management page.'}), status=405)
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+            if action == 'save':
+                from plogical.autoUpdate import checked_settings
+                settings = checked_settings({'mode': data.get('mode'), 'hour': data.get('hour'),
+                                             'email': data.get('email', '')})
+                # Only hexadecimal digits reach the root helper's command line.
+                argument = 'configure ' + json.dumps(settings).encode('utf-8').hex()
+            elif action in ('check', 'status'):
+                argument = action
+            else:
+                raise ValueError('Unknown request.')
+        except (ValueError, AttributeError) as error:
+            return HttpResponse(json.dumps({'status': 0, 'error_message': str(error)}))
+        command = '/usr/local/CyberCP/bin/python -I /usr/local/CyberCP/plogical/autoUpdate.py ' + argument
+        result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+        try:
+            state = json.loads(result[1].strip().splitlines()[-1])
+        except (TypeError, IndexError, ValueError, AttributeError):
+            state = None
+        if not result or not result[0] or not isinstance(state, dict) or 'settings' not in state:
+            message = state.get('error') if isinstance(state, dict) else None
+            return HttpResponse(json.dumps({'status': 0, 'error_message':
+                                            message or 'Automatic update settings are unavailable.'}))
+        return HttpResponse(json.dumps({'status': 1, 'autoUpdate': state}))
+    except KeyError:
+        return HttpResponse(json.dumps({'status': 0, 'error_message': 'Please login or refresh this page.'}))
+
+
 def upgradeVersion(request):
     try:
         if ACLManager.loadedACL(request.session['userID'])['admin'] != 1:
