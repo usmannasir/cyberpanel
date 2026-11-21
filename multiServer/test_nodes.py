@@ -24,7 +24,7 @@ class NodePresentationTests(unittest.TestCase):
 
     def test_incomplete_enrollment_and_link_sessions_do_not_grant_access(self):
         from multiServer import nodes
-        request = SimpleNamespace(session=SimpleNamespace(session_key='local'), META={})
+        request = SimpleNamespace(session=SimpleNamespace(session_key='local', get=lambda name: None), META={})
         admin = SimpleNamespace(twoFA=1, secretKey='None')
         with patch.object(nodes.views, 'full_administrator', return_value=admin):
             self.assertIsNone(nodes.administrator(request))

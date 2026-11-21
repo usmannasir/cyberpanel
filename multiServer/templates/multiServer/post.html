@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Opening server</title></head>
+<body><form id="handoff" method="post" action="{{ action }}" autocomplete="off">
+{% for key, value in fields %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+<button type="submit">Continue to panel</button></form>
+<script nonce="{{ nonce }}">document.getElementById('handoff').submit();</script></body></html>

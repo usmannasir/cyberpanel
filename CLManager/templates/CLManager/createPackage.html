@@ -1,4 +1,5 @@
 {% extends "baseTemplate/index.html" %}
+{% block create_server_selector %}{% endblock %}
 {% load static %}
 {% block module_scripts %}<script defer src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
 {% load i18n %}
@@ -18,6 +19,8 @@
                 </h3>
                 <div class="example-box-wrapper">
 
+
+                    {% include "multiServer/selector.html" with placement="create" %}
 
                     <form action="/" class="form-horizontal bordered-row panel-body">
 

@@ -8,6 +8,8 @@ panel's URL table and must never be the reason the panel cannot start.
 import functools
 
 from django.http import Http404, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.debug import sensitive_post_parameters
 
 from multiServer import keys, switch
 
@@ -72,15 +74,34 @@ def status(request, role):
 
 
 def nodes_navigation(request):
+    from multiServer import landings
+    match = getattr(request, 'resolver_match', None)
+    name = getattr(match, 'url_name', None)
+    managed = getattr(request, 'ms_managed', None)
+    if managed:
+        return {'ms_server': True, 'ms_managed': managed, 'ms_current': request.get_host(),
+                'ms_create': name in landings.CREATE_PAGES}
     if switch.active_role() != keys.CONTROLLER:
         return {}
     from multiServer.nodes import administrator
-    visible = administrator(request) is not None
-    context = {'showManagedNodes': visible}
-    route = getattr(getattr(request, 'resolver_match', None), 'url_name', None)
-    if visible and route in ('listWebsites', 'listDBs', 'listEmails'):
-        from multiServer import entitlement
-        context['showInventoryLink'] = entitlement.allowed()
+    admin = administrator(request)
+    context = {'showManagedNodes': admin is not None}
+    if not admin:
+        return context
+    from multiServer import entitlement, nodes, sso
+    lists = name in ('listWebsites', 'listDBs', 'listEmails')
+    if not lists and not request.session.get('ms_local_login'):
+        return context
+    licensed = entitlement.allowed()
+    if lists:
+        context['showInventoryLink'] = licensed
+    try:
+        if licensed and sso.verified_login(request, admin):
+            context.update(ms_server=True, ms_nodes=nodes.switch_choices(), ms_page=landings.destination(
+                name, getattr(match, 'kwargs', {})), ms_current=request.get_host(),
+                ms_create=name in landings.CREATE_PAGES)
+    except (ValueError, nodes.DatabaseError):
+        pass  # An unavailable switcher must never break a native page.
     return context
 
 
@@ -100,3 +121,20 @@ def node_control(request, role):
 def inventory_page(request, role, category):
     from multiServer.lists import index
     return index(request, category)
+
+# Only the cross-site handoff legs are CSRF-exempt. They cannot authorize a login
+# without the original controller session, its signed proof and the node's host cookie.
+def browser_view(operation, role, cross_site=False):
+    @serves(role)
+    @sensitive_post_parameters()
+    def run(request, role):
+        from multiServer import browser
+        return browser.dispatch(request, getattr(browser, operation))
+    return csrf_exempt(run) if cross_site else run
+
+
+select_server = browser_view('select', keys.CONTROLLER)
+arrive = browser_view('arrive', keys.NODE, True)
+returned = browser_view('returned', keys.CONTROLLER, True)
+finish = browser_view('finish', keys.CONTROLLER)
+redeem = browser_view('redeem', keys.NODE, True)

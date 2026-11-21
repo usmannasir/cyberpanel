@@ -80,10 +80,25 @@ def _revoke(verified):
     from multiServer import audit, models
     if verified.body or verified.content_type != '-':
         raise _Refused('format')
+    from django.db import transaction
+    from multiServer import sso
     keys.mark_revoked(verified.link_id)
-    models.Link.objects.filter(pk=verified.link_id).update(status=models.REVOKED, updated_at=int(time.time()))
+    with transaction.atomic():
+        link = models.Link.objects.select_for_update().get(pk=verified.link_id)
+        sso.clear(link)
+        models.Link.objects.filter(pk=link.pk).update(status=models.REVOKED, updated_at=int(time.time()))
     audit.record('link_revoke', outcome='ok', actor=verified.actor, link_id=verified.link_id)
     return 200, JSON, b'{"revoked":true}'
+
+
+def _ticket(verified):
+    from multiServer.sso import gateway_issue
+    return gateway_issue(verified)
+
+
+def _end_sessions(verified):
+    from multiServer.sso import gateway_clear
+    return gateway_clear(verified)
 
 
 def _inventory(verified):
@@ -106,6 +121,8 @@ def _hello(verified):
 # request that passed every check above, with its exact method, and without a query unless the route
 # takes one. It returns (status, media type, body). Nothing here leads to the panel's URL table.
 ROUTES = {
+    ('ticket', '/multiserver/gateway/ticket'): Route('ticket', 'POST', False, _ticket),
+    ('ticket', '/multiserver/gateway/end-sessions'): Route('ticket', 'POST', False, _end_sessions),
     ('json', links.REVOKE_PATH): Route('revoke', 'POST', False, _revoke),
     ('inventory', inventory.PATH): Route('inventory', 'GET', False, _inventory),
     ('json', HELLO): Route('hello', 'GET', False, _hello),
@@ -132,7 +149,30 @@ class NodeGateway(object):
 
     def __call__(self, request):
         if not _addressed(request.META) or switch.active_role() != keys.NODE:
-            return self.get_response(request)
+            response = self.get_response(request)
+            managed = getattr(request, 'ms_managed', None)
+            if managed:
+                response['Cache-Control'] = 'private, no-store'
+            if managed and request.method == 'POST':
+                from multiServer import audit
+                match = getattr(request, 'resolver_match', None)
+                # Record the named operation only. Its arguments, body and query stay private.
+                audit.record('request', outcome='ok' if response.status_code < 400 else 'refused',
+                             link_id=managed['link'], actor=managed['actor'], source_ip=request.META.get('REMOTE_ADDR'),
+                             method='POST', path='/native/' + (getattr(match, 'url_name', None) or 'unknown'),
+                             status=response.status_code)
+            if getattr(request, 'ms_private_cookies', False):
+                from django.conf import settings
+                for name in (settings.SESSION_COOKIE_NAME, settings.CSRF_COOKIE_NAME):
+                    if name in response.cookies:
+                        cookie = response.cookies[name]
+                        cookie['secure'] = True
+                        cookie['domain'] = ''
+                        if cookie['samesite'] != 'Strict':
+                            cookie['samesite'] = 'Lax'
+                        if name == settings.SESSION_COOKIE_NAME:
+                            cookie['httponly'] = True
+            return response
         if request.META.get('REQUEST_METHOD') == 'POST' and request.path_info == pairing.PATH:
             return _pair(request)
         exchange = _Exchange()

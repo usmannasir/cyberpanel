@@ -59,6 +59,20 @@ class secMiddleware:
         from urllib.parse import urlparse
         pathActual = urlparse(FinalURL).path
 
+        if pathActual.startswith('/multiserver/login/'):
+            from multiServer import browser
+            if pathActual in browser.PATHS:
+                # The dedicated views validate the entire small form and never log its body.
+                # They set stricter response policies than the ordinary panel.
+                request.ms_private_cookies = True
+                return self.get_response(request)
+        if 'ms_managed' in request.session:
+            from multiServer.browser import guard
+            request.ms_private_cookies = True
+            refusal = guard(request)
+            if refusal is not None:
+                return refusal
+
         # Debug logging removed for performance
 
         # Define webhook pattern for secure matching

@@ -111,6 +111,7 @@ def verifyLogin(request):
             password_check_result = hashPassword.check_password(admin.password, password)
 
             if password_check_result:
+                verified_totp = False
                 if admin.twoFA:
                     if request.session.get('twofa', 1) == 0:
                         import pyotp
@@ -125,6 +126,7 @@ def verifyLogin(request):
                             return response
                         # Clear the session flag after successful 2FA verification
                         del request.session['twofa']
+                        verified_totp = True
 
                 # Validate before storing authenticated state.
                 ipAddr = session_ip_key(get_client_ip(request))
@@ -136,6 +138,12 @@ def verifyLogin(request):
                 request.session.cycle_key()
                 request.session['userID'] = admin.pk
                 request.session['ipAddr'] = ipAddr
+                request.session.pop('ms_local_login', None)
+                if verified_totp:
+                    from multiServer import keys
+                    if keys.role() == keys.CONTROLLER and request.is_secure():
+                        from multiServer.sso import remember_login
+                        remember_login(request, admin)
 
                 request.session.set_expiry(43200)
                 # Persist before the browser follows the login response with a
@@ -274,6 +282,8 @@ def loadLoginPage(request):
 def logout(request):
     try:
         del request.session['userID']
+        request.session.pop('ms_local_login', None)
+        request.session.pop('ms_open', None)
         return render(request, 'loginSystem/login.html', {})
     except:
         return render(request, 'loginSystem/login.html', {})
