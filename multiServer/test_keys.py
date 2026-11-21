@@ -1,5 +1,6 @@
 """The role switch and the key files: off unless everything about them is right."""
 import ast
+import sys
 import os
 from pathlib import Path
 import stat
@@ -185,7 +186,8 @@ class CompatibilityTests(unittest.TestCase):
     def test_sources_parse_as_python_3_6(self):
         root = Path(__file__).resolve().parents[1]
         for relative in ('multiServer/keys.py', 'install/multiserver_identity.py'):
-            ast.parse((root / relative).read_text(), feature_version=(3, 6))
+            options = {'feature_version': (3, 6)} if sys.version_info >= (3, 8) else {}
+            ast.parse((root / relative).read_text(), **options)
 
 
 if __name__ == '__main__':
