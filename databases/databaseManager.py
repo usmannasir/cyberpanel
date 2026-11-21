@@ -27,6 +27,18 @@ import re
 # never quotes/spaces/semicolons that could break out of the '...'@'host' literal.
 _MYSQL_HOST_RE = re.compile(r"^[A-Za-z0-9_.:%/-]{1,255}$")
 
+
+def website_database_prefix(domain):
+    """The start of the names of a website's databases and database users.
+
+    The same rule as getTruncatedWebName on the create-database page
+    (databases.js), which shows the prefix before the request is sent.
+    """
+    name = str(domain).replace('-', '').split('.')[0]
+    if len(name) > 5:
+        name = name[:4]
+    return name
+
 class DatabaseManager:
 
     REMOTE_ACCESS = 'remote_access'
@@ -60,7 +72,6 @@ class DatabaseManager:
             dbName = data['dbName']
             dbUsername = data['dbUsername']
             dbPassword = data['dbPassword']
-            webUsername = data['webUserName']
 
             if ACLManager.checkOwnership(databaseWebsite, admin, currentACL) == 1:
                 pass
@@ -68,8 +79,15 @@ class DatabaseManager:
                 return ACLManager.loadErrorJson()
 
             if rAPI == None:
-                dbName = webUsername + "_" + dbName
-                dbUsername = webUsername + "_" + dbUsername
+                # The prefix comes from the website. A prefix sent by the browser is not used.
+                prefix = website_database_prefix(databaseWebsite)
+                if not is_safe_sql_identifier(prefix) or not prefix[0].isalnum():
+                    data_ret = {'status': 0, 'createDBStatus': 0,
+                                'error_message': 'A database name cannot be derived from this website name.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                dbName = prefix + "_" + dbName
+                dbUsername = prefix + "_" + dbUsername
 
             if not is_safe_sql_identifier(dbName) or not is_safe_sql_identifier(dbUsername):
                 data_ret = {'status': 0, 'createDBStatus': 0,
