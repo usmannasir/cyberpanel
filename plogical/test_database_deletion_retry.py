@@ -1,5 +1,6 @@
 """Retry real deletion methods with isolated SQL and website dependencies."""
 import ast
+import sys
 from pathlib import Path
 from types import SimpleNamespace as NS
 import unittest
@@ -8,6 +9,8 @@ from unittest import mock
 import test_unix_account_deletion as website_tests
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import databaseGrants  # noqa: E402
 
 
 def database_helper(connection, cursor):
@@ -16,7 +19,7 @@ def database_helper(connection, cursor):
     methods = [n for n in cls.body if isinstance(n, ast.FunctionDef)
                and n.name in ('quoteIdentifier', 'deleteDatabase', 'submitDBDeletion')]
     cls.body = methods
-    scope = {'ProcessUtilities': NS(executioner=mock.Mock()),
+    scope = {'ProcessUtilities': NS(executioner=mock.Mock()), 'databaseGrants': databaseGrants,
              'logging': NS(CyberCPLogFileWriter=NS(writeToFile=mock.Mock()))}
     exec(compile(ast.Module(body=[cls], type_ignores=[]), str(HERE / 'mysqlUtilities.py'), 'exec'), scope)
     helper = scope['mysqlUtilities']
@@ -66,7 +69,7 @@ class DatabaseDeletionTests(unittest.TestCase):
         self.assertEqual(1, self.helper.deleteDatabase('fixturedb', 'fixtureuser'))
         self.assertEqual([
             mock.call('DROP DATABASE IF EXISTS `fixturedb`'),
-            mock.call('select user,host from mysql.db where db=%s', ('fixturedb',)),
+            mock.call('SELECT User, Host FROM mysql.db WHERE Db IN (%s)', ('fixturedb',)),
             mock.call('DROP USER IF EXISTS %s@%s', ('fixtureuser', 'localhost')),
         ], self.cursor.execute.call_args_list)
         self.connection.close.assert_called_once()

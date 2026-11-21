@@ -24,6 +24,7 @@ import MySQLdb as mysql
 import json
 from random import randint
 from plogical.processUtilities import ProcessUtilities
+from plogical import databaseGrants
 import MySQLdb.cursors as cursors
 from math import ceil
 import argparse
@@ -139,6 +140,10 @@ class mysqlUtilities:
                 HostToUse = mysqlUtilities.LOCALHOST
             else:
                 HostToUse = host
+
+            # In a grant `_` and `%` are wildcards: name this database only.
+            grantOn = mysqlUtilities.quoteIdentifier(databaseGrants.grant_name(cursor, dbname))
+
             ## Create db
 
             if dbcreate:
@@ -169,11 +174,9 @@ class mysqlUtilities:
                 record('user_created_' + hostToUse)
 
                 if mysqlUtilities.RDS == 0:
-                    grant = "GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % (
-                        mysqlUtilities.quoteIdentifier(dbname))
+                    grant = "GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % grantOn
                 else:
-                    grant = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % (
-                        mysqlUtilities.quoteIdentifier(dbname))
+                    grant = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % grantOn
                 record('granting_user_' + hostToUse)
                 cursor.execute(grant, (dbuser, hostToUse))
                 record('user_granted_' + hostToUse)
@@ -231,11 +234,13 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
+            grantOn = mysqlUtilities.quoteIdentifier(databaseGrants.grant_name(cursor, dbName))
             if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                cursor.execute("GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % grantOn,
+                               (globalUser, mysqlUtilities.LOCALHOST))
             else:
-                cursor.execute("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (
-                    mysqlUtilities.LOCALHOST))
+                cursor.execute("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % grantOn,
+                               (globalUser, mysqlUtilities.LOCALHOST))
 
             connection.close()
 
@@ -263,8 +268,8 @@ class mysqlUtilities:
 
             ## Try deleting all user who had priviliges on db
 
-            cursor.execute("select user,host from mysql.db where db=%s", (dbname,))
-            databaseUsers = cursor.fetchall()
+            # A grant is stored under the plain name or under its escaped form.
+            databaseUsers = databaseGrants.accounts_granted(cursor, dbname)
 
             for databaseUser in databaseUsers:
                 cursor.execute("DROP USER IF EXISTS %s@%s", (databaseUser[0], databaseUser[1]))
@@ -649,10 +654,8 @@ password=%s
         try:
             cursor.execute('SELECT User FROM mysql.user WHERE User = %s AND Host = %s', (dbUser, dbHost))
             exists = bool(cursor.fetchall())
-            if exists:
-                cursor.execute('SELECT Db FROM mysql.db WHERE User = %s AND Host = %s', (dbUser, dbHost))
-                if dbName not in [row[0] for row in cursor.fetchall()]:
-                    return 0
+            if exists and not databaseGrants.account_is_granted(cursor, dbName, dbUser, dbHost):
+                return 0
         finally:
             connection.close()
         if not exists and mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost) != 1:
@@ -1163,34 +1166,27 @@ password=%s
     def fetchuser(databaseName):
         try:
             connection, cursor = mysqlUtilities.setupConnection()
-            cursor.execute("use mysql")
-            database = Databases.objects.get(dbName=databaseName)
-            databaseName = databaseName.replace('_', '\_')
-            query = "select user from db where db = '%s'" % (databaseName)
 
             if connection == 0:
                 return 0
 
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            counter = 0
+            try:
+                database = Databases.objects.get(dbName=databaseName)
+                users = [user for user, host in databaseGrants.accounts_granted(cursor, databaseName)]
+            finally:
+                connection.close()
 
-            for row in rows:
-                if row[0].find('_') > -1:
-                    database.dbUser = row[0]
+            # The registered user stays the database's user while it has its grant.
+            if database.dbUser in users:
+                return database.dbUser
+
+            for user in users:
+                if user.find('_') > -1:
+                    database.dbUser = user
                     database.save()
-
-                    try:
-                        connection.close()
-                    except:
-                        pass
-                    message = 'Detected databaser user is %s for database %s.' % (row[0], databaseName)
+                    message = 'Detected databaser user is %s for database %s.' % (user, databaseName)
                     logging.CyberCPLogFileWriter.writeToFile(message)
-                    return row[0]
-                else:
-                    counter = counter + 1
-
-            connection.close()
+                    return user
 
             return 1
 
@@ -1275,13 +1271,15 @@ bind-address=%s
 
                 return
 
+            grantOn = mysqlUtilities.quoteIdentifier(databaseGrants.grant_name(cursor, database))
             if mysqlUtilities.RDS == 0:
                 cursor.execute(
-                    "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                    "GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % grantOn, (user, mysqlUtilities.LOCALHOST))
             else:
                 try:
                     cursor.execute(
-                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % grantOn,
+                        (user, mysqlUtilities.LOCALHOST))
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:953]' % (str(msg)))
 

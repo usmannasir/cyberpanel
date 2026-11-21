@@ -16,6 +16,7 @@ import django
 import plogical.CyberCPLogFileWriter as logging
 
 import plogical.mysqlUtilities as mysqlUtilities
+from plogical import databaseGrants
 from plogical.backupV2Repository import (
     database_name_from_snapshot_path,
     forget_selection,
@@ -449,9 +450,9 @@ class CPBackupsV2(multi.Thread):
 
                     for db in dataBases:
 
-                        query = f"SELECT host,user FROM mysql.db WHERE db='{db.dbName}';"
-                        cursor.execute(query)
-                        DBUsers = cursor.fetchall()
+                        # A grant is stored under the plain name or under its escaped form.
+                        DBUsers = [(host, user) for user, host in
+                                   databaseGrants.accounts_granted(cursor, db.dbName)]
 
                         UserList = []
 

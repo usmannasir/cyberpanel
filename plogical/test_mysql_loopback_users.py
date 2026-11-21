@@ -23,6 +23,9 @@ class FakeCursor:
                 and args and args[1] == '127.0.0.1'):
             raise RuntimeError('loopback account already exists')
 
+    def fetchall(self):
+        return []
+
 
 class MySQLLoopbackUserTests(unittest.TestCase):
 
@@ -56,7 +59,7 @@ class MySQLLoopbackUserTests(unittest.TestCase):
             cursor.queries,
         )
         self.assertIn(
-            ('GRANT ALL PRIVILEGES ON `site_db`.* TO %s@%s',
+            ('GRANT ALL PRIVILEGES ON `site\\_db`.* TO %s@%s',
              ('site_user', '127.0.0.1')),
             cursor.queries,
         )

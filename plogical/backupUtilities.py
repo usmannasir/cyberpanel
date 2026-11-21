@@ -23,6 +23,7 @@ import subprocess
 import shlex
 from shutil import make_archive, rmtree
 from plogical import mysqlUtilities
+from plogical import databaseGrants
 import tarfile
 from multiprocessing import Process
 import signal
@@ -264,8 +265,8 @@ class backupUtilities:
                 child = SubElement(databaseXML, 'dbName')
                 child.text = str(items.dbName)
 
-                cursor.execute(f"select user,host from mysql.db where db='{items.dbName}'")
-                databaseUsers = cursor.fetchall()
+                # A grant is stored under the plain name or under its escaped form.
+                databaseUsers = databaseGrants.accounts_granted(cursor, items.dbName)
 
                 for databaseUser in databaseUsers:
 
