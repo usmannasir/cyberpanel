@@ -1,5 +1,6 @@
 """The audit trail: fixed events, typed fields, and nothing that could be a body or a secret."""
 import ast
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import re
 import sys
@@ -80,18 +81,61 @@ class RecordTests(Recorder):
 
 
 class BudgetTests(Recorder):
-    def test_unverified_endpoints_share_a_rolling_budget_but_decisions_and_verified_calls_do_not(self):
-        with patch.object(audit, '_unverified', audit._MinuteBudget(2)), patch.object(
-                audit.time, 'monotonic', side_effect=[0, 5, 59, 60, 61, 65]):
-            self.assertTrue(audit.record_unverified('request', reason='link', outcome='refused'))
-            self.assertTrue(audit.record_unverified('pairing', reason='format', outcome='refused'))
-            self.assertFalse(audit.record_unverified('request', reason='signature', outcome='refused'))
-            self.assertTrue(audit.record('link_approve'))
-            self.assertTrue(audit.record('request', actor='admin'))
-            self.assertTrue(audit.record_unverified('pairing', reason='size', outcome='refused'))
-            self.assertFalse(audit.record_unverified('request', reason='link', outcome='refused'))
-            self.assertTrue(audit.record_unverified('request', reason='link', outcome='refused'))
-        self.assertEqual(6, len(self.rows))
+    def setUp(self):
+        super().setUp()
+        # Simulate a successful commit. The MariaDB tests exercise actual on_commit callbacks.
+        def commit(row):
+            self.rows.append(row)
+            audit._unverified.report()
+
+        for patcher in (patch.object(audit, '_unverified', audit._MinuteBudget(audit.UNVERIFIED_PER_MINUTE)),
+                        patch.object(audit, '_write', side_effect=commit),
+                        patch.object(audit, '_insert', side_effect=self.rows.append)):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.clock = patch.object(audit.time, 'monotonic', return_value=10)
+        self.now = self.clock.start()
+        self.addCleanup(self.clock.stop)
+
+    def test_thirty_shared_slots_and_one_exact_summary_on_the_next_observed_window(self):
+        for n in range(37):
+            event = 'pairing' if n % 2 else 'request'
+            self.assertEqual(n < 30, audit.record_unverified(event, outcome='refused', reason='link',
+                                                             link_id=LINK, path='/example', size=9))
+        self.now.return_value = 69.99
+        self.assertTrue(audit.record('request', outcome='refused', reason='link', link_id=LINK))
+        self.assertEqual(31, len(self.rows))
+        self.now.return_value = 70
+        self.assertTrue(audit.record('link_pause', link_id=LINK))
+        summary = {'at': 1795000000, 'event': 'request', 'outcome': 'refused',
+                   'reason': 'internal', 'size': 7, 'dropped': 0}
+        self.assertEqual(summary, self.rows[-1])
+        self.assertTrue(audit.record_unverified('request', outcome='refused', reason='link'))
+        self.now.return_value = 370
+        self.assertTrue(audit.record('link_resume'))
+        self.assertEqual(35, len(self.rows))
+        self.assertEqual(1, self.rows.count(summary))
+
+    def test_threads_share_the_worker_allowance_and_only_one_claims_each_summary(self):
+        def refuse(_):
+            return audit.record_unverified('pairing', outcome='refused', reason='format')
+
+        with ThreadPoolExecutor(max_workers=8) as threads:
+            for minute, attempts in enumerate((53, 39)):
+                self.now.return_value = 10 + 60 * minute
+                self.assertEqual(30, sum(threads.map(refuse, range(attempts))))
+        self.now.return_value = 130
+        self.assertTrue(audit.record('link_approve'))
+        self.assertEqual([23, 9], [r['size'] for r in self.rows if r.get('reason') == 'internal'])
+
+    def test_failed_individual_inserts_still_consume_the_allowance(self):
+        with patch.object(audit, '_write', side_effect=RuntimeError()) as write:
+            for _ in range(34):
+                self.assertFalse(audit.record_unverified('request', outcome='refused', reason='link'))
+            self.assertEqual(30, write.call_count)
+        self.now.return_value = 70
+        self.assertTrue(audit.record_unverified('pairing', outcome='refused', reason='format'))
+        self.assertEqual(4, self.rows[-1]['size'])
 
 
 class RefusalTests(Recorder):
