@@ -583,6 +583,66 @@ increment();
 
 ////////////
 
+// Automatic updates on the Version Management page. Settings and state come
+// from the server; nothing here decides what is installed.
+app.controller('autoUpdateSettings', function ($scope, $http) {
+
+    $scope.autoUpdate = {mode: 'off', hour: 3, email: ''};
+    $scope.autoUpdateHours = [];
+    for (var hour = 0; hour < 24; hour++) {
+        $scope.autoUpdateHours.push({value: hour, label: (hour < 10 ? '0' : '') + hour + ':00'});
+    }
+    $scope.autoUpdateState = {summary: 'Not checked yet'};
+    $scope.autoUpdateBusy = false;
+    $scope.autoUpdateLoaded = false;
+    $scope.autoUpdateError = '';
+    $scope.autoUpdateSaved = false;
+
+    function showAutoUpdate(state) {
+        var release = state.release;
+        $scope.autoUpdate = {mode: state.settings.mode, hour: state.settings.hour, email: state.settings.email};
+        $scope.autoUpdateState = {
+            summary: state.summary || 'Not checked yet',
+            error: state.error || '',
+            releaseLabel: release ? release.version + '.' + release.build + ' (' + String(release.commit).slice(0, 12) + ')' : 'Unknown',
+            checkedLabel: state.checked_text || 'Never',
+            serverTime: (state.server_time || '') + ' ' + (state.timezone || '')
+        };
+        $scope.autoUpdateLoaded = true;
+    }
+
+    function autoUpdateRequest(data, saved) {
+        $scope.autoUpdateBusy = true;
+        $scope.autoUpdateError = '';
+        $scope.autoUpdateSaved = false;
+        $http.post('/base/autoUpdate', data, {headers: {'X-CSRFToken': getCookie('csrftoken')}}).then(function (response) {
+            $scope.autoUpdateBusy = false;
+            if (response.data && response.data.status === 1 && response.data.autoUpdate) {
+                showAutoUpdate(response.data.autoUpdate);
+                $scope.autoUpdateSaved = !!saved;
+            } else {
+                $scope.autoUpdateError = (response.data && response.data.error_message) || 'Automatic update settings are unavailable.';
+            }
+        }, function () {
+            $scope.autoUpdateBusy = false;
+            $scope.autoUpdateError = 'The panel could not be reached. Refresh this page and try again.';
+        });
+    }
+
+    $scope.saveAutoUpdate = function () {
+        autoUpdateRequest({action: 'save', mode: $scope.autoUpdate.mode, hour: $scope.autoUpdate.hour,
+                           email: $scope.autoUpdate.email || ''}, true);
+    };
+
+    $scope.checkAutoUpdate = function () {
+        autoUpdateRequest({action: 'check'}, false);
+    };
+
+    autoUpdateRequest({action: 'status'}, false);
+
+});
+
+
 app.controller('versionManagment', function ($scope, $http, $timeout) {
 
     var pendingPoll = null;
