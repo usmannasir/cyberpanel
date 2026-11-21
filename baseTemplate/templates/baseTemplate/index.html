@@ -90,7 +90,7 @@
         </div>
 
         <div id="header-right">
-            {% include "multiServer/selector.html" with placement="header" %}
+            {% if ms_server %}{% include "multiServer/selector.html" with placement="header" %}{% endif %}
             <div class="social-links">
                 <a href="https://web.facebook.com/groups/cyberpanel" target="_blank" rel="noopener" title="Facebook">
                     <i class="fab fa-facebook-f"></i>
