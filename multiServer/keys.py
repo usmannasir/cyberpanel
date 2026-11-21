@@ -18,7 +18,7 @@ _FERNET_KEY = re.compile(r'[A-Za-z0-9_-]{43}=')
 _NUMBER = re.compile(r'[0-9]{1,18}')
 
 
-def _read(name, limit=128):
+def _read(name, limit=128, versioned=False):
     """The text of one private file in the key directory, or None."""
     try:
         directory = os.lstat(KEY_DIRECTORY)
@@ -34,9 +34,27 @@ def _read(name, limit=128):
             data = os.read(descriptor, limit + 1)
         finally:
             os.close(descriptor)
-        return data.decode('ascii') if len(data) <= limit else None
+        if len(data) > limit:
+            return None
+        text = data.decode('ascii')
+        if versioned:
+            return text, (details.st_dev, details.st_ino, details.st_ctime_ns)
+        return text
     except Exception:
         return None
+
+
+def role_revision(expected):
+    """Bind short-lived logins to this installation of the root-owned role file.
+
+    set_role replaces the file. A switch away and back also invalidates a browser
+    that did not make any request during the interval. The text and revision come
+    from the same checked descriptor.
+    """
+    value = _read('role', 16, versioned=True)
+    if not value or value[0].rstrip('\n') != expected or not _ROLE.fullmatch(value[0]):
+        raise ValueError('Multi-Server role changed.')
+    return value[1]
 
 
 def role():

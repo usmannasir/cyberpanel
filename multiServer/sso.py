@@ -57,7 +57,7 @@ def local_origin(request):
 
 
 def login_stamp(request, admin):
-    return stamp(account_stamp(admin), local_origin(request), request.session.session_key)
+    return stamp(account_stamp(admin), local_origin(request), request.session.session_key, keys.role_revision(keys.CONTROLLER))
 
 
 def remember_login(request, admin):
@@ -102,7 +102,7 @@ def live_link(link, admin_id):
 
 def identity(link, admin, origin, target):
     return stamp(link.link_id, link.controller_key, link.allowed_ips, link.generation, link.activated_at,
-                 account_stamp(admin), origin, target)
+                 account_stamp(admin), origin, target, keys.role_revision(keys.NODE))
 
 
 def proof_message(flow, challenge):
