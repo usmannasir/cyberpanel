@@ -38,6 +38,7 @@ REASONS = (
     'role', 'format', 'size', 'link', 'generation', 'expired', 'source_ip', 'time', 'signature',
     'body_hash', 'replay', 'admin', 'not_allowed', 'burned', 'consumed', 'certificate', 'unreachable',
     'timeout', 'licence', 'password', 'two_factor', 'internal',
+    'number',           # the number typed to approve a link is not the one its controller shows
 )
 METHODS = ('GET', 'POST')
 MAX_PATH = 255

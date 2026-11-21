@@ -42,7 +42,7 @@ NOW = 1795000000
 ADMIN = 1
 GENERATION = 7
 SIDE = threading.local()  # which of the two servers the running thread is
-THE_LINK = object()
+THE_LINK, THE_NUMBER = object(), object()
 REFUSED = ('The server did not accept the pairing code. A code can be used once, for ten minutes, from the '
            'controller address it was made for.')
 OTHER_CERTIFICATE = ('The server at that address did not present the certificate the pairing code names. Nothing was '
@@ -344,14 +344,13 @@ class PairingTests(Servers):
         self.assertEqual(((0, 1),), self.codes())
         transport.Link(link_id, paired.node_id, host, port, node_key, private_key, tls_pin,
                        allow_loopback_for_tests=True)
-        # The same number on both sides.
+        # The controller shows the number; the managed server lists the link without it and asks for it.
         with on_the_node():
-            self.assertEqual([pairing.Pending(link_id, '127.0.0.1', ADMIN, NOW, NOW + 600, paired.confirmation)],
-                             pairing.pending())
+            self.assertEqual([pairing.Pending(link_id, '127.0.0.1', ADMIN, NOW, NOW + 600)], pairing.pending())
         self.assertRegex(paired.confirmation, '^[0-9]{8}$')
         self.clock[0] = NOW + 599
         with on_the_node():
-            self.assertIsNone(pairing.approve(link_id, ADMIN))
+            self.assertIsNone(pairing.approve(link_id, ADMIN, paired.confirmation))
             self.assertEqual([], pairing.pending())
         self.assertEqual(((link_id, controller_key, pairing_key, '127.0.0.1', ADMIN, 'active', GENERATION, NOW,
                            NOW + 599, NOW + 599, NOW + 599 + 90 * 24 * 60 * 60, 0),), self.links())
@@ -552,7 +551,7 @@ class LinkRowTests(Servers):
         self.assertEqual(('127.0.0.1',), addresses.listed(link.allowed_ips))
         self.assertEqual('link', nodeGateway._unusable(link, GENERATION, NOW))
         with on_the_node():
-            pairing.approve(paired.link_id, ADMIN)
+            pairing.approve(paired.link_id, ADMIN, paired.confirmation)
         link = models.Link.objects.get(pk=paired.link_id)
         self.assertIsNone(nodeGateway._unusable(link, GENERATION, NOW))
         self.assertEqual('expired', nodeGateway._unusable(link, GENERATION, NOW + pairing.LINK_LIFETIME))
@@ -974,24 +973,45 @@ class CodeIssuingTests(Servers):
 
 
 class DecisionTests(Servers):
+    WRONG = 'This is not the number the controller shows for this link.'
+    CLOSED = 'A wrong number was typed 5 times. This link is closed; pair the two servers again.'
+
     def setUp(self):
         super().setUp()
         self.paired = self.pair(self.issue())
         self.link_id = self.paired.link_id
+        self.number = self.paired.confirmation
+        self.other = '%08d' % ((int(self.number) + 1) % 10 ** 8)
 
     def status(self):
         return [(link[0], link[5]) for link in self.links()]
 
-    def refused(self, reason, because, decide=None, link_id=THE_LINK, admin_id=ADMIN, actor='admin'):
-        before, links = len(self.audited()), self.links()
+    def failures(self, link_id=None):
+        return self.database.run("SELECT failures FROM ms_links WHERE link_id = '%s'" % (link_id or self.link_id))[0][0]
+
+    def approve(self, number=None, link_id=None, admin_id=ADMIN):
+        with on_the_node():
+            return pairing.approve(link_id or self.link_id, admin_id, self.number if number is None else number)
+
+    def refused(self, reason, because, decide=None, link_id=THE_LINK, admin_id=ADMIN, actor='admin',
+                number=THE_NUMBER, changes=False):
+        before, links, failures = len(self.audited()), self.links(), self.failures()
         link_id = self.link_id if link_id is THE_LINK else link_id
         with self.assertRaises(pairing.PairingError) as caught, on_the_node():
-            (decide or pairing.approve)(link_id, admin_id)
+            if decide is pairing.reject:
+                pairing.reject(link_id, admin_id)
+            else:
+                pairing.approve(link_id, admin_id, self.number if number is THE_NUMBER else number)
         self.assertEqual((reason, because), (caught.exception.reason, str(caught.exception)))
-        self.assertEqual(links, self.links())
-        recorded = link_id if reason in ('link', 'not_allowed', 'expired', 'generation') else ''
-        self.assertEqual([('link_revoke' if decide is pairing.reject else 'link_approve', 'refused', reason, recorded,
-                           actor, '', None)], self.audited()[before:])
+        if not changes:
+            self.assertEqual((links, failures), (self.links(), self.failures()))
+        named = reason in ('link', 'not_allowed', 'expired', 'generation', 'number', 'burned', 'internal') or (
+            reason == 'format' and decide is not pairing.reject and isinstance(link_id, str)
+            and pairing._LINK.fullmatch(link_id) is not None)
+        self.assertEqual(('link_revoke' if decide is pairing.reject else 'link_approve',
+                          'error' if reason == 'internal' else 'refused', reason, link_id if named else '', actor, '',
+                          None), self.audited()[-1])
+        return self.audited()[before:]
 
     def test_only_an_active_full_administrator_of_the_managed_server_decides(self):
         nobody = 'Only a full administrator of this server may do this.'
@@ -1008,13 +1028,15 @@ class DecisionTests(Servers):
             self.refused('admin', nobody, decide, admin_id=99, actor='')
             self.find.side_effect = None
             with self.assertRaises(pairing.PairingError) as caught:
-                decide(self.link_id, ADMIN)
+                # On the controller.
+                decide(*((self.link_id, ADMIN, self.number) if decide is pairing.approve else (self.link_id, ADMIN)))
             self.assertEqual('role', caught.exception.reason)
             self.assertEqual(('refused', 'role'), self.audited()[-1][1:3])
         with self.assertRaises(pairing.PairingError) as caught:
             pairing.pending()
         self.assertEqual('role', caught.exception.reason)
         self.assertEqual([(self.link_id, 'pending')], self.status())
+        self.assertEqual(0, self.failures())
 
     def test_a_link_that_does_not_exist_cannot_be_decided(self):
         for decide in (pairing.approve, pairing.reject):
@@ -1024,9 +1046,175 @@ class DecisionTests(Servers):
                 self.refused('format', 'This is not a link.', decide, link_id=link_id)
         self.assertEqual([(self.link_id, 'pending')], self.status())
 
-    def test_a_link_is_approved_once(self):
+    def test_a_link_is_approved_with_the_number_its_controller_shows(self):
+        self.assertRegex(self.number, r'\A[0-9]{8}\Z')
+        self.assertIsNone(self.approve())
+        self.assertEqual([(self.link_id, 'active')], self.status())
+        self.assertEqual(('link_approve', 'ok', '', self.link_id, 'admin', '', None), self.audited()[-1])
+        self.assertEqual(0, self.failures())
+
+    def test_a_wrong_number_approves_nothing_and_is_counted(self):
+        self.assertEqual(5, pairing.MAX_WRONG_NUMBERS)
+        for count, number in enumerate((self.other, self.number[::-1] if self.number[::-1] != self.number
+                                        else self.other, '00000000', '99999999'), 1):
+            if number == self.number:
+                number = self.other
+            links = self.links()
+            self.refused('number', self.WRONG, number=number, changes=True)
+            self.assertEqual((links, count), (self.links(), self.failures()))
+        # The right number still approves it: four wrong ones are allowed.
+        self.assertIsNone(self.approve())
+        self.assertEqual([(self.link_id, 'active')], self.status())
+        self.assertEqual(4, self.failures())
+
+    def test_the_fifth_wrong_number_closes_the_link_and_then_the_right_one_is_refused_too(self):
+        for count in range(1, 5):
+            self.refused('number', self.WRONG, number=self.other, changes=True)
+        self.clock[0] = NOW + 30
+        rows = self.refused('burned', self.CLOSED, number=self.other, changes=True)
+        self.assertEqual([('link_revoke', 'ok', 'burned', self.link_id, 'admin', '', None),
+                          ('link_approve', 'refused', 'burned', self.link_id, 'admin', '', None)], rows)
+        self.assertEqual(([(self.link_id, 'revoked')], 5), (self.status(), self.failures()))
+        self.assertEqual(NOW + 30, self.links()[0][8])
+        for number in (self.number, self.other):
+            self.refused('not_allowed', 'This link is not waiting for a decision.', number=number)
         with on_the_node():
-            pairing.approve(self.link_id, ADMIN)
+            self.assertEqual([], pairing.pending())
+        # The code it came from stays used, so no second link comes of it either.
+        self.assertEqual(((0, 1),), self.codes())
+
+    def test_what_cannot_be_the_number_is_refused_without_being_counted(self):
+        for number in ('', '1234567', '123456789', self.number + ' ', ' ' + self.number, self.number + '\n',
+                       self.number[:7] + 'x', '+' + self.number[1:], '-' + self.number[1:], '\u0661' * 8,
+                       '\uff11' * 8, int(self.number), float(self.number), self.number.encode(), None, True,
+                       [self.number], (self.number,)):
+            self.refused('format', 'The number is the eight digits the controller shows for this link.',
+                         number=number)
+        self.assertEqual(0, self.failures())
+        self.assertIsNone(self.approve())
+
+    def test_the_number_of_another_link_is_a_wrong_number(self):
+        second = self.pair(self.issue())
+        self.assertNotEqual(self.number, second.confirmation)
+        self.refused('number', self.WRONG, number=second.confirmation, changes=True)
+        self.assertEqual((1, 0), (self.failures(), self.failures(second.link_id)))
+        self.assertIsNone(self.approve(second.confirmation, second.link_id))
+        self.assertIsNone(self.approve())
+        self.assertEqual(sorted([(self.link_id, 'active'), (second.link_id, 'active')]), sorted(self.status()))
+
+    def test_the_number_is_compared_whole_and_in_the_same_time_whatever_was_typed(self):
+        import hmac
+        compared = []
+        real = hmac.compare_digest
+
+        def compare(left, right):
+            compared.append((left, right))
+            return real(left, right)
+        with mock.patch.object(pairing.hmac, 'compare_digest', side_effect=compare):
+            self.refused('number', self.WRONG, number=self.other, changes=True)
+            self.assertIsNone(self.approve())
+        self.assertEqual([(self.number.encode(), self.other.encode()), (self.number.encode(), self.number.encode())],
+                         compared)
+
+    def test_a_wrong_number_for_a_link_that_cannot_be_approved_anyway_is_not_counted(self):
+        self.clock[0] = NOW + 600
+        self.refused('expired', 'This link was not approved in time. Pair the two servers again.', number=self.other)
+        self.clock[0] = NOW
+        self.generation[0] = GENERATION + 1
+        self.refused('generation', 'A link was revoked on this server after this one was made. Pair the two servers '
+                     'again.', number=self.other)
+        self.generation[0] = GENERATION
+        self.assertEqual(0, self.failures())
+        with on_the_node():
+            pairing.reject(self.link_id, ADMIN)
+        self.refused('not_allowed', 'This link is not waiting for a decision.', number=self.other)
+        self.assertEqual(0, self.failures())
+
+    def test_a_link_already_at_its_limit_is_not_approved_by_the_right_number(self):
+        # Should a row ever be left waiting with the count full, it still opens for nobody.
+        self.database.run("UPDATE ms_links SET failures = 5 WHERE link_id = '%s'" % self.link_id)
+        self.refused('burned', self.CLOSED)
+        self.database.run("UPDATE ms_links SET failures = 6 WHERE link_id = '%s'" % self.link_id)
+        self.refused('burned', self.CLOSED)
+        self.assertEqual([(self.link_id, 'pending')], self.status())
+
+    def test_wrong_numbers_typed_at_the_same_moment_are_each_counted_and_the_link_closes_once(self):
+        outcomes = []
+
+        def decide(number):
+            SIDE.role = keys.NODE
+            try:
+                outcomes.append(pairing.approve(self.link_id, ADMIN, number))
+            except pairing.PairingError as error:
+                outcomes.append(error.reason)
+            finally:
+                connection.close()
+        workers = [threading.Thread(target=decide, args=(self.other,)) for unused in range(8)]
+        for worker in workers:
+            worker.start()
+        for worker in workers:
+            worker.join()
+        self.assertEqual(['burned'] + ['not_allowed'] * 3 + ['number'] * 4, sorted(outcomes))
+        self.assertEqual(([(self.link_id, 'revoked')], 5), (self.status(), self.failures()))
+        self.assertEqual(1, len([row for row in self.audited() if row[0] == 'link_revoke']))
+
+    def test_the_right_number_among_wrong_ones_at_the_same_moment_never_leaves_a_closed_link_active(self):
+        for unused in range(3):
+            self.again()
+            self.setUp_link()
+            outcomes = []
+
+            def decide(number):
+                SIDE.role = keys.NODE
+                try:
+                    outcomes.append(pairing.approve(self.link_id, ADMIN, number))
+                except pairing.PairingError as error:
+                    outcomes.append(error.reason)
+                finally:
+                    connection.close()
+            workers = [threading.Thread(target=decide, args=(number,))
+                       for number in [self.other] * 6 + [self.number]]
+            for worker in workers:
+                worker.start()
+            for worker in workers:
+                worker.join()
+            (link_id, status), = self.status()
+            approved = outcomes.count(None)
+            self.assertIn(approved, (0, 1))
+            # Approved before the fifth wrong number, or closed by it: never both, and never neither.
+            self.assertEqual('active' if approved else 'revoked', status, outcomes)
+            self.assertEqual(approved, len([row for row in self.audited() if row[:2] == ('link_approve', 'ok')]))
+            self.assertEqual(1 - approved, len([row for row in self.audited() if row[0] == 'link_revoke']))
+            self.assertLessEqual(self.failures(), 5)
+
+    def setUp_link(self):
+        self.paired = self.pair(self.issue())
+        self.link_id, self.number = self.paired.link_id, self.paired.confirmation
+        self.other = '%08d' % ((int(self.number) + 1) % 10 ** 8)
+
+    def test_a_server_that_cannot_write_its_audit_trail_still_counts_wrong_numbers(self):
+        self.database.run('RENAME TABLE ms_audit TO ms_audit_away')
+        try:
+            reasons = []
+            for unused in range(6):
+                with self.assertRaises(pairing.PairingError) as caught, on_the_node():
+                    pairing.approve(self.link_id, ADMIN, self.other)
+                reasons.append(caught.exception.reason)
+            self.assertEqual(['number'] * 4 + ['burned', 'not_allowed'], reasons)
+            self.assertEqual(([(self.link_id, 'revoked')], 5), (self.status(), self.failures()))
+        finally:
+            self.database.run('RENAME TABLE ms_audit_away TO ms_audit')
+
+    def test_without_its_identity_key_a_server_approves_nothing_and_counts_nothing(self):
+        kept, self.identity[0] = self.identity[0], None
+        for number in (self.number, self.other):
+            self.refused('internal', 'The identity key of this server could not be read.', number=number)
+        self.identity[0] = kept
+        self.assertEqual(0, self.failures())
+        self.assertIsNone(self.approve())
+
+    def test_a_link_is_approved_once(self):
+        self.approve()
         active = self.links()
         self.clock[0] = NOW + 60
         for decide in (pairing.approve, pairing.reject):
@@ -1040,7 +1228,7 @@ class DecisionTests(Servers):
         def decide():
             SIDE.role = keys.NODE
             try:
-                outcomes.append(pairing.approve(self.link_id, ADMIN))
+                outcomes.append(pairing.approve(self.link_id, ADMIN, self.number))
             except pairing.PairingError as error:
                 outcomes.append(error.reason)
             finally:
@@ -1067,16 +1255,18 @@ class DecisionTests(Servers):
 
     def test_a_link_nobody_approved_in_ten_minutes_is_closed(self):
         self.assertEqual(600, pairing.PENDING_LIFETIME)
-        late = self.pair(self.issue()).link_id
+        late = self.pair(self.issue())
         self.clock[0] = NOW + 600
         self.refused('expired', 'This link was not approved in time. Pair the two servers again.')
-        self.assertEqual([(link_id, 'pending') for link_id in sorted((self.link_id, late))], sorted(self.status()))
+        self.assertEqual([(link_id, 'pending') for link_id in sorted((self.link_id, late.link_id))],
+                         sorted(self.status()))
         with on_the_node():
             self.assertEqual([], pairing.pending())
-        self.assertEqual(sorted([(self.link_id, 'revoked'), (late, 'revoked')]), sorted(self.status()))
-        self.assertEqual(sorted(('link_expire', 'ok', '', link_id, '', '', None) for link_id in (self.link_id, late)),
-                         sorted(self.audited()[-2:]))
-        self.refused('not_allowed', 'This link is not waiting for a decision.', link_id=late)
+        self.assertEqual(sorted([(self.link_id, 'revoked'), (late.link_id, 'revoked')]), sorted(self.status()))
+        self.assertEqual(sorted(('link_expire', 'ok', '', link_id, '', '', None)
+                                for link_id in (self.link_id, late.link_id)), sorted(self.audited()[-2:]))
+        self.refused('not_allowed', 'This link is not waiting for a decision.', link_id=late.link_id,
+                     number=late.confirmation)
         with on_the_node():
             self.assertEqual([], pairing.pending())
         self.assertEqual(2, len([row for row in self.audited() if row[0] == 'link_expire']))
@@ -1093,28 +1283,38 @@ class DecisionTests(Servers):
         self.generation[0] = GENERATION
         with on_the_node():
             self.assertEqual([self.link_id], [waiting.link_id for waiting in pairing.pending()])
-            pairing.approve(self.link_id, ADMIN)
+        self.approve()
         self.assertEqual([(self.link_id, 'active')], self.status())
 
-    def test_every_waiting_link_is_listed_with_its_own_number(self):
+    def test_the_managed_server_lists_every_waiting_link_and_never_its_number(self):
         second = self.pair(self.issue())
+        self.assertNotEqual(self.number, second.confirmation)
         with on_the_node():
             waiting = pairing.pending()
-        self.assertEqual(sorted([(self.link_id, self.paired.confirmation), (second.link_id, second.confirmation)]),
-                         sorted((link.link_id, link.confirmation) for link in waiting))
-        self.assertNotEqual(self.paired.confirmation, second.confirmation)
+        self.assertEqual(sorted([(self.link_id, '127.0.0.1', ADMIN, NOW, NOW + 600),
+                                 (second.link_id, '127.0.0.1', ADMIN, NOW, NOW + 600)]),
+                         sorted(tuple(link) for link in waiting))
+        self.assertEqual(('link_id', 'controller_ip', 'admin_id', 'created_at', 'expires_at'), pairing.Pending._fields)
+        for number in (self.number, second.confirmation):
+            self.assertNotIn(number, repr(waiting))
+        # Listing needs nothing the number is made from: not even this server's identity key.
         kept, self.identity[0] = self.identity[0], None
-        with self.assertRaises(pairing.PairingError) as caught, on_the_node():
-            pairing.pending()
-        self.assertEqual('internal', caught.exception.reason)
+        with on_the_node():
+            self.assertEqual(2, len(pairing.pending()))
         self.identity[0] = kept
+        # Nor is the number written anywhere on this server, before or after it was typed.
+        self.approve()
+        written = repr([self.database.run('SELECT * FROM `%s`' % name) for name in test_database.NAMES])
+        for number in (self.number, second.confirmation):
+            self.assertNotIn(number, written)
 
     def test_a_decision_that_cannot_be_recorded_is_not_carried_out(self):
         self.database.run('RENAME TABLE ms_audit TO ms_audit_away')
         try:
             for decide in (pairing.approve, pairing.reject):
                 with self.assertRaises(pairing.PairingError) as caught, on_the_node():
-                    decide(self.link_id, ADMIN)
+                    decide(*((self.link_id, ADMIN, self.number) if decide is pairing.approve
+                             else (self.link_id, ADMIN)))
                 self.assertEqual('internal', caught.exception.reason)
                 self.assertEqual([(self.link_id, 'pending')], self.status())
         finally:
