@@ -59,14 +59,20 @@ class secMiddleware:
         from urllib.parse import urlparse
         pathActual = urlparse(FinalURL).path
 
-        if pathActual.startswith('/multiserver/login/'):
+        # Multi-Server paths are compared as Django routes them. pathActual has its
+        # dot segments resolved, so "/x/../multiserver/login/arrive" would be taken
+        # for a server login address here while another view answers it.
+        routedPath = request.path_info
+        serverLogin = False
+        if routedPath.startswith('/multiserver/login/'):
             from multiServer import browser
-            if pathActual in browser.PATHS:
-                # The dedicated views validate the entire small form and never log its body.
-                # They set stricter response policies than the ordinary panel.
-                request.ms_private_cookies = True
-                return self.get_response(request)
-        if 'ms_managed' in request.session:
+            serverLogin = routedPath in browser.PATHS
+        if serverLogin:
+            # The dedicated views validate the entire small form and never log its body.
+            # They set stricter response policies than the ordinary panel. A session
+            # sent along is bound to its address below, as on every other path.
+            request.ms_private_cookies = True
+        elif 'ms_managed' in request.session:
             from multiServer.browser import guard
             request.ms_private_cookies = True
             refusal = guard(request)
@@ -88,7 +94,7 @@ class secMiddleware:
             and self._has_standalone_webmail_session(request)
         )
 
-        if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
+        if serverLogin or pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
                 or publicWebmailRequest or standaloneWebmailRequest or roundcubeRequest\
                 or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
             pass
@@ -126,7 +132,8 @@ class secMiddleware:
                 logging.writeToFile('Panel session IP binding changed.')
                 # A stale cookie must not consume a valid login attempt, nor
                 # leave a browser navigation displaying a raw JSON error.
-                if pathActual not in ('/', '/verifyLogin', '/logout'):
+                # A server login view then answers for itself, without the session.
+                if pathActual not in ('/', '/verifyLogin', '/logout') and not serverLogin:
                     if request.method in ('GET', 'HEAD'):
                         from django.shortcuts import redirect
                         return redirect('/')
@@ -141,6 +148,9 @@ class secMiddleware:
                     }), content_type='application/json')
         except:
             pass
+
+        if serverLogin:
+            return self.get_response(request)
 
 
         from CyberCP.csfAdapter import validate_request, adapt_response
@@ -177,7 +187,7 @@ class secMiddleware:
                 # CSP, Referrer-Policy) are applied.
                 webmailRequest = pathActual.startswith('/webmail/')
 
-                node_control = pathActual == '/multiserver/nodes/control'
+                node_control = routedPath == '/multiserver/nodes/control'
                 for key, value in ({} if webmailRequest else data).items():
                     if node_control and key == 'password':
                         continue  # Opaque credential consumed only by the password verifier.
