@@ -674,6 +674,7 @@
                         <p class="page-subtitle">{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
                     </div>
                     <div>
+                        {% if showInventoryLink %}<a class="btn btn-outline" href="{% url 'multiServerInventory' 'websites' %}">{% trans "All servers" %}</a>{% endif %}
                         <a class="btn btn-primary" href="{% url 'createWebsite' %}">
                             <i class="fas fa-plus"></i>
                             {% trans "Create Website" %}

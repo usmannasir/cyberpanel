@@ -277,7 +277,9 @@ def send(link, method, path, query, content_type, body, actor, mode, now=None, n
     """
     if type(link) is not Link:
         raise InvalidLink('A link description is required.')
-    deadline = time.monotonic() + DEADLINE
+    from multiServer import inventory
+    is_inventory = mode == 'inventory'
+    deadline = time.monotonic() + (min(DEADLINE, 4) if is_inventory else DEADLINE)
     timestamp = int(time.time()) if now is None else now
     nonce = os.urandom(16).hex() if nonce is None else nonce
     try:
@@ -292,7 +294,8 @@ def send(link, method, path, query, content_type, body, actor, mode, now=None, n
     connection = _connect(link, deadline)
     try:
         _write(connection, head + body, deadline)
-        status, reply_type, reply_body, signature = _read_reply(connection, deadline)
+        status, reply_type, reply_body, signature = _read_reply(
+            connection, deadline, inventory.BYTE_LIMIT if is_inventory else MAX_RESPONSE)
     finally:
         connection.close()
     try:
@@ -468,7 +471,7 @@ def _write(connection, data, deadline):
         view = view[_within(deadline, connection, connection.send, view[:65536]):]
 
 
-def _read_reply(connection, deadline):
+def _read_reply(connection, deadline, body_limit=MAX_RESPONSE):
     """One whole reply and then the end of the connection: (status, content type, body, signature)."""
     received = bytearray()
     while True:
@@ -484,7 +487,7 @@ def _read_reply(connection, deadline):
             raise MalformedResponse('The node closed the connection in the middle of its reply headers.')
         received += chunk
     status, length, content_type, signature = _parse_head(bytes(received[:end]))
-    if end + 4 + length > MAX_RESPONSE:
+    if length > body_limit or end + 4 + length > MAX_RESPONSE:
         raise ResponseTooLarge('The reply is larger than a reply may be.')
     body = received[end + 4:]
     # Read to the end of the connection, not just the declared length: whatever

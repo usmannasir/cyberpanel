@@ -1,0 +1,33 @@
+{% extends "baseTemplate/index.html" %}
+{% block title %}{{ inventory_title }} · All servers – CyberPanel{% endblock %}
+{% block content %}
+<section class="container-fluid" ng-non-bindable>
+  <h1>{{ inventory_title }} <small>All servers</small></h1>
+  {% if licensed %}
+  {% include 'multiServer/inventory_nav.html' %}
+  <h2>Servers</h2>
+  <ul class="list-inline">{% for label, status, url in badges %}
+    <li><a href="{{ url }}">{{ label }}</a> <span class="label label-default">{{ status }}</span></li>
+  {% empty %}<li>No active server matches this filter.</li>{% endfor %}</ul>
+  {% if prev_sources %}<a href="{{ prev_sources }}">Previous servers</a>{% endif %}
+  {% if next_sources %}<a href="{{ next_sources }}">More servers</a>{% endif %}
+  {% if source %}<p><a href="{{ all_sources }}">Show all servers</a></p>{% endif %}
+  <form method="get" class="form-inline">
+    <label for="inventory-search">Search {{ inventory_title|lower }}</label>
+    <input id="inventory-search" name="q" class="form-control" maxlength="100" value="{{ query }}">
+    {% if source %}<input type="hidden" name="source" value="{{ source }}">{% endif %}
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+  {% if partial %}<p class="alert alert-info">Partial inventory includes up to {{ row_limit }} records per server. Entries outside the supported format are omitted.</p>{% endif %}
+  <p role="status">{{ count }} matching record{{ count|pluralize }}</p>
+  <div class="table-responsive"><table class="table table-striped">
+    <thead><tr><th scope="col">{{ name_heading }}</th><th scope="col">{{ detail_heading }}</th><th scope="col">Server</th><th scope="col">Open on server</th></tr></thead>
+    <tbody>{% for name, detail, label, url, status in rows %}
+      <tr><th scope="row">{{ name }}</th><td>{{ detail }}</td><td>{{ label }} <small>{{ status }}</small></td>
+      <td><a href="{{ url }}" rel="noreferrer">{% if category == 'websites' %}Site workspace{% elif category == 'databases' %}Database list{% else %}Mailbox list{% endif %}</a></td></tr>
+    {% empty %}<tr><td colspan="4">No matching records in the available inventory.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <nav aria-label="Inventory pages">{% if prev %}<a href="{{ prev }}">Previous</a> · {% endif %}Page {{ page }} of {{ pages }}{% if next %} · <a href="{{ next }}">Next</a>{% endif %}</nav>
+  {% else %}<p class="alert alert-warning">An active Multi-Server Manager licence is required to view inventory.</p>{% endif %}
+</section>
+{% endblock %}

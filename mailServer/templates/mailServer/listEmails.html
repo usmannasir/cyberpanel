@@ -578,6 +578,7 @@
             </h1>
             <p class="page-subtitle">{% trans "Manage email accounts, change passwords, and configure mail clients" %}</p>
             <div class="header-actions">
+                {% if showInventoryLink %}<a class="btn-secondary" href="{% url 'multiServerInventory' 'mail' %}">{% trans "All servers" %}</a>{% endif %}
                 <a href="{% url 'createEmailAccount' %}" class="btn-primary">
                     <i class="fas fa-plus-circle"></i>
                     {% trans "Create Email" %}

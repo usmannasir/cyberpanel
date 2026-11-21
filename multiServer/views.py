@@ -75,7 +75,13 @@ def nodes_navigation(request):
     if switch.active_role() != keys.CONTROLLER:
         return {}
     from multiServer.nodes import administrator
-    return {'showManagedNodes': administrator(request) is not None}
+    visible = administrator(request) is not None
+    context = {'showManagedNodes': visible}
+    route = getattr(getattr(request, 'resolver_match', None), 'url_name', None)
+    if visible and route in ('listWebsites', 'listDBs', 'listEmails'):
+        from multiServer import entitlement
+        context['showInventoryLink'] = entitlement.allowed()
+    return context
 
 
 @serves(keys.CONTROLLER)
@@ -88,3 +94,9 @@ def nodes_page(request, role):
 def node_control(request, role):
     from multiServer.nodes import control
     return control(request)
+
+
+@serves(keys.CONTROLLER)
+def inventory_page(request, role, category):
+    from multiServer.lists import index
+    return index(request, category)
