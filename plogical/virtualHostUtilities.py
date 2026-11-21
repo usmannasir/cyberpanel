@@ -841,10 +841,7 @@ class virtualHostUtilities:
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
-                        phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
-
-                        command = f"systemctl restart {phpService}"
-                        ProcessUtilities.normalExecutioner(command)
+                        ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
 
             ## Create Configurations ends here
 
@@ -1835,10 +1832,7 @@ class virtualHostUtilities:
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
-                        phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
-
-                        command = f"systemctl restart {phpService}"
-                        ProcessUtilities.normalExecutioner(command)
+                        ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
 
             ## DKIM Check
 
@@ -1946,18 +1940,9 @@ class virtualHostUtilities:
 
                 ##
 
-                phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
+                ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('stop', phpVersion))
 
-                # if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                #     phpService = f'php{php}-php-fpm'
-                # else:
-                #     phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
-
-                command = f"systemctl stop {phpService}"
-                ProcessUtilities.normalExecutioner(command)
-
-                command = f"systemctl restart {phpService}"
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
 
                 command = f"systemctl restart {ApacheVhost.serviceName}"
                 ProcessUtilities.normalExecutioner(command)

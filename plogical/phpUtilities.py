@@ -194,10 +194,7 @@ class phpUtilities:
 
             if int(apache) == 1:
 
-                phpService = ApacheVhost.DecideFPMServiceName(phpVers)
-
-                command = f"systemctl restart {phpService}"
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVers))
 
             print("1,None")
 

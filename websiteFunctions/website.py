@@ -5603,23 +5603,24 @@ StrictHostKeyChecking no
                     phpVersion = phpPath[3][3] + phpPath[3][4]
                     phpVersion = f'PHP {phpPath[3][3]}.{phpPath[3][4]}'
             else:
-                phpVersion = f'PHP {phpPath[2]}'
+                # /etc/php/8.1/fpm/pool.d/<domain>.conf
+                phpVersion = f'PHP {phpPath[3]}'
 
             # php = PHPManager.getPHPString(phpVersion)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'PHP Version in tune settings {phpVersion}')
 
-            phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
+            # The service name is built from the version's digits. This is the
+            # panel's web process, which cannot control services itself, so
+            # the privileged helper runs the two commands.
+            for action in ('stop', 'restart'):
+                command = ' '.join(shlex.quote(word) for word in ApacheVhost.fpmServiceCommand(action, phpVersion))
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile(f'PHP service in tune settings {phpService}')
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'PHP service command in tune settings {command}')
 
-            command = f"systemctl stop {phpService}"
-            ProcessUtilities.normalExecutioner(command)
-
-            command = f"systemctl restart {phpService}"
-            ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.executioner(command)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
