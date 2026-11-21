@@ -12,7 +12,8 @@ pairing code, a login ticket or a capability.
 from django.db import models
 
 PENDING, ACTIVE, PAUSED, REVOKED = 'pending', 'active', 'paused', 'revoked'
-STATUSES = (PENDING, ACTIVE, PAUSED, REVOKED)
+REVOKING = 'revoking'
+STATUSES = (PENDING, ACTIVE, PAUSED, REVOKED, REVOKING)
 _STATUS_CHOICES = [(status, status) for status in STATUSES]
 
 # The largest inventory a controller stores; the column itself ends at 16 MiB.
@@ -32,6 +33,7 @@ class Node(models.Model):
     status = models.CharField(max_length=16, choices=_STATUS_CHOICES, default=PENDING)
     sealed = models.CharField(max_length=2048)
     panel_version = models.CharField(max_length=32, default='')
+    advertised = models.CharField(max_length=400, default='')
     created_at = models.BigIntegerField()
     updated_at = models.BigIntegerField()
     last_seen_at = models.BigIntegerField(null=True, default=None)

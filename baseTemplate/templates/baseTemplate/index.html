@@ -259,6 +259,12 @@
             <div class="icon-wrapper"><i class="fas fa-server"></i></div>
             <span>{% trans "Server" %}</span>
         </a>
+        {% if showManagedNodes %}
+        <a href="{% url 'multiServerNodes' %}" class="menu-item {% if request.resolver_match.url_name == 'multiServerNodes' %}active{% endif %}">
+            <div class="icon-wrapper"><i class="fas fa-network-wired"></i></div>
+            <span>{% trans "Nodes" %}</span>
+        </a>
+        {% endif %}
         <a href="{% url 'cpHub' 'security' %}" class="menu-item">
             <div class="icon-wrapper"><i class="fas fa-shield"></i></div>
             <span>{% trans "Security" %}</span>

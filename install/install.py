@@ -3082,6 +3082,9 @@ def main():
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+    subprocess.check_call(['/usr/local/CyberPanel/bin/python', 'manage.py', 'shell', '-c',
+                           'from plogical.schemaMigration import provision_multiserver; provision_multiserver()'],
+                          cwd='/usr/local/CyberCP')
     if not checks.download_install_phpmyadmin():
         raise RuntimeError("phpMyAdmin setup failed; installation stopped. Check the [download_install_phpmyadmin] error in the install log.")
     checks.setupCLI()

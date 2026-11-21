@@ -60,6 +60,19 @@ class TableTests(OwnDatabase):
         self.assertEqual(((1,),), self.database.run('SELECT COUNT(*) FROM ms_entitlement'))
         self.database.run('DELETE FROM ms_entitlement')
 
+    def test_legacy_nodes_gain_capabilities_without_replacing_rows(self):
+        self.ensure()
+        self.database.run("INSERT INTO ms_nodes (link_id,label,sealed,created_at,updated_at) "
+                          "VALUES ('legacy','Legacy node','existing',1,1)")
+        try:
+            self.database.run('ALTER TABLE ms_nodes DROP COLUMN advertised')
+            self.ensure()
+            self.ensure()
+            self.assertEqual((('Legacy node', 'existing', ''),), self.database.run(
+                "SELECT label,sealed,advertised FROM ms_nodes WHERE link_id='legacy'"))
+        finally:
+            self.database.run("DELETE FROM ms_nodes WHERE link_id='legacy'")
+
     def test_2_a_table_without_a_required_unique_index_stops_it(self):
         self.ensure()
         for table, columns, remove, restore in (

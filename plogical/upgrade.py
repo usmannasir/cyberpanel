@@ -4409,6 +4409,12 @@ passdb {
                 os.chdir('/usr/local')
                 with activate_source(installation, staged) as previous:
                     os.chdir(installation)
+                    # The launcher can be a standalone upgrader running against an older panel.
+                    # Load schema, settings and identity code together from the selected checkout.
+                    if os.path.isdir(os.path.join(installation, 'multiServer')):
+                        subprocess.check_call(['/usr/local/CyberPanel/bin/python', 'manage.py', 'shell', '-c',
+                                               'from plogical.schemaMigration import provision_multiserver; provision_multiserver()'],
+                                              cwd=installation)
                     Upgrade.staticContent()
                 Upgrade.stdOut('Previous installation retained at: ' + previous)
 

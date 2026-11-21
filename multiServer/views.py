@@ -69,3 +69,22 @@ def status(request, role):
     response = JsonResponse({'role': role, 'licensed': licensed})
     response['Cache-Control'] = 'no-store'
     return response
+
+
+def nodes_navigation(request):
+    if switch.active_role() != keys.CONTROLLER:
+        return {}
+    from multiServer.nodes import administrator
+    return {'showManagedNodes': administrator(request) is not None}
+
+
+@serves(keys.CONTROLLER)
+def nodes_page(request, role):
+    from multiServer.nodes import index
+    return index(request)
+
+
+@serves(keys.CONTROLLER)
+def node_control(request, role):
+    from multiServer.nodes import control
+    return control(request)

@@ -568,7 +568,7 @@ class StateTests(Controller):
                         if callable(value) and not name.startswith('_') and getattr(value, '__module__', '') ==
                         links.__name__ and not isinstance(value, type))
         self.assertEqual(['check_label', 'confirm', 'hello', 'link_of', 'pairing_slot', 'pause', 'prepare', 'remove',
-                          'resume', 'seal', 'store', 'unseal'], public)
+                          'resume', 'revoke', 'seal', 'store', 'unseal'], public)
 
     def test_a_link_changes_state_only_from_the_state_that_change_starts_in(self):
         self.store()
@@ -585,7 +585,7 @@ class StateTests(Controller):
                                      (row['status'], row['updated_at']))
                     self.assertEqual((event,) + (('ok', '') if moved else ('refused', 'link'))
                                      + (LINK, 'admin', '', '', None, None, 0), self.audited()[-1])
-        self.assertEqual(8, len(self.audited()))
+        self.assertEqual(len(self.CHANGES) * len(models.STATUSES), len(self.audited()))
 
     def test_a_change_touches_nothing_but_the_status_and_its_time(self):
         self.store()
@@ -604,7 +604,21 @@ class StateTests(Controller):
                              sorted(self.workers([lambda: getattr(links, name)(LINK, 'admin')] * 8)))
         self.assertEqual([False] * 7 + [True], sorted(self.workers([lambda: links.remove(LINK, 'admin')] * 8)))
 
-    def test_pausing_and_removing_ask_neither_the_licence_nor_the_role_nor_the_master_key(self):
+    def test_revoke_retains_key_for_retry_until_the_remote_node_confirms(self):
+        self.store()
+        self.alter(status='paused')
+        self.licensed = False
+        with mock.patch.object(transport, 'send', side_effect=[
+            (403, 'application/json', b'{}'), (200, 'application/json', b'{"revoked":true}')
+        ]):
+            self.assertFalse(links.revoke(LINK, 'admin'))
+            self.assertEqual((models.REVOKING, links.REFUSED), (self.row()['status'], self.row()['last_error']))
+            self.assertFalse(links.resume(LINK, 'admin'))
+            self.assertTrue(links.revoke(LINK, 'admin'))
+            self.assertFalse(links.revoke(LINK, 'admin'))
+            self.assertEqual([], self.rows())
+
+    def test_lapsed_controller_can_pause_and_remove_an_unreadable_row(self):
         self.store()
         self.alter(status='active')
         node = models.Node.objects.get(pk=LINK)
@@ -613,21 +627,20 @@ class StateTests(Controller):
                                          created_at=NOW, expires_at=NOW + 60)
         self.store(OTHER_LINK, node_key=OTHER_NODE_KEY)
         self.forget_audit()
-        self.role, self.master, self.licensed = keys.OFF, None, False
+        self.master, self.licensed = None, False
         self.alter(sealed='x')
-        with mock.patch.object(keys, 'role', side_effect=AssertionError('the role is not asked')), \
-                mock.patch.object(keys, 'master_key', side_effect=AssertionError('the key is not asked')), \
+        with mock.patch.object(keys, 'master_key', side_effect=AssertionError('the key is not asked')), \
                 mock.patch.object(links, 'unseal', side_effect=AssertionError('nothing is opened')):
             self.assertIs(True, links.pause(LINK, 'admin'))
             self.assertEqual('paused', self.row()['status'])
-            self.assertIs(True, links.resume(LINK, 'admin'))
+            self.assertIs(False, links.resume(LINK, 'admin'))
             self.assertIs(True, links.remove(LINK, 'admin'))
             self.assertIs(False, links.remove(LINK, 'admin'))
-        self.assertEqual(0, self.licence_asked)
+        self.assertEqual(1, self.licence_asked)
         self.assertEqual([OTHER_LINK], [row['link_id'] for row in self.rows()])
         self.assertEqual((0, 0), (models.InventoryCache.objects.count(), models.Capability.objects.count()))
         self.assertEqual([(event, outcome, reason, LINK, 'admin', '', '', None, None, 0) for event, outcome, reason in (
-            ('link_pause', 'ok', ''), ('link_resume', 'ok', ''), ('node_remove', 'ok', ''),
+            ('link_pause', 'ok', ''), ('link_resume', 'refused', 'licence'), ('node_remove', 'ok', ''),
             ('node_remove', 'refused', 'link'))], self.audited())
 
     def test_what_is_not_a_link_id_names_no_row(self):
