@@ -17,6 +17,7 @@ order, and the first that fails ends the request:
     link        the request names this server; the link exists and is active,
                 unexpired and of the current generation
     source_ip   the address the connection came from is one the link allows
+                (addresses.py is the one rule for both)
     time        signed within WINDOW seconds of now and not before the newest
                 signed time already accepted on the link
     size        the body is as long as declared (it is kept only now: nobody who
@@ -43,12 +44,11 @@ next request from the same stream, so nothing may be left on it unread.
 """
 import collections
 import hmac
-import ipaddress
 import json
 import re
 import time
 
-from multiServer import crypto, keys, switch, transport
+from multiServer import addresses, crypto, keys, switch, transport
 
 WINDOW = 90  # seconds a signed time may differ from this server's clock, either way
 PRUNE_EVERY = 60  # a link's dead nonces are removed when its newest accepted time enters a new minute
@@ -145,7 +145,7 @@ def _addressed(meta):
 def _serve(request, exchange, get_response):
     meta = request.META
     now = int(time.time())
-    exchange.source = _address(meta.get('REMOTE_ADDR'))
+    exchange.source = addresses.peer(meta.get('REMOTE_ADDR'))
     exchange.has_body = _declares_body(meta)
     coded = 'HTTP_TRANSFER_ENCODING' in meta or meta.get('HTTP_CONTENT_ENCODING', 'identity') != 'identity'
     named = _strip(request, exchange)
@@ -196,7 +196,7 @@ def _serve(request, exchange, get_response):
         raise _Refused(unusable)
 
     # source_ip
-    if exchange.source is None or exchange.source not in _allowed(link.allowed_ips):
+    if not addresses.allows(link.allowed_ips, exchange.source):
         raise _Refused('source_ip')
 
     # time
@@ -230,7 +230,7 @@ def _serve(request, exchange, get_response):
 
     # not_allowed
     verified = Verified(link.link_id, link.admin_id, named['actor'], named['mode'], method, host, path, query,
-                        content_type, body, str(exchange.source))
+                        content_type, body, exchange.source)
     status, media_type, reply = _dispatch(verified, request, get_response)
     response = _signed(exchange, status, media_type, reply)
     _audit(exchange, 'ok', None, status)
@@ -297,30 +297,6 @@ def _language(request):
         return translation.get_language_from_request(request)
     except Exception:
         return None
-
-
-def _address(value):
-    """An address in its one form, or None. IPv4 that arrives written as IPv6 is that IPv4 address."""
-    if type(value) is not str or len(value) > 45 or '%' in value:
-        return None
-    try:
-        parsed = ipaddress.ip_address(value)
-    except ValueError:
-        return None
-    if parsed.version == 4:
-        return parsed if str(parsed) == value else None
-    return parsed if parsed.ipv4_mapped is None else parsed.ipv4_mapped
-
-
-def _allowed(listed):
-    """The addresses a link accepts: plainly written, separated by commas. One entry that is not, and none is."""
-    found = []
-    for entry in listed.split(',') if type(listed) is str else ():
-        address = _address(entry)
-        if address is None or str(address) != entry:
-            return ()
-        found.append(address)
-    return found
 
 
 def _unusable(link, generation, now):
@@ -449,7 +425,7 @@ def _audit(exchange, outcome, reason, status):
     from multiServer import audit
     fields = {'outcome': outcome, 'status': status}
     for name, value in (('reason', reason), ('link_id', exchange.link_id), ('actor', exchange.actor),
-                        ('source_ip', None if exchange.source is None else str(exchange.source)),
+                        ('source_ip', exchange.source),
                         ('method', exchange.method), ('path', exchange.path), ('size', exchange.size)):
         if value is not None:
             fields[name] = value

@@ -13,6 +13,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import re
 import secrets
 import socket
 import ssl
@@ -23,7 +24,7 @@ import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 from wsgiref import simple_server
 
-from multiServer import crypto, keys, nodeGateway, schema, switch, testing, transport
+from multiServer import addresses, crypto, keys, nodeGateway, schema, switch, testing, transport
 from multiServer import test_transport as wire
 
 SKIP = testing.unavailable()
@@ -182,33 +183,14 @@ class TableTests(unittest.TestCase):
 
 
 class AddressTests(unittest.TestCase):
-    def test_an_address_has_one_form(self):
-        for given, expected in (('203.0.113.9', '203.0.113.9'), ('2001:db8::9', '2001:db8::9'),
-                                ('2001:DB8:0:0:0:0:0:9', '2001:db8::9'), ('::ffff:203.0.113.9', '203.0.113.9'),
-                                ('::FFFF:cb00:7109', '203.0.113.9'), ('::1', '::1'), ('127.0.0.1', '127.0.0.1')):
-            self.assertEqual(expected, str(nodeGateway._address(given)), given)
+    """The rule itself is in multiServer/addresses.py and is tested in multiServer/test_addresses.py."""
 
-    def test_what_is_not_one_plain_address_is_no_address(self):
-        for given in (None, '', b'203.0.113.9', 3405803785, ' 203.0.113.9', '203.0.113.9 ', '203.0.113.9\n',
-                      '203.0.113.09', '0203.0.113.9', '203.0.113', '203.0.113.9.1', '203.0.113.9/32',
-                      '203.0.113.9,203.0.113.9', '203.0.113.9:8090', '[2001:db8::9]', 'fe80::1%eth0', '2001:db8::9%1',
-                      'localhost', 'unknown', '3405803785', '0xcb.0.113.9', 'a' * 46):
-            self.assertIsNone(nodeGateway._address(given), repr(given))
-
-    def test_a_link_allows_exactly_the_addresses_it_lists(self):
-        allowed = nodeGateway._allowed
-        self.assertEqual(['203.0.113.9'], [str(address) for address in allowed('203.0.113.9')])
-        self.assertEqual(['203.0.113.9', '2001:db8::9', '198.51.100.7'],
-                         [str(address) for address in allowed('203.0.113.9,2001:db8::9,198.51.100.7')])
-        self.assertIn(nodeGateway._address('::ffff:198.51.100.7'), allowed('203.0.113.9,198.51.100.7'))
-        self.assertNotIn(nodeGateway._address('198.51.100.8'), allowed('203.0.113.9,198.51.100.7'))
-
-    def test_a_list_with_one_entry_that_is_not_a_plain_address_allows_nobody(self):
-        for listed in (None, '', ',', '203.0.113.9,', ',203.0.113.9', '203.0.113.9, 198.51.100.7', ' 203.0.113.9',
-                       '203.0.113.9;198.51.100.7', '203.0.113.9 198.51.100.7', '203.0.113.0/24', '0.0.0.0/0', '*',
-                       '203.0.113.9,*', '203.0.113.9,any', '2001:DB8::9', '2001:db8:0::9', '::ffff:203.0.113.9',
-                       '203.0.113.9,::ffff:198.51.100.7', '203.0.113.009', b'203.0.113.9', ['203.0.113.9']):
-            self.assertEqual(0, len(nodeGateway._allowed(listed)), repr(listed))
+    def test_the_gateway_names_and_matches_an_address_by_the_one_rule_and_nowhere_else(self):
+        source = Path(nodeGateway.__file__).read_text()
+        self.assertEqual(["addresses.peer(meta.get('REMOTE_ADDR'))",
+                          'addresses.allows(link.allowed_ips, exchange.source)'],
+                         re.findall(r'addresses\.[a-z_]+\([^()]*(?:\([^()]*\))?[^()]*\)', source))
+        self.assertEqual(1, source.count('REMOTE_ADDR'))
 
 
 class CompatibilityTests(unittest.TestCase):
@@ -745,7 +727,7 @@ class SourceTests(Panel):
                 before = self.state()
                 response = self.call(environ={'REMOTE_ADDR': address})[0]
                 self.refused_unsigned(response, 'source_ip', before,
-                                      source_ip=str(nodeGateway._address(address)))
+                                      source_ip=addresses.peer(address))
 
     def test_an_address_the_server_cannot_name_is_refused(self):
         for address in ('', 'unknown', '127.0.0.1, 127.0.0.1', '127.0.0.1:51324', '127.0.0.01', 'localhost',
@@ -1238,7 +1220,7 @@ class ExtensionPointTests(Panel):
 class NeverRaisesTests(Panel):
     def test_a_failure_before_the_signature_is_an_unsigned_refusal(self):
         for target, name in ((models.Link.objects, 'filter'), (crypto, 'public_key'), (keys, 'generation'),
-                             (nodeGateway, '_allowed'), (nodeGateway, '_address'), (nodeGateway, '_strip')):
+                             (addresses, 'allows'), (addresses, 'peer'), (nodeGateway, '_strip')):
             with self.subTest(name):
                 del self.log[:]
                 nodeGateway._NOTED.clear()

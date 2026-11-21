@@ -54,7 +54,7 @@ import ssl
 import time
 import types
 
-from multiServer import audit, crypto, keys, switch, transport
+from multiServer import addresses, audit, crypto, keys, switch, transport
 
 PATH = '/multiserver/pair'
 CODE_LIFETIME = 10 * 60  # seconds a pairing code can be used
@@ -262,7 +262,7 @@ def issue_code(admin_id, controller_ip, host=None, port=None):
     """
     administrator = _administrator('pairing_code', admin_id)
     actor = administrator.userName
-    source = _address(controller_ip)
+    source = addresses.entry(controller_ip)
     if source is None:
         _refuse('pairing_code', 'format', "The controller's address must be one IPv4 or IPv6 address.", actor=actor)
     try:
@@ -303,7 +303,8 @@ def node_receive(request):
     the same unsigned answer; only the audit trail has the reason.
     """
     from django.http import HttpResponse
-    source = request.META.get('REMOTE_ADDR')
+    # The address in its one spelling (addresses.py), as it is compared and as it is written down.
+    source = addresses.peer(request.META.get('REMOTE_ADDR'))
     try:
         node_key, signature = _accept(request, source)
         response = HttpResponse(node_key, content_type='text/plain')
@@ -333,8 +334,8 @@ def _accept(request, source):
         raise _no(reason)
     # One statement: attempts made at the same moment are each counted, and the fifth burns the code.
     count_failure = codes.filter(consumed=False, failures__lt=MAX_FAILURES)
-    given = _address(source)
-    if given is None or given != code.controller_ip:
+    # A code is made for one address: the connection came from it, or the request is refused and counted.
+    if source is None or addresses.listed(code.controller_ip) != (source,):
         count_failure.update(failures=F('failures') + 1)
         raise _no('source_ip')
     identity, generation = keys.identity_key(), keys.generation()
@@ -357,7 +358,7 @@ def _accept(request, source):
             consumed = codes.filter(consumed=False, failures__lt=MAX_FAILURES).update(consumed=True)
             if consumed == 1:
                 Link.objects.create(link_id=link_id, controller_key=controller_key, pairing_key=pairing_key,
-                                    allowed_ips=code.controller_ip, admin_id=code.admin_id, status=PENDING,
+                                    allowed_ips=addresses.joined((source,)), admin_id=code.admin_id, status=PENDING,
                                     generation=generation, created_at=now, updated_at=now,
                                     expires_at=now + PENDING_LIFETIME)
                 if audit.record('pairing', link_id=link_id, source_ip=source, status=200) is not True:
@@ -485,19 +486,6 @@ def _certificate_fingerprint():
     if len(pem) > MAX_CERTIFICATE or first is None:
         raise ValueError('The panel certificate cannot be read.')
     return hashlib.sha256(ssl.PEM_cert_to_DER_cert(first.group(0).decode('ascii'))).hexdigest()
-
-
-def _address(text):
-    """The one spelling of an IP address; None for anything else, IPv4 written as IPv6 included."""
-    try:
-        if not isinstance(text, str) or '%' in text:
-            return None
-        address = ipaddress.ip_address(text)
-        if address.version == 4:
-            return text if str(address) == text else None
-        return None if address.ipv4_mapped is not None else str(address)
-    except ValueError:
-        return None
 
 
 def _now():
