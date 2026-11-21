@@ -162,4 +162,3 @@ class CacheTests(db.Controller):
                 with self.subTest(changed=changed), self.assertRaises(gateway._Refused):
                     gateway._dispatch(request._replace(**changed), None, None)
             self.assertEqual(1, read.call_count)
-
