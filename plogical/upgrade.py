@@ -5788,6 +5788,18 @@ pm.max_spare_servers = 3
         # complete copy. PHP 8.0 is absent on many supported installations.
         Upgrade.installPanelPHP()
 
+        # A command-line upgrade rebuilds the panel's web worker in
+        # cyberpanel_upgrade.sh. One started from the panel runs only this
+        # file, so the worker is rebuilt here and the caller restarts the panel
+        # afterwards. On any failure the installed worker stays in use.
+        if Upgrade.SoftUpgrade:
+            try:
+                from plogical.panelWorkerBuild import rebuild as rebuild_panel_worker
+                Upgrade.stdOut('Panel web worker rebuilt: ' + rebuild_panel_worker()['sha256'], 0)
+            except Exception as error:
+                Upgrade.stdOut('WARNING: The panel web worker was not rebuilt; the installed one stays in use: '
+                               + str(error), 0)
+
         if Upgrade.SoftUpgrade == 0:
             try:
                 command = "systemctl start lscpd"
