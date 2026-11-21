@@ -10,6 +10,7 @@ Times are whole Unix seconds in every table: they are compared with signed
 timestamps and must not depend on a time zone setting.
 """
 import collections
+import time
 
 Table = collections.namedtuple('Table', 'name columns primary unique indexes foreign')
 
@@ -217,22 +218,33 @@ def ensure_tables(connection, cursor):
 
 
 _READY = False
+RECHECK_SECONDS = 30
+_RECHECK_AT = 0  # on the monotonic clock: until then a check that failed is not repeated
 
 
 def ready():
     """Whether the tables exist with their unique indexes; never raises, never creates."""
-    global _READY
+    global _READY, _RECHECK_AT
     if _READY:
         return True
+    now = time.monotonic()
+    if now < _RECHECK_AT:
+        return False
     try:
         from django.db import connection
         with connection.cursor() as cursor:
             usable = not problems(cursor)
     except Exception:
-        return False
-    # Only success is remembered: tables created by an upgrade are noticed by
-    # running workers, and tables do not lose an index while the panel runs.
-    _READY = usable
+        usable = False
+    # Success is remembered for good: tables do not lose an index while the panel runs.
+    # A failure is remembered for RECHECK_SECONDS. With a role set and tables that cannot
+    # be used, each request carrying a link header would otherwise cost two catalogue
+    # queries, and anybody can send such requests. Tables created by an upgrade are
+    # noticed by running workers within that time.
+    if usable:
+        _READY = True
+    else:
+        _RECHECK_AT = now + RECHECK_SECONDS
     return usable
 
 
