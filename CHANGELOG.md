@@ -36,6 +36,17 @@ administrator turns it on.
 - Carries the upgrade page changes published on the v3.0.9 line on 21 November
   (listed under v3.0.9 below).
 
+### Upgrades on servers with a misconfigured website (22 November)
+- An upgrade stopped at its OpenLiteSpeed check when a single website was
+  misconfigured, for example a website still set to a PHP version that is no
+  longer installed, or a stray brace in one website's file. OpenLiteSpeed runs
+  with such errors and they do not come from the upgrade. The upgrade now
+  lists the affected websites and continues. It still stops for an error that
+  affects the whole server, and for an error that appears in a website that
+  had none when the upgrade began.
+- A server running the stock OpenLiteSpeed package is checked before any
+  package is changed, instead of after.
+
 ## v3.0.9 (build 9) — 2026-11-20
 
 Security and reliability release. It contains every fix published on the
