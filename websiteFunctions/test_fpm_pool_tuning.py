@@ -92,5 +92,37 @@ class PoolServiceRestartTests(PoolTuning):
         self.assert_restarts(OLD_REMI_POOL, 'php54-php-fpm')
 
 
+class PoolNameOnTuningTests(PoolTuning):
+    legacy = '[%s]\nlisten = /var/run/php/owned.example.sock\nuser = owned1234\n'
+
+    def test_a_pool_keeps_the_name_it_already_has(self):
+        # Names given by earlier versions, and the name new pools get.
+        for name in ('owned1234', 'ownedex', phpConfig.fpm_pool_name('owned1234', 'owned.example')):
+            with self.subTest(name=name):
+                self.process.outputExecutioner.return_value = self.legacy % name
+                self.assertEqual({'status': 1}, self.tune(tuning_data(UBUNTU_POOL)))
+                self.process.outputExecutioner.assert_called_once_with('sudo cat ' + UBUNTU_POOL)
+                self.assertEqual('[%s]' % name, self.written().splitlines()[0])
+
+    def test_a_pool_file_without_a_usable_name_gets_a_unique_one(self):
+        unique = '[%s]' % phpConfig.fpm_pool_name('owned1234', 'owned.example')
+        for content in ('', 'cat: %s: No such file or directory' % UBUNTU_POOL, '[global]\nx = 1\n', '[www]\n',
+                        '[a b]\n', 'pm = dynamic\n'):
+            with self.subTest(content=content):
+                self.process.outputExecutioner.return_value = content
+                self.assertEqual({'status': 1}, self.tune(tuning_data(UBUNTU_POOL)))
+                self.assertEqual(unique, self.written().splitlines()[0])
+
+    def test_tuned_values_and_the_site_identity_are_written_as_before(self):
+        self.process.outputExecutioner.return_value = self.legacy % 'owned1234'
+        self.tune(tuning_data(UBUNTU_POOL, pmMaxChildren='40', pmStartServers='3', pmMinSpareServers='3',
+                              pmMaxSpareServers='9'))
+        self.assertEqual(
+            '[owned1234]\nlisten = /var/run/php/owned.example.sock\nlisten.owner = nobody\n'
+            'listen.group = nogroup\nlisten.mode = 0660\nuser = owned1234\ngroup = owned1234\npm = dynamic\n'
+            'pm.max_children = 40\npm.start_servers = 3\npm.min_spare_servers = 3\npm.max_spare_servers = 9\n',
+            self.written())
+
+
 if __name__ == '__main__':
     unittest.main()

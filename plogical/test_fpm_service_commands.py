@@ -3,6 +3,7 @@ import builtins
 import contextlib
 import io
 from pathlib import Path
+import re
 import tempfile
 from types import SimpleNamespace as NS
 import unittest
@@ -30,20 +31,33 @@ class ApacheVhostLoader:
         self.process.decideDistro.return_value = distro
         self.process.normalExecutioner.return_value = 1
         self.temp = tempfile.TemporaryDirectory(prefix='fpm-service-test-')
-        self.pool = Path(self.temp.name) / 'pool.conf'
+        self.files = {}
         self.vhost = NS(configBasePath='/etc/apache2/sites-enabled/', serviceName='apache2',
-                        deletePHPPath=mock.Mock(),
-                        DecidePHPPath=lambda php, name: '/etc/php/pool.d/%s.conf' % name)
+                        sslBasePath='/etc/apache2/conf-enabled/', deletePHPPath=mock.Mock(),
+                        GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path)
         namespace = dict(
             ProcessUtilities=self.process, ApacheVhost=self.vhost, vhostConfs=vhostConfs, logging=mock.Mock(),
             fpm_service_for_selection=phpConfig.fpm_service_for_selection,
+            fpm_pool_name=phpConfig.fpm_pool_name, re=re,
             PHPManager=NS(getPHPString=lambda text: text.split()[1].replace('.', '')),
             Websites=NS(objects=NS(get=lambda domain: NS(externalApp='siteuser'))), ChildDomains=mock.Mock(),
-            os=NS(path=NS(exists=lambda path: path.startswith('/etc/apache2/'))),
-            open=lambda path, *args: builtins.open(self.pool, *args))
-        self.vhost.DecideFPMServiceName, self.vhost.fpmServiceCommand, self.vhost.changePHP = load_methods(
-            'ApachController/ApacheVhosts.py', 'ApacheVhost',
-            ['DecideFPMServiceName', 'fpmServiceCommand', 'changePHP'], namespace)
+            os=NS(path=NS(exists=lambda path: path.startswith('/etc/apache2/'))), open=self.open)
+        names = ['DecideFPMServiceName', 'fpmServiceCommand', 'changePHP', 'perHostVirtualConf',
+                 'perHostVirtualConfChild']
+        for name, loaded in zip(names, load_methods('ApachController/ApacheVhosts.py', 'ApacheVhost',
+                                                    names, namespace)):
+            setattr(self.vhost, name, loaded)
+
+    @staticmethod
+    def pool_path(php, name):
+        return '/etc/php/%s.%s/fpm/pool.d/%s.conf' % (php[0], php[1:], name)
+
+    def open(self, path, mode='r'):
+        target = self.files.setdefault(str(path), Path(self.temp.name) / str(len(self.files)))
+        return builtins.open(target, mode)
+
+    def text(self, path):
+        return self.files[path].read_text()
 
     def close(self):
         self.temp.cleanup()
