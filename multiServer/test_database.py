@@ -398,22 +398,75 @@ class EntitlementTests(DjangoDatabase):
         entitlement._save_answer('2001:db8::20', True, 180)
         self.assertEqual(((1, '2001:db8::20', 1, 180, 180),), self.row())
 
-    def test_an_unanswered_attempt_keeps_the_last_answer_for_the_same_address(self):
+    def test_a_claim_notes_the_attempt_and_keeps_the_last_answer_for_the_same_address(self):
         entitlement._save_answer(self.ADDRESS, True, 100)
-        entitlement._save_attempt(self.ADDRESS, 161)
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 161))
         self.assertEqual(((1, self.ADDRESS, 1, 100, 161),), self.row())
-        entitlement._save_attempt(self.ADDRESS, 171)
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 171))
         self.assertEqual(((1, self.ADDRESS, 1, 100, 171),), self.row())
 
-    def test_an_unanswered_attempt_for_another_address_forgets_the_old_answer(self):
+    def test_a_second_claim_within_the_retry_time_is_lost_and_changes_nothing(self):
         entitlement._save_answer(self.ADDRESS, True, 100)
-        entitlement._save_attempt('203.0.113.21', 161)
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 161))
+        for now in (161, 162, 170):
+            self.assertIs(False, entitlement._claim(self.ADDRESS, now), now)
+            self.assertEqual(((1, self.ADDRESS, 1, 100, 161),), self.row())
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 171))
+        # A clock that was set back does not leave an attempt standing that nobody can get past.
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 50))
+        self.assertEqual(((1, self.ADDRESS, 1, 100, 50),), self.row())
+
+    def test_a_claim_for_another_address_forgets_the_old_answer(self):
+        entitlement._save_answer(self.ADDRESS, True, 100)
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 161))
+        self.assertIs(True, entitlement._claim('203.0.113.21', 161))
         self.assertEqual(((1, '203.0.113.21', 0, 0, 161),), self.row())
 
-    def test_the_first_attempt_ever_stores_that_there_is_no_answer(self):
-        entitlement._save_attempt(self.ADDRESS, 50)
+    def test_the_first_claim_ever_stores_that_there_is_no_answer(self):
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 50))
         self.assertEqual(((1, self.ADDRESS, 0, 0, 50),), self.row())
         self.assertEqual(entitlement.State(self.ADDRESS, False, 0, 50), entitlement._load())
+        self.assertIs(False, entitlement._claim(self.ADDRESS, 50))
+
+    def claims_at_once(self, workers=8):
+        won, failures = [], []
+        gate = threading.Barrier(workers)
+
+        def worker():
+            try:
+                gate.wait(10)
+                won.append(entitlement._claim(self.ADDRESS, 161))
+            except Exception as error:
+                failures.append(error)
+            finally:
+                connection.close()
+        threads = [threading.Thread(target=worker) for _ in range(workers)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual([], failures)
+        return won
+
+    def test_of_workers_claiming_at_once_exactly_one_is_to_ask(self):
+        entitlement._save_answer(self.ADDRESS, True, 100)
+        for _ in range(5):
+            self.database.run('UPDATE ms_entitlement SET checked_at = 100')
+            self.assertEqual([False] * 7 + [True], sorted(self.claims_at_once()))
+            self.assertEqual(((1, self.ADDRESS, 1, 100, 161),), self.row())
+
+    def test_of_workers_storing_the_very_first_row_at_once_exactly_one_is_to_ask(self):
+        for _ in range(5):
+            self.database.run('DELETE FROM ms_entitlement')
+            self.assertEqual([False] * 7 + [True], sorted(self.claims_at_once()))
+            self.assertEqual(((1, self.ADDRESS, 0, 0, 161),), self.row())
+
+    def test_a_lost_claim_leaves_the_callers_transaction_usable(self):
+        self.assertIs(True, entitlement._claim(self.ADDRESS, 161))
+        with transaction.atomic():
+            self.assertIs(False, entitlement._claim(self.ADDRESS, 162))
+            self.assertIs(True, audit.record('licence'))
+        self.assertEqual(1, models.AuditEntry.objects.count())
 
     def test_workers_writing_at_once_leave_one_consistent_row(self):
         failures = []
@@ -424,7 +477,7 @@ class EntitlementTests(DjangoDatabase):
                     if number % 2:
                         entitlement._save_answer(self.ADDRESS, True, 100)
                     else:
-                        entitlement._save_attempt(self.ADDRESS, 161)
+                        entitlement._claim(self.ADDRESS, 161)
             except Exception as error:
                 failures.append(error)
             finally:
@@ -436,7 +489,7 @@ class EntitlementTests(DjangoDatabase):
             thread.join()
         self.assertEqual([], failures)
         (row,) = self.row()
-        # An attempt never erases a yes: whichever statement ran last, the yes of time 100 is there.
+        # A claim never erases a yes: whichever statement ran last, the yes of time 100 is there.
         self.assertEqual((1, self.ADDRESS, 1, 100), row[:4])
         self.assertIn(row[4], (100, 161))
 
