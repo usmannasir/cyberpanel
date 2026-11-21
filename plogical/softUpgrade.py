@@ -124,10 +124,42 @@ def resolve_release(branch):
     return match.group(1)
 
 
-def stage_release(stage, revision):
+def verified_source(directory, commit):
+    """Read files of one exact commit.
+
+    An upgrade nobody watches must run only what the signed release names.
+    git names every object by its content, so a checkout of that commit
+    cannot hold anything else, whatever the server sent.
+    """
+    if not re.fullmatch(r'[0-9a-f]{40}', commit):
+        raise ValueError('Invalid release commit.')
+
+    def git(*arguments):
+        return subprocess.run(['git', '-C', directory] + list(arguments), check=True, timeout=300,
+                              stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              universal_newlines=True).stdout.strip()
+
+    git('init', '--quiet')
+    git('fetch', '--quiet', '--depth', '1', REPOSITORY, commit)
+    git('checkout', '--quiet', '--detach', commit)
+    if git('rev-parse', 'HEAD') != commit:
+        raise RuntimeError('The fetched source is not the signed release commit.')
+
+    def read(path):
+        target = Path(directory) / path
+        if target.is_symlink() or not target.is_file():
+            raise ValueError('Missing release file: ' + path)
+        return target.read_bytes()[:2 * 1024 * 1024 + 1]
+    return read
+
+
+def stage_release(stage, revision, read=None):
     def fetch(path):
-        with urlopen('%s/%s/%s' % (RAW, revision, path), timeout=30) as response:
-            content = response.read(2 * 1024 * 1024 + 1)
+        if read is not None:
+            content = read(path)
+        else:
+            with urlopen('%s/%s/%s' % (RAW, revision, path), timeout=30) as response:
+                content = response.read(2 * 1024 * 1024 + 1)
         if len(content) > 2 * 1024 * 1024:
             raise ValueError('Unexpected release file size: ' + path)
         if path == 'CPScripts/watchdog.sh':
@@ -171,18 +203,26 @@ def readable_failure(text):
     return text
 
 
-def run(branch, lock_fd=None):
-    revision = resolve_release(branch)
+def run(branch, lock_fd=None, commit=None):
+    """Upgrade to the branch's current commit or, with `commit`, to exactly that one."""
+    validate_branch(branch)
     with tempfile.TemporaryDirectory(prefix='cyberpanel-soft-upgrade-') as directory:
         stage = Path(directory)
-        stage_release(stage, revision)
+        environment = None
+        if commit is None:
+            stage_release(stage, resolve_release(branch))
+        else:
+            with tempfile.TemporaryDirectory(prefix='cyberpanel-release-') as checkout:
+                stage_release(stage, commit, read=verified_source(checkout, commit))
+            # The upgrader installs this commit and nothing newer on the branch.
+            environment = dict(os.environ, CYBERPANEL_UPGRADE_COMMIT=commit)
         with tempfile.TemporaryFile() as errors:
             # The service manager can terminate the launcher independently.
             # The running upgrader must retain the same flock until it exits.
             inherited = (lock_fd,) if lock_fd is not None else ()
             result = subprocess.run([sys.executable, '-u', str(stage / 'upgrade.py'),
                                      'SoftUpgrade,' + branch], cwd=stage, stderr=errors,
-                                    pass_fds=inherited)
+                                    pass_fds=inherited, env=environment)
             if result.returncode:
                 errors.seek(max(0, errors.tell() - 16384))
                 diagnostic = readable_failure(errors.read().decode('utf-8', errors='replace'))
@@ -562,6 +602,32 @@ def run_panel_job(branch, job, require_admission=False):
         record_status(job, 'failed', str(error))
         print(str(error), file=sys.stderr)
         return 1
+
+
+class Busy(RuntimeError):
+    """Another upgrade holds the lock; nothing was started."""
+
+
+def run_unattended(branch, commit, job):
+    """An upgrade to one exact commit that the server started itself. Raises unless it completed."""
+    STATUS_ROOT.mkdir(exist_ok=True, mode=0o755)
+    with (STATUS_ROOT / '.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise Busy('Another panel upgrade is in progress.')
+        record_status(job, 'running')
+        known = kept_installations()
+        try:
+            run(branch, lock_fd=lock.fileno(), commit=commit)
+            activation = activate_panel_runtime(lock.fileno())
+        except Exception as error:
+            # Nobody is watching: a server must not be left on a half-installed release.
+            message = recover_from_failure(known, lock.fileno(), error)
+            record_status(job, 'failed', message)
+            raise RuntimeError(message)
+        record_status(job, 'complete', activation=activation)
+        return activation
 
 
 if __name__ == '__main__':
