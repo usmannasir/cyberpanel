@@ -4,6 +4,46 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.11 (build 11) — 2026-11-22
+
+Multi-Server Manager. One CyberPanel server, the controller, manages your other
+CyberPanel servers from its own panel. It is a separately licensed add-on for
+the controller; the servers it manages need no licence. The feature is off on
+every server until an administrator turns it on, and an upgrade changes nothing
+for a server that does not use it.
+
+### Multi-Server Manager
+- Multi-Server in the sidebar gives a server its role: controller or managed
+  server. Changing the role needs two-factor login on the administrator's
+  account, the password and a fresh verification code. Root can do the same on
+  the command line with `multiServer/msctl.py`.
+- Two servers are paired by their administrators. The managed server makes a
+  one-time pairing code for the address of the controller. The controller
+  shows what the code says before it connects, connects only to the
+  certificate the code names, and then shows an eight-digit number. The link
+  becomes active when that number is typed on the managed server.
+- On the controller: the Nodes page (status, version, pause, resume, revoke),
+  combined lists of the websites, databases and mailboxes of all servers, a
+  server switcher in the header, and "Open this page on another server" on
+  create pages. Opening a server signs the administrator in to that server's
+  own panel with a single-use ticket; the session shows which controller it
+  came from and ends when the link is paused, revoked or ended.
+- On the managed server: the Controllers page lists the controllers, approves
+  or rejects a request, and ends a link at once.
+- Every request between two servers is signed, bound to the certificate that
+  was pinned when the servers were paired, and accepted only from the address
+  of the controller. The managed server keeps an audit trail of what a
+  controller did.
+- A session opened from a controller cannot create or change panel users,
+  access rights or API access, and cannot open phpMyAdmin, the terminal or SSH
+  keys of the managed server.
+
+### Upgrades
+- On AlmaLinux, Rocky and CloudLinux 8 an upgrade stopped with "Cannot safely
+  preserve SESSION_COOKIE_SECURE" (or CSRF_COOKIE_SECURE,
+  SESSION_COOKIE_HTTPONLY) when an administrator had set these cookie options
+  in the panel's settings by hand. The upgrade now keeps them there too.
+
 ## v3.0.10 (build 10) — 2026-11-21
 
 Automatic updates. A server can now keep its own CyberPanel up to date, and
