@@ -7881,6 +7881,18 @@ StrictHostKeyChecking no
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            ## An application may be put on a website that already exists only by
+            ## someone who owns that website. A domain that does not exist yet is
+            ## created for the selected owner by the worker.
+
+            if not isinstance(Domain, str):
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+            if Websites.objects.filter(domain=Domain).count() > 0 or \
+                    ChildDomains.objects.filter(domain=Domain).count() > 0:
+                if ACLManager.checkOwnership(Domain, admin, currentACL) != 1:
+                    return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             data = {}
 

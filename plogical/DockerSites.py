@@ -685,46 +685,49 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             UserID = userID
 
             if Websites.objects.filter(domain=DataToPass['domainName']).count() == 0:
-                try:
-                    website = Websites.objects.get(domain=DataToPass['domainName'])
 
-                    if website.phpSelection == 'PHP 7.3':
-                        website.phpSelection = 'PHP 8.0'
-                        website.save()
-
-                    if ACLManager.checkOwnership(website.domain, self.data['adminID'],
-                                                 self.data['currentACL']) == 0:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines('You dont own this site.[404]')
+                ab = WebsiteManager()
+                coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
+                coreResult1 = json.loads((coreResult).content)
+                logging.writeToFile("Creating website result....%s" % coreResult1)
+                reutrntempath = coreResult1['tempStatusPath']
+                while (1):
+                    lastLine = open(reutrntempath, 'r').read()
+                    logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
+                    if lastLine.find('[200]') > -1:
+                        break
+                    elif lastLine.find('[404]') > -1:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
                         statusFile.close()
-                except:
+                        return 0
+                    else:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Creating Website....,20')
+                        statusFile.close()
+                        time.sleep(2)
 
-                    ab = WebsiteManager()
-                    coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
-                    coreResult1 = json.loads((coreResult).content)
-                    logging.writeToFile("Creating website result....%s" % coreResult1)
-                    reutrntempath = coreResult1['tempStatusPath']
-                    while (1):
-                        lastLine = open(reutrntempath, 'r').read()
-                        logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
-                        if lastLine.find('[200]') > -1:
-                            break
-                        elif lastLine.find('[404]') > -1:
-                            statusFile = open(currentTemp, 'w')
-                            statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
-                            statusFile.close()
-                            return 0
-                        else:
-                            statusFile = open(currentTemp, 'w')
-                            statusFile.writelines('Creating Website....,20')
-                            statusFile.close()
-                            time.sleep(2)
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Creating DockerSite....,30')
+                statusFile.close()
 
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines('Creating DockerSite....,30')
-                    statusFile.close()
+            else:
+
+                ## The website was there before this request. The page that started
+                ## this job has already refused callers who do not own it; the job
+                ## runs later, so it asks again before it touches the website.
+
+                from loginSystem.models import Administrator
+                if ACLManager.checkOwnership(Domain, Administrator.objects.get(pk=userID),
+                                             ACLManager.loadedACL(userID)) != 1:
+                    logging.statusWriter(tempStatusPath, 'You do not own this website. [404]')
+                    return 0
+
+            ## Every path and command below is built from the stored domain, not
+            ## from the text of the request, which the database matches loosely.
 
             webobj = Websites.objects.get(domain=Domain)
+            Domain = webobj.domain
 
             if webobj.dockersites_set.all().count() > 0:
                 logging.statusWriter(self.JobID, f'Docker container already exists on this domain. [404]')
