@@ -1,8 +1,13 @@
 import re
+import time
 
 
 def provision_multiserver():
-    """Run as root from the selected panel tree, with its configured database."""
+    """Run as root from the selected panel tree, with its configured database.
+
+    For a new installation, where a failure here is a failed installation. An
+    upgrade uses ensure_multiserver_tables() instead.
+    """
     from django.db import connection
     from install.multiserver_identity import ensure_key_directory
     from multiServer.schema import ensure_tables
@@ -10,6 +15,46 @@ def provision_multiserver():
     ensure_key_directory()
     with connection.cursor() as cursor:
         ensure_tables(connection, cursor)
+
+
+def ensure_multiserver_tables(connect, log, attempts=3, delay=5):
+    """Create the Multi-Server Manager tables during an upgrade. True when they are usable.
+
+    Never raises, and never a reason to stop an upgrade: the feature stays off
+    on a server whose tables are missing or incomplete (multiServer/switch.py),
+    and the panel is otherwise unaffected. Whatever goes wrong (the database
+    does not answer, its account may not create tables, a table of an earlier
+    build is in the way) is tried again, and then reported in one line.
+
+    connect() returns (connection, cursor) as the upgrader's setupConnection
+    does, with (0, 0) for no connection.
+    """
+    reason = 'unknown reason'
+    for attempt in range(attempts):
+        connection = None
+        try:
+            from multiServer.schema import ensure_tables
+            connection, cursor = connect()
+            if not connection:
+                raise RuntimeError('the panel database could not be opened')
+            ensure_tables(connection, cursor)
+            return True
+        except Exception as error:
+            reason = str(error) or type(error).__name__
+        finally:
+            try:
+                if connection:
+                    connection.close()
+            except Exception:
+                pass
+        if attempt + 1 < attempts:
+            time.sleep(delay)
+    try:
+        log('WARNING: The Multi-Server Manager tables were not created: %s. The upgrade continues without '
+            'them and the feature stays off on this server; the next upgrade creates them.' % reason)
+    except Exception:
+        pass
+    return False
 
 
 def ensure_child_domain_state(connection, cursor):

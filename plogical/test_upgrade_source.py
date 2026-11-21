@@ -451,28 +451,59 @@ class UpgradeEntryPointTests(unittest.TestCase):
         backups = list(self.root.glob('cyberpanel_backup_*/**/CyberCP/settings.py'))
         self.assertEqual([old], [path.read_text() for path in backups])
 
-    def test_multiserver_hook_uses_candidate_then_rolls_back_on_failure(self):
+    def candidate_with_multiserver(self):
         execute = self.upgrade.executioner
 
         def clone_candidate(command, *args):
             result = execute(command, *args)
             argv = shlex.split(command)
             if argv[1] == 'clone':
-                (Path(argv[-1]) / 'multiServer').mkdir()
+                self.write(Path(argv[-1]) / 'install/multiserver_identity.py', '')
             return result
 
         self.upgrade.executioner = clone_candidate
-        def fail_hook(argv, cwd):
-            self.assertTrue((Path(cwd) / 'new_source.py').is_file())
-            self.assertEqual(['manage.py', 'shell', '-c'], argv[1:4])
-            self.assertIn('from plogical.schemaMigration import provision_multiserver', argv[-1])
-            raise RuntimeError('candidate provisioning failed')
+        self.messages = []
+        self.upgrade.stdOut = lambda *args: self.messages.append(args[0])
 
-        with patch.dict(self.globals, subprocess=types.SimpleNamespace(check_call=fail_hook)):
-            status, reason = self.upgrade.downloadAndUpgrade(None, 'v3.0.8')
-        self.assertEqual((0, 'candidate provisioning failed'), (status, reason))
-        self.assertFalse((self.current / 'new_source.py').exists())
-        self.assertTrue((self.current / '.env').exists())
+    def multiserver_messages(self):
+        return [message for message in self.messages if 'Multi-Server' in message]
+
+    def test_multiserver_key_directory_is_prepared_from_the_candidate_without_the_database(self):
+        self.candidate_with_multiserver()
+        calls = []
+
+        def prepare(argv, cwd):
+            self.assertTrue((Path(cwd) / 'new_source.py').is_file())
+            calls.append(argv)
+
+        with patch.dict(self.globals, subprocess=types.SimpleNamespace(check_call=prepare),
+                        sys=types.SimpleNamespace(executable='/the/upgraders/python')):
+            self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.8'))
+        # The identity script alone: no manage.py, so nothing here starts Django or opens the database.
+        self.assertEqual([['/the/upgraders/python', str(self.current / 'install/multiserver_identity.py')]], calls)
+        self.assertEqual([], self.multiserver_messages())
+
+    def test_a_failed_multiserver_key_directory_neither_fails_nor_rolls_back_the_upgrade(self):
+        self.candidate_with_multiserver()
+
+        def fail(argv, cwd):
+            raise RuntimeError('the directory has the wrong owner')
+
+        with patch.dict(self.globals, subprocess=types.SimpleNamespace(check_call=fail),
+                        sys=types.SimpleNamespace(executable='/the/upgraders/python')):
+            self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.8'))
+        self.assertTrue((self.current / 'new_source.py').exists())
+        self.assertFalse((self.current / 'old_source.py').exists())
+        (warning,) = self.multiserver_messages()
+        self.assertIn('the directory has the wrong owner', warning)
+        self.assertIn('the feature stays off', warning)
+
+    def test_a_candidate_without_multiserver_is_installed_without_the_step(self):
+        self.messages = []
+        self.upgrade.stdOut = lambda *args: self.messages.append(args[0])
+        with patch.dict(self.globals, subprocess=types.SimpleNamespace(check_call=self.fail)):
+            self.assertEqual((1, None), self.upgrade.downloadAndUpgrade(None, 'v3.0.8'))
+        self.assertEqual([], self.multiserver_messages())
 
     def test_ambiguous_hardening_stops_before_source_activation(self):
         old = 'SESSION_COOKIE_SECURE = get_security_flag()\n'
@@ -603,6 +634,74 @@ class UpgradeEntryPointTests(unittest.TestCase):
         custom = self.current / 'baseTemplate/static/baseTemplate/custom'
         self.assertEqual('custom configuration', (Path(files[str(custom)]) / 'config').read_text())
         self.assertEqual('phpmyadmin configuration', Path(files[str(self.current / 'public/phpmyadmin/config.inc.php')]).read_text())
+
+
+class MultiServerTablesTests(unittest.TestCase):
+    """The upgrader creates the Multi-Server Manager tables with its other schema work, and never depends on them."""
+
+    def setUp(self):
+        upgrade_class = copy.deepcopy(next(node for node in parsed_source.body
+                                           if isinstance(node, ast.ClassDef) and node.name == 'Upgrade'))
+        upgrade_class.body = [node for node in upgrade_class.body
+                              if isinstance(node, ast.FunctionDef) and node.name == 'multiServerMigrations']
+        scope = {}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[upgrade_class], type_ignores=[])),
+                     'upgrade.py', 'exec'), scope)
+        self.upgrade = scope['Upgrade']
+        self.messages = []
+        self.connections = []
+        self.upgrade.stdOut = lambda message, do_exit=0: self.messages.append((message, do_exit))
+        self.upgrade.setupConnection = lambda db=None: self.connections.append(db) or (0, 0)
+
+    def calls(self, function):
+        found = [(node.lineno, node.col_offset, node.func.attr) for node in ast.walk(function)
+                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                 and isinstance(node.func.value, ast.Name) and node.func.value.id == 'Upgrade']
+        return [name for _, _, name in sorted(found)]  # in the order of the source
+
+    def function(self, name):
+        upgrade_class = next(node for node in parsed_source.body
+                             if isinstance(node, ast.ClassDef) and node.name == 'Upgrade')
+        return next(node for node in upgrade_class.body
+                    if isinstance(node, ast.FunctionDef) and node.name == name)
+
+    def test_the_tables_are_created_after_the_database_answered_and_not_inside_the_source_swap(self):
+        order = self.calls(self.function('upgrade'))
+        self.assertEqual(1, order.count('multiServerMigrations'))
+        self.assertLess(order.index('downloadAndUpgrade'), order.index('waitForDatabaseReady'))
+        self.assertLess(order.index('waitForDatabaseReady'), order.index('multiServerMigrations'))
+        self.assertLess(order.index('mailServerMigrations'), order.index('multiServerMigrations'))
+        self.assertNotIn('multiServerMigrations', self.calls(self.function('downloadAndUpgrade')))
+        # The installer's all-or-nothing step is not part of an upgrade any more.
+        self.assertNotIn('provision_multiserver', source)
+        swap = ast.dump(self.function('downloadAndUpgrade'))
+        self.assertNotIn('manage.py', swap)
+        self.assertNotIn('schemaMigration', swap)
+
+    def test_the_result_is_not_looked_at_by_the_upgrade(self):
+        statement = next(node for node in ast.walk(self.function('upgrade'))
+                         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+                         and getattr(node.value.func, 'attr', None) == 'multiServerMigrations')
+        self.assertEqual([], statement.value.args)
+
+    def test_tables_that_cannot_be_created_are_one_line_in_the_log_and_no_failure(self):
+        with patch('plogical.schemaMigration.time.sleep') as sleep:
+            self.assertIs(False, self.upgrade.multiServerMigrations())
+        self.assertEqual(['cyberpanel'] * 3, self.connections)
+        self.assertEqual(2, sleep.call_count)
+        ((message, do_exit),) = self.messages
+        self.assertEqual(0, do_exit)
+        self.assertIn('Multi-Server Manager tables were not created', message)
+        self.assertIn('the feature stays off', message)
+
+    def test_a_source_without_the_helper_or_a_helper_that_fails_is_no_failure_either(self):
+        for broken in (types.ModuleType('plogical.schemaMigration'),
+                       types.SimpleNamespace(ensure_multiserver_tables=lambda *args: 1 / 0)):
+            self.messages = []
+            with patch.dict(sys.modules, {'plogical.schemaMigration': broken}):
+                self.assertIs(False, self.upgrade.multiServerMigrations())
+            self.assertEqual(1, len(self.messages))
+            self.assertIn('the feature stays off', self.messages[0][0])
 
 
 if __name__ == '__main__':
