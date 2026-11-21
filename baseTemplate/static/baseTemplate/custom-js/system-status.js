@@ -588,6 +588,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     var pendingPoll = null;
     var disposed = false;
     var failedPolls = 0;
+    var unclearPolls = 0;
 
     function schedulePoll(delay) {
         if (disposed) return;
@@ -607,11 +608,22 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     $scope.updateStarted = true;
     $scope.updateFinish = true;
     $scope.couldNotConnect = true;
+    var CHECKING = 'The panel is restarting or cannot be reached. This page keeps checking.';
+    $scope.connectionMessage = CHECKING;
 
 
     $scope.upgrade = function () {
 
+        // An upgrade restarts services; it must not start from a stray click.
+        var button = document.querySelector('button[ng-click="upgrade()"]');
+        var question = button && button.getAttribute('data-confirm');
+        if (question && typeof window !== 'undefined' && window.confirm && !window.confirm(question)) {
+            return;
+        }
+
         failedPolls = 0;
+        unclearPolls = 0;
+        $scope.connectionMessage = CHECKING;
         $scope.upgradeLoading = false;
         $scope.updateError = true;
         $scope.updateStarted = true;
@@ -691,12 +703,39 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
             $scope.couldNotConnect = true;
 
 
-            if (response.data.upgradeStatus === 0) {
+            var data = response.data || {};
+            var verdict = data.upgradeStatus === 1 || (data.upgradeStatus === 0 && data.finished === 1);
+
+            if (!verdict) {
+                // Not the upgrade's own verdict. While an upgrade runs, the
+                // panel's database or session store can be away for a moment,
+                // so this is retried like a lost connection. Only an answer
+                // that stays like this for a minute ends the wait.
+                if (++unclearPolls <= 20) {
+                    $scope.couldNotConnect = false;
+                    schedulePoll(3000);
+                    return;
+                }
                 $scope.updateError = false;
                 $scope.upgradeLoading = true;
                 $scope.updateStarted = true;
                 $scope.updateFinish = true;
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = data.error_message || data.errorMessage ||
+                    'The panel no longer accepts this session. Sign in again and open this page; an upgrade that was running continues on the server.';
+                return;
+            }
+            unclearPolls = 0;
+
+            if (data.upgradeStatus === 0) {
+                $scope.updateError = false;
+                $scope.upgradeLoading = true;
+                $scope.updateStarted = true;
+                $scope.updateFinish = true;
+                $scope.errorMessage = data.error_message;
+                if (data.upgradeLog) {
+                    $scope.upgradelogBox = false;
+                    $scope.upgradeLog = data.upgradeLog;
+                }
                 return;
             }
 
@@ -723,11 +762,14 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
         function cantLoadInitialDatas(response) {
             $scope.couldNotConnect = false;
             $scope.updateFinish = true;
-            if (++failedPolls <= 20) {
+            // Ten minutes: the restart at the end of an upgrade can be slow on a busy server.
+            if (++failedPolls <= 200) {
                 schedulePoll(3000);
             } else {
                 $scope.updateStarted = true;
                 $scope.upgradeLoading = true;
+                $scope.connectionMessage = 'The panel has not answered for 10 minutes. Refresh this page. ' +
+                    'If it does not load, check the lscpd service on the server.';
             }
         }
 

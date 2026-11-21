@@ -282,14 +282,16 @@
                 
                 <div class="form-group">
                     <label for="branchSelect" class="form-label">{% trans "Select Branch" %}</label>
-                    <select ng-model="branchSelect" ng-init="branchSelect='{{ currentRelease|default:'stable' }}'" id="branchSelect" class="form-select">
-                        <option value="stable">stable</option>
+                    <select ng-model="branchSelect" ng-init="branchSelect='{{ defaultRelease|default:'stable' }}'" id="branchSelect" class="form-select" data-installed-release="{{ currentRelease|default:'' }}">
+                        {% if latestRelease %}<option value="{{ latestRelease }}">{{ latestRelease }}</option>{% endif %}
                         {% if currentRelease %}<option value="{{ currentRelease }}">{{ currentRelease }}</option>{% endif %}
+                        <option value="stable">stable</option>
                     </select>
                 </div>
                 
                 <div class="btn-group">
-                    <button type="button" ng-click="upgrade()" ng-disabled="!updateStarted || !upgradeLoading" class="btn btn-primary">
+                    <button type="button" ng-click="upgrade()" ng-disabled="!updateStarted || !upgradeLoading" class="btn btn-primary"
+                            data-confirm="{% trans "Upgrade CyberPanel now? Web, mail and panel services are restarted during the upgrade, and the panel is unavailable for a short time near the end." %}">
                         <i class="fas fa-arrow-up"></i>
                         {% trans "Upgrade CyberPanel to selected branch (Beta)" %}
                     </button>
@@ -335,10 +337,10 @@
                 <span ng-bind="errorMessage"></span>
             </div>
             <div class="alert alert-warning" role="status" ng-hide="couldNotConnect" ng-cloak>
-                {% trans "The panel connection was interrupted. Refresh this page to check the upgrade status." %}
+                <span ng-bind="connectionMessage"></span>
             </div>
             <div class="alert alert-success" role="status" ng-hide="updateFinish" ng-cloak>
-                {% trans "CyberPanel upgrade completed." %}
+                {% trans "CyberPanel upgrade completed." %} {% trans "Refresh this page to see the installed version." %}
             </div>
 
             <div class="content-card" ng-hide="upgradelogBox">
@@ -359,12 +361,24 @@
         function populateBranches(branches) {
             var branchSelect = document.getElementById("branchSelect");
             var existing = new Set(Array.from(branchSelect.options, option => option.value));
+            // An older release is never offered: going back is not an upgrade.
+            var numbers = name => (/^v([0-9]+(?:\.[0-9]+)+)/.exec(name || "") || ["", ""])[1].split(".").map(Number);
+            var installed = branchSelect.getAttribute ? numbers(branchSelect.getAttribute("data-installed-release")) : [NaN];
+            var older = name => {
+                if (installed.some(isNaN)) return false;
+                var release = numbers(name);
+                for (var part = 0; part < Math.max(release.length, installed.length); part++) {
+                    var difference = (release[part] || 0) - (installed[part] || 0);
+                    if (difference !== 0) return difference < 0;
+                }
+                return false;
+            };
             for (let i = branches.length - 1; i >= 0; i--) {
                 const branch = branches[i];
                 if (typeof branch !== "string" ||
                     !/^v[0-9]+(?:\.[0-9]+)+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$/.test(branch) ||
                     branch.indexOf("dev") !== -1 || branch.indexOf("version-counter") !== -1 ||
-                    existing.has(branch)) continue;
+                    existing.has(branch) || older(branch)) continue;
                 var option = document.createElement("option");
                 option.value = branch;
                 option.text = branch;

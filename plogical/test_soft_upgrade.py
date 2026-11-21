@@ -30,6 +30,10 @@ class PanelUpgradeTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
+        # Whatever is installed on the machine running these tests is not their subject.
+        isolated = patch.object(softUpgrade, 'INSTALLATION', self.root / 'installation')
+        isolated.start()
+        self.addCleanup(isolated.stop)
         repo = self.root / 'repo'
         repo.mkdir()
         subprocess.run(['git', 'init', '-q', '-b', 'v3.0.8', str(repo)], check=True)
