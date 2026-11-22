@@ -27,13 +27,15 @@ def restore(user, stream_result=1, import_result=1, dump_code=0):
         fed = feed(sink)
         calls.imports.append(SimpleNamespace(database=database, host=host, port=port, owner=owner, fed=fed,
                                              received=sink.getvalue()))
-        return 1 if fed and import_result else 0
+        return import_result if fed and import_result else 0
 
     function = load_method('plogical/mysqlUtilities.py', 'mysqlUtilities', 'restoreRusticDatabase', dict(
         shlex=shlex, getpass=SimpleNamespace(getuser=lambda: user),
         subprocess=SimpleNamespace(Popen=popen, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
         ProcessUtilities=SimpleNamespace(streamCommand=stream),
-        databaseImport=SimpleNamespace(import_dump=import_dump, copy=databaseImport.copy),
+        databaseImport=SimpleNamespace(import_dump=import_dump, copy=databaseImport.copy,
+                                       LOADED=databaseImport.LOADED,
+                                       LOADED_OBJECTS_KEPT=databaseImport.LOADED_OBJECTS_KEPT),
         mysqlUtilities=SimpleNamespace(registeredUser=lambda name: 'site_user'),
         logging=SimpleNamespace(CyberCPLogFileWriter=SimpleNamespace(writeToFile=lambda *a: None))))
     result = function('site_db', "'rclone:team drive:example.com'", 'examp1234', 'abcdef0123456789',
@@ -68,6 +70,10 @@ class PanelAccountTests(unittest.TestCase):
         self.assertEqual(0, restore('cyberpanel', import_result=0)[0])
         self.assertEqual(0, restore('root', dump_code=1)[0])
         self.assertEqual(0, restore('root', import_result=0)[0])
+
+    def test_loaded_dump_whose_objects_stay_with_the_import_account_is_not_a_failure(self):
+        for user in ('cyberpanel', 'root'):
+            self.assertEqual(2, restore(user, import_result=2)[0])
 
     def test_root_callers_keep_the_direct_pipeline(self):
         result, calls = restore('root')
