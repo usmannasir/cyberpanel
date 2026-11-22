@@ -1,5 +1,6 @@
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.commandShape import runs_one_command
+from plogical import commandStatus
 import subprocess
 import shlex
 import os
@@ -396,32 +397,40 @@ class ProcessUtilities(multi.Thread):
 
         The output is passed on as bytes while it arrives, so it may be binary
         and of any size. Returns 1 when the command exits with status 0.
+
+        The helper's reply does not carry the exit status, so the command runs
+        in a subshell and the shell reports the status after it (see
+        plogical/commandStatus.py). A command too long for the helper is not
+        sent at all.
         """
         try:
+            if ProcessUtilities.token == "unset":
+                ProcessUtilities.token = os.environ.get('TOKEN')
+                del os.environ['TOKEN']
+
+            marker = commandStatus.new_marker()
+            request = commandStatus.helper_request(ProcessUtilities.token, user, command, marker)
+            if request is None:
+                logging.writeToFile('A command is longer than the helper takes and was not run. [streamCommand]')
+                return 0
+
             ret = ProcessUtilities.setupUDSConnection()
             if ret[0] == -1:
                 return 0
             sock = ret[0]
 
-            if ProcessUtilities.token == "unset":
-                ProcessUtilities.token = os.environ.get('TOKEN')
-                del os.environ['TOKEN']
+            try:
+                sock.sendall(request)
+                reader = commandStatus.StatusReader(marker, sink)
+                while 1:
+                    data = sock.recv(65536)
+                    if not data:
+                        break
+                    reader.feed(data)
+            finally:
+                sock.close()
 
-            sock.sendall(('%s-u %s %s' % (ProcessUtilities.token, user, command)).encode('utf-8'))
-
-            # The helper ends its reply with one byte holding the exit status.
-            held = b''
-            while 1:
-                data = sock.recv(65536)
-                if not data:
-                    break
-                data = held + data
-                held = data[-1:]
-                if len(data) > 1:
-                    sink.write(data[:-1])
-            sock.close()
-
-            return 1 if held == b'\x00' else 0
+            return 1 if reader.finish() == 0 else 0
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [streamCommand]")
             return 0
