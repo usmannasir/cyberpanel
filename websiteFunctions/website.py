@@ -7638,7 +7638,13 @@ StrictHostKeyChecking no
         adminNames = ACLManager.loadAllUsers(userID)
         Data = {'adminNames': adminNames}
 
-        if PackageAssignment.objects.all().count() == 0:
+        ## The first package is made for a visitor who may open this page, not
+        ## for whoever requests its address.
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 1 and \
+                PackageAssignment.objects.all().count() == 0:
             name = 'Default'
             cpu = 2
             Memory = 1024
@@ -7861,9 +7867,9 @@ StrictHostKeyChecking no
                     return HttpResponse(final_json)
 
 
-            pattern = r"^[a-z0-9][a-z0-9]*$"
+            pattern = r"[a-z0-9][a-z0-9]*"
 
-            if re.match(pattern, sitename):
+            if isinstance(sitename, str) and re.fullmatch(pattern, sitename):
                 pass
             else:
                 final_dic = {'status': 0, 'error_message': f'invalid site name "{sitename}": must consist only of lowercase alphanumeric characters, as well as start with a letter or number.'}
