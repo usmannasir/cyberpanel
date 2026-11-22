@@ -630,9 +630,10 @@ class ApacheVhost:
                 command = f"sed -i 's/www-data/apache/g' {defaultConfPath}"
                 ProcessUtilities.executioner(command)
 
-            ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('stop', phpVersion))
+            # The pool file is complete on disk before the service reads it.
+            confFile.close()
 
-            ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
+            ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
             command = f"systemctl restart {ApacheVhost.serviceName}"
             ProcessUtilities.normalExecutioner(command)
@@ -674,6 +675,12 @@ class ApacheVhost:
         rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
         return fpm_service_for_selection(phpVersion, rpmFamily)
 
+    # What a change to one website's pool does to the PHP-FPM service that
+    # all websites of that PHP version share: php-fpm re-reads its pools and
+    # keeps its listening sockets, so the other websites stay reachable. A
+    # service that is not running, or cannot reload, is (re)started instead.
+    fpmReload = 'reload-or-restart'
+
     @staticmethod
     def fpmServiceCommand(action, phpVersion):
         """The systemctl argument list that acts on the PHP-FPM service of a PHP selection.
@@ -681,6 +688,6 @@ class ApacheVhost:
         Run it as a list (ProcessUtilities.normalExecutioner accepts one). The
         unit is one argument after `--`, so it is never read as an option.
         """
-        if action not in ('stop', 'start', 'restart', 'reload'):
+        if action not in ('stop', 'start', 'restart', 'reload', ApacheVhost.fpmReload):
             raise ValueError('Unsupported service action.')
         return ['systemctl', action, '--', ApacheVhost.DecideFPMServiceName(phpVersion)]
