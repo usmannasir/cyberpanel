@@ -16,7 +16,7 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
-from install import install_events
+from install import install_events, install_utils
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -231,6 +231,35 @@ class InstallerEntryPointTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'fixture database failure'):
                 main('/root', 'One', 0, 0, None, '8090', 'ON', 'ON', '192.0.2.10', 'OFF')
         self.assertEqual(['web_server done', 'php running', 'php done', 'database running'], self.events())
+
+
+class PythonExitStatusTests(unittest.TestCase):
+    def test_exit_asked_for_with_a_message_is_never_a_success(self):
+        for arguments in ((), (os.EX_OK,)):
+            with self.subTest(arguments=arguments):
+                with patch('builtins.print'), self.assertRaises(SystemExit) as stopped:
+                    install_utils.stdOut('fixture failure', 0, 1, *arguments)
+                self.assertEqual(os.EX_SOFTWARE, stopped.exception.code)
+        with patch('builtins.print'), self.assertRaises(SystemExit) as stopped:
+            install_utils.stdOut('fixture failure', 0, 1, os.EX_OSERR)
+        self.assertEqual(os.EX_OSERR, stopped.exception.code)
+
+    def test_failed_command_with_exit_asked_for_is_never_a_success(self):
+        with patch('builtins.print'), patch.object(install_utils.subprocess, 'call', return_value=1), \
+                self.assertRaises(SystemExit) as stopped:
+            install_utils.call('false', install_utils.ubuntu, '', 'fixture', 0, 1)
+        self.assertEqual(os.EX_SOFTWARE, stopped.exception.code)
+
+    def test_no_failure_path_of_the_installer_ends_with_status_zero(self):
+        for name in ('install/install.py', 'install/installCyberPanel.py', 'install/install_utils.py'):
+            tree = ast.parse((ROOT / name).read_text())
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Call):
+                    continue
+                target = ast.unparse(node.func) if hasattr(ast, 'unparse') else ''
+                if target in ('os._exit', 'sys.exit', 'exit'):
+                    argument = ast.unparse(node.args[0]) if node.args else ''
+                    self.assertNotIn(argument, ('', '0', 'os.EX_OK'), '%s:%s' % (name, node.lineno))
 
 
 if __name__ == '__main__':

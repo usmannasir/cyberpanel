@@ -460,7 +460,7 @@ class preFlightsChecks:
                 logging.InstallLog.writeToFile(
                     "SELinux is enabled, please disable SELinux and restart the installation!")
                 preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                os._exit(0)
+                os._exit(os.EX_CONFIG)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + "[checkIfSeLinuxDisabled]")
@@ -473,7 +473,7 @@ class preFlightsChecks:
             return 1
         else:
             preFlightsChecks.stdOut("You are running Unsupported python version, please install python 3.x")
-            os._exit(0)
+            os._exit(os.EX_SOFTWARE)
 
     def setup_account_cyberpanel(self):
         try:
@@ -2974,7 +2974,7 @@ def main():
                 preFlightsChecks.stdOut("LiteSpeed Enterprise Serial detected: " + serial)
             else:
                 preFlightsChecks.stdOut("Installation failed, please specify LiteSpeed Enterprise key using --serial")
-                os._exit(0)
+                os._exit(os.EX_USAGE)
 
     ## Writing public IP
 
