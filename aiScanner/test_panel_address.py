@@ -36,28 +36,33 @@ class PanelAddressTests(SimpleTestCase):
         request = RequestFactory().get('/aiscanner/', HTTP_HOST=host)
         return panel_address(request, self.admin, self.acl)
 
-    def test_the_servers_own_address_and_port_are_used_as_given(self):
+    def test_a_user_who_is_no_administrator_always_gets_the_servers_own_address(self):
+        # panel.example.net and other.example.org are websites of other accounts on this panel.
+        self.sites['other.example.org'] = 0
+        for host in ('203.0.113.10:8090', '203.0.113.10', 'panel.example.net:8090', 'panel.example.net',
+                     'panel.example.net:443', 'other.example.org:8090', 'shop.example.org:8090',
+                     'collector.example.com', '198.51.100.7:8090', 'a b', ''):
+            self.assertEqual('203.0.113.10:8090', self.address(host), host)
+
+    def test_for_an_administrator_the_servers_own_address_and_port_are_used_as_given(self):
+        self.acl = {'admin': 1}
         self.assertEqual('203.0.113.10:8090', self.address('203.0.113.10:8090'))
         self.assertEqual('203.0.113.10', self.address('203.0.113.10'))
 
-    def test_the_name_of_a_website_on_this_panel_is_used(self):
+    def test_for_an_administrator_the_name_of_a_website_on_this_panel_is_used(self):
+        self.acl = {'admin': 1}
         self.assertEqual('panel.example.net:8090', self.address('panel.example.net:8090'))
         self.assertEqual('panel.example.net:8090', self.address('PANEL.example.net:8090'))
         self.assertEqual('panel.example.net', self.address('panel.example.net'))
         self.assertEqual('panel.example.net:443', self.address('panel.example.net:443'))
+        self.assertEqual('shop.example.org:8090', self.address('shop.example.org:8090'))
 
-    def test_any_other_host_or_port_becomes_the_servers_own_address(self):
+    def test_for_an_administrator_any_other_host_or_port_becomes_the_servers_own_address(self):
+        self.acl = {'admin': 1}
         for host in ('collector.example.com', 'collector.example.com:8090', '198.51.100.7:8090',
                      'localhost:8090', '127.0.0.1:8090', 'panel.example.net:22', '203.0.113.10:9999',
                      'panel.example.net@collector.example.com', 'a b', ''):
             self.assertEqual('203.0.113.10:8090', self.address(host), host)
-
-    def test_a_user_cannot_name_a_website_of_their_own(self):
-        self.assertEqual('203.0.113.10:8090', self.address('shop.example.org:8090'))
-        self.assertEqual('panel.example.net:8090', self.address('panel.example.net:8090'))
-        # An administrator runs the server and may name any website on it.
-        self.acl = {'admin': 1}
-        self.assertEqual('shop.example.org:8090', self.address('shop.example.org:8090'))
 
     def start_scan(self, host):
         manager = AIScannerManager()
@@ -87,12 +92,16 @@ class PanelAddressTests(SimpleTestCase):
         self.assertTrue(json.loads(response.content.decode('utf-8'))['success'])
         return submitted
 
-    def test_a_scan_started_under_a_foreign_host_name_is_called_back_at_the_server(self):
-        for host in ('collector.example.com:8090', 'shop.example.org:8090'):
+    def test_a_scan_started_by_a_user_is_called_back_at_the_server_whatever_name_the_request_bears(self):
+        for host in ('collector.example.com:8090', 'shop.example.org:8090', 'panel.example.net:8090'):
             self.assertEqual({'callback_url': 'https://203.0.113.10:8090/api/ai-scanner/callback',
                               'base_url': 'https://203.0.113.10:8090/api/ai-scanner/'}, self.start_scan(host))
 
-    def test_a_scan_started_under_the_panels_name_is_called_back_there(self):
+    def test_a_scan_started_by_an_administrator_under_the_panels_name_is_called_back_there(self):
+        self.acl = {'admin': 1}
         self.assertEqual({'callback_url': 'https://panel.example.net:8090/api/ai-scanner/callback',
                           'base_url': 'https://panel.example.net:8090/api/ai-scanner/'},
                          self.start_scan('panel.example.net:8090'))
+        self.assertEqual({'callback_url': 'https://203.0.113.10:8090/api/ai-scanner/callback',
+                          'base_url': 'https://203.0.113.10:8090/api/ai-scanner/'},
+                         self.start_scan('collector.example.com:8090'))

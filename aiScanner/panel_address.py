@@ -24,18 +24,22 @@ def names_a_website(hostname):
 def panel_address(request, admin, currentACL):
     """host[:port] at which the scanner platform is asked to call this panel back for a scan.
 
-    The host a request names is used only when it is this server's own
-    address or the name of a website on this panel, and its port only when it
-    is the panel's port or the default one. Anything else is replaced by the
-    server's own address and the panel's port, where the panel always answers.
+    For a user who is not an administrator it is always the server's own
+    address and the panel's port: the platform's calls carry what belongs
+    to the server, and where a name leads is decided by whoever owns it,
+    which may be another user of this panel.
 
-    A user who is not an administrator cannot name a website of their own:
-    where such a name leads is theirs to decide, and the platform's calls
-    carry what belongs to the server.
+    An administrator runs the server. For one, the host a request names is
+    used when it is this server's own address or the name of a website on
+    this panel, and its port when it is the panel's port or the default one.
+    Anything else is replaced by the server's own address and the panel's
+    port, where the panel always answers.
     """
     server = ACLManager.fetchIP()
     port = panel_port()
     own = '%s:%s' % (server, port)
+    if currentACL.get('admin') != 1:
+        return own
     try:
         host = request.get_host()
         parts = urlsplit('//' + host)
@@ -47,9 +51,6 @@ def panel_address(request, admin, currentACL):
         return own
     if given_port is not None and str(given_port) not in (port, '443'):
         return own
-    if hostname != server:
-        if not is_safe_hostname(hostname) or not names_a_website(hostname):
-            return own
-        if currentACL.get('admin') != 1 and ACLManager.checkOwnership(hostname, admin, currentACL) == 1:
-            return own
+    if hostname != server and (not is_safe_hostname(hostname) or not names_a_website(hostname)):
+        return own
     return hostname if given_port is None else '%s:%d' % (hostname, given_port)
