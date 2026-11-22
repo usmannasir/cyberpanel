@@ -133,3 +133,8 @@
 
 
 {% endblock %}
+
+{% block module_scripts %}
+    {{ block.super }}
+    <script defer src="{% static 'IncBackups/IncBackups.js' %}?v={{ CP_VERSION }}"></script>
+{% endblock %}

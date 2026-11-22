@@ -76,3 +76,7 @@
 </div>
 {% endblock %}
 
+{% block module_scripts %}
+    {{ block.super }}
+    <script defer src="{% static 'emailMarketing/emailMarketing.js' %}?v={{ CP_VERSION }}"></script>
+{% endblock %}
