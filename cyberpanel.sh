@@ -999,29 +999,40 @@ Read_Admin_Password_File() {
 # the server is changed, and before the command line is checked, which then
 # knows that a value of -p is not used. What is wrong with the file is kept in
 # Admin_Pass_File_Problem and said after a request for help was answered.
-local details owner mode
+local opened="No" details="" owner mode kind first_line=""
 Admin_Pass_From_File=""
 Admin_Pass_File_Problem=""
 if [[ -z "${CP_ADMIN_PASSWORD_FILE:-}" ]]; then
   return 0
 fi
-if [[ -L "$CP_ADMIN_PASSWORD_FILE" || ! -f "$CP_ADMIN_PASSWORD_FILE" ]]; then
+# The file is opened once. What is checked is the opened file, and the
+# password is read from the same opened file, whatever the name leads to a
+# moment later.
+{
+  opened="Yes"
+  details=$(stat -L -c '%u %a %F' /dev/stdin)
+  IFS= read -r first_line
+} 2>/dev/null < "$CP_ADMIN_PASSWORD_FILE"
+if [[ "$opened" != "Yes" ]]; then
+  Admin_Pass_File_Problem="The file named in CP_ADMIN_PASSWORD_FILE cannot be read."
+  return 1
+fi
+read -r owner mode kind <<<"$details"
+if [[ "$kind" != regular* ]]; then
   Admin_Pass_File_Problem="CP_ADMIN_PASSWORD_FILE does not name a regular file."
   return 1
 fi
-details=$(stat -c '%u %a' "$CP_ADMIN_PASSWORD_FILE" 2>/dev/null)
-owner=${details%% *}
-mode=${details##* }
 if [[ "$owner" != "0" || ! "$mode" =~ ^[0-7]+$ ]] || (( (8#$mode & 8#77) != 0 )); then
   Admin_Pass_File_Problem="The file named in CP_ADMIN_PASSWORD_FILE must belong to root and be readable by root only (chmod 600)."
   return 1
 fi
-IFS= read -r Admin_Pass_From_File < "$CP_ADMIN_PASSWORD_FILE"
-if [[ ${#Admin_Pass_From_File} -lt 8 ]]; then
-  Admin_Pass_From_File=""
+# A file written on Windows ends its lines with a carriage return as well.
+first_line=${first_line%$'\r'}
+if [[ ${#first_line} -lt 8 ]]; then
   Admin_Pass_File_Problem="The password in the file named in CP_ADMIN_PASSWORD_FILE has less than 8 characters."
   return 1
 fi
+Admin_Pass_From_File="$first_line"
 return 0
 }
 
