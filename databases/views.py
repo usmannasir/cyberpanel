@@ -447,7 +447,6 @@ def UpgradeMySQL(request):
 def getMysqlstatus(request):
     try:
         userID = request.session['userID']
-        finalData = mysqlUtilities.showStatus()
 
         currentACL = ACLManager.loadedACL(userID)
 
@@ -456,6 +455,7 @@ def getMysqlstatus(request):
         else:
             return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
+        finalData = mysqlUtilities.showStatus()
         finalData = json.dumps(finalData)
         return HttpResponse(finalData)
 
@@ -463,6 +463,7 @@ def getMysqlstatus(request):
         return redirect(loadLoginPage)
 
 
+@require_POST
 def restartMySQL(request):
     try:
         userID = request.session['userID']
