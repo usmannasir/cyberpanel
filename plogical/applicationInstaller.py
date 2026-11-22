@@ -2056,9 +2056,11 @@ class ApplicationInstaller(multi.Thread):
                 coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
                 coreResult1 = json.loads((coreResult).content)
 
-                if coreResult1['status'] == 0:
+                # A refused creation answers with status 0 and its reason in
+                # error_message, and starts no worker to wait for.
+                if coreResult1.get('status') != 1:
                     statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Failed to Create Website: error: %s. [404]' % coreResult1['errorMessage'])
+                    statusFile.writelines('Failed to Create Website: error: %s. [404]' % coreResult1.get('error_message'))
                     statusFile.close()
                     return 0
 
@@ -2356,6 +2358,14 @@ class ApplicationInstaller(multi.Thread):
         if os.path.exists('/usr/local/CyberCP/debug'):
             logging.writeToFile("Creating website result....%s" % coreResult1)
         
+        # A refused creation answers with status 0 and its reason in
+        # error_message, and starts no worker to wait for.
+        if coreResult1.get('status') != 1:
+            statusFile = open(currentTemp, 'w')
+            statusFile.writelines('Failed to Create Website: error: %s[404]' % coreResult1.get('error_message'))
+            statusFile.close()
+            return None
+
         reutrntempath = coreResult1['tempStatusPath']
         
         # Wait for website creation to complete
