@@ -79,7 +79,11 @@ class DefinerFilterTests(unittest.TestCase):
                 (b"CREATE OR REPLACE DEFINER = CURRENT_USER VIEW `v` AS select 1\n",
                  b"CREATE OR REPLACE VIEW `v` AS select 1\n"),
                 (b"create definer=root@localhost trigger t before insert on a for each row set @x = 1\n",
-                 b"create trigger t before insert on a for each row set @x = 1\n")):
+                 b"create trigger t before insert on a for each row set @x = 1\n"),
+                # A trigger made under ANSI_QUOTES is dumped with double quotes.
+                (b'/*!50003 CREATE*/ /*!50017 DEFINER="root"@"localhost"*/ /*!50003 TRIGGER "t" BEFORE UPDATE ON "a"\n',
+                 b'/*!50003 CREATE*/ /*!50017 */ /*!50003 TRIGGER "t" BEFORE UPDATE ON "a"\n'),
+                (b'CREATE DEFINER="shop ""user"@"%" PROCEDURE "p"()\n', b'CREATE PROCEDURE "p"()\n')):
             self.assertEqual(expected, filtered(line, self.SIZES), line)
 
     def test_table_data_and_other_statements_pass_unchanged(self):
@@ -516,6 +520,17 @@ class HandOverTests(unittest.TestCase):
         cursor = owned_server([('VIEW', 'v')], hosts=('203.0.113.9', '10.0.0.7'))
         self.assertEqual(('shop_user', '203.0.113.9'),
                          databaseImport.owner_account(cursor, 'shop_db', 'shop_user', ('203.0.113.9',)))
+
+    def test_trigger_made_under_ansi_quotes_is_handed_over_as_well(self):
+        # The server describes such a trigger with its definer between double quotes.
+        cursor = owned_server([('TRIGGER', 'trg')], statements={
+            'SHOW CREATE TRIGGER': [('trg', 'ANSI_QUOTES',
+                                     'CREATE DEFINER="cpimp_1"@"localhost" TRIGGER "trg" BEFORE UPDATE ON "t" '
+                                     'FOR EACH ROW SET NEW."note" = 1')]})
+        self.assertTrue(self.hand_over(cursor))
+        self.assertIn('CREATE OR REPLACE DEFINER=`shop_user`@`localhost` TRIGGER "trg" BEFORE UPDATE ON "t" '
+                      'FOR EACH ROW SET NEW."note" = 1', self.changes(cursor))
+        self.assertEqual([('ANSI_QUOTES',)], [args for query, args in cursor.sent('SET SESSION sql_mode = %s')])
 
     def test_object_that_is_not_described_as_it_was_made_stops_the_hand_over(self):
         cursor = owned_server([('VIEW', 'v')], statements={

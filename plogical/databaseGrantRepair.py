@@ -27,6 +27,11 @@ GRANT_LINE = re.compile(
 
 COVERED_SHOWN = 12
 
+# Schemas of the database server itself. A grant on one of them is the server's
+# own (MySQL 8 gives `mysql.session` one on `performance_schema`), not a
+# pattern somebody wrote, and is not reported at every upgrade.
+SERVER_SCHEMAS = frozenset(('performance_schema', 'information_schema', 'mysql', 'sys'))
+
 
 class RepairError(Exception):
     pass
@@ -104,6 +109,8 @@ def repair(cursor, registered):
     schemas = None
     for stored, user, host in _rows(cursor, 'SELECT Db, User, Host FROM mysql.db ORDER BY Db, User, Host'):
         if not databaseGrants.is_pattern(stored):
+            continue
+        if stored.lower() in SERVER_SCHEMAS and stored not in known:
             continue
         if stored in known and not databaseGrants.exact_name_fits(stored):
             # The server accepts no exact grant for this name; said once per database.
