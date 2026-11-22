@@ -328,6 +328,42 @@ class DeploymentTests(unittest.TestCase):
 
 
 class PortTests(unittest.TestCase):
+    def setUp(self):
+        # No program of the server this test runs on decides the outcome.
+        self.taken = set()
+        self.real_check = docker_sites.port_is_taken
+        patcher = mock.patch.object(docker_sites, 'port_is_taken', side_effect=lambda port: port in self.taken)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_a_port_another_program_listens_on_is_passed_over(self):
+        self.taken = {11005, 11006}
+        self.assertEqual('11007', next_site_port(['11001'], self.CONFIG))
+        self.taken = {11000}
+        self.assertEqual('11001', next_site_port([], ''))
+        # It was never the port of a site, so it is offered again once it is free.
+        self.taken = set()
+        self.assertEqual('11005', next_site_port(['11001'], self.CONFIG))
+
+    def test_when_every_port_left_is_in_use_none_is_chosen(self):
+        self.taken = set(range(65000, 65536))
+        with self.assertRaises(ValueError):
+            next_site_port(['64999'])
+
+    def test_a_port_is_in_use_when_it_cannot_be_bound_on_loopback(self):
+        import socket
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.addCleanup(listener.close)
+        listener.bind(('127.0.0.1', 0))
+        listener.listen(1)
+        port = listener.getsockname()[1]
+        self.assertTrue(self.real_check(port))
+        self.assertTrue(self.real_check(str(port)))
+        listener.close()
+        self.assertFalse(self.real_check(port))
+        for value in (None, 'abc', 70000, -1):
+            self.assertTrue(self.real_check(value))
+
     CONFIG = '''extprocessor docker11000 {
   type                    proxy
   address                 127.0.0.1:11000
@@ -401,7 +437,7 @@ extprocessor docker40002x {
         self.assertEqual('11042', next_site_port([], ''.join(written)))
 
 
-def create(ports, config, site_name='shop', rows_of_the_name=0, name_in_use=False):
+def create(ports, config, site_name='shop', rows_of_the_name=0, name_in_use=False, taken=()):
     """Run the real creation job; ``config`` is what reading the web server configuration answers."""
     site = Docker_Sites.__new__(Docker_Sites)
     site.JobID = '/home/cyberpanel/4711'
@@ -437,6 +473,7 @@ def create(ports, config, site_name='shop', rows_of_the_name=0, name_in_use=Fals
             mock.patch.object(docker_sites.logging, 'writeToFile'), \
             mock.patch.object(docker_sites.docker, 'from_env'), \
             mock.patch.object(docker_sites, 'site_name_in_use', return_value=name_in_use) as in_use, \
+            mock.patch.object(docker_sites, 'port_is_taken', side_effect=lambda port: port in taken), \
             mock.patch.object(docker_sites, 'Docker_Sites') as deployment:
         deployment.web_server_config = Docker_Sites.web_server_config
         result = Docker_Sites.SubmitDockersiteCreation(site)
@@ -453,6 +490,11 @@ class AllocationTests(unittest.TestCase):
         self.assertEqual('11005', run.models.DockerSites.call_args[1]['port'])
         run.output.assert_called_once_with('cat /usr/local/lsws/conf/httpd_config.conf', None, None, None, 1)
         self.assertEqual([], run.status)
+
+    def test_a_site_is_not_given_a_port_another_program_listens_on(self):
+        run = create(['11002', '11001'], (1, PortTests.CONFIG), taken=(11005,))
+        self.assertEqual('11006', run.port)
+        self.assertEqual('11006', run.models.DockerSites.call_args[1]['port'])
 
     def test_a_website_named_like_a_port_entry_does_not_move_or_stop_the_allocation(self):
         for name in ('docker70000.example.com', 'docker65535.example.com', 'docker20000.shop.example'):

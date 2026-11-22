@@ -188,6 +188,18 @@ SITE_PORT_ENTRIES = (re.compile(r'^extprocessor[ \t]+docker([0-9]{1,5})[ \t]*\{'
                      re.compile(r'<name>docker([0-9]{1,5})</name>'))
 
 
+def port_is_taken(port):
+    """Whether something on this server already listens on a loopback port."""
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        probe.bind(('127.0.0.1', int(port)))
+        return False
+    except (OSError, OverflowError, TypeError, ValueError):
+        return True
+    finally:
+        probe.close()
+
+
 def next_site_port(site_ports, web_server_config=''):
     """
     The loopback port for a new Docker site.
@@ -195,7 +207,9 @@ def next_site_port(site_ports, web_server_config=''):
     It is higher than the port of every Docker site there is and of every
     Docker site the web server has ever been told about. A port is therefore
     never handed out twice, and a website that still points at the port of a
-    site that was deleted can never reach the container of a new one.
+    site that was deleted can never reach the container of a new one. A port
+    that another program of the server listens on is passed over: the
+    containers of the site could not be started on it.
     """
     recorded = []
     for entry in SITE_PORT_ENTRIES:
@@ -209,9 +223,12 @@ def next_site_port(site_ports, web_server_config=''):
             continue
         if 0 < port <= 65535:
             highest = max(highest, port)
-    if highest >= 65535:
-        raise ValueError('No port is left for a new Docker site.')
-    return str(highest + 1)
+
+    for port in range(highest + 1, 65536):
+        if not port_is_taken(port):
+            return str(port)
+
+    raise ValueError('No port is left for a new Docker site.')
 
 
 def compose_file(config):
