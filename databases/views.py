@@ -33,7 +33,6 @@ from databases.phpmyadmin_handoff import consume_handoff, create_handoff
 from databases.phpmyadmin_session import issue_grant, panel_ip_allowed, validate_grant
 from databases import phpmyadminAccess
 from plogical.databaseAccounts import phpmyadmin_account
-from plogical.panelUserNames import stored_name_is_usable
 
 
 # Create your views here.
@@ -198,12 +197,12 @@ def generateAccess(request):
         if ACLManager.currentContextPermission(currentACL, 'listDatabases') != 1:
             return ACLManager.loadErrorJson()
 
-        # Nothing below is named after the user, and a name that cannot be
-        # carried to the sign-in page is refused here.
-        if not stored_name_is_usable(admin.userName):
+        # Nothing below is named after the user: the account, the record and
+        # the key carry the user's number, and the name only goes into the
+        # answer. Every existing user can therefore open phpMyAdmin.
+        if not isinstance(admin.userName, str) or not admin.userName:
             data_ret = {'status': 0, 'createDBStatus': 0,
-                        'error_message': 'phpMyAdmin cannot be opened for this user name. '
-                                         'Ask the administrator to create a user with a plain name.'}
+                        'error_message': 'phpMyAdmin cannot be opened for a user without a name.'}
             return HttpResponse(json.dumps(data_ret))
 
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'

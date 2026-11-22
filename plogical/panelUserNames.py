@@ -2,10 +2,9 @@
 
 Until now the name of a new user was stored as typed. A new name is held to
 one written rule. Users created before the rule existed keep signing in and
-working under the name they have; features that hand the name on check
-`stored_name_is_usable` and refuse a name they cannot carry instead of
-passing it along, and a file kept for a user is named through
-`file_for_user`.
+working under the name they have: wherever the name is handed on it is
+quoted, a file kept for a user is named through `file_for_user`, and an
+owner recreated from a backup is held to `stored_name_is_usable`.
 """
 import os
 import re
