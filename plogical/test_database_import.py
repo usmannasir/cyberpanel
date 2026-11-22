@@ -711,6 +711,13 @@ class GuardTests(unittest.TestCase):
             described.assert_not_called()
             self.assertIn('cannot be imported into', note.call_args[0][0])
 
+    def test_importer_of_other_panels_refuses_a_name_that_cannot_be_granted_before_it_makes_the_database(self):
+        source = (Path(__file__).resolve().parent / 'cPanelImporter.py').read_text()
+        check = source.index("databaseGrants.grant_name(cursor, items.replace('.sql', ''))")
+        self.assertLess(check, source.index('cursor.execute("CREATE DATABASE `%s`"'))
+        self.assertLess(check, source.index('was not imported: %s'))
+        self.assertLess(source.index('was not imported: %s'), source.index('cursor.execute("CREATE DATABASE `%s`"'))
+
     def test_unreadable_account_table_does_not_stop_an_import(self):
         case = ImportTests('test_account_and_option_file_are_gone_after_a_good_import')
         case.setUp()

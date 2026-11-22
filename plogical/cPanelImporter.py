@@ -20,6 +20,7 @@ import MySQLdb.cursors as cursors
 import shlex
 import subprocess
 from databases.models import Databases
+from plogical import databaseGrants
 from plogical import databaseImport
 from websiteFunctions.models import Websites, ChildDomains as CDomains
 from plogical.vhost import vhost
@@ -637,6 +638,20 @@ class cPanelImporter:
                 if items.endswith('.sql'):
                     message = 'Restoring MySQL dump for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)
+
+                    # A name the server accepts no exact grant for cannot be
+                    # imported into: that is said before the database is made.
+                    refusal = None
+                    try:
+                        databaseGrants.grant_name(cursor, items.replace('.sql', ''))
+                    except ValueError as msg:
+                        refusal = str(msg)
+                    except BaseException:
+                        pass
+                    if refusal is not None:
+                        message = 'Database %s was not imported: %s' % (items.replace('.sql', ''), refusal)
+                        logging.statusWriter(self.logFile, message, 1)
+                        continue
 
                     try:
                         # The name comes from a file name in the archive.
