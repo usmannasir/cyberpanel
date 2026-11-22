@@ -873,7 +873,7 @@ class vhost:
 
                     php = PHPManager.getPHPString(phpVersion)
 
-                    ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
+                    ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
                 print("1,None")
                 return 1,'None'

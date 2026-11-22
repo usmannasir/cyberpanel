@@ -850,7 +850,7 @@ class virtualHostUtilities:
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
-                        ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
+                        ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
             ## Create Configurations ends here
 
@@ -1843,7 +1843,7 @@ class virtualHostUtilities:
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
-                        ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
+                        ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
             ## DKIM Check
 
@@ -1953,9 +1953,7 @@ class virtualHostUtilities:
 
                 ##
 
-                ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('stop', phpVersion))
-
-                ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVersion))
+                ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
                 command = f"systemctl restart {ApacheVhost.serviceName}"
                 ProcessUtilities.normalExecutioner(command)

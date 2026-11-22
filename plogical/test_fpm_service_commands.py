@@ -33,6 +33,7 @@ class ApacheVhostLoader:
         self.temp = tempfile.TemporaryDirectory(prefix='fpm-service-test-')
         self.files = {}
         self.vhost = NS(configBasePath='/etc/apache2/sites-enabled/', serviceName='apache2',
+                        fpmReload='reload-or-restart',
                         sslBasePath='/etc/apache2/conf-enabled/', deletePHPPath=mock.Mock(),
                         GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path)
         namespace = dict(
@@ -72,7 +73,7 @@ class FPMServiceCommandTests(unittest.TestCase):
     def test_command_is_an_argument_list_with_the_unit_after_two_dashes(self):
         for distro, unit in (('ubuntu', 'php8.3-fpm'), ('cent8', 'php83-php-fpm'), ('centos', 'php83-php-fpm')):
             apache = self.loader(distro).vhost
-            for action in ('stop', 'start', 'restart', 'reload'):
+            for action in ('stop', 'start', 'restart', 'reload', 'reload-or-restart'):
                 with self.subTest(distro=distro, action=action):
                     self.assertEqual(['systemctl', action, '--', unit], apache.fpmServiceCommand(action, 'PHP 8.3'))
 
@@ -100,25 +101,34 @@ class FPMServiceCommandTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'Unsupported service action'):
                     apache.fpmServiceCommand(action, 'PHP 8.3')
 
-    def test_apache_php_change_restarts_the_selected_service_only(self):
+    def test_apache_php_change_reloads_the_selected_service_without_stopping_it(self):
         loader = self.loader()
+        pool = '/etc/php/8.3/fpm/pool.d/example.test.conf'
+        seen = []
+        loader.process.normalExecutioner.side_effect = lambda command: seen.append(loader.text(pool)) or 1
         self.assertEqual(1, loader.vhost.changePHP('PHP 8.3', '/usr/local/lsws/conf/vhosts/example.test/vhost.conf'))
-        self.assertEqual([['systemctl', 'stop', '--', 'php8.3-fpm'], ['systemctl', 'restart', '--', 'php8.3-fpm'],
-                          'systemctl restart apache2'], service_calls(loader.process))
+        # The service all websites of this PHP version share re-reads its
+        # pools; it is not stopped for one website's change.
+        self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.3-fpm'], 'systemctl restart apache2'],
+                         service_calls(loader.process))
+        # The pool file was complete on disk when the service was asked.
+        self.assertIn('listen = /var/run/php/example.test.sock', seen[0])
+        self.assertEqual(seen[0], loader.text(pool))
 
     def test_apache_php_change_runs_no_service_command_from_other_text(self):
         loader = self.loader()
         loader.vhost.changePHP(SPLIT_SELECTION, '/usr/local/lsws/conf/vhosts/example.test/vhost.conf')
         self.assertEqual([], service_calls(loader.process))
 
-    def test_site_php_change_on_apache_backend_restarts_with_an_argument_list(self):
+    def test_site_php_change_on_apache_backend_reloads_with_an_argument_list(self):
         change = PHPChange(OLS, apache_backend=True)
         self.addCleanup(change.close)
+        change.apache.fpmReload = 'reload-or-restart'
         change.apache.fpmServiceCommand.side_effect = \
             lambda action, selection: ['systemctl', action, '--', phpConfig.fpm_service_for_selection(selection, False)]
         result, output = change.run('/usr/local/lsws/conf/vhosts/example.test/vhost.conf', 'PHP 8.1')
         self.assertEqual((1, 'None'), tuple(result), output)
-        self.assertEqual([['systemctl', 'restart', '--', 'php8.1-fpm']], change.events)
+        self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.1-fpm']], change.events)
 
 
 class ArgumentListRunnerTests(unittest.TestCase):
