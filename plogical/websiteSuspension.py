@@ -199,7 +199,8 @@ class VhostUpdate:
     `check()` returns what the web server's configuration test reports, and
     `check(before)` raises when it reports an error that `before` lacks.
     `check(before, changed)` also names the websites whose files were edited:
-    True for one that was suspended, False for one that was restored.
+    True for one that was suspended, False for one that was restored, and
+    None for one that was suspended already and stays so.
     """
     def __init__(self, server_root, check, reload):
         self.root = Path(server_root).resolve()
@@ -218,10 +219,15 @@ class VhostUpdate:
                 raise ValueError('Unsafe virtual-host configuration path.')
             metadata = path.stat()
             original = path.read_bytes()
-            updated = render_suspension(original.decode('utf-8'), suspended).encode('utf-8')
+            text = original.decode('utf-8')
+            updated = render_suspension(text, suspended).encode('utf-8')
             if updated != original:
                 staged.append((path, original, updated, metadata))
-                changed[domain] = bool(suspended)
+                # A file that an earlier release suspended in its own form is
+                # written again in the present one. The website was suspended
+                # and stays so: that is neither a suspension nor a restore.
+                held = suspended and render_suspension(text, False) != text
+                changed[domain] = None if held else bool(suspended)
         if staged and self.before is None:
             # What the test reports now is what the server already runs with.
             self.before = self.check()
@@ -311,10 +317,15 @@ def config_errors_added(before, after, changed=None):
     damage: a fatal message that was not there before, or a test that ends
     with another status than 0, 1 or 2. A change that suspends any website,
     and the files put back after a failure, keep the strict rule.
+
+    None marks a website that was suspended already and stays so, its file
+    only written again in the present form. Restoring a parent does that to a
+    child that is suspended on its own. It does not make the restore a
+    suspension; on its own it is judged by the strict rule.
     """
     from plogical import olsStockClassifier
     changed = changed or {}
-    restore = bool(changed) and not any(changed.values())
+    restore = False in changed.values() and True not in changed.values()
 
     def errors(output):
         # The upgrader's rule for an error line, with no website excused.

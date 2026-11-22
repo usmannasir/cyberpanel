@@ -345,6 +345,41 @@ class RestoreTests(ServerFixture):
             self.assert_suspended(domain)
         self.assertEqual(self.calls(), ['test', 'test', 'restart', 'test', 'restart'])
 
+    # A website as an earlier release suspended it.
+    LEGACY = ('# Website Suspension Configuration\ncontext / {\n}\n# End Website Suspension Configuration\n'
+              '# Commented out during suspension\n#rewrite {\n#  enable 1\n#}\n'
+              'docRoot /home/example/public_html\n')
+
+    def test_a_parent_is_restored_beside_a_child_that_an_earlier_release_suspended(self):
+        # The child is suspended on its own and stays so; restoring the parent
+        # only writes its file again in the present form.
+        self.paths['parent.test'].write_text(with_rule(RULE))
+        with server_update(self.root) as update:
+            update.apply([('parent.test', True), ('sibling.test', True)])
+        self.paths['child.test'].write_text(self.LEGACY)
+        (self.root / 'calls').write_text('')
+        with server_update(self.root) as update:
+            update.apply([('parent.test', False), ('child.test', True), ('sibling.test', False)])
+        self.assertEqual(self.paths['parent.test'].read_text(), with_rule(RULE))
+        self.assertEqual(self.paths['sibling.test'].read_text(), VHOST)
+        self.assert_suspended('child.test')
+        self.assertNotIn('# Commented out during suspension', self.paths['child.test'].read_text())
+        self.assertEqual(self.calls(), ['test', 'test', 'restart'])
+        self.assertEqual(self.status(), 2)
+        # The child's own rules are still there for its own restore.
+        self.change(suspended=False, domain='child.test')
+        self.assertEqual(self.paths['child.test'].read_text(),
+                         'rewrite {\n  enable 1\n}\ndocRoot /home/example/public_html\n')
+
+    def test_the_check_is_told_which_websites_only_stay_suspended(self):
+        self.change()
+        self.paths['child.test'].write_text(self.LEGACY)
+        check = mock.Mock()
+        with VhostUpdate(self.root, check, mock.Mock()) as update:
+            update.apply([('parent.test', False), ('child.test', True), ('sibling.test', True)])
+        self.assertEqual(check.call_args_list, [mock.call(), mock.call(
+            check.return_value, {'parent.test': False, 'child.test': None, 'sibling.test': True})])
+
     def test_a_change_that_also_suspends_a_website_keeps_the_strict_rule(self):
         self.paths['parent.test'].write_text(with_rule(RULE))
         self.change()
@@ -516,6 +551,21 @@ class AddedErrorsTests(unittest.TestCase):
             with self.subTest(line=line):
                 for changed in (self.SUSPENDED, {'a.test': False, 'b.test': True}, {}, None):
                     self.assertEqual(config_errors_added((1, self.WARN), (2, line), changed), [line.strip()])
+
+    def test_a_website_that_only_stays_suspended_does_not_make_a_restore_a_suspension(self):
+        for line in self.RETURNING:
+            with self.subTest(line=line):
+                after = (2, line)
+                self.assertEqual(config_errors_added((1, self.WARN), after, {'p.test': False, 'a.test': None}), [])
+                # On its own, and beside a suspension, the strict rule holds.
+                self.assertEqual(config_errors_added((1, self.WARN), after, {'a.test': None}), [line.strip()])
+                self.assertEqual(config_errors_added((1, self.WARN), after, {'a.test': None, 'b.test': True}),
+                                 [line.strip()])
+                self.assertEqual(config_errors_added((1, self.WARN), after,
+                                                     {'p.test': False, 'a.test': None, 'b.test': True}),
+                                 [line.strip()])
+        # Its lines move like those of any edited file.
+        self.assertEqual(config_errors_added((2, self.OLD), (2, self.MOVED), {'a.test': None}), [])
 
     def test_a_restore_is_undone_for_a_fatal_message_that_was_not_there(self):
         fatal = '2026-11-22 17:20:00.000001 [FATAL] [299154] [config:server:vhosts:vhost:a.test] cannot continue'
