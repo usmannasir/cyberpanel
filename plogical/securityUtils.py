@@ -41,7 +41,9 @@ API_OTP_FAILURE_WINDOW = 5 * 60
 def constant_time_equal(left, right):
     if left is None or right is None:
         return False
-    return hmac.compare_digest(str(left), str(right))
+    # Compared as bytes: text outside ASCII is a value like any other, not an error.
+    return hmac.compare_digest(
+        str(left).encode('utf-8', 'surrogatepass'), str(right).encode('utf-8', 'surrogatepass'))
 
 
 def normalize_api_token(token):
