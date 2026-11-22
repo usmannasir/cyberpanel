@@ -177,8 +177,16 @@ class DirectoryTests(unittest.TestCase):
         source = (Path(__file__).resolve().parents[1] / 'IncBackups' / 'IncBackupsControl.py').read_text()
         self.assertNotIn('chmod 755 /home/cyberpanel', source)
         self.assertIn("command = 'chmod 700 /home/cyberpanel'", source)
-        self.assertNotIn("'chmod 711 %s' % (UploadPath)", source)
-        self.assertIn("'chmod 700 %s' % (UploadPath)", source)
+
+    def test_shared_temporary_directory_keeps_the_mode_other_features_need(self):
+        # Website accounts read their own temporary files there by name
+        # (ACLManager.CreateSecureDir); the dump in it is a private file.
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        source = (root / 'IncBackups' / 'IncBackupsControl.py').read_text()
+        self.assertIn("'chmod 711 %s' % (UploadPath)", source)
+        self.assertNotIn("'chmod 700 %s' % (UploadPath)", source)
+        self.assertIn("command = 'chmod 711 %s' % (UploadPath)", (root / 'plogical' / 'acl.py').read_text())
 
 
 if __name__ == '__main__':
