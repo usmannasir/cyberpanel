@@ -205,7 +205,7 @@ class ContainerTroubleTests(unittest.TestCase):
         self.assertEqual('', trouble(error=OSError('Docker does not answer'))[0])
 
 
-def deploy(failure, cleaned=True, site_id=41, app='n8n', retries=None):
+def deploy(failure, cleaned=True, site_id=41, app='n8n', unhealthy=(), trouble=''):
     """Run the real deployment of a compose application and let its first-run step fail."""
     site = make_site(app)
     site.JobID = site.data['JobID']
@@ -232,7 +232,9 @@ def deploy(failure, cleaned=True, site_id=41, app='n8n', retries=None):
             mock.patch.object(site, 'install_compose_file', return_value=(1, None)), \
             mock.patch.dict(sys.modules, {'plogical.installUtilities': utilities, 'websiteFunctions.models': models}), \
             mock.patch.object(site, 'verify_system_resources'), \
-            mock.patch.object(site, 'check_container_health', return_value=True), \
+            mock.patch.object(site, 'check_container_health',
+                              side_effect=lambda service: service not in unhealthy) as health, \
+            mock.patch.object(site, 'container_trouble', return_value=trouble) as shown, \
             mock.patch.object(site, 'monitor_deployment'), \
             mock.patch.object(site, 'log_deployment_metrics'), \
             mock.patch.object(site, 'cleanup_failed_deployment',
@@ -243,7 +245,7 @@ def deploy(failure, cleaned=True, site_id=41, app='n8n', retries=None):
                               side_effect=lambda path, message: events.append(message)), \
             mock.patch.object(docker_sites.logging, 'writeToFile'):
         result = site.DeployComposeApp(app)
-    return SimpleNamespace(result=result, events=events, rows=rows, cleanup=cleanup)
+    return SimpleNamespace(result=result, events=events, rows=rows, cleanup=cleanup, health=health, shown=shown)
 
 
 NOT_READY = DockerDeploymentError('n8n did not become ready to create its administrator account within 6 minutes. '
@@ -256,6 +258,19 @@ class RetryTests(unittest.TestCase):
         run = deploy(NOT_READY)
         self.assertIs(False, run.result)
         self.assertEqual('Deployment failed: %s [404]' % NOT_READY.message, run.events[-1])
+
+    def test_a_container_that_does_not_come_up_is_named_with_what_it_shows(self):
+        for service in ('testapp-db', 'testapp'):
+            with self.subTest(service=service):
+                run = deploy(None, unhealthy=(service,), trouble='It was restarted 4 times.')
+                self.assertIs(False, run.result)
+                self.assertEqual('Deployment failed: Containers failed to reach healthy state. It was restarted 4 '
+                                 'times. [404]', run.events[-1])
+                run.shown.assert_called_once_with(service)
+        run = deploy(None, unhealthy=('testapp',))
+        self.assertEqual('Deployment failed: Containers failed to reach healthy state [404]', run.events[-1])
+        run = deploy(None, app='Hermes', site_id=None)
+        self.assertEqual([mock.call('testapp')], run.health.call_args_list)
 
     def test_its_entry_is_removed_after_the_clean_up_and_before_the_page_is_told(self):
         for failure in (NOT_READY, RuntimeError('unexpected')):

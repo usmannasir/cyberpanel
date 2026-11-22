@@ -1864,10 +1864,13 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
                 # Wait for containers to be healthy
                 time.sleep(25)
-                if meta['requiresDB'] and not self.check_container_health(f"{self.data['ServiceName']}-db"):
-                    raise DockerDeploymentError("Containers failed to reach healthy state", self.ERROR_CONTAINER_FAILED)
-                if not self.check_container_health(self.data['ServiceName']):
-                    raise DockerDeploymentError("Containers failed to reach healthy state", self.ERROR_CONTAINER_FAILED)
+                for service in ([f"{self.data['ServiceName']}-db"] if meta['requiresDB'] else []) + [
+                        self.data['ServiceName']]:
+                    if not self.check_container_health(service):
+                        trouble = self.container_trouble(service)
+                        raise DockerDeploymentError(
+                            "Containers failed to reach healthy state" + ('. ' + trouble if trouble else ''),
+                            self.ERROR_CONTAINER_FAILED)
                 logging.statusWriter(self.JobID, 'Containers healthy...,70')
 
                 # The website is pointed at the containers only after the
