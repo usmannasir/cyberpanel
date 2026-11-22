@@ -377,10 +377,23 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath, "%s [138][5009]" % (str(msg)), 1)
             return 0
 
+    def databaseOfDump(self, fileName):
+        """The database a dump file is restored into; it must be one of this website's own."""
+        from databases.models import Databases
+        name = fileName[:-len('.sql')] if fileName.endswith('.sql') else fileName
+        website = getattr(self.website, 'domain', self.website)
+        if not Databases.objects.filter(dbName=name, website__domain=website).exists():
+            raise BaseException('The database %s does not belong to %s.' % (name, website))
+        return name
+
     def restoreDatabase(self):
         try:
 
             if self.reconstruct == 'remote':
+                # The name comes with the request: nothing is fetched or
+                # loaded unless the database is this website's.
+                database = self.databaseOfDump(self.path.split('/')[-1])
+
                 if self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction('none', 'none', 1) == 0:
                         return 0
@@ -400,10 +413,12 @@ class IncJobs(multi.Thread):
 
                 ##
 
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.path.split('/')[-1].rstrip('.sql'),
+                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(database,
                                                                        '/usr/local/CyberCP/tmp', 'dummy', 'dummy') == 0:
                     raise BaseException
             else:
+
+                database = self.databaseOfDump(self.jobid.type.split(':')[1])
 
                 if self.jobid.destination == 'local':
                     if self.localFunction('none', 'none', 1) == 0:
@@ -416,7 +431,7 @@ class IncJobs(multi.Thread):
                         return 0
 
 
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'),
+                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(database,
                                                                        '/home/%s' % (self.website), 'dummy', 'dummy') == 0:
                     raise BaseException('Can not restore database backup.')
 
