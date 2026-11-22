@@ -11,7 +11,8 @@ Reliability release. It corrects nine defects found in acceptance testing of
 suspension, the Create ACL page, mail in incremental backups, the Backup V2
 pages, WordPress restore to a new site, the Web Terminal service, pattern
 forwarding of mail and websites on the Apache backend. Upgrading is
-recommended for every server.
+recommended for every server. A fresh installation now reports its steps and
+its result, and installs only the components it is asked for.
 
 ### Certificates
 - A website with a certificate is mapped on the IPv4 and on the IPv6 HTTPS
@@ -105,6 +106,24 @@ recommended for every server.
   the mail server cannot use is left out and marked on the page. Rules of a
   deleted website or mail domain leave the map with it. An upgrade puts
   rules saved by earlier releases into use.
+
+### Installation
+- A fresh installation records each of its steps, and how it ended, in
+  /var/log/cyberpanel/install_events.log (readable by root only).
+- An installation that fails ends with a failing exit status and a reason;
+  before, several failure paths ended with status 0. A server that already
+  has the panel is recognised before any service is stopped. A panel that
+  does not answer on port 8090 within about three minutes of the end of the
+  installation counts as a failed installation.
+- `-m` installs only the components it names (postfix, powerdns, pureftpd);
+  before, `-m postfix` installed all three. Sieve and Dovecot are installed
+  with the mail server only. A word the installer does not know, such as
+  `nopostfix`, is now refused instead of ignored.
+- The administrator password can be given in a file only root can read
+  (CP_ADMIN_PASSWORD_FILE); it is not echoed or written to a log, and a
+  password given with `-p` is masked in the installer's logs.
+- When the hostname certificate cannot be issued the installer says how the
+  panel is reached and records a warning.
 
 ### Web Terminal
 - The Web Terminal service is started once its interpreter exists, at the
