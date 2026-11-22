@@ -76,19 +76,30 @@ def set_directory_owner(allowed_root, directory, user, group, mode=None):
         os.close(descriptor)
 
 
-def write_shared_temp_file(content, mode=0o644):
+def write_shared_temp_file(content, mode=0o644, discard_on_failure=False):
     """Write text or bytes to a new file in the panel's shared temporary directory.
 
     The file is handed to a command that runs as another account, so that
     account must be able to read it; its name cannot be guessed and the
     directory cannot be listed. The caller removes the file. For a secret,
     pass mode 0o600 and give the file to that account before it is read.
+
+    The caller only learns the name of a file that was written completely.
+    With discard_on_failure a file that could not be is removed again.
     """
     path = os.path.join(SHARED_TEMP_DIRECTORY, secrets.token_hex(16))
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, mode)
-    with os.fdopen(descriptor, "wb" if isinstance(content, bytes) else "w") as handle:
-        handle.write(content)
-    os.chmod(path, mode)
+    try:
+        with os.fdopen(descriptor, "wb" if isinstance(content, bytes) else "w") as handle:
+            handle.write(content)
+        os.chmod(path, mode)
+    except BaseException:
+        if discard_on_failure:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+        raise
     return path
 
 
