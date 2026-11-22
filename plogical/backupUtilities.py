@@ -745,6 +745,23 @@ class backupUtilities:
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
+            # The website keeps its account name unless this server's tool
+            # refuses it; it then gets one as a new website does. The name
+            # is stored with the website, and everything after its creation
+            # reads it from there.
+            import pwd
+            from plogical.websiteAccount import restored_name
+
+            def accountNameTaken(name):
+                if Websites.objects.filter(externalApp=name).count() > 0:
+                    return True
+                try:
+                    pwd.getpwnam(name)
+                    return True
+                except KeyError:
+                    return False
+
+            externalApp = restored_name(externalApp, domain, accountNameTaken)
             backup_version = backupMetaData.find('VERSION').text
             backup_build = backupMetaData.find('BUILD').text
             mail_domain = int(backup_includes_mail_domain(backupMetaData, domain))
@@ -976,7 +993,27 @@ class backupUtilities:
 
             ## Reading meta file to create subdomains
 
-            externalApp = backupMetaData.find('externalApp').text
+            # The account the website had when the backup was made, and the
+            # one it was created with here. They differ when this server
+            # does not take the old name; the configuration files of the
+            # backup then name an account that does not exist here.
+            from plogical.websiteAccount import renamed_in_configuration
+            accountInBackup = backupMetaData.find('externalApp').text
+            try:
+                accountHere = Websites.objects.get(domain=masterDomain).externalApp
+            except BaseException:
+                accountHere = accountInBackup
+            if not isinstance(accountHere, str) or not accountHere:
+                accountHere = accountInBackup
+
+            def useAccountHere(confPath):
+                if accountHere == accountInBackup:
+                    return
+                with open(confPath, 'r') as conf:
+                    text = conf.read()
+                with open(confPath, 'w') as conf:
+                    conf.write(renamed_in_configuration(text, accountInBackup, accountHere))
+
             websiteHome = os.path.join("/home", masterDomain, "public_html")
 
             ### Restoring Child Domains if any.
@@ -1013,6 +1050,7 @@ class backupUtilities:
                                     completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
                                     childConfPathinBKUP = completPath + '/' + domain + '.vhost.conf'
                                     copy(childConfPathinBKUP, completPathToConf)
+                                    useAccountHere(completPathToConf)
 
                                     ### take care of apache conf
 
@@ -1053,7 +1091,12 @@ class backupUtilities:
                                                     logging.CyberCPLogFileWriter.writeToFile(
                                                         f'CyberPanel was able to successfully convert {domain} to apache conf as {finalConfPathApache} exists..')
 
-                                                copy(childConfPathinBKUPApache, finalConfPathApache)
+                                                # The backup's virtual host replaces the new one
+                                                # only if Apache accepts it on this server.
+                                                restored = ApacheVhost.restoreVhost(childConfPathinBKUPApache, finalConfPathApache)
+                                                if restored[0] == 0:
+                                                    logging.CyberCPLogFileWriter.writeToFile(
+                                                        '%s [restore of the Apache virtual host of %s]' % (restored[1], domain))
 
                                     ### apache ends
 
@@ -1289,6 +1332,7 @@ class backupUtilities:
                 if CurrentServer == ProcessUtilities.decideServer():
                     confPathMainSite = completPath + '/vhost.conf'
                     copy(confPathMainSite, completPathToConf)
+                    useAccountHere(completPathToConf)
 
 
                     ### apache starts here
@@ -1328,8 +1372,14 @@ class backupUtilities:
                                 logging.CyberCPLogFileWriter.writeToFile(
                                     f'Apache conf path of main domain exists which means CyberPanel successfully converted site to Apache for {masterDomain}')
 
-                            if os.path.exists(confPathApache):
-                                copy(confPathApache, finalConfPathApache)
+                            # The backup's virtual host replaces the new one only
+                            # where the website was put on Apache, and only if
+                            # Apache accepts it on this server.
+                            if os.path.exists(confPathApache) and os.path.exists(finalConfPathApache):
+                                restored = ApacheVhost.restoreVhost(confPathApache, finalConfPathApache)
+                                if restored[0] == 0:
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                        '%s [restore of the Apache virtual host of %s]' % (restored[1], masterDomain))
 
                     ### apache ends here
 

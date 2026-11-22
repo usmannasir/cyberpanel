@@ -131,7 +131,9 @@ class FirstApacheWebsiteTests(unittest.TestCase):
 
 
 class ApacheSetUpStateTests(unittest.TestCase):
-    """Apache counts as set up when Apache and one PHP-FPM version of the set-up are there."""
+    """Apache counts as set up when Apache, its control program and one PHP-FPM version of the set-up are there."""
+
+    UBUNTU = ('/usr/sbin/apache2', '/usr/sbin/apache2ctl')
 
     def controller(self, distro, present):
         import ast
@@ -155,26 +157,31 @@ class ApacheSetUpStateTests(unittest.TestCase):
 
     def test_any_one_fpm_version_beside_apache_counts(self):
         cases = (
-            ('ubuntu', '/usr/sbin/apache2', ['/etc/php/%s/fpm/pool.d/' % version for version in (
+            ('ubuntu', self.UBUNTU, ['/etc/php/%s/fpm/pool.d/' % version for version in (
                 '5.6', '7.4', '8.0', '8.1', '8.3', '8.5')]),
-            ('cent8', '/usr/sbin/httpd', ['/etc/opt/remi/php%s/php-fpm.d/' % version for version in (
+            ('cent8', ('/usr/sbin/httpd',), ['/etc/opt/remi/php%s/php-fpm.d/' % version for version in (
                 '56', '74', '80', '81', '83', '85')] + ['/opt/remi/php54/root/etc/php-fpm.d/']),
         )
         for distro, apache, pools in cases:
             for pool in pools:
                 with self.subTest(distro=distro, pool=pool):
-                    self.assertEqual(1, self.controller(distro, {apache, pool}).checkIfApacheInstalled())
+                    self.assertEqual(1, self.controller(distro, set(apache) | {pool}).checkIfApacheInstalled())
 
     def test_ubuntu_20_with_php_7_4_only_is_set_up(self):
         # Its PHP archive offers no PHP 8.0, so the set-up leaves 7.4 alone.
-        present = {'/usr/sbin/apache2', '/etc/php/7.4/fpm/pool.d/'}
+        present = set(self.UBUNTU) | {'/etc/php/7.4/fpm/pool.d/'}
         self.assertEqual(1, self.controller('ubuntu', present).checkIfApacheInstalled())
+
+    def test_the_binary_without_its_control_program_is_not_set_up(self):
+        # What removing the apache2 package leaves behind.
+        present = {'/usr/sbin/apache2', '/etc/php/8.3/fpm/pool.d/'}
+        self.assertEqual(0, self.controller('ubuntu', present).checkIfApacheInstalled())
 
     def test_apache_alone_or_php_fpm_alone_is_not_set_up(self):
         for distro, present in (
-                ('ubuntu', set()), ('ubuntu', {'/usr/sbin/apache2'}), ('ubuntu', {'/etc/php/8.0/fpm/pool.d/'}),
+                ('ubuntu', set()), ('ubuntu', set(self.UBUNTU)), ('ubuntu', {'/etc/php/8.0/fpm/pool.d/'}),
                 ('ubuntu', {'/etc/apache2', '/etc/php/8.0/fpm/pool.d/'}),
-                ('ubuntu', {'/usr/sbin/apache2', '/etc/php/8.9/fpm/pool.d/'}),
+                ('ubuntu', set(self.UBUNTU) | {'/etc/php/8.9/fpm/pool.d/'}),
                 ('ubuntu', {'/usr/sbin/httpd', '/etc/opt/remi/php80/php-fpm.d/'}),
                 ('cent8', set()), ('cent8', {'/usr/sbin/httpd'}), ('cent8', {'/etc/opt/remi/php80/php-fpm.d/'}),
                 ('cent8', {'/usr/sbin/apache2', '/etc/php/8.0/fpm/pool.d/'})):

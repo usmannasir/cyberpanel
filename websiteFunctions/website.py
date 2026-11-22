@@ -2442,10 +2442,14 @@ Require valid-user
                 externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:5].lower() + str(randint(1000, 9999))
 
             try:
+                # The next name is built from the name made above, not from
+                # the stored one it matched: the database compares names
+                # without regard to case.
                 counter = 0
+                baseName = externalApp
                 while 1:
                     tWeb = Websites.objects.get(externalApp=externalApp)
-                    externalApp = '%s%s' % (tWeb.externalApp, str(counter))
+                    externalApp = '%s%s' % (baseName, str(counter))
                     counter = counter + 1
             except:
                 pass
