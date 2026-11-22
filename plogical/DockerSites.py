@@ -349,8 +349,8 @@ def n8n_container_remarks(attrs):
 
 
 def n8n_owner_missing(port, timeout=10):
-    """True when the n8n instance on this loopback port still offers its owner account to the first visitor,
-    False when it has an owner, None when it does not answer."""
+    """True when the n8n instance on this loopback port has no owner account yet, False when it has one,
+    None when it does not answer."""
     import requests
 
     session = requests.Session()
@@ -2096,7 +2096,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             remarks = []
 
             if n8n_owner_missing(site.port, timeout=5) is True:
-                remarks.append('HAS NO OWNER ACCOUNT: whoever opens it first becomes its owner')
+                remarks.append('HAS NO OWNER ACCOUNT: open the site and finish its set-up, or delete the site')
 
             # The application container only: the database container beside it is not n8n.
             containers = []

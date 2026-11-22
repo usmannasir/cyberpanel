@@ -133,8 +133,8 @@ class ReportTests(unittest.TestCase):
             raise OSError('Docker does not answer')
 
         report = self.report({'11000': True, '11001': None}, select=no_answer)
-        self.assertEqual(['n8n site flows.example (flows): HAS NO OWNER ACCOUNT: whoever opens it first becomes '
-                          'its owner'], report)
+        self.assertEqual(['n8n site flows.example (flows): HAS NO OWNER ACCOUNT: open the site and finish its '
+                          'set-up, or delete the site'], report)
         self.assertEqual(1, self.selected.call_count)
 
     def test_a_server_without_docker_gets_a_report_without_an_error(self):
